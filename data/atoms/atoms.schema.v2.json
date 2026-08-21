@@ -1,0 +1,306 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "League champion atom v2 - numeric spine, sub-states, cycle model",
+ "type": "array",
+ "items": {
+  "type": "object",
+  "required": [
+   "atom_id",
+   "family",
+   "behavior",
+   "trigger",
+   "target_policy",
+   "parameters",
+   "states",
+   "cycle",
+   "provenance"
+  ],
+  "properties": {
+   "atom_id": {
+    "type": "string"
+   },
+   "family": {
+    "type": "string",
+    "enum": [
+     "crowd-control-mobility",
+     "damage",
+     "heal-shield",
+     "interaction",
+     "stack-transform-summon-resource",
+     "vision-economy"
+    ]
+   },
+   "behavior": {
+    "type": "string"
+   },
+   "trigger": {
+    "type": "string"
+   },
+   "target_policy": {
+    "type": "string"
+   },
+   "parameters": {
+    "type": "object",
+    "properties": {
+     "cooldown": {
+      "type": [
+       "array",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "cast_range": {
+      "type": [
+       "array",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "mana_cost": {
+      "type": [
+       "array",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "damage": {
+      "type": [
+       "array",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "duration": {
+      "type": [
+       "array",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "ratios": {
+      "type": [
+       "object",
+       "array",
+       "null"
+      ],
+      "description": "formula coefficients by calculation name"
+     },
+     "effect_amounts": {
+      "type": [
+       "array",
+       "object",
+       "null"
+      ]
+     },
+     "tick_rate": {
+      "type": [
+       "array",
+       "number",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "stacks_cap": {
+      "type": [
+       "array",
+       "number",
+       "null"
+      ],
+      "items": {
+       "type": [
+        "number",
+        "null"
+       ]
+      }
+     },
+     "damage_type": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "affects_type_flags": {
+      "type": [
+       "integer",
+       "null"
+      ]
+     }
+    }
+   },
+   "states": {
+    "type": [
+     "array",
+     "null"
+    ],
+    "items": {
+     "type": "object",
+     "required": [
+      "state"
+     ],
+     "properties": {
+      "state": {
+       "type": "string",
+       "enum": [
+        "cast",
+        "channel",
+        "travel",
+        "impact",
+        "recast",
+        "aftermath",
+        "persistent"
+       ]
+      },
+      "duration": {
+       "type": [
+        "number",
+        "null"
+       ]
+      },
+      "behavior": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "atoms": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     }
+    }
+   },
+   "cycle": {
+    "type": [
+     "object",
+     "null"
+    ],
+    "properties": {
+     "cooldown_seconds": {
+      "anyOf": [
+       {
+        "type": [
+         "number",
+         "null"
+        ]
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": [
+          "number",
+          "null"
+         ]
+        }
+       },
+       {
+        "type": "object",
+        "properties": {
+         "rank1": {
+          "type": [
+           "number",
+           "null"
+          ]
+         },
+         "rank_max": {
+          "type": [
+           "number",
+           "null"
+          ]
+         }
+        }
+       }
+      ]
+     },
+     "cast_time_seconds": {
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "uptime_fraction": {
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "reset_on": {
+      "type": [
+       "array",
+       "null"
+      ],
+      "items": {
+       "type": "string"
+      }
+     },
+     "tempo_class": {
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    }
+   },
+   "relations": {
+    "type": "array",
+    "items": {
+     "type": "string"
+    }
+   },
+   "provenance": {
+    "type": "object",
+    "required": [
+     "binary"
+    ],
+    "properties": {
+     "wiki": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "binary": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "evidence": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ }
+}

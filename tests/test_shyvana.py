@@ -22,7 +22,7 @@ class TestReviewedCrowdControl:
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
-        assert "slowing by 30% them for 2 seconds" in cc_review.slot_text(data, "E")
+        assert "slowing them by 30% for 2 seconds" in cc_review.slot_text(data, "E")
         # R also slows by 99%; the fear is the immobilizing half, which is
         # the answer a control-armed reader needs.
         assert "fears them for 0.75 seconds" in cc_review.slot_text(data, "R")

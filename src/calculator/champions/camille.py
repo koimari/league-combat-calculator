@@ -44,8 +44,10 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
+    with_control,
 )
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _true_split_parts(
@@ -300,7 +302,7 @@ ASSUMPTIONS = [
     "W models the outer-cone sweet spot by default; W's self-heal and "
     "slow are not modeled",
     "E's 40-60% attack speed is applied for the whole fight (in-game: 5s "
-    "per cast); E's stun is not modeled",
+    "per cast); the sourced 0.75-second stun is counted as action downtime",
     "P (Adaptive Defenses) is modeled as a pre-fight granted shield: 20% "
     "of max HP for 2s riding the first W cast. The in-game trigger (the "
     "next auto against a champion) and the physical/magic adaptation "
@@ -323,6 +325,16 @@ SLOTS = {
 SLOTS = dict(SLOTS)
 _packet_w = SLOTS["W"]
 SLOTS["W"] = _tactical_sweep_with_shield
+SLOTS["E"] = with_control(
+    SLOTS["E"],
+    # Two immobilizes land together and only one of them is given a number:
+    # the un-narrowed kind states both, and the 0.75-second "Stun Duration"
+    # row is the sourced interval Camille's target cannot act for.
+    kind="immobilize",
+    duration_attr="Stun Duration",
+    source=("E", 1),
+    effect_index=1,
+)
 # Cached kit review.  Q and Q2 are empowered basic attacks that only add
 # damage and self movement speed.  W's modeled hit is the outer-cone half,
 # whose enemies "are slowed by 80% decaying over 2 seconds".  E's Wall Dive
@@ -339,10 +351,39 @@ parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 
 SOURCES = load_champion_sources("Camille")
 
-SELF_HEALING_RULE = declare_healing_rule("Camille")
-
 # P emits no cast row, so the derivation would call it out_of_scope; the
 # shield W carries is what the engine prices (466.6 for 2s at level 18
 # with no items, 20% of max health).
 MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Camille self-healing events from its authored packet."""
+    healing = []
+    w_ability = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    base_raw = _healing.extract_named(
+        w_ability, "Physical Damage", w_rank, champion_stats, {}
+    )
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+    ):
+        event = payment.event
+        raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        post = float(event.get("damage", 0.0) or 0.0)
+        outer_raw = max(0.0, raw - base_raw)
+        amount = outer_raw * (post / raw) if raw > 0.0 else 0.0
+        _healing._heal_from_damage(healing, event, amount, "Tactical Sweep")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Camille", derive_self_healing)

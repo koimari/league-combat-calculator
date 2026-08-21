@@ -69,10 +69,12 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
         "Increase your {{as|ability power}} by 45%.",
         0.45,
     ),
+    # 16.16.1 moved Wind's Fury's bolt share 55% AD -> 65% AD, so the proof's
+    # "before" is the cached text as it now reads; the mutation is unchanged.
     RuleFamily.SECONDARY_TARGET: (
         "Runaan's Hurricane",
         "secondary_ad_ratio",
-        "{{as|55% AD}}",
+        "{{as|65% AD}}",
         "{{as|70% AD}}",
         0.70,
     ),

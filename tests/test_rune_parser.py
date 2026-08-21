@@ -74,6 +74,108 @@ ARCANE_COMET_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Arcane Com
 }}"""
 
 
+AERY_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Summon Aery|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Sorcery
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Damaging {{tip|basic attacks}}, {{tip|abilities}}, and [[Named item effect|item effects]] against an enemy {{tip|champion}} signal ''Aery'' to pounce at them over {{fd|0.45}} seconds, dealing {{pp|10 + (40/17)*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} {{tip|adaptive damage}}. {{tip|Healing}}, {{tip|shield|shielding}}, or {{tip|buff|buffing}} an allied champion signals ''Aery'' to leap to their side over {{fd|0.35}} seconds, {{tip|shield|shielding}} them for {{pp|20 + (100-20)/17*(x-1)|1 to 20 by 1}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} for 2 seconds.
+''Aery'' applies her effects to the affected champion upon arrival. She then lingers on the target for {{tt|2 seconds|Slightly less than this duration}} before flying back to the user, and cannot be sent out again until she returns.
+|cooldown     =
+}}"""
+
+
+GRASP_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Grasp of the Undying|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Resolve
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Entering [[Combat status|combat]] generates 1 [[stack]] every second for the next 3 seconds, refreshing the duration with each instance of combat and stacking the effect up to 4 times. At maximum stacks, your next [[basic attack]] {{tip|on-hit}} within 5 seconds against an enemy {{tip|champion}} consumes all stacks to deal {{as|'''bonus''' magic damage}} equal to {{as|{{rd|{{fd|3.5}}%|{{fd|1.4}}%}} of your '''maximum''' health}}, {{tip|heal}} you for {{as|(+ {{rd|{{fd|1.3}}%|{{fd|0.52}}%}} of your '''maximum''' health)}}, and permanently grant you {{as|{{rd|5|2}} '''bonus''' health}}.
+|cooldown     =
+}}"""
+
+
+HAIL_OF_BLADES_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Hail of Blades|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Domination
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Starting an {{tip|attack windup}} against an enemy {{tip|champion}} triggers ''Hail of Blades'', and if the windup completes, you gain 2 stacks of the effect for 3 seconds, with the duration refreshing on basic attacks {{tip|on-attack}} against enemy champions until all stacks are consumed. Stacks are consumed per basic attack on-attack and you generate an additional stack of the effect each time you activate an effect that has a {{tip|basic attack reset}}, up to 2 times.
+While ''Hail of Blades'' is active, you gain {{as|{{rd|120%|60%}} {{sti|'''bonus''' attack speed}}|as}}, are allowed to exceed the {{tt|attack speed cap|normally 3.003 attacks per second}}, and basic attacks deal {{pp|4 + (20-4)/17*(x-1) for 20|color=true damage}} {{as|(+ 8% '''bonus''' AD)}} {{as|(+ 6% AP)}} {{as|{{sti|'''bonus true damage}}}}.<br><br>''The triggering attack benefits from Hail of Blades.''
+|cooldown     = 10
+}}"""
+
+
+LETHAL_TEMPO_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Lethal Tempo|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2025
+|path         = Precision
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Basic attacks {{tip|on-attack}} against enemy {{tip|champion|champions}} grant a {{tip|stack}} for 6 seconds, refreshing on subsequent attacks and stacking up to 6 times. Gain {{as|{{rd|6%|{{ap|6*0.8}}%}} '''bonus''' attack speed|as}} for each stack, up to {{as|{{rd|36%|{{ap|36*0.8}}%}}|as}} at maximum stacks.
+At maximum stacks, basic attacks are empowered to fire a bolt at the target {{tip|on-attack}} that deals them {{rd|9 + (30-9)/17*(x-1) for 20|6 + (24-6)/17*(x-1) for 20|pp=true}} '''bonus''' {{tip|adaptive damage}} upon arrival, increased by {{rd|1%|{{fd|0.6{{recurring|6}}%}}}} per {{as|1% '''bonus''' attack speed}}.
+Stacks expire one by one every {{fd|0.5}} seconds when the duration ends.
+|cooldown     =
+}}"""
+
+
+GLACIAL_AUGMENT_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Glacial Augment|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2022
+|path         = Inspiration
+|slot         = Keystone
+|description  = {{sbc|Passive:}} {{tip|immobilize|Immobilizing}} an enemy {{tip|champion}} will cause 3 glacial rays to emanate from them towards you and other nearby enemy champions, creating icy zones with a 700 unit radius that last for 3 (+ 100% of the {{tt|immobilizing effect's duration|Duration after being modified by tenacity}}) seconds.
+|description2 = Enemies within the icy zones, which have a width of 80 units, are {{tip|slow|slowed}} by 20% {{as|(+ 7% per 100 '''bonus''' AD)}} {{as|(+ 6% per 100 AP)}} {{as|(+ 9% per 10% heal and shield power)}} and have their damage reduced by 15% against your allies, excluding yourself.
+|cooldown     = 25
+}}"""
+
+
+STORMRAIDER_SURGE_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Stormraider's Surge|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Sorcery
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Dealing {{tt|damage|post-mitigation damage}} to an enemy champion equal to {{as|25% of their '''maximum''' health}} within 3 seconds grants you {{as|{{rd|48%|36%}} '''bonus''' movement speed}} and 50% {{tip|slow resist}} for 4 seconds.
+|cooldown     = {{pp|20 to 10|1 to 20 by 1}}
+}}"""
+
+
+FLEET_FOOTWORK_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Fleet Footwork|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Precision
+|slot         = Keystone
+|description  = {{Unique|Energized|Moving and basic attacking generates ''Charges'', up to 100.}}
+At 100 ''Charges'', become {{tip|Energized}}, empowering your next {{tip|basic attack}} to {{tip|heal}} you for {{rd|10+(120/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|10*0.6+((120*0.6)/17)*(x-1)*(0.7025+0.0175*(x-1)) for 20|color=heal|pp=true}} {{as|(+ {{rd|10%|6%}} '''bonus''' AD)}} {{as|(+ {{rd|5%|3%}} AP)}} and grant {{as|{{rd|20%|15%}}|ms}} {{sti|{{as|'''bonus''' movement speed}}}} for 1 second. Against {{tip|minion|minions}}, the healing is 15% effective.
+|cooldown     =
+}}"""
+
+
+CONQUEROR_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Conqueror|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Precision
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Dealing damage to enemy {{tip|champions}} generates {{tip|stacks}} of ''Conqueror'', lasting for 5 seconds, refreshing on subsequent damage against champions, and stacking up to 12 times. Gain {{rd|2|1}} stacks for {{tip|basic damage}} {{tip|on-hit}}. Otherwise, gain 2 stacks for any damage that is neither {{tip|basic damage|basic}} nor non-{{tip|pet damage|pet}} {{tip|proc damage}}, up to once every {{fd|4}} seconds per {{tip|cast instance}}.
+Each stack of ''Conqueror'' grants {{adaptive|1.8 + (4-1.8)/17*(x-1)|20}}, up to {{adaptive|1.8*12 + (4*12-1.8*12)/17*(x-1)|20}} at maximum stacks, at which you also {{tip|heal}} for {{rd|8%|5%}} of the {{tt|post-mitigation damage|Damage calculated after modifiers}} dealt against enemy champions.
+}}"""
+
+
+DEATHFIRE_TOUCH_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Deathfire Touch|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Sorcery
+|slot         = Keystone
+|description  = Dealing {{tip|ability damage}} or {{tip|pet damage}} to enemy {{tip|champions}} inflicts a burn that deals {{pp|(3/2) + ((12/2)-(3/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7/2}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5/2}}% AP)}} {{as|magic damage}} every {{fd|0.5}} seconds over the duration. After the burn has lingered on a target for 3 seconds, its damage to them is increased{{ft|by 75%|to {{pp|(3*1.75/2) + ((12*1.75/2)-(3*1.75/2))/17*(x-1) for 20|color=magic damage}} {{as|(+ {{ap|7*1.75/2|round=3}}% '''bonus''' AD)}} {{as|(+ {{ap|2.5*1.75/2|round=3}}% AP)}} per tick}}while it lasts.
+The burn's duration is based on the form of ability damage dealt to the target and is refreshed on subsequent applications:
+* {{tip|Spell damage}}: 4 seconds.
+* {{tip|Area damage}}: 2 seconds.
+* {{tip|Persistent damage}}: 1 second.
+* {{tip|Persistent area damage}}: 1 second.
+* {{tip|Pet damage}}: 1 second.
+|cooldown     =
+}}"""
+
+
+DARK_HARVEST_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Dark Harvest|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Domination
+|slot         = Keystone
+|description  = {{sbc|Passive:}} Dealing {{tip|pet damage|pet}} or non-{{tip|proc damage|proc}} damage against enemy {{tip|champions}} below {{as|50% of their '''maximum''' health}} deals 30 {{as|(+ 11 per Soul)}} {{as|(+ 10% '''bonus''' AD)}} {{as|(+ 5% AP)}} '''bonus''' {{tip|adaptive damage}} and, after a {{fd|1.75}}-second delay, reap {{as|1 Soul}}. This cannot occur again for 35 seconds, resetting to 1 second upon scoring a {{tip|takedown}} against an enemy champion.
+|cooldown     = 35
+}}"""
+
+
 class TestEvaluatePp:
     def test_linear_formula_over_level_range(self):
         values = evaluate_pp("60 + 10 * x", "1 to 20 by 1")
@@ -123,6 +225,12 @@ class TestEvaluatePp:
         values = evaluate_pp("40 + (160-40)/17*(x-1)", "1 to 20 by 1")
         assert values[0] == 40
         assert values[17] == pytest.approx(160)
+
+    def test_formula_for_levels_supplies_the_level_span(self):
+        values = evaluate_pp("50 + (165-50)/17*(x-1) for 20", None)
+        assert len(values) == 20
+        assert values[0] == pytest.approx(50)
+        assert values[17] == pytest.approx(165)
 
     def test_semicolon_value_list(self):
         assert evaluate_pp("10;20;30", None) == [10, 20, 30]
@@ -205,6 +313,152 @@ class TestRunePayload:
         assert "stacks_required" not in effects
         assert "proc_delay_seconds" not in effects
 
+    def test_grasp_effects_keep_nested_melee_ranged_values(self):
+        payload = rune_payload(
+            "Grasp of the Undying", GRASP_WIKITEXT, path="Resolve", row=0
+        )
+        effects = payload["effects"]
+        assert effects["grasp_damage_melee_ranged_ratios"] == pytest.approx(
+            [0.035, 0.014]
+        )
+        assert effects["grasp_heal_melee_ranged_ratios"] == pytest.approx(
+            [0.013, 0.0052]
+        )
+        assert effects["grasp_bonus_health_melee_ranged"] == [5.0, 2.0]
+        assert effects["combat_stack_cadence_seconds"] == 1.0
+        assert effects["combat_stack_generation_seconds"] == 3.0
+        assert effects["max_stacks"] == 4
+        assert effects["ready_window_seconds"] == 5.0
+
+    def test_hail_of_blades_effects_keep_temporary_window_values(self):
+        payload = rune_payload(
+            "Hail of Blades", HAIL_OF_BLADES_WIKITEXT, path="Domination", row=0
+        )
+        effects = payload["effects"]
+        assert effects["leveling"][0][0] == pytest.approx(4.0)
+        assert effects["leveling"][0][17] == pytest.approx(20.0)
+        assert effects["bonus_ad_ratio"] == pytest.approx(0.08)
+        assert effects["ap_ratio"] == pytest.approx(0.06)
+        assert effects["hail_bonus_attack_speed_melee_ranged"] == [120.0, 60.0]
+        assert effects["hail_initial_stacks"] == 2
+        assert effects["hail_stack_duration_seconds"] == pytest.approx(3.0)
+        assert effects["hail_reset_stack_limit"] == 2
+        assert "parse_warnings" not in payload
+
+    def test_lethal_tempo_effects_keep_stacks_speed_bolts_and_expiry(self):
+        payload = rune_payload(
+            "Lethal Tempo", LETHAL_TEMPO_WIKITEXT, path="Precision", row=0
+        )
+        effects = payload["effects"]
+        assert effects[
+            "lethal_tempo_attack_speed_percent_melee_ranged"
+        ] == pytest.approx([6.0, 4.8])
+        assert effects["lethal_tempo_bolt_damage_melee_by_level"][0] == pytest.approx(
+            9.0
+        )
+        assert effects["lethal_tempo_bolt_damage_melee_by_level"][17] == pytest.approx(
+            30.0
+        )
+        assert effects["lethal_tempo_bolt_damage_ranged_by_level"][17] == pytest.approx(
+            24.0
+        )
+        assert effects[
+            "lethal_tempo_bolt_damage_increase_ratio_melee_ranged"
+        ] == pytest.approx([0.01, 1.0 / 150.0])
+        assert effects["max_stacks"] == 6
+        assert effects["lethal_tempo_stack_duration_seconds"] == pytest.approx(6.0)
+        assert effects["lethal_tempo_expiry_step_seconds"] == pytest.approx(0.5)
+        assert "parse_warnings" not in payload
+
+    def test_glacial_augment_effects_keep_zone_and_reduction_values(self):
+        payload = rune_payload(
+            "Glacial Augment", GLACIAL_AUGMENT_WIKITEXT, path="Inspiration", row=0
+        )
+        assert payload["cooldown"] == pytest.approx(25.0)
+        effects = payload["effects"]
+        assert effects["glacial_ray_count"] == 3
+        assert effects["glacial_zone_radius_units"] == pytest.approx(700.0)
+        assert effects["glacial_zone_width_units"] == pytest.approx(80.0)
+        assert effects["glacial_zone_base_duration_seconds"] == pytest.approx(3.0)
+        assert effects["glacial_zone_duration_cc_ratio"] == pytest.approx(1.0)
+        assert effects["glacial_slow_base_ratio"] == pytest.approx(0.20)
+        assert effects["glacial_slow_bonus_ad_ratio_per_100"] == pytest.approx(0.07)
+        assert effects["glacial_slow_ap_ratio_per_100"] == pytest.approx(0.06)
+        assert effects["glacial_slow_heal_shield_ratio_per_10"] == pytest.approx(0.09)
+        assert effects["glacial_damage_reduction_ratio"] == pytest.approx(0.15)
+        assert "parse_warnings" not in payload
+
+    def test_stormraider_effects_keep_damage_window_and_movement_values(self):
+        payload = rune_payload(
+            "Stormraider's Surge", STORMRAIDER_SURGE_WIKITEXT, path="Sorcery", row=0
+        )
+        assert payload["cooldown"][0] == pytest.approx(20.0)
+        assert payload["cooldown"][17] == pytest.approx(10.0)
+        assert payload["cooldown"][19] == pytest.approx(8.8235294118)
+        effects = payload["effects"]
+        assert effects["stormraider_damage_threshold_ratio"] == pytest.approx(0.25)
+        assert effects["stormraider_damage_window_seconds"] == pytest.approx(3.0)
+        assert effects["stormraider_duration_seconds"] == pytest.approx(4.0)
+        assert effects["stormraider_bonus_move_speed_melee_ranged"] == [48.0, 36.0]
+        assert effects["stormraider_slow_resist_ratio"] == pytest.approx(0.50)
+        assert "parse_warnings" not in payload
+
+    def test_fleet_footwork_effects_keep_charge_heal_and_speed_values(self):
+        payload = rune_payload(
+            "Fleet Footwork", FLEET_FOOTWORK_WIKITEXT, path="Precision", row=0
+        )
+        effects = payload["effects"]
+        assert effects["fleet_heal_melee_by_level"][0] == pytest.approx(10.0)
+        assert effects["fleet_heal_melee_by_level"][17] == pytest.approx(130.0)
+        assert effects["fleet_heal_ranged_by_level"][17] == pytest.approx(78.0)
+        assert effects["fleet_bonus_ad_ratio_melee_ranged"] == [0.10, 0.06]
+        assert effects["fleet_ap_ratio_melee_ranged"] == [0.05, 0.03]
+        assert effects["fleet_bonus_move_speed_melee_ranged"] == [20.0, 15.0]
+        assert effects["fleet_move_speed_duration_seconds"] == pytest.approx(1.0)
+        assert effects["fleet_minion_heal_effectiveness"] == pytest.approx(0.15)
+        assert effects["fleet_charge_cap"] == pytest.approx(100.0)
+
+    def test_conqueror_effects_keep_force_stack_and_heal_values(self):
+        payload = rune_payload("Conqueror", CONQUEROR_WIKITEXT, path="Precision", row=0)
+        effects = payload["effects"]
+        assert effects["conqueror_adaptive_force_by_level"][0] == pytest.approx(1.8)
+        assert effects["conqueror_adaptive_force_by_level"][17] == pytest.approx(4.0)
+        assert effects["conqueror_adaptive_force_max_by_level"][17] == pytest.approx(
+            48.0
+        )
+        assert effects["conqueror_heal_melee_ranged_ratios"] == [0.08, 0.05]
+        assert effects["conqueror_stack_duration_seconds"] == pytest.approx(5.0)
+        assert effects["conqueror_cast_instance_interval_seconds"] == pytest.approx(4.0)
+        assert effects["conqueror_stacks_per_application"] == 2
+        assert effects["max_stacks"] == 12
+        assert "parse_warnings" not in payload
+
+    def test_deathfire_effects_keep_burn_states_and_duration_categories(self):
+        payload = rune_payload(
+            "Deathfire Touch", DEATHFIRE_TOUCH_WIKITEXT, path="Sorcery", row=0
+        )
+        effects = payload["effects"]
+        assert effects["leveling"][0][0] == pytest.approx(1.5)
+        assert effects["leveling"][0][17] == pytest.approx(6.0)
+        assert effects["leveling"][1][17] == pytest.approx(10.5)
+        assert effects["deathfire_bonus_ad_ratios_by_state"] == pytest.approx(
+            [0.035, 0.06125]
+        )
+        assert effects["deathfire_ap_ratios_by_state"] == pytest.approx(
+            [0.0125, 0.021875]
+        )
+        assert effects["deathfire_tick_interval_seconds"] == pytest.approx(0.5)
+        assert effects["deathfire_amp_delay_seconds"] == pytest.approx(3.0)
+        assert effects["deathfire_amp_ratio"] == pytest.approx(0.75)
+        assert effects["deathfire_duration_seconds"] == {
+            "spell_damage": 4.0,
+            "area_damage": 2.0,
+            "persistent_damage": 1.0,
+            "persistent_area_damage": 1.0,
+            "pet_damage": 1.0,
+        }
+        assert "parse_warnings" not in payload
+
     def test_electrocute_gains_no_press_the_attack_keys(self):
         effects = rune_payload(
             "Electrocute", ELECTROCUTE_WIKITEXT, path="Domination", row=0
@@ -277,8 +531,91 @@ class TestArcaneCometPayload:
             "values": [float(v) for v in range(0, 105, 5)],
             "distance_range": [0.0, 750.0],
         }
+
+
+class TestSummonAeryPayload:
+    def test_aery_payload_keeps_damage_shield_and_linger_timings_separate(self):
+        payload = rune_payload("Summon Aery", AERY_WIKITEXT, path="Sorcery", row=0)
+        effects = payload["effects"]
+        assert effects["damage_flight_seconds"] == pytest.approx(0.45)
+        assert effects["shield_flight_seconds"] == pytest.approx(0.35)
+        assert effects["shield_duration_seconds"] == pytest.approx(2.0)
+        assert effects["linger_seconds"] == pytest.approx(2.0)
+        assert effects["leveling"][0][0] == pytest.approx(10.0)
+        assert effects["leveling"][1][0] == pytest.approx(20.0)
         # Every template in the description now parses — no warnings.
         assert "parse_warnings" not in payload
+
+
+class TestDarkHarvestPayload:
+    def test_dark_harvest_payload_keeps_threshold_and_soul_formula(self):
+        payload = rune_payload(
+            "Dark Harvest", DARK_HARVEST_WIKITEXT, path="Domination", row=0
+        )
+        effects = payload["effects"]
+        assert effects["base_damage"] == pytest.approx(30.0)
+        assert effects["soul_damage"] == pytest.approx(11.0)
+        assert effects["health_threshold_ratio"] == pytest.approx(0.50)
+        assert effects["proc_delay_seconds"] == pytest.approx(1.75)
+        assert effects["takedown_reset_seconds"] == pytest.approx(1.0)
+        assert "parse_warnings" not in payload
+
+
+GUARDIAN_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Guardian|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Resolve
+|slot         = Keystone
+|description  = {{sbc|Passive:}} While within 350 units of an allied {{tip|champion}}, you raise your ''Guard''. If you or a ''Guarded'' ally would take {{pp|50 + (165-50)/17*(x-1) for 20}} damage within {{fd|2.5}} seconds or lethal damage, you both gain a {{tip|shield}} for {{pp|40 + (150-40)/17*(x-1) for 20}} {{as|(+ 20% of your AP)}} {{as|(+ 6% of your '''bonus''' health)}} for 2 seconds.
+|description3 = ''Guardian'' only goes on {{sti|cooldown}} when the shield is triggered.
+|range        = 350 / {{tt|Global|Targeted Guard}}
+|cooldown     = {{pp|75 + (40-75)/17*(x-1) for 20}}
+}}"""
+
+
+AFTERSHOCK_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Aftershock|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
+|released     = Season 2018
+|path         = Resolve
+|slot         = Keystone
+|description  = {{sbc|Passive:}} {{tip|Immobilize|Immobilizing}} an enemy {{tip|champion}} grants you a static {{as|45|armor}} {{as|(+ 75% '''bonus''' armor)}} {{as|'''bonus''' armor}} and {{as|45|mr}} {{as|(+ 75% '''bonus''' magic resistance)}} {{as|'''bonus''' magic resistance}} for {{fd|2.5}} seconds. The '''bonus''' resistances are each capped at {{pp|80 to 150}}. After the duration, you release a shockwave that deals {{as|{{pp|25 to 120}}|magic damage}} {{as|(+ 8% of your '''bonus''' health)}} {{as|magic damage}} to enemy champions and {{tip|monster|monsters}} within a {{tip|cr|icononly=true}} 350 radius.
+|cooldown     = 20
+}}"""
+
+
+class TestAftershockPayload:
+    def test_aftershock_payload_expands_implicit_level_tables(self):
+        payload = rune_payload("Aftershock", AFTERSHOCK_WIKITEXT, path="Resolve", row=0)
+        effects = payload["effects"]
+        assert payload["cooldown"] == pytest.approx(20.0)
+        assert effects["leveling"][0][0] == pytest.approx(80.0)
+        assert effects["leveling"][0][17] == pytest.approx(150.0)
+        assert effects["leveling"][1][0] == pytest.approx(25.0)
+        assert effects["leveling"][1][17] == pytest.approx(120.0)
+        assert effects["flat_armor"] == pytest.approx(45.0)
+        assert effects["flat_magic_resistance"] == pytest.approx(45.0)
+        assert effects["bonus_armor_ratio"] == pytest.approx(0.75)
+        assert effects["bonus_magic_resistance_ratio"] == pytest.approx(0.75)
+        assert effects["bonus_health_ratio"] == pytest.approx(0.08)
+        assert effects["resistance_duration_seconds"] == pytest.approx(2.5)
+        assert effects["shockwave_radius"] == pytest.approx(350.0)
+        assert "parse_warnings" not in payload
+
+
+class TestGuardianPayload:
+    def test_guardian_payload_keeps_threshold_window_and_shield_scaling(self):
+        payload = rune_payload("Guardian", GUARDIAN_WIKITEXT, path="Resolve", row=0)
+        effects = payload["effects"]
+        assert effects["trigger_window_seconds"] == pytest.approx(2.5)
+        assert effects["shield_duration_seconds"] == pytest.approx(2.0)
+        assert effects["ap_ratio"] == pytest.approx(0.20)
+        assert effects["bonus_health_ratio"] == pytest.approx(0.06)
+        assert len(effects["leveling"]) == 2
+        assert payload["cooldown"][0] == pytest.approx(75.0)
+        assert payload["cooldown"][17] == pytest.approx(40.0)
+        assert "parse_warnings" not in payload
+
+    def test_description_numbering_keeps_all_sourced_prose(self):
+        payload = rune_payload("Guardian", GUARDIAN_WIKITEXT, path="Resolve", row=0)
+        assert "only goes on" in payload["description"]
 
     def test_electrocute_gains_no_comet_keys(self):
         effects = rune_payload(

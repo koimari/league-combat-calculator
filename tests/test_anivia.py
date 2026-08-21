@@ -3,7 +3,8 @@
 import pytest
 
 from tests.ability_math import parts_raw_total
-from src.calculator.champions import anivia
+from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.champions import anivia, get_champion_module_meta
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
@@ -55,10 +56,25 @@ class TestQFlashFrost:
 
 
 class TestWCrystallize:
-    """W is a utility wall — should not appear in results."""
+    """W is a knockback wall with no sourced damage/heal/shield number —
+    documented zero-damage row (module_helpers.no_damage), not a silent
+    absence (roadmap session 3)."""
 
-    def test_w_not_in_results(self, anivia_data, parse_at) -> None:
+    def test_w_is_explicit_zero_damage_row(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 9)
+        entry = abilities["W"]
+        assert entry["name"] == "Crystallize"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert "knockback wall" in entry["detail"].lower()
+
+    def test_w_absent_when_unlearned(self, anivia_data, parse_at) -> None:
+        """The state row is rank-gated like every other slot."""
+        _, abilities = parse_at(
+            anivia_data,
+            9,
+            ability_ranks={"Q": 5, "W": 0, "E": 1, "R": 1},
+        )
         assert "W" not in abilities
 
 
@@ -202,11 +218,20 @@ class TestRGlacialStorm:
 
 
 class TestPassiveRebirth:
-    """Passive is resurrection only — no damage, not in results."""
+    """Passive is the sourced revive state (StartingDefenses.revive_*) —
+    it prices no cast damage of its own, so it stays absent from the
+    parsed abilities dict even though MODULE_COVERAGE now reads
+    "modeled" (roadmap session 3: tests/test_e8_support.py exercises the
+    revive kernel end to end)."""
 
     def test_passive_not_in_results(self, anivia_data, parse_at) -> None:
         _, abilities = parse_at(anivia_data, 9)
         assert "P" not in abilities
+
+    def test_passive_not_in_slot_map(self) -> None:
+        """P has no cast-damage SLOTS entry; it is wired through
+        starting_revive_defense instead."""
+        assert "P" not in get_champion_module_meta("Anivia")["slots"]
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +303,13 @@ class TestReviewedCrowdControl:
         assert all(part.cc_kind is None for part in abilities["R"]["parts"])
 
     def test_flash_frosts_shatter_has_no_cached_time(self):
-        """The one slot that still withholds, and the sentence that proves it."""
+        """The one slot that still withholds, and the sentence that proves it.
+
+        The shatter's stun IS sourced ("Stun Duration"), but Q's row is
+        the pass-through and the shatter summed into one "Total Magic
+        Damage" — two landings, so the row cannot certify a single hit,
+        and a kind on it would never reach the event ledger.
+        """
         text = cc_review.slot_text(cc_review.kit("Anivia"), "Q")
         assert (
             "flash frost can be recast while the ice is in flight after its "
@@ -295,7 +326,7 @@ def test_p_is_modeled_through_the_2114_rebirth_revive() -> None:
 
     At level 18 with no items Anivia's maximum health is 2114.0, and
     Rebirth "restores all of her health" — the receipt behind P's
-    ``modeled`` label.  W stays out of scope: the wall is terrain.
+    ``modeled`` label.
     """
     from src.calculator.champions import get_champion_module_contract
     from src.calculator.defensive_effects import resolve_starting_defenses
@@ -304,7 +335,6 @@ def test_p_is_modeled_through_the_2114_rebirth_revive() -> None:
     contract = get_champion_module_contract("Anivia")
     assert "P" not in contract.slots
     assert contract.coverage["P"] == "modeled"
-    assert contract.coverage["W"] == "out_of_scope"
     assert contract.coverage_channels["P"] == ("starting_revive_defense",)
 
     data = cc_review.kit("Anivia")
@@ -313,3 +343,24 @@ def test_p_is_modeled_through_the_2114_rebirth_revive() -> None:
     )
     assert defenses.revive_source == "Rebirth"
     assert defenses.revive_health_amount == pytest.approx(2114.0)
+
+
+# ---------------------------------------------------------------------------
+# Module coverage metadata
+# ---------------------------------------------------------------------------
+
+
+class TestModuleCoverage:
+    """Roadmap session 3: P and W close from out_of_scope (P -> modeled via
+    the sourced revive kernel, W -> no_damage via the explicit zero-damage
+    row)."""
+
+    def test_module_coverage_reflects_p_w_dispositions(self) -> None:
+        coverage = get_champion_module_meta("Anivia")["coverage"]
+        assert coverage == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }

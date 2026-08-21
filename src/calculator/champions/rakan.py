@@ -20,10 +20,12 @@ it).  The out-of-combat refresh cadence stays state.
 
 from typing import Any
 
+from .inputs import champion_stat
 from .engine import build_parser
 from .healing_contract import declare_healing_rule
-from .slotlib import attach_self_shield, simple_damage, support_cast
+from .slotlib import attach_self_shield, simple_damage, support_cast, with_control
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -36,6 +38,16 @@ ASSUMPTIONS = [
     "Fey Feathers' periodic self-shield (30:247.94 by level + 95% AP) rides "
     "the first damaging cast (Q) as a timed shield for the fight window; "
     "the periodic/out-of-combat refresh cadence is state.",
+    "Q (Gleaming Quill) emits an ally-only heal packet per cast (scope "
+    "all_teammates, selection key heal:Q:<cast>) priced at the scanner's "
+    "rank-indexed 80 + 55% AP while the champion rule owns the per-level "
+    "self heal (40 : 230 based on level + 55% AP) — the self copy pays "
+    "exactly once and the ally branch never double-grants it.",
+    "E (Battle Dance) shields the selected teammate the sourced Shield "
+    "Strength (50-150 + 70% AP) for 3s (selection key shield:E:<cast>); "
+    "the free 5s recast is a second cast in the rotation when the fight "
+    "schedule casts E twice and 'the shields do not stack' refresh rule "
+    "is state.",
 ]
 
 SOURCES = load_champion_sources("Rakan")
@@ -88,8 +100,12 @@ SLOTS = {
     "W": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
-    "R": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    "R": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="charm",
+        duration_attr="Disable Duration",
     ),
     # Battle Dance shields the target ally ("Rakan grants a shield to the
     # target allied champion for 3 seconds", cached "Shield Strength"
@@ -110,7 +126,8 @@ SLOTS = {
 # control he applies.  R "deals magic damage to enemies he collides with
 # and charms and slows them by 75%": the charm is the immobilize the slow
 # rides with.  P (a self-shield) and E (an ally shield and dash) damage
-# nothing and are not in the slot map at all.
+# nothing, so neither is declared: P is never cast, and E's slot exists
+# only so the support scanner can price its ally shield.
 MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm"}
 
 parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
@@ -122,4 +139,36 @@ MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
-SELF_HEALING_RULE = declare_healing_rule("Rakan")
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Rakan self-healing events from its authored packet."""
+    healing = []
+    level = max(1, int(champion_stat(champion_stats, "level")))
+    heal = _healing.extract_named(
+        _healing._ability(champion_data, "Q"), "Heal", level, champion_stats
+    )
+    if heal > 0.0:
+        for payment in _healing._payments(
+            _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        ):
+            event = payment.event
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)) + 3.0,
+                    "amount": heal,
+                    "source": "Gleaming Quill",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Rakan", derive_self_healing)

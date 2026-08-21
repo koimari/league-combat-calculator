@@ -27,6 +27,7 @@ E9-2 gap fixes:
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
@@ -275,4 +276,39 @@ MODULE_COVERAGE = {
     slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Naafiri")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Naafiri self-healing events from its authored packet."""
+    healing = []
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_heal = _healing.extract_named(
+        _healing._ability(champion_data, "Q"), "Heal", q_rank, champion_stats
+    )
+    # One heal per Q cast: the module emits the initial hit at the cast
+    # boundary, then the bleed ticks and the recast share later
+    # timestamps, so the heal anchors to the cast's first hit (the recast
+    # hits an already-bleeding champion the same cast).  Matching cast
+    # time to event time exactly drops a cast whose published time the
+    # engine rounded, so the anchor is resolved by ``HealAnchor.CAST``.
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        _healing._heal_from_damage(
+            healing,
+            payment.event,
+            q_heal,
+            "Darkin Daggers",
+            link_to_damage=False,
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Naafiri", derive_self_healing)

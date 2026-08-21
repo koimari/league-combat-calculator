@@ -26,6 +26,7 @@ projection, and the campaign's propagation rule for aggregates is
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class DamageClass(Enum):
@@ -374,7 +375,11 @@ IMMOBILIZING_CC_KINDS = frozenset(
 # They exist because the alternative for Malphite's Ground Slam cripple,
 # Malzahar's Call of the Void silence and Teemo's Blinding Dart blind was to
 # call them "slow" or "none", and both of those are false.
-NON_IMMOBILIZING_CC_KINDS = frozenset({"slow", "cripple", "silence", "blind"})
+# Polymorph blocks actions (``ACTION_BLOCKING_CC_KINDS``) but the target
+# keeps moving, so it is not an immobilize for Everlasting / Command.
+NON_IMMOBILIZING_CC_KINDS = frozenset(
+    {"slow", "cripple", "silence", "blind", "polymorph"}
+)
 
 # Every value a module may author as a part's ``cc_kind``. "none" is an
 # explicit reviewed no-CC result. Anything else is a typo the engine rejects —
@@ -388,6 +393,26 @@ CC_KIND_VOCABULARY = (
 # in ``trigger_stream``, not here: authoring vocabulary belongs beside
 # ``DamagePart``, classification is transport.  This module keeps the
 # vocabulary and nothing that reads an event with it.
+
+# These control types stop a champion from taking a normal action for the
+# authored interval. Slow effects stay outside this set because they change
+# movement, not the ability to act.
+ACTION_BLOCKING_CC_KINDS = frozenset(
+    {
+        "airborne",
+        "charm",
+        "fear",
+        "immobilize",
+        "knockback",
+        "knockup",
+        "polymorph",
+        "root",
+        "sleep",
+        "stun",
+        "suppression",
+        "taunt",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -471,6 +496,15 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     # part of the number's identity, so repr and equality agree by saying
     # the same thing.
     zero_policy: "ZeroPolicy | None" = field(default=None, compare=False)
+    # Authored control duration.  A zero value means that the module has
+    # marked the control kind but has not supplied a usable downtime interval.
+    cc_duration: float = 0.0
+    # A blockable projectile or skillshot marker for target-side defensive
+    # interactions such as Braum E and Yasuo W.
+    skillshot: bool = False
+    # Source receipt for a control duration read from the ability atom catalog.
+    # The field stays empty for parts without authored control metadata.
+    control_source_atoms: tuple[dict[str, Any], ...] = ()
 
     def __post_init__(self) -> None:
         if self.damage_type not in part_damage_types():
@@ -484,6 +518,8 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             raise ValueError("DamagePart hit_interval cannot be negative")
         if self.cc_kind is not None and not isinstance(self.cc_kind, str):
             raise ValueError("DamagePart cc_kind must be a string or None")
+        if self.cc_duration < 0:
+            raise ValueError("DamagePart cc_duration cannot be negative")
 
     def __repr__(self) -> str:
         # Deterministic repr: the golden snapshot serializes entries via
@@ -502,8 +538,72 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             extras += f", hit_interval={self.hit_interval}"
         if self.cc_kind is not None:
             extras += f", cc_kind={self.cc_kind!r}"
+        if self.cc_duration:
+            extras += f", cc_duration={self.cc_duration}"
+        if self.skillshot:
+            extras += ", skillshot=yes"
+        if self.control_source_atoms:
+            extras += ", control_source_atoms=yes"
         return (
             f"DamagePart({self.damage_type}, amount={self.amount}, "
             f"count={self.count}, hp_scaled={hp_scaled}, "
             f"crit_effectiveness={self.crit_effectiveness}{extras})"
         )
+
+
+@dataclass(frozen=True)
+class ControlEvent:
+    """One authored control interval without a damage packet.
+
+    Damage parts carry control metadata when damage and control land together.
+    This atom covers a control-only cast such as a trap or a stun field.
+    """
+
+    kind: str
+    duration: float
+    time_offset: float | None = 0.0
+    count: int = 1
+    hit_interval: float | None = None
+    skillshot: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.kind.strip():
+            raise ValueError("ControlEvent kind must be a non-empty string")
+        if self.duration <= 0.0:
+            raise ValueError("ControlEvent duration must be positive")
+        if self.time_offset is not None and self.time_offset < 0.0:
+            raise ValueError("ControlEvent time_offset cannot be negative")
+        if self.count < 1:
+            raise ValueError("ControlEvent count must be positive")
+        if self.hit_interval is not None and self.hit_interval < 0.0:
+            raise ValueError("ControlEvent hit_interval cannot be negative")
+        if self.count > 1 and self.hit_interval is None:
+            raise ValueError("Repeated ControlEvent requires hit_interval")
+
+    def __repr__(self) -> str:
+        extras = ""
+        if self.time_offset is not None:
+            extras += f", time_offset={self.time_offset}"
+        if self.count != 1:
+            extras += f", count={self.count}"
+        if self.hit_interval is not None:
+            extras += f", hit_interval={self.hit_interval}"
+        if self.skillshot:
+            extras += ", skillshot=yes"
+        return f"ControlEvent({self.kind!r}, duration={self.duration}" f"{extras})"
+
+
+def parts_raw_total(
+    parts: tuple[DamagePart, ...],
+    damage_type: str | None = None,
+) -> float:
+    """Sum the raw per-cast damage of *parts*, optionally for one type.
+
+    HP-scaled parts contribute their static ``amount`` (0.0 unless set) —
+    their live value exists only at evaluation time.
+    """
+    return sum(
+        part.amount * part.count
+        for part in parts
+        if damage_type is None or part.damage_type == damage_type
+    )

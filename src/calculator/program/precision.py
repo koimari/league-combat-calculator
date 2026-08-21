@@ -96,6 +96,7 @@ _SURVIVAL_ROUNDING: dict[str, int] = {
     "damage_deferral_pending": 1,
     "damage_deferral_cleared": 1,
     "defy_heal_received": 1,
+    "permanent_bonus_health_received": 1,
     # timestamps, to the millisecond
     "temporary_health_until": 3,
     "healing_reduction_until": 3,
@@ -110,17 +111,40 @@ _SURVIVAL_ROUNDING: dict[str, int] = {
     "spell_shield_until": 3,
     "defy_trigger_time": 3,
     "damage_deferral_fraction": 3,
+    "crowd_control_until": 3,
+    "crowd_control_immunity_until": 3,
+    "action_downtime": 3,
+    "guardian.cooldown_until": 3,
+    "aftershock.until": 3,
     "force_of_nature.stacks_until": 3,
     # dynamic resistances, published at timestamp precision rather than
     # ratio precision because that is what the kernel did with them
     "force_of_nature.dynamic_bonus_magic_resistance": 3,
     "jaksho.dynamic_bonus_armor": 3,
     "jaksho.dynamic_bonus_magic_resistance": 3,
+    "aftershock.bonus_armor": 3,
+    "aftershock.bonus_magic_resistance": 3,
     # ratios and factors
     "ending_health_ratio": 6,
     "venom_factor": 6,
     "grey_health_stored": 6,
     "grey_health_consumed": 6,
+}
+
+# The survival row's CONDITIONAL receipt blocks -- a second table, and not
+# more rows in the first, because the first table's keys are the leaves every
+# row publishes.  These three blocks are emitted only when their mechanic
+# fired (a cleanse activated, an immunity was granted, a spell shield was
+# declared), and a reader that walked the survival table expecting to find
+# each of its keys on any row would be reading a conditional absence as a
+# missing leaf.  The precisions are the same registry either way: ``ROUNDING``
+# is flat, so ``round_field`` resolves these exactly like the rest.
+_SURVIVAL_RECEIPT_ROUNDING: dict[str, int] = {
+    "crowd_control_immunity.active_until": 3,
+    "spell_shield.triggered_heal.time": 3,
+    "cleanse.downtime_after": 6,
+    "spell_shield.triggered_heal.amount": 6,
+    "spell_shield.triggered_heal.delay": 6,
 }
 
 # The breakdown view's own leaves.  A second table rather than more rows in
@@ -155,6 +179,7 @@ _EVENTS_ROUNDING: dict[str, int] = {
     "events.redirect_fraction": 6,
     "events.incoming_damage_multiplier": 3,
     "events.incoming_damage_reduction": 1,
+    "events.cc_duration": 3,
     "events.wound_duration": 3,
     "events.wound_until": 3,
     "events.grey_health_stored": 1,
@@ -178,6 +203,7 @@ _HEALING_EVENTS_ROUNDING: dict[str, int] = {
 _SUPPORT_EVENTS_ROUNDING: dict[str, int] = {
     "support_events.time": 3,
     "support_events.amount": 6,
+    "support_events.raw_amount": 6,
     "support_events.applied_amount": 6,
     "support_events.duration": 3,
     "support_events.expires_at": 3,
@@ -204,6 +230,39 @@ _SUPPORT_EVENTS_ROUNDING: dict[str, int] = {
     "support_events.ward_uses": 6,
     "support_events.quest_threshold": 6,
     "support_events.minion_kills": 6,
+    "support_events.bonus_armor": 6,
+    "support_events.bonus_magic_resistance": 6,
+    "support_events.bonus_health": 6,
+    "support_events.permanent_bonus_health": 6,
+    "support_events.slow_resist_percent": 6,
+    "support_events.aftershock_duration": 6,
+    "support_events.aftershock_cooldown": 6,
+    "support_events.glacial_ray_count": 6,
+    "support_events.glacial_zone_radius_units": 6,
+    "support_events.glacial_zone_width_units": 6,
+    "support_events.glacial_zone_duration": 6,
+    "support_events.glacial_slow_percent": 6,
+    "support_events.glacial_damage_reduction_ratio": 6,
+    "support_events.stormraider_damage_threshold_ratio": 6,
+    "support_events.stormraider_damage_window_seconds": 6,
+    "support_events.stormraider_trigger_damage": 6,
+    "support_events.stormraider_target_max_health": 6,
+    "support_events.stormraider_cooldown_seconds": 6,
+    "support_events.fleet_starting_charges": 6,
+    "support_events.fleet_charge_cap": 6,
+    "support_events.fleet_move_speed_duration_seconds": 6,
+    "support_events.stacks_before": 6,
+    "support_events.stacks_after": 6,
+    "support_events.stacks_gained": 6,
+    "support_events.max_stacks": 6,
+    "support_events.adaptive_force": 6,
+    "support_events.shield_gate_time": 6,
+    "support_events.activation_delay": 6,
+    "support_events.on_block_heal_amount": 6,
+    "support_events.on_block_heal_delay": 6,
+    "support_events.reduced_amount": 6,
+    "support_events.overheal": 6,
+    "support_events.healing_reduction_factor": 6,
 }
 
 # The TDD view's leaves -- the objective block's totals.
@@ -223,6 +282,7 @@ _OBJECTIVE_ROUNDING: dict[str, int] = {
 ROUNDING_BY_VIEW: Mapping[str, Mapping[str, int]] = MappingProxyType(
     {
         "survival": MappingProxyType(_SURVIVAL_ROUNDING),
+        "survival_receipts": MappingProxyType(_SURVIVAL_RECEIPT_ROUNDING),
         "breakdown": MappingProxyType(_BREAKDOWN_ROUNDING),
         "receipt": MappingProxyType(
             {**_EVENTS_ROUNDING, **_HEALING_EVENTS_ROUNDING, **_SUPPORT_EVENTS_ROUNDING}
@@ -236,6 +296,7 @@ ROUNDING_BY_VIEW: Mapping[str, Mapping[str, int]] = MappingProxyType(
 # depend on merge order, which is a coin toss wearing a registry's name.
 _TABLES = (
     _SURVIVAL_ROUNDING,
+    _SURVIVAL_RECEIPT_ROUNDING,
     _BREAKDOWN_ROUNDING,
     _EVENTS_ROUNDING,
     _HEALING_EVENTS_ROUNDING,

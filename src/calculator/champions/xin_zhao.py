@@ -38,6 +38,8 @@ Zhao healing rule off the same on-hit events.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
+from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
@@ -51,7 +53,7 @@ PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf6
 # breakpoints come from Template:Data Xin Zhao/Determination
 # ("15 to 60 for 4|1 to 16" and "5 to 20 for 4|1;6;11;16" — levels
 # 1/6/11/16 for both damage terms).  The heal's bands live in the
-# healing rule that pays it (healing_legacy, "Xin Zhao").
+# healing rule that pays it (this module's ``derive_self_healing``).
 DETERMINATION_STACKS = 3
 _DAMAGE_BANDS: tuple[tuple[int, float, float], ...] = (
     (16, 0.60, 0.20),
@@ -171,4 +173,70 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-SELF_HEALING_RULE = declare_healing_rule("Xin Zhao")
+
+# HARDCODED: verify on patch updates — Determination's heal is cached
+# PROSE, not a leveling row: the third stack "heal[s] Xin Zhao for
+# 2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% /
+# 70% (based on level) AP)".  The level breakpoints 1/6/11 are the wiki
+# template's.
+_HEAL_BANDS: tuple[tuple[int, float, float], ...] = (
+    (11, 0.05, 0.70),
+    (6, 0.035, 0.50),
+    (1, 0.02, 0.40),
+)
+
+
+def _determination_heal_ratios(level: int) -> tuple[float, float]:
+    """The third-stack maximum-health and AP heal ratios at a level."""
+    for min_level, health_share, ap_ratio in _HEAL_BANDS:
+        if level >= min_level:
+            return health_share, ap_ratio
+    return _HEAL_BANDS[-1][1], _HEAL_BANDS[-1][2]
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Xin Zhao self-healing events from its authored packet."""
+    healing = []
+    lifesteal = champion_stat(champion_stats, "lifesteal_percent")
+    if lifesteal > 0.0:
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "W"
+        ):
+            amount = (
+                0.333 * max(0.0, float(event.get("damage", 0.0))) * lifesteal / 100.0
+            )
+            _healing._heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
+    # Determination (P): the third stack "consume[s] them all to deal ...
+    # bonus physical damage and heal Xin Zhao for 2% / 3.5% / 5% (based on
+    # level) of his maximum health (+ 40% / 50% / 70% (based on level) AP)".
+    # ``_determination`` prices the proc as a per-attack share (partial
+    # stacks included), so the heal pays the same share on the same on-hit
+    # events — three of them are one proc's heal.
+    determination = (ability_damages.get("passive") or {}).get("on_hit") or {}
+    if determination:
+        xin_level = max(1, int(champion_stat(champion_stats, "level")))
+        health_share, heal_ap_ratio = _determination_heal_ratios(xin_level)
+        per_proc_heal = health_share * float(
+            champion_stat(champion_stats, "health")
+        ) + heal_ap_ratio * champion_stat(champion_stats, "ability_power")
+        # The module declares the cadence; dividing by it here is what keeps
+        # the heal and the damage on one grouping.
+        stacks = max(1, int(determination.get("stacks_required") or 1))
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "on_hit_ability_passive"
+        ):
+            _healing._heal_from_damage(
+                healing, event, per_proc_heal / stacks, "Determination"
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Xin Zhao", derive_self_healing)

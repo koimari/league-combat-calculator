@@ -1,0 +1,1582 @@
+[
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "KennenDoubleStrikeProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 10000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     215.0,
+     260.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1300.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenDoubleStrikeProc"
+   ],
+   "evidence": "name:proc"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenDoubleStrikeProc",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenDoubleStrikeProc",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cooldown_seconds_max_rank": 4.0,
+   "cast_time_seconds": 0.29,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "KennenPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenPassiveAbility/KennenPassive"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KennenMarkOfStorm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenPassiveAbility/KennenMarkOfStorm"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KennenShurikenStorm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "missile_speed": 779.9000244140625
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenShurikenStormAbility/KennenShurikenStorm"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenShurikenStorm",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenShurikenStorm",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_seconds_max_rank": 120.0,
+   "cast_time_seconds": 0.414,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KennenShurikenStorm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "missile_speed": 779.9000244140625
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenShurikenStormAbility/KennenShurikenStorm"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenShurikenStorm",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenShurikenStorm",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_seconds_max_rank": 120.0,
+   "cast_time_seconds": 0.414,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "KennenShurikenStorm",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 120.0,
+   "cooldown_rank_max": 120.0,
+   "range": 550.0,
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "missile_speed": 779.9000244140625
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenShurikenStormAbility/KennenShurikenStorm"
+   ],
+   "evidence": "tag:Trait_DoT"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenShurikenStorm",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenShurikenStorm",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cooldown_seconds_max_rank": 120.0,
+   "cast_time_seconds": 0.414,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KennenLightningRushBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenLightningRushAbility/KennenLightningRushBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KennenLightningRushDamage",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 210.0,
+   "cooldown_rank_max": 210.0,
+   "range": 200.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenLightningRushAbility/KennenLightningRushDamage"
+   ],
+   "evidence": "name:damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KennenLightningRushDamage",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 210.0,
+   "cooldown_seconds_max_rank": 210.0,
+   "cast_time_seconds": 0.833,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KennenLightningRush",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 200.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     85.0,
+     85.0,
+     125.0,
+     165.0,
+     205.0,
+     245.0,
+     285.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     10.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_3": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_4": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_6": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenLightningRushAbility/KennenLightningRush"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenLightningRush",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_seconds_max_rank": 6.0,
+   "cast_time_seconds": 0.031,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KennenLightningRush",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 6.0,
+   "range": 200.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     85.0,
+     85.0,
+     125.0,
+     165.0,
+     205.0,
+     245.0,
+     285.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     10.0,
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0
+    ],
+    "effect_3": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_4": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_6": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenLightningRushAbility/KennenLightningRush"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenLightningRush",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_seconds_max_rank": 6.0,
+   "cast_time_seconds": 0.031,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KennenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.4,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KennenBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.4,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KennenShurikenHurlMissile1",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 4.0,
+   "range": 1050.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    7.0,
+    6.25,
+    5.5,
+    4.75,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0
+   ],
+   "mana_cost": [
+    60.0,
+    55.0,
+    50.0,
+    45.0,
+    40.0,
+    35.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenShurikenHurlMissile1Ability/KennenShurikenHurlMissile1"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenShurikenHurlMissile1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenShurikenHurlMissile1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 4.0,
+   "cast_time_seconds": 0.341,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KennenShurikenHurlMissile1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 4.0,
+   "range": 1050.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    7.0,
+    6.25,
+    5.5,
+    4.75,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0,
+    1050.0
+   ],
+   "mana_cost": [
+    60.0,
+    55.0,
+    50.0,
+    45.0,
+    40.0,
+    35.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenShurikenHurlMissile1Ability/KennenShurikenHurlMissile1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenShurikenHurlMissile1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenShurikenHurlMissile1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 4.0,
+   "cast_time_seconds": 0.341,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KennenShurikenHurl1",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 3.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    65.0,
+    60.0,
+    55.0,
+    50.0,
+    45.0,
+    40.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     75.0,
+     115.0,
+     155.0,
+     195.0,
+     235.0,
+     275.0
+    ],
+    "effect_1": [
+     800.0,
+     900.0,
+     1000.0,
+     1100.0,
+     1200.0,
+     1300.0,
+     1400.0
+    ],
+    "effect_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "effect_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenShurikenHurlMissile1Ability/KennenShurikenHurl1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenShurikenHurl1",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenShurikenHurl1",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_seconds_max_rank": 3.0,
+   "cast_time_seconds": 0.185,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KennenCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenCritAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.467,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KennenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.467,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KennenBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 4234,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.467,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "KennenMegaProc",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 200.0,
+   "damage_type": null,
+   "affects_type_flags": 4266,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenMegaProc"
+   ],
+   "evidence": "name:proc"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenMegaProc",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KennenMegaProc",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.533,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KennenBringTheLight",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    13.0,
+    13.0,
+    11.25,
+    9.5,
+    7.75,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     70.0,
+     70.0,
+     95.0,
+     120.0,
+     145.0,
+     170.0,
+     170.0
+    ],
+    "effect_1": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_2": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenBringTheLightAbility/KennenBringTheLight"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenBringTheLight",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_seconds_max_rank": 6.0,
+   "cast_time_seconds": 0.488,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KennenBringTheLight",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 13.0,
+   "cooldown_rank_max": 6.0,
+   "range": 725.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    13.0,
+    13.0,
+    11.25,
+    9.5,
+    7.75,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     70.0,
+     70.0,
+     95.0,
+     120.0,
+     145.0,
+     170.0,
+     170.0
+    ],
+    "effect_1": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_2": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenBringTheLightAbility/KennenBringTheLight"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KennenBringTheLight",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_seconds_max_rank": 6.0,
+   "cast_time_seconds": 0.488,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "KennenMoSDiminish",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Lightning Rush: 100% bonus movement speed, decaying over 2 seconds"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenPassiveAbility/KennenMoSDiminish"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KennenDoubleStrikeLive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Electrical Surge: basic attacks on-attack generate a stack, up to 4; at 4 stacks next basic attack consumes them for bonus magic damage"
+   ],
+   "binary": [
+    "Characters/Kennen/Spells/KennenDoubleStrikeLive"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ }
+]

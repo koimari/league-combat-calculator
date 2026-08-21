@@ -42,6 +42,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # HARDCODED: verify on patch updates — Repudiation's shield duration (1.5s)
 # is prose in the cached ability description ("shields herself ... for 1.5
@@ -336,4 +337,43 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 SOURCES = load_champion_sources("Ambessa")
 
-SELF_HEALING_RULE = declare_healing_rule("Ambessa")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Ambessa self-healing events from its authored packet."""
+    healing = []
+    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    ratio = _healing._leveling_value(
+        _healing._ability(champion_data, "R"), "Healing Percentage", r_rank
+    )
+    # Public Execution heals from post-mitigation active ability damage: a
+    # share of each hit's own damage, so one payment per hit that dealt some.
+    if ratio > 0:
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT,
+            lambda source: source in {"Q", "Q2", "W", "E", "R"},
+            damage_events,
+        ):
+            event = payment.event
+            amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0
+            if amount > 0:
+                healing.append(
+                    {
+                        "time": float(event.get("time", 0.0)),
+                        "amount": amount,
+                        "source": "Public Execution",
+                        "kind": "champion_passive",
+                        **_healing._trigger_fields(event),
+                    }
+                )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Ambessa", derive_self_healing)

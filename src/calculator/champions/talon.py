@@ -9,9 +9,9 @@ E9-1 closes the two remaining audit gaps over the CP10.8 packet:
   13.125% bonus AD) physical damage every 0.125 seconds").  The bleed
   is priced once per fight from the ``passive_procs`` option (default
   1 = one 3-stack consume).
-- Q's on-kill self-heal (9 : 60.41 based on level) is authored by the
-  HEALING_RULE_CHAMPIONS rule in healing.py (the kill condition is a
-  documented boundary there).
+- Q's on-kill self-heal (9 : 60.41 based on level) is authored by this
+  module's own ``derive_self_healing`` (the kill condition is the
+  boundary the assumption below documents).
 
 W two-hit and R are modeled.
 
@@ -21,7 +21,9 @@ is an axis the engine does not have, so the slot stays out of scope.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
@@ -153,13 +155,37 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     'on basic attacks", so the consuming swing has no stacks to consume '
     "when no ability was cast.",
     "Q's on-kill self-heal (9 : 60.41 based on level) is authored by "
-    "the HEALING_RULE_CHAMPIONS rule in healing.py; the fight model "
-    "prices it once per Q cast because the outgoing ledger cannot "
-    "identify the killing blow (boundary documented in healing.py).",
+    "this module's derive_self_healing; the fight model prices it once "
+    "per Q cast because the outgoing ledger cannot identify the "
+    "killing blow.",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Talon")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Talon self-healing events from its authored packet."""
+    healing = []
+    level = max(1, int(champion_stat(champion_stats, "level")))
+    heal = _healing._leveling_value(
+        _healing._ability(champion_data, "Q"), "Heal", level
+    )
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        event = payment.event
+        _healing._heal_from_damage(healing, event, heal, "Noxian Diplomacy")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Talon", derive_self_healing)

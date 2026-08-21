@@ -1,0 +1,3070 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MilioQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{19391cd9}"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MilioQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioQAbility/MilioQ"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MilioQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    80.0,
+    140.0,
+    200.0,
+    260.0,
+    320.0,
+    380.0
+   ],
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioQAbility/MilioQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MilioQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage": [
+    80.0,
+    140.0,
+    200.0,
+    260.0,
+    320.0,
+    380.0
+   ],
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 22539,
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioQAbility/MilioQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MilioBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512,
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MilioBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512,
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MilioPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{3e27cfac}"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MilioPBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{f08b37b8}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MilioR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 8193,
+   "effect_amounts": {
+    "HealBase": [
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "TenacityDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TenacityAmount": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "HealFXDelay": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_ActiveHeal",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "heal (HealBase 50-650) + cleanse non-airborne CC on self+allies"
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "65% tenacity for 3s (TenacityDuration/TenacityAmount)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.75,
+    "behavior": "cannot cast other abilities for 0.75s"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioRAbility/MilioR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "MilioR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "heal": [
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "ratios": {},
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 8193,
+   "effect_amounts": {
+    "HealBase": [
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "TenacityDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TenacityAmount": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "HealFXDelay": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_ActiveHeal",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "heal (HealBase 50-650) + cleanse non-airborne CC on self+allies"
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "65% tenacity for 3s (TenacityDuration/TenacityAmount)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.75,
+    "behavior": "cannot cast other abilities for 0.75s"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioRAbility/MilioR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MilioR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 8193,
+   "effect_amounts": {
+    "HealBase": [
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "TenacityDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TenacityAmount": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "HealFXDelay": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_Boon",
+    "Trait_ActiveHeal",
+    "Trait_AoE"
+   ],
+   "reset_on": []
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "heal (HealBase 50-650) + cleanse non-airborne CC on self+allies"
+   },
+   {
+    "state": "persistent",
+    "duration": 3.0,
+    "behavior": "65% tenacity for 3s (TenacityDuration/TenacityAmount)"
+   },
+   {
+    "state": "aftermath",
+    "duration": 0.75,
+    "behavior": "cannot cast other abilities for 0.75s"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.75,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioRAbility/MilioR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "MilioE",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "ratios": {},
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 2.0,
+   "affects_type_flags": 1,
+   "effect_amounts": {
+    "MoveSpeedAmount": [
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737,
+     0.20000000298023224,
+     0.2199999988079071
+    ],
+    "MoveSpeedDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldBase": [
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0,
+     195.0
+    ],
+    "DecayDelay": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_Ammo"
+   ],
+   "reset_on": [
+    "charge stocks to max 2"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "shield (ShieldBase 15-195) + bonus move speed (MoveSpeedAmount 10-22%) for 2.5s (MoveSpeedDuration)"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "stocks a charge periodically, cap 2; effects stack up to 2 times"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "charge stocks to max 2"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioEAbility/MilioE"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MilioE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 2.0,
+   "affects_type_flags": 1,
+   "effect_amounts": {
+    "MoveSpeedAmount": [
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737,
+     0.20000000298023224,
+     0.2199999988079071
+    ],
+    "MoveSpeedDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldBase": [
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0,
+     195.0
+    ],
+    "DecayDelay": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_Ammo"
+   ],
+   "reset_on": [
+    "charge stocks to max 2"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "shield (ShieldBase 15-195) + bonus move speed (MoveSpeedAmount 10-22%) for 2.5s (MoveSpeedDuration)"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "stocks a charge periodically, cap 2; effects stack up to 2 times"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "charge stocks to max 2"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioEAbility/MilioE"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MilioE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "stacks_cap": 2.0,
+   "affects_type_flags": 1,
+   "effect_amounts": {
+    "MoveSpeedAmount": [
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737,
+     0.20000000298023224,
+     0.2199999988079071
+    ],
+    "MoveSpeedDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldBase": [
+     45.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0,
+     195.0
+    ],
+    "DecayDelay": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon",
+    "Trait_Shield",
+    "Trait_Ammo"
+   ],
+   "reset_on": [
+    "charge stocks to max 2"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 2.5,
+    "behavior": "shield (ShieldBase 15-195) + bonus move speed (MoveSpeedAmount 10-22%) for 2.5s (MoveSpeedDuration)"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "stocks a charge periodically, cap 2; effects stack up to 2 times"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "charge stocks to max 2"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioEAbility/MilioE"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MilioCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512,
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MilioBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512,
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MilioBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 512,
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MilioW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 1,
+   "effect_amounts": {
+    "ZoneDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "Radius": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "RangePctIncrease": [
+     0.10000000149011612,
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552
+    ],
+    "HealFrequencySeconds": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TotalHealingOverTime": [
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "HealAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon",
+    "Trait_ActiveHeal",
+    "Trait_RecastOrReplaceSpell",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "recast after 0.5s; Fired Up! at most once every 3s"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "fuemigo zone 6s (ZoneDuration), radius 350 (Radius), bonus attack range up to 22.5% (RangePctIncrease)"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "allies heal periodically (TotalHealingOverTime 50-170, +15% AP HealAPRatio; wiki text: every 0.264s)"
+   },
+   {
+    "state": "recast",
+    "duration": 0.5,
+    "behavior": "recast: fuemigo follows target ally within 150 units; 0.5s static cooldown"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "recast after 0.5s; Fired Up! at most once every 3s"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioWAbility/MilioW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "MilioW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "heal": [
+    70.0,
+    90.0,
+    110.0,
+    130.0,
+    150.0,
+    170.0
+   ],
+   "ratios": {
+    "HealAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 1,
+   "effect_amounts": {
+    "ZoneDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "Radius": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "RangePctIncrease": [
+     0.10000000149011612,
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552
+    ],
+    "HealFrequencySeconds": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TotalHealingOverTime": [
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "HealAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon",
+    "Trait_ActiveHeal",
+    "Trait_RecastOrReplaceSpell",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "recast after 0.5s; Fired Up! at most once every 3s"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "fuemigo zone 6s (ZoneDuration), radius 350 (Radius), bonus attack range up to 22.5% (RangePctIncrease)"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "allies heal periodically (TotalHealingOverTime 50-170, +15% AP HealAPRatio; wiki text: every 0.264s)"
+   },
+   {
+    "state": "recast",
+    "duration": 0.5,
+    "behavior": "recast: fuemigo follows target ally within 150 units; 0.5s static cooldown"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "recast after 0.5s; Fired Up! at most once every 3s"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioWAbility/MilioW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MilioW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "affects_type_flags": 1,
+   "effect_amounts": {
+    "ZoneDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "Radius": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "RangePctIncrease": [
+     0.10000000149011612,
+     0.125,
+     0.15000000596046448,
+     0.17499999701976776,
+     0.20000000298023224,
+     0.22499999403953552
+    ],
+    "HealFrequencySeconds": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "TotalHealingOverTime": [
+     70.0,
+     90.0,
+     110.0,
+     130.0,
+     150.0,
+     170.0
+    ],
+    "HealAPRatio": [
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448,
+     0.15000000596046448
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon",
+    "Trait_ActiveHeal",
+    "Trait_RecastOrReplaceSpell",
+    "Trait_SignatureSpell",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "recast after 0.5s; Fired Up! at most once every 3s"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 6.0,
+    "behavior": "fuemigo zone 6s (ZoneDuration), radius 350 (Radius), bonus attack range up to 22.5% (RangePctIncrease)"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "allies heal periodically (TotalHealingOverTime 50-170, +15% AP HealAPRatio; wiki text: every 0.264s)"
+   },
+   {
+    "state": "recast",
+    "duration": 0.5,
+    "behavior": "recast: fuemigo follows target ally within 150 units; 0.5s static cooldown"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "recast after 0.5s; Fired Up! at most once every 3s"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Milio/Spells/MilioWAbility/MilioW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "MilioQHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "{71323211}"
+   ],
+   "inherited_from": "MilioQ",
+   "evidence": "inherited:MilioQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MilioQHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{71323211}"
+   ],
+   "inherited_from": "MilioQ",
+   "evidence": "inherited:MilioQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MilioQHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{71323211}"
+   ],
+   "inherited_from": "MilioQ",
+   "evidence": "inherited:MilioQ"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MilioPBurn",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "MaxMonsterDamage": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "BurnDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "BaseDamageStart": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "BaseDamageEnd": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "spell_tags": [
+    "PositiveEffect_Boon"
+   ],
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "enchantment 4s after ability hits on self/allies"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "next basic attack/ability hit deals 7-15% AD bonus magic + burn (10-50 + 20% AP over 1.5s, ticks every 0.25s)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "ability hits re-grant the enchantment"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Burn",
+    "Damage"
+   ],
+   "binary": [
+    "{e86d160c}"
+   ],
+   "evidence": "refined: passive Fired Up! applies a magic burn on hit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MilioQHitMinion",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {},
+   "cooldown": null,
+   "mana_cost": null,
+   "cast_range": null,
+   "damage_type": "magic",
+   "effect_amounts": {
+    "SlowAmount": [
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5,
+     0.550000011920929,
+     0.6000000238418579,
+     0.6499999761581421
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "FallDamage": [
+     80.0,
+     140.0,
+     200.0,
+     260.0,
+     320.0,
+     380.0
+    ],
+    "FallTime": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "FallRadius": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ],
+    "KnockbackDistance": [
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0,
+     140.0
+    ],
+    "KnockbackMinionDistance": [
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0,
+     340.0
+    ],
+    "ImpactAdjustment": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "ExtraVisionDuration": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MinionFallRadius": [
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0,
+     275.0
+    ],
+    "MinionFallTime": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "RefundRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Ranged_StopsFirstHit",
+    "Trait_AoE"
+   ],
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "kick delay 0.25s"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "fireball grants sight of path"
+   },
+   {
+    "state": "impact",
+    "duration": 1.0,
+    "behavior": "knockback + 1s stun on first enemy; bounce once in same direction"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "explosion: magic damage (FallDamage 20-380), slow 1.5s (SlowDuration), fall 0.8s (FallTime), radius 250 (FallRadius)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "refunds 50% mana (RefundRatio) if it hits at least one champion"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{2e13e11f}"
+   ],
+   "evidence": "refined: Q hit damage vs minions (same projectile as MilioQHit)"
+  }
+ }
+]

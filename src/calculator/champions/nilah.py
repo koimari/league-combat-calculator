@@ -21,10 +21,12 @@ basic-attack dodge. An ally heal/shield amplifier and damage taken are
 axes the engine does not have, so both slots are out of scope.
 """
 
+from .inputs import champion_stat
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
 
@@ -127,9 +129,75 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "cached Maximum row (0-76.4 + 191% AD) exactly 1.91x the Minimum at "
     "every rank; the module scales linearly with the fight's crit "
     "chance, exact at both sourced endpoints.",
+    "KNOWN CACHE LAG (verified 16.16.1, not fixed here — out of this "
+    "module's file scope): E (Slipstream)'s cached cost row is flat 30 "
+    "at every rank; the game files say 40 — bin NilahEAbility/NilahE "
+    "'mana' [40, 40, 40, 40, 40, 40] and ddragon Nilah.json costBurn "
+    "'40' (single value, all ranks) both confirm 40, not 30 (Nilah's "
+    "resource is MANA per the CharacterRecord arType). This module does "
+    "not model resource costs at all (no extract_cost call, no "
+    "hardcoded value to re-pin) — the generic engine.py resource-cost "
+    "stamp reads data/champions.json directly, so the flag traces to "
+    "the wiki cache, not to this module or its tests (no test currently "
+    "asserts Nilah's resource_cost). Clearing patch_regression.py's "
+    "ability_rows_stale flag requires a data/champions.json re-pull/"
+    "re-cert, which is outside this task's scope (see "
+    "docs/patch-day-runbook.md Step 3.A).",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Nilah")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Nilah self-healing events from its authored packet.
+
+    Q passive: basic attacks and Formless Blade heal her for 0%-20%
+    (based on critical strike chance) of the post-mitigation damage dealt
+    to champions.  Apotheosis (R): 20%-50% on the same basis.  Both are a
+    share of "the post-mitigation damage dealt to champions", so both pay
+    per hit that dealt some.
+    """
+    healing = []
+    crit = max(
+        0.0,
+        min(
+            100.0,
+            champion_stat(champion_stats, "critical_strike_chance"),
+        ),
+    )
+    q_ratio = 0.20 * crit / 100.0
+    r_ratio = 0.20 + 0.30 * crit / 100.0
+    for payment in _healing._payments(
+        _healing.HealAnchor.DAMAGING_HIT,
+        lambda source: source in {"Q", "auto_attacks", "R"},
+        damage_events,
+    ):
+        event = payment.event
+        source = _healing._event_source(event)
+        if source in ("Q", "auto_attacks") and q_ratio > 0.0:
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0)) * q_ratio,
+                "Formless Blade",
+            )
+        elif source == "R" and r_ratio > 0.0:
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0)) * r_ratio,
+                "Apotheosis",
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Nilah", derive_self_healing)

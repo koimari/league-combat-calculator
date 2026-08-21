@@ -43,9 +43,15 @@ from dataclasses import dataclass, field, fields, replace
 from types import MappingProxyType
 from typing import Any
 
+from ..delivery_eligibility import (
+    delivery_declarations_receipt,
+    spell_shield_rules_receipt,
+)
+from ..interaction_effects import public_defense
 from ..survival.actions import SurvivalAction
 from ..survival.transitions import TransitionContext, finalize_states, run_survival_walk
 from ..work_counters import WorkCounterSink, record_walk
+from .precision import round_field
 from .rung import CompiledFast, Rung
 
 
@@ -95,9 +101,172 @@ class AttackerOutcome:
     utility_outcomes: Mapping[str, Any] | None = None
 
 
+def merged_interval_duration(intervals: Sequence[Mapping[str, Any]]) -> float:
+    """The union length of one participant's authored inactive intervals.
+
+    Union rather than sum: two controls overlapping in time cost the actor
+    one window of downtime and not two, so a total that added them would
+    publish more downtime than the fight is long.
+
+    It lives here rather than beside its reader for criterion 3's reason:
+    the survival row publishes this number, and a view that folded the
+    intervals itself would be a second producer of it.
+    """
+    # The overwhelmingly common answer, taken without allocating: almost no
+    # participant of almost any fight is ever inactive, and this fold runs
+    # once per participant per walk on the optimizer's hot path.
+    if not intervals:
+        return 0.0
+    ordered: list[tuple[float, float]] = []
+    for interval in intervals:
+        try:
+            start = float(interval.get("start", 0.0))
+            end = float(interval.get("end", 0.0))
+        except (TypeError, ValueError):
+            continue
+        if end > start:
+            ordered.append((start, end))
+    ordered.sort()
+    total = 0.0
+    current_start = current_end = 0.0
+    for start, end in ordered:
+        if start > current_end:
+            total += current_end - current_start
+            current_start, current_end = start, end
+        else:
+            current_end = max(current_end, end)
+    if ordered:
+        total += current_end - current_start
+    return max(0.0, total)
+
+
+def _crowd_control_immunity(state: Mapping[str, Any]) -> dict[str, Any] | None:
+    """One settled state's crowd-control immunity receipt, or ``None``.
+
+    Folded here rather than in the view because the eligibility record
+    answers with :meth:`public_receipt`, and a view's call graph may not
+    reach a method that computes -- the window's own expiry is an addition.
+    The recipient id is *not* stamped here: naming who the row belongs to is
+    the projection's job and needs no arithmetic.
+    """
+    grants = state.get("crowd_control_immunity_grants") or ()
+    if not grants:
+        return None
+    latest = grants[-1]
+    eligibility = state.get("crowd_control_immunity_eligibility")
+    return {
+        "shield_source": latest["source"],
+        "source_atoms": [dict(atom) for atom in latest.get("source_atoms", ())],
+        "window": (
+            eligibility.window.public_receipt() if eligibility is not None else None
+        ),
+        "active_until": round_field(
+            "crowd_control_immunity.active_until", float(latest["expires_at"])
+        ),
+        "reason_immunity_ended": latest.get("ended_reason"),
+        "eligibility": (
+            eligibility.public_receipt() if eligibility is not None else None
+        ),
+        "blocked": [
+            dict(entry) for entry in state.get("crowd_control_immunity_blocked", [])
+        ],
+        "decisions": [
+            dict(entry) for entry in state.get("crowd_control_immunity_decisions", [])
+        ],
+    }
+
+
+def _spell_shield(state: Mapping[str, Any]) -> dict[str, Any] | None:
+    """One settled state's spell-shield receipt, or ``None`` where none was
+    declared.
+
+    Extends the kernel declaration with the walk-observed lifecycle: the
+    sourced window (an infinite Annul window publishes ``until`` as ``None``),
+    the acceptance and block rule, the selected cast identity, the one-use
+    budget before and after, the blocked packets, every eligibility decision,
+    the triggered heal, the declared categorical rules and the receipted
+    cooldown.  Here for the same reason as :func:`_crowd_control_immunity`.
+    """
+    eligibility = state.get("spell_shield_eligibility")
+    if eligibility is None:
+        return None
+    window = eligibility.window.public_receipt()
+    if window["until"] == float("inf"):
+        window["until"] = None
+    blocked_cast = state["spell_shield_blocked_cast"]
+    return {
+        "source": state["spell_shield_source"],
+        "window": window,
+        "acceptance": eligibility.acceptance.public_receipt(),
+        "block_rule": eligibility.block_rule,
+        "rules": spell_shield_rules_receipt(),
+        "uses_before": 1,
+        "uses_after": state.get("spell_shield_uses_remaining"),
+        "selected_cast_identity": (str(blocked_cast[-1]) if blocked_cast else None),
+        "blocked_packets": [
+            dict(entry) for entry in state.get("spell_shield_blocked_packets", [])
+        ],
+        "decisions": [dict(entry) for entry in state.get("spell_shield_decisions", [])],
+        "triggered_heal": (
+            {
+                "time": round_field(
+                    "spell_shield.triggered_heal.time",
+                    float(state["spell_shield_heal_time"]),
+                ),
+                "amount": round_field(
+                    "spell_shield.triggered_heal.amount",
+                    float(state["spell_shield_heal_amount"]),
+                ),
+                "delay": round_field(
+                    "spell_shield.triggered_heal.delay",
+                    float(state["spell_shield_heal_delay"]),
+                ),
+                "source": state["spell_shield_heal_source"],
+            }
+            if state.get("spell_shield_heal_time") is not None
+            else None
+        ),
+        "cooldown_seconds": state.get("spell_shield_cooldown_seconds"),
+        "cooldown_atom": (
+            dict(state["spell_shield_cooldown_atom"])
+            if state.get("spell_shield_cooldown_atom") is not None
+            else None
+        ),
+    }
+
+
+def _projectile_defense(state: Mapping[str, Any]) -> dict[str, Any] | None:
+    """One settled state's projectile-defense receipt, or ``None``.
+
+    Extends the static declaration (:func:`public_defense`) with the
+    walk-observed state: the remaining full-block uses, the six typed
+    delivery declarations, and -- for an event-id selection -- the selected
+    ids that never matched an incoming event, which is the named fail-closed
+    receipt for a positional selection no option parse could validate.  Here
+    for the same reason as :func:`_crowd_control_immunity`: both
+    ``public_defense`` and ``delivery_declarations_receipt`` answer through
+    ``public_receipt``, and a view's call graph may not reach a method that
+    computes.
+    """
+    base = public_defense(state["projectile_defense"])
+    if base is None:
+        return None
+    base["remaining_uses"] = state.get("projectile_defense_uses_remaining")
+    base["delivery_declarations"] = delivery_declarations_receipt()
+    eligibility = state.get("projectile_defense_eligibility")
+    if eligibility is not None and eligibility.selection.blocked_event_ids:
+        matched = state.get("projectile_defense_event_id_matches", set())
+        base["blocked_event_ids_unmatched"] = [
+            event_id
+            for event_id in eligibility.selection.blocked_event_ids
+            if event_id not in matched
+        ]
+    return base
+
+
 @dataclass(frozen=True, slots=True)
 class SurvivalFold:
-    """The three numbers one participant's settled state *implies*.
+    """What one participant's settled state *implies*, folded once.
 
     The kernel stores three shield pools, a health and a max health; the
     published survival row wants their sum, their ratio and the five-term
@@ -114,11 +283,22 @@ class SurvivalFold:
     ``effective_health`` keeps its five terms in their original order,
     because float addition is not associative and a re-spelled sum is a
     changed number.
+
+    The last five members joined for the same rule and not for a different
+    one.  Two are interval unions the row publishes (the action downtime and
+    the post-cleanse control downtime); three are receipt objects assembled
+    through ``public_receipt``, whose bodies compute.  All five are
+    ingredients the view would otherwise fold, so all five are folded here.
     """
 
     remaining_shield: float
     ending_health_ratio: float
     effective_health: float
+    action_downtime: float
+    crowd_control_downtime: float
+    crowd_control_immunity: Mapping[str, Any] | None
+    spell_shield: Mapping[str, Any] | None
+    projectile_defense: Mapping[str, Any] | None
 
 
 def survival_folds(states: Sequence[Any]) -> tuple[SurvivalFold, ...]:
@@ -146,6 +326,15 @@ def survival_folds(states: Sequence[Any]) -> tuple[SurvivalFold, ...]:
                     - pools.shield_expired
                     + state["healing_received"]
                 ),
+                action_downtime=merged_interval_duration(
+                    state["action_downtime_intervals"]
+                ),
+                crowd_control_downtime=merged_interval_duration(
+                    state["crowd_control_intervals"]
+                ),
+                crowd_control_immunity=_crowd_control_immunity(state),
+                spell_shield=_spell_shield(state),
+                projectile_defense=_projectile_defense(state),
             )
         )
     return tuple(folds)
@@ -250,6 +439,11 @@ class WalkResult:
     support_events: tuple[Mapping[str, Any], ...] = ()
     utility_by_actor: Mapping[str, Any] = MappingProxyType({})
     target_allocation: Mapping[str, Any] | None = None
+    # Fail-closed denials the composition collected instead of applying
+    # (Renata W Bailout's withheld half, an unreadable self-shield
+    # payload).  A denial is a receipt, never a packet: it is folded here
+    # so the one receipt view publishes it beside the packets it replaced.
+    item_denial_receipts: tuple[Mapping[str, Any], ...] = ()
     objective: ObjectiveFold | None = None
 
     def action_count(self) -> int:
@@ -355,7 +549,13 @@ _FOLD_FIELDS = frozenset(
 # would leave the "result" mutable through the caller's own variable, which is
 # the one thing freezing it was for.
 _SEQUENCE_FOLDS = frozenset(
-    {"outcomes", "damage_events", "healing_events", "support_events"}
+    {
+        "outcomes",
+        "damage_events",
+        "healing_events",
+        "support_events",
+        "item_denial_receipts",
+    }
 )
 
 __all__ = [

@@ -35,6 +35,7 @@ from .module_helpers import typed_damage
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
 
@@ -200,4 +201,41 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # places, so every slot in SLOTS prices a row the engine consumes, which
 # is what the contract derives.
 
-SELF_HEALING_RULE = declare_healing_rule("Rek'Sai")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Rek'Sai self-healing events from its authored packet.
+
+    Fury of the Xer'Sai (P): "When Rek'Sai becomes Burrowed, she consumes
+    her current Fury over 3 seconds to heal for 0% : 100% (based on Fury)
+    of 9% : 21.29% (based on level) maximum health."  P priced the
+    burrow's Fury against her own maximum health and carried the amount on
+    its row; the fight's first W is where that burrow ends, so the consume
+    is paid there.
+    """
+    healing: list[dict[str, Any]] = []
+    burrow = ability_damages.get("passive", {}).get("self_heal_state")
+    w_casts = _healing._cast_slot_times(cast_timeline, "W")
+    if isinstance(burrow, dict) and w_casts:
+        amount = float(burrow.get("amount", 0.0) or 0.0)
+        if amount > 0.0:
+            healing.append(
+                {
+                    "time": w_casts[0],
+                    "amount": amount,
+                    "source": "Fury of the Xer'Sai",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Rek'Sai", derive_self_healing)

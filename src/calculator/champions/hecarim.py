@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
@@ -202,4 +203,49 @@ ASSUMPTIONS = [
 ]
 SOURCES = load_champion_sources("Hecarim")
 
-SELF_HEALING_RULE = declare_healing_rule("Hecarim")
+# HARDCODED: verify on patch updates — Spirit of Dread heals Hecarim for
+# 25% of the post-mitigation damage dealt to enemies in the area from all
+# sources, for the 4 seconds a cast is active (cached W effect[1]).  The
+# sourced cap applies only to minions and monsters, so a champion duel
+# uses the uncapped share.
+_SPIRIT_OF_DREAD_SHARE = 0.25
+_SPIRIT_OF_DREAD_WINDOW_SECONDS = 4.0
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Hecarim self-healing events from its authored packet.
+
+    Window membership comes from the engine's own cast timeline, and every
+    damaging event inside a W window (the W ticks included) is a trigger.
+    """
+    healing: list[dict[str, Any]] = []
+    w_casts = [
+        float(cast.get("time", 0.0))
+        for cast in (cast_timeline or [])
+        if cast.get("slot") == "W"
+    ]
+    if w_casts:
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+        ):
+            event = payment.event
+            event_time = float(event.get("time", 0.0))
+            if not any(
+                cast_time <= event_time <= cast_time + _SPIRIT_OF_DREAD_WINDOW_SECONDS
+                for cast_time in w_casts
+            ):
+                continue
+            amount = _SPIRIT_OF_DREAD_SHARE * max(0.0, float(event.get("damage", 0.0)))
+            _healing._heal_from_damage(healing, event, amount, "Spirit of Dread")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Hecarim", derive_self_healing)

@@ -334,6 +334,8 @@ ACTION_KIND_FAMILY: Mapping[ActionKind, RuleFamily] = {
     ActionKind.INVULNERABLE: RuleFamily.COMBAT_STATE,
     ActionKind.UNTARGETABLE: RuleFamily.COMBAT_STATE,
     ActionKind.SPELL_SHIELD: RuleFamily.COMBAT_STATE,
+    ActionKind.CROWD_CONTROL: RuleFamily.COMBAT_STATE,
+    ActionKind.CROWD_CONTROL_RESIST: RuleFamily.COMBAT_STATE,
     ActionKind.STAT_BUFF: RuleFamily.STAT_DERIVATION,
     ActionKind.DAMAGE_MODIFIER: RuleFamily.DELTA_AMP,
     ActionKind.ON_HIT_MAGIC: RuleFamily.ON_HIT_STRIKE,
@@ -374,6 +376,7 @@ DEFENSE_SOURCE_FAMILY: Mapping[DefenseMechanic, RuleFamily] = {
     DefenseMechanic.BOUNDLESS_VITALITY: RuleFamily.SUSTAIN,
     DefenseMechanic.PLATING: RuleFamily.OPENING_DEFENSE,
     DefenseMechanic.ROCK_SOLID: RuleFamily.OPENING_DEFENSE,
+    DefenseMechanic.UNDAUNTED: RuleFamily.OPENING_DEFENSE,
     DefenseMechanic.RESILIENCE: RuleFamily.OPENING_DEFENSE,
     DefenseMechanic.THORNS: RuleFamily.REACTIVE,
 }
@@ -1012,6 +1015,35 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
             "is a measurement",
         ),
     ),
+    DefenseMechanic.UNDAUNTED: DefenseDeclaration(
+        # Rock Solid's sibling, and a different mechanic: Undaunted blocks a
+        # flat amount of EVERY champion attack and ability rather than the
+        # first basic-damage packet of a swing, and it carries its own
+        # damage-over-time amount instead of a share-of-the-packet cap.  The
+        # two keys are the signature because either one alone is this
+        # mechanic and no other entry carries them.
+        shape=DefenseShape(
+            (
+                "champion_damage_flat_reduction",
+                "champion_dot_damage_flat_reduction",
+            )
+        ),
+        writes=(
+            DefenseField.CHAMPION_DAMAGE_FLAT_REDUCTION,
+            DefenseField.CHAMPION_DOT_DAMAGE_FLAT_REDUCTION,
+            DefenseField.CHAMPION_DAMAGE_FLAT_SOURCE,
+        ),
+        exclusivity=DefenseExclusivity.NONE,
+        reads=(
+            "champion_damage_flat_reduction",
+            "champion_dot_damage_flat_reduction",
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "both reductions are sourced flat amounts; a zero would mean the "
+            "registry holds zero, which is a measurement",
+        ),
+    ),
     DefenseMechanic.RESILIENCE: DefenseDeclaration(
         shape=DefenseShape(("critical_strike_damage_multiplier",)),
         writes=(DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER,),
@@ -1043,37 +1075,23 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
 # granularity rather than per item, which is D-43's whole argument: three of
 # the sixteen reasons the retired per-item hand set carried were conservatism
 # notes about a different mechanic of the same item.
+#
+# Four mechanics left this mapping when the compiled path grew what they
+# needed, and each removal names the clause that now serves it rather than a
+# judgement that it looks fine: ``ANNUL`` because the kernel's own
+# spell-shield lifecycle decides per packet off ``ability_instance``, which
+# ``WalkCompiler`` stamps on every enriched damage row;  ``REBIRTH`` because
+# ``program.compile.revive_candidate_actions`` authors the candidates with
+# their sourced ``delay`` before the walk starts;  ``STEADFAST`` and
+# ``VOIDBORN_RESILIENCE`` because ``transitions.reprice_dynamic_resistance``
+# reads the pair fight's baseline resistances off the action, which the
+# compiler stamps from ``pair_resistance_baselines`` and which receipts
+# ``dynamic_resistance_unavailable`` when a fight published none.
+# ``LIFELINE_MAW`` left for a fifth: its omnivamp heals are authored mid-walk
+# through ``ledger.schedule_heal``, and the compiled search context now builds
+# its ``ScoreLedger`` with the ``actions``/``index_of``/``compile_event``
+# injections that call needs.
 COMPILED_KERNEL_CANNOT_STAGE: Mapping[DefenseMechanic, ReceiptOnly] = {
-    DefenseMechanic.ANNUL: ReceiptOnly(
-        "the compiled score kernel cannot stage an Annul spell shield: "
-        "consuming one needs the per-packet cast metadata the light score "
-        "ledger does not carry",
-        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-    ),
-    DefenseMechanic.REBIRTH: ReceiptOnly(
-        "the compiled score kernel cannot stage a resurrection: Rebirth's "
-        "candidates are authored inside the event walk, after the score "
-        "ledger has been built",
-        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-    ),
-    DefenseMechanic.STEADFAST: ReceiptOnly(
-        "the compiled score kernel cannot stage a dynamic-resistance reprice: "
-        "Steadfast's stacks are priced against baseline resistances the score "
-        "ledger does not keep",
-        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-    ),
-    DefenseMechanic.VOIDBORN_RESILIENCE: ReceiptOnly(
-        "the compiled score kernel cannot stage a dynamic-resistance reprice: "
-        "Voidborn Resilience multiplies baseline resistances the score ledger "
-        "does not keep",
-        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-    ),
-    DefenseMechanic.LIFELINE_MAW: ReceiptOnly(
-        "the compiled score kernel cannot stage the Lifeline omnivamp state "
-        "transition: the temporary stat is granted by an authored threshold "
-        "event",
-        scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-    ),
     DefenseMechanic.IGNORE_PAIN: ReceiptOnly(
         "the compiled score kernel cannot stage deferred damage: Ignore Pain's "
         "ticks and Defy's clearance are authored inside the event walk",
@@ -1192,6 +1210,13 @@ DEFENSE_RECEIPTS: Mapping[DefenseMechanic, SourceReceipt] = {
         url=f"{_WIKI}/Warden%27s_Mail",
         revision_id=3987228,
         revision_timestamp="2026-01-25T05:28:19Z",
+    ),
+    DefenseMechanic.UNDAUNTED: SourceReceipt(
+        url=f"{_WIKI}/Guardian%27s_Horn",
+        # The tracked item cache exposes no MediaWiki revision id for this
+        # record; zero is the spelled marker for a cache-backed reading.
+        revision_id=0,
+        revision_timestamp="cached data/items.json (patch 16.16.1)",
     ),
     DefenseMechanic.RESILIENCE: SourceReceipt(
         url=f"{_WIKI}/Randuin%27s_Omen",
@@ -1433,6 +1458,7 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "rage_duration": RuleFamily.ALLY_PACKET,
         "support_quest_threshold": RuleFamily.ALLY_PACKET,
         "front_offset": RuleFamily.ALLY_PACKET,
+        "nightstalker_unseen_seconds": RuleFamily.ALLY_PACKET,
         # A defence hung on an entry whose tag names a different family.  The
         # key is the mechanic's own signature key from DEFENSE_DECLARATIONS,
         # so the two tables cannot name different keys for one mechanic, and
@@ -3937,6 +3963,20 @@ def _saturating_stat_rules(
     return rules
 
 
+# The sustain family's own "declared elsewhere", the sibling of
+# :data:`STAT_DERIVATION_DECLARED_ELSEWHERE`: a key whose whole mechanic
+# another surface owns, so an entry carrying only that key compiles no
+# sustain rule on purpose rather than by a parse failure.
+SUSTAIN_DECLARED_ELSEWHERE: Mapping[str, str] = {
+    "slay_omnivamp_per_takedown": (
+        "declared as the bounded ``slay_stacks`` scenario control and the "
+        "state receipt it arms (``item_effects.item_state_receipts``); "
+        "takedown-driven stacks are not pre-fight-projectable, so no sustain "
+        "formula may resolve them"
+    ),
+}
+
+
 def _compile_sustain(
     family: RuleFamily,
     owner: str,
@@ -3954,7 +3994,7 @@ def _compile_sustain(
     schema = _schema_keys(owner, registry, entry)
     rules = _sustain_rule_list(owner, registry, schema)
     rules.extend(_compile_defense(family, owner, registry, entry))
-    if not rules:
+    if not rules and not any(key in schema for key in SUSTAIN_DECLARED_ELSEWHERE):
         raise BehaviorCatalogError(
             f"{registry}[{owner!r}] is tagged into the sustain family and "
             "carries none of its signature keys; sustain that restores nothing "
@@ -4099,15 +4139,6 @@ COMPILED_SUPPORT_KINDS: frozenset[PacketKind] = frozenset(
     {PacketKind.HEAL, PacketKind.SHIELD, PacketKind.DAMAGE}
 )
 
-COMPILED_KERNEL_CANNOT_REDIRECT = ReceiptOnly(
-    "the compiled score kernel cannot represent a producer that re-routes "
-    "another participant's incoming damage: the redirect is stamped on the "
-    "victim's own events by the receipt scheduler, which the score ledger "
-    "does not run (the retired per-item hand set recorded the same fact "
-    "against the item)",
-    scope=ReceiptScope.SURVIVAL_LEDGER_TRANSITION,
-)
-
 
 @dataclass(frozen=True, slots=True)
 class EntryShape:
@@ -4193,6 +4224,11 @@ ALLY_ENTRY_SHAPES: Mapping[AllyProducer, EntryShape] = {
             "everlasting_cooldown",
             "everlasting_current_mana_ratio",
             "everlasting_duration",
+            # The gate the producer reads, and the authority behind it: the
+            # ratio prices the gate and the status says whether a source
+            # authorizes it, so a future de-sourcing is a named denial
+            # rather than a silently missing key.
+            "everlasting_mana_gate_status",
             "everlasting_mana_threshold_ratio",
             "everlasting_multi_target_multiplier",
         ),
@@ -4305,6 +4341,14 @@ ALLY_ENTRY_SHAPES: Mapping[AllyProducer, EntryShape] = {
     ),
     AllyProducer.SHARED_RICHES: EntryShape("ITEM_EFFECTS", _QUEST_KEYS),
     AllyProducer.WARD: EntryShape("ITEM_EFFECTS", _QUEST_KEYS),
+    AllyProducer.NIGHTSTALKER: EntryShape(
+        "ITEM_EFFECTS",
+        (
+            "nightstalker_unseen_seconds",
+            "nightstalker_trigger_window",
+            "blackout_duration",
+        ),
+    ),
     AllyProducer.DEVOTION: EntryShape(
         "ALLY_ITEM_EFFECTS",
         ("level_scaling_start", "shield_duration", "shield_max", "shield_min"),
@@ -4319,7 +4363,6 @@ ALLY_ENTRY_SHAPES: Mapping[AllyProducer, EntryShape] = {
             "heal_max",
             "heal_min",
             "target_area_range_units",
-            "target_area_reveal_duration",
         ),
     ),
     AllyProducer.INSPIRING_SPEECH: EntryShape(
@@ -4349,6 +4392,7 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
         redirects_incoming_damage=False,
         reads=(
             "everlasting_mana_threshold_ratio",
+            "everlasting_mana_gate_status",
             "everlasting_cooldown",
             "everlasting_multi_target_multiplier",
             "everlasting_base_shield",
@@ -4766,6 +4810,24 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
             "is withheld rather than booked"
         ),
     ),
+    AllyProducer.NIGHTSTALKER: AllyPacketDeclaration(
+        trigger=PacketTrigger.FIGHT_START,
+        packets=(PacketSpec(PacketKind.VISION, Recipients.SELF),),
+        secondary_target=None,
+        persistence=Persistence.SINGLE_MOMENT,
+        redirects_incoming_damage=False,
+        reads=(
+            "nightstalker_unseen_seconds",
+            "nightstalker_trigger_window",
+            "blackout_duration",
+        ),
+        ramps=(),
+        zero_reason=(
+            "the receipt states the sourced unseen gate, trigger window and "
+            "denial duration for an authored ready state; a zero means the "
+            "caller armed no Nightstalker, and no packet is emitted at all"
+        ),
+    ),
     AllyProducer.COMMAND: AllyPacketDeclaration(
         trigger=PacketTrigger.CROWD_CONTROL,
         packets=(PacketSpec(PacketKind.DAMAGE_MODIFIER, Recipients.TRIGGERING_ENEMY),),
@@ -4786,20 +4848,18 @@ ALLY_PACKET_DECLARATIONS: Mapping[AllyProducer, AllyPacketDeclaration] = {
 def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
     """Whether the compiled score kernel can stage this producer's packets.
 
-    Derived from four declared axes rather than judged per item, because a
+    Derived from three declared axes rather than judged per item, because a
     per-item judgement is exactly how sixteen conservatism notes ended up
     indistinguishable from sixteen representability facts (D-43).  Each
     refusal names the kernel clause that produces it.
 
     The order is the order the kernel would meet them, not a preference: the
-    redirect and the self-shield are refused by the *build*-level scan before
-    any template is staged, and the kind and duration clauses are the
-    template gate itself.  A producer that trips more than one is reported by
-    the first gate that would have stopped it, which is the one whose receipt
-    a caller would actually read.
+    self-shield is refused by the *build*-level scan before any template is
+    staged, and the kind and duration clauses are the template gate itself.
+    A producer that trips more than one is reported by the first gate that
+    would have stopped it, which is the one whose receipt a caller would
+    actually read.
     """
-    if declaration.redirects_incoming_damage:
-        return COMPILED_KERNEL_CANNOT_REDIRECT
     if any(
         spec.kind is PacketKind.SHIELD and spec.recipients is Recipients.SELF
         for spec in declaration.packets
@@ -5410,6 +5470,22 @@ STAT_DERIVATION_DECLARED_ELSEWHERE: Mapping[str, str] = {
     "health_threshold": (
         "declared as the threshold defence the resolver builds, together with "
         "the omnivamp its own Lifeline grants"
+    ),
+    "enlighten_restore_percent": (
+        "declared as the typed level-up restoration rule the resource ledger "
+        "schedules (``resource_ledger``); the restore is a mana event over a "
+        "sourced duration, never a number the stat block holds"
+    ),
+    "summoner_spell_haste": (
+        "declared as the named boundary its state receipt carries "
+        "(``item_effects.item_state_receipts``): the champion fight model has "
+        "no summoner-spell action state, so the haste is never an ability-haste "
+        "grant the stat block holds"
+    ),
+    "helping_hand_minion_damage": (
+        "declared as the class-restricted on-hit a minion-class fight arms "
+        "(item_effects.CLASS_RESTRICTED_ON_HITS); a champion-class target "
+        "never receives it and the stat block never holds it"
     ),
 }
 
@@ -6407,7 +6483,6 @@ __all__ = [
     "ALLY_PACKET_DECLARATIONS",
     "AllyPacketDeclaration",
     "CITATION_KEYS",
-    "COMPILED_KERNEL_CANNOT_REDIRECT",
     "COMPILED_SUPPORT_KINDS",
     "EntryShape",
     "CACHED_ITEM_SOURCE",

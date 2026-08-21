@@ -64,10 +64,31 @@ from .program.scope import Unreviewed, reviewed_scope, scope_policy
 # ``survival/`` imports ``item_support_effects``.
 from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
+# The closed support-scope vocabulary and the kernel's typed trigger,
+# cooldown and cadence rules an item packet arms under.
+from .capabilities import SUPPORT_TARGET_SCOPES
+from .state_lifecycle import (
+    CcTriggerRule,
+    CooldownRule,
+    CooldownState,
+    InstanceCadence,
+    SourceReceipt,
+)
+from .item_effects import (
+    AUTHORIZED_MANA_GATE_STATUSES,
+    fimbulwinter_mana_gate_authority,
+    fimbulwinter_nearby_enemy_range_authority,
+    required_effect_value,
+)
+
 # The one packet kind that changes how much damage some *other* participant
 # deals or takes, and therefore the kind ``_packet`` runs its authority and
 # damage-class checks on.  See *Cross-participant producers* below.
 _DAMAGE_MODIFIER_KIND = "damage_modifier"
+
+# The sentinel that separates "the caller supplied no value" from a real
+# zero; a mana read that is absent is a named denial, never a 0.0.
+_MISSING = object()
 
 
 def _same_side(attacker: Any, actor: Any) -> bool:
@@ -77,10 +98,11 @@ def _same_side(attacker: Any, actor: Any) -> bool:
 
 
 def _teammates(attacker: Any, all_actors: Iterable[Any]) -> list[Any]:
+    attacker_id = getattr(attacker, "participant_id", None)
     return [
         actor
         for actor in all_actors
-        if actor.participant_id != attacker.participant_id
+        if getattr(actor, "participant_id", None) != attacker_id
         and _same_side(attacker, actor)
     ]
 
@@ -180,7 +202,24 @@ def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
     """
     if slot is None:
         return 0.0
-    return _option(attacker, slot.owner, "active_seconds")
+    return _active_seconds_for(attacker, slot.owner)
+
+
+def _active_seconds_for(attacker: Any, item_name: str) -> float:
+    """One validated active-seconds read for *item_name*.
+
+    Delegates to the typed ``input_option_float_value`` accessor so the
+    emission layer re-checks the schema bounds AND step multiple: a direct
+    timeline caller cannot author an out-of-domain activation even though
+    the request layer already validates.  Absent input reads 0.0 (no cast).
+    """
+    from .item_effects import input_option_float_value
+
+    request = getattr(attacker, "request", None)
+    item_options = getattr(request, "item_options", None) or {}
+    return input_option_float_value(
+        list(attacker.items), item_options, item_name, "active_seconds"
+    )
 
 
 def _event_time(event: Mapping[str, Any]) -> float:
@@ -251,6 +290,20 @@ def _packet(  # pylint: disable=too-many-arguments
         raise ValueError(f"{source} packet amount must be finite and non-negative")
     if not math.isfinite(float(duration)) or float(duration) < 0.0:
         raise ValueError(f"{source} packet duration must be finite and non-negative")
+    if target_scope not in SUPPORT_TARGET_SCOPES:
+        raise ValueError(
+            f"{source} packet target_scope {target_scope!r} is outside the "
+            f"closed support scope vocabulary: {sorted(SUPPORT_TARGET_SCOPES)}"
+        )
+    attacker_id = getattr(attacker, "participant_id", None)
+    target_id = getattr(target, "participant_id", None)
+    if kind != "item_denial" and (
+        not isinstance(attacker_id, str)
+        or not attacker_id.strip()
+        or not isinstance(target_id, str)
+        or not target_id.strip()
+    ):
+        raise ValueError(f"{source} applied packet requires participant identity")
     if kind == _DAMAGE_MODIFIER_KIND:
         _check_cross_participant_authority(source, authority, fields.get("owner"))
         _check_declared_classes(source, damage_classes, attack_classes)
@@ -267,10 +320,11 @@ def _packet(  # pylint: disable=too-many-arguments
         "duration": float(duration),
         "source": source,
         "source_key": source,
-        "attacker": attacker.participant_id,
-        "target": target.participant_id,
+        "attacker": attacker_id,
+        "target": target_id,
         "target_scope": target_scope,
         "target_policy": "explicit_selected_roster_target",
+        "target_selection_key": fields.get("target_selection_key", f"{kind}:{source}"),
         "_item_support": True,
         **({SUPPORT_RANK_KEY: rank} if rank is not None else {}),
         **fields,
@@ -322,20 +376,70 @@ def _support_triggers(
     ]
 
 
-def _everlasting_trigger_kind(trigger: Trigger) -> str:
-    """Which of Everlasting's two rungs a control trigger takes, if any.
+# Everlasting's crowd-control trigger predicate is kernel-owned
+# (state_lifecycle.CcTriggerRule): immobilize from the sourced
+# action-blocking vocabulary, or slow for a melee holder.  A bare
+# ``crowd_control`` flag does not distinguish the branches and stays
+# insufficient, exactly as the reviewed item coverage decided.
+_FIMBULWINTER_TRIGGER_RULE = CcTriggerRule(
+    name="Fimbulwinter — Everlasting crowd-control trigger",
+    slow_melee_only=True,
+    source=SourceReceipt.from_mapping(ITEM_INPUT_OPTIONS["Fimbulwinter"]),
+)
 
-    The shield fires on an immobilize, or on a slow for a melee holder, and
-    the receipt records which.  A bare ``crowd_control`` marker —
-    ``UNCLASSIFIED_CONTROL`` on the bus — says control happened without
-    saying which rung it was, so it takes neither: an unnarrowed marker must
-    not be promoted into a narrowed one.
+
+def _cc_event_stream(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    """The deduplicated damage + control-only event stream.
+
+    Damage-attached control rides ``damage_events``; control-ONLY packets
+    (Darius E, Elise E, ...) ride ``control_events``.  The coupled pair
+    enrichment merges control-only rows INTO the per-event view, so a
+    ``(time, source_key, cc_kind)`` dedupe keeps exactly one copy of every
+    packet and never double-fires the same control packet.
     """
-    if trigger.cc is CcClass.IMMOBILIZE:
-        return "immobilize"
-    if trigger.cc is CcClass.SLOW:
-        return "slow"
-    return ""
+    seen: set[tuple[float, str, str]] = set()
+    out: list[Mapping[str, Any]] = []
+    for stream in (
+        result.get("damage_events", ()),
+        result.get("control_events", ()),
+    ):
+        for event in stream:
+            if not isinstance(event, Mapping):
+                continue
+            try:
+                event_time = float(event.get("time", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            key = (
+                round(event_time, 9),
+                str(event.get("source_key", "")),
+                str(event.get("cc_kind", "") or ""),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(event)
+    return out
+
+
+def _mana_input(
+    raw: object,
+    *,
+    missing_reason: str,
+    invalid_reason: str,
+) -> tuple[float | None, str | None]:
+    """Validate one explicit mana value without inventing a fallback."""
+    if raw is _MISSING:
+        return None, missing_reason
+    if raw is None or isinstance(raw, bool):
+        return None, invalid_reason
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None, invalid_reason
+    if not math.isfinite(value) or value < 0.0:
+        return None, invalid_reason
+    return value, None
 
 
 def _stack_triggers(triggers: Iterable[Trigger]) -> Iterator[Trigger]:
@@ -354,13 +458,17 @@ def _stack_triggers(triggers: Iterable[Trigger]) -> Iterator[Trigger]:
 
 
 def _current_mana_at(
-    result: Mapping[str, Any], event_time: float, maximum_mana: float
-) -> float:
-    """Resolve current mana from the ordered cast receipt at one timestamp."""
-    current = max(0.0, float(maximum_mana))
+    result: Mapping[str, Any], event_time: float, initial_current_mana: object
+) -> tuple[float | None, str | None]:
+    """Resolve current mana from explicit state and ordered cast receipts."""
+    current, initial_reason = _mana_input(
+        initial_current_mana,
+        missing_reason="missing_current_mana",
+        invalid_reason="invalid_current_mana",
+    )
     casts = result.get("cast_timeline", ())
     if not isinstance(casts, Iterable):
-        return current
+        return current, initial_reason
     ordered = []
     for cast in casts:
         if not isinstance(cast, Mapping):
@@ -373,16 +481,18 @@ def _current_mana_at(
             continue
         ordered.append((cast_time, cast))
     for _, cast in sorted(ordered, key=lambda row: row[0]):
-        raw_after = cast.get("resource_after")
-        if raw_after is None:
+        if "resource_after" not in cast:
             continue
-        try:
-            parsed = float(raw_after)
-        except (TypeError, ValueError):
-            continue
-        if math.isfinite(parsed):
-            current = max(0.0, parsed)
-    return current
+        parsed, reason = _mana_input(
+            cast["resource_after"],
+            missing_reason="missing_current_mana",
+            invalid_reason="invalid_current_mana",
+        )
+        if reason is not None:
+            return None, reason
+        current = parsed
+        initial_reason = None
+    return current, initial_reason
 
 
 def _target_by_id(all_actors: Iterable[Any], participant_id: str) -> Any | None:
@@ -457,9 +567,51 @@ def _selected_teammate(attacker: Any, teammates: list[Any], owner: str) -> Any |
     """The teammate the holder's scenario tethered, under *owner*'s options."""
     if not teammates:
         return None
-    raw_index = _option(attacker, owner, "worthy_target_index", 0.0)
+    raw_index = _option(attacker, owner, "worthy_target_index", -1.0)
+    if float(raw_index) < 0.0:
+        # Pledge is unit-targeted: a MISSING authored index means no
+        # designation - fail closed instead of inventing the first
+        # teammate as Worthy (P3 package 3S).
+        return None
     index = max(0, min(len(teammates) - 1, int(raw_index)))
     return teammates[index]
+
+
+def resolve_knights_vow_tether(
+    holder: Any, all_actors: Iterable[Any]
+) -> dict[str, Any] | None:
+    """Resolve one Knight's Vow holder's Worthy tether.
+
+    Returns the authored target, the option gates, and the typed Sacrifice
+    values, or ``None`` when the holder declares no Sacrifice producer, has
+    no eligible teammate, or the authored Worthy index is the no-selection
+    sentinel.  Both the receipt scheduler and the compiled score staging
+    consume this one resolution so the walks cannot disagree about the
+    tether; every number comes back through the declaration's own
+    references, so the item is never spelled here.
+    """
+    sacrifice = _producer(resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE)
+    if sacrifice is None:
+        return None
+    sacrifice.declared(PacketKind.HEAL)
+    target = _selected_teammate(
+        holder, _teammates(holder, list(all_actors)), sacrifice.owner
+    )
+    if target is None:
+        return None
+    return {
+        "holder": holder,
+        "target": target,
+        "redirect_fraction": sacrifice.value("redirect_fraction"),
+        "heal_fraction": sacrifice.value("holder_heal_fraction"),
+        "within_range": _option(holder, sacrifice.owner, "worthy_within_range", 1.0),
+        "holder_health_ready": _option(
+            holder, sacrifice.owner, "holder_above_30_percent", 1.0
+        ),
+        "range_units": sacrifice.value("worthy_range_units"),
+        "threshold": sacrifice.value("holder_health_threshold_ratio"),
+        "source_revision_id": int(sacrifice.value("source_revision_id")),
+    }
 
 
 def _starved_streams(names: Collection[str]) -> list[tuple[str, str]]:
@@ -566,6 +718,19 @@ def _support_quest_packets(
                 target_scope="self",
                 gold_amount=min(gold, gold_cap),
                 quest_threshold=gold_cap,
+                quest_complete=gold >= gold_cap,
+                shared_riches_interval=required_effect_value(
+                    quest_item, "shared_riches_interval"
+                ),
+                shared_riches_gold_minion=required_effect_value(
+                    quest_item, "shared_riches_gold_minion"
+                ),
+                shared_riches_gold_melee=required_effect_value(
+                    quest_item, "shared_riches_gold_melee"
+                ),
+                shared_riches_gold_ranged=required_effect_value(
+                    quest_item, "shared_riches_gold_ranged"
+                ),
                 source_url=source_meta["source_url"],
                 source_revision_id=source_meta["source_revision_id"],
             )
@@ -585,12 +750,67 @@ def _support_quest_packets(
                 amount=ward_uses,
                 target_scope="self",
                 ward_uses=ward_uses,
+                ward_charges=ward.value("ward_charges"),
                 quest_threshold=gold_cap,
                 source_url=source_meta["source_url"],
                 source_revision_id=source_meta["source_revision_id"],
             )
         )
     return packets
+
+
+def _cleanse_active_packet(
+    attacker: Any, target: Any, time: float, item: str
+) -> dict[str, Any]:
+    """One self-cast cleanse-kind packet for a cleanse active item."""
+    from .cleanse_eligibility import item_declaration
+
+    declaration = item_declaration(item)
+    return _packet(
+        attacker=attacker,
+        target=target,
+        time=time,
+        kind="cleanse",
+        source=f"{item} — {declaration['active_name']}",
+        amount=1.0,
+        target_scope="self",
+        cleanse_item=item,
+        source_key=item,
+        utility_kind="cleanse",
+    )
+
+
+def _cleanse_movement_entry(item: str) -> dict[str, Any] | None:
+    """*item*'s atom-backed movement entry, or ``None`` when it grants none."""
+    from .cleanse_eligibility import item_declaration, movement_entry
+
+    return movement_entry(item_declaration(item))
+
+
+def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
+    """The build's cleanse actives that target their own holder.
+
+    Declaration order rather than build order, so the emitted packet sequence
+    is a property of the registry every reader can see and not of whatever
+    order a request happened to list its items in.
+    """
+    from .cleanse_eligibility import ITEM_CLEANSE_DECLARATIONS
+
+    held = frozenset(names)
+    return tuple(
+        item
+        for item, declaration in ITEM_CLEANSE_DECLARATIONS.items()
+        if declaration["target_scope"] == "self" and item in held
+    )
+
+
+def _cleanse_movement_declaration(item: str) -> dict[str, Any]:
+    """The atom-backed movement entry of a cleanse active item (ONE kernel
+    builder — the walk consumes the same shape)."""
+    movement = _cleanse_movement_entry(item)
+    if movement is None:
+        raise KeyError(f"cleanse declaration for {item!r} has no movement entry")
+    return movement
 
 
 def derive_item_support_effects(
@@ -705,58 +925,372 @@ def derive_item_support_effects(
         ward.declared(PacketKind.VISION)
         packets.extend(_support_quest_packets(attacker, shared_riches, ward))
 
+    # Tear of the Goddess — Manaflow packets are a PROJECTION of the typed
+    # mana resource ledger (P3 slice 1): the fight engine admits casts
+    # through ``resource_ledger``, records every PROVEN accepted eligible
+    # hit (a denied cast can never trigger Tear, and a missing hit identity
+    # fails closed), and applies each granted bonus max-mana to the same
+    # account.  This layer only shapes the accepted hit receipts into the
+    # public kind="resource" packet schema — it never recomputes cadence,
+    # charges, or caps (the retired duplicate state).  A fight result
+    # without a ledger section has no Manaflow activity by construction, and
+    # that section IS the guard: damage._tear_manaflow_for builds one for no
+    # other holder, so this branch asks the typed ledger whether Manaflow ran
+    # instead of asking the build for an item name (A3).
+    ledger_section = result.get("resource_ledger")
+    tear = ledger_section.get("tear") if isinstance(ledger_section, Mapping) else None
+    if isinstance(tear, Mapping):
+        interval = required_effect_value(
+            "Tear of the Goddess", "manaflow_charge_interval"
+        )
+        max_charges = max(
+            1,
+            int(required_effect_value("Tear of the Goddess", "manaflow_max_charges")),
+        )
+        per_trigger = required_effect_value(
+            "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
+        )
+        per_champion = required_effect_value(
+            "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
+        )
+        mana_cap = required_effect_value(
+            "Tear of the Goddess", "manaflow_bonus_mana_max"
+        )
+        source_meta = ITEM_INPUT_OPTIONS["Tear of the Goddess"]
+        authored_mana = max(
+            0.0, _option(attacker, "Tear of the Goddess", "manaflow_bonus_mana")
+        )
+        for hit in (
+            tear.get("hits", ()) if isinstance(tear.get("hits"), Iterable) else ()
+        ):
+            if not isinstance(hit, Mapping):
+                continue
+            if not hit.get("accepted"):
+                # Denial receipts (missing identity, no charge, cap)
+                # are public ledger rows, not support packets.
+                continue
+            try:
+                hit_time = float(hit.get("time", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if not math.isfinite(hit_time) or hit_time < 0.0:
+                continue
+            try:
+                grant = float(hit.get("bonus_delta", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if grant <= 0.0:
+                continue
+            try:
+                use_count = max(1, int(hit.get("use_count", 1) or 1))
+            except (TypeError, ValueError):
+                use_count = 1
+            # The packet's public bonus_mana_total keeps the historic
+            # in-fight accrual semantics (authored progress is a separate
+            # field), while the ledger receipt tracks the full total.
+            authored_capped = min(authored_mana, mana_cap)
+            try:
+                ledger_total = float(hit.get("bonus_total", grant) or grant)
+            except (TypeError, ValueError):
+                ledger_total = grant
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=hit_time,
+                    kind="resource",
+                    source="Tear of the Goddess — Manaflow",
+                    amount=grant,
+                    target_scope="self",
+                    bonus_mana_total=max(0.0, ledger_total - authored_capped),
+                    bonus_mana_cap=float(hit.get("cap", mana_cap) or mana_cap),
+                    authored_bonus_mana=authored_capped,
+                    manaflow_charge_interval=interval,
+                    manaflow_max_charges=max_charges,
+                    manaflow_bonus_mana_per_trigger=per_trigger,
+                    manaflow_bonus_mana_per_champion=per_champion,
+                    trigger_kind="ability_cast_vs_champion",
+                    charge_accrued_at=(use_count - 1) * interval,
+                    rank=TransitionRank.BARRIER_GRANT,
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                )
+            )
+
+    # Umbral Glaive — Blackout is the ward-denial vision state: the sourced
+    # one-second unseen gate arms Nightstalker, whose sourced true damage
+    # (50 + 1.5 x lethality) rides the typed first-auto packet in the damage
+    # ledger.  Blackout itself (the 8-second ward/trap denial aura) has no
+    # champion-facing target in the fighter model, so this layer emits one
+    # vision-dimension receipt when the authored ready gate is set; it never
+    # guesses ward hits or converts the denial into damage.
+    if "Umbral Glaive" in names:
+        ready = _option(attacker, "Umbral Glaive", "nightstalker_ready") > 0.0
+        if ready:
+            source_meta = ITEM_INPUT_OPTIONS["Umbral Glaive"]
+            lethality = max(
+                0.0,
+                (
+                    float(attacker.stats.get("lethality", 0.0) or 0.0)
+                    if isinstance(attacker.stats, Mapping)
+                    else 0.0
+                ),
+            )
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=attacker,
+                    time=0.0,
+                    kind="vision",
+                    source="Umbral Glaive — Blackout",
+                    amount=1.0,
+                    target_scope="self",
+                    ward_uses=0.0,
+                    nightstalker_ready=True,
+                    blackout_trigger_windows=1,
+                    unseen_gate_seconds=required_effect_value(
+                        "Umbral Glaive", "nightstalker_unseen_seconds"
+                    ),
+                    trigger_window_seconds=required_effect_value(
+                        "Umbral Glaive", "nightstalker_trigger_window"
+                    ),
+                    blackout_duration=required_effect_value(
+                        "Umbral Glaive", "blackout_duration"
+                    ),
+                    ward_only=True,
+                    ward_hits_modeled=0,
+                    true_damage_on_ward_hit=(
+                        required_effect_value("Umbral Glaive", "base")
+                        + required_effect_value("Umbral Glaive", "lethality_ratio")
+                        * lethality
+                    ),
+                    source_url=source_meta["source_url"],
+                    source_revision_id=source_meta["source_revision_id"],
+                )
+            )
+
     # Fimbulwinter's Everlasting is a self shield that fires only from an
     # explicitly marked immobilize, or a slow for a melee holder.  Its
-    # current-mana threshold and cooldown are resolved from the same ordered
-    # cast receipt that drives resource admission; no cast or crowd-control
-    # state is inferred from a spell name.
+    # trigger predicate, per-cast-instance cadence, and cooldown are
+    # kernel-owned (state_lifecycle); the mana gate and shield pricing stay
+    # here.  No cast or crowd-control state is inferred from a spell name.
+    # Every denial is a named ``item_denial`` receipt (ranged_slow,
+    # mana_gate, cooldown, duplicate_instance, missing_instance_identity,
+    # untyped_cc, unknown_cc_kind) so a silent skip can never hide an
+    # unreviewed or ambiguous trigger.
     everlasting = _producer(slots, AllyProducer.EVERLASTING)
     if everlasting is not None:
         everlasting.declared(PacketKind.SHIELD)
+        # The kernel's trigger rule reads the raw event rows, not the bus's
+        # typed ``Trigger`` view: a denial receipt names the row's own
+        # ``_event_id``, ``cc_kind`` and cast instance, and the bus does not
+        # carry the unclassified rows a denial exists to report.
+        # Candidacy is the MECHANIC's question, so its own kernel rule answers
+        # it: SURVIVAL-API D-08 rules that "applies crowd control" (the bus's
+        # ``applies_control``, the wider sibling used by Cheap Shot and
+        # friends) and "blocks actions" (this trigger) are two different
+        # questions, and they disagree on ``polymorph`` and ``silence``.
+        # Filtering on the bus predicate would drop rows Everlasting's own
+        # declaration accepts.
+        everlasting_events = [
+            event
+            for event in _cc_event_stream(result)
+            if _FIMBULWINTER_TRIGGER_RULE.is_candidate(event)
+        ]
         is_melee = bool(attacker.stats.get("is_melee", False))
         champion_stats = result.get("champion_stats", attacker.stats)
         if not isinstance(champion_stats, Mapping):
             champion_stats = attacker.stats
-        maximum_mana = max(
-            0.0,
-            float(champion_stats.get("max_mana", attacker.stats.get("max_mana", 0.0))),
+        raw_maximum_mana = champion_stats.get(
+            "max_mana", attacker.stats.get("max_mana", _MISSING)
         )
-        mana_threshold_ratio = everlasting.value("everlasting_mana_threshold_ratio")
-        nearby_enemy_count = sum(
-            1 for actor in all_actors if not _same_side(attacker, actor)
+        maximum_mana, maximum_mana_reason = _mana_input(
+            raw_maximum_mana,
+            missing_reason="missing_maximum_mana",
+            invalid_reason="invalid_maximum_mana",
         )
-        cooldown = everlasting.value("everlasting_cooldown")
-        last_activation = float("-inf")
-        seen_casts: set[str] = set()
+        raw_current_mana = attacker.stats.get("mana", _MISSING)
+        mana_gate = fimbulwinter_mana_gate_authority()
+        range_authority = fimbulwinter_nearby_enemy_range_authority()
+        holder_identity = getattr(attacker, "participant_id", None)
         source_meta = ITEM_INPUT_OPTIONS[everlasting.owner]
-        for event in cc_events:
-            trigger_kind = _everlasting_trigger_kind(event)
-            if not trigger_kind or (trigger_kind == "slow" and not is_melee):
-                continue
-            time = event.time
-            cast_identity = (
-                event.ability_instance or f"{event.source_key}:{round(time, 9)}"
+
+        def _denial(
+            event: Mapping[str, Any], reason: str, **details: Any
+        ) -> dict[str, Any]:
+            """One named fail-closed receipt for a denied Everlasting trigger.
+
+            Receipts are NOT applied packets: consumers of the applied
+            support stream filter ``kind == "item_denial"`` (the participant
+            timeline splits them into the public denial-receipt section).
+            """
+            return _packet(
+                attacker=attacker,
+                target=attacker,
+                time=_event_time(event),
+                kind="item_denial",
+                source="Fimbulwinter — Everlasting",
+                target_scope="self",
+                reason=reason,
+                cc_kind=str(event.get("cc_kind", "") or ""),
+                event_id=event.get("_event_id"),
+                trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
+                mana_gate_status=mana_gate["status"],
+                nearby_enemy_range_units=range_authority["range_units"],
+                range_center=(
+                    holder_identity
+                    if isinstance(holder_identity, str) and holder_identity.strip()
+                    else None
+                ),
+                range_input_status=range_authority["spatial_input_status"],
+                source_url=source_meta["source_url"],
+                source_revision_id=source_meta["source_revision_id"],
+                rank=TransitionRank.DAMAGE,
+                **details,
             )
-            if cast_identity in seen_casts:
+
+        if not isinstance(holder_identity, str) or not holder_identity.strip():
+            for event in everlasting_events:
+                if _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee):
+                    packets.append(_denial(event, "missing_holder_identity"))
+            everlasting_events = []
+
+        # Ambiguous / unknown / ranged-slow metadata: every CC-adjacent
+        # event (damage-attached or control-only) that cannot match a branch
+        # is receipted once (an event with NO CC metadata is not a candidate
+        # and produces nothing).
+        for event in _cc_event_stream(result):
+            reason = _FIMBULWINTER_TRIGGER_RULE.denial_reason(event, is_melee=is_melee)
+            if reason:
+                packets.append(_denial(event, reason))
+
+        cooldown_rule = CooldownRule(
+            name="Fimbulwinter — Everlasting",
+            cooldown_seconds=float(everlasting.value("everlasting_cooldown")),
+            per_target=False,
+            source=SourceReceipt.from_mapping(source_meta),
+        )
+        cooldown_state = CooldownState(cooldown_rule)
+        # One shield per cast instance: a multi-part cast that carries
+        # several CC-marked events still arms Everlasting once.
+        cast_cadence = InstanceCadence(once_only=True)
+        for event in everlasting_events:
+            trigger_kind = _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
+            if not trigger_kind:
+                # The CC-adjacent scan above already receipted this event
+                # with its named reason (ranged_slow / untyped_cc /
+                # unknown_cc_kind); it is not an eligible branch.
                 continue
-            seen_casts.add(cast_identity)
-            if time < last_activation + cooldown - 1e-9:
+            time = _event_time(event)
+            raw_cast_identity = event.get("ability_instance")
+            if not isinstance(raw_cast_identity, str) or not raw_cast_identity.strip():
+                packets.append(_denial(event, "missing_instance_identity"))
                 continue
-            current_mana = _current_mana_at(result, time, maximum_mana)
+            cast_identity = raw_cast_identity.strip()
+            if not cast_cadence.allow(time, cast_identity):
+                packets.append(_denial(event, "duplicate_instance"))
+                continue
+            if not cooldown_state.is_ready(time):
+                packets.append(_denial(event, "cooldown"))
+                continue
+            if maximum_mana_reason is not None:
+                packets.append(_denial(event, maximum_mana_reason))
+                continue
+            current_mana, current_mana_reason = _current_mana_at(
+                result, time, raw_current_mana
+            )
+            if current_mana_reason is not None:
+                packets.append(_denial(event, current_mana_reason))
+                continue
+            if mana_gate["status"] == "source_unavailable":
+                packets.append(
+                    _denial(
+                        event,
+                        "mana_gate_authority_unavailable",
+                        current_mana=current_mana,
+                        maximum_mana=maximum_mana,
+                        mana_threshold_ratio=mana_gate["threshold_ratio"],
+                        mana_comparison=mana_gate["comparison"],
+                    )
+                )
+                continue
+            if mana_gate["status"] not in AUTHORIZED_MANA_GATE_STATUSES:
+                raise ValueError(
+                    "Fimbulwinter Everlasting mana gate has an unsupported "
+                    f"authority status: {mana_gate['status']!r}"
+                )
+            if current_mana is None or maximum_mana is None:
+                raise RuntimeError("validated Fimbulwinter mana state is unavailable")
+            threshold_ratio, threshold_reason = _mana_input(
+                mana_gate["threshold_ratio"],
+                missing_reason="missing_mana_threshold_ratio",
+                invalid_reason="invalid_mana_threshold_ratio",
+            )
+            if threshold_reason is not None or threshold_ratio is None:
+                raise ValueError(
+                    "script-authorized Fimbulwinter mana gate requires a valid "
+                    "threshold_ratio"
+                )
+            if mana_gate["comparison"] != "current_mana > maximum_mana * ratio":
+                raise ValueError(
+                    "script-authorized Fimbulwinter mana gate requires an exact "
+                    "comparison contract"
+                )
+            if maximum_mana == 0.0 or current_mana <= maximum_mana * threshold_ratio:
+                packets.append(
+                    _denial(
+                        event,
+                        "mana_gate",
+                        current_mana=current_mana,
+                        maximum_mana=maximum_mana,
+                        mana_threshold_ratio=threshold_ratio,
+                        mana_comparison=mana_gate["comparison"],
+                    )
+                )
+                continue
+
+            raw_target_identity = event.get("target")
             if (
-                maximum_mana <= 0.0
-                or current_mana <= maximum_mana * mana_threshold_ratio
+                not isinstance(raw_target_identity, str)
+                or not raw_target_identity.strip()
             ):
+                packets.append(_denial(event, "missing_target_identity"))
                 continue
-            multiplier = (
-                everlasting.value("everlasting_multi_target_multiplier")
-                if nearby_enemy_count > 1
-                else 1.0
+
+            # Evaluate holder-centered range: count enemies whose
+            # position is within the sourced 1200 units.  Spatial input
+            # flows from the actor stats (stats.position tuple).
+            from .spatial import enemies_within_range, SPATIAL_UNAVAILABLE
+
+            nearby_count: int
+            nearby_count, spatial_reason = enemies_within_range(
+                attacker, all_actors, range_authority["range_units"]
             )
+            if spatial_reason is not None:
+                nearby_count = 0
+                multiplier = 1.0
+                packets.append(
+                    _denial(
+                        event,
+                        SPATIAL_UNAVAILABLE,
+                        denied_component="multi_target_multiplier",
+                        base_shield_applied=True,
+                        nearby_enemy_count=None,
+                        requested_multi_target_multiplier=range_authority["multiplier"],
+                        applied_multi_target_multiplier=multiplier,
+                    )
+                )
+            else:
+                multiplier = (
+                    range_authority["multiplier"]
+                    if nearby_count >= range_authority["minimum_enemy_count"]
+                    else 1.0
+                )
             amount = (
                 everlasting.value("everlasting_base_shield")
                 + current_mana * everlasting.value("everlasting_current_mana_ratio")
             ) * multiplier
+            cooldown_state.start(time, sequence=0)
             packets.append(
                 _packet(
                     attacker=attacker,
@@ -764,6 +1298,9 @@ def derive_item_support_effects(
                     time=time,
                     kind="shield",
                     source="Fimbulwinter — Everlasting",
+                    _event_id=(
+                        f"{attacker.participant_id}:fimbulwinter:{cast_identity}"
+                    ),
                     amount=amount,
                     duration=everlasting.value("everlasting_duration"),
                     target_scope="self",
@@ -772,20 +1309,29 @@ def derive_item_support_effects(
                     # compiler's fail-closed ``support_trigger_link`` branch
                     # keys on ``is not None``, so an unenriched shield must
                     # carry an absent link and not an empty one (D-03).
-                    _trigger_event_id=event.event_id or None,
+                    _trigger_event_id=event.get("_event_id"),
                     trigger_kind=trigger_kind,
                     current_mana=current_mana,
-                    mana_threshold=maximum_mana * mana_threshold_ratio,
-                    nearby_enemy_count=nearby_enemy_count,
+                    mana_threshold=maximum_mana * threshold_ratio,
+                    nearby_enemy_count=nearby_count if spatial_reason is None else None,
+                    nearby_enemy_range_units=range_authority["range_units"],
+                    range_center=holder_identity,
+                    range_input_status=(
+                        "spatially_certified"
+                        if spatial_reason is None
+                        else range_authority["spatial_input_status"]
+                    ),
+                    range_boundary_status=range_authority["boundary_status"],
+                    requested_multi_target_multiplier=range_authority["multiplier"],
                     multi_target_multiplier=multiplier,
-                    cooldown=cooldown,
-                    cooldown_until=time + cooldown,
+                    cooldown=cooldown_rule.cooldown_seconds,
+                    cooldown_until=time + cooldown_rule.cooldown_seconds,
+                    trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
                     source_url=source_meta["source_url"],
                     source_revision_id=source_meta["source_revision_id"],
                     rank=TransitionRank.LATE_BARRIER,
                 )
             )
-            last_activation = time
 
     # Shared target modifiers are emitted only from an authored trigger.  The
     # holder's own pair engine already prices its personal Black Cleaver,
@@ -1331,6 +1877,44 @@ def derive_item_support_effects(
                 ),
                 target_scope="explicit_selected_ally",
                 cleanse=True,
+                cleanse_item="Mikael's Blessing",
+            )
+        )
+    # Quicksilver — the self-cast cleanse actives, driven by the cleanse
+    # registry rather than by a pair of item names.  cleanse_eligibility is
+    # the one home of every cleanse fact (exclusions, cooldown gap, the
+    # atom-backed movement entry), so "which items cleanse their own holder"
+    # is a question that registry already answers.  An AllyProducer could
+    # not: ALLY_ENTRY_SHAPES identifies a producer by its ITEM_EFFECTS value
+    # keys, and Quicksilver Sash carries no such record at all because its
+    # active has no numbers.  An explicit active_seconds input emits the
+    # sourced cleanse packet; a declaration carrying a movement entry
+    # (Mercurial's) grants that SEPARATE utility from the same atom-backed
+    # source — never a call-site literal.
+    for cleanse_item in _self_cleanse_items(names):
+        active_time = _active_seconds_for(attacker, cleanse_item)
+        if active_time <= 0.0:
+            continue
+        packets.append(
+            _cleanse_active_packet(attacker, attacker, active_time, cleanse_item)
+        )
+        movement = _cleanse_movement_entry(cleanse_item)
+        if movement is None:
+            continue
+        packets.append(
+            _packet(
+                attacker=attacker,
+                target=attacker,
+                time=active_time,
+                kind="movement",
+                source=movement["source"],
+                amount=movement["amount"],
+                duration=movement["duration"],
+                bonus_move_speed_percent=movement["amount"],
+                target_scope="self",
+                cleanse_item=cleanse_item,
+                source_key=cleanse_item,
+                utility_kind="movement",
             )
         )
     intervention = _producer(slots, AllyProducer.INTERVENTION)
@@ -1390,6 +1974,31 @@ def derive_item_support_effects(
                     beam_delay=beam_delay,
                     rank=TransitionRank.DAMAGE,
                     sequence=0,
+                )
+            )
+        # Intervention grants sight of the target area for the beam
+        # call-down ("granting sight of the area for the duration"): one
+        # vision receipt per selected enemy, window [cast, impact] =
+        # the sourced 2.5s beam_delay.  The registry previously carried a
+        # 3.0s reveal duration with NO local source (wiki text names no
+        # number, the binary has no reveal value) — removed in P3-3H; the
+        # sourced call-down window is the receipt.
+        for target in (
+            actor for actor in all_actors if not _same_side(attacker, actor)
+        ):
+            packets.append(
+                _packet(
+                    attacker=attacker,
+                    target=target,
+                    time=active_time,
+                    kind="vision",
+                    source="Redemption — Intervention",
+                    amount=beam_delay,
+                    duration=beam_delay,
+                    reveal_duration=beam_delay,
+                    target_scope="enemy_champions_in_radius",
+                    range_assumption=f"within_{range_units:g}_units",
+                    beam_delay=beam_delay,
                 )
             )
     inspiring_speech = _producer(slots, AllyProducer.INSPIRING_SPEECH)
@@ -1470,22 +2079,24 @@ def schedule_knights_vow(
 ) -> None:
     """Attach one deterministic Worthy tether and redirect/heal receipts."""
     for holder in all_actors:
-        sacrifice = _producer(
-            resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE
-        )
-        if sacrifice is None:
+        # The declaration guard, stated here rather than left to the shared
+        # resolver: this is the impl a Knight's Vow capability names, and
+        # ``resolve_knights_vow_tether`` answers ``None`` for three different
+        # reasons — no producer, no eligible teammate, no authored selection
+        # — so folding them would hide which one a build tripped.
+        if (
+            _producer(resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE)
+            is None
+        ):
             continue
-        sacrifice.declared(PacketKind.HEAL)
-        teammates = _teammates(holder, all_actors)
-        target = _selected_teammate(holder, teammates, sacrifice.owner)
-        if target is None:
+        tether = resolve_knights_vow_tether(holder, all_actors)
+        if tether is None:
             continue
-        fraction = sacrifice.value("redirect_fraction")
-        heal_fraction = sacrifice.value("holder_heal_fraction")
-        within_range = _option(holder, sacrifice.owner, "worthy_within_range", 1.0)
-        holder_health_ready = _option(
-            holder, sacrifice.owner, "holder_above_30_percent", 1.0
-        )
+        target = tether["target"]
+        fraction = tether["redirect_fraction"]
+        heal_fraction = tether["heal_fraction"]
+        within_range = tether["within_range"]
+        holder_health_ready = tether["holder_health_ready"]
         # Pledge is unit-targeted and only operates inside 1250 units.  The
         # roster has no spatial coordinates, so the scenario must expose the
         # authored in-range assumption instead of letting the calculator
@@ -1518,13 +2129,9 @@ def schedule_knights_vow(
             event["redirect_target"] = holder.participant_id
             event["redirect_source"] = "Knight's Vow — Sacrifice"
             event["redirect_pre_mitigation_required"] = True
-            event["redirect_holder_health_ratio"] = sacrifice.value(
-                "holder_health_threshold_ratio"
-            )
-            event["redirect_range_units"] = sacrifice.value("worthy_range_units")
-            event["redirect_source_revision_id"] = int(
-                sacrifice.value("source_revision_id")
-            )
+            event["redirect_holder_health_ratio"] = tether["threshold"]
+            event["redirect_range_units"] = tether["range_units"]
+            event["redirect_source_revision_id"] = tether["source_revision_id"]
         for event in outgoing.get(target.participant_id, []):
             if str(event.get("damage_type", "")) not in {"physical", "magic", "true"}:
                 continue
@@ -1541,11 +2148,9 @@ def schedule_knights_vow(
                     amount=amount * heal_fraction,
                     target_scope="holder_from_worthy_damage",
                     healing_category="knights_vow",
-                    requires_holder_health_ratio=sacrifice.value(
-                        "holder_health_threshold_ratio"
-                    ),
-                    range_units=sacrifice.value("worthy_range_units"),
-                    source_revision_id=int(sacrifice.value("source_revision_id")),
+                    requires_holder_health_ratio=tether["threshold"],
+                    range_units=tether["range_units"],
+                    source_revision_id=tether["source_revision_id"],
                 )
             )
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
@@ -197,4 +198,30 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Ekko")
 
-SELF_HEALING_RULE = declare_healing_rule("Ekko")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Ekko self-healing events from its authored packet."""
+    healing = []
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(
+        _healing._ability(champion_data, "R"), "Minimum Heal", r_rank, champion_stats
+    )
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+    ):
+        event = payment.event
+        _healing._heal_from_damage(
+            healing, event, r_heal, "Chronobreak", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Ekko", derive_self_healing)

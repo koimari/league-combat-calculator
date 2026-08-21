@@ -8,10 +8,11 @@ single-pass "Physical Damage" row the reviewed packet priced.  The
 module now prices the Total row so a full out-and-back pass deals the
 in-game 2x damage (320 at rank 5 vs the old 160).
 
-E (Spell Shield) is ``modeled``: blocking a hostile effect heals Sivir for
-81.6 at rank 5 (80% of her level-18 total AD, 102.0), scoped to herself —
-"she heals herself and activates Fleet of Foot" names no ally.  The spell
-shield's own block has no engine axis.
+E (Spell Shield) is ``modeled`` as a timed ``self_state_events`` window:
+the sourced 1.5s shield blocks one hostile effect and, after the sourced
+0.25s delay, heals Sivir for the cached Heal row (60-80% AD + 50% AP by
+rank), scoped to herself — "she heals herself and activates Fleet of
+Foot" names no ally.
 
 P (Fleet of Foot) and R (On The Hunt) stay ``out_of_scope`` on the
 movement-speed axis: ``slotlib``'s ``stat_buff`` dispatch has no
@@ -21,6 +22,12 @@ attack" needs a cooldown-refund channel a champion module cannot author.
 
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    required_ability_atom,
+    required_ranked_attribute_atom,
+    ranked_ability_atom_value,
+)
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
@@ -56,11 +63,104 @@ def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# Sourced from the cached Spell Shield description.  The duration is read
+# through the typed ability-atom accessor (``timing.active_duration``, the
+# description's "for 1.5 seconds" prose atom); the 0.25s heal delay has NO
+# atom in the catalog (prose-only — recorded SOURCE GAP in the slice
+# handover), so it stays a module-authored sourced literal.
+_SPELL_SHIELD_HEAL_DELAY_SECONDS = 0.25
+
+_ATOM_RECEIPT_KEYS = (
+    "atom_id",
+    "behavior",
+    "source",
+    "values",
+    "units",
+    "evidence",
+    "hash",
+)
+
+
+def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+    """One JSON-safe atom receipt (the interaction-atoms shape)."""
+    return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
+
+
+def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: one timed spell shield with its sourced block heal.
+
+    Numeric values ride the typed ability-atom accessors: the 1.5s window
+    (``timing.active_duration``) and the Heal row (60-80% AD + 50% AP by
+    rank).  The 0.25s heal delay is prose-sourced (no atom exists).
+    """
+    ability = ctx.ability("E")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("E")
+    if rank < 1:
+        return None
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    duration_atom = required_ability_atom(
+        "Sivir",
+        champion_data,
+        "E",
+        query=AbilityAtomQuery(
+            source="Sivir.E[0].effects[0].description",
+            behavior="timing",
+            evidence_prefix="active duration@",
+        ),
+    )
+    if duration_atom.get("units") != ["s"]:
+        raise ValueError("Sivir E spell-shield duration atom must use seconds")
+    duration = ranked_ability_atom_value(
+        duration_atom, 1, source="Sivir.E[0].effects[0].description"
+    )
+    ad_ratio, ad_atom = required_ranked_attribute_atom(
+        "Sivir", champion_data, "E", "Heal", rank, modifier_index=0
+    )
+    ap_ratio, ap_atom = required_ranked_attribute_atom(
+        "Sivir", champion_data, "E", "Heal", rank, modifier_index=1
+    )
+    heal = (
+        ad_ratio * ctx.stat("attack_damage") / 100.0
+        + ap_ratio * ctx.stat("ability_power") / 100.0
+    )
+    return {
+        "name": ability.get("name", "Spell Shield"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "total_raw": 0.0,
+        "damage_type": "magic",
+        "parts": (),
+        "self_state_events": [
+            {
+                "kind": "spell_shield",
+                "duration": duration,
+                "source": ability.get("name", "Spell Shield"),
+                "on_block_heal_amount": heal,
+                "on_block_heal_delay": _SPELL_SHIELD_HEAL_DELAY_SECONDS,
+                "on_block_heal_source": "Spell Shield · Heal",
+                "source_atoms": [
+                    _atom_receipt(duration_atom),
+                    _atom_receipt(ad_atom),
+                    _atom_receipt(ap_atom),
+                ],
+            }
+        ],
+        "detail": (
+            "Spell Shield blocks one hostile effect during the sourced "
+            f"{duration:g}s window and heals Sivir for {heal:g} after the "
+            "sourced 0.25s delay."
+        ),
+    }
+
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sivir",
     PACKET_SHA256,
     slot_parsers={
         "Q": _boomerang_blade,
+        "E": _spell_shield,
     },
 )
 
@@ -71,6 +171,12 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "deals the same damage on the way out and back.",
     "The exact return cadence is not cached; both passes are priced at "
     "the cast boundary.",
+    "E (Spell Shield) grants a 1.5 second shield (atom-backed: "
+    "timing.active_duration 4d718bc78f540f0a). The first hostile ability "
+    "effect during that window is blocked. The cached Heal row is applied "
+    "after the sourced 0.25 second delay (prose-only — no catalog atom "
+    "exists; recorded SOURCE GAP). Fleet of Foot is state and stays "
+    "outside the damage ledger.",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E"} else "out_of_scope") for slot in "PQWER"

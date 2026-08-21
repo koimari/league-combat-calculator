@@ -339,6 +339,47 @@ as "re-cert in progress" and the STALE badge stays visible until the re-cert
 completes — the badge is the point; it tells users not to trust those
 numbers yet. The < 72h full re-cert SLA still applies.
 
+## Automation wrapper — `scripts/weekly_ingest.py`
+
+A cron-able orchestrator over four of this runbook's steps. It never
+supersedes the manual judgment calls (Steps 0/3/4/6/7/8/9 stay manual) — it
+exists to make the mechanical, no-judgment parts of a weekly check
+one command instead of several by-hand ones.
+
+```bash
+# Module form, from the repo root. `python scripts/weekly_ingest.py` is NOT
+# supported: the script imports siblings as `scripts.X` and never edits
+# sys.path (see its "Import contract" docstring).
+python -m scripts.weekly_ingest detect     # Step 0.2, read-only
+python -m scripts.weekly_ingest fetch --patch 16.16 [--limit 20] [--force]
+python -m scripts.weekly_ingest bis --patch 16.16
+python -m scripts.weekly_ingest packets
+python -m scripts.weekly_ingest all        # detect, then fetch -> bis -> packets
+                                           # only if a new patch is live
+```
+
+| Subcommand | Covers | Exit codes | Fails closed on |
+|---|---|---|---|
+| `detect` | Step 0.2 (live vs. cached patch comparison). Read-only, no side effects. | 0 current, 1 new patch available, 2 infra failure | `cdtb` and the CommunityDragon `content-metadata.json` fallback both unreachable; `data/staleness.json` missing/unreadable/no `patch` field; unparseable patch labels |
+| `fetch` | Refreshes `data/gamefiles/` (the exact cache `patch_regression.py check` reads, Step 2) plus the tracked Gnar/GnarBig/Renata game-file authority pair (`data/bin/characters/`, commit 58ce29e) | 0 clean, 1 partial (an authority file failed), 2 hard error | empty/unreadable champion roster; HTTP/network errors per file; malformed JSON (`jq empty`); always clears a prior patch's cached bin before fetching so a stale copy can't be silently re-served |
+| `bis` | Rebuilds `static/bis-profiles.json` — the by-hand step Step 1 and the Non-goals section below describe (`build_bis_profiles.py` wrapper) | 0 ok, raises `RuntimeError` (script exit 2) on any invariant failure | missing `LCC_AXWORD_SOURCE` sibling-repo file; missing champion cache; zero champions produced; zero merged Meraki damage packets; a merged-packet count that regresses below the checked-in baseline (the Axword invariant, `tests/test_bis_profiles.py`) |
+| `packets` | Regenerates reviewed packets to a scratch path and reports **drift only** against `static/reviewed-packets.json` — it never writes that file | 0 clean, 1 drift found, 2 hard error | missing checked-in asset; missing `LCC_WIKI_DB` / wiki sqlite cache; missing Axword source; zero wiki revision receipts |
+| `all` | `detect`, then — only if a new patch is live — `fetch` → `bis` → `packets` in order, short-circuiting on the first failure | 0 no action needed / ready for triage, 1/2 per the failing subcommand | same as above; propagates the first `RuntimeError` verbatim with the failing step named |
+
+Every subcommand prints a single JSON report to stdout (`--indent 2,
+sort_keys`), so it composes with `jq` in a cron wrapper or CI step.
+
+What it explicitly does **not** do, by design (these stay the human steps in
+Steps 1/3/4/6/7/8/9 above):
+
+- Re-pull the wiki cache (`patch_update.py run` — Step 1) or run its gates.
+- Splice a drifted champion's reviewed-packet sub-object back into
+  `static/reviewed-packets.json` — `packets` only reports the diff; the
+  splice remains a by-hand `build_reviewed_modules.py` edit (the Poppy
+  16.16.1 precedent, commit 3137da9).
+- Triage stale flags, re-capture the golden baseline, commit, push, or gate
+  issue closures.
+
 ## Non-goals (this runbook does not cover)
 
 - Mid-patch hotfix data (between patches): re-run Steps 2-5 on the pinned

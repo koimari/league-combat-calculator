@@ -20,7 +20,11 @@ from .champions import (
     get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
-from .rotation_resolver import build_rotation_receipt, resolve_cast_order
+from .rotation_resolver import (
+    build_rotation_receipt,
+    detect_aoe_cap,
+    resolve_cast_order,
+)
 from .champions.skill_orders import get_ability_rank
 from .damage import (
     FightConfig,
@@ -29,10 +33,10 @@ from .damage import (
     split_by_damage_type,
 )
 from . import item_effects
+from . import resource_ledger
 from .interpreters import sustain
 from .interpreters.sustain import declared_sustain
 from .item_behavior import (
-    ManaSpentHealRule,
     PostMitigationHealRule,
     ResourceDrainRule,
     SustainStat,
@@ -40,6 +44,7 @@ from .item_behavior import (
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import derive_self_healing, self_heal_rule_owner
 from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
+from .support_effects import derive_self_state_effects
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -49,15 +54,21 @@ from .auto_attack_policy import (
 )
 from .role_quests import max_champion_level, validate_role
 from .request_parsing import (
+    request_index_map,
     request_bool as _request_bool,
     request_int as _request_int,
     request_number,
+    request_string,
 )
 from .rune_effects import (
+    KeystoneConquerorEffect,
+    KeystoneFleetEffect,
     RuneHealEffect,
     RuneHealTrigger,
     RunePage,
+    resolve_rune,
     resolve_rune_page,
+    validate_keystone_options,
     validate_rune_page,
 )
 from .stats import calculate_total_stats, get_item_stats
@@ -241,59 +252,86 @@ def _item_self_healing_events(
                 sequence += 1
                 time += tick
 
-    # Catalyst's Eternity heal is tied to each accepted mana-spending cast.
-    # The cast timeline is the only certified timestamp/resource receipt; an
-    # aggregate resource total is deliberately not converted into a guessed
-    # heal.  The sourced 20-per-second cap is applied in one-second buckets,
-    # while each cast is independently capped at 20.
-    mana_spent_heal = declared_sustain(item_names, ManaSpentHealRule)
-    if mana_spent_heal is not None:
-        cast_timeline = result.get("cast_timeline")
-        if not isinstance(cast_timeline, list):
-            cast_timeline = []
-        heal_ratio = mana_spent_heal.value("heal_ratio")
-        cast_cap = mana_spent_heal.value("cap_per_cast")
-        second_cap = mana_spent_heal.value("cap_per_second")
-        healed_by_second: dict[int, float] = {}
-        for cast in cast_timeline:
-            if not isinstance(cast, Mapping):
-                continue
-            try:
-                event_time = float(cast["time"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if not math.isfinite(event_time):
-                continue
-            try:
-                before = float(cast.get("resource_before", 0.0) or 0.0)
-                after = float(cast.get("resource_after", 0.0) or 0.0)
-                spent = max(0.0, before - after)
-            except (TypeError, ValueError):
-                spent = 0.0
-            if spent <= 0.0:
+    # Catalyst's Eternity heal is a projection of the typed mana resource
+    # ledger's ACCEPTED spend receipts (P3 package 3A): the ledger is the
+    # single authoritative current/max mana account, and the per-cast and
+    # per-second heal caps are applied exactly once there, at the cast
+    # timestamp, so every consumer (receipt walk and score-only walk)
+    # emits byte-identical heal packets.  The public resource_ledger.catalyst
+    # section carries the typed declaration and the heal rows; a fight
+    # without the typed account (energy or manaless resource, or resource
+    # limits disabled) cannot certify a MANA-spent heal and emits none —
+    # an aggregate resource total is never converted into a guessed heal.
+    if "Catalyst of Aeons" in item_names:
+        ledger_section = result.get("resource_ledger")
+        # A catalyst section is only ever built on a mana account, so its
+        # presence answers the question even when the ledger row carries no
+        # ``kind`` (a unit-level ledger built without the fight's identity).
+        mana_account = isinstance(ledger_section, Mapping) and (
+            str(ledger_section.get("kind", "")) == resource_ledger.RESOURCE_KIND_MANA
+            or isinstance(ledger_section.get("catalyst"), Mapping)
+        )
+        if not mana_account:
+            # A holder who spends no mana has no Eternity to price.  The
+            # fight publishes a resource ledger either way -- Rengar's is a
+            # Ferocity account -- so "no catalyst section" means two
+            # different things, and only one of them is a defect: a MANA
+            # account without one is the ledger failing to build the heal,
+            # while any other kind is the mechanic being structurally
+            # absent.  Certifying the difference here is what keeps a
+            # manaless holder from failing a window it simply does not have.
+            notes = result.get("notes")
+            if isinstance(notes, list):
+                kind = (
+                    str(ledger_section.get("kind", ""))
+                    if isinstance(ledger_section, Mapping)
+                    else ""
+                )
+                notes.append(
+                    "Catalyst of Aeons (Eternity): the holder spends no mana"
+                    + (f" ({kind} resource)" if kind else "")
+                    + "; the mana-spent heal is structurally zero, not "
+                    "withheld."
+                )
+        else:
+            catalyst_section = ledger_section.get("catalyst")
+            if not isinstance(catalyst_section, Mapping):
+                raise ValueError(
+                    "Catalyst of Aeons is equipped but the typed mana "
+                    "resource ledger carries no catalyst section; the "
+                    "Eternity heal cannot be certified."
+                )
+            heal_rows = catalyst_section.get("heals")
+            if not isinstance(heal_rows, list):
+                raise ValueError(
+                    "Catalyst of Aeons resource ledger section has no heals "
+                    "list; the Eternity heal cannot be certified."
+                )
+            for heal in heal_rows:
+                if not isinstance(heal, Mapping):
+                    continue
                 try:
-                    spent = max(0.0, float(cast.get("resource_cost", 0.0) or 0.0))
+                    event_time = float(heal.get("time", 0.0))
+                    amount = float(heal.get("amount", 0.0) or 0.0)
                 except (TypeError, ValueError):
-                    spent = 0.0
-            if spent <= 0.0:
-                continue
-            bucket = math.floor(event_time + 1e-9)
-            remaining = max(0.0, second_cap - healed_by_second.get(bucket, 0.0))
-            amount = min(cast_cap, heal_ratio * spent, remaining)
-            if amount <= 0.0:
-                continue
-            healed_by_second[bucket] = healed_by_second.get(bucket, 0.0) + amount
-            events.append(
-                {
-                    "time": event_time,
-                    "amount": amount,
-                    "source": f"{mana_spent_heal.owner} (Eternity)",
-                    "kind": "item_proc",
-                    "_trigger_source": str(cast.get("slot", "cast")),
-                    "_trigger_time": event_time,
-                    "_trigger_sequence": int(cast.get("ordinal", 1) or 1) - 1,
-                }
-            )
+                    continue
+                if (
+                    not math.isfinite(event_time)
+                    or not math.isfinite(amount)
+                    or amount <= 0.0
+                ):
+                    continue
+                events.append(
+                    {
+                        "time": event_time,
+                        "amount": amount,
+                        "source": "Catalyst of Aeons (Eternity)",
+                        "kind": "item_proc",
+                        "_trigger_source": str(heal.get("slot", "cast")),
+                        "_trigger_time": event_time,
+                        "_trigger_sequence": int(heal.get("ordinal", 1) or 1) - 1,
+                    }
+                )
 
     # Item-provided health regeneration is a timestamped stat contribution.
     # Keep champion base regeneration out of the item self-heal stream (the
@@ -385,6 +423,8 @@ def _item_self_healing_events(
             continue
         if row.get("unit") != "health":
             continue
+        if row.get("owner") == "keystone":
+            continue
         raw_heal_events = row.get("heal_events")
         if isinstance(raw_heal_events, list):
             source = str(row.get("name", source_key))
@@ -413,6 +453,8 @@ def _item_self_healing_events(
                 }
                 if raw_event.get("healing_category"):
                     materialized["healing_category"] = raw_event["healing_category"]
+                if raw_event.get("actor_wide"):
+                    materialized["actor_wide"] = True
                 amount_formula = raw_event.get("amount_formula")
                 if callable(amount_formula):
                     materialized["amount_formula"] = amount_formula
@@ -519,7 +561,7 @@ def _rune_heal_times(result: Mapping[str, Any], effect: RuneHealEffect) -> list[
 
 
 def _rune_self_healing_events(
-    result: Mapping[str, Any], rune_page: "RunePage | None"
+    result: Mapping[str, Any], rune_page: RunePage | None
 ) -> list[dict[str, Any]]:
     """Materialize the heal packets the page's healing runes earned.
 
@@ -566,6 +608,50 @@ def _rune_self_healing_events(
     return events
 
 
+def _keystone_self_healing_events(
+    result: Mapping[str, Any], params: "FightParams"
+) -> list[dict[str, Any]]:
+    """Materialize timestamped self-heals emitted by a typed keystone row."""
+    if params.keystone not in {"Fleet Footwork", "Conqueror"}:
+        return []
+    row = result.get("breakdown", {}).get(f"heal_{params.keystone}")
+    if not isinstance(row, Mapping) or not isinstance(row.get("heal_events"), list):
+        return []
+    source = (
+        "Fleet Footwork · Energized heal"
+        if params.keystone == "Fleet Footwork"
+        else "Conqueror · max-stack heal"
+    )
+    effect = resolve_rune(params.keystone)
+    if params.keystone == "Fleet Footwork" and not isinstance(
+        effect, KeystoneFleetEffect
+    ):
+        return []
+    if params.keystone == "Conqueror" and not isinstance(
+        effect, KeystoneConquerorEffect
+    ):
+        return []
+    slug = "fleet-footwork" if params.keystone == "Fleet Footwork" else "conqueror"
+    events: list[dict[str, Any]] = []
+    for index, event in enumerate(row["heal_events"]):
+        if not isinstance(event, Mapping):
+            continue
+        events.append(
+            {
+                **event,
+                "source": source,
+                "kind": "keystone",
+                "healing_category": "direct",
+                "actor_wide": True,
+                "_event_id": event.get(
+                    "_event_id",
+                    f"main:{slug}:heal:{index}",
+                ),
+            }
+        )
+    return events
+
+
 def _saturated_omnivamp_percent(
     items: list[dict[str, Any]],
     fight_duration_seconds: float,
@@ -607,6 +693,7 @@ def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arg
         stats=fight_stats,
         damage_effects=item_damage_effects,
         ability_damages=ability_damages,
+        rune_page=params.rune_page,
         fight_duration_seconds=params.fight_duration_seconds,
         is_melee=bool(fight_stats.get("is_melee", True)),
         target_threshold_health_heal=params.target_threshold_health_heal,
@@ -694,6 +781,31 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
     result["auto_attack_damage"] = auto_damage
     result["ability_damage"] = ability_damage
     result["damage_by_type"] = split_by_damage_type(result["breakdown"])
+
+
+def _annotate_deathfire_categories(
+    ability_damages: dict[str, dict[str, Any]],
+    champion_data: Mapping[str, Any],
+) -> None:
+    """Attach conservative typed damage categories for Deathfire Touch."""
+    for slot, info in ability_damages.items():
+        if not isinstance(info, dict) or not info.get("parts"):
+            continue
+        if info.get("deathfire_category"):
+            continue
+        if float(info.get("total_raw", 0.0) or 0.0) <= 0.0:
+            continue
+        persistent = bool(info.get("dot_duration") or info.get("dot_tick_interval"))
+        area = detect_aoe_cap(champion_data, slot) > 1
+        if persistent and area:
+            category = "persistent_area_damage"
+        elif persistent:
+            category = "persistent_damage"
+        elif area:
+            category = "area_damage"
+        else:
+            category = "spell_damage"
+        info["deathfire_category"] = category
 
 
 def _bounded_request_float(
@@ -796,6 +908,26 @@ def cast_slot_surface(
     return surface
 
 
+def _request_target_class(data: Mapping[str, Any]) -> str:
+    """Read the public target-class selector (P3-3M), failing closed.
+
+    Omitting the key keeps the historical champion-class fight, so every
+    existing request stays byte-identical. A supplied value must match a
+    :data:`item_effects.TARGET_CLASSES` spelling EXACTLY — no case folding
+    and no plural forms, so the request layer and ``FightConfig``'s own
+    guard share one spelling contract rather than the request layer
+    quietly widening what the kernel accepts.
+    """
+    value = request_string(data, "target_class", item_effects.DEFAULT_TARGET_CLASS)
+    if value not in item_effects.TARGET_CLASSES:
+        raise ValueError(
+            "target_class must be "
+            + " or ".join(item_effects.TARGET_CLASSES)
+            + f"; got {value!r}"
+        )
+    return value
+
+
 @dataclass(frozen=True)
 class FightParams(FightConfig):
     """FightConfig plus the parse-layer inputs the engine never sees.
@@ -806,7 +938,8 @@ class FightParams(FightConfig):
 
     ability_ranks: dict[str, int] | None = None
     champion_options: dict[str, Any] | None = None
-    item_options: dict[str, dict[str, int]] | None = None
+    item_options: dict[str, dict[str, int | float]] | None = None
+    support_target_selections: dict[str, int] | None = None
     role: str = ""
     role_quest_complete: bool = False
     ally_stat_bonuses: dict[str, float] | None = None
@@ -882,12 +1015,45 @@ class FightParams(FightConfig):
         if champion_options is not None and not isinstance(champion_options, Mapping):
             raise ValueError("champion_options must be an object")
         item_options = validate_item_input_options(data.get("item_options"))
+        support_target_selections = request_index_map(
+            data.get("support_target_selections"),
+            field="support_target_selections",
+            maximum_index=3,
+        )
+        # One page validates the whole rune selection — keystone, minors,
+        # shards and every rune's options — so a keystone-only validator is
+        # not a second home for the same question.
         rune_page = validate_rune_page(
             data.get("keystone"),
             data.get("minor_runes"),
             data.get("stat_shards"),
             data.get("rune_options"),
         )
+        # ``keystone_options`` is the older spelling of the keystone's own
+        # entry in ``rune_options``.  It is validated against the page's
+        # keystone and folded into the page, so every reader downstream asks
+        # the page and a request may use either spelling without two homes
+        # answering differently.
+        requested_keystone_options = data.get("keystone_options")
+        keystone_options = validate_keystone_options(
+            requested_keystone_options, rune_page.keystone
+        )
+        if (
+            isinstance(requested_keystone_options, Mapping)
+            and requested_keystone_options
+        ):
+            rune_page = replace(
+                rune_page,
+                options={
+                    **rune_page.options,
+                    rune_page.keystone: {
+                        **rune_page.options.get(rune_page.keystone, {}),
+                        **{
+                            key: float(value) for key, value in keystone_options.items()
+                        },
+                    },
+                },
+            )
         role = validate_role(data.get("role", ""))
         role_quest_complete = _request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
@@ -922,10 +1088,13 @@ class FightParams(FightConfig):
                 dict(champion_options) if champion_options is not None else None
             ),
             item_options=item_options or None,
+            support_target_selections=support_target_selections or None,
             keystone=rune_page.keystone,
             minor_runes=rune_page.minor_runes,
             stat_shards=rune_page.stat_shards,
             rune_options=dict(rune_page.options) or None,
+            keystone_options=keystone_options,
+            target_class=_request_target_class(data),
             role=role,
             role_quest_complete=role_quest_complete,
             enemies_attack=_request_bool(data, "enemies_attack", True),
@@ -1211,6 +1380,8 @@ def run_fight(
         target_stats=params.target_stats(),
         champion_options=champion_options,
     )
+    if params.keystone == "Deathfire Touch":
+        _annotate_deathfire_categories(ability_damages, champion_data)
     # The fight engine applies ability stat buffs (Mega Gnar's form
     # stats, Vayne/Aatrox R, ...) to this copy in place — report THESE
     # as the champion's stats so the UI panel shows the fight-effective
@@ -1237,6 +1408,7 @@ def run_fight(
             ability_damages,
             champion_data=champion_data,
             certified_order=get_champion_cast_order(champion_data.get("name", "")),
+            champion_options=champion_options,
         )
         params = _params_with_cast_order(params, declared_order)
         resolved_rotation_rule = combo_rule
@@ -1297,6 +1469,8 @@ def run_fight(
                 target_stats=params.target_stats(),
                 champion_options=champion_options,
             )
+            if params.keystone == "Deathfire Touch":
+                _annotate_deathfire_categories(ability_damages, champion_data)
     # ``score_only`` is the request for a narrowed result; whether the light
     # tuple ledger can serve it is projection satisfaction over the declared
     # adequacy conditions, not a conjunction kept here (D-38, criterion 15).
@@ -1325,7 +1499,24 @@ def run_fight(
         score_only=score_only,
         tuple_ledger=tuple_ledger,
         item_options=params.item_options,
+        champion_options=params.champion_options,
     )
+    result["self_state_events"] = derive_self_state_effects(
+        ability_damages,
+        list(result.get("cast_timeline", [])),
+    )
+    keystone_state_events: list[dict[str, Any]] = []
+    fleet_row = result.get("breakdown", {}).get("keystone_Fleet Footwork")
+    if isinstance(fleet_row, Mapping) and isinstance(
+        fleet_row.get("movement_events"), list
+    ):
+        keystone_state_events.extend(fleet_row["movement_events"])
+    conqueror_row = result.get("breakdown", {}).get("keystone_Conqueror")
+    if isinstance(conqueror_row, Mapping) and isinstance(
+        conqueror_row.get("stack_events"), list
+    ):
+        keystone_state_events.extend(conqueror_row["stack_events"])
+    result["keystone_state_events"] = keystone_state_events
     result["champion_stats"] = fight_stats
     # F2 rotation receipt: the optimal order + WHY it is optimal, for the
     # event-order panel. ``order`` is the engine's actual cooldown-aware
@@ -1357,6 +1548,7 @@ def run_fight(
     )
     result["self_healing_events"] = sorted(
         champion_healing
+        + _keystone_self_healing_events(result, params)
         + _item_self_healing_events(result, items, params.fight_duration_seconds)
         + _rune_self_healing_events(result, params.rune_page),
         key=lambda event: (

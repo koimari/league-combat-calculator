@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _vital(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -144,14 +146,73 @@ OPTIONS = [
         "max": 2,
         "label": "Bladework attacks",
     },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": False,
+        "label": "W (Riposte) active against selected incoming events",
+    },
+    {
+        "key": "w_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "W active start time in seconds",
+    },
+    {
+        "key": "w_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 0.75,
+        "label": "W active seconds; zero uses the sourced 0.75 second duration",
+    },
+    {
+        "key": "w_blocked_sources",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Incoming sources to negate; an empty list negates all matching events"
+        ),
+    },
 ]
 
 ASSUMPTIONS = [
-    "Vitals are explicit true-damage procs; the user supplies how many directional hits actually occur.",
-    "Lunge is a real attack for item on-hit purposes, while Bladework's first/second crit distinction remains visible in its option detail.",
+    "Vitals are explicit true-damage procs; the user supplies how many "
+    "directional hits actually occur.",
+    "Lunge is a real attack for item on-hit purposes, while Bladework's "
+    "first/second crit distinction remains visible in its option detail.",
     "Grand Challenge's Victory Zone heals are not TDD and are not converted into damage.",
+    "Riposte negates selected incoming damage and crowd control during the "
+    "sourced 0.75 second stance; an empty source list means every incoming "
+    "event in the window.",
 ]
 
 SOURCES = load_champion_sources("Fiora")
 
-SELF_HEALING_RULE = declare_healing_rule("Fiora")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Fiora self-healing events from its authored packet."""
+    healing = []
+    p_level = int(champion_stat(champion_stats, "level"))
+    p_heal = _healing.extract_named(
+        _healing._ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "passive"
+    ):
+        _healing._heal_from_damage(healing, event, p_heal, "Duelist's Dance")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Fiora", derive_self_healing)

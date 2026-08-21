@@ -2,16 +2,32 @@
 
 Only Q deals damage.  R is priced as the Chronoshift revive below, so it
 is ``modeled`` through that channel rather than through its own row.  The
-other three slots need axes the engine does not have: P (Time in a
-Bottle) is experience generation, W (Rewind) is a resource/cooldown
-refund on Q and E, and E (Time Warp) is a movement-speed grant or an
-enemy slow whose CC magnitude no cast row carries.
+other three slots carry no sourced damage/heal/shield number at all, so
+they are ``no_damage`` rather than unmodelled mechanics:
+
+  - P (Time in a Bottle) has empty cached leveling — it grants Zilean and
+    a selected ally experience only.
+  - W (Rewind) has empty cached leveling; it "reduces the remaining
+    cooldowns of Time Bomb and Time Warp by 10 seconds each", and the
+    fight engine's rotation is a static per-fight cast count, so a
+    mid-fight cooldown refund changes nothing it prices.  What it *does*
+    change is reachable through the ``q_second_bomb`` state below: a
+    Q -> W -> Q sequence is how the second bomb lands inside the first
+    one's fuse.
+  - E (Time Warp) carries only a "Movement Speed Modifier" row
+    (40/55/70/85/99%, a slow on an enemy or a haste on an ally), and
+    ``ability_spec.ACTION_BLOCKING_CC_KINDS`` deliberately excludes
+    "slow", so a pure movement-speed change creates no action downtime
+    either.
 """
+
+from dataclasses import replace
 
 from .inputs import champion_stat
 from .packet_module import build_packet_module
 
 from ..champions.skill_orders import get_ability_rank
+from .slotlib import with_control
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
 
@@ -20,20 +36,83 @@ PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc823377
 # damage to nearby enemies" (cached Q prose).
 _Q_FUSE_SECONDS = 3.0
 
-# A lone bomb only explodes.  The kit's stun needs a second bomb inside the
-# first one's fuse — "the bomb detonates immediately if another bomb
-# attaches itself to the same unit, stunning nearby enemies" — which Time
-# Bomb's own cooldown puts out of reach of one cast.  W (Rewind), E (Time
-# Warp, where the enemy slow lives) and R (Chronoshift) are out_of_scope
-# rows with no damage, and P is the experience channel.
-MODULE_CC = {"Q": "none"}
+
+def _time_bomb(compiled):
+    """Q: a lone bomb waits out its fuse; a second bomb detonates it now.
+
+    One cast, two sourced answers, so they are authored per part rather
+    than in ``MODULE_CC`` (the Alistar E / Xayah E precedent): a lone Time
+    Bomb only "explodes to deal magic damage", while "the bomb detonates
+    immediately if another bomb attaches itself to the same unit, stunning
+    nearby enemies".  Reaching the second bomb inside the fuse needs W
+    (Rewind) to refund Q's cooldown, which the static rotation cannot
+    derive — so it is the player-declared ``q_second_bomb`` state, and it
+    moves the detonation to the cast boundary as well as arming the
+    sourced Stun Duration row.
+
+    That stun rides the detonation itself — one hit, one instant, one
+    control — so ``with_control`` puts the sourced interval and the atoms
+    it was read from on that part rather than beside it as a separate
+    control event.  The row lives on the third cached effect
+    (``Zilean.Q[0].effects[2].leveling[0]``, "Stun Duration"
+    1.1 : 1.5), which is why the branch names ``effect_index=2``.
+    """
+
+    def parse(ctx):
+        entry = compiled(ctx)
+        if entry is None:
+            return None
+        second_bomb = bool(ctx.option("q_second_bomb"))
+        entry["parts"] = tuple(
+            replace(part, time_offset=0.0 if second_bomb else _Q_FUSE_SECONDS)
+            for part in entry.get("parts") or ()
+        )
+        if second_bomb:
+            entry = with_control(
+                lambda _ctx, built=entry: built,
+                kind="stun",
+                duration_attr="Stun Duration",
+                effect_index=2,
+            )(ctx)
+        else:
+            entry["parts"] = tuple(
+                replace(part, cc_kind="none") for part in entry["parts"]
+            )
+        entry["cc_reviewed"] = True
+        return entry
+
+    return parse
+
+
+# Q is authored per part by ``_time_bomb`` (its kind depends on the
+# second-bomb state), and P/W/E/R price no damage, so the module declares
+# no per-slot kind of its own.
+MODULE_CC: dict[str, str] = {}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zilean",
     PACKET_SHA256,
-    packet_part_timings={"Q": {"time_offset": _Q_FUSE_SECONDS}},
+    slot_wrappers={"Q": _time_bomb},
     cc_kinds=MODULE_CC,
 )
+
+OPTIONS = list(OPTIONS) + [
+    {
+        "key": "q_second_bomb",
+        "type": "bool",
+        "default": False,
+        "label": "Q second bomb attached to the target",
+        "rotation": {
+            "role": "self_state",
+            "slot": "Q",
+            "note": (
+                "A second Time Bomb detonates the first immediately and "
+                "stuns; W (Rewind) is what refunds Q's cooldown in time, "
+                "and no cast order the engine walks can derive it."
+            ),
+        },
+    },
+]
 
 # E8d: sourced Chronoshift revive values.  Cached R leveling (data/
 # champions.json, Zilean R Chronoshift) Heal row: 600 / 850 / 1100 (+ 200% AP)
@@ -62,19 +141,26 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 
 
 # R's own packet row prices nothing; the revive above is what the engine
-# prices for the slot (1100.0 at rank 3 with no AP).  P/W/E stay out of
-# scope: experience generation, a cooldown refund on Q and E, and an ally
-# speed-up or enemy slow whose magnitude no CC axis carries.
+# prices for the slot (1100.0 at rank 3 with no AP).
 MODULE_COVERAGE = {
-    "P": "out_of_scope",
+    "P": "no_damage",
     "Q": "modeled",
-    "W": "out_of_scope",
-    "E": "out_of_scope",
+    "W": "no_damage",
+    "E": "no_damage",
     "R": "modeled",
 }
 COVERAGE_CHANNELS = {"R": ("starting_revive_defense",)}
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "Q's stun is emitted only when the explicit second-bomb state is selected; "
+    "the second bomb detonates the first bomb immediately (so the detonation "
+    "moves from its 3s fuse to the cast boundary) and uses the sourced "
+    "Stun Duration row",
     "R (Chronoshift) is modeled as the sourced revive state: 600 / 850 / 1100 "
     "(+ 200% AP) restored after a 3s resurrection on a 120 / 90 / 60s cooldown "
     "by rank (cached R Heal row).",
+    "P (Time in a Bottle), W (Rewind), and E (Time Warp) carry no sourced "
+    "damage/heal/shield row (P and W leveling are empty; E's only leveling "
+    "row is a Movement Speed Modifier, and slow/haste effects create no "
+    "action downtime in this engine) — all three are no_damage, not "
+    "out_of_scope.",
 ]

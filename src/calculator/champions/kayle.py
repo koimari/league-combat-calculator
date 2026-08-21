@@ -11,6 +11,7 @@ module declares W in SLOTS so the fight rotation casts it.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import _ability, _cast_slot_times, _rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
@@ -147,4 +148,35 @@ def parse_abilities(*args, **kwargs):
 parse_abilities.cc_kinds = _parse_abilities.cc_kinds
 
 
-SELF_HEALING_RULE = declare_healing_rule("Kayle")
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Celestial Blessing's heal: one sourced Heal row per W cast.
+
+    "Kayle blesses herself and the target allied champion, healing them"
+    — the heal is paid on the cast, not on damage, so it rides the cast
+    timeline and carries ``actor_wide`` for the ally copy.
+    """
+    del damage_events, fight_duration_seconds
+    w_rank = _rank(ability_damages, "W")
+    w_heal = extract_named(_ability(champion_data, "W"), "Heal", w_rank, champion_stats)
+    healing = [
+        {
+            "time": cast_time,
+            "amount": w_heal,
+            "source": "Celestial Blessing",
+            "kind": "champion_ability",
+            "actor_wide": True,
+        }
+        for cast_time in _cast_slot_times(cast_timeline, "W")
+    ]
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Kayle", derive_self_healing)

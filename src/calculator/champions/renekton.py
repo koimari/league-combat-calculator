@@ -13,7 +13,8 @@ from functools import partial
 
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits
+from .slotlib import extract_named, with_item_on_hits
+from ..healing_helpers import _ability, _event_source, _heal_from_damage, _rank
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 
@@ -61,4 +62,25 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Renekton")
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Cull the Meek pays its heal on every Q hit that lands."""
+    healing: list[dict] = []
+    ability = _ability(champion_data, "Q")
+    rank = _rank(ability_damages, "Q")
+    amount = extract_named(ability, "Champion Healing", rank, champion_stats, {})
+    for event in damage_events:
+        if _event_source(event) == "Q":
+            _heal_from_damage(healing, event, amount, "Cull the Meek")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Renekton", derive_self_healing)

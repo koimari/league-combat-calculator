@@ -243,8 +243,23 @@ class TestQContinuousFightMode:
 class TestWAstralFlight:
     """W is a dash/utility; its only calc effect is Q's beam modifier."""
 
-    def test_w_not_in_results(self, aurelion_sol_data, parse_at) -> None:
+    def test_w_is_explicit_zero_damage_row(self, aurelion_sol_data, parse_at) -> None:
+        """W carries no damage attribute of its own — documented zero-damage
+        row (module_helpers.no_damage), not a silent absence."""
         _, abilities = parse_at(aurelion_sol_data, 18)
+        entry = abilities["W"]
+        assert entry["name"] == "Astral Flight"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert "damage-less dash" in entry["detail"].lower()
+
+    def test_w_absent_when_unlearned(self, aurelion_sol_data, parse_at) -> None:
+        """The state row is rank-gated like every other slot."""
+        _, abilities = parse_at(
+            aurelion_sol_data,
+            18,
+            ability_ranks={"Q": 5, "W": 0, "E": 5, "R": 3},
+        )
         assert "W" not in abilities
 
 
@@ -396,9 +411,18 @@ class TestRFallingStar:
 class TestPassiveCosmicCreator:
     """The passive is the Stardust stack mechanic — no damage of its own."""
 
-    def test_passive_not_in_results(self, aurelion_sol_data, parse_at) -> None:
+    def test_passive_is_explicit_zero_damage_row(
+        self, aurelion_sol_data, parse_at
+    ) -> None:
+        """P feeds Q/E's Stardust math but prices nothing itself —
+        documented zero-damage row (module_helpers.no_damage), not a
+        silent absence."""
         _, abilities = parse_at(aurelion_sol_data, 18)
-        assert "passive" not in abilities
+        entry = abilities["passive"]
+        assert entry["name"] == "Cosmic Creator"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert "stardust" in entry["detail"].lower()
         assert "P" not in abilities
 
 
@@ -408,16 +432,27 @@ class TestPassiveCosmicCreator:
 
 
 class TestOptionsMeta:
-    """The module declares its three options and its modeling assumptions."""
+    """The module declares its four options and its modeling assumptions."""
 
     def test_declared_options(self) -> None:
         meta = get_champion_options_meta("Aurelion Sol")
         keys = {opt["key"]: opt for opt in meta["options"]}
-        assert set(keys) == {"stardust_stacks", "w_active", "r_empowered"}
+        # Breath of Light's secondary-beam target count is a declared row:
+        # the formula reads it, so it belongs among the rows the frontend
+        # renders rather than being a parse-only key with a call-site
+        # default (D-24).
+        assert set(keys) == {
+            "stardust_stacks",
+            "w_active",
+            "r_empowered",
+            "q_secondary_targets",
+        }
         assert keys["stardust_stacks"]["default"] == 0
         assert keys["stardust_stacks"]["max"] == 999
         assert keys["w_active"]["default"] is False
         assert keys["r_empowered"]["default"] is False
+        assert keys["q_secondary_targets"]["default"] == 0
+        assert keys["q_secondary_targets"]["max"] == 5
 
     def test_assumptions_present(self) -> None:
         meta = get_champion_options_meta("Aurelion Sol")
@@ -540,29 +575,29 @@ class TestReviewedCrowdControl:
 
 
 class TestCoverageMap:
-    """P and W read ``out_of_scope`` but neither is a damage gap.
+    """P and W read ``no_damage``, and neither is a damage gap.
 
     The frontier page flagged W because the cached entry carries a
     leveling row with "Damage" in its name.  That row is
     "Breath of Light Flat Damage Modifier" — a 108-112% multiplier on Q,
     priced through ``w_active`` — and Cosmic Creator is the same story:
-    every Stardust effect the cache states augments another slot.  Neither
-    slot emits a row, and the contract lets a slot with no row be nothing
-    but ``out_of_scope``.
+    every Stardust effect the cache states augments another slot.  Both
+    slots emit an explicit zero-damage row, so the map says ``no_damage``
+    rather than hiding them as ``out_of_scope``.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
         assert get_champion_module_contract("Aurelion Sol").coverage == {
-            "P": "out_of_scope",
+            "P": "no_damage",
             "Q": "modeled",
-            "W": "out_of_scope",
+            "W": "no_damage",
             "E": "modeled",
             "R": "modeled",
         }
         assert coverage_truth.emitted("Aurelion Sol") == {
-            "P": coverage_truth.ABSENT,
+            "P": coverage_truth.ZERO,
             "Q": coverage_truth.PRICED,
-            "W": coverage_truth.ABSENT,
+            "W": coverage_truth.ZERO,
             "E": coverage_truth.PRICED,
             "R": coverage_truth.PRICED,
         }

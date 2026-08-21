@@ -31,6 +31,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    with_control,
 )
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
@@ -147,6 +148,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "Q": _blooming_burst,
         "R": _pop_blossom,
+    },
+    # Tangle-Barbs carries its sourced root duration onto the spiral's hit.
+    slot_wrappers={
+        "E": lambda parser: with_control(
+            parser, kind="root", duration_attr="Root Duration"
+        ),
     },
     cc_kinds=MODULE_CC,
 )

@@ -25,7 +25,12 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import STEROID_ZERO, damage_entry, extract_cooldown
+from .slotlib import (
+    STEROID_ZERO,
+    damage_entry,
+    extract_cooldown,
+    with_control_event,
+)
 
 # HARDCODED: verify on patch updates — the thorns formula exists only in
 # the cached W description prose ("enemies that use a basic attack
@@ -137,7 +142,10 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
 # gated on Soaring Slam being cast during Powerball, a combination this
 # module does not price.  W answers per part (``_defensive_ball_curl``).  E
 # taunts, but "monsters are additionally dealt magic damage" is its only
-# damage row, so against a champion it emits nothing; P is a stat innate.
+# damage row, so against a champion it prices nothing and there is no part
+# for a marker to ride: its sourced taunt is authored as a typed
+# ``control_events`` interval by the slot wrapper below, which is why E is
+# absent here.  P is a stat innate.
 MODULE_CC = {"Q": "immobilize", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -150,6 +158,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "W": _defensive_ball_curl,
         "P": _spiked_shell,
+    },
+    slot_wrappers={
+        "E": lambda parser: with_control_event(
+            parser,
+            kind="taunt",
+            duration_attr="Taunt Duration",
+        ),
     },
     cc_kinds=MODULE_CC,
 )
@@ -179,9 +194,9 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "passive has no leveling row).  It reads the BUILD's resistances: "
     "W's stance bonus is a state row rather than a stat_buff, so the "
     "in-game dynamic update from Defensive Ball Curl is not modelled.",
-    "E (Frenzying Taunt) is an emitted zero-damage row: its 1.2-2s taunt "
-    "is control the engine records as a kind without a magnitude, and "
-    "its only damage row is monsters-only.",
+    "E (Frenzying Taunt) is an emitted zero-damage row: its only damage "
+    "row is monsters-only, and its sourced 1.2-2s taunt is authored as a "
+    "typed control interval at the cast.",
 ]
 
 # E is emitted and grants nothing the engine prices against a champion.

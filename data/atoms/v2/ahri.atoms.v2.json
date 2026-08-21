@@ -1,0 +1,3299 @@
+[
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriWDamageMissile",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AhriWDamageMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriWDamageMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriWDamageMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{151ec365}"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AhriWSpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriWSpeedBuff",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "AhriWSpeedBuffPersist",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{28a70038}"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [],
+   "ratios": {
+    "scaling": 0.4000000059604645
+   },
+   "effect_amounts": [],
+   "data_values": {
+    "MovementSpeed": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "MovementSpeedDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MinionBonusDamageMultiplier": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MinionBonusDamageThreshold": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "RepeatDamageMod": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "AcquisitionRange": [
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0,
+     550.0
+    ],
+    "BonusAcquisitionRange": [
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0,
+     725.0
+    ],
+    "InitialDelay": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "SecondaryDelay": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "FlameDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "OrbitRadius": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 2048
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AhriW",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriWMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriWHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriWAbility/AhriW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AhriBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriBasicAttackMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriBasicAttackHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AhriBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriBasicAttack",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriBasicAttackMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriBasicAttackHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "AhriR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {
+    "RBaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RMaxTargetsPerCast": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RMaxCasts": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RDashDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RBaseDashSpeed": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RRecastWindow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "RAcquisitionRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "RDashCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RAPCoefficient": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "RResetCasts": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PDurationExtension": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriR",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriRAbility/AhriR"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AhriR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {
+    "RBaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RMaxTargetsPerCast": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RMaxCasts": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RDashDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RBaseDashSpeed": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RRecastWindow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "RAcquisitionRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "RDashCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RAPCoefficient": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "RResetCasts": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PDurationExtension": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriR",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriRAbility/AhriR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AhriR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {
+    "RBaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RMaxTargetsPerCast": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RMaxCasts": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RDashDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RBaseDashSpeed": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RRecastWindow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "RAcquisitionRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "RDashCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RAPCoefficient": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "RResetCasts": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PDurationExtension": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriR",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriRAbility/AhriR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AhriR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {
+    "RBaseDamage": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     275.0,
+     325.0
+    ],
+    "RMaxTargetsPerCast": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RMaxCasts": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RDashDistance": [
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0,
+     500.0
+    ],
+    "RBaseDashSpeed": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RRecastWindow": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "RAcquisitionRange": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "RDashCooldown": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "RAPCoefficient": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ],
+    "RResetCasts": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "PDurationExtension": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriR",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriRAbility/AhriR"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "AhriBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriBasicAttack2Missile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriBasicAttack2Hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "AhriBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriBasicAttack2",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriBasicAttack2Missile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriBasicAttack2Hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AhriQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AhriQ",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriQMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriQHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriQAbility/AhriQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    10.0,
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0
+   ],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {
+    "BaseDamage": [
+     10.0,
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AhriQ",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriQMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriQHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriQAbility/AhriQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "AhriE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": [],
+   "ratios": {
+    "scaling": 0.8500000238418579
+   },
+   "effect_amounts": [],
+   "data_values": {
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "SlowPercent": [
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421
+    ],
+    "CharmDuration": [
+     1.0499999523162842,
+     1.2000000476837158,
+     1.350000023841858,
+     1.5,
+     1.649999976158142,
+     1.7999999523162842,
+     1.9500000476837158
+    ],
+    "APRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AhriE",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriEMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriEHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriEAbility/AhriE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [
+    40.0,
+    80.0,
+    120.0,
+    160.0,
+    200.0,
+    240.0,
+    280.0
+   ],
+   "duration": [],
+   "ratios": {
+    "scaling": 0.8500000238418579
+   },
+   "effect_amounts": [],
+   "data_values": {
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "SlowPercent": [
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421,
+     -0.6499999761581421
+    ],
+    "CharmDuration": [
+     1.0499999523162842,
+     1.2000000476837158,
+     1.350000023841858,
+     1.5,
+     1.649999976158142,
+     1.7999999523162842,
+     1.9500000476837158
+    ],
+    "APRatio": [
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579,
+     0.8500000238418579
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "AhriE",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriEMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriEHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriEAbility/AhriE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "AhriCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriCritAttack",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriCritAttackMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriCritAttackHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Ahri/Spells/AhriCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ahri Passive (Essence Theft)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ahri Passive (Essence Theft)",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Essence Theft"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.699999988079071
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriWMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriWMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriWMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{eb5d8742}"
+   ],
+   "inherited_from": "AhriW",
+   "evidence": "inherited:AhriW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "AhriRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.699999988079071
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "{5aa54d24}"
+   ],
+   "inherited_from": "AhriR",
+   "evidence": "inherited:AhriR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "AhriRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.699999988079071
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{5aa54d24}"
+   ],
+   "inherited_from": "AhriR",
+   "evidence": "inherited:AhriR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AhriRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.699999988079071
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{5aa54d24}"
+   ],
+   "inherited_from": "AhriR",
+   "evidence": "inherited:AhriR"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AhriRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.699999988079071
+   },
+   "effect_amounts": [
+    [
+     40.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0,
+     340.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriRMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriRMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriRMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "{5aa54d24}"
+   ],
+   "inherited_from": "AhriR",
+   "evidence": "inherited:AhriR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AhriQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.6000000238418579
+   },
+   "effect_amounts": [
+    [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriQReturnMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriQReturnMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriQReturnMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{87debe7c}"
+   ],
+   "inherited_from": "AhriQ",
+   "evidence": "inherited:AhriQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriQReturnMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.6000000238418579
+   },
+   "effect_amounts": [
+    [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriQReturnMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriQReturnMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriQReturnMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{87debe7c}"
+   ],
+   "inherited_from": "AhriQ",
+   "evidence": "inherited:AhriQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "AhriQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   },
+   "effect_amounts": [
+    [
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriQMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriQMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriQMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{9d929d96}"
+   ],
+   "inherited_from": "AhriQ",
+   "evidence": "inherited:AhriQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.4000000059604645
+   },
+   "effect_amounts": [
+    [
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "other",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriQMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriQMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriQMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{9d929d96}"
+   ],
+   "inherited_from": "AhriQ",
+   "evidence": "inherited:AhriQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "AhriEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.8999999761581421
+   },
+   "effect_amounts": [
+    [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     355.0
+    ],
+    [
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriEMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriEMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriEMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{f82834e6}"
+   ],
+   "inherited_from": "AhriE",
+   "evidence": "inherited:AhriE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "AhriEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": 0.8999999761581421
+   },
+   "effect_amounts": [
+    [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     355.0
+    ],
+    [
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25
+    ]
+   ],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriEMissile",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "AhriEMissileMissile",
+    "atoms": [
+     "movement.projectile"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "AhriEMissileHit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{f82834e6}"
+   ],
+   "inherited_from": "AhriE",
+   "evidence": "inherited:AhriE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "AhriPassiveCounter (Essence Theft)",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": [],
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "AhriPassiveCounter (Essence Theft)",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack-consumption"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Essence Theft"
+   ],
+   "binary": [
+    "{112db766}"
+   ],
+   "source": "review-refinement",
+   "evidence": "wiki P Essence Theft: kills grant Essence Fragment stacks, consumed at 9 to heal; binary object AhriPassiveCounter"
+  }
+ }
+]

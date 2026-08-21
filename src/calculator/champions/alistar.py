@@ -13,21 +13,34 @@ Why each slot is non-generic:
   legacy module reached by calling the generic parser and patching its
   output.
 - P (Triumphant Roar) is healing only: its slot is a zero-damage
-  receipt carrying the Triumph stacks Alistar walks in with, so the
-  self-heal rule can complete the seven-stack set inside the fight.
-- R (Unbreakable Will) stays `out_of_scope` and off the slot map: it
-  reduces incoming damage by 55-75%, and the engine's
-  ``incoming_damage_multiplier`` axis is item-only
+  receipt carrying the Triumph stacks Alistar walks in with, so
+  ``derive_self_healing`` can complete the seven-stack set inside the
+  fight.  The same cached sentence also heals *allies* for 7% of his
+  maximum health on the same trigger — a different amount than his own
+  5%, which the engine's heal fan-out (``participant_timeline.py``
+  clones one shared ``amount`` to every recipient) cannot express, so it
+  belongs to the ally scanner rather than to this rule.
+- R (Unbreakable Will) stays off the slot map: it reduces incoming
+  damage by 55/65/75% for 7s and cleanses Alistar's own CC, and the
+  engine's ``incoming_damage_multiplier`` axis is item-only, wired
+  inline inside ``resolve_starting_defenses`` and keyed by item name
   (``defensive_effects.py``) — no champion can author a
-  damage-reduction-taken row.
+  damage-reduction-taken row.  The three champion-module hooks the
+  runtime actually reads are ``SELF_HEALING_RULE``,
+  ``starting_revive_defense`` and ``GRIEVOUS_WOUNDS_SOURCES``; none
+  accepts a mid-fight reduction window.
+
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import HealAnchor, _payments, _ability, _trigger_fields
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
@@ -212,13 +225,20 @@ ASSUMPTIONS = [
     "E Trample deals full duration damage (10 ticks over 5 seconds)",
     "E empowered auto always procs once per cast (5 stacks reached)",
     "P (Triumphant Roar) heals 5% of maximum health when the seventh "
-    "Triumph stack lands (cached P prose). Q and W each generate one "
-    "stack against this fight's champion, so p_triumph_stacks (default "
-    "0) supplies the rest; minion and monster deaths are not simulated, "
-    "and the wiki's unstated internal cooldown ('only once every few "
-    "seconds') is not enforced. The 7%-maximum-health ally heal in the "
-    "same sentence belongs to the ally scanner, not to this rule",
-    "R (Unbreakable Will) damage reduction is ignored",
+    "Triumph stack lands (cached P prose), through SELF_HEALING_RULE. Q "
+    "and W each generate one stack against this fight's champion, so "
+    "p_triumph_stacks (default 0) supplies the rest; minion and monster "
+    "deaths are not simulated, and the wiki's unstated internal cooldown "
+    "('only once every few seconds') is not enforced. The 7%-of-maximum-"
+    "health ally heal in the same sentence is a different amount than "
+    "the 5% self heal, and the engine's champion-authored heal fan-out "
+    "clones one shared amount to every recipient — so it belongs to the "
+    "ally scanner, not to this rule",
+    "R (Unbreakable Will) damage reduction (55/65/75% for 7s, cleanses "
+    "Alistar's own CC) is sourced but unmodeled: no champion-authored "
+    "hook for a mid-fight incoming-damage-reduction window exists in "
+    "this engine today (only SELF_HEALING_RULE, starting_revive_defense, "
+    "and GRIEVOUS_WOUNDS_SOURCES are read from a champion module)",
 ]
 
 SLOTS = {
@@ -243,4 +263,65 @@ parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 
 SOURCES = load_champion_sources("Alistar")
 
-SELF_HEALING_RULE = declare_healing_rule("Alistar")
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments,protected-access
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Triumphant Roar: 5% maximum health per completed 7-stack set.
+
+    Both numbers are read from the cached P prose ("At 7 stacks, Alistar
+    consumes them all to heal himself for 5% of his maximum health").  Q
+    and W each generate one Triumph stack per enemy champion hit, so the
+    stacks count *casts*, not the parts a cast is priced with — hence the
+    ``CAST`` anchor.  A duel reaches at most two stacks on its own, so the
+    set completes only with stacks already in hand, which the P row
+    carries from its declared option.  A nearby champion death would grant
+    all seven at once, but a 1v1 kill ends the fight before any heal
+    receipt can apply.
+    """
+    del fight_duration_seconds
+    healing: list[dict[str, Any]] = []
+    p_text = " ".join(
+        effect.get("description", "")
+        for effect in _ability(champion_data, "P").get("effects", [])
+    )
+    stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
+    stack_cap = int(stack_match.group(1)) if stack_match else 0
+    if stack_cap <= 0:
+        return healing
+    self_match = re.search(
+        r"heal(?:s|ing)? himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
+        p_text,
+        flags=re.IGNORECASE,
+    )
+    self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
+    casts = sorted(
+        _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+        + _payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
+        key=lambda payment: float(payment.event.get("time", 0.0)),
+    )
+    carried = ability_damages.get("passive", {}).get("self_heal_state")
+    qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
+    for payment in casts:
+        event = payment.event
+        qw_seen += 1
+        if qw_seen % stack_cap == 0:
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": self_ratio * champion_stat(champion_stats, "health"),
+                    "source": "Triumphant Roar",
+                    "kind": "champion_passive",
+                    **_trigger_fields(event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Alistar", derive_self_healing)

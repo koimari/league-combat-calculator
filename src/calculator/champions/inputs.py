@@ -119,6 +119,15 @@ CHAMPION_STATS: Mapping[str, InputDefault] = {
     "critical_strike_chance": _build(_ABSENT_MEANS_NONE),
     "health": _build(_ABSENT_MEANS_NONE),
     "lethality": _build(_ABSENT_MEANS_NONE),
+    "level": InputDefault(
+        1.0,
+        "BUILD",
+        "a champion is always at least level 1, so the per-level rows a "
+        "module reads price their first rank rather than a zeroth one; "
+        "calculate_total_stats always emits level, so this is reached "
+        "only by a caller that supplied no build stats at all",
+    ),
+    "lifesteal_percent": _build(_ABSENT_MEANS_NONE),
     "magic_penetration_percent": _build(_ABSENT_MEANS_NONE),
     "magic_resistance": _build(_ABSENT_MEANS_NONE),
     "max_mana": _build(_ABSENT_MEANS_NONE),

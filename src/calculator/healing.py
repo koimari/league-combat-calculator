@@ -1,8 +1,10 @@
 """Shared healing entrypoint for the participant and fight pipelines.
 
 Champion modules own their typed declarations. This module owns generic
-ordering and receipt shape. Formula migration stays behind the registry so
-event output stays stable during the split.
+ordering and receipt shape: it walks the champion registry, demands a
+resolver from every module that declares one, and sorts what they return.
+The shared readers and the payment machinery a resolver uses live in
+``healing_helpers``; no healing formula lives here.
 """
 
 from __future__ import annotations
@@ -12,13 +14,21 @@ from typing import Any
 
 from .champions import _CHAMPION_MODULES
 from .champions.healing_contract import ChampionHealingRule
-from .healing_legacy import (
-    GREY_HEALTH_RULE_CHAMPIONS as _GREY_HEALTH_RULE_CHAMPIONS,
-    HEALING_RULE_CHAMPIONS as _DECLARED_HEALING_CHAMPIONS,
-)
 from .trigger_stream import ChampionSlotOwner
 
-GREY_HEALTH_RULE_CHAMPIONS = _GREY_HEALTH_RULE_CHAMPIONS
+# Grey-health champions whose self-heals are sourced from damage TAKEN
+# (post-mitigation) stored as a grey pool, then paid back when the
+# champion's active consumes it (Pyke P out-of-vision, Rengar W, Tahm
+# Kench E out-of-combat, Mordekaiser W recast).  A champion module's
+# resolver only sees its own OUTGOING events, so these receipts are
+# authored by the participant timeline against its incoming ledger (the
+# enemy -> main pair events) rather than by a declaration; the set names
+# that pipeline branch and so lives here, beside the registry the same
+# callers read.  Kled's Skaarl pool is a revive-boundary pattern
+# (dismount/remount) documented in the Kled module, not authored as a heal.
+GREY_HEALTH_RULE_CHAMPIONS = frozenset(
+    {"Pyke", "Rengar", "Tahm Kench", "Mordekaiser", "Locke"}
+)
 
 # The declaration site a self-heal rule occupies in its champion module.
 # ``ChampionSlotOwner`` names a champion and the slot that declares a
@@ -32,20 +42,23 @@ SELF_HEAL_RULE_SLOT = "SELF_HEALING_RULE"
 
 def _load_declarations() -> dict[str, ChampionHealingRule]:
     declarations: dict[str, ChampionHealingRule] = {}
-    for champion_name in sorted(_DECLARED_HEALING_CHAMPIONS):
-        module_name = _CHAMPION_MODULES.get(champion_name)
-        if module_name is None:
-            raise RuntimeError(f"no champion module for {champion_name!r}")
+    for champion_name, module_name in sorted(_CHAMPION_MODULES.items()):
         module = importlib.import_module(
             f".champions.{module_name}", package=__package__
         )
         declaration = getattr(module, "SELF_HEALING_RULE", None)
+        if declaration is None:
+            continue
         if not isinstance(declaration, ChampionHealingRule):
             raise RuntimeError(f"{module.__name__} must declare SELF_HEALING_RULE")
         if declaration.champion_name != champion_name:
             raise RuntimeError(
                 f"{module.__name__} declares {declaration.champion_name!r}, "
                 f"expected {champion_name!r}"
+            )
+        if declaration.resolver is None:
+            raise RuntimeError(
+                f"{module.__name__} must provide a champion-local healing resolver"
             )
         declarations[champion_name] = declaration
     return declarations

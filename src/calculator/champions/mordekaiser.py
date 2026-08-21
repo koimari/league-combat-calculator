@@ -26,6 +26,7 @@ from .engine import SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import simple_damage
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
 
@@ -132,4 +133,40 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # self-heal rule, so every slot in SLOTS now prices a row the engine
 # consumes — which is what the contract derives.
 
-SELF_HEALING_RULE = declare_healing_rule("Mordekaiser")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Price Realm of Death's soul drain: one banishment, one heal.
+
+    Mordekaiser "consumes the target's soul ..., healing himself for 10%
+    of their maximum health" at the cast.  Only R can price a share of the
+    *target's* health, so it carries the amount on its row for the primary
+    defender; the heal is paid at the cast and is actor-wide so a roster
+    does not pay it once per enemy.  W's Potential Shield recast heal is
+    the grey-health primitive's, not this rule's.
+    """
+    healing: list[dict[str, Any]] = []
+    realm = ability_damages.get("R", {}).get("self_heal_state")
+    if isinstance(realm, dict):
+        amount = float(realm.get("amount", 0.0) or 0.0)
+        for cast_time in _healing._cast_slot_times(cast_timeline, "R"):
+            healing.append(
+                {
+                    "time": cast_time,
+                    "amount": amount,
+                    "source": "Realm of Death",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Mordekaiser", derive_self_healing)

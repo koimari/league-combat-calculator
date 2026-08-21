@@ -85,6 +85,9 @@ UTILITY_OUTCOMES: Mapping[str, tuple[UtilityDimension, ...]] = {
     "Tear of the Goddess": (UtilityDimension.PROGRESSION, UtilityDimension.RESOURCE),
     "Banshee's Veil": (UtilityDimension.SPELL_PROTECTION,),
     "Edge of Night": (UtilityDimension.SPELL_PROTECTION,),
+    # The third Annul item, and the same published dimension as its two
+    # siblings above; its absence here was an omission, not a ruling.
+    "Verdant Barrier": (UtilityDimension.SPELL_PROTECTION,),
     "Zhonya's Hourglass": (UtilityDimension.STASIS,),
     "Guardian Angel": (UtilityDimension.REVIVE,),
     "Mercurial Scimitar": (UtilityDimension.CLEANSE, UtilityDimension.MOVEMENT),

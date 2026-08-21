@@ -1,0 +1,2969 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "duration": [
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75
+   ],
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.75,
+    "behavior": "WarwickE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "uptime_fraction": 0.1719,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickEAbility/WarwickE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "WarwickE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "duration": [
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75
+   ],
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.75,
+    "behavior": "WarwickE",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "uptime_fraction": 0.1719,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickEAbility/WarwickE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "WarwickE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "duration": [
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75
+   ],
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.75,
+    "behavior": "WarwickE",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "uptime_fraction": 0.1719,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickEAbility/WarwickE"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    11.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "duration": [
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75,
+    2.75
+   ],
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.75,
+    "behavior": "WarwickE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "uptime_fraction": 0.1719,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickEAbility/WarwickE"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickRChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.5,
+    "behavior": "WarwickRChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 1.5,
+    "behavior": "WarwickRChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickRChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 1.5,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    80.0,
+    80.0,
+    70.0,
+    60.0,
+    50.0,
+    40.0,
+    40.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "duration": [
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0,
+    8.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "WarwickW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 8.0,
+    "behavior": "WarwickW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 80.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": 0.1,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickW"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blind",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickWActiveMiss",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWActiveMiss",
+    "atoms": [
+     "crowd-control-mobility.blind"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "{d7461e60}"
+   ],
+   "evidence": "name:miss"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "InfiniteDuress",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    110.0,
+    90.0,
+    70.0,
+    120.0,
+    120.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    125.0,
+    150.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "InfiniteDuress",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "InfiniteDuress",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/InfiniteDuress"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickPSpellInfo",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "WarwickPSpellInfo",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "WarwickPSpellInfo",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickPSpellInfo",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "cast_time_seconds": 0.5,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickPSpellInfo"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    90.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    175.0,
+    350.0,
+    525.0,
+    700.0,
+    875.0,
+    1050.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "WarwickR",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "WarwickR",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.0136,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickR"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    90.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    175.0,
+    350.0,
+    525.0,
+    700.0,
+    875.0,
+    1050.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "WarwickR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "WarwickR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.0136,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    90.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    175.0,
+    350.0,
+    525.0,
+    700.0,
+    875.0,
+    1050.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "WarwickR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "WarwickR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.0136,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "WarwickR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    90.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    175.0,
+    350.0,
+    525.0,
+    700.0,
+    875.0,
+    1050.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "WarwickR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "WarwickR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.0136,
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "WarwickR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    110.0,
+    110.0,
+    90.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    175.0,
+    350.0,
+    525.0,
+    700.0,
+    875.0,
+    1050.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "WarwickR",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 1.5,
+    "behavior": "WarwickR",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 110.0,
+   "cast_time_seconds": 0.1,
+   "uptime_fraction": 0.0136,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "WarwickCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickQ",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    11.0
+   ],
+   "ratios": {
+    "ADRatio": 1.2,
+    "APRatio": 1.0
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "WarwickQ",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "WarwickQ",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickQAbility/WarwickQ"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    11.0
+   ],
+   "ratios": {
+    "ADRatio": 1.2,
+    "APRatio": 1.0
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "WarwickQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "WarwickQ",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickQAbility/WarwickQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "WarwickQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0,
+    425.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    11.0
+   ],
+   "ratios": {
+    "ADRatio": 1.2,
+    "APRatio": 1.0
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "WarwickQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "channel",
+    "duration": 0.5,
+    "behavior": "WarwickQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.5,
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickQAbility/WarwickQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttack4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttack4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "InfiniteDuressChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "InfiniteDuressChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "InfiniteDuressChannel",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/InfiniteDuressChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive4"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive1",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive1",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive1",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive1",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive1"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickBasicAttackPassive1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive1",
+    "atoms": [
+     "stack-transform-summon-resource.additive-stacking"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive1",
+    "atoms": [
+     "stack-transform-summon-resource.additive-stacking"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "WarwickBasicAttackPassive3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickBasicAttackPassive3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickBasicAttackPassive3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{a4364dd8}"
+   ],
+   "inherited_from": "WarwickE",
+   "evidence": "inherited:WarwickE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "WarwickE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{a4364dd8}"
+   ],
+   "inherited_from": "WarwickE",
+   "evidence": "inherited:WarwickE"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "WarwickE2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{a4364dd8}"
+   ],
+   "inherited_from": "WarwickE",
+   "evidence": "inherited:WarwickE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickE2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "affects_type_flags": 14346
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickE2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "{a4364dd8}"
+   ],
+   "inherited_from": "WarwickE",
+   "evidence": "inherited:WarwickE"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "WarwickP",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {
+    "HealingRatio": 1.0,
+    "EmpoweredHealingRatio": 2.5,
+    "ADRatio": 0.15,
+    "APRatio": 0.1
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickP",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickP",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Eternal Hunger"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickPAbility/WarwickP"
+   ],
+   "evidence": "calc OnHitDamage; DataValues ADRatio/APRatio; wiki: bonus magic damage on-hit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "WarwickP",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "ratios": {
+    "HealingRatio": 1.0,
+    "EmpoweredHealingRatio": 2.5,
+    "ADRatio": 0.15,
+    "APRatio": 0.1
+   },
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickP",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickP",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Eternal Hunger"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickPAbility/WarwickP"
+   ],
+   "evidence": "on-hit magic damage instance"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "WarwickP",
+  "trigger": "on_hit",
+  "target_policy": "self",
+  "parameters": {
+   "ratios": {
+    "HealingRatio": 1.0,
+    "EmpoweredHealingRatio": 2.5,
+    "ADRatio": 0.15,
+    "APRatio": 0.1
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickP",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Eternal Hunger"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickPAbility/WarwickP"
+   ],
+   "evidence": "DataValues HealingThreshold/HealingRatio/EmpoweredHealingRatio; wiki: heals below 50% max HP"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HungeringStrike",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "mana_cost": [
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0,
+    120.0
+   ],
+   "damage": [
+    25.0,
+    75.0,
+    125.0,
+    175.0,
+    225.0,
+    275.0,
+    325.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "HungeringStrike",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HungeringStrike",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Jaws of the Beast"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickQAbility/HungeringStrike"
+   ],
+   "evidence": "Q damage object; DataValues cooldown 11->6; wiki: Q deals magic damage, applies on-hit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "HungeringStrike",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "mana_cost": [
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0,
+    120.0
+   ],
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "HungeringStrike",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HungeringStrike",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Jaws of the Beast"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickQAbility/HungeringStrike"
+   ],
+   "evidence": "wiki: Q heals Warwick for a percentage of post-mitigation damage dealt"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BloodScent",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "BloodScent",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "BloodScent",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.5,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/BloodScent"
+   ],
+   "evidence": "W scent buff; wiki: attack speed and movement speed toward low-HP enemies"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HuntersCall",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    16.0
+   ],
+   "mana_cost": [
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0
+   ],
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "HuntersCall",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "HuntersCall",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 26.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/HuntersCall"
+   ],
+   "evidence": "W active buff; DataValues cooldown 26->16; wiki: grants bonus attack speed to nearby allies"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickWPassiveAS",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWPassiveAS",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickWPassiveAS",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickWPassiveAS"
+   ],
+   "evidence": "W passive attack-speed buff object"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickWPassivevJungle",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWPassivevJungle",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickWPassivevJungle",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickWPassivevJungle"
+   ],
+   "evidence": "W passive vs-jungle-monsters buff object"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickWActive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWActive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickWActive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickWActive"
+   ],
+   "evidence": "W active buff object"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickWActiveHit",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWActiveHit",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickWActiveHit",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickWActiveHit"
+   ],
+   "evidence": "W active-hit buff application object"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickWP",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWP",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickWP",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickWP"
+   ],
+   "evidence": "W passive buff object"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "WarwickWEnemy",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickWEnemy",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickWEnemy",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blood Hunt"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickWAbility/WarwickWEnemy"
+   ],
+   "evidence": "W hunted-enemy mark object (scent target)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "WarwickRmiss",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickRmiss",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickRmiss",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Infinite Duress"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickRmiss"
+   ],
+   "evidence": "R leap missile (miss path)"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "WarwickRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "WarwickRSpellPassive",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "WarwickRSpellPassive",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Infinite Duress"
+   ],
+   "binary": [
+    "Characters/Warwick/Spells/WarwickRAbility/WarwickRSpellPassive"
+   ],
+   "evidence": "wiki: Warwick heals for 100% of post-mitigation damage dealt during Infinite Duress"
+  }
+ }
+]

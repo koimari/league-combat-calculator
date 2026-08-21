@@ -34,8 +34,8 @@ from .item_behavior import (
     RuleFamily,
 )
 from .item_behavior_catalog import DEFENSE_RECEIPTS, behavior_rules
-from .item_effects import ITEM_EFFECTS
-from .value_ref import SourceReceipt
+from .item_effects import ITEM_EFFECTS, input_option_float_value
+from .value_ref import SourceReceipt, receipt_for
 
 # How each defensive source is published.  A template per mechanic, because
 # the label is presentation of a citation rather than policy of a rule: most
@@ -66,6 +66,7 @@ DEFENSE_SOURCE_LABEL: Mapping[DefenseMechanic, str] = {
     DefenseMechanic.BOUNDLESS_VITALITY: "{owner} — Boundless Vitality",
     DefenseMechanic.PLATING: "{owner} — Plating",
     DefenseMechanic.ROCK_SOLID: "{owner} — Rock Solid",
+    DefenseMechanic.UNDAUNTED: "{owner} — Undaunted",
     DefenseMechanic.RESILIENCE: "{owner} — Resilience",
     DefenseMechanic.THORNS: "{owner} — Thorns",
 }
@@ -91,6 +92,38 @@ class DefenseCitation:
     def label(self) -> str:
         """The published name of this source."""
         return DEFENSE_SOURCE_LABEL[self.mechanic].format(owner=self.owner)
+
+    @property
+    def source_url(self) -> str:
+        """The page the receipt was read from."""
+        return self.receipt.url
+
+    @property
+    def revision_id(self) -> int:
+        """The revision the receipt names, or ``0`` for a cache-backed one."""
+        return self.receipt.revision_id
+
+    @property
+    def revision_timestamp(self) -> str:
+        """The human-checkable stamp for that revision."""
+        return self.receipt.revision_timestamp
+
+
+def defense_source(owner: str, mechanic: DefenseMechanic) -> DefenseCitation:
+    """The citation one owner's declaration of *mechanic* resolves to.
+
+    The successor to this module's retired per-item ``_X_SOURCE`` constants:
+    the receipt comes from the owner's own registry entry or from the
+    family's declared constant, in ``receipt_for``'s ruled order, so there is
+    no second place a revision can be typed and go stale.
+    """
+    return DefenseCitation(
+        mechanic=mechanic,
+        owner=owner,
+        receipt=receipt_for(
+            "ITEM_EFFECTS", owner, declared=DEFENSE_RECEIPTS.get(mechanic)
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +151,9 @@ class StartingDefenses:
     incoming_damage_linger: float = 0.0
     incoming_damage_cooldown: float = 0.0
     incoming_damage_source: str = ""
+    champion_damage_flat_reduction: float = 0.0
+    champion_dot_damage_flat_reduction: float = 0.0
+    champion_damage_flat_source: str = ""
     basic_damage_flat_reduction: float = 0.0
     basic_damage_flat_reduction_cap: float = 0.0
     critical_strike_damage_multiplier: float = 1.0
@@ -190,6 +226,22 @@ class StartingDefenses:
                     "incoming_damage_linger": round(self.incoming_damage_linger, 1),
                     "incoming_damage_cooldown": round(self.incoming_damage_cooldown, 1),
                     "source": self.incoming_damage_source,
+                }
+            )
+        if (
+            self.champion_damage_flat_reduction > 0.0
+            or self.champion_dot_damage_flat_reduction > 0.0
+            or self.champion_damage_flat_source
+        ):
+            incoming_damage.update(
+                {
+                    "champion_damage_flat_reduction": round(
+                        self.champion_damage_flat_reduction, 2
+                    ),
+                    "champion_dot_damage_flat_reduction": round(
+                        self.champion_dot_damage_flat_reduction, 2
+                    ),
+                    "champion_damage_flat_source": self.champion_damage_flat_source,
                 }
             )
         return {
@@ -578,6 +630,23 @@ _LEDGER_APPLIED_DEFENSES: Mapping[
 # ── the resolver ──────────────────────────────────────────────────────────
 
 
+def option_reader(
+    item_options: Mapping[str, Mapping[str, int | float]],
+) -> Callable[[str, str], float]:
+    """The typed option reader a :class:`DefenseSubject` is built with.
+
+    One home for how a defence reads a scenario input: through the item's
+    own schema (bounds, step, finiteness), never off the raw mapping.
+    """
+
+    def read(owner: str, key: str) -> float:
+        return input_option_float_value(
+            [{"name": owner}], {owner: item_options.get(owner) or {}}, owner, key
+        )
+
+    return read
+
+
 def resolve_starting_defenses(
     champion_name: str,
     level: int,
@@ -594,7 +663,12 @@ def resolve_starting_defenses(
     accident of how the branches were once typed.
     """
     ledger = _DefenseLedger()
-    subject = DefenseSubject(level=level, stats=stats, options=item_options or {})
+    subject = DefenseSubject(
+        level=level,
+        stats=stats,
+        options=item_options or {},
+        option_value=option_reader(item_options or {}),
+    )
     _apply_galio(ledger, champion_name, level, stats)
     _apply_champion_revive(ledger, champion_name, level, stats)
 
@@ -619,6 +693,7 @@ def resolve_starting_defenses(
 __all__ = [
     "DEFENSE_SOURCE_LABEL",
     "DefenseCitation",
+    "defense_source",
     "StartingDefenses",
     "resolve_starting_defenses",
 ]

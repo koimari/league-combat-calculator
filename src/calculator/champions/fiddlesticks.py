@@ -8,8 +8,9 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -60,6 +61,19 @@ def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
         "Already-feared target uses the sourced doubled current-health branch."
     )
     return entry
+
+
+# The sourced fear interval rides the branch that actually fears: the
+# doubled branch is reached only against a target that "cannot be affected
+# by it again", so wrapping it would source a duration for a fear the cast
+# does not apply.
+_terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Duration")
+
+
+def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
+    if bool(ctx.options.get("q_target_already_feared", False)):
+        return _terrify(ctx)
+    return _terrify_fearing(ctx)
 
 
 def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -140,7 +154,7 @@ def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
 
 SLOTS = {
     "P": _scarecrow,
-    "Q": _terrify,
+    "Q": _terrify_slot,
     "W": _bountiful_harvest,
     "E": _reap,
     "R": _crowstorm,
@@ -195,4 +209,32 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Fiddlesticks")
 
-SELF_HEALING_RULE = declare_healing_rule("Fiddlesticks")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Fiddlesticks self-healing events from its authored packet."""
+    healing = []
+    w_ability = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    portion = (
+        _healing.extract_named(
+            w_ability, "Champion Heal Portion", w_rank, champion_stats, {}
+        )
+        / 100.0
+    )
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "W"
+    ):
+        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        _healing._heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Fiddlesticks", derive_self_healing)

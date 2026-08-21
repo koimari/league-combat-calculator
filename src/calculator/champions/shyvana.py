@@ -14,7 +14,9 @@ defers both (see ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS`` and
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .slotlib import (
@@ -231,7 +233,7 @@ SLOTS = {
 # empowered attacks — slash, tail slam, dragon-form bite — with no control
 # clause; W (Inferno Aegis) shields and explodes "dealing magic damage to
 # nearby enemies" and applies none either.  E (Molten Burst) deals damage
-# "and slowing by 30% them for 2 seconds".  R (Dragon's Descent) "deals
+# "and slowing them by 30% for 2 seconds".  R (Dragon's Descent) "deals
 # magic damage to enemies hit and fears them for 0.75 seconds, as well as
 # slows them by 99%" — the fear is the immobilizing half.
 MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear"}
@@ -301,4 +303,51 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Shyvana")
 
 
-SELF_HEALING_RULE = declare_healing_rule("Shyvana")
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Shyvana self-healing events from its authored packet."""
+    healing = []
+    w_row = ability_damages.get("W", {})
+    if "dragon form" in str(w_row.get("detail", "")).lower():
+        level = max(1, int(champion_stat(champion_stats, "level")))
+        w = _healing._ability(champion_data, "W")
+        flat = _healing.extract_named(w, "Heal", level, champion_stats, {})
+        missing_pct = _healing._leveling_modifier(w, "Missing Health Damage", level, 0)
+
+        def inferno_aegis_heal(
+            current_health: float,
+            maximum_health: float,
+            flat: float = flat,
+            missing_pct: float = missing_pct,
+        ) -> float:
+            return (
+                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+            )
+
+        for payment in _healing._payments(
+            _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+        ):
+            event = payment.event
+            if float(event.get("damage", 0.0)) <= 0.0:
+                continue
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": inferno_aegis_heal,
+                    "source": "Inferno Aegis",
+                    "kind": "champion_ability",
+                    **_healing._trigger_fields(event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Shyvana", derive_self_healing)

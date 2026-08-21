@@ -122,7 +122,19 @@ COUNTER_5_DECLARED_SURVIVOR: Mapping[str, str] = {
 # ── counter 6 ──────────────────────────────────────────────────────────────
 
 COUNTER_6_REGISTRY = "calculator/program/precision.py"
-COUNTER_6_KERNEL_BASELINE = 118
+
+# Re-declared at the e201490d..origin/main merge close, on the measurement and
+# not on a preference: the file set the ratchet counts is not the one that
+# declared 118.  ``receipt_state.py``'s 38 occurrences are gone with the module,
+# and ``transitions.py`` arrives from main at 130 where this branch had driven
+# the whole kernel to 78, because main's survival transitions round every
+# certification field they publish at their own write sites.  Moving the
+# baseline to the merged tree's 133 keeps the ratchet non-increasing *from
+# here*; ``docs/receipts/migration-frontier-movements.json`` carries the move
+# with its cause, and driving it back down is the same work it always was —
+# the write sites in ``survival/transitions.py`` fold into the end-of-walk
+# projection that ``program/precision.py`` owns.
+COUNTER_6_KERNEL_BASELINE = 133
 
 # ── counter 7 ──────────────────────────────────────────────────────────────
 

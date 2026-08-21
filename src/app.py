@@ -40,6 +40,7 @@ from flask import (
 )
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.comparison import compare_payload
 from src.calculator.application_errors import ApplicationError
 
 # The sys.path bootstrap above forces every first-party import below it;
@@ -60,6 +61,7 @@ from src.calculator.item_effects import (
     stat_conversion_metadata,
 )
 from src.calculator.rune_effects import (
+    keystone_input_options_meta,
     refresh_rune_effects,
     rune_catalog,
     shard_catalog,
@@ -94,7 +96,7 @@ from src.calculator.optimizer import (
 )
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.stats import get_item_stats
-from src.calculator.bis import bis_objective_contract, bis_payload
+from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
 from src.calculator.program.views import (  # pylint: disable=wrong-import-position
     UnrankableNumber,
 )
@@ -257,7 +259,12 @@ _SCOPE_LABELS = {
 # other two because it is deterministic and the most expensive endpoint.
 _OPERATION_POLICY = {
     "calculate": {"rate_limit_scope": "calculate", "cache_namespace": "calculate"},
+    "compare": {"rate_limit_scope": "calculate", "cache_namespace": "compare"},
     "bis": {"rate_limit_scope": "calculate", "cache_namespace": "bis"},
+    "bis_batch": {
+        "rate_limit_scope": "calculate",
+        "cache_namespace": "bis_batch",
+    },
     "optimize": {"rate_limit_scope": "optimize", "cache_namespace": "optimize"},
 }
 
@@ -1186,6 +1193,7 @@ def api_config():
     cache_meta_path = (
         Path(__file__).resolve().parent.parent / "data" / ".champions.json.meta"
     )
+    cache_meta: dict = {}
     try:
         cache_meta = json.loads(cache_meta_path.read_text(encoding="utf-8"))
         fetched_at = datetime.fromtimestamp(
@@ -1208,6 +1216,7 @@ def api_config():
             "input_limits": PUBLIC_INPUT_LIMITS,
             "champion_options": champion_options_meta_map(),
             "item_options": item_input_options_meta(),
+            "keystone_options": keystone_input_options_meta(),
             "role_quest": {
                 "support_item": support_quest_item_contract(),
                 "boot_upgrades": boot_upgrade_contract(),
@@ -1237,6 +1246,15 @@ def api_config():
                 "source": "League of Legends Wiki cache",
                 "fetched_at": fetched_at,
                 "champion_count": len(fetch_champion_data()),
+                # The patch the cache was pulled on, from its own provenance
+                # receipt (data_registry writes it through patch_identity).
+                # The page pins its patch label and its Data Dragon asset
+                # version to this, never to a literal.
+                "patch": {
+                    "public": cache_meta.get("public_patch"),
+                    "client": cache_meta.get("client_patch"),
+                    "source_version": cache_meta.get("source_version"),
+                },
             },
         }
     )
@@ -1300,6 +1318,41 @@ def api_calculate():
     return jsonify(payload)
 
 
+@app.route("/api/compare", methods=["POST"])
+# pylint: disable=too-many-return-statements
+def api_compare():
+    """Calculate Build A and Build B behind one request boundary."""
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["compare"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["compare"]["rate_limit_scope"]
+    )
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = compare_payload(data)
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot through the pure BIS application boundary."""
@@ -1323,6 +1376,44 @@ def api_bis():
 
     try:
         payload = bis_payload(data)
+    except KeyError as exc:
+        missing = exc.args[0] if exc.args else "requested data"
+        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
+    except LookupError as exc:
+        return jsonify({"error": str(exc)}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
+@app.route("/api/bis/batch", methods=["POST"])
+# pylint: disable=too-many-return-statements
+def api_bis_batch():
+    """Score dependent BIS slots with one shared timeline cache."""
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(
+            _OPERATION_POLICY["bis_batch"]["cache_namespace"], data
+        )
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(
+        _OPERATION_POLICY["bis_batch"]["rate_limit_scope"]
+    )
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = bis_batch_payload(data)
     except KeyError as exc:
         missing = exc.args[0] if exc.args else "requested data"
         return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
@@ -1524,6 +1615,7 @@ def api_save_build():
 
     The request mirrors the /api/calculate payload.  Dedicated columns take
     champion/level/role/items/item_options/ability_ranks/champion_options/
+    keystone_options/
     enemies/allies; every remaining key (boots, fight_mode, target stats,
     rotations, ...) is preserved losslessly in ``fight_params`` so the saved
     build can be reconstructed into a full calculate request.
@@ -1540,7 +1632,12 @@ def api_save_build():
             raise ValueError("items must be a list of item names")
         if len(items) > 20:
             raise ValueError("items may contain at most 20 entries")
-        for key in ("item_options", "ability_ranks", "champion_options"):
+        for key in (
+            "item_options",
+            "ability_ranks",
+            "champion_options",
+            "keystone_options",
+        ):
             value = data.get(key, {})
             if not isinstance(value, dict):
                 raise ValueError(f"{key} must be a JSON object")

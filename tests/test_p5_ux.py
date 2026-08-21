@@ -422,6 +422,10 @@ def test_app_js_posts_json_through_one_helper():
     for url in (
         "/api/metrics/event",
         "/api/calculate",
+        # main's two new POST endpoints, both routed through the helper: the
+        # roster comparison boundary and the per-slot BIS batch.
+        "/api/compare",
+        "/api/bis/batch",
         "/api/loadout-stats",
         "/api/bis",
         "/api/optimize",

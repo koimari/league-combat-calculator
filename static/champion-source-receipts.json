@@ -3343,16 +3343,34 @@
   ],
   "Shen": [
     {
-      "label": "Shen — Twilight Assault",
-      "revision_id": 4008038,
-      "revision_timestamp": "2026-04-13T04:23:20Z",
-      "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Twilight_Assault"
+      "label": "Shen — Ki Barrier",
+      "revision_id": 3985839,
+      "revision_timestamp": "2026-01-21T19:55:43Z",
+      "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Ki_Barrier"
     },
     {
       "label": "Shen — Shadow Dash",
       "revision_id": 4007754,
       "revision_timestamp": "2026-04-12T14:09:29Z",
       "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Shadow_Dash"
+    },
+    {
+      "label": "Shen — Spirit's Refuge",
+      "revision_id": 3977238,
+      "revision_timestamp": "2025-12-18T16:34:14Z",
+      "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Spirit's_Refuge"
+    },
+    {
+      "label": "Shen — Stand United",
+      "revision_id": 4004939,
+      "revision_timestamp": "2026-04-02T19:26:56Z",
+      "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Stand_United"
+    },
+    {
+      "label": "Shen — Twilight Assault",
+      "revision_id": 4008038,
+      "revision_timestamp": "2026-04-13T04:23:20Z",
+      "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Shen/Twilight_Assault"
     }
   ],
   "Shyvana": [

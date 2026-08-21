@@ -489,7 +489,34 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
         # bound, for the cadence its heal is delivered on.
         "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_OWNER_MEMO",
         "calculator.interpreters.threshold_defense._THRESHOLD_HEALTH_TICK_MEMO",
+        # Bounded WITHIN a generation -- one entry per champion, so the
+        # roster bounds it -- which is why it is here rather than in
+        # ``UNBOUNDED_KEYED_MEMOS``.  Its write still goes through
+        # ``store_for_generation``: bounded is not the same as evicting,
+        # and each row set pins the cached ability dicts it came from.
+        # The eviction claim is the test below.
+        "calculator.ability_atoms._ABILITY_ATOMS_MEMO",
     }
+
+
+def test_the_ability_atoms_memo_drops_its_superseded_generation(
+    bumped_version,
+) -> None:
+    """The eviction claim, for the memo the merge added to the keyed table."""
+    from src.calculator import ability_atoms  # noqa: PLC0415
+    from src.calculator.data_fetcher import get_champion  # noqa: PLC0415
+
+    champion = get_champion("Ahri")
+    ability_atoms._ABILITY_ATOMS_MEMO.clear()  # noqa: SLF001
+    ability_atoms._ability_atoms("Ahri", champion)  # noqa: SLF001
+    before = len(ability_atoms._ABILITY_ATOMS_MEMO)  # noqa: SLF001
+
+    bumped_version()
+    ability_atoms._ability_atoms("Ahri", champion)  # noqa: SLF001
+
+    assert len(ability_atoms._ABILITY_ATOMS_MEMO) == before  # noqa: SLF001
+    generations = {key[0] for key in ability_atoms._ABILITY_ATOMS_MEMO}  # noqa: SLF001
+    assert len(generations) == 1
 
 
 def test_state_proto_memo_key_carries_the_version_and_every_input() -> None:

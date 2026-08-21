@@ -315,7 +315,9 @@ def _name_the_response(response: dict) -> None:
     )
 
 
-def calculate_payload(data: Mapping[str, object]) -> dict:
+def calculate_payload(
+    data: Mapping[str, object], *, deterministic: bool = False
+) -> dict:
     """Return the complete JSON-safe calculate payload without Flask state.
 
     ``headline_total`` is the one published answer to "which number does
@@ -323,7 +325,7 @@ def calculate_payload(data: Mapping[str, object]) -> dict:
     fight has one, else the rotation total.  ``displayed_prediction`` is the
     rule; the browser reads the leaf instead of re-deriving it.
     """
-    request = parse_scenario_request(data)
+    request = parse_scenario_request(data, deterministic=deterministic)
     resolved = resolve_scenario(request)
     response = _calculate_resolved(request, resolved)
     response["headline_total"] = displayed_prediction(response)[0]

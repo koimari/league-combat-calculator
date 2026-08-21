@@ -42,6 +42,19 @@ def _parse(data, ranks, level=18, ap=100.0, options=None):
     )
 
 
+def _r_part(*, facing: bool):
+    """Petrifying Gaze's one part on the facing / facing-away branch."""
+    from src.calculator.data_fetcher import get_champion
+
+    abilities = _parse(
+        get_champion("Cassiopeia"),
+        ALL_MAXED,
+        options={"r_target_facing": facing},
+    )
+    (part,) = abilities["R"]["parts"]
+    return part
+
+
 # ---------------------------------------------------------------------------
 # Q: Noxious Blast
 # ---------------------------------------------------------------------------
@@ -180,7 +193,7 @@ class TestETwinFang:
 
 
 class TestRPetrifyingGaze:
-    """R: simple cone nuke; CC facing condition never changes damage."""
+    """R: cone damage plus the facing-dependent control branch."""
 
     def test_r_is_magic(self, cassiopeia_data) -> None:
         abilities = _parse(cassiopeia_data, ALL_MAXED)
@@ -202,6 +215,23 @@ class TestRPetrifyingGaze:
         r3 = _parse(cassiopeia_data, ALL_MAXED)
         assert r1["R"]["cooldown"] == pytest.approx(120.0)
         assert r3["R"]["cooldown"] == pytest.approx(80.0)
+
+    def test_r_facing_target_has_typed_stun(self, cassiopeia_data) -> None:
+        abilities = _parse(cassiopeia_data, ALL_MAXED)
+        part = abilities["R"]["parts"][0]
+        assert part.cc_kind == "stun"
+        assert part.cc_duration == pytest.approx(2.0)
+        assert part.control_source_atoms[0]["atom_id"] == "timing.control_duration"
+
+    def test_r_away_target_has_typed_slow(self, cassiopeia_data) -> None:
+        abilities = _parse(
+            cassiopeia_data,
+            ALL_MAXED,
+            options={"r_target_facing": False},
+        )
+        part = abilities["R"]["parts"][0]
+        assert part.cc_kind == "slow"
+        assert part.cc_duration == pytest.approx(2.0)
 
 
 # ---------------------------------------------------------------------------
@@ -325,10 +355,12 @@ class TestPassiveAndMeta:
     def test_options_meta(self) -> None:
         meta = get_champion_options_meta("Cassiopeia")
         keys = {opt["key"] for opt in meta["options"]}
-        assert keys == {"target_poisoned"}
-        (opt,) = meta["options"]
-        assert opt["type"] == "bool"
-        assert opt["default"] is True
+        assert keys == {"target_poisoned", "r_target_facing"}
+        options = {option["key"]: option for option in meta["options"]}
+        assert options["target_poisoned"]["type"] == "bool"
+        assert options["target_poisoned"]["default"] is True
+        assert options["r_target_facing"]["type"] == "bool"
+        assert options["r_target_facing"]["default"] is True
         assert meta["assumptions"]
 
 
@@ -344,12 +376,15 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Cassiopeia")
-        assert cassiopeia.MODULE_CC == {
-            "Q": "none",
-            "W": "slow",
-            "E": "none",
-            "R": "stun",
-        }
+        # R is absent because its kind is a property of the cast, not of
+        # the slot: Petrifying Gaze stuns the enemies facing Cassiopeia
+        # and slows the ones facing away, so ``_petrifying_gaze`` authors
+        # the kind and its sourced duration on the part per branch (the
+        # ``r_target_facing`` option picks it) rather than declaring one
+        # answer for both.
+        assert cassiopeia.MODULE_CC == {"Q": "none", "W": "slow", "E": "none"}
+        assert _r_part(facing=True).cc_kind == "stun"
+        assert _r_part(facing=False).cc_kind == "slow"
         assert "grounded and slowed" in " ".join(cc_review.slot_text(data, "W").split())
         assert "instead stunned for the same duration" in " ".join(
             cc_review.slot_text(data, "R").split()

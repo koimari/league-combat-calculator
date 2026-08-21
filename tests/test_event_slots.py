@@ -19,6 +19,7 @@ from src.calculator.program.compile import action_from_event
 from src.calculator.survival.actions import (
     EVENT_SLOTS,
     NO_SLOT,
+    TransitionRank,
     EventSlots,
     SurvivalAction,
 )
@@ -136,7 +137,7 @@ class TestTheBuilderInternsWhatThePacketDeclares:
                 "_trigger_event_id": "main:enemy:0",
                 "time": 0.0,
             },
-            0.0,
+            TransitionRank.DAMAGE,
             0,
             {},
         )
@@ -144,7 +145,7 @@ class TestTheBuilderInternsWhatThePacketDeclares:
         assert action.trigger_slot == action.event_slot
 
     def test_an_absent_reference_is_no_slot(self) -> None:
-        action = action_from_event({"kind": "damage"}, 0.0, 0, {})
+        action = action_from_event({"kind": "damage"}, TransitionRank.DAMAGE, 0, {})
         for field in SLOT_FIELDS:
             assert getattr(action, field) == NO_SLOT, field
 
@@ -157,7 +158,7 @@ class TestTheBuilderInternsWhatThePacketDeclares:
                 "_deferred_batch_id": "main:enemy:4",
                 "_event_id": "main:enemy:4:deferred:1",
             },
-            0.0,
+            TransitionRank.DAMAGE,
             0,
             {},
         )
@@ -173,6 +174,9 @@ class TestTheBuilderInternsWhatThePacketDeclares:
         rather than for truth.
         """
         action = action_from_event(
-            {"kind": "heal", "_defy_trigger_slot": 0}, 1.0, 0, {}
+            {"kind": "heal", "_defy_trigger_slot": 0},
+            TransitionRank.RECOVERY,
+            0,
+            {},
         )
         assert action.defy_trigger_slot == 0

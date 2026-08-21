@@ -48,6 +48,8 @@ from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 
+pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
+
 
 def _simulated_rows(combatants, *args, **kwargs):
     """The published survival rows for one simulated walk.

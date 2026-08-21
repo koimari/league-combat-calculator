@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from collections.abc import Callable
 from typing import Any
 
-from ..healing_legacy import HEALING_RULE_CHAMPIONS, _legacy_derive_self_healing
-
 
 @dataclass(frozen=True, slots=True)
 class ChampionHealingRule:
@@ -26,17 +24,11 @@ class ChampionHealingRule:
         fight_duration_seconds: float | None = None,
     ) -> list[dict[str, Any]]:
         """Resolve this declaration through the shared rule interface."""
-        if self.resolver is not None:
-            return self.resolver(
-                champion_data,
-                champion_stats,
-                ability_damages,
-                damage_events,
-                cast_timeline,
-                fight_duration_seconds,
+        if self.resolver is None:
+            raise RuntimeError(
+                f"{self.champion_name} has no champion-local healing resolver"
             )
-
-        return _legacy_derive_self_healing(
+        return self.resolver(
             champion_data,
             champion_stats,
             ability_damages,
@@ -48,18 +40,18 @@ class ChampionHealingRule:
 
 def declare_healing_rule(
     champion_name: str,
-    resolver: Callable[..., list[dict[str, Any]]] | None = None,
+    resolver: Callable[..., list[dict[str, Any]]],
 ) -> ChampionHealingRule:
     """Declare the self-healing rule owned by a champion module.
 
-    ``healing._load_declarations`` walks the registry and demands a
-    declaration from every named champion; this is the other direction.  A
-    module that declares a rule the registry does not know would otherwise
-    import clean and never heal, so the declaration fails closed here.
+    The resolver is the declaration: there is no shared body left to fall
+    back to, so a module that declares a rule without one would import
+    clean and never heal.  ``healing._load_declarations`` derives
+    ``HEALING_RULE_CHAMPIONS`` from these declarations, so the champion
+    set has no second home to drift from.
     """
-    if champion_name not in HEALING_RULE_CHAMPIONS:
+    if resolver is None:
         raise RuntimeError(
-            f"{champion_name!r} declares SELF_HEALING_RULE but is absent from "
-            "healing_legacy.HEALING_RULE_CHAMPIONS"
+            f"{champion_name!r} declares SELF_HEALING_RULE without a resolver"
         )
     return ChampionHealingRule(champion_name=champion_name, resolver=resolver)

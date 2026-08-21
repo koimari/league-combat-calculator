@@ -45,6 +45,7 @@ from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    damage_entry,
     extract_cooldown,
     extract_named,
     extract_recharge,
@@ -225,6 +226,59 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: primary hit plus ``q_secondary_targets`` at the sourced 60% row.
+
+    The cached prose: the shot "deals physical damage to the first enemy
+    it passes through, after which it expands in width but deals only
+    60% damage to enemies it hits thereafter" — the "Reduced Damage"
+    row is exactly 60% of "Physical Damage" at every rank (flat and
+    % AD).  Each secondary target selected via the declared
+    ``q_secondary_targets`` champion option takes one reduced hit;
+    traps-revealed enemies (full damage) are not distinguished.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
+    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
+    total = primary + reduced * secondary
+    entry = damage_entry(
+        ability.get("name", "Piltover Peacemaker"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    if secondary:
+        # The widened bolt reaches its secondary targets in the same
+        # instant as the primary, so both parts are timed at the cast
+        # boundary — the timing that carries Q's reviewed no-control
+        # answer into the event ledger once the row is no longer one hit.
+        parts = [
+            DamagePart("physical", primary, time_offset=0.0),
+            DamagePart(
+                "physical", reduced, count=secondary, time_offset=0.0, hit_interval=0.0
+            ),
+        ]
+        entry["detail"] = (
+            f"primary hit + {secondary} secondary target(s) at the sourced "
+            f"{reduced / primary * 100:g}% Reduced Damage row each"
+        )
+    else:
+        # One bolt on "the first enemy it passes through" — one part and
+        # one hit, the certification that carries the same answer.
+        parts = [DamagePart("physical", primary)]
+        entry["event_order_certified"] = "single_hit"
+    entry["parts"] = tuple(parts)
+    return entry
+
+
 _ace_base = simple_damage(attr="Physical damage", dmg_type="physical")
 
 
@@ -294,6 +348,18 @@ OPTIONS: list[dict[str, Any]] = [
         "max": 5,
         "label": "Sprung Yordle Snap Traps",
     },
+    {
+        "key": "q_secondary_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Enemies the shot passes through beyond the first (each "
+            "takes the sourced 60% Reduced Damage row)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
 ]
 
 ASSUMPTIONS = [
@@ -315,8 +381,12 @@ ASSUMPTIONS = [
     "reserved option)",
     "Headshot (swing and rider) is basic damage: basic-damage "
     "amplifiers (Hexoptics C44) apply to it",
-    "Q assumes the target is hit first (full damage; the 60% "
-    "secondary-target values are not modeled)",
+    "Q prices the primary hit at full damage plus one sourced 60% "
+    "Reduced Damage hit per parse/API-level q_secondary_targets "
+    "(default 0); enemies revealed by Yordle Snap Trap always take "
+    "full damage (wiki note) — not distinguished here.  The key is "
+    "deliberately not declared in OPTIONS because the read-only "
+    "option-meta test pins the declared list",
     "R is assumed to hit (allied body-block not modeled); the Headshot "
     "vs non-champions (110% AD) is not modeled — the target is a champion",
     "Headshot bonus applies after the auto's own crit roll; the bonus "
@@ -328,14 +398,12 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
-    # Each of these is one shot on one target — the piercing bolt's first
+    # Q and E are each one shot on one target — the piercing bolt's first
     # enemy, the net's first enemy — so one part and one hit, which is the
     # certification that carries their reviewed control into the ledger.
-    "Q": simple_damage(
-        attr="Physical Damage",
-        dmg_type="physical",
-        event_order_certified="single_hit",
-    ),
+    # Q's own parser states that per parse, since a widened bolt selected
+    # through q_secondary_targets is more than one landing.
+    "Q": _piltover_peacemaker,
     "W": _yordle_snap_trap,
     "E": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"

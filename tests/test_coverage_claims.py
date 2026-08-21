@@ -728,13 +728,24 @@ def test_ci_runs_pytest_with_no_keyword_marker_or_path_filter() -> None:
         if command[:1] == ["pytest"] or command[:3] == ["python", "-m", "pytest"]
     ]
     assert invocations, "the workflow runs no pytest step"
+    # Options that take a value: their value is not a positional path.
+    # ``-n auto`` (pytest-xdist) is the workflow's parallel-worker count.
+    value_options = {"-n", "--numprocesses", "-p", "--dist", "--cov"}
     for invocation in invocations:
         arguments = invocation[invocation.index("pytest") + 1 :]
         assert "-k" not in arguments and "--keyword" not in arguments
         assert "-m" not in arguments
-        assert [
-            argument for argument in arguments if not argument.startswith("-")
-        ] == [], invocation
+        positional = []
+        skip_next = False
+        for argument in arguments:
+            if skip_next:
+                skip_next = False
+                continue
+            if argument in value_options:
+                skip_next = True
+            elif not argument.startswith("-"):
+                positional.append(argument)
+        assert positional == [], invocation
 
 
 # ── the other eight evidence kinds ────────────────────────────────────────
@@ -1791,15 +1802,16 @@ def test_a_target_blocked_item_stops_the_run() -> None:
     The population is no longer a table of one: since 3.8's flip the target
     lane passes the attacker ladder's refusal through, so every cached record
     whose described passive nothing declares stops a target build rather than
-    being called irrelevant.  Guardian's Horn is the member that used to be
-    named by hand and is checked explicitly; the rest are checked as a set.
+    being called irrelevant.  Guardian's Horn used to be named here by hand;
+    it left the population when Undaunted got its declaration, so the whole
+    population is checked as a set and nothing is named twice.
     """
     refused = [
         name
         for name, record in CACHE.items()
         if item_coverage.target_item_model_coverage(record)["status"] == "withheld"
     ]
-    assert "Guardian's Horn" in refused
+    assert "Guardian's Horn" not in refused
     for item in refused:
         record = CACHE[item]
         assert not item_coverage.target_item_model_coverage(record)[

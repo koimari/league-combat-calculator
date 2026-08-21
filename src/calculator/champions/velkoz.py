@@ -29,6 +29,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     simple_damage,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -112,7 +113,8 @@ ASSUMPTIONS = [
     "conversion is not modeled",
     "The Researched mark (applying 3 stacks marks the target for 7s, "
     "making R deal true damage) is not modeled — R stays magic",
-    "Q slow, W sight, and E knockup/stun are CC/utility only",
+    "Q slow and W sight are utility; E's sourced 0.75-second knockup and "
+    "stun count as target action downtime",
 ]
 
 # HARDCODED: verify on patch updates — the 13-tick channel count is the
@@ -168,8 +170,14 @@ SLOTS = {
     "W": simple_damage(
         attr="Total Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
-    "E": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # E's interval is read off the cached "Knock Up Duration" row, so the
+    # ledger gets the sourced 0.75s rather than a restated constant.
+    "E": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="knockup",
+        duration_attr="Knock Up Duration",
     ),
     "R": _disintegration_ray,  # already authors its 13-tick channel timing
     "P": _organic_deconstruction,  # after the damage slots: reads their emissions

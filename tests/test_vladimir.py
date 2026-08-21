@@ -6,6 +6,7 @@ cast, which the packet now authors.
 """
 
 from src.calculator.champions import parse_champion_abilities, vladimir
+from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 
 
@@ -53,8 +54,16 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(r_text) == []
         assert "infects enemies hit for 4 seconds" in r_text
         assert "after the duration, the infection bursts" in r_text
+        # E (Tides of Blood) prices a share of Vladimir's health, and the
+        # module reads ``ctx.stats["health"]`` with no default — a parse
+        # with no champion stats raises rather than pricing it at zero.
+        stats = calculate_total_stats(data, 18, [])
         parsed = parse_champion_abilities(
-            data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
+            data,
+            18,
+            100.0,
+            {"Q": 5, "W": 5, "E": 5, "R": 3},
+            champion_stats=stats,
         )
         (part,) = parsed["R"]["parts"]
         assert part.time_offset == 4.0

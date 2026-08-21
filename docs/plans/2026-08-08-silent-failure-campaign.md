@@ -417,7 +417,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
 ## Success criteria
 
 1. **The invariant holds by machine.** Every serialized numeric leaf of `/api/calculate` — score, breakdown,
-   survival, TDD and timeline — **and of `/api/bis` (`app.py:1304`) and `/api/optimize` (`app.py:1339`), the
+   survival, TDD and timeline — **and of `/api/bis` (`app.py:524`) and `/api/optimize` (`app.py:1429`), the
    two score-serving endpoints the Goal's "every numeric leaf" also binds** — is covered by exactly one
    entry in its payload's parallel `dispositions` map, keyed by leaf path and resolving to exactly one of
    the four spellings. That map is the ruled serialization (Phase 4's S9 owns it): a bare JSON number
@@ -813,9 +813,9 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > re-pricing"*. A retirement lane that went to start `delta_amp` measured that the path as built
    > does not carry one term the pair engine does. `damage._add_item_active_damage` mitigates an item
    > active's raw value against the holder's magic amplifier —
-   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:9080`) — and
+   > `raw_active, source.damage_type, resists, state.magic_amp` (`damage.py:14531`) — and
    > `damage._add_item_proc_damage` multiplies its mitigated per-proc figure by the holder's ability
-   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:8371`);
+   > amplifier — `amp = state.ability_amp if source.is_ability_damage else 1.0` (`damage.py:11073`);
    > `survival.pricing.price_declared_packet` (`pricing.py:483`) has neither. So
    > stamping a family's pair rows `THEORETICAL` while the walk prices its declaration would delete a
    > measured contribution — the holder's own *static, pair-local* amplifiers — from every total that
@@ -912,7 +912,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > `survival.pricing.price_declared_packet` (`pricing.py:483`) prices a declaration at the **one**
    > effective resistance a fight publishes, while the pair engine re-prices already-authored
    > packets once the complete ledger exists — `_apply_temporary_lethality_windows`
-   > (`damage.py:9894`) for physical packets, `_apply_liandry_reprice` (`damage.py:10804`) for magic
+   > (`damage.py:9894`) for physical packets, `_apply_liandry_reprice` (`damage.py:10163`) for magic
    > ones. Voltaic Cyclosword's Firmament grants its lethality *after* its own energized packet, so
    > an item active authored earlier is re-priced afterwards; measured on `mundo_3champ`'s locked
    > build, a declared raw of `324.423936` was priced by the pair engine at `0.0` and `0.45`
@@ -1000,13 +1000,13 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > Amendment M already ruled.* Scanned over `damage.py` for assignment to a `damage`,
    > `total_damage` or `damage_per_hit` subscript: 14 sites in 8 functions, of which **four**
    > functions write rows or events they did not author — the two the ruling names, plus
-   > `_reattribute_empowered_swings` (`damage.py:12046`), which moves damage between two authored
+   > `_reattribute_empowered_swings` (`damage.py:17825`), which moves damage between two authored
    > rows with the fight total untouched, and `_resolve_starting_shield_outcome`
    > (`damage.py:10586`), which re-prices every max-health-scaled packet against the target's live
    > pools and then recomputes `state.total_damage` from the rewritten rows. That is a **third**
    > re-pricing site the prose does not name, which is what Ruling 2's *anything else the scan
    > finds* was written for. And the amp fold appears in that scan **not at all**:
-   > `_apply_command_amp` (`damage.py:11312`) and `_apply_general_amplifiers` (`damage.py:11217`)
+   > `_apply_command_amp` (`damage.py:17078`) and `_apply_general_amplifiers` (`damage.py:16983`)
    > mutate no packet in place — they read the ordered ledger and author a derived bonus row beside
    > it — so a census keyed only on in-place packet writes would enumerate this amendment's term and
    > silently miss Amendment M's. The census owes both shapes.
@@ -1321,9 +1321,9 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > swing.* Every family retired so far reaches its target through `_mitigate`
    > (`damage.py:395`) and nothing else — a resistance and the holder's own amps, which is exactly
    > what `survival.pricing.price_declared_packet` (`pricing.py:483`) carries. A Runaan's bolt is
-   > priced by `_mitigate_basic_attack_swing` (`damage.py:707`), which applies three further
+   > priced by `_mitigate_basic_attack_swing` (`damage.py:853`), which applies three further
    > target-side terms, and the family's *other* authored row is the attack's on-hit effects copied
-   > onto a second subject by `_copied_on_hit_packet` (`damage.py:9574`), for which
+   > onto a second subject by `_copied_on_hit_packet` (`damage.py:15248`), for which
    > `runaans_hurricane.secondary_target` declares no magnitude at all. The lane refused four moves,
    > each already forbidden in terms by the three amendments that built the stage, filed its
    > measurement at
@@ -1337,7 +1337,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > (Amendment M, Ruling 1, already carried), and then met by the target-side terms. Two of those
    > three **fold**, because a pure factor on a linear mitigation composes into the declared
    > magnitude and prices to the same real number — the target's critical-strike damage multiplier,
-   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:673`) applies —
+   > and the plating multiplier `_apply_target_basic_damage_reduction` (`damage.py:799`) applies —
    > which is the argument the `on_hit_strike` retirement already used for on-hit effectiveness and
    > is used here for the last time on these two terms. Warden's Mail's Rock Solid is **never
    > folded**. `min(flat, per_hit × cap)` is a **capped flat subtraction**, not a factor on a
@@ -1424,10 +1424,10 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > Hurricane and Blade of the Ruined King, deterministic, one rotation at full auto uptime, a
    > roster target count of two with the bolt allocated to the second, against the snapshot
    > target's 50.0 effective armour — the receipt's own pinned probe. The bolt row prices at
-   > `76.54166666666666` per hit with the three target-side terms inert, at `68.88749999999999`
-   > with the plating multiplier of 0.9 armed, at `67.35666666666665` with the crit-damage
-   > multiplier of 0.7 armed, and at `63.60666666666666` with Warden's Mail's flat 15.0 capped at
-   > 0.2 of the instance — the last being the 20.3 percent a walk pricing this declaration at the
+   > `90.45833333333331` per hit with the three target-side terms inert, at `81.4125`
+   > with the plating multiplier of 0.9 armed, at `79.60333333333332` with the crit-damage
+   > multiplier of 0.7 armed, and at `75.85333333333332` with Warden's Mail's flat 15.0 capped at
+   > 0.2 of the instance — the last being the 19.3 percent a walk pricing this declaration at the
    > published baseline would have paid over. The copied on-hit row's four one-rotation events are
    > the first four of the seven the receipt reports and sum to its figure exactly.
    >
@@ -1452,7 +1452,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > coupled scenario with the defender-state hand-off instrumented: exactly one,
    > `immolate_active_bruiser_roster`, arms a non-unit target-side swing term — plating 0.9 and
    > crit-damage 0.7, on its Darius main as **defender**, in two pair fights — because
-   > `target_overrides` (`roster_composition.py:237`) hands a defender's resolved
+   > `target_overrides` (`roster_composition.py:251`) hands a defender's resolved
    > state to every pair fight the walk runs, and that scenario is attacked as well as attacking.
    > **Rock Solid is armed by no committed coupled scenario and by no bench roster at all.** The
    > receipt's unqualified sentence is wrong and its own rulings-owed row's qualified one is right:

@@ -29,9 +29,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from ...interaction_effects import public_physical_damage_reduction
 from ..build import Program
 from ..precision import round_field
-from ..walk import WalkResult
+from ..walk import SurvivalFold, WalkResult
 from . import LeafBlock, LeafWriter
 
 __all__ = ["participant_paths", "survival", "survival_leaves"]
@@ -108,6 +109,82 @@ def _combat_state_blocks(
             float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
         ),
     )
+
+
+def _rune_state_blocks(
+    state: dict[str, Any], row: dict[str, Any], leaf: LeafBlock
+) -> None:
+    """The two rune lifecycle sub-blocks (Guardian, Aftershock).
+
+    Their own block rather than part of :func:`_combat_state_blocks`, because
+    the two answer different questions: those are item stack ledgers whose
+    leaf names collide, these are rune windows whose names do not.
+    """
+    guardian: dict[str, Any] = {}
+    row["guardian"] = guardian
+    inner = leaf.nested(guardian, "guardian")
+    inner.measured(
+        "cooldown_until",
+        round_field("guardian.cooldown_until", state["guardian_cooldown_until"]),
+    )
+    inner.structure("trigger_events", list(state["guardian_trigger_events"]))
+    aftershock: dict[str, Any] = {}
+    row["aftershock"] = aftershock
+    inner = leaf.nested(aftershock, "aftershock")
+    inner.measured("until", round_field("aftershock.until", state["aftershock_until"]))
+    inner.measured(
+        "bonus_armor",
+        round_field("aftershock.bonus_armor", float(state["aftershock_bonus_armor"])),
+    )
+    inner.measured(
+        "bonus_magic_resistance",
+        round_field(
+            "aftershock.bonus_magic_resistance",
+            float(state["aftershock_bonus_magic_resistance"]),
+        ),
+    )
+    inner.structure("trigger_events", list(state["aftershock_trigger_events"]))
+
+
+def _cleanse_receipt(
+    state: dict[str, Any], fold: SurvivalFold, participant_id: str
+) -> dict[str, Any]:
+    """One recipient row's published cleanse receipt.
+
+    The decision fields (removed/rejected controls, downtime before) were
+    frozen at activation; ``intervals_after`` and ``downtime_after`` name the
+    FINAL interval ledger instead, so a control landing after the activation
+    -- a cleanse creates no immunity -- is visible in the receipt rather than
+    implied by its absence.  The union itself is the walk's
+    (:attr:`~..walk.SurvivalFold.crowd_control_downtime`); this only names it.
+    """
+    receipt = dict(state["cleanse"])
+    # The walk-level intervals mirror the survival row's interval shape
+    # (kind/start/end/source + recipient), so naming them here keeps them
+    # identical to ``crowd_control_intervals`` by construction.
+    receipt["intervals_after"] = [
+        {"recipient": participant_id, **event}
+        for event in state["crowd_control_intervals"]
+    ]
+    receipt["downtime_after"] = round_field(
+        "cleanse.downtime_after", fold.crowd_control_downtime
+    )
+    return receipt
+
+
+# The champion-authored state blocks the walk writes only when the mechanic
+# fired: Dr. Mundo's passive lifecycle and Olaf's Ragnarok window.  An absent
+# key means "this never happened", which is why nothing publishes a neutral
+# row for them -- a reader must ask with a membership check rather than a
+# ``.get(..., {})`` that cannot tell the two apart.
+_CONDITIONAL_STATE_BLOCKS = (
+    "passive_cost",
+    "canister",
+    "pickup",
+    "passive_cooldown",
+    "passive_state",
+    "ragnarok_immunity",
+)
 
 
 def survival_leaves(
@@ -202,6 +279,20 @@ def survival_leaves(
         leaf.raw("temporary_health_expired_at", state["temporary_health_expired_at"])
         leaf.raw("temporary_health_source", state["temporary_health_source"])
         leaf.measured(
+            "permanent_bonus_health_received",
+            round_field(
+                "permanent_bonus_health_received",
+                state["permanent_bonus_health_received"],
+            ),
+        )
+        leaf.structure(
+            "permanent_bonus_health_events",
+            [
+                {"recipient": participant_id, **event}
+                for event in state["permanent_bonus_health_events"]
+            ],
+        )
+        leaf.measured(
             "effective_health",
             round_field("effective_health", fold.effective_health),
         )
@@ -249,6 +340,17 @@ def survival_leaves(
             round_field("revive_health_restored", state["revive_health_restored"]),
         )
         leaf.raw("revive_source", state["revive_source"])
+        # The explicit resurrection-stasis lifecycle: one entry per lethal
+        # packet that actually armed a Rebirth window.  Emitted ONLY when a
+        # window was armed, so a row that never entered stasis keeps its
+        # pinned shape -- and a reader must ask with a membership check
+        # (``"revive_stasis" in row``) rather than a ``.get(..., [])`` that
+        # cannot tell "never armed" from "armed with no windows".
+        if state["revive_stasis_windows"]:
+            leaf.structure(
+                "revive_stasis",
+                [dict(window) for window in state["revive_stasis_windows"]],
+            )
         leaf.raw("terminal_phase", state["terminal_phase"])
         leaf.optional_measured(
             "execute_time", _optional_time("execute_time", state["execute_time"])
@@ -260,6 +362,61 @@ def survival_leaves(
         leaf.raw("stasis_started_at", state["stasis_started_at"])
         leaf.raw("stasis_source", state["stasis_source"])
         leaf.measured(
+            "crowd_control_until",
+            round_field("crowd_control_until", state["crowd_control_until"]),
+        )
+        leaf.measured(
+            "crowd_control_immunity_until",
+            round_field(
+                "crowd_control_immunity_until", state["crowd_control_immunity_until"]
+            ),
+        )
+        leaf.raw(
+            "crowd_control_immunity_source", state["crowd_control_immunity_source"]
+        )
+        if fold.crowd_control_immunity is not None:
+            leaf.structure(
+                "crowd_control_immunity",
+                {"recipient": participant_id, **fold.crowd_control_immunity},
+            )
+        leaf.structure(
+            "crowd_control_intervals",
+            [
+                {"recipient": participant_id, **event}
+                for event in state["crowd_control_intervals"]
+            ],
+        )
+        if state.get("cleanse") is not None:
+            leaf.structure("cleanse", _cleanse_receipt(state, fold, participant_id))
+        if state.get("cleanse_use") is not None:
+            leaf.structure("cleanse_use", dict(state["cleanse_use"]))
+        if state.get("cleanse_denied"):
+            leaf.structure(
+                "cleanse_denied", [dict(entry) for entry in state["cleanse_denied"]]
+            )
+        if state.get("crowd_control_resisted"):
+            leaf.structure(
+                "crowd_control_resisted",
+                [dict(entry) for entry in state["crowd_control_resisted"]],
+            )
+        for block in _CONDITIONAL_STATE_BLOCKS:
+            if state.get(block) is not None:
+                leaf.structure(block, dict(state[block]))
+        leaf.measured(
+            "action_downtime", round_field("action_downtime", fold.action_downtime)
+        )
+        leaf.structure(
+            "action_downtime_intervals",
+            [
+                {"recipient": participant_id, **event}
+                for event in state["action_downtime_intervals"]
+            ],
+        )
+        leaf.structure("projectile_defense", fold.projectile_defense)
+        leaf.raw(
+            "projectile_defense_blocked", list(state["projectile_defense_blocked"])
+        )
+        leaf.measured(
             "invulnerable_until",
             round_field("invulnerable_until", state["invulnerable_until"]),
         )
@@ -269,6 +426,9 @@ def survival_leaves(
         )
         leaf.raw("spell_shield_used", bool(state["spell_shield_used"]))
         leaf.raw("spell_shield_source", state["spell_shield_source"])
+        leaf.raw(
+            "spell_shield_heal_triggered", bool(state["spell_shield_heal_triggered"])
+        )
         leaf.optional_measured(
             "spell_shield_until",
             (
@@ -277,6 +437,9 @@ def survival_leaves(
                 else round_field("spell_shield_until", state["spell_shield_until"])
             ),
         )
+        if fold.spell_shield is not None:
+            leaf.structure("spell_shield", fold.spell_shield)
+        _rune_state_blocks(state, row, leaf)
         _combat_state_blocks(state, row, leaf)
         leaf.raw(
             "threshold_shield_triggered",
@@ -317,6 +480,12 @@ def survival_leaves(
             "defy_heal_received",
             round_field("defy_heal_received", state["defy_heal_received"]),
         )
+        physical_damage_reduction = state.get("physical_damage_reduction")
+        if physical_damage_reduction is not None:
+            leaf.structure(
+                "physical_damage_reduction",
+                public_physical_damage_reduction(physical_damage_reduction),
+            )
         if index == 0 and grey is not None and grey.get("source"):
             # Grey health is the main champion's stored-then-consumed pool
             # (Mordekaiser), published on its own row.  Both composition

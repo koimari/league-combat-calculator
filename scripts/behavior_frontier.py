@@ -279,6 +279,14 @@ CLASS_C_CLAIM_EVIDENCE_CONTAINERS: Mapping[str, Mapping[str, str]] = {
             "item, routed onto a claim at import.  An issue reference states no "
             "coverage, so it is not the prose counter 2 is named for"
         ),
+        "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": (
+            "the cached wiki branch text each certified stats-only item was "
+            "read at, pinned so tests/test_stats_only_items.py fails loudly "
+            "when a refresh appends a mechanic to a passive without renaming "
+            "it.  The member is the evidence a review was performed, not a "
+            "claim about coverage, so it is the same exclusion _SOURCE_REFS "
+            "carries for the same reason"
+        ),
     },
 }
 
@@ -948,6 +956,45 @@ def _lane_owed_to(lane: str) -> str:
     return creditor_stage(f"counter_4/{lane}") if open_gaps else ""
 
 
+#: Where a counter that is *not* a counter-4 lane records who retires its gap.
+#: Counter 4's creditor is a campaign stage, so it resolves through
+#: ``campaign-stages.json``; counters 1-3 have no stage — they were met from
+#: the day this instrument was written and needed no creditor until a merge
+#: brought a kernel that had never been measured against them.  Same rule,
+#: separate home, because a stage record is derived from a closed commit range
+#: and a debt this file's counters carry is not.
+OPEN_DEBTS = ROOT / "docs" / "receipts" / "frontier-open-debts.json"
+
+
+def debt_owner(debt: str) -> str:
+    """Who the committed record says retires *debt*, or "" if nothing owes it.
+
+    Fail-closed in the same two directions as :func:`creditor_stage`: a debt
+    two rows claim has no single owner, and a debt with an open gap and no row
+    is what the gate prints as "no receipt in the tree names who retires it" —
+    the empty string, so the sentence stays true rather than being replaced by
+    a name nobody committed.
+    """
+    if not OPEN_DEBTS.exists():
+        return ""
+    rows = json.loads(OPEN_DEBTS.read_text(encoding="utf-8"))["debts"]
+    claimed = [row for row in rows if row["debt"] == debt]
+    if len(claimed) > 1:
+        raise ValueError(
+            f"{OPEN_DEBTS.name} has {len(claimed)} rows claiming {debt}; "
+            "exactly one may, because the owner is what the gap is overdue "
+            "against"
+        )
+    if not claimed:
+        return ""
+    return f"{claimed[0]['owner']} ({OPEN_DEBTS.name})"
+
+
+def _owed(has_gap: bool, debt: str) -> str:
+    """A met counter names nobody; an open one names its committed owner."""
+    return debt_owner(debt) if has_gap else ""
+
+
 def deferral_block() -> dict[str, Any]:
     """Counter 4's committed deferrals: the gap, its reason and its creditor.
 
@@ -1124,11 +1171,17 @@ def target_block(report: FrontierReport) -> dict[str, Any]:
     by_lane = _uninterpreted_by_lane()
     deferred = _deferrals_by_lane()
     measured: dict[str, tuple[int, int, str]] = {
-        "counter_1": (0, report.counter_1, ""),
+        "counter_1": (0, report.counter_1, _owed(report.counter_1 > 0, "counter_1")),
         # The bound is the reviewed set's live size, so reviewing an item in
         # or out moves the target the same commit it moves the set.
-        "counter_2": (len(item_coverage.NO_RUNTIME_BEHAVIOR), report.counter_2, ""),
-        "counter_3": (0, report.counter_3, ""),
+        "counter_2": (
+            len(item_coverage.NO_RUNTIME_BEHAVIOR),
+            report.counter_2,
+            _owed(
+                report.counter_2 > len(item_coverage.NO_RUNTIME_BEHAVIOR), "counter_2"
+            ),
+        ),
+        "counter_3": (0, report.counter_3, _owed(report.counter_3 > 0, "counter_3")),
         **{
             f"counter_4/{lane}": (
                 0,

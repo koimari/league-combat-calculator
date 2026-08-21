@@ -388,6 +388,19 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(72 : 270).  The 3-stacks-per-cast generation, the 5s window and "
     "the next-basic-attack trigger are state, not cadence this module "
     "infers.",
+    "KNOWN CACHE LAG (verified 16.16.1, not fixed here — out of this "
+    "module's file scope): W (Rebuttal)'s cached cooldown row is "
+    "[38, 35, 32, 29, 26]; the game files disagree at rank 3 only — bin "
+    "MelWAbility/MelW 'cooldownTime' [38, 38, 35, 33, 29, 26, 26] and "
+    "ddragon Mel.json cooldownBurn '38/35/33/29/26' both say 33, not "
+    "32. This module reads the cooldown dynamically via "
+    "extract_cooldown(ability, rank) (no hardcoded value to re-pin), so "
+    "the flag traces to data/champions.json's W cache entry, not to "
+    "this module or its tests — no test currently asserts W's cooldown "
+    "value, so this module's behavior is otherwise unaffected. Clearing "
+    "patch_regression.py's ability_rows_stale flag requires a "
+    "data/champions.json re-pull/re-cert, which is outside this task's "
+    "scope (see docs/patch-day-runbook.md Step 3.A).",
 ]
 MODULE_COVERAGE = {
     slot: ("out_of_scope" if slot == "W" else "modeled") for slot in "PQWER"

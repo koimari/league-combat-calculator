@@ -5,16 +5,44 @@ treated Rend as a one-stack constant.  This module keeps those states
 explicit, while every numeric value still comes from the pinned champion
 cache and its full-entry Wiki receipt.
 
-Coverage: P (Martial Poise) is the dash Kalista takes during every attack
-windup and R (Fate's Call) throws the Oathsworn ally into a knock-up.
-Mobility and CC magnitude are axes the engine does not have, so neither
-slot is priced.
+Coverage: P and R are ``no_damage``, not ``out_of_scope``.  Both emit an
+explicit, user-visible zero-damage row (``module_helpers.no_damage``)
+rather than staying silently absent from the parse output.
+
+  - P (Martial Poise): all four cached effect rows carry empty leveling
+    (``data/champions.json`` Kalista P effects[0..3]) — the innate
+    windup-dash mechanic, its boots-tier range/speed table, and the
+    Oathsworn Bond declaration are pure movement/state prose with no
+    damage attribute anywhere. Corroborated by the game binary
+    (``data/bin/characters/kalista.bin.json``,
+    ``Characters/Kalista/Spells/KalistaPassiveBuffAbility/
+    KalistaPassiveDashSpell(Actual)``): neither carries a
+    ``mSpellCalculations`` table, and their ``mEffectAmount`` rows are
+    dash duration/speed/range parameters (1.5s, 40/50 speed, the
+    15-225 boots-tier range ramp) — no damage node exists for P.
+  - R (Fate's Call): the cached entry's only leveling row is "Airborne
+    Duration" (1/1.5/2s by rank) — a crowd-control duration, not a
+    damage value; the ability's full text is retrieve-and-hold, cleanse,
+    invulnerability, a guided dash, and a knockback/airborne landing,
+    with no damage sentence anywhere (``data/champions.json`` Kalista R).
+    Corroborated by the game binary (``KalistaRxAbility/KalistaRx`` and
+    its child spells ``KalistaRAllyStun``/``KalistaRAllyDash``): the
+    only named ``DataValues`` entry is ``KnockupDuration`` [0, 1, 1.5,
+    2, ...], matching the wiki's Airborne Duration exactly, and none of
+    R's spell records carry a ``mSpellCalculations`` table — no damage
+    formula exists for R to price. R's effects land entirely on the
+    Oathsworn ally (retrieval, cleanse, invulnerability) or on enemies
+    as pure CC (knockback + airborne), never as a priced hit.  That
+    airborne is real control, but the row prices no damage part, so
+    ``MODULE_CC`` leaves R unreviewed rather than declaring a kind no
+    event could carry.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -82,14 +110,73 @@ def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _martial_poise(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the windup-dash mechanic — documented zero-damage row.
+
+    All four cached effect rows carry empty leveling; Martial Poise is
+    pure movement/state (the dash itself and the Oathsworn Bond
+    declaration), with no damage attribute of its own.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Martial Poise"),
+        reason=(
+            "Martial Poise is the windup-dash mechanic and the Oathsworn "
+            "Bond declaration; all four cached effect rows carry empty "
+            "leveling (data/champions.json Kalista P) and the game "
+            "binary's dash spells (KalistaPassiveDashSpell(Actual)) carry "
+            "no mSpellCalculations table — only dash duration/speed/range "
+            "parameters. P prices nothing."
+        ),
+    )
+
+
+def _fates_call(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: the ally-retrieval/CC ultimate — documented zero-damage row.
+
+    R's only sourced number is Airborne Duration (a CC duration, not
+    damage); every other effect is a state applied to the Oathsworn ally
+    (retrieval, cleanse, invulnerability) or a knockback on enemies.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Fate's Call"),
+        reason=(
+            "Fate's Call retrieves and holds the Oathsworn ally (cleanse, "
+            "invulnerability, untargetable), lets them dash with "
+            "displacement immunity, then knocks back and keeps nearby "
+            "enemies airborne on landing — no damage sentence anywhere in "
+            "the cached entry (data/champions.json Kalista R); its only "
+            "leveling row is 'Airborne Duration' (1/1.5/2s), a CC "
+            "duration. Corroborated by the game binary (KalistaRx and its "
+            "child spells): the only named DataValues entry is "
+            "KnockupDuration [0, 1, 1.5, 2, ...], matching the wiki "
+            "value, and no spell record carries a mSpellCalculations "
+            "table. R prices nothing; its effects land on the Oathsworn "
+            "ally or as pure enemy CC."
+        ),
+    )
+
+
 SLOTS = {
+    "P": _martial_poise,
     "Q": _pierce,
     "W": _soul_marked,
     "E": _rend,
+    "R": _fates_call,
 }
 
 # Pierce's spear and the Soul-Mark consumption only damage; Rend rips the
-# spears out "to deal physical damage and slow them for 2 seconds".
+# spears out "to deal physical damage and slow them for 2 seconds".  P and
+# R are absent — unreviewed rather than reviewed-no-CC: R's knockback and
+# airborne are real control, but its row prices no damage part for an
+# event to carry the kind, and P applies none at all.
 MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
@@ -128,6 +215,20 @@ ASSUMPTIONS = [
     "W damage is withheld unless the Oathsworn and Kalista marks are explicitly armed.",
     "Rend defaults to one lodged spear; the stack count is explicit and capped at the sourced 254-stack limit.",
     "Fate's Call and Martial Poise are utility/state effects with no direct enemy damage.",
+    "P (Martial Poise) and R (Fate's Call) carry no sourced damage/heal/shield "
+    "row of their own (P's four effect rows are all empty leveling; R's only "
+    "leveling row is a CC duration, Airborne Duration) — both are no_damage, "
+    "not out_of_scope, and each emits an explicit zero-damage state row "
+    "rather than staying silently absent.",
 ]
 
 SOURCES = load_champion_sources("Kalista")
+
+# P and R emit a row but price no damage, which is not what SLOTS derives.
+MODULE_COVERAGE = {
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "no_damage",
+}

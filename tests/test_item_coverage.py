@@ -28,6 +28,7 @@ from src.calculator.interpreters.threshold_defense import (
 from src.calculator.item_behavior import AllyPacketRule, UtilityDimension
 from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_effects import ITEM_EFFECTS
+from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_source import is_ordinary_sr_item
 from src.calculator.item_coverage import ATTACKER_LANES
@@ -237,7 +238,10 @@ def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
     # declaration.  Noxian Gait's Riot-only movement branch is still out of
     # scope and is still not a refusal: what changed is that the sentence
     # saying so is gone, because a modelled item no longer carries prose.
-    assert coverage["status"] == "modeled_effect"
+    # ``modeled_state`` and not ``modeled_effect``: the boot joined
+    # ITEM_INPUT_OPTIONS as the citation carrier for the Noxian Gait named
+    # boundary, and membership in that registry is what the rung reads.
+    assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["review_issue_refs"] == []
 
@@ -274,6 +278,9 @@ def test_optimizer_reports_exhaustive_legal_candidates_after_item_reconciliation
 
     assert result["items"]
     assert not (set(result["items"]) & excluded_names)
+    # "legal" and not "modeled": every legal candidate is fully modelled, so
+    # ``candidate_coverage`` is complete and the guarantee is the stronger of
+    # the optimizer's two exhaustive answers (the name of this test).
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
     assert result["is_certified_best"] is False
 
@@ -683,10 +690,14 @@ def test_a_defence_without_both_halves_of_the_gate_keeps_the_family_census(
     """Both ways the sub-question declines, so the discriminator is pinned."""
     coverage = item_model_coverage(item_name, ATTACKER_LANES)
     assert coverage.status == "stats_only", why_the_gate_does_not_apply
-    assert coverage.reason == (
-        "Every declared family on this item is a defence: the represented "
-        "mechanic changes durability, not outgoing TDD."
+    # The census names the mechanic it is about; what the gate decides is
+    # whether the sentence beside the label is the gate's or the census's,
+    # which is what these two items discriminate.
+    assert coverage.reason.endswith(
+        " is a defence: the represented mechanic changes durability, "
+        "not outgoing TDD."
     )
+    assert "priced only from the explicit bounded" not in coverage.reason
 
 
 def test_the_gated_receipt_population_is_exactly_the_two_stasis_items():
@@ -748,7 +759,36 @@ def test_stridebreaker_utility_scope_is_explicitly_modelled(item_name):
     assert coverage["review_issue_refs"] == []
 
 
+def test_guardians_horn_target_coverage_uses_typed_flat_reduction():
+    """Undaunted is a declared defence, and the declaration is what pays it.
+
+    Main's version of this test asserted the magnitude appeared in the
+    coverage *prose*; ours derives that prose from the declaration and never
+    puts numbers in it, so the number is asserted where it now lives — the
+    resolved defensive state the survival plumbing reads.
+    """
+    coverage = target_item_model_coverage(get_item_by_name("Guardian's Horn"))
+
+    assert coverage["status"] == "modeled"
+    assert coverage["calculation_eligible"] is True
+    assert "Undaunted" in coverage["reason"]
+
+    resolved = resolve_starting_defenses(
+        "Ahri",
+        18,
+        {"health": 2000.0},
+        [{"name": "Guardian's Horn"}],
+        {},
+    )
+    assert resolved.champion_damage_flat_reduction == pytest.approx(15.0)
+    assert resolved.champion_dot_damage_flat_reduction == pytest.approx(3.75)
+    assert resolved.champion_damage_flat_source == "Guardian's Horn — Undaunted"
+
+
 def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
+    """The 20%-maximum-mana gate is sourced (rev 3984419, campaign U11a), so
+    the ``*_gate_status`` refusal does not fire here and the item stays a
+    modelled, rankable candidate."""
     coverage = _attacker_coverage(get_item_by_name("Fimbulwinter"))
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
@@ -980,6 +1020,12 @@ def test_an_owner_the_migration_has_not_reached_still_publishes_as_modelled() ->
     """
     for owner in sorted(undeclared_owners()):
         status = item_model_coverage(owner, ATTACKER_LANES).status
+        if item_coverage.reviewed_as_inert(owner) is not None:
+            # A review that read the whole entry and found no outgoing
+            # mechanic is an answer, not a refusal the migration invented:
+            # ``stats_only`` stays optimizer- and calculation-eligible.
+            assert status == "stats_only", owner
+            continue
         assert status in {"modeled", "modeled_state", "modeled_effect"}, owner
 
 
@@ -1026,6 +1072,9 @@ def test_the_flip_moved_no_ordinary_item_in_or_out_of_attacker_eligibility() -> 
         coverage = item_model_coverage(str(record["name"]), ATTACKER_LANES)
         assert coverage.optimizer_eligible == coverage.calculation_eligible
         if is_ordinary_sr_item(record):
+            # No cached ordinary item declares an unauthorized gate today, so
+            # the ``authority_gap_reason`` rung refuses none of them.
+            assert not item_coverage.authority_gap_reason(str(record["name"]))
             assert coverage.optimizer_eligible, record["name"]
 
 

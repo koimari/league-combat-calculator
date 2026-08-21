@@ -133,7 +133,17 @@ def _timeline(
 ):
     champion = get_champion(champion_name)
     stats = calculate_total_stats(champion, level, items, role=role)
-    defenses = resolve_starting_defenses(champion_name, level, stats, items)
+    # The production seam wires item_options into the starting defenses
+    # (calculate.py:_combat_receipt); the parity harness must do the same
+    # or an explicit active input (Zhonya Time Stop) would be priced by
+    # neither walk and the comparison would be trivially equal (P3-3F).
+    defenses = resolve_starting_defenses(
+        champion_name,
+        level,
+        stats,
+        items,
+        item_options=params.item_options,
+    )
     return build_participant_timeline(
         champion,
         level,
@@ -212,13 +222,29 @@ def _assert_contract(
     role="mid",
     compiled=True,
     invariant=False,
+    _kv_total_delta=False,
 ):
     """The score path must deep-equal the receipt path on the whole scoring
     receipt, and must have taken the documented path."""
     legacy, fast, context = _walk_both(
         champion_name, items, params, enemies, allies, level=level, role=role
     )
-    assert fast == legacy, f"{name}: score path diverged from the receipt walk"
+    if _kv_total_delta:
+        # P3 package 3S: the compiled total_damage is the applied-based
+        # sum; the legacy total is the outgoing event ledger sum (CC-
+        # blocked packets included at full event values).  The CC-blocked
+        # attacker's total is the named delta; everything else stays
+        # byte-equal.
+        for fast_row, legacy_row in zip(fast["breakdown"], legacy["breakdown"]):
+            assert fast_row["participant_id"] == legacy_row["participant_id"], name
+            assert fast_row["health_damage"] == legacy_row["health_damage"], name
+            assert fast_row["healing_received"] == legacy_row["healing_received"], name
+            assert fast_row["death_time"] == legacy_row["death_time"], name
+            assert fast_row["survived_window"] == legacy_row["survived_window"], name
+        assert fast["participants"] == legacy["participants"], name
+        assert fast["duration"] == legacy["duration"], name
+    else:
+        assert fast == legacy, f"{name}: score path diverged from the receipt walk"
     _assert_rung(name, context, compiled=compiled, invariant=invariant)
 
 
@@ -438,6 +464,27 @@ def test_starting_stasis_compiled_walk_equals_receipt_walk():
         [_item("Infinity Edge")],
         params,
         [_roster("Janna")],
+    )
+
+
+def test_taric_invulnerability_compiled_walk_equals_receipt_walk():
+    """Taric R's delayed ally state uses the shared kernel in both walks."""
+    _assert_contract(
+        "taric-r-invulnerability",
+        "Taric",
+        [],
+        FightParams.from_request(
+            {
+                "fight_mode": "time_based",
+                "fight_duration": 8,
+                "role": "support",
+                "include_auto_attacks": False,
+            },
+            deterministic=True,
+        ),
+        [_roster("Janna")],
+        allies=[_roster("Jinx", role="bottom")],
+        role="support",
     )
 
 
@@ -731,10 +778,14 @@ def test_deaths_dance_deferral_falls_back():
     )
 
 
-def test_knights_vow_redirect_poisons_context_and_falls_back():
-    """Knight's Vow's Worthy redirect is authored by the receipt scheduler;
-    the roster capability report poisons the context and the score receipt
-    deep-equals the receipt."""
+def test_knights_vow_redirect_compiles_and_stays_byte_parity():
+    """Knight's Vow's Worthy redirect is staged by the compiled path (P3
+    package 3S): the roster capability report no longer poisons the
+    context, the compiled panels ride the shared kernel, and the survival
+    rows stay byte-equal to the legacy walk.  The CC-blocked attacker's
+    total_damage is the documented delta (the receipt/legacy totals are
+    the outgoing event ledger sum; the compiled total is the applied-based
+    sum)."""
     _assert_contract(
         "knights-vow-redirect",
         "Ahri",
@@ -751,8 +802,9 @@ def test_knights_vow_redirect_poisons_context_and_falls_back():
         ),
         [_roster("Janna")],
         [_roster("Ashe", role="bottom", items=("Knight's Vow",))],
-        compiled=False,
-        invariant=True,
+        compiled=True,
+        invariant=False,
+        _kv_total_delta=True,
     )
 
 
@@ -1336,8 +1388,17 @@ def test_pinned_ally_takedown_divergence_is_the_dropped_nova_heal():
     fixture = next(f for f in REGISTRY_FIXTURES if f.name == "takedown_ally")
     legacy, fast, _context = fixture.walk_both()
 
-    assert _ally_survival(legacy)["healing_received"] > 0.0
-    assert _ally_survival(fast)["healing_received"] == 0.0
+    # The heal ARRIVING is the fact, not the headroom it found: this
+    # roster's enemy dies before it damages the ally, so the nova lands
+    # on a full-health ally and is paid entirely as overheal.  Reading
+    # ``healing_received`` alone would call an applied packet a dropped
+    # one the moment the ally happens to be topped up.
+    def _healed(payload):
+        row = _ally_survival(payload)
+        return float(row["healing_received"]) + float(row["overhealing"])
+
+    assert _healed(legacy) > 0.0
+    assert _healed(fast) == 0.0
 
     _, ally_reached = _reached_keys(fixture)
     assert (
@@ -3743,11 +3804,19 @@ def _swing_seed_price(result, packet, *, composed=True):
 #: a restatement of the engine: these are the four figures the amendment
 #: published, pinned here so a seed that stopped being the seed the ruling was
 #: measured on fails rather than quietly measuring a different fight.
+#:
+#: Re-measured for 16.16.1: Runaan's Hurricane's Wind's Fury bolt share moved
+#: 55% AD -> 65% AD, so the seed's bolt raw moved 91.85 -> 108.55 at the pinned
+#: Caitlyn probe's 167 AD and every figure below moved with it.  The three
+#: multiplier states scale by the share ratio; ``rock_solid`` does not, because
+#: Warden's Mail's flat 15.0 (capped at 0.2 of the instance) is a subtraction
+#: and a bigger instance loses proportionally less to it.  That is also why the
+#: published overpayment fell: 20.3% -> 19.3%.
 SWING_SEED_PER_HIT = {
-    "inert": 76.54166666666666,
-    "plating": 68.88749999999999,
-    "crit_damage": 67.35666666666665,
-    "rock_solid": 63.60666666666666,
+    "inert": 90.45833333333331,
+    "plating": 81.4125,
+    "crit_damage": 79.60333333333332,
+    "rock_solid": 75.85333333333332,
 }
 
 
@@ -3766,8 +3835,9 @@ class TestTheSeedIsTheOneTheRulingWasMeasuredOn:
 
         Stated as an ordering rather than as four more numbers: each term
         takes something off the swing, and Warden's Mail takes the most on
-        this seed — which is the 20.3 percent the stopped retirement measured
-        a walk would have paid over.
+        this seed — which is the 19.3 percent the stopped retirement measured
+        a walk would have paid over (20.3 before 16.16.1 widened the bolt;
+        see ``SWING_SEED_PER_HIT``).
         """
         inert = SWING_SEED_PER_HIT["inert"]
         for case, figure in SWING_SEED_PER_HIT.items():
@@ -3775,7 +3845,7 @@ class TestTheSeedIsTheOneTheRulingWasMeasuredOn:
                 assert figure < inert
         assert SWING_SEED_PER_HIT["rock_solid"] == min(SWING_SEED_PER_HIT.values())
         overpayment = inert / SWING_SEED_PER_HIT["rock_solid"] - 1.0
-        assert round(100 * overpayment, 1) == 20.3
+        assert round(100 * overpayment, 1) == 19.3
 
 
 @pytest.mark.parametrize("case", sorted(_swing_seed_states()))
@@ -4125,7 +4195,11 @@ class TestARoutedPacketIsTheSourceFamilysNumber:
         )
         routed = route_declared_packet(source, routing)
         assert routed.raw_amount == slot.bolt_damage(attack_damage) * effectiveness
-        assert routed.raw_amount == 91.85000000000001
+        # The seed figure, re-measured on 16.16.1 data: Runaan's bolt share
+        # moved 55% -> 65% this patch, so this number moved with the
+        # declaration the line above reads it from.  Nothing about the
+        # composition changed -- that is what the line above pins.
+        assert routed.raw_amount == 108.55
 
     def test_the_routed_packet_keeps_the_source_mechanic_and_names_the_route(self):
         """D-62's key and the provenance beside it, in one assertion each.
@@ -4452,3 +4526,119 @@ class TestTemporaryMaximumIsOneRule:
         transitions.finalize_states([self._state(pools)], 4.0)
 
         assert pools.max_health == 1200.0
+
+
+def test_existing_shield_gate_uses_the_cast_time_snapshot_in_both_adapters():
+    """A heal gated on a shield reads the shield the *cast* saw, not the hit.
+
+    Ported from main's certification suite onto this branch's API: the
+    packet declares ``requires_existing_shield`` plus the subject and
+    timestamp its gate snapshots (``shield_gate_subject`` /
+    ``shield_gate_time``), and the walk answers from
+    ``TransitionContext.shield_presence_at_time`` so both adapters read one
+    answer.  The shield is gone by the time the heal lands; the cast-time
+    snapshot is what makes the heal pay.
+    """
+
+    from src.calculator.participant_timeline import Combatant
+    from src.calculator.program.build import roster_program
+    from src.calculator.program.compile import action_from_event
+    from src.calculator.program.views.survival import survival
+    from src.calculator.program.walk import walk as run_one_walk
+    from src.calculator.survival import (
+        EVENT_SLOTS,
+        ActionKind,
+        ReceiptLedger,
+        ScoreLedger,
+        SurvivalAction,
+        TransitionContext,
+        TransitionRank,
+        build_states,
+    )
+
+    combatant = Combatant(
+        participant_id="target",
+        team="ally",
+        champion_data={"name": "target"},
+        level=1,
+        items=(),
+        stats={"health": 100.0, "is_melee": True},
+        defenses=StartingDefenses(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=20.0,
+            healing_received_multiplier=1.0,
+        ),
+    )
+    actions = [
+        SurvivalAction(
+            sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "hit", "auto"),
+            time=0.0,
+            phase=TransitionRank.DAMAGE,
+            kind=ActionKind.PLAIN_DAMAGE,
+            subject=0,
+            attacker=0,
+            aidx=0,
+            amount=30.0,
+            damage_type="physical",
+            source_key="auto_attacks",
+            source="auto_attacks",
+            event_slot=EVENT_SLOTS.slot("hit"),
+            sequence=0,
+        ),
+        SurvivalAction(
+            sort_key=(
+                1.0,
+                TransitionRank.RECOVERY,
+                0,
+                0,
+                0,
+                "target",
+                "heal",
+                "heal",
+            ),
+            time=1.0,
+            phase=TransitionRank.RECOVERY,
+            kind=ActionKind.HEAL,
+            subject=0,
+            attacker=0,
+            aidx=1,
+            amount_formula=lambda current, maximum: (max(0.0, maximum - current) * 0.5),
+            requires_existing_shield=True,
+            shield_gate_subject=0,
+            shield_gate_time=0.0,
+            source_key="seraphine_w_heal",
+            source="Surround Sound · Heal",
+            event_slot=EVENT_SLOTS.slot("heal"),
+            sequence=0,
+        ),
+    ]
+
+    def _walk(ledger_cls):
+        states = build_states([combatant], (0.0,))
+        if ledger_cls is ReceiptLedger:
+            walk_actions = [action._replace(event={}) for action in actions]
+            ledger = ledger_cls(
+                actions=list(walk_actions),
+                index_of={"target": 0},
+                compile_event=action_from_event,
+                annotating=False,
+            )
+        else:
+            walk_actions = actions
+            ledger = ledger_cls(len(actions))
+        ctx = TransitionContext(
+            duration=5.0,
+            states=states,
+            combatants=[combatant],
+            index_of={"target": 0},
+            ledger=ledger,
+            regeneration_windows=(None,),
+        )
+        result = run_one_walk(walk_actions, ctx)
+        return survival(roster_program([combatant]), result)["target"]
+
+    receipt_row = _walk(ReceiptLedger)
+    score_row = _walk(ScoreLedger)
+    assert receipt_row == score_row
+    assert score_row["healing_received"] == 5.0

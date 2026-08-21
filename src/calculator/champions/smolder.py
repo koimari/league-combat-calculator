@@ -39,6 +39,7 @@ and the bolts' cadence across the 1.25-second flight are left for the
 timing wave, as is the stack-scaled sixth bolt onward.
 """
 
+from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -47,6 +48,7 @@ from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
@@ -103,21 +105,11 @@ def _super_scorcher_breath(packet_q):
         )
         factor = 1.0 + _Q_CRIT_INCREASE_PER_CRIT * crit_chance
         if abs(factor - 1.0) > 1e-12:
+            # Only the amount changes: rebuilding the part field by field
+            # silently drops every declaration the part carries beyond the
+            # ones named (cc_duration, skillshot, zero_policy, control atoms).
             entry["parts"] = tuple(
-                DamagePart(
-                    part.damage_type,
-                    amount=part.amount * factor,
-                    count=part.count,
-                    hp_scaled_damage=part.hp_scaled_damage,
-                    crit_effectiveness=part.crit_effectiveness,
-                    basic_damage=part.basic_damage,
-                    bonus_ad_ratio=part.bonus_ad_ratio,
-                    dot_stack_scaled=part.dot_stack_scaled,
-                    time_offset=part.time_offset,
-                    hit_interval=part.hit_interval,
-                    cc_kind=part.cc_kind,
-                )
-                for part in entry["parts"]
+                replace(part, amount=part.amount * factor) for part in entry["parts"]
             )
             entry["total_raw"] = float(entry.get("total_raw", 0.0)) * factor
 
@@ -242,4 +234,30 @@ MODULE_COVERAGE = {
     "R": "modeled",
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Smolder")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Smolder self-healing events from its authored packet."""
+    healing = []
+    r = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(r, "Self Heal", r_rank, champion_stats)
+    # The flat self heal is paid once per cast, so a wave the module prices
+    # as several hits still heals once.
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+    ):
+        _healing._heal_from_damage(
+            healing, payment.event, r_heal, "MMOOOMMMM!", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Smolder", derive_self_healing)

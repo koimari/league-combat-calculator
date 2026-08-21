@@ -99,6 +99,7 @@ _PUBLIC_FIELD_POLICIES: dict[str, str] = {
     "rotation": "primary",
     "resource_spent": "primary",
     "resource_remaining": "primary",
+    "resource_ledger": "primary",
     "notes": "primary",
     "timeline_coverage": "combine_timeline_coverages",
     "auto_attack_policy": "primary",
@@ -153,6 +154,38 @@ def _legacy_overkill(result: Mapping[str, object]) -> float:
     )
 
 
+def _public_damage_event(event: Mapping[str, object]) -> dict[str, object]:
+    """Keep typed interaction fields on the public damage ledger."""
+    row: dict[str, object] = {
+        "time": _public_event_time(event),
+        "source": str(event.get("source_key", "")),
+        "damage_type": str(event.get("damage_type", "")),
+        "damage": round(float(event.get("damage", 0.0)), 1),
+        "phase": str(event.get("phase", "")),
+    }
+    for key in (
+        "amplified",
+        "basic_attack",
+        "cc_kind",
+        "cc_duration",
+        "control_source_atoms",
+        "damage_over_time",
+        "deathfire_category",
+        "event_precision",
+        "skillshot",
+        "trigger_source",
+    ):
+        if key not in event:
+            continue
+        value = event[key]
+        if key in {"cc_duration", "time"} and value is not None:
+            value = round(float(value), 3)
+        row[key] = value
+    if "trigger_time" in event:
+        row["trigger_time"] = _public_event_time({"time": event.get("trigger_time")})
+    return row
+
+
 def serialize_fight_result(result: Mapping[str, object]) -> dict:
     """Translate one engine result into the stable public response shape."""
     breakdown = result.get("breakdown", {})
@@ -205,6 +238,26 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict:
             row["temporary_lethality"] = dict(temporary_lethality)
         if "targeting" in entry:
             row["targeting"] = dict(entry["targeting"])
+        for receipt_key in (
+            "amp_delay_seconds",
+            "amp_ratio",
+            "amplified_tick_count",
+            "duration_by_category",
+            "pet_damage_category_modeled",
+            "tick_interval_seconds",
+            "trigger_events",
+        ):
+            if receipt_key not in entry:
+                continue
+            value = entry[receipt_key]
+            if isinstance(value, Mapping):
+                row[receipt_key] = dict(value)
+            elif isinstance(value, list):
+                row[receipt_key] = [
+                    dict(item) if isinstance(item, Mapping) else item for item in value
+                ]
+            else:
+                row[receipt_key] = value
         api_breakdown[key] = row
 
     return {
@@ -247,17 +300,12 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict:
         "rotation": dict(result.get("rotation") or {}),
         "resource_spent": round(result.get("resource_spent", 0.0), 1),
         "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
+        "resource_ledger": dict(result.get("resource_ledger") or {}),
         "timeline_coverage": dict(result.get("timeline_coverage", {})),
         "auto_attack_policy": dict(result.get("auto_attack_policy", {})),
         "auto_attack_schedule": dict(result.get("auto_attack_schedule", {})),
         "damage_events": [
-            {
-                "time": _public_event_time(event),
-                "source": str(event.get("source_key", "")),
-                "damage_type": str(event.get("damage_type", "")),
-                "damage": round(float(event.get("damage", 0.0)), 1),
-                "phase": str(event.get("phase", "")),
-            }
+            _public_damage_event(event)
             for event in result.get("damage_events", [])
             if isinstance(event, Mapping) and _public_event_time(event) is not None
         ],

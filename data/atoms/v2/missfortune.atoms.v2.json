@@ -1,0 +1,1647 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "MissFortuneScattershotSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0
+   ],
+   "damage": [
+    20.0,
+    110.0
+   ],
+   "duration": [
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": 4.0,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneScattershotSlow",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "MissFortuneScattershotSlow",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneScattershotAbility/MissFortuneScattershotSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MissFortuneScattershot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0
+   ],
+   "damage": [
+    20.0,
+    110.0
+   ],
+   "duration": [
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": 4.0,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneScattershot",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneScattershotAbility/MissFortuneScattershot"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MissFortuneScattershot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0
+   ],
+   "damage": [
+    20.0,
+    110.0
+   ],
+   "duration": [
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": 4.0,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneScattershot",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneScattershotAbility/MissFortuneScattershot"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MissFortuneScattershot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0
+   ],
+   "damage": [
+    20.0,
+    110.0
+   ],
+   "duration": [
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": 4.0,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneScattershot",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneScattershotAbility/MissFortuneScattershot"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MissFortuneRicochetShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    3.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.3499999940395355,
+    "adratio": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneRicochetShot",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneRicochetShotAbility/MissFortuneRicochetShot"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MissFortuneRicochetShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    3.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.3499999940395355,
+    "adratio": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneRicochetShot",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneRicochetShotAbility/MissFortuneRicochetShot"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MissFortuneRicochetShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    3.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0
+   ],
+   "damage": [
+    -5.0,
+    145.0
+   ],
+   "duration": null,
+   "ratios": {
+    "apratio": 0.3499999940395355,
+    "adratio": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneRicochetShot",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneRicochetShotAbility/MissFortuneRicochetShot"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MissFortunePassiveStack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortunePassiveStack",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortunePassiveStack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassiveStack"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MissFortunePassiveAttackCrit",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortunePassiveAttackCrit",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortunePassiveAttackCrit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassiveAttackCrit"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MissFortuneStrutStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0
+   ],
+   "damage": [
+    20.0,
+    110.0
+   ],
+   "duration": [
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": 4.0,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneStrutStacks",
+    "atoms": [
+     "stack-transform-summon-resource.stack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "MissFortuneStrutStacks",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneViciousStrikesAbility/MissFortuneStrutStacks"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "MissFortuneViciousStrikes",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    45.0,
+    45.0
+   ],
+   "damage": null,
+   "duration": [
+    4.0,
+    4.0
+   ],
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneViciousStrikes",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 4.0,
+    "behavior": "MissFortuneViciousStrikes",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.3333,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneViciousStrikesAbility/MissFortuneViciousStrikes"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MissFortuneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MissFortuneBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "MissFortuneBulletTime",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    70.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "apratio": 0.25,
+    "adratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBulletTime",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.0010000000474974513,
+   "uptime_fraction": 0.0231,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneBulletTime"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "MissFortuneBulletTime",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    70.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "apratio": 0.25,
+    "adratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBulletTime",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.0010000000474974513,
+   "uptime_fraction": 0.0231,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneBulletTime"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MissFortuneBulletTime",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    70.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "apratio": 0.25,
+    "adratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBulletTime",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.0010000000474974513,
+   "uptime_fraction": 0.0231,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneBulletTime"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "MissFortuneBulletTime",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    130.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0
+   ],
+   "damage": [
+    10.0,
+    70.0
+   ],
+   "duration": [
+    3.0,
+    3.0
+   ],
+   "ratios": {
+    "apratio": 0.25,
+    "adratio": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBulletTime",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 130.0,
+   "cast_time_seconds": 0.0010000000474974513,
+   "uptime_fraction": 0.0231,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneBulletTime"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "MissFortuneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "MissFortuneBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortuneBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "MissFortuneCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortuneCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MissFortunePassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortunePassive",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortunePassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Miss Fortune Love Tap"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassive"
+   ],
+   "evidence": "wiki:P empowered basic attack applies mark; bonus physical on unmarked targets"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MissFortunePassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortunePassiveAttack",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortunePassiveAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Miss Fortune Love Tap"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassiveAttack"
+   ],
+   "evidence": "wiki:P bonus damage instance on new target"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MissFortunePassiveAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortunePassiveAttack2",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortunePassiveAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Miss Fortune Love Tap"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortunePassiveAbility/MissFortunePassiveAttack2"
+   ],
+   "evidence": "wiki:P secondary bonus damage instance"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "MissFortuneRShotExtra",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    3.0
+   ],
+   "cast_range": [
+    575.0,
+    575.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneRShotExtra",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Miss Fortune Bullet Time"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneBulletTimeAbility/MissFortuneRShotExtra"
+   ],
+   "evidence": "wiki:R waves of 6 projectiles; extra per-wave damage instance"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "MissFortuneRicochetShotDud",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    3.0
+   ],
+   "cast_range": [
+    176.0,
+    176.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneRicochetShotDud",
+    "atoms": [
+     "damage.on-hit"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "MissFortuneRicochetShotDud",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Miss Fortune Double Up"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneRicochetShotAbility/MissFortuneRicochetShotDud"
+   ],
+   "evidence": "wiki:Q bounce applies on-hit effects to the second enemy"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "MissFortuneStrut",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    20.0,
+    13.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0
+   ],
+   "damage": [
+    20.0,
+    110.0
+   ],
+   "duration": [
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "apratio": 0.6000000238418579
+   },
+   "tick_rate": 4.0,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "MissFortuneStrut",
+    "atoms": [
+     "crowd-control-mobility.movement-speed"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 2.0,
+    "behavior": "MissFortuneStrut",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.1,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Miss Fortune Strut"
+   ],
+   "binary": [
+    "Characters/MissFortune/Spells/MissFortuneViciousStrikesAbility/MissFortuneStrut"
+   ],
+   "evidence": "wiki:W passive bonus movement speed out of combat (mBuff)"
+  }
+ }
+]

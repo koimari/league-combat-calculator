@@ -1,0 +1,2696 @@
+[
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SylasBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 5327,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SylasBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 5327,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SylasBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 5327,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SylasBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 5327,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SylasWDamageAndHeal",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasWDamageAndHeal"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SylasWDamageAndHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasWDamageAndHeal"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SylasW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SylasW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasW"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SylasW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "SylasW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasW"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SylasW",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    12.0,
+    10.5,
+    9.0,
+    7.5,
+    6.0,
+    5.25
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0
+   ],
+   "cast_time_seconds": 0.15000000596046448,
+   "effect_amounts": {
+    "Damage": [
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0,
+     215.0,
+     250.0
+    ],
+    "Healing": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "MaxHealingPercentAmp": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "MaxExecuteThreshold": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "DamageAPRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "HealMinAPRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "HealMinHPRatio": [
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806,
+     0.05000000074505806
+    ]
+   },
+   "damage": [
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0,
+    215.0,
+    250.0
+   ],
+   "ratios": {
+    "12": 1.0
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.15000000596046448,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cooldown_max_rank_seconds": 5.25,
+   "cast_time_seconds": 0.15000000596046448,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasWAbility/SylasW"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SylasR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    80.0,
+    80.0,
+    55.0,
+    30.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "cast_time_seconds": 0.25,
+   "effect_amounts": {
+    "EnemyCooldownPercent": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "EnemyCooldownTooltip": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "MinimumEnemyCooldown": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "UltHoldDuration": [
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0,
+     90.0
+    ]
+   },
+   "affects_type_flags": 16387,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 80.0,
+   "cooldown_max_rank_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasRAbility/SylasR"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SylasQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "cast_time_seconds": 0.4000000059604645,
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "APRatio1": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     5.0,
+     60.0,
+     115.0,
+     170.0,
+     225.0,
+     280.0,
+     335.0
+    ],
+    "APRatio2": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645
+    ],
+    "MinionMod": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Q2AoE": [
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0
+    ],
+    "DetonationDelay": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4000000059604645,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_rank_seconds": 6.0,
+   "cast_time_seconds": 0.4000000059604645,
+   "uptime_fraction": 0.15,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasQAbility/SylasQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SylasQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "mana_cost": [
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0,
+    55.0
+   ],
+   "cast_time_seconds": 0.4000000059604645,
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "APRatio1": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExplosionBaseDamage": [
+     5.0,
+     60.0,
+     115.0,
+     170.0,
+     225.0,
+     280.0,
+     335.0
+    ],
+    "APRatio2": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ],
+    "SlowAmount": [
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645
+    ],
+    "MinionMod": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "Q2AoE": [
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0,
+     180.0
+    ],
+    "DetonationDelay": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MonsterMod": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4000000059604645,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   },
+   {
+    "state": "persistent",
+    "duration": 1.5,
+    "behavior": "buff_or_debuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cooldown_max_rank_seconds": 6.0,
+   "cast_time_seconds": 0.4000000059604645,
+   "uptime_fraction": 0.15,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasQAbility/SylasQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SylasCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "effect_amounts": {},
+   "affects_type_flags": 5327,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SylasEShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_time_seconds": 0.10000000149011612,
+   "effect_amounts": {},
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 11.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasEShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "SylasE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "PullDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "KnockUpDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SylasE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "PullDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "KnockUpDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SylasE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "PullDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "KnockUpDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SylasE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    9.0
+   ],
+   "mana_cost": [
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0,
+    65.0
+   ],
+   "effect_amounts": {
+    "PullDamage": [
+     30.0,
+     80.0,
+     130.0,
+     180.0,
+     230.0,
+     280.0,
+     330.0
+    ],
+    "KnockUpDuration": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cooldown_max_rank_seconds": 9.0,
+   "tempo_class": "damage"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SylasE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ]
+   },
+   "damage": [
+    20.0,
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE2"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SylasE2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ]
+   },
+   "damage": [
+    20.0,
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE2"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "SylasE2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0,
+    850.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ]
+   },
+   "damage": [
+    20.0,
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0
+   ],
+   "affects_type_flags": 6154,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "damage_or_heal_application"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "reset_on": [
+    "spell_tag_reset"
+   ],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasEAbility/SylasE2"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SylasRBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "effect_amounts": {},
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasRBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SylasPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "AoE": [
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "PassiveCharges": [
+     2.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PassiveDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "CheatingThreshold": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "PassiveAttackSpeed": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ],
+    "MonsterDamageMulti": [
+     1.149999976158142,
+     1.149999976158142,
+     1.149999976158142,
+     1.149999976158142,
+     1.149999976158142,
+     1.149999976158142,
+     1.149999976158142
+    ]
+   },
+   "ratios": {
+    "2": 0.4000000059604645
+   },
+   "calculation_coefficients": [
+    1.2999999523162842,
+    0.30000001192092896,
+    0.4000000059604645,
+    0.20000000298023224
+   ],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank_seconds": 0.0,
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Petricite Burst",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasPassiveAbility/SylasPassive"
+   ],
+   "evidence": "wiki-map: passive grants Unshackled stacks on each ability cast, up to 3"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SylasPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_time_seconds": 0.10000000149011612,
+   "effect_amounts": {},
+   "affects_type_flags": 22538,
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 11.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Petricite Burst",
+    "Damage",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasPassiveAttack",
+    "Characters/Sylas/Spells/SylasPassiveAttackNoAnim"
+   ],
+   "evidence": "wiki-map: empowered basic attacks deal bonus magic damage per Unshackled stack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SylasPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_time_seconds": 0.10000000149011612,
+   "effect_amounts": {},
+   "affects_type_flags": 22538,
+   "damage_type": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.10000000149011612,
+    "behavior": "winding_up"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile_flight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cooldown_max_rank_seconds": 11.0,
+   "cast_time_seconds": 0.10000000149011612,
+   "tempo_class": "damage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Petricite Burst",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Sylas/Spells/SylasPassiveAttack"
+   ],
+   "evidence": "wiki-map: passive empowers the next basic attack"
+  }
+ }
+]

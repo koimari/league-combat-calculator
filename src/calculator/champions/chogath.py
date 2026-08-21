@@ -43,8 +43,10 @@ from .slotlib import (
     find_named_leveling,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
 # attribute of its own; the JSON's "Total Magic Damage" entry is exactly
@@ -248,9 +250,13 @@ SLOTS = {
         attr="Magic damage",
         dmg_type="magic",
     ),
-    # One roar in a cone, landing at the cast.
-    "W": simple_damage(
-        attr="Magic damage", dmg_type="magic", event_order_certified="single_hit"
+    # One roar in a cone, landing at the cast, carrying the sourced silence.
+    "W": with_control(
+        simple_damage(
+            attr="Magic damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="silence",
+        duration_attr="Silence Duration",
     ),
     "E": _vorpal_spikes,
 }
@@ -275,4 +281,42 @@ parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 
 SOURCES = load_champion_sources("Cho'Gath")
 
-SELF_HEALING_RULE = declare_healing_rule("Cho'Gath")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Price Carnivore: one heal per kill Cho'Gath's user declares.
+
+    "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
+    level)" — P reads the level row and carries the user's declared kill
+    count on its receipt.  A takedown-paid heal has neither a cast nor a
+    damage row of its own, so each kill rides one of the fight's first
+    damaging hits.
+    """
+    healing: list[dict[str, Any]] = []
+    carnivore = ability_damages.get("passive", {}).get("self_heal_state")
+    if isinstance(carnivore, dict):
+        amount = float(carnivore.get("amount", 0.0) or 0.0)
+        for payment in _healing._takedown_payments(
+            int(carnivore.get("kills", 0) or 0), damage_events
+        ):
+            healing.append(
+                {
+                    "time": float(payment.event.get("time", 0.0)),
+                    "amount": amount,
+                    "source": "Carnivore",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                    **_healing._trigger_fields(payment.event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Cho'Gath", derive_self_healing)

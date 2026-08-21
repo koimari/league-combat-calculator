@@ -146,7 +146,7 @@ class TestTheAnchorIsDeclaredNotInferred:
         """A predicate cannot be matched against the cast timeline, so a
         rule asking for a cast anchor over one fails closed rather than
         quietly counting events."""
-        from src.calculator.healing_legacy import HealAnchor, _payments
+        from src.calculator.healing_helpers import HealAnchor, _payments
 
         with pytest.raises(ValueError, match="one slot"):
             _payments(HealAnchor.CAST, lambda source: True, [], None)
@@ -173,11 +173,11 @@ class TestTheDeclarationAndTheRegistryAgreeBothWays:
     """``healing._load_declarations`` walks the registry and demands a
     declaration; these cover the other direction."""
 
-    def test_declaring_a_rule_the_registry_does_not_know_fails_closed(self):
+    def test_declaring_a_rule_without_a_resolver_fails_closed(self):
         from src.calculator.champions.healing_contract import declare_healing_rule
 
-        with pytest.raises(RuntimeError, match="absent from"):
-            declare_healing_rule("Teemo")
+        with pytest.raises(RuntimeError, match="without a resolver"):
+            declare_healing_rule("Teemo", None)
 
     def test_no_champion_module_declares_a_rule_outside_the_set(self):
         import importlib

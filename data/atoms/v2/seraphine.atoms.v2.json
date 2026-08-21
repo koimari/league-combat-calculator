@@ -1,0 +1,5278 @@
+[
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SeraphineWShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SeraphineW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.113636,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.113636,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SeraphineW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "damage": null,
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.113636,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "SeraphineW",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "damage": null,
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.113636,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphineW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0,
+    22.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    90.0
+   ],
+   "damage": null,
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "ratios": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_max_seconds": 22.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.113636,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineEStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "{1c49a45f}"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineERoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "{2e2e2c8f}"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cooldown_max_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.090909,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SeraphineE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cooldown_max_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.090909,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cooldown_max_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.090909,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "{bc559f12}"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "SeraphineCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SeraphineQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExecuteThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DamageAmp": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineQAbility/SeraphineQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExecuteThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DamageAmp": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineQAbility/SeraphineQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "SeraphineQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    8.0,
+    7.5,
+    7.0,
+    6.5,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    35.0,
+    60.0,
+    85.0,
+    110.0,
+    135.0,
+    160.0,
+    185.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "ExecuteThreshold": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "DamageAmp": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cooldown_max_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineQAbility/SeraphineQ"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SeraphinePassiveNotesAARange",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveNotesAARange"
+   ],
+   "evidence": "name:aa"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "SeraphineW2HealMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineW2HealMissile"
+   ],
+   "evidence": "name:heal"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SeraphineBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SeraphineBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphinePassiveNotesMissileTarget1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7819
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "projectile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveNotesMissileTarget1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphinePassiveEchoStage1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveEchoStage1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SeraphineBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "SeraphineBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphinePassiveNotesBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveNotesBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    100.0,
+    150.0,
+    200.0,
+    250.0,
+    300.0,
+    350.0,
+    400.0
+   ],
+   "duration": null,
+   "ratios": {
+    "RChannelDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "R1APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "RChannelDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "R1BaseDamage": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "R1APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "RRange": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RMinSlow": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "RMaxSlow": [
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_max_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.00625,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineRAbility/SeraphineR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SeraphineR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    100.0,
+    150.0,
+    200.0,
+    250.0,
+    300.0,
+    350.0,
+    400.0
+   ],
+   "duration": null,
+   "ratios": {
+    "RChannelDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "R1APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "RChannelDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "R1BaseDamage": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "R1APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "RRange": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RMinSlow": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "RMaxSlow": [
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_max_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.00625,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineRAbility/SeraphineR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    160.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    100.0,
+    150.0,
+    200.0,
+    250.0,
+    300.0,
+    350.0,
+    400.0
+   ],
+   "duration": null,
+   "ratios": {
+    "RChannelDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "R1APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "RChannelDuration": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5
+    ],
+    "R1BaseDamage": [
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0,
+     400.0
+    ],
+    "R1APRatio": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "RRange": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RMinSlow": [
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645,
+     -0.4000000059604645
+    ],
+    "RMaxSlow": [
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432,
+     -0.9900000095367432
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 22539
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_max_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.00625,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineRAbility/SeraphineR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "{66ca2cf5}"
+   ],
+   "inherited_from": "SeraphineE",
+   "evidence": "inherited:SeraphineE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "SeraphineEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "{66ca2cf5}"
+   ],
+   "inherited_from": "SeraphineE",
+   "evidence": "inherited:SeraphineE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "{66ca2cf5}"
+   ],
+   "inherited_from": "SeraphineE",
+   "evidence": "inherited:SeraphineE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphinePassive",
+  "trigger": "passive",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stage Presence",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+   ],
+   "evidence": "calc:AutoDamage (Stage Presence empowered auto)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphinePassiveEcho",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stage Presence",
+    "Stack"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveEcho"
+   ],
+   "evidence": "name:echo (every third cast echoes)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphinePassiveEchoStage2",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stage Presence",
+    "Stack"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveEchoStage2"
+   ],
+   "evidence": "name:echo (echo charge stage tracking)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "SeraphinePassiveNotes",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "effect_amounts": {
+    "EchoCastDelay": [
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582,
+     0.009999999776482582
+    ],
+    "AutoAPRatio": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "MaxNotes": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "AllyNoteDamagePercent": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "NoteDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "BonusAARange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "DelayBetweenNoteCasts": [
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224,
+     0.07500000298023224
+    ],
+    "NoteRadius": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ],
+    "DelayBetweenNoteCastsDecayRate": [
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071,
+     0.949999988079071
+    ],
+    "MinionDamageMultiplier": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "NoteAPRatio": [
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033,
+     0.03999999910593033
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphinePassiveAbility/SeraphinePassive"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stage Presence",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveNotes",
+    "Characters/Seraphine/Spells/SeraphinePassiveNotesMissileToAlly",
+    "Characters/Seraphine/Spells/SeraphinePassiveNotesMissileTarget2",
+    "Characters/Seraphine/Spells/SeraphinePassiveNotesMissileOrbitingAlly"
+   ],
+   "evidence": "name:notes (note delivery to allies; feeds PassiveNotesBuff)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineQCast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "High Note",
+    "Damage"
+   ],
+   "binary": [
+    "{c50c3a9c}"
+   ],
+   "evidence": "name:cast (High Note cast)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineQInitialMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 14347
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "High Note",
+    "Damage"
+   ],
+   "binary": [
+    "{63988e2f}"
+   ],
+   "evidence": "name:missile (High Note missile)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineWHaste",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ]
+   },
+   "effect_amounts": {
+    "ShieldDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldStrength": [
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0
+    ],
+    "ShieldAPRatio": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonus": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "WMSBonusAPRatio": [
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503,
+     0.00019999999494757503
+    ],
+    "HasteValueForAllies": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "WMissingHPBase": [
+     6.0,
+     8.0,
+     10.0,
+     12.0,
+     14.0,
+     16.0,
+     18.0
+    ],
+    "WHealSplitDelay": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "ShieldAmpForSeraphine": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Surround Sound",
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineWHaste"
+   ],
+   "evidence": "name:haste (Surround Sound move speed)"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "SeraphineECast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Beat Drop",
+    "Damage"
+   ],
+   "binary": [
+    "{7490b7cc}"
+   ],
+   "evidence": "name:cast (Beat Drop cast)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineEPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": [
+    40.0,
+    70.0,
+    100.0,
+    130.0,
+    160.0,
+    190.0,
+    220.0
+   ],
+   "duration": null,
+   "ratios": {
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     70.0,
+     100.0,
+     130.0,
+     160.0,
+     190.0,
+     220.0
+    ],
+    "APRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "SlowValue": [
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0,
+     99.0
+    ],
+    "SlowDuration": [
+     1.0,
+     1.100000023841858,
+     1.2000000476837158,
+     1.2999999523162842,
+     1.399999976158142,
+     1.5,
+     1.600000023841858
+    ],
+    "MinionDamageMod": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "inherited_from": "Characters/Seraphine/Spells/SeraphineEAbility/SeraphineE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Beat Drop",
+    "Slow"
+   ],
+   "binary": [
+    "{9231f30c}"
+   ],
+   "evidence": "name:passive (conditional slow escalating to root/stun per ESlow/ERoot/EStun atoms)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "SeraphineRPostCast",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8192
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   },
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Encore",
+    "Charm"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphineRAbility/SeraphineRPostCast"
+   ],
+   "evidence": "name:postcast (Encore charm application)"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "SeraphinePassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 8127
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "impact",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Basic attack",
+    "Stage Presence"
+   ],
+   "binary": [
+    "Characters/Seraphine/Spells/SeraphinePassiveAttack"
+   ],
+   "evidence": "name:basicattack (Stage Presence empowered basic attack)"
+  }
+ }
+]

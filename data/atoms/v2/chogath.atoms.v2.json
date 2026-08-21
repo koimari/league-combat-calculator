@@ -1,0 +1,2924 @@
+[
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Feast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 70.0,
+   "cooldown_rank_max": 70.0,
+   "range": 175.0,
+   "damage_type": "true",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    70.0,
+    80.0,
+    70.0,
+    60.0,
+    10.0,
+    10.0,
+    70.0
+   ],
+   "cast_range": [
+    175.0,
+    175.0,
+    175.0,
+    175.0,
+    175.0,
+    175.0,
+    175.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    60.0,
+    60.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "RBaseMonsterDamage": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "RBaseDamage": [
+     125.0,
+     300.0,
+     475.0,
+     650.0,
+     825.0,
+     1000.0,
+     1175.0
+    ],
+    "RHealthPerStack": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "RMinionMaxStacks": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "RStoneplateRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "CastRangePerStack": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "MaxBonusCastRange": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "AttackRangePerStack": [
+     3.200000047683716,
+     4.699999809265137,
+     6.199999809265137,
+     7.699999809265137,
+     9.199999809265137,
+     10.699999809265137,
+     12.199999809265137
+    ],
+    "MaxBonusAttackRange": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ]
+   },
+   "damage": [
+    125.0,
+    300.0,
+    475.0,
+    650.0,
+    825.0,
+    1000.0,
+    1175.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Feast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 70.0,
+   "max_rank_cooldown_seconds": 70.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/FeastAbility/Feast"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "VorpalSpikesDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesDebuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikes",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "PercentHealthDamage": [
+     2.1500000953674316,
+     2.5,
+     2.8499999046325684,
+     3.200000047683716,
+     3.549999952316284,
+     3.9000000953674316,
+     4.25
+    ],
+    "FeastStackMultiplier": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MonsterDamageCap": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "SlowAmountPercentage": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "AttackRangeIncrease": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MaximumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModifiedMonsterCap": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ]
+   },
+   "damage": [
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "ratios": [
+    {
+     "stat": 6,
+     "coefficient": 0.30000001192092896
+    }
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "max_rank_cooldown_seconds": 4.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1875,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikes"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikes",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "PercentHealthDamage": [
+     2.1500000953674316,
+     2.5,
+     2.8499999046325684,
+     3.200000047683716,
+     3.549999952316284,
+     3.9000000953674316,
+     4.25
+    ],
+    "FeastStackMultiplier": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MonsterDamageCap": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "SlowAmountPercentage": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "AttackRangeIncrease": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MaximumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModifiedMonsterCap": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ]
+   },
+   "damage": [
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "ratios": [
+    {
+     "stat": 6,
+     "coefficient": 0.30000001192092896
+    }
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "max_rank_cooldown_seconds": 4.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1875,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikes"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikes",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 9221,
+   "cooldown": [
+    8.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "mana_cost": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     0.0,
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0
+    ],
+    "APRatio": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "PercentHealthDamage": [
+     2.1500000953674316,
+     2.5,
+     2.8499999046325684,
+     3.200000047683716,
+     3.549999952316284,
+     3.9000000953674316,
+     4.25
+    ],
+    "FeastStackMultiplier": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MonsterDamageCap": [
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0,
+     200.0
+    ],
+    "SlowAmountPercentage": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "AttackRangeIncrease": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "MaximumAttacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModifiedMonsterCap": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ]
+   },
+   "damage": [
+    0.0,
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0
+   ],
+   "ratios": [
+    {
+     "stat": 6,
+     "coefficient": 0.30000001192092896
+    }
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "max_rank_cooldown_seconds": 4.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1875,
+   "reset_on": [
+    "takedown"
+   ],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "stats.attack-speed",
+   "damage.basic-attack"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikes"
+   ],
+   "evidence": "tag:Trait_AttackReset"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "FeralScream",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 9.0,
+   "range": 300.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    11.0,
+    11.0,
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "FeralScream",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "max_rank_cooldown_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/FeralScreamAbility/FeralScream"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "FeralScream",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 9.0,
+   "range": 300.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    11.0,
+    11.0,
+    10.5,
+    10.0,
+    9.5,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0,
+    95.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "FeralScream",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "max_rank_cooldown_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/FeralScreamAbility/FeralScream"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ChogathBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ChogathBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ChogathBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ChogathBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "Rupture",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 950.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     355.0
+    ],
+    "SlowAmountPercentage": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage": [
+    25.0,
+    80.0,
+    135.0,
+    190.0,
+    245.0,
+    300.0,
+    355.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Rupture",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "max_rank_cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/RuptureAbility/Rupture"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "Rupture",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 950.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     355.0
+    ],
+    "SlowAmountPercentage": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage": [
+    25.0,
+    80.0,
+    135.0,
+    190.0,
+    245.0,
+    300.0,
+    355.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Rupture",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "max_rank_cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/RuptureAbility/Rupture"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "Rupture",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 950.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     80.0,
+     135.0,
+     190.0,
+     245.0,
+     300.0,
+     355.0
+    ],
+    "SlowAmountPercentage": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "damage": [
+    25.0,
+    80.0,
+    135.0,
+    190.0,
+    245.0,
+    300.0,
+    355.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Rupture",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 6.0,
+   "max_rank_cooldown_seconds": 6.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/RuptureAbility/Rupture"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ChogathCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ChogathCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ChogathBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ChogathBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ChogathBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ChogathBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle3"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle3"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle3",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle3",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle3"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle2"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle2"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle2"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle5",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle5"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle5",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle5"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle5",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle5",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle5"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle4",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle4"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle4",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle4"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle4",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle4",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle4"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle7",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle7",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle7"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle7",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle7",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle7"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle7",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle7",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle7"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle6",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle6"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle6",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle6"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle6",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle6",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle6"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "VorpalSpikesMissle",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "interaction.attack-reset",
+  "family": "interaction",
+  "behavior": "VorpalSpikesMissle",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 8.0,
+   "cooldown_rank_max": 4.0,
+   "range": 40.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikesMissle",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "max_rank_cooldown_seconds": 14.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack speed",
+    "Basic attack"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle"
+   ],
+   "inherited_from": "VorpalSpikes",
+   "evidence": "inherited:VorpalSpikes"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "Feast",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 80.0,
+   "cooldown_rank_max": 80.0,
+   "range": 175.0,
+   "damage_type": "true"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Feast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execute",
+    "True damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/FeastAbility/Feast_Internal"
+   ],
+   "evidence": "wiki:R true-damage execute; base damage modified vs non-champions; stacks gained on kill"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Feast",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Feast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Maximum health"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/FeastAbility/Feast_Internal"
+   ],
+   "evidence": "wiki:R kill grants Feast stack -> permanent max health/size"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "VorpalSpikes",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "range": 500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "VorpalSpikes",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Slow"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathEAttack"
+   ],
+   "evidence": "wiki:E spikes slow struck enemies"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "ChogathEAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 6.0,
+   "cooldown_rank_max": 6.0,
+   "damage_type": "magic",
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "ChogathEAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "On-hit",
+    "Magic damage"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/ChogathEAttack"
+   ],
+   "evidence": "wiki:E empowers next 3 basic attacks to launch damaging spikes on-attack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "Carnivore",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Carnivore",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Heal"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/CarnivoreAbility/Carnivore"
+   ],
+   "evidence": "wiki:P killing an enemy heals 18-52 based on level"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource",
+  "family": "stack-transform-summon-resource",
+  "behavior": "Carnivore",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "Carnivore",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "max_rank_cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Resource",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Chogath/Spells/CarnivoreAbility/Carnivore"
+   ],
+   "evidence": "wiki:P killing an enemy restores 4.72-9.48 mana based on level"
+  }
+ }
+]

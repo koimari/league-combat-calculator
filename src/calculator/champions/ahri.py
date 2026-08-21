@@ -25,9 +25,17 @@ hardcoded.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
+from .. import healing_helpers as _healing
 from .healing_contract import declare_healing_rule
-from .slotlib import extract_auto, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    extract_auto,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    simple_damage,
+)
 from .source_receipts import load_champion_sources
 
 
@@ -120,10 +128,17 @@ def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
         "name": ability.get("name", "Charm"),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
-        # The charm marker is declared once in MODULE_CC; what this entry
-        # states is the separate claim that E's one hit lands at the cast
+        # The charm's KIND is declared once in MODULE_CC and stamped onto
+        # this part; what the entry states here is the sourced DURATION
+        # and the separate claim that E's one hit lands at the cast
         # boundary, which is what puts the marker in the event ledger.
-        "parts": (DamagePart("magic", damage),),
+        "parts": (
+            DamagePart(
+                "magic",
+                damage,
+                cc_duration=extract_value(ability, "Disable Duration", rank),
+            ),
+        ),
         "total_raw": damage,
         "damage_type": "magic",
         "event_order_certified": "single_hit",
@@ -196,4 +211,37 @@ parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)
 
 SOURCES = load_champion_sources("Ahri")
 
-SELF_HEALING_RULE = declare_healing_rule("Ahri")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Ahri self-healing events from its authored packet."""
+    healing = []
+    if "passive" in ability_damages:
+        # The module emits the P receipt only at 9+ fragments.
+        level = int(champion_stat(champion_stats, "level"))
+        heal = _healing.extract_named(
+            _healing._ability(champion_data, "P"), "Heal", level, champion_stats
+        )
+        for event in damage_events:
+            source = _healing._event_source(event)
+            if source not in {"Q", "W", "E", "R"}:
+                continue
+            _healing._heal_from_damage(
+                healing,
+                event,
+                heal,
+                "Essence Theft",
+                link_to_damage=False,
+            )
+            break
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Ahri", derive_self_healing)

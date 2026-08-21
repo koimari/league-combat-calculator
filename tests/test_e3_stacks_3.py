@@ -58,7 +58,7 @@ _ENEMY = {
     "level": 18,
     "items": [],
     "role": "mid",
-    "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+    "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
 }
 _FULL_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -192,8 +192,16 @@ class TestKogMaw:
         assert scaled(1.0) == pytest.approx(max_dmg, abs=0.5)
 
     def test_r_fight_lands_between_bounds(self) -> None:
-        """The fight's R hit prices the missing-HP curve above the flat min."""
-        combat = _fight("KogMaw")
+        """The fight's R hit prices the missing-HP curve above the flat min.
+
+        A **time-based** fight, deliberately: an hp-scaled part is priced
+        against the state at its own landing instant, and in one rotation
+        every cast lands at t=0.0, so R would read a full-health target and
+        sit exactly on the minimum -- the curve would go untested.  Here R
+        is cast at 0.25, after Q has landed, which is the fight this row is
+        about.
+        """
+        combat = _fight("KogMaw", fight_mode="time_based", duration=6)
         events = _main_events(combat, "R")
         assert len(events) == 1
         raw = float(events[0]["raw_damage"])
@@ -462,12 +470,30 @@ class TestXayah:
         per_feather = _value("Xayah", "E", "Physical Damage Per Feather", 5)
         assert abilities["E"]["total_raw"] == pytest.approx(per_feather * 12, abs=0.5)
 
+    def test_e_emits_sourced_root_at_three_feathers(self) -> None:
+        _, abilities = _parse("Xayah", options={"bladecaller_feathers": 3})
+        control = abilities["E"]["control_events"][0]
+        assert control.kind == "root"
+        assert control.duration == pytest.approx(1.25)
+        assert abilities["E"]["control_source_atoms"][0]["atom_id"] == (
+            "timing.control_duration"
+        )
+
+    def test_e_without_three_feathers_has_no_root(self) -> None:
+        _, abilities = _parse("Xayah", options={"bladecaller_feathers": 2})
+        assert "control_events" not in abilities["E"]
+
     def test_fight_e_prices_feathers(self) -> None:
         combat = _fight("Xayah")
         events = _main_events(combat, "E")
-        assert len(events) == 1  # the multi-Feather part aggregates at the cast
+        damage_events = [event for event in events if float(event["damage"]) > 0.0]
+        assert len(damage_events) == 1  # the multi-Feather part aggregates at the cast
         per_feather = _value("Xayah", "E", "Physical Damage Per Feather", 5)
-        assert float(events[0]["raw_damage"]) == pytest.approx(per_feather * 7, abs=0.5)
+        assert float(damage_events[0]["raw_damage"]) == pytest.approx(
+            per_feather * 7, abs=0.5
+        )
+        control = next(event for event in events if event.get("cc_kind") == "root")
+        assert control["cc_duration"] == pytest.approx(1.25)
 
 
 # ---------------------------------------------------------------------------

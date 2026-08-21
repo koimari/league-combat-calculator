@@ -1,0 +1,3018 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HeimerdingerW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    90.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "effect_1": [
+     6.0,
+     12.0,
+     18.0,
+     24.0,
+     30.0,
+     36.0,
+     42.0
+    ],
+    "effect_2": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_3": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "effect_4": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "effect_5": [
+     54.0,
+     108.0,
+     162.0,
+     216.0,
+     270.0,
+     324.0,
+     378.0
+    ],
+    "effect_6": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerWAbility/HeimerdingerW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "HeimerdingerW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{f9c2333e}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    90.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "effect_1": [
+     6.0,
+     12.0,
+     18.0,
+     24.0,
+     30.0,
+     36.0,
+     42.0
+    ],
+    "effect_2": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_3": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "effect_4": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "effect_5": [
+     54.0,
+     108.0,
+     162.0,
+     216.0,
+     270.0,
+     324.0,
+     378.0
+    ],
+    "effect_6": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerWAbility/HeimerdingerW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "HeimerdingerW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{f9c2333e}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 75.0,
+   "range": 280.0,
+   "damage_type": null,
+   "affects_type_flags": 1028,
+   "cooldown": [
+    100.0,
+    100.0,
+    85.0,
+    70.0,
+    70.0,
+    70.0,
+    75.0
+   ],
+   "cast_range": [
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    100.0,
+    140.0,
+    180.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     100.0,
+     140.0,
+     180.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_1": [
+     0.0,
+     80.0,
+     80.0,
+     80.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_3": [
+     0.0,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_4": [
+     0.0,
+     500.0,
+     690.0,
+     865.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_5": [
+     0.0,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_6": [
+     0.0,
+     80.0,
+     100.0,
+     120.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_7": [
+     0.0,
+     135.0,
+     180.0,
+     225.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_8": [
+     0.0,
+     28.0,
+     39.0,
+     49.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_9": [
+     0.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.transform",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerdingerR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 75.0,
+   "range": 280.0,
+   "damage_type": null,
+   "affects_type_flags": 1028,
+   "cooldown": [
+    100.0,
+    100.0,
+    85.0,
+    70.0,
+    70.0,
+    70.0,
+    75.0
+   ],
+   "cast_range": [
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    100.0,
+    140.0,
+    180.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     100.0,
+     140.0,
+     180.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_1": [
+     0.0,
+     80.0,
+     80.0,
+     80.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_3": [
+     0.0,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_4": [
+     0.0,
+     500.0,
+     690.0,
+     865.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_5": [
+     0.0,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_6": [
+     0.0,
+     80.0,
+     100.0,
+     120.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_7": [
+     0.0,
+     135.0,
+     180.0,
+     225.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_8": [
+     0.0,
+     28.0,
+     39.0,
+     49.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_9": [
+     0.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "relations": [
+   "stats.health",
+   "stats.armor",
+   "stats.attack-damage"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Debuff",
+    "Gnar",
+    "Ability resource",
+    "Manaless"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerR"
+   ],
+   "evidence": "tag:Trait_Transformation"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.upgrade",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerdingerR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 75.0,
+   "range": 280.0,
+   "damage_type": null,
+   "affects_type_flags": 1028,
+   "cooldown": [
+    100.0,
+    100.0,
+    85.0,
+    70.0,
+    70.0,
+    70.0,
+    75.0
+   ],
+   "cast_range": [
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0,
+    280.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "damage": [
+    0.0,
+    100.0,
+    140.0,
+    180.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     100.0,
+     140.0,
+     180.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_1": [
+     0.0,
+     80.0,
+     80.0,
+     80.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     0.0,
+     1.5,
+     1.5,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_3": [
+     0.0,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.11999999731779099,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_4": [
+     0.0,
+     500.0,
+     690.0,
+     865.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_5": [
+     0.0,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_6": [
+     0.0,
+     80.0,
+     100.0,
+     120.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_7": [
+     0.0,
+     135.0,
+     180.0,
+     225.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_8": [
+     0.0,
+     28.0,
+     39.0,
+     49.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_9": [
+     0.0,
+     150.0,
+     250.0,
+     350.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerR"
+   ],
+   "evidence": "tag:Trait_Upgrade"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HeimerdingerEUlt",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 20.0,
+   "cooldown_rank_max": 10.0,
+   "range": 2500.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "damage": [
+    20.0,
+    60.0,
+    100.0,
+    140.0,
+    180.0,
+    220.0,
+    260.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     20.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0,
+     260.0
+    ],
+    "effect_1": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "effect_2": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_3": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerEUlt"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HeimerdingerE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 925.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    85.0,
+    85.0,
+    85.0,
+    85.0,
+    85.0,
+    85.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerEAbility/HeimerdingerE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "HeimerdingerE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{f9c2333e}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HeimerdingerE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 925.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    85.0,
+    85.0,
+    85.0,
+    85.0,
+    85.0,
+    85.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerEAbility/HeimerdingerE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "HeimerdingerE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{f9c2333e}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": 925.0,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    85.0,
+    85.0,
+    85.0,
+    85.0,
+    85.0,
+    85.0
+   ]
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerEAbility/HeimerdingerE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "HeimerdingerE",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{f9c2333e}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "HeimerdingerBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "HeimerdingerBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerdingerQSpell1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQSpell1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HeimerdingerQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 350.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_4": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 350.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_4": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerdingerQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 350.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_4": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQ"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerdingerQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": 350.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_4": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ]
+   }
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQ"
+   ],
+   "evidence": "tag:Trait_Pet"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerQAmmo",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerQAmmo"
+   ],
+   "evidence": "name:ammo"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "HeimerdingerCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "HeimerdingerBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "HeimerdingerBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 625.0,
+   "damage_type": null,
+   "affects_type_flags": 24527,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "heimerdinger Passive (H-28G Evolution Turret)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets",
+    "H-28G Evolution Turret"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HeimerdingerWAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerWAbility/HeimerdingerWAttack2"
+   ],
+   "inherited_from": "HeimerdingerW",
+   "evidence": "inherited:HeimerdingerW"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerWAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0
+   ]
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerWAbility/HeimerdingerWAttack2"
+   ],
+   "inherited_from": "HeimerdingerW",
+   "evidence": "inherited:HeimerdingerW"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  },
+  "relations": []
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerQUlt",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "H-28Q Apex Turret"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerQUlt"
+   ],
+   "evidence": "wiki: UPGRADE Q turret attacks enemy champion for magic damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "HeimerdingerQUlt",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "H-28Q Apex Turret"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerQUlt"
+   ],
+   "evidence": "wiki: UPGRADE Q turret slows nearby enemies"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HeimerdingerSuperTurret",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 1.0,
+   "cooldown_rank_max": 1.0,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0,
+    350.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_4": [
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0,
+     900.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "H-28Q Apex Turret"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerSuperTurret"
+   ],
+   "evidence": "wiki: UPGRADE Q deploys apex turret"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "DataValuesModeOverride",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 1.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HeimerdingerWUlt",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null,
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "damage": [
+    30.0,
+    60.0,
+    90.0,
+    120.0,
+    150.0,
+    180.0,
+    210.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "effect_1": [
+     6.0,
+     12.0,
+     18.0,
+     24.0,
+     30.0,
+     36.0,
+     42.0
+    ],
+    "effect_2": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_3": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "effect_4": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ],
+    "effect_5": [
+     54.0,
+     108.0,
+     162.0,
+     216.0,
+     270.0,
+     324.0,
+     378.0
+    ],
+    "effect_6": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Hextech Rocket Swarm"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerRAbility/HeimerdingerWUlt"
+   ],
+   "evidence": "wiki: UPGRADE W fires 4 waves of rockets"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "HeimerdingerWUlt",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerWAttack2Ult",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 7.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0,
+    1350.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Hextech Rocket Swarm"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerWAbility/HeimerdingerWAttack2Ult"
+   ],
+   "evidence": "wiki: rocket wave damage instance"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HeimerdingerE_Ult",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6794,
+   "cooldown": [
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0,
+    2500.0
+   ],
+   "mana_cost": [
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0,
+    120.0
+   ],
+   "damage": [
+    20.0,
+    60.0,
+    100.0,
+    140.0,
+    180.0,
+    220.0,
+    260.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     20.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0,
+     260.0
+    ],
+    "effect_1": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "effect_2": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "effect_3": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "CH-3X Lightning Grenade"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerEAbility/HeimerdingerE_Ult"
+   ],
+   "evidence": "wiki: UPGRADE E grenade bounces 3 times"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{210f9ec0}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerESpell_ult3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 11.0,
+   "cooldown_rank_max": 11.0,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "damage": [
+    50.0,
+    80.0,
+    110.0,
+    140.0,
+    170.0,
+    200.0,
+    230.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "CH-3X Lightning Grenade"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerEAbility/HeimerdingerESpell_ult3"
+   ],
+   "evidence": "wiki: UPGRADE E bounce damage"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "Cooldown",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "{0e1136d1}",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "TechmaturgicalRepairBots",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Hextech Affinity"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/TechmaturgicalRepairBots"
+   ],
+   "evidence": "wiki: P heals turrets over time"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "HeimerdingerPassiveSpeed",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "damage": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224,
+    0.20000000298023224
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Hextech Affinity"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerPassiveAbility/HeimerdingerPassiveSpeed"
+   ],
+   "evidence": "wiki: P grants bonus movement speed near allied towers/turrets"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerQSpell2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "H-28G Evolution Turret"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQSpell2"
+   ],
+   "evidence": "wiki: Q turret rapid-fire attack"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HeimerdingerQSpell3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "H-28G Evolution Turret"
+   ],
+   "binary": [
+    "Characters/Heimerdinger/Spells/HeimerdingerQAbility/HeimerdingerQSpell3"
+   ],
+   "evidence": "wiki: Q turret attack variant"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": null
+  }
+ }
+]

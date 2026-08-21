@@ -1,0 +1,1505 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricWAllyBuff",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricWAllyBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricWAbility/TaricWAllyBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "TaricW",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 1,
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank": 15.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 800.0,
+   "mana_cost_rank1": 60.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricWAbility/TaricW"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 1,
+   "cooldown": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cooldown_max_rank": 15.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 800.0,
+   "mana_cost_rank1": 60.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricWAbility/TaricW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricWAllyBuffMissile",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricWAllyBuffMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricWAbility/TaricWAllyBuffMissile"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricWSelfBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricWSelfBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricWAbility/TaricWSelfBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TaricR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    210.0,
+    180.0,
+    150.0,
+    120.0,
+    90.0,
+    60.0,
+    30.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 210.0,
+   "cooldown_max_rank": 30.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricRAbility/TaricR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    210.0,
+    180.0,
+    150.0,
+    120.0,
+    90.0,
+    60.0,
+    30.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 210.0,
+   "cooldown_max_rank": 30.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricRAbility/TaricR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "TaricQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank": 3.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 325.0,
+   "mana_cost_rank1": 60.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricQAbility/TaricQ"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank": 3.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 325.0,
+   "mana_cost_rank1": 60.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricQAbility/TaricQ"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 9221,
+   "cooldown": [
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 3.0,
+   "cooldown_max_rank": 3.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 325.0,
+   "mana_cost_rank1": 60.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricQAbility/TaricQ"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TaricBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TaricBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricEChargeBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricEChargeBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricEAbility/TaricEChargeBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricEChargeBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricEChargeBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricEAbility/TaricEChargeBuff"
+   ],
+   "evidence": "name:charge"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TaricE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "ratios": {
+    "ad": 0.5,
+    "bonus_ad": 0.5
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cooldown_max_rank": 11.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricEAbility/TaricE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TaricE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "ratios": {
+    "ad": 0.5,
+    "bonus_ad": 0.5
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cooldown_max_rank": 11.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricEAbility/TaricE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TaricE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0,
+    290.0
+   ],
+   "ratios": {
+    "ad": 0.5,
+    "bonus_ad": 0.5
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 17.0,
+   "cooldown_max_rank": 11.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricEAbility/TaricE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TaricCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TaricBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricBasicAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TaricBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricBasicAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TaricBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TaricBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 600.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaricPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "duration": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 0.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricPassiveAbility/TaricPassive"
+   ],
+   "evidence": "wiki:Bravado empowers the next two basic attacks (100% total attack speed) after casting an ability"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "TaricPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricPassiveAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage on-hit"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricPassiveAbility/TaricPassiveAttack"
+   ],
+   "evidence": "wiki:Bravado empowered basic attack deals 25:101 (+15% bonus armor) bonus magic damage on-attack"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "TaricPassiveAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6826,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaricPassiveAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage on-hit"
+   ],
+   "binary": [
+    "Characters/Taric/Spells/TaricPassiveAbility/TaricPassiveAttack2"
+   ],
+   "evidence": "wiki:second Bravado empowered basic attack with the same bonus magic damage on-attack"
+  }
+ }
+]

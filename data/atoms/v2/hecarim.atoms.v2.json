@@ -1,0 +1,4628 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimRamp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "MinMoveSpeed": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxMoveSpeed": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinKnockback": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaxKnockback": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DistanceToMaxDamage": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "TimeToMaxMoveSpeed": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 10.0,
+   "is_toggle": true,
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Strike"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "MinDamage": {
+     "base": "MinBaseDamage",
+     "ratios": [
+      "BonusADRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.5,
+    "coefficient2": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle-or-buff"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.333,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRamp"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimRamp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "MinMoveSpeed": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxMoveSpeed": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinKnockback": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaxKnockback": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DistanceToMaxDamage": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "TimeToMaxMoveSpeed": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 10.0,
+   "is_toggle": true,
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Strike"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "MinDamage": {
+     "base": "MinBaseDamage",
+     "ratios": [
+      "BonusADRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.5,
+    "coefficient2": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle-or-buff"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.333,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRamp"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "HecarimRamp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "MinMoveSpeed": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxMoveSpeed": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinKnockback": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaxKnockback": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DistanceToMaxDamage": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "TimeToMaxMoveSpeed": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 10.0,
+   "is_toggle": true,
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Strike"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "MinDamage": {
+     "base": "MinBaseDamage",
+     "ratios": [
+      "BonusADRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.5,
+    "coefficient2": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle-or-buff"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.333,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRamp"
+   ],
+   "evidence": "tag:Trait_Strike"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimRamp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    20.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "MinMoveSpeed": [
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25,
+     0.25
+    ],
+    "MaxMoveSpeed": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "MinBaseDamage": [
+     15.0,
+     30.0,
+     45.0,
+     60.0,
+     75.0,
+     90.0,
+     105.0
+    ],
+    "BonusADRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MaxBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinKnockback": [
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0,
+     150.0
+    ],
+    "MaxKnockback": [
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0,
+     350.0
+    ],
+    "Duration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "DistanceToMaxDamage": [
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0,
+     1200.0
+    ],
+    "TimeToMaxMoveSpeed": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 0.0,
+   "cast_frame": 10.0,
+   "is_toggle": true,
+   "spell_tags": [
+    "Trait_ImmobilizingCCSpell",
+    "Trait_DamageAbility",
+    "Trait_KnockBack",
+    "Trait_Strike"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "MinDamage": {
+     "base": "MinBaseDamage",
+     "ratios": [
+      "BonusADRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.5,
+    "coefficient2": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.333,
+    "behavior": "Spell1"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "toggle-or-buff"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 20.0,
+   "cast_time_seconds": 0.333,
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRamp"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HecarimRapidSlash",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "mana_cost": [
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinionDamageRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "RampageBonusRatio": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RampageDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "RampageCooldownReduction": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamageBonusAD": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "MaxStacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BuffDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "missile_speed": 1450.0,
+   "cast_frame": 3.0399999618530273,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "Damage": {
+     "base": "BaseDamage",
+     "ratios": [
+      "BaseDamageBonusAD"
+     ]
+    },
+    "RampageBonusDamagePerc": {
+     "base": null,
+     "ratios": [
+      "RampageBonusRatio",
+      "None"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.8999999761581421,
+    "coefficient2": 0.10000000149011612
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Spell1_Upperbody"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.101,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimRapidSlash",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "mana_cost": [
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinionDamageRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "RampageBonusRatio": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RampageDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "RampageCooldownReduction": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamageBonusAD": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "MaxStacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BuffDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "missile_speed": 1450.0,
+   "cast_frame": 3.0399999618530273,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "Damage": {
+     "base": "BaseDamage",
+     "ratios": [
+      "BaseDamageBonusAD"
+     ]
+    },
+    "RampageBonusDamagePerc": {
+     "base": null,
+     "ratios": [
+      "RampageBonusRatio",
+      "None"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.8999999761581421,
+    "coefficient2": 0.10000000149011612
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Spell1_Upperbody"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.101,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "HecarimRapidSlash",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "mana_cost": [
+    28.0,
+    26.0,
+    24.0,
+    22.0,
+    20.0,
+    20.0
+   ],
+   "affects_type_flags": 9221,
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "MinionDamageRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ],
+    "RampageBonusRatio": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "RampageDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "RampageCooldownReduction": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamageBonusAD": [
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421,
+     0.8999999761581421
+    ],
+    "MaxStacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "BuffDuration": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "missile_speed": 1450.0,
+   "cast_frame": 3.0399999618530273,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_SignatureSpell",
+    "Trait_AoE",
+    "PositiveEffect_EmpowerAttack"
+   ],
+   "required_unit_tags": {
+    "mObjectTagList": [
+     "{ea595ca6}"
+    ],
+    "__type": "ObjectTags"
+   },
+   "calculations": {
+    "Damage": {
+     "base": "BaseDamage",
+     "ratios": [
+      "BaseDamageBonusAD"
+     ]
+    },
+    "RampageBonusDamagePerc": {
+     "base": null,
+     "ratios": [
+      "RampageBonusRatio",
+      "None"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 0.8999999761581421,
+    "coefficient2": 0.10000000149011612
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "Spell1_Upperbody"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.101,
+   "tempo_class": "utility"
+  },
+  "relations": [
+   "stack-transform-summon-resource.stack",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash"
+   ],
+   "evidence": "tag:PositiveEffect_EmpowerAttack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUlt",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "FearDurationMin": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "FearDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "DashSpeed": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MaxDashRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "RangeForMaxFearDuration": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "DamageDone": {
+     "base": "BaseDamage",
+     "ratios": [
+      "APRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUlt"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUlt",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "FearDurationMin": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "FearDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "DashSpeed": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MaxDashRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "RangeForMaxFearDuration": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "DamageDone": {
+     "base": "BaseDamage",
+     "ratios": [
+      "APRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUlt"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUlt",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "FearDurationMin": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "FearDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "DashSpeed": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MaxDashRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "RangeForMaxFearDuration": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "DamageDone": {
+     "base": "BaseDamage",
+     "ratios": [
+      "APRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUlt"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUlt",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "FearDurationMin": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "FearDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "DashSpeed": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MaxDashRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "RangeForMaxFearDuration": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "DamageDone": {
+     "base": "BaseDamage",
+     "ratios": [
+      "APRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUlt"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HecarimUlt",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "FearDurationMin": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "FearDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "DashSpeed": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MaxDashRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "RangeForMaxFearDuration": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "DamageDone": {
+     "base": "BaseDamage",
+     "ratios": [
+      "APRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUlt"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimUlt",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    140.0,
+    120.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "cast_range": [
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0,
+    50000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    0.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "FearDurationMin": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "FearDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "APRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "DashSpeed": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "MaxDashRange": [
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "RangeForMaxFearDuration": [
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0,
+     950.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "spell_tags": [
+    "Trait_Ultimate",
+    "PositiveEffect_MoveBlock",
+    "Trait_ChannelSpell",
+    "Trait_ImmobilizingCCSpell",
+    "Trait_PlayerSelectedDashDirection",
+    "Trait_DamageAbility",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "DamageDone": {
+     "base": "BaseDamage",
+     "ratios": [
+      "APRatio"
+     ]
+    }
+   },
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUlt"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HecarimW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "NonSelfLeechRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageLeechPerc": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TickTime": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealCap": [
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0,
+     270.0
+    ],
+    "ResistAmount": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "HealBonusADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "missile_speed": 828.5,
+   "cast_frame": 16.094999313354492,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_DoT",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": null,
+     "ratios": [
+      "APRatio"
+     ]
+    },
+    "LeechAmount": {
+     "base": null,
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.800000011920929
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.536,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.536,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimWAbility/HecarimW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "NonSelfLeechRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageLeechPerc": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TickTime": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealCap": [
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0,
+     270.0
+    ],
+    "ResistAmount": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "HealBonusADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "missile_speed": 828.5,
+   "cast_frame": 16.094999313354492,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_DoT",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": null,
+     "ratios": [
+      "APRatio"
+     ]
+    },
+    "LeechAmount": {
+     "base": null,
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.800000011920929
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.536,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.536,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimWAbility/HecarimW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "HecarimW",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "NonSelfLeechRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageLeechPerc": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TickTime": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealCap": [
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0,
+     270.0
+    ],
+    "ResistAmount": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "HealBonusADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "missile_speed": 828.5,
+   "cast_frame": 16.094999313354492,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_DoT",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": null,
+     "ratios": [
+      "APRatio"
+     ]
+    },
+    "LeechAmount": {
+     "base": null,
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.800000011920929
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.536,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.536,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimWAbility/HecarimW"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "HecarimW",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "NonSelfLeechRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageLeechPerc": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TickTime": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealCap": [
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0,
+     270.0
+    ],
+    "ResistAmount": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "HealBonusADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "missile_speed": 828.5,
+   "cast_frame": 16.094999313354492,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_DoT",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": null,
+     "ratios": [
+      "APRatio"
+     ]
+    },
+    "LeechAmount": {
+     "base": null,
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.800000011920929
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.536,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.536,
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimWAbility/HecarimW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "HecarimBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 5327,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Attack2"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "HecarimBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 5327,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Attack2"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "HecarimCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 5327,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Crit"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "HecarimBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 5327,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "HecarimBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 5327,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "cast"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "hecarim Passive (Spirit of Dread (W))",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic",
+   "source_kind": "spell",
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 14346,
+   "effect_amounts": {
+    "NonSelfLeechRatio": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageLeechPerc": [
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0,
+     25.0
+    ],
+    "Damage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "BuffDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "TickTime": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "MinionHealCap": [
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0,
+     240.0,
+     270.0
+    ],
+    "ResistAmount": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "HealBonusADRatio": [
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164,
+     0.019999999552965164
+    ],
+    "APRatio": [
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929,
+     0.800000011920929
+    ]
+   },
+   "missile_speed": 828.5,
+   "cast_frame": 16.094999313354492,
+   "spell_tags": [
+    "Trait_DamageAbility",
+    "Trait_ActiveHeal",
+    "Trait_DoT",
+    "Trait_Low_Damage",
+    "Trait_AoE"
+   ],
+   "calculations": {
+    "TotalDamage": {
+     "base": null,
+     "ratios": [
+      "APRatio"
+     ]
+    },
+    "LeechAmount": {
+     "base": null,
+     "ratios": []
+    }
+   },
+   "ratios": {
+    "coefficient": 0.800000011920929
+   },
+   "bound_from": "sibling-bind"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.536,
+    "behavior": "Spell3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cast_time_seconds": 0.536,
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health",
+    "Spirit of Dread (W)"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimRampAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 6826,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Spell3"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRampAttack"
+   ],
+   "inherited_from": "HecarimRamp",
+   "evidence": "inherited:HecarimRamp"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimRampAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 6826,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Spell3"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRampAttack"
+   ],
+   "inherited_from": "HecarimRamp",
+   "evidence": "inherited:HecarimRamp"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "HecarimRampAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 6826,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Spell3"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRampAttack"
+   ],
+   "inherited_from": "HecarimRamp",
+   "evidence": "inherited:HecarimRamp"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimRampAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0,
+    125.0
+   ],
+   "affects_type_flags": 6826,
+   "cast_frame": 12.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.4,
+    "behavior": "Spell3"
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.4,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimRampAttack"
+   ],
+   "inherited_from": "HecarimRamp",
+   "evidence": "inherited:HecarimRamp"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HecarimRapidSlash2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash2"
+   ],
+   "inherited_from": "HecarimRapidSlash",
+   "evidence": "inherited:HecarimRapidSlash"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimRapidSlash2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash2"
+   ],
+   "inherited_from": "HecarimRapidSlash",
+   "evidence": "inherited:HecarimRapidSlash"
+  }
+ },
+ {
+  "atom_id": "damage.on-hit",
+  "family": "damage",
+  "behavior": "HecarimRapidSlash2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Attack effects",
+    "On-damage effects",
+    "Attack effects/Abilities",
+    "Ability damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRapidSlashAbility/HecarimRapidSlash2"
+   ],
+   "inherited_from": "HecarimRapidSlash",
+   "evidence": "inherited:HecarimRapidSlash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUltMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "slot_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "slot_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "slot_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1100.0,
+   "cast_frame": 6.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltMissile"
+   ],
+   "inherited_from": "HecarimUlt",
+   "evidence": "inherited:HecarimUlt"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUltMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "slot_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "slot_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "slot_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1100.0,
+   "cast_frame": 6.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltMissile"
+   ],
+   "inherited_from": "HecarimUlt",
+   "evidence": "inherited:HecarimUlt"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUltMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "slot_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "slot_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "slot_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1100.0,
+   "cast_frame": 6.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltMissile"
+   ],
+   "inherited_from": "HecarimUlt",
+   "evidence": "inherited:HecarimUlt"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUltMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "slot_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "slot_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "slot_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1100.0,
+   "cast_frame": 6.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltMissile"
+   ],
+   "inherited_from": "HecarimUlt",
+   "evidence": "inherited:HecarimUlt"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "HecarimUltMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "slot_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "slot_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "slot_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1100.0,
+   "cast_frame": 6.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltMissile"
+   ],
+   "inherited_from": "HecarimUlt",
+   "evidence": "inherited:HecarimUlt"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimUltMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0,
+    1650.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "slot_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "slot_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "slot_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1100.0,
+   "cast_frame": 6.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.2,
+    "behavior": "Spell4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.2,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltMissile"
+   ],
+   "inherited_from": "HecarimUlt",
+   "evidence": "inherited:HecarimUlt"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "HecarimCharge",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "physical",
+   "source_kind": "spell",
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    4.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     150.0,
+     275.0,
+     400.0,
+     0.0,
+     0.0,
+     125.0
+    ],
+    "slot_1": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4WindUp"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Physical damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (E Devastating Charge hit damage)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimCharge",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    4.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     150.0,
+     275.0,
+     400.0,
+     0.0,
+     0.0,
+     125.0
+    ],
+    "slot_1": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4WindUp"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Knockback"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (E knockback on impact)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimCharge",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "spell",
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    4.5,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "slot_0": [
+     25.0,
+     150.0,
+     275.0,
+     400.0,
+     0.0,
+     0.0,
+     125.0
+    ],
+    "slot_1": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "missile_speed": 1200.0,
+   "cast_frame": 7.5,
+   "ratios": {
+    "coefficient": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "Spell4WindUp"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed",
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimRampAbility/HecarimCharge"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (E bonus movement speed while charging)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.flee",
+  "family": "crowd-control-mobility",
+  "behavior": "HecarimUltPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "source_kind": "SpellObject"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Fear"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimUltAbility/HecarimUltPassive"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (R Onslaught of Shadows fear application)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "HecarimPassive",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "source_kind": "spell",
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "calculations": {
+    "BonusAD": {
+     "base": null,
+     "ratios": [
+      "None"
+     ]
+    }
+   }
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Attack damage"
+   ],
+   "binary": [
+    "Characters/Hecarim/Spells/HecarimPassiveAbility/HecarimPassive"
+   ],
+   "evidence": "manual:v2:unclassified-object-refinement (P Warpath: bonus AD from bonus move speed)"
+  }
+ }
+]

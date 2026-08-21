@@ -1,0 +1,2779 @@
+[
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KhazixCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KhazixQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 325.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     80.0,
+     80.0,
+     105.0,
+     130.0,
+     155.0,
+     180.0,
+     180.0
+    ],
+    "effect_1": [
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixQAbility/KhazixQ"
+   ],
+   "evidence": "tag:Trait_Strike"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cooldown_seconds_max_rank": 4.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KhazixQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 4.0,
+   "cooldown_rank_max": 4.0,
+   "range": 325.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0,
+    325.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     80.0,
+     80.0,
+     105.0,
+     130.0,
+     155.0,
+     180.0,
+     180.0
+    ],
+    "effect_1": [
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixQAbility/KhazixQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cooldown_seconds_max_rank": 4.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KhazixBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KhazixBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KhazixREvoCharTextureBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixRAbility/KhazixREvoCharTextureBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KhazixRStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixRAbility/KhazixRStealth"
+   ],
+   "evidence": "name:stealth"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KhazixR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 70.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    100.0,
+    100.0,
+    85.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": 2200.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixRAbility/KhazixR"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cooldown_seconds_max_rank": 70.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KhazixR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 100.0,
+   "cooldown_rank_max": 70.0,
+   "range": 25000.0,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    100.0,
+    100.0,
+    85.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "missile_speed": 2200.0
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixRAbility/KhazixR"
+   ],
+   "evidence": "tag:Trait_Invisibility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cooldown_seconds_max_rank": 70.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KhazixREvoStealth",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "vision-economy.true-sight",
+   "vision-economy.attacker-reveal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stealth",
+    "Ward",
+    "Vision Ward"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixRAbility/KhazixREvoStealth"
+   ],
+   "evidence": "name:stealth"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KhazixE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "effect_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_2": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_3": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_seconds_max_rank": 12.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KhazixE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "effect_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_2": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_3": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_seconds_max_rank": 12.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KhazixE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "effect_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_2": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_3": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_seconds_max_rank": 12.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KhazixE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "effect_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_2": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_3": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_seconds_max_rank": 12.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KhazixELong",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "effect_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_2": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "effect_3": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixELong"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixELong",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_seconds_max_rank": 12.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KhazixELong",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 22.0,
+   "cooldown_rank_max": 12.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "cooldown": [
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0
+    ],
+    "effect_1": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_2": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "effect_3": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixELong"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixELong",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 22.0,
+   "cooldown_seconds_max_rank": 12.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KhazixW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     75.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0,
+     195.0,
+     195.0
+    ],
+    "effect_1": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    "effect_2": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_3": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_5": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_6": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KhazixW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     75.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0,
+     195.0,
+     195.0
+    ],
+    "effect_1": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    "effect_2": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_3": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_5": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_6": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KhazixW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     75.0,
+     75.0,
+     105.0,
+     135.0,
+     165.0,
+     195.0,
+     195.0
+    ],
+    "effect_1": [
+     35.0,
+     55.0,
+     75.0,
+     95.0,
+     115.0,
+     135.0,
+     155.0
+    ],
+    "effect_2": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_3": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_5": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_6": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixW",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "KhazixWSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWSight"
+   ],
+   "evidence": "name:sight"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KhazixWEvoSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWEvoSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KhazixPDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixPassiveAbility/KhazixPDamage"
+   ],
+   "evidence": "name:damage"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KhazixBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KhazixBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KhazixWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "effect_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "effect_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1700.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWMissile"
+   ],
+   "inherited_from": "KhazixW",
+   "evidence": "inherited:KhazixW"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixWMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixWMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KhazixWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "effect_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "effect_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1700.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWMissile"
+   ],
+   "inherited_from": "KhazixW",
+   "evidence": "inherited:KhazixW"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixWMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixWMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "KhazixWMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 9.0,
+   "cooldown_rank_max": 9.0,
+   "range": 25000.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0,
+     50.0,
+     55.0
+    ],
+    "effect_1": [
+     12.0,
+     15.0,
+     18.0,
+     21.0,
+     23.0,
+     25.0,
+     28.0
+    ],
+    "effect_2": [
+     5.0,
+     20.0,
+     35.0,
+     50.0,
+     65.0,
+     80.0,
+     95.0
+    ],
+    "effect_3": [
+     25.0,
+     75.0,
+     125.0,
+     175.0,
+     225.0,
+     250.0,
+     300.0
+    ]
+   },
+   "missile_speed": 1700.0
+  },
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWMissile"
+   ],
+   "inherited_from": "KhazixW",
+   "evidence": "inherited:KhazixW"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixWMissile",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixWMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "KhazixPAttack",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unseen Threat: empowers next basic attack to deal bonus magic damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixPAttack"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixPAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cast_time_seconds": 0.3,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KhazixQPassiveIsolation",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Taste Their Fear: considers any enemy unit Isolated if not nearby allies; special interactions vs Isolated targets"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixQAbility/KhazixQPassiveIsolation"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [],
+  "cycle": {
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KhazixQLong",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null,
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0,
+    375.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     60.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "effect_1": [
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0,
+     110.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0,
+     45.0
+    ]
+   },
+   "missile_speed": 20.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Evolved Reaper Claws: special interactions against Isolated targets (long-range variant)"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixQAbility/KhazixQLong"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixQLong",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cooldown_seconds_max_rank": 4.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KhazixQEvo",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_1": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "effect_2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_3": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_4": [
+     12.0,
+     24.0,
+     36.0,
+     48.0,
+     60.0,
+     72.0,
+     84.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Void Assault: each rank allows evolving one ability"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixQAbility/KhazixQEvo"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KhazixQEvo",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 2.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.stealth",
+  "family": "vision-economy",
+  "behavior": "KhazixREvo",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "effect_1": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_2": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "effect_3": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "effect_4": [
+     12.0,
+     24.0,
+     36.0,
+     48.0,
+     60.0,
+     72.0,
+     84.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Evolved Void Assault: grants stealth and bonus movement speed"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixRAbility/KhazixREvo"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KhazixREvo",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 2.0,
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KhazixEEvo",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_1": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "effect_2": [
+     15.0,
+     20.0,
+     25.0,
+     30.0,
+     35.0,
+     40.0,
+     45.0
+    ],
+    "effect_3": [
+     18.0,
+     20.0,
+     22.0,
+     24.0,
+     26.0,
+     28.0,
+     30.0
+    ],
+    "effect_4": [
+     12.0,
+     24.0,
+     36.0,
+     48.0,
+     60.0,
+     72.0,
+     84.0
+    ]
+   }
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Evolved Leap: gains 200 bonus cast range and resets on champion takedown"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixEAbility/KhazixEEvo"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KhazixEEvo",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 2.0,
+   "tempo_class": "engage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KhazixWLong",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": "physical",
+   "affects_type_flags": null,
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "effect_amounts": {
+    "effect_0": [
+     55.0,
+     85.0,
+     115.0,
+     145.0,
+     175.0,
+     205.0,
+     235.0
+    ],
+    "effect_1": [
+     35.0,
+     60.0,
+     85.0,
+     110.0,
+     135.0,
+     160.0,
+     185.0
+    ],
+    "effect_2": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_3": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_5": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "effect_6": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ]
+   },
+   "missile_speed": 828.5
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Evolved Void Spike: fires three clusters of spikes dealing physical damage"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWLong"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KhazixWLong",
+    "atoms": []
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KhazixWLong",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cooldown_seconds_max_rank": 9.0,
+   "cast_time_seconds": 0.25,
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KhazixWEvo",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Void Assault: evolution state for Void Spike"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixWAbility/KhazixWEvo"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KhazixWEvo",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 2.0,
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KhazixPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 0.0,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Unseen Threat: granted when the enemy loses sight of KhaZix or on Void Assault"
+   ],
+   "binary": [
+    "Characters/Khazix/Spells/KhazixPassive"
+   ],
+   "evidence": "refined: reviewed unclassified SpellObject against wiki ability text"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "KhazixPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_seconds_max_rank": 0.0,
+   "cast_time_seconds": 0.433,
+   "tempo_class": "setup"
+  }
+ }
+]

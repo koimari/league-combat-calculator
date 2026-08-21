@@ -15,20 +15,36 @@ cast schedule while the ledger prices each bonus instance at its swing.
 Shadow Dash is authored at the selected travel distance. Its cooldown begins
 after the dash, so travel time is added to the data's post-effect cooldown.
 It also carries P (Ki Barrier), which fires "after completing an ability's
-effects": the sourced self-shield (120.0 at level 18 with no bonus health)
-rides the E cast as a ``self_shield_events`` payload, because a shield-only
-slot has no channel of its own and a passive is never cast.
+effects": the sourced self-shield (``data/champions.json`` Shen P "Shield"
+leveling row — a per-LEVEL flat base, 47 : 128.59, plus a flat 13% bonus
+health modifier that is the same at every level) rides the E cast as a
+``self_shield_events`` payload, because a shield-only slot has no channel of
+its own and a passive is never cast.  The cached notes name Shadow Dash's own
+dash-end as one of Ki Barrier's triggers ("Shadow Dash will grant the shield
+when the dash ends") and this module's certified order is E before Q, so E is
+the first ability to complete in a one-rotation fight.  Ki Barrier's 11-second
+flat cooldown — its own cached row, not affected by ability haste — is longer
+than any one-rotation fight, so Q's own later completion (also a named
+trigger) is not double-counted.
 
 R (Stand United) is a zero-damage cast so the ally-support scanner prices
-the sourced ally shield at its floor (320.0 at rank 3 with no AP or bonus
-health, the cached "Minimum Shield Strength" row); the "increased by
-0% : 60% (based on target's missing health)" that separates it from the
-maximum is a live-health condition the scan cannot establish, and the
-3-second channel's teleport is not modeled.
+the sourced ally shield at its floor (the cached "Minimum Shield Strength"
+row, 120/220/320 + 135% AP + 15% of his bonus health, which
+``support_effects._SHIELD_ATTRIBUTES`` reads floor-before-ceiling); the
+"increased by 0% : 60% (based on target's missing health)" that separates it
+from the "Maximum Shield Strength" row (uniformly 1.6x the minimum at every
+rank) is a live-health condition the scan cannot establish, and the 3-second
+channel's teleport has no numeric representation in this engine at all.
 
-W (Spirit's Refuge) stays ``out_of_scope`` on the enemy-basic-attack-block
-axis: the zone nullifies incoming basic attacks for Shen and his allies, and
-the engine has no channel that withholds an attacker's swing.
+W (Spirit's Refuge) is a pure attack-block zone: the cached ability carries
+``"leveling": []`` for its only effect row (``data/champions.json`` Shen W) —
+no damage, heal or shield numeric attribute of any kind, only a rank-scaled
+cost and cooldown — so the slot emits an explicit ``no_damage`` state row
+rather than staying silently absent.  The engine does carry an attack-block
+convention (``interaction_effects.ProjectileDefense.blocks_basic_attacks``,
+used by Jax's Counter Strike and Fiora's Riposte), but it lives entirely on
+the DEFENDER side of a champion-vs-champion interaction, not in a champion's
+own outgoing ``SLOTS`` map.
 """
 
 from dataclasses import replace
@@ -36,12 +52,14 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
     attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
+    find_named_leveling,
     support_cast,
 )
 from .source_receipts import load_champion_sources
@@ -89,6 +107,41 @@ def _named_level_rank_damage(
                 )
             return total
     raise ValueError(f"Shen Q attribute {attribute!r} is unavailable")
+
+
+def _ki_barrier_shield_amount(ctx: SlotCtx) -> float:
+    """P: the sourced self-shield amount at the current champion level.
+
+    Ki Barrier's cached "Shield" leveling row mixes a 20-value per-LEVEL
+    flat base (level-indexed, matching Twilight Assault's own mixed rows)
+    with a flat 13% bonus health modifier that is the same at every level
+    (a length-1 values array). Ki Barrier has no rank of its own (Innate),
+    so every modifier here is read by champion level only.
+    """
+    ability = ctx.ability("P")
+    if ability is None:
+        raise ValueError("Shen P (Ki Barrier) ability data is unavailable")
+    leveling = find_named_leveling(ability, "Shield")
+    if leveling is None:
+        raise ValueError(
+            "Shen P (Ki Barrier): the cached P entry has no 'Shield' "
+            "leveling row for its self-shield amount"
+        )
+    total = 0.0
+    for modifier in leveling.get("modifiers", []):
+        values = modifier.get("values", [])
+        units = modifier.get("units", [])
+        if not values:
+            continue
+        index = min(max(ctx.level - 1, 0), len(values) - 1)
+        value = float(values[index])
+        unit = units[index] if index < len(units) else ""
+        total += (
+            value
+            if is_flat_unit(unit)
+            else resolve_scaling(unit, value, ctx.stats, ctx.target)
+        )
+    return total
 
 
 def _energy_restore(level: int) -> float:
@@ -191,7 +244,18 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: one champion hit at the selected dash travel time."""
+    """E: one champion hit at the selected dash travel time, plus Ki
+    Barrier's self-shield (P), which the cached notes name as one of the
+    dash's own completion triggers.
+
+    Ki Barrier deals no damage of its own, so it cannot host
+    ``self_shield_events`` on a standalone entry (the payload requires a
+    damage-emitting host). E is the first ability to complete in this
+    module's certified E-then-Q order, and Ki Barrier's 11s flat cooldown
+    outlasts a whole one-rotation fight, so attaching the shield here
+    prices exactly the one grant a real fight would produce and Q's own
+    later completion is not double-counted.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -213,25 +277,52 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (DamagePart("physical", total, time_offset=travel),)
     entry["resource_restore"] = _energy_restore(ctx.level)
     entry["detail"] = f"champion hit after {travel:.2f}s dash"
-    passive = ctx.ability("P")
-    if passive is None:
-        return entry
     # Ki Barrier fires "after completing an ability's effects", and E is the
     # module's first cast (CAST_ORDER), so the sourced self-shield rides it.
     # A shield-only slot has no channel of its own — ``attach_self_shield``
     # needs a damage event to ride (slotlib) and a passive is never cast.
-    shield = extract_named(passive, "Shield", ctx.level, ctx.stats, ctx.target)
-    if shield <= 0.0:
-        return entry
+    shield = _ki_barrier_shield_amount(ctx)
     return attach_self_shield(
         entry,
         amount=shield,
         duration=_P_SHIELD_DURATION_SECONDS,
         source="Ki Barrier",
         detail=(
-            f"{entry['detail']}; the E cast also grants the Ki Barrier "
-            f"self-shield ({shield:g} for {_P_SHIELD_DURATION_SECONDS:g}s, "
-            "47:128.59 by level + 13% bonus health)"
+            f"{entry['detail']}; Ki Barrier (P) also shields Shen for "
+            f"{shield:g} for {_P_SHIELD_DURATION_SECONDS:g}s once the dash "
+            "ends (sourced per-level base + 13% bonus health; the 11s flat "
+            "cooldown caps this at one grant per one-rotation fight)"
+        ),
+    )
+
+
+def _spirits_refuge(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: attack-block zone — documented zero-damage row (no_damage).
+
+    The cached ability carries an empty ``leveling`` list — no damage,
+    heal, or shield attribute at all, only a rank-scaled cost/cooldown.
+    The zone blocks incoming basic attacks (and basic-damage abilities)
+    rather than dealing or granting any HP number, so there is nothing for
+    this champion's own outgoing SLOTS map to price.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Spirit's Refuge"),
+        reason=(
+            "Spirit's Refuge primes a protective zone that blocks all "
+            "non-turret basic attacks (and basic-damage abilities) hitting "
+            "Shen or allied champions inside it for 1.75s; the cached W "
+            "entry carries no damage/heal/shield leveling row at all "
+            "(data/champions.json Shen W). This engine's attack-block "
+            "defense convention (interaction_effects.py's "
+            "ProjectileDefense.blocks_basic_attacks, used by Jax's Counter "
+            "Strike and Fiora's Riposte) lives on the defender side of a "
+            "champion-vs-champion interaction, not in a champion's own "
+            "outgoing SLOTS map, so the zone is priced as an explicit "
+            "zero-HP-number state rather than left silently absent."
         ),
     )
 
@@ -282,8 +373,19 @@ ASSUMPTIONS = [
     "(selected first-attack delay, then the enhanced cadence), and the "
     "consumed swings themselves are shown on the Q row at the auto stream's "
     "per-hit damage.",
-    "Ki Barrier, Spirit's Refuge, and Stand United deal no damage and are "
-    "excluded from outgoing TDD.",
+    "Ki Barrier (P) has no cast of its own; its sourced self-shield "
+    "(per-level base + 13% bonus health) is attached to Shadow Dash (E), the "
+    "first ability to complete in the certified E-then-Q order, since its 11s "
+    "flat cooldown allows only one grant per one-rotation fight.",
+    "Spirit's Refuge (W) is a pure attack-block zone with no damage, heal or "
+    "shield attribute in the cached data; it emits an explicit zero-damage "
+    "state row rather than staying silently absent, because the engine's "
+    "attack-block convention lives on the defender side of an interaction.",
+    "Stand United (R) deals no damage; the ally-support scanner prices its "
+    "sourced shield floor (Minimum Shield Strength + 135% AP + 15% of his "
+    "bonus health).  The 0-60% missing-health ramp to the Maximum row is a "
+    "live-health condition the scan cannot establish, and the 3-second "
+    "channel's teleport is not modeled.",
 ]
 
 SOURCES = load_champion_sources("Shen")
@@ -292,6 +394,7 @@ CAST_ORDER = ["E", "Q", "R"]
 SLOTS = {
     "E": _shadow_dash,
     "Q": _twilight_assault,
+    "W": _spirits_refuge,
     # Stand United shields the target ally ("granting the target allied
     # champion a shield for 5 seconds at the time of cast").  The slot
     # exists so the rotation casts it and the support scanner can price the
@@ -320,8 +423,10 @@ MODULE_CC = {"E": "taunt", "Q": "slow"}
 parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
 
 # P emits no cast row of its own; the Ki Barrier shield E carries is what
-# the engine prices (120.0 for 2.5s at level 18 with no bonus health).
+# the engine prices.  W emits an explicit zero-damage state row: its cached
+# entry carries no HP number at all, and the attack block it does apply lives
+# on the defender side of an interaction, not in this outgoing slot map.
 MODULE_COVERAGE = {
-    slot: ("out_of_scope" if slot == "W" else "modeled") for slot in "PQWER"
+    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
 }
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

@@ -7,7 +7,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    proc_damage,
+)
 from .source_receipts import load_champion_sources
 
 
@@ -172,12 +178,20 @@ def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
     # One kind per subject, read off each one's own text: Grim Visage
     # "fears them", Gaze of the Abyss "root[s] them", Crushing Maw slows
     # everything it damages (its pull only catches enemies off-centre).
+    # The first two carry a sourced duration row; Crushing Maw's cached
+    # rows hold the slow's percentage only, so its interval stays unstated
+    # rather than invented.
+    kind = ("fear", "root", "slow")[variant]
+    duration_attr = ("Disable Duration", "Root Duration", None)[variant]
     entry["parts"] = (
         DamagePart(
             "magic",
             value,
             time_offset=0.6 if variant == 2 else 0.3,
-            cc_kind=("fear", "root", "slow")[variant],
+            cc_kind=kind,
+            cc_duration=(
+                extract_value(ability, duration_attr, rank) if duration_attr else 0.0
+            ),
         ),
     )
     entry["detail"] = ("Grim Visage", "Gaze of the Abyss", "Crushing Maw")[

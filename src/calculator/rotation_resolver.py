@@ -852,6 +852,15 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                 else "proc"
             )
             cons.append(("detonation_consume", "stacks", f"post_hit_proc {nm!r}"))
+        execute_ratio = float(info.get("execute_threshold_ratio", 0.0) or 0.0)
+        if execute_ratio > 0 and _is_damage_row(info):
+            cons.append(
+                (
+                    "execute",
+                    "execute",
+                    f"execute_threshold_ratio={execute_ratio:g}",
+                )
+            )
         at = atexts[b]
         if _ATTR_PER_STACK.search(at):
             cons.append(
@@ -1544,6 +1553,19 @@ def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel,unused-argu
     )
 
 
+def _freeze_option_value(value: Any) -> Any:
+    """Convert JSON-shaped option values into stable cache-key values."""
+    if isinstance(value, Mapping):
+        return tuple(
+            sorted(
+                (str(key), _freeze_option_value(item)) for key, item in value.items()
+            )
+        )
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_option_value(item) for item in value)
+    return value
+
+
 def _option_signature(
     champion_name: str, champion_options: Mapping[str, Any] | None
 ) -> frozenset[tuple[str, Any]] | None:
@@ -1566,7 +1588,7 @@ def _option_signature(
         for opt in get_champion_options_meta(champion_name).get("options", [])
     }
     return frozenset(
-        (key, champion_options[key])
+        (key, _freeze_option_value(champion_options[key]))
         for key in sorted(champion_options)
         if key in declared
     )

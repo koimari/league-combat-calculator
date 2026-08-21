@@ -49,6 +49,7 @@ from src.calculator.item_support_effects import (
     derive_item_support_effects,
 )
 from src.calculator.program.compile import WalkCompiler, action_from_event
+from src.calculator.survival.actions import TransitionRank
 from src.calculator.program.views import ViewTag
 from src.calculator.roster_composition import ActorRequest
 from src.calculator.survival.compile import (
@@ -997,8 +998,39 @@ CC_KIND_READERS = {
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
     "src/calculator/damage.py": frozenset({"_damage_event_row"}),
-    "src/calculator/program/compile.py": frozenset({"action_from_event"}),
+    # The three compiler entries are copies too, and the distinction is the
+    # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
+    # and none of them branches on it.  Every "is this an immobilize?"
+    # question they ask goes to ``is_immobilizing_event`` on the line above
+    # the copy, so the classifier still has one home.  ``add_packet`` and
+    # ``add_engine_result`` joined when the merge restored the delivery
+    # facts on compiled damage rows: Force of Nature's Steadfast and the
+    # spell-shield cast grouping read ``action.cc_kind`` off the action, and
+    # a compiled packet that carried none priced differently from the
+    # receipt packet with nothing saying so.
+    "src/calculator/program/compile.py": frozenset(
+        {"action_from_event", "add_packet", "add_engine_result"}
+    ),
+    # The receipt view publishes the token as a public field; a projection
+    # that classified it would be a second classifier inside a layer that
+    # may not compute at all (criterion 3).
+    "src/calculator/program/views/receipt.py": frozenset({"_damage_event_rows"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
+    # ``state_lifecycle`` asks main's *action-blocking* question (may the
+    # holder act?), which D-08 rules is a different question from the bus's
+    # immobilize one: the two vocabularies differ on polymorph and on
+    # flee/pull/snare/stasis, and it receipts an out-of-vocabulary token as
+    # ``unknown_cc_kind`` where the bus refuses it.  One classifier per
+    # question; each declared here.
+    "src/calculator/state_lifecycle.py": frozenset(
+        {"denial_reason", "is_candidate", "match"}
+    ),
+    # Everlasting's own kernel rule filters the control stream (it admits
+    # kinds the immobilize predicate drops) and names the denial; the
+    # dedupe key copies the token without branching on it.
+    "src/calculator/item_support_effects.py": frozenset(
+        {"_cc_event_stream", "_denial"}
+    ),
 }
 
 
@@ -1433,22 +1465,36 @@ def immobilize_literal_sites(
     return tuple(sites)
 
 
-def test_a7_the_immobilize_vocabulary_has_one_literal_home():
-    """A7 — the fourth re-typing of this set is what D-08 had to widen."""
+def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
+    """A7 — the fourth re-typing of this set is what D-08 had to widen.
+
+    MERGE: ``ability_spec`` declares TWO such literals now, and they are two
+    questions rather than one fact typed twice.  ``IMMOBILIZING_CC_KINDS``
+    is what counts as an immobilize (Imperial Mandate's Command,
+    Fimbulwinter's non-melee Everlasting); ``ACTION_BLOCKING_CC_KINDS`` is
+    what stops a champion acting for the authored interval, read only by
+    ``transitions.py``.  A knockback blocks the action and is not the
+    immobilize the shield arms on, so collapsing them would move an answer.
+
+    What A7 guards against is a re-typing in a CONSUMER, so the assertion
+    is where the sites live rather than how many there are.
+    """
     sites = immobilize_literal_sites()
-    assert len(sites) == 1
-    assert sites[0].startswith("src/calculator/ability_spec.py:")
+    assert sites, "the vocabulary literal disappeared"
+    assert all(site.startswith("src/calculator/ability_spec.py:") for site in sites)
     assert {"stun", "root"} <= IMMOBILIZING_CC_KINDS
 
 
 def test_a7_has_a_permanent_injection_seam():
-    """R-05: re-type the set anywhere and A7 goes red."""
+    """R-05: re-type the set outside the vocabulary module and A7 goes red."""
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
         'HARD_CC = {"stun", "root", "snare"}\n',
     )
-    assert len(immobilize_literal_sites(injected)) == 2
+    sites = immobilize_literal_sites(injected)
+    assert "src/calculator/economy.py:1" in sites
+    assert not all(site.startswith("src/calculator/ability_spec.py:") for site in sites)
 
 
 # ---------------------------------------------------------------------------
@@ -2027,10 +2073,11 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
     It is also wider in one place: ``is True`` became a truth test, so a
     truthy non-``True`` marker now certifies.
 
-    Neither direction is reachable from the engine.  ``_damage_event_row``
-    writes ``cc_reviewed`` in the same two lines that write ``cc_kind``, and
-    writes it ``True`` by default, so no engine row can carry an empty token
-    without a certifying flag beside it.
+    Neither direction is reachable from the engine: ``_damage_event_row``
+    never emits a token without a certifying flag beside it.  That is
+    asserted below by driving the row builder rather than by matching its
+    source, because the property is what makes the divergence unreachable
+    and a text match also fails on a reformat that changes nothing.
     """
     assert _fimbulwinter_gate([{"is_ability": True, "source_key": "Q"}]) == (
         False,
@@ -2047,12 +2094,31 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
     assert _fimbulwinter_gate(
         [{"is_ability": True, "source_key": "Q", "cc_reviewed": 1}]
     ) == (True, "")
-    # The control that makes both unreachable from the engine.
-    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
-    assert (
-        'row["cc_kind"] = str(cc_kind)\n'
-        '        row["cc_reviewed"] = bool(fields.get("cc_reviewed", True))'
-    ) in ledger
+    # The control that makes both unreachable from the engine, driven.
+    for authored in (
+        {"cc_kind": ""},
+        {"cc_kind": "stun"},
+        {"cc_kind": "none"},
+        {"cc_reviewed": True},
+        {},
+    ):
+        row = damage._damage_event_row(
+            False,
+            False,
+            "Q",
+            "physical",
+            10.0,
+            0.0,
+            0,
+            0.0,
+            "ability",
+            1,
+            authored,
+            True,
+            False,
+            None,
+        )
+        assert "cc_kind" not in row or row.get("cc_reviewed") is True
 
 
 def test_the_certification_gate_selects_its_holder_from_a_declaration():
@@ -2342,7 +2408,15 @@ class TestTheSupportTriggerLinkRaise:
 
     @staticmethod
     def _everlasting(**extra):
-        """Fimbulwinter's shield packets from one authored immobilize."""
+        """Fimbulwinter's shield packets from one authored immobilize.
+
+        Two things the emitter's fail-closed contract owes and this class
+        does not pin: a cast the holder can be identified by
+        (``ability_instance``, without which the cadence refuses the trigger
+        by name), and the separate ``item_denial`` receipt for a roster that
+        states no positions.  So the row authors the identity and the helper
+        keeps the shields, which is what the trigger link rides.
+        """
         holder = _support_actor("main:Annie", "main", ("Fimbulwinter",))
         enemy = _support_actor("enemy:Aatrox", "enemy", ())
         row = {
@@ -2352,13 +2426,18 @@ class TestTheSupportTriggerLinkRaise:
             "damage": 10.0,
             "cc_kind": "stun",
             "cc_reviewed": True,
+            "ability_instance": "Q:1",
             "target": "enemy:Aatrox",
             "attacker": "main:Annie",
             **extra,
         }
-        return derive_item_support_effects(
-            holder, {"damage_events": [row]}, [holder, enemy]
-        )
+        return [
+            packet
+            for packet in derive_item_support_effects(
+                holder, {"damage_events": [row]}, [holder, enemy]
+            )
+            if packet["kind"] == "shield"
+        ]
 
     def test_a_support_author_does_emit_a_trigger_link(self):
         """The enriched view stamps one; the plain view stamps ``None``.
@@ -2374,17 +2453,28 @@ class TestTheSupportTriggerLinkRaise:
         assert plain["_trigger_event_id"] is None
 
     def test_the_emitted_link_is_declined_one_branch_earlier(self):
-        """Everlasting's 3 s duration reaches the receipt first.
+        """Everlasting's own declaration refuses it before any template gate.
 
-        So the trigger-link branch is not what refuses today's one linked
+        The 3 s duration used to be that earlier decline; the typed shield
+        ledger now stages a timed shield, so the duration refuses nothing and
+        the template receipt admits this packet.  What still shadows the
+        guard is a branch earlier still — Everlasting is declared a SELF
+        shield, and the compiled kernel cannot stage one at all — so the
+        trigger-link branch is again not what refuses today's one linked
         packet, and a comment claiming it is would be the mirror image of
-        the one it replaced.  Pinned because the shadowing is a property of
-        Everlasting's duration, not of the guard: drop the duration and
-        this test says so.
+        the one it replaced.  Pinned on the declaration because that is
+        where the shadowing now lives: make the kernel stage a self shield
+        and this test says so.
         """
         (enriched,) = self._everlasting(_event_id="e1")
         assert enriched["duration"] == 3.0
-        assert unrepresentable_template_receipt(enriched) == "support_duration=3.0"
+        assert unrepresentable_template_receipt(enriched) is None
+        (rule,) = [
+            rule
+            for rule in catalog.behavior_rules("Fimbulwinter")
+            if rule.family is catalog.RuleFamily.ALLY_PACKET
+        ]
+        assert rule.compilability is catalog.COMPILED_KERNEL_CANNOT_SELF_SHIELD
 
     def test_the_branch_still_refuses_a_link_the_receipt_admits(self):
         """An instant linked heal reaches the guard and is refused by name.
@@ -2535,7 +2625,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         damage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-        action_from_event(row, 0.0, 0, {"enemy:Aatrox": 0})
+        action_from_event(row, TransitionRank.DAMAGE, 0, {"enemy:Aatrox": 0})
     holder = _support_actor("ally:Lulu", "ally", ("Imperial Mandate",))
     enemy = _support_actor("enemy:Aatrox", "enemy", ())
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):

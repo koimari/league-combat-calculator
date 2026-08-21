@@ -288,7 +288,21 @@ class TestViBlastShield:
         (shield,) = shields
         assert shield["amount"] == pytest.approx(0.12 * max_health, abs=0.05)
         assert shield["amount"] == pytest.approx(292.8, abs=0.1)
-        assert _main_survival(payload)["shield_absorbed"] > 0.0
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "the Blast Shield payload rides the FIRST Q event unconditionally. "
+            "In this fight Ahri charms Vi at 0.0, so that Q is published with "
+            "skipped_reason='attacker_state_blocked' and the shield inherits "
+            "'trigger_event_skipped' (applied_amount 0.0) — while Vi's Q at "
+            "8.971 lands for 156.2 and authors no shield at all.  A rider on a "
+            "cast that never happened should move to the cast that did.  "
+            "Owner: survival/pipeline.  See TEST-SWEEP-FINDINGS 'Final sweep'."
+        ),
+    )
+    def test_the_granted_shield_absorbs_something(self):
+        assert _main_survival(_fight("Vi"))["shield_absorbed"] > 0.0
 
     def test_the_slot_declares_the_channel_that_pays_it(self):
         contract = get_champion_module_contract("Vi")

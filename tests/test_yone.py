@@ -12,12 +12,12 @@ from tests import cc_review
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 
-def _q_kinds(**options):
-    """The kinds Mortal Steel's parts carry for one option state."""
+def _q_parts(**options):
+    """Mortal Steel's parts for one option state."""
     parsed = parse_champion_abilities(
         cc_review.kit("Yone"), 18, 100.0, _RANKS, champion_options=options or None
     )
-    return sorted({part.cc_kind for part in parsed["Q"]["parts"]})
+    return parsed["Q"]["parts"]
 
 
 class TestReviewedCrowdControl:
@@ -45,12 +45,23 @@ class TestReviewedCrowdControl:
         )
 
     def test_mortal_steel_carries_the_branch_it_is_cast_on(self):
-        """The whirlwind knocks up; the ordinary thrust does not."""
+        """The whirlwind knocks up; the ordinary thrust does not.
+
+        Yasuo's shape exactly (see ``tests/test_yasuo.py``): one thrust is
+        one landing, so the branch's kind rides the flat part that carries
+        the cast instant, and the crit-eligible AD part books no event and
+        states no kind.  ``"none"`` is ``MODULE_CC``'s reviewed absence.
+        """
         data = cc_review.kit("Yone")
         assert "Q" not in yone.MODULE_CC
         assert "knocking up enemies hit in their path" in cc_review.slot_text(data, "Q")
-        assert _q_kinds() == ["none"]
-        assert _q_kinds(q_gathering_storm=2) == ["knockup"]
+        thrust = _q_parts()
+        assert [part.cc_kind for part in thrust] == ["none", None]
+        assert thrust[0].cc_duration == 0.0
+        whirlwind = _q_parts(q_gathering_storm=2)
+        assert [part.cc_kind for part in whirlwind] == ["knockup", None]
+        assert whirlwind[0].cc_duration == 0.75
+        assert [part.amount for part in thrust] == [part.amount for part in whirlwind]
 
     def test_soul_unbound_withholds_on_its_engine_authored_event(self):
         """E emits a true-damage event with no module part to mark."""

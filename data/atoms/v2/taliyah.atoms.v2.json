@@ -1,0 +1,2243 @@
+[
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TaliyahEMineDamageMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahEMineDamageMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineDamageMarker"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahEMineDamageMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahEMineDamageMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineDamageMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TaliyahEMineDamage",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahEMineDamage"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineDamage"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahEMineStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahEMineStun"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    15.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank": 14.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 950.0,
+   "mana_cost_rank1": 90.0,
+   "uptime_fraction": 0.0536,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TaliyahE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    15.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank": 14.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 950.0,
+   "mana_cost_rank1": 90.0,
+   "uptime_fraction": 0.0536,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TaliyahE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 8192,
+   "cooldown": [
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "mana_cost": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    15.0,
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0,
+    285.0
+   ],
+   "ratios": {
+    "ad": 0.6000000238418579
+   },
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank": 14.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 950.0,
+   "mana_cost_rank1": 90.0,
+   "uptime_fraction": 0.0536,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahEMineSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahEMineSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TaliyahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_time": 0.25,
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 300.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TaliyahBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "cast_time": 0.25,
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 300.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TaliyahQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    75.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    37.5,
+    55.0,
+    72.5,
+    90.0,
+    107.5,
+    125.0,
+    142.5
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": 55.0,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TaliyahQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    75.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    37.5,
+    55.0,
+    72.5,
+    90.0,
+    107.5,
+    125.0,
+    142.5
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": 55.0,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "TaliyahQ",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cooldown": [
+    7.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    2.0
+   ],
+   "cast_range": [
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0,
+    1000.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    75.0
+   ],
+   "cast_time": 0.25,
+   "damage": [
+    37.5,
+    55.0,
+    72.5,
+    90.0,
+    107.5,
+    125.0,
+    142.5
+   ],
+   "ratios": {
+    "ap": 0.5
+   },
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 7.0,
+   "cooldown_max_rank": 2.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 1000.0,
+   "mana_cost_rank1": 55.0,
+   "uptime_fraction": 0.2143,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQ"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahQSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahQSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.combat-status",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahOutOfCombat",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahOutOfCombat"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahOutOfCombat"
+   ],
+   "evidence": "name:combat"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.combat-status",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahInCombat",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahInCombat"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahInCombat"
+   ],
+   "evidence": "name:combat"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahRCastRoot",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahRCastRoot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahRCastRoot"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahRKnockAside",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahRKnockAside"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahRKnockAside"
+   ],
+   "evidence": "name:knockaside"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    180.0,
+    180.0,
+    150.0,
+    120.0,
+    0.0,
+    0.0,
+    140.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.009999999776482582,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "TaliyahR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cooldown_max_rank": 140.0,
+   "cast_time_seconds": 0.009999999776482582,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.0222,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "TaliyahR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    180.0,
+    180.0,
+    150.0,
+    120.0,
+    0.0,
+    0.0,
+    140.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.009999999776482582,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "TaliyahR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cooldown_max_rank": 140.0,
+   "cast_time_seconds": 0.009999999776482582,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.0222,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahR"
+   ],
+   "evidence": "rule:execute"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahR",
+  "trigger": "threshold",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 8192,
+   "cooldown": [
+    180.0,
+    180.0,
+    150.0,
+    120.0,
+    0.0,
+    0.0,
+    140.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.009999999776482582,
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "TaliyahR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cooldown_max_rank": 140.0,
+   "cast_time_seconds": 0.009999999776482582,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": 0.0222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahR"
+   ],
+   "evidence": "tag:Trait_CreateTerrain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahPStackingUp",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahPStackingUp"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahPassiveAbility/TaliyahPStackingUp"
+   ],
+   "evidence": "name:stack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahPSpeedBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahPSpeedBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahPassiveAbility/TaliyahPSpeedBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahWCastTime",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahWCastTime"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahWVCAbility/TaliyahWCastTime"
+   ],
+   "evidence": "name:casttime"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahWMoveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahWMoveBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahWVCAbility/TaliyahWMoveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahWVC",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    40.0,
+    30.0,
+    20.0,
+    10.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahWVC"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank": 8.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 900.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahWVCAbility/TaliyahWVC"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahWVC",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    40.0,
+    30.0,
+    20.0,
+    10.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahWVC"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank": 8.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 900.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahWVCAbility/TaliyahWVC"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TaliyahWVC",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cooldown": [
+    14.0,
+    14.0,
+    12.5,
+    11.0,
+    9.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0,
+    900.0
+   ],
+   "mana_cost": [
+    40.0,
+    30.0,
+    20.0,
+    10.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahWVC"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 14.0,
+   "cooldown_max_rank": 8.0,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 900.0,
+   "mana_cost_rank1": 40.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahWVCAbility/TaliyahWVC"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.airborne",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahWKnockUp",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahWKnockUp"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahWVCAbility/TaliyahWKnockUp"
+   ],
+   "evidence": "name:knockup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TaliyahCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "ratios": {
+    "ad": 1.0
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 300.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TaliyahQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahQMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 4000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQMis"
+   ],
+   "inherited_from": "TaliyahQ",
+   "evidence": "inherited:TaliyahQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TaliyahQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahQMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 4000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQMis"
+   ],
+   "inherited_from": "TaliyahQ",
+   "evidence": "inherited:TaliyahQ"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "TaliyahQMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0,
+    4000.0
+   ],
+   "cast_time": 0.25
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "TaliyahQMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": 0.25,
+   "cast_range_rank1": 4000.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahQAbility/TaliyahQMis"
+   ],
+   "inherited_from": "TaliyahQ",
+   "evidence": "inherited:TaliyahQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.009999999776482582
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "TaliyahRMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.009999999776482582,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahRMis"
+   ],
+   "inherited_from": "TaliyahR",
+   "evidence": "inherited:TaliyahR"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "TaliyahRMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.009999999776482582
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "TaliyahRMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.009999999776482582,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahRMis"
+   ],
+   "inherited_from": "TaliyahR",
+   "evidence": "inherited:TaliyahR"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TaliyahRMis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "cooldown": [
+    160.0,
+    140.0,
+    120.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": 0.009999999776482582
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "TaliyahRMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 160.0,
+   "cooldown_max_rank": 0.0,
+   "cast_time_seconds": 0.009999999776482582,
+   "cast_range_rank1": 25000.0,
+   "mana_cost_rank1": 100.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahRAbility/TaliyahRMis"
+   ],
+   "inherited_from": "TaliyahR",
+   "evidence": "inherited:TaliyahR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": 0.0,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Movement speed"
+   ],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahPassiveAbility/TaliyahPassive"
+   ],
+   "evidence": "wiki:Rock Surfing grants bonus movement speed near terrain (builds over 1s); binary:mBuff game_buff_tooltip_TaliyahPassive"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahRSurfing",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahRSurfing"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Movement speed"
+   ],
+   "binary": [
+    "{edf6b3c0}"
+   ],
+   "evidence": "wiki:recast surfs on the wall and may jump off to a target location; binary:object TaliyahRSurfing"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed-caps",
+  "family": "crowd-control-mobility",
+  "behavior": "TaliyahEMineMoveSpeedCeiling",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "TaliyahEMineMoveSpeedCeiling"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cooldown_max_rank": null,
+   "cast_time_seconds": null,
+   "cast_range_rank1": null,
+   "mana_cost_rank1": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [],
+   "binary": [
+    "Characters/Taliyah/Spells/TaliyahEAbility/TaliyahEMineMoveSpeedCeiling"
+   ],
+   "evidence": "binary:object-name MoveSpeedCeiling on E mine slow (wiki only states the 20% slow; the cap is a binary detail)"
+  }
+ }
+]

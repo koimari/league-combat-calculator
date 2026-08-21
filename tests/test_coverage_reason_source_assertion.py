@@ -7,8 +7,13 @@ predicate that produces it, never by an R-18 investigation, whose export is
 ``data/`` plus ``docs/math-foundations.md`` and excludes ``src/`` by design.
 The string it rules on is this one —
 
-    "Every declared family on this item is a defence: the represented
-     mechanic changes durability, not outgoing TDD."
+    "<subject> is a defence: the represented mechanic changes
+     durability, not outgoing TDD."
+
+where ``<subject>`` names the mechanics the item declares ("Plating",
+"Unmake") and falls back to the universal "Every declared family on this
+item" when the rule set names none.  The subject varies; the CLAIM — the
+clause after it — is one literal in ``src`` and is what this file binds.
 
 — published on an item's coverage payload, and the fact it asserts is about
 ``item_behavior.RuleFamily``: that every family the item declares is in the
@@ -75,9 +80,8 @@ SRC = Path(__file__).resolve().parents[1] / "src"
 #: Pinned rather than imported, because importing it from the module under
 #: assertion would make "the sentence is emitted here" true by construction —
 #: the tautology the campaign's own resolution check exists to refuse.
-CENSUS_REASON = (
-    "Every declared family on this item is a defence: the represented "
-    "mechanic changes durability, not outgoing TDD."
+CENSUS_CLAIM = (
+    " is a defence: the represented mechanic changes durability, " "not outgoing TDD."
 )
 
 
@@ -202,7 +206,8 @@ def unbound_claims(
         sorted(
             name
             for name, reason in published.items()
-            if reason == CENSUS_REASON and not declared_defence_only.get(name, False)
+            if reason.endswith(CENSUS_CLAIM)
+            and not declared_defence_only.get(name, False)
         )
     )
 
@@ -228,7 +233,7 @@ def test_the_sentence_is_emitted_at_exactly_one_site_in_src() -> None:
     """One producer, named — the whole tree asked, not one file."""
     sites = {
         path.relative_to(SRC).as_posix(): emitting_sites(
-            path.read_text(encoding="utf-8"), CENSUS_REASON
+            path.read_text(encoding="utf-8"), CENSUS_CLAIM
         )
         for path in sorted(SRC.rglob("*.py"))
     }
@@ -291,13 +296,13 @@ def test_a_second_or_unguarded_emitter_is_reported() -> None:
     fabricated = (
         "def _declared_status(name, families):\n"
         "    if declares_only_defence(name):\n"
-        f"        return {CENSUS_REASON!r}\n"
-        f"    return {CENSUS_REASON!r}\n"
+        f"        return {CENSUS_CLAIM!r}\n"
+        f"    return {CENSUS_CLAIM!r}\n"
         "def somewhere_else(name):\n"
         "    if name in _A_HAND_LIST:\n"
-        f"        return {CENSUS_REASON!r}\n"
+        f"        return {CENSUS_CLAIM!r}\n"
     )
-    assert emitting_sites(fabricated, CENSUS_REASON) == (
+    assert emitting_sites(fabricated, CENSUS_CLAIM) == (
         ("_declared_status", frozenset({"declares_only_defence"})),
         ("_declared_status", frozenset()),
         ("somewhere_else", frozenset()),
@@ -320,7 +325,7 @@ def test_every_published_claim_is_one_the_declaration_makes(published) -> None:
     declared = {name: declares_only_defence(name) for name in published}
     assert unbound_claims(published, declared) == ()
     for name, reason in published.items():
-        if reason != CENSUS_REASON:
+        if not reason.endswith(CENSUS_CLAIM):
             continue
         families = item_coverage._declared_families(name)
         assert families, name
@@ -338,12 +343,14 @@ def test_every_declaration_that_makes_the_claim_publishes_it(published) -> None:
     for name, reason in published.items():
         if not declares_only_defence(name) or gated_state_reason(name) is not None:
             continue
-        assert reason == CENSUS_REASON, name
+        assert reason.endswith(CENSUS_CLAIM), name
 
 
 def test_the_population_the_sentence_quantifies_over_is_not_empty(published) -> None:
     """A universal over nothing is green by vacuity, which is not a check."""
-    claiming = {name for name, reason in published.items() if reason == CENSUS_REASON}
+    claiming = {
+        name for name, reason in published.items() if reason.endswith(CENSUS_CLAIM)
+    }
     assert claiming
     assert claiming == {
         name
@@ -360,7 +367,7 @@ def test_an_unbound_publication_is_reported() -> None:
     outrunning the code, which is what the ruling permits it to assert only
     because this goes red.
     """
-    fabricated = {"A Fabricated Item": CENSUS_REASON, "Another": "something else"}
+    fabricated = {"A Fabricated Item": CENSUS_CLAIM, "Another": "something else"}
     assert unbound_claims(fabricated, {"A Fabricated Item": False}) == (
         "A Fabricated Item",
     )

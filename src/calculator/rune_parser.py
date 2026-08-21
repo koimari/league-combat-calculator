@@ -64,6 +64,20 @@ they never conflict with their sources.  Two sentences restate a *sum*
 rather than a product the same way ("up to 31 at 5 stacks", "for a total of
 20 at 10 stacks"); both are read to certify the parts they restate, and the
 parts are dropped with a warning when they stop adding up.
+- Summon Aery's sourced damage/shield flight, shield duration, and linger
+  timings
+- Dark Harvest's health threshold, base damage, Soul scaling, and takedown
+  cooldown reset
+- ``for N`` level spans used by current rune formulas
+- Guardian's trigger window, shield duration, and bonus-health ratio
+- Aftershock's implicit level-scaled endpoint tables and resistance fields
+- Grasp's timed combat stacks and nested melee/ranged health ratios
+- Hail of Blades' temporary attack-speed window and true-damage rider
+- Lethal Tempo's stacked attack speed, bolt damage, and expiry cadence
+- Glacial Augment's ray geometry, slow formula, and ally damage reduction
+- Stormraider's Surge's damage threshold, movement speed, and slow resistance
+- Fleet Footwork's level heal, scaling, movement speed, and minion modifier
+- Conqueror's adaptive-force tables, stack timing, and max-stack healing
 
 This module is pure parsing: no network, no file writes. ``data_updater``
 fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
@@ -78,13 +92,15 @@ the stat-shard table and the adaptive-force conversion.
 
 import ast
 import re
-from typing import Any
+from types import MappingProxyType
+from typing import Any, Mapping
 
 _PARAM_LINE = re.compile(r"^\|(\w+)\s*=\s?(.*)$")
 _PP_TEMPLATE = re.compile(r"\{\{pp\|([^{}]+)\}\}")
 _RD_TEMPLATE = re.compile(r"\{\{rd\|([^{}]+)\}\}")
 _AS_RATIO = re.compile(
-    r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
+    r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:('''bonus'''|bonus)\s*)?"
+    r"(?:of your\s*)?(AD|AP)\)"
 )
 _AS_RATIO_PAIR = re.compile(
     r"\{\{as\|\(\+\s*\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}\s*"
@@ -92,22 +108,22 @@ _AS_RATIO_PAIR = re.compile(
 )
 #: The scaling ratios that read something other than the holder's attack
 #: damage or ability power.  One key per quantity and each pattern spelled
-#: for exactly the sentence that states it: Aftershock's and Guardian's
-#: "of your '''bonus''' health" is a different quantity from Shield Bash's
-#: "'''bonus''' health" and must not read as it.
+#: for exactly the sentence that states it: "70% of your maximum health" is
+#: Absolute Focus's health *gate*, not a heal, so the heal verb is part of
+#: that pattern.
 _AS_QUANTITY_RATIO_RULES: tuple[tuple[str, re.Pattern], ...] = (
     (
         "bonus_health_ratio",
-        re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*'''bonus'''\s*health\)"),
+        re.compile(
+            r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:of your\s*)?"
+            r"(?:'''bonus'''|bonus)\s+health\)"
+        ),
     ),
     (
         "shield_amount_ratio",
         re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*shield amount\)"),
     ),
     (
-        # The heal verb is part of the pattern: "70% of your maximum health"
-        # is Absolute Focus's health *gate*, and a share of maximum health
-        # is only a heal where the sentence says it heals.
         "max_health_heal_ratio",
         re.compile(
             r"\{\{tip\|heals\}\} you for "
@@ -119,13 +135,20 @@ _AS_QUANTITY_RATIO_RULES: tuple[tuple[str, re.Pattern], ...] = (
         re.compile(r"\{\{as\|\(\+\s*([\d.]+)% of your '''missing''' health\)"),
     ),
 )
+#: Resistance ratios and flat resistance grants key off the resistance the
+#: sentence names, so they read their own capture rather than joining the
+#: single-group table above.
+_BONUS_RESISTANCE_RATIO = re.compile(
+    r"\{\{as\|\(\+\s*([\d.]+)%\s*(?:'''bonus'''|bonus)\s+" r"(armor|magic resistance)\)"
+)
+_FLAT_RESISTANCE = re.compile(r"\{\{as\|([\d.]+)\|(armor|mr)\}\}")
 # "both after a 1-second delay" — how long after its trigger a rune's payout
 # lands.  Its own rule rather than a branch of the damage delays: those read
 # a projectile's flight or a burn's tick, and this reads a payout's wait.
 _PAYOUT_DELAY = re.compile(r"after a ([\d.]+)-second delay")
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
 _STACK_DURATION = re.compile(r"apply a \{\{tip\|stacks?\}\} for ([\d.]+) seconds")
-_MAX_STACKS = re.compile(r"stacking up to (\d+) times")
+_MAX_STACKS = re.compile(r"stacking (?:the effect )?up to (\d+) times")
 _DAMAGE_AMP = re.compile(r"([\d.]+)% increased damage against champions")
 _BONUS_TRUE_DAMAGE = re.compile(r"\{\{as\|([\d.]+)%\s*'''bonus'''\s*true damage\}\}")
 _FLAT_GOLD = re.compile(r"\{\{g\|([\d.]+)\}\}")
@@ -183,6 +206,158 @@ _ULTIMATE_HASTE_PER_STACK = re.compile(
 #: "Gain ''Legend'' stacks for every 100 points earned, up to 10:" — the
 #: ceiling that bounds a per-stack grant's option.
 _STACK_CEILING = re.compile(r"stacks for every \d+ points earned, up to (\d+):")
+_GRASP_DAMAGE_RATIO = re.compile(
+    r"bonus''' magic damage\}\} equal to \{\{as\|"
+    r"\{\{rd\|\{\{fd\|([\d.]+)\}\}%\|\{\{fd\|([\d.]+)\}\}%\}\}"
+    r".*?maximum.*?health",
+    re.DOTALL,
+)
+_GRASP_HEAL_RATIO = re.compile(
+    r"heal\}\} you for \{\{as\|\(\+\s*"
+    r"\{\{rd\|\{\{fd\|([\d.]+)\}\}%\|\{\{fd\|([\d.]+)\}\}%\}\}"
+    r".*?maximum.*?health",
+    re.DOTALL,
+)
+_GRASP_PERMANENT_HEALTH = re.compile(
+    r"permanently grant you \{\{as\|\{\{rd\|([\d.]+)\|([\d.]+)\}\}"
+    r"\s+'''bonus''' health"
+)
+_GRASP_COMBAT_STACKS = re.compile(
+    r"generates? 1 .*? every (?:([\d.]+) )?seconds? for the next ([\d.]+) seconds?"
+)
+_GRASP_READY_WINDOW = re.compile(
+    r"your next .*?basic attack.*?within ([\d.]+) seconds against an enemy .*?champion",
+    re.DOTALL,
+)
+_HAIL_ATTACK_SPEED = re.compile(
+    r"gain \{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}" r".*?bonus''' attack speed",
+    re.DOTALL,
+)
+_HAIL_INITIAL_STACKS = re.compile(
+    r"gain (\d+) stacks? of the effect for ([\d.]+) seconds"
+)
+_HAIL_RESET_STACK_LIMIT = re.compile(
+    r"generate an additional stack .*? up to (\d+) times",
+    re.DOTALL,
+)
+_LETHAL_TEMPO_ATTACK_SPEED = re.compile(
+    r"gain \{\{as\|\{\{rd\|([\d.]+)%\|\{\{ap\|([\d.]+)\*([\d.]+)\}\}%\}\}"
+    r".*?bonus''' attack speed",
+    re.DOTALL | re.IGNORECASE,
+)
+_LETHAL_TEMPO_BOLT_DAMAGE = re.compile(
+    r"deals them \{\{rd\|([^|]+)\|([^|]+)\|pp=true\}\}",
+    re.DOTALL,
+)
+_LETHAL_TEMPO_DAMAGE_AMP = re.compile(
+    r"\{\{rd\|([\d.]+)%\|\{\{fd\|([\d.]+)" r"(?:\{\{recurring\|(\d)\}\})?%\}\}\}\} per",
+    re.DOTALL,
+)
+_LETHAL_TEMPO_STACK_DURATION = re.compile(
+    r"grant a .*?stack.*?for ([\d.]+) seconds", re.DOTALL | re.IGNORECASE
+)
+_LETHAL_TEMPO_EXPIRY_STEP = re.compile(
+    r"expire one by one every \{\{fd\|([\d.]+)\}\} seconds",
+    re.IGNORECASE,
+)
+_GLACIAL_RAY_COUNT = re.compile(
+    r"will cause (\d+) glacial rays to emanate",
+    re.IGNORECASE,
+)
+_GLACIAL_ZONE = re.compile(
+    r"creating icy zones with a ([\d.]+) unit radius that last for "
+    r"([\d.]+) \(\+ ([\d.]+)% of the",
+    re.IGNORECASE,
+)
+_GLACIAL_ZONE_WIDTH = re.compile(
+    r"icy zones, which have a width of ([\d.]+) units",
+    re.IGNORECASE,
+)
+_GLACIAL_SLOW_BASE = re.compile(r"slowed\}\} by ([\d.]+)%", re.IGNORECASE)
+_GLACIAL_SLOW_BONUS_AD = re.compile(
+    r"\(\+ ([\d.]+)% per 100 (?:'''bonus'''|bonus) AD\)",
+    re.IGNORECASE,
+)
+_GLACIAL_SLOW_AP = re.compile(
+    r"\(\+ ([\d.]+)% per 100 AP\)",
+    re.IGNORECASE,
+)
+_GLACIAL_SLOW_HEAL_SHIELD = re.compile(
+    r"\(\+ ([\d.]+)% per 10% heal and shield power\)",
+    re.IGNORECASE,
+)
+_GLACIAL_DAMAGE_REDUCTION = re.compile(
+    r"damage reduced by ([\d.]+)% against your allies",
+    re.IGNORECASE,
+)
+_STORMRAIDER_TRIGGER = re.compile(
+    r"equal to \{\{as\|([\d.]+)% of their .*?maximum.*?health\}\}"
+    r" within ([\d.]+) seconds",
+    re.IGNORECASE,
+)
+_STORMRAIDER_DURATION = re.compile(
+    r"grants you .*?for ([\d.]+) seconds",
+    re.IGNORECASE | re.DOTALL,
+)
+_STORMRAIDER_MOVE_SPEED = re.compile(
+    r"\{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}" r" .*?movement speed\}\}",
+    re.IGNORECASE | re.DOTALL,
+)
+_STORMRAIDER_SLOW_RESIST = re.compile(
+    r"and ([\d.]+)% \{\{tip\|slow resist\}\}",
+    re.IGNORECASE,
+)
+_FLEET_HEAL_BASE = re.compile(
+    r"\{\{rd\|([^|]+)\|([^|]+)\|color=heal",
+    re.IGNORECASE,
+)
+_FLEET_HEAL_SCALING = re.compile(
+    r"\(\+\s*\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}" r"\s*(?:'''bonus'''\s*)?(AD|AP)\)",
+    re.IGNORECASE,
+)
+_FLEET_MOVE_SPEED = re.compile(
+    r"\{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}\|ms\}\}",
+    re.IGNORECASE,
+)
+_FLEET_MOVE_DURATION = re.compile(
+    r"movement speed\}\}\}\}\s+for\s+([\d.]+)\s+second",
+    re.IGNORECASE,
+)
+_FLEET_MINION_EFFECTIVENESS = re.compile(
+    r"Against .*?healing is ([\d.]+)% effective", re.IGNORECASE | re.DOTALL
+)
+_FLEET_CHARGE_CAP = re.compile(r"Charges'', up to ([\d.]+)", re.IGNORECASE)
+_CONQUEROR_ADAPTIVE = re.compile(
+    r"\{\{adaptive\|([^|{}]+)\|([^{}]+)\}\}", re.IGNORECASE
+)
+_CONQUEROR_HEAL_RATIO = re.compile(
+    r"at which you also .*?heal\}\} for \{\{rd\|([\d.]+)%\|([\d.]+)%\}\}",
+    re.IGNORECASE | re.DOTALL,
+)
+_CONQUEROR_STACK_DURATION = re.compile(
+    r"Conqueror.*?lasting for ([\d.]+) seconds", re.IGNORECASE | re.DOTALL
+)
+_CONQUEROR_CAST_INSTANCE_INTERVAL = re.compile(
+    r"once every (?:\{\{fd\|)?([\d.]+)(?:\}\})? seconds per "
+    r"(?:\{\{tip\|)?cast instance(?:\}\})?",
+    re.IGNORECASE,
+)
+_CONQUEROR_STACKS_PER_APPLICATION = re.compile(r"Gain (\d+) stacks? for", re.IGNORECASE)
+_DEATHFIRE_RATIO = re.compile(
+    r"\{\{ap\|([^|{}]+)(?:\|[^{}]+)?\}\}%\s*" r"(?:'''bonus'''\s*)?(AD|AP)",
+    re.IGNORECASE,
+)
+_DEATHFIRE_TICK = re.compile(
+    r"every (?:\{\{fd\|)?([\d.]+)(?:\}\})? seconds", re.IGNORECASE
+)
+_DEATHFIRE_DURATION = re.compile(
+    r"\{\{tip\|([^|{}]+)(?:\|[^{}]+)?\}\}:\s*([\d.]+) seconds?",
+    re.IGNORECASE,
+)
+_DEATHFIRE_AMP_DELAY = re.compile(
+    r"burn has lingered on a target for ([\d.]+) seconds", re.IGNORECASE
+)
+_DEATHFIRE_AMP_RATIO = re.compile(r"increased\{\{ft\|by ([\d.]+)%", re.IGNORECASE)
 _BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _POUNCE_DELAY = re.compile(r"over \{\{fd\|([\d.]+)\}\} seconds, dealing")
@@ -382,6 +557,57 @@ _UNCLAIMED_RD = re.compile(r"\{\{rd\|(?:[^{}]|\{\{(?:[^{}]|\{\{[^{}]*\}\})*\}\})
 #: Public because it is the width of a legitimately short level table, and
 #: ``rune_effects`` must admit one rather than call it a degraded parse.
 DEFAULT_LEVEL_COUNT = 18
+#: The column count of a level table that states every level of the cap.
+_FULL_LEVEL_COUNT = 20
+_AERY_DAMAGE_FLIGHT = re.compile(
+    r"signal ''Aery'' to pounce at them over \{\{fd\|([\d.]+)\}\} seconds"
+)
+_AERY_SHIELD_FLIGHT = re.compile(
+    r"signals? ''Aery'' to leap to their side over \{\{fd\|([\d.]+)\}\} seconds"
+)
+_AERY_SHIELD_DURATION = re.compile(
+    r"shield\|shielding\}\} them for .*? for ([\d.]+) seconds", re.DOTALL
+)
+_AERY_LINGER = re.compile(r"lingers on the target for \{\{tt\|([\d.]+) seconds")
+_DARK_HARVEST_DAMAGE = re.compile(
+    r"deals\s+([\d.]+)\s+\{\{as\|\(\+\s*([\d.]+)\s+per\s+Soul\)\}\}"
+)
+_DARK_HARVEST_THRESHOLD = re.compile(
+    r"below\s+\{\{as\|([\d.]+)%\s+of their .*?maximum.*?health\}\}",
+    re.DOTALL,
+)
+_DARK_HARVEST_TAKEDOWN_RESET = re.compile(r"resetting to ([\d.]+) second")
+_GUARDIAN_TRIGGER_WINDOW = re.compile(
+    r"would take .*?damage within \{\{fd\|([\d.]+)\}\} seconds",
+    re.DOTALL,
+)
+_GUARDIAN_SHIELD_DURATION = re.compile(
+    r"gain a \{\{tip\|shield\}\}.*?for ([\d.]+) seconds", re.DOTALL
+)
+_AFTERSHOCK_DURATION = re.compile(
+    r"grants? .*?for \{\{fd\|([\d.]+)\}\} seconds", re.DOTALL
+)
+_AFTERSHOCK_RADIUS = re.compile(r"\}\}\s*([\d.]+)\s+radius")
+
+# The current Aftershock template uses ``{{pp|80 to 150}}`` and
+# ``{{pp|25 to 120}}``. The page defines both pairs as level-scaled values,
+# while the template omits the explicit span used by newer rune formulas.
+_AFTERSHOCK_IMPLICIT_LEVEL_RANGE = "1 to 20 by 1"
+#: The level range a rune's ``{{pp}}`` tables are read over when the template
+#: states none.  One entry, one rune, and this is its only home: both the
+#: wiki pull and the offline reparse read it through
+#: :func:`parse_rune_effects` rather than restating the exception.
+_IMPLICIT_LEVEL_RANGES: Mapping[str, str] = MappingProxyType(
+    {"Aftershock": _AFTERSHOCK_IMPLICIT_LEVEL_RANGE}
+)
+
+
+def parse_rune_effects(name: str, description: str) -> tuple[dict[str, Any], list[str]]:
+    """Parse one *named* rune's description, applying its implicit level span."""
+    return parse_effects(
+        description, implicit_level_range=_IMPLICIT_LEVEL_RANGES.get(name)
+    )
+
 
 _ALLOWED_PP_NODES = (
     ast.Expression,
@@ -566,6 +792,12 @@ def _interpolate_endpoints(match: re.Match, range_spec: str | None) -> list[floa
     Mirrors Module:Ability progression's linear filling: A at the first
     level, B at the last, over the explicit range's count when one is
     given, else the default 18 columns.
+
+    A 20-column level range is the one exception: the wiki writes rune
+    endpoints over levels 1–18 and this cache keeps two extra rows for the
+    level-20 cap, so B lands on level 18 and the last two rows continue the
+    same slope — the denominator the wiki's own ``(B-A)/17*(x-1)`` formulas
+    use.
     """
     start_value, finish_value = float(match.group(1)), float(match.group(2))
     if range_spec:
@@ -577,7 +809,8 @@ def _interpolate_endpoints(match: re.Match, range_spec: str | None) -> list[floa
         count = DEFAULT_LEVEL_COUNT
     if count < 2:
         raise ValueError(f"pp span {match.group(0)!r} needs at least two levels")
-    step = (finish_value - start_value) / (count - 1)
+    span = DEFAULT_LEVEL_COUNT - 1 if count == _FULL_LEVEL_COUNT else count - 1
+    step = (finish_value - start_value) / span
     return [start_value + step * index for index in range(count)]
 
 
@@ -643,6 +876,25 @@ def parse_cooldown(value: str | None) -> float | list[float] | None:
         return None
 
 
+def _recurring_decimal(value: str, recurring_digit: str | None) -> float:
+    """Resolve a decimal whose final displayed digit repeats forever.
+
+    The prose rules read the wikitext verbatim, so ``{{recurring}}`` reaches
+    them unresolved; ``_resolve_display_templates`` only inlines it for the
+    scalar template rules that run on resolved text.
+    """
+    if not recurring_digit:
+        return float(value)
+    text = value.strip()
+    whole, separator, fraction = text.partition(".")
+    if not separator or not fraction:
+        raise ValueError(f"invalid recurring decimal {value!r}")
+    nonrecurring = fraction[:-1]
+    base = float(f"{whole}.{nonrecurring}") if nonrecurring else float(whole)
+    place = 10 ** len(nonrecurring)
+    return base + float(recurring_digit) / (9.0 * place)
+
+
 class _EffectRecorder:
     """Collects parsed effect values, failing closed on conflicts.
 
@@ -678,14 +930,16 @@ class _EffectRecorder:
         self.effects[key] = value
 
 
-def parse_effects(description: str) -> tuple[dict[str, Any], list[str]]:
+def parse_effects(
+    description: str, *, implicit_level_range: str | None = None
+) -> tuple[dict[str, Any], list[str]]:
     """Extract the numeric effect values a description carries.
 
     Returns the effects dict plus parse warnings. Keys are only present
     when their source text parsed — consumers fail closed on absence.
     """
     recorder = _EffectRecorder()
-    _parse_leveling(description, recorder)
+    _parse_leveling(description, recorder, implicit_level_range)
     _parse_scalar_templates(description, recorder)
     _parse_prose_rules(description, recorder)
     return recorder.effects, recorder.warnings
@@ -733,7 +987,11 @@ def _resolve_display_templates(text: str) -> str:
     return text
 
 
-def _parse_leveling(description: str, recorder: _EffectRecorder) -> None:
+def _parse_leveling(
+    description: str,
+    recorder: _EffectRecorder,
+    implicit_level_range: str | None = None,
+) -> None:
     """Evaluate every level-table template into per-level value lists.
 
     ``{{pp}}`` tables join ``leveling`` in sentence order (a ``type=``
@@ -749,6 +1007,14 @@ def _parse_leveling(description: str, recorder: _EffectRecorder) -> None:
         positional = [part for part in parts if "=" not in part]
         formula = positional[0] if positional else ""
         range_spec = positional[1] if len(positional) > 1 else None
+        if (
+            range_spec is None
+            and implicit_level_range is not None
+            and _RANGE_SPEC.fullmatch(formula.strip())
+        ):
+            # A stepless "A to B" the template gives no span for: this rune's
+            # page states the span the template omits.
+            range_spec = implicit_level_range
         try:
             values = evaluate_pp(formula, range_spec)
         except ValueError as exc:
@@ -961,6 +1227,17 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     for key, pattern in _AS_QUANTITY_RATIO_RULES:
         for percent in pattern.findall(text):
             recorder.record(key, float(percent) / 100.0)
+    for percent, resistance in _BONUS_RESISTANCE_RATIO.findall(description):
+        key = (
+            "bonus_magic_resistance_ratio"
+            if resistance == "magic resistance"
+            else "bonus_armor_ratio"
+        )
+        recorder.record(key, float(percent) / 100.0)
+
+    for amount, resistance in _FLAT_RESISTANCE.findall(description):
+        key = "flat_magic_resistance" if resistance == "mr" else "flat_armor"
+        recorder.record(key, float(amount))
 
     for percent in _BONUS_TRUE_DAMAGE.findall(text):
         recorder.record("bonus_true_damage_ratio", float(percent) / 100.0)
@@ -995,6 +1272,231 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     for leftover in _UNCLAIMED_RD.findall(text):
         recorder.warn(f"unclassified melee/ranged split: {leftover}")
 
+    grasp_damage = _GRASP_DAMAGE_RATIO.search(description)
+    if grasp_damage:
+        recorder.record(
+            "grasp_damage_melee_ranged_ratios",
+            [float(value) / 100.0 for value in grasp_damage.groups()],
+        )
+
+    grasp_heal = _GRASP_HEAL_RATIO.search(description)
+    if grasp_heal:
+        recorder.record(
+            "grasp_heal_melee_ranged_ratios",
+            [float(value) / 100.0 for value in grasp_heal.groups()],
+        )
+
+    grasp_health = _GRASP_PERMANENT_HEALTH.search(description)
+    if grasp_health:
+        recorder.record(
+            "grasp_bonus_health_melee_ranged",
+            [float(value) for value in grasp_health.groups()],
+        )
+
+    hail_attack_speed = _HAIL_ATTACK_SPEED.search(description)
+    if hail_attack_speed:
+        recorder.record(
+            "hail_bonus_attack_speed_melee_ranged",
+            [float(value) for value in hail_attack_speed.groups()],
+        )
+
+    lethal_attack_speed = _LETHAL_TEMPO_ATTACK_SPEED.search(description)
+    if lethal_attack_speed:
+        melee, ranged_base, ranged_multiplier = lethal_attack_speed.groups()
+        recorder.record(
+            "lethal_tempo_attack_speed_percent_melee_ranged",
+            [float(melee), float(ranged_base) * float(ranged_multiplier)],
+        )
+
+    lethal_damage = _LETHAL_TEMPO_BOLT_DAMAGE.search(description)
+    if lethal_damage:
+        try:
+            recorder.record(
+                "lethal_tempo_bolt_damage_melee_by_level",
+                evaluate_pp(lethal_damage.group(1), None),
+            )
+            recorder.record(
+                "lethal_tempo_bolt_damage_ranged_by_level",
+                evaluate_pp(lethal_damage.group(2), None),
+            )
+        except ValueError as exc:
+            recorder.warn(f"Lethal Tempo bolt damage: {exc}")
+
+    lethal_damage_amp = _LETHAL_TEMPO_DAMAGE_AMP.search(description)
+    if lethal_damage_amp:
+        melee, ranged_base, recurring_digit = lethal_damage_amp.groups()
+        ranged = _recurring_decimal(ranged_base, recurring_digit)
+        recorder.record(
+            "lethal_tempo_bolt_damage_increase_ratio_melee_ranged",
+            [float(melee) / 100.0, ranged / 100.0],
+        )
+
+    glacial_fields = (
+        (_GLACIAL_RAY_COUNT, "glacial_ray_count", lambda value: int(value)),
+        (_GLACIAL_ZONE_WIDTH, "glacial_zone_width_units", float),
+        (
+            _GLACIAL_SLOW_BASE,
+            "glacial_slow_base_ratio",
+            lambda value: float(value) / 100.0,
+        ),
+        (
+            _GLACIAL_SLOW_BONUS_AD,
+            "glacial_slow_bonus_ad_ratio_per_100",
+            lambda value: float(value) / 100.0,
+        ),
+        (
+            _GLACIAL_SLOW_AP,
+            "glacial_slow_ap_ratio_per_100",
+            lambda value: float(value) / 100.0,
+        ),
+        (
+            _GLACIAL_SLOW_HEAL_SHIELD,
+            "glacial_slow_heal_shield_ratio_per_10",
+            lambda value: float(value) / 100.0,
+        ),
+        (
+            _GLACIAL_DAMAGE_REDUCTION,
+            "glacial_damage_reduction_ratio",
+            lambda value: float(value) / 100.0,
+        ),
+    )
+    for pattern, key, converter in glacial_fields:
+        match = pattern.search(description)
+        if match:
+            recorder.record(key, converter(match.group(1)))
+
+    glacial_zone = _GLACIAL_ZONE.search(description)
+    if glacial_zone:
+        recorder.record("glacial_zone_radius_units", float(glacial_zone.group(1)))
+        recorder.record(
+            "glacial_zone_base_duration_seconds", float(glacial_zone.group(2))
+        )
+        recorder.record(
+            "glacial_zone_duration_cc_ratio",
+            float(glacial_zone.group(3)) / 100.0,
+        )
+
+    stormraider_trigger = _STORMRAIDER_TRIGGER.search(description)
+    if stormraider_trigger:
+        recorder.record(
+            "stormraider_damage_threshold_ratio",
+            float(stormraider_trigger.group(1)) / 100.0,
+        )
+        recorder.record(
+            "stormraider_damage_window_seconds",
+            float(stormraider_trigger.group(2)),
+        )
+
+    stormraider_duration = _STORMRAIDER_DURATION.search(description)
+    if stormraider_duration:
+        recorder.record(
+            "stormraider_duration_seconds", float(stormraider_duration.group(1))
+        )
+
+    stormraider_move_speed = _STORMRAIDER_MOVE_SPEED.search(description)
+    if stormraider_move_speed:
+        recorder.record(
+            "stormraider_bonus_move_speed_melee_ranged",
+            [float(value) for value in stormraider_move_speed.groups()],
+        )
+
+    stormraider_slow_resist = _STORMRAIDER_SLOW_RESIST.search(description)
+    if stormraider_slow_resist:
+        recorder.record(
+            "stormraider_slow_resist_ratio",
+            float(stormraider_slow_resist.group(1)) / 100.0,
+        )
+
+    fleet_heal = _FLEET_HEAL_BASE.search(description)
+    if fleet_heal:
+        try:
+            recorder.record(
+                "fleet_heal_melee_by_level",
+                evaluate_pp(fleet_heal.group(1).strip(), None),
+            )
+            recorder.record(
+                "fleet_heal_ranged_by_level",
+                evaluate_pp(fleet_heal.group(2).strip(), None),
+            )
+        except ValueError as exc:
+            recorder.warn(f"Fleet Footwork healing: {exc}")
+
+    fleet_scalings = _FLEET_HEAL_SCALING.findall(description)
+    if fleet_scalings:
+        for percent_melee, percent_ranged, stat in fleet_scalings:
+            key = (
+                "fleet_bonus_ad_ratio_melee_ranged"
+                if stat.upper() == "AD"
+                else "fleet_ap_ratio_melee_ranged"
+            )
+            recorder.record(
+                key,
+                [float(percent_melee) / 100.0, float(percent_ranged) / 100.0],
+            )
+
+    fleet_move_speed = _FLEET_MOVE_SPEED.search(description)
+    if fleet_move_speed:
+        recorder.record(
+            "fleet_bonus_move_speed_melee_ranged",
+            [float(value) for value in fleet_move_speed.groups()],
+        )
+
+    fleet_move_duration = _FLEET_MOVE_DURATION.search(description)
+    if fleet_move_duration:
+        recorder.record(
+            "fleet_move_speed_duration_seconds",
+            float(fleet_move_duration.group(1)),
+        )
+
+    fleet_minion = _FLEET_MINION_EFFECTIVENESS.search(description)
+    if fleet_minion:
+        recorder.record(
+            "fleet_minion_heal_effectiveness",
+            float(fleet_minion.group(1)) / 100.0,
+        )
+
+    fleet_charge_cap = _FLEET_CHARGE_CAP.search(description)
+    if fleet_charge_cap:
+        recorder.record("fleet_charge_cap", float(fleet_charge_cap.group(1)))
+
+    conqueror_adaptive = _CONQUEROR_ADAPTIVE.findall(description)
+    if conqueror_adaptive:
+        for index, (formula, level_span) in enumerate(conqueror_adaptive[:2]):
+            try:
+                level_count = int(float(level_span.strip()))
+                values = evaluate_pp(formula.strip(), f"1 to {level_count} by 1")
+            except ValueError as exc:
+                recorder.warn(f"Conqueror adaptive force: {exc}")
+                continue
+            key = (
+                "conqueror_adaptive_force_by_level"
+                if index == 0
+                else "conqueror_adaptive_force_max_by_level"
+            )
+            recorder.record(key, values)
+
+    conqueror_heal = _CONQUEROR_HEAL_RATIO.search(description)
+    if conqueror_heal:
+        recorder.record(
+            "conqueror_heal_melee_ranged_ratios",
+            [float(value) / 100.0 for value in conqueror_heal.groups()],
+        )
+
+    deathfire_ratios: dict[str, list[float]] = {"AD": [], "AP": []}
+    for formula, stat in _DEATHFIRE_RATIO.findall(description):
+        try:
+            value = evaluate_pp(f"{formula.strip()} for 1", None)[0] / 100.0
+        except ValueError as exc:
+            recorder.warn(f"Deathfire Touch ratio: {exc}")
+            continue
+        deathfire_ratios[stat.upper()].append(value)
+    if deathfire_ratios["AD"]:
+        recorder.record(
+            "deathfire_bonus_ad_ratios_by_state", deathfire_ratios["AD"][:2]
+        )
+    if deathfire_ratios["AP"]:
+        recorder.record("deathfire_ap_ratios_by_state", deathfire_ratios["AP"][:2])
+
 
 def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     """Read the prose-form rules: buff windows, stack rules, proc delays."""
@@ -1011,11 +1513,83 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     if duration_match:
         recorder.record("stack_duration_seconds", float(duration_match.group(1)))
 
+    conqueror_duration = _CONQUEROR_STACK_DURATION.search(description)
+    if conqueror_duration:
+        recorder.record(
+            "conqueror_stack_duration_seconds", float(conqueror_duration.group(1))
+        )
+
+    conqueror_interval = _CONQUEROR_CAST_INSTANCE_INTERVAL.search(description)
+    if conqueror_interval:
+        recorder.record(
+            "conqueror_cast_instance_interval_seconds",
+            float(conqueror_interval.group(1)),
+        )
+
+    conqueror_stacks = _CONQUEROR_STACKS_PER_APPLICATION.search(description)
+    if conqueror_stacks:
+        recorder.record(
+            "conqueror_stacks_per_application", int(conqueror_stacks.group(1))
+        )
+
+    deathfire_tick = _DEATHFIRE_TICK.search(description)
+    if deathfire_tick:
+        recorder.record(
+            "deathfire_tick_interval_seconds", float(deathfire_tick.group(1))
+        )
+
+    deathfire_delay = _DEATHFIRE_AMP_DELAY.search(description)
+    if deathfire_delay:
+        recorder.record("deathfire_amp_delay_seconds", float(deathfire_delay.group(1)))
+
+    deathfire_amp = _DEATHFIRE_AMP_RATIO.search(description)
+    if deathfire_amp:
+        recorder.record("deathfire_amp_ratio", float(deathfire_amp.group(1)) / 100.0)
+
+    deathfire_durations = {
+        category.strip().lower().replace(" ", "_"): float(duration)
+        for category, duration in _DEATHFIRE_DURATION.findall(description)
+    }
+    if deathfire_durations:
+        recorder.record("deathfire_duration_seconds", deathfire_durations)
+
     max_stacks_match = _MAX_STACKS.search(description) or _STACK_CEILING.search(
         description
     )
     if max_stacks_match:
         recorder.record("max_stacks", int(max_stacks_match.group(1)))
+
+    grasp_stacks = _GRASP_COMBAT_STACKS.search(description)
+    if grasp_stacks:
+        recorder.record(
+            "combat_stack_cadence_seconds", float(grasp_stacks.group(1) or 1.0)
+        )
+        recorder.record("combat_stack_generation_seconds", float(grasp_stacks.group(2)))
+
+    grasp_window = _GRASP_READY_WINDOW.search(description)
+    if grasp_window:
+        recorder.record("ready_window_seconds", float(grasp_window.group(1)))
+
+    hail_stacks = _HAIL_INITIAL_STACKS.search(description)
+    if hail_stacks:
+        recorder.record("hail_initial_stacks", int(hail_stacks.group(1)))
+        recorder.record("hail_stack_duration_seconds", float(hail_stacks.group(2)))
+
+    hail_reset_limit = _HAIL_RESET_STACK_LIMIT.search(description)
+    if hail_reset_limit:
+        recorder.record("hail_reset_stack_limit", int(hail_reset_limit.group(1)))
+
+    lethal_stack_duration = _LETHAL_TEMPO_STACK_DURATION.search(description)
+    if lethal_stack_duration:
+        recorder.record(
+            "lethal_tempo_stack_duration_seconds", float(lethal_stack_duration.group(1))
+        )
+
+    lethal_expiry_step = _LETHAL_TEMPO_EXPIRY_STEP.search(description)
+    if lethal_expiry_step:
+        recorder.record(
+            "lethal_tempo_expiry_step_seconds", float(lethal_expiry_step.group(1))
+        )
 
     threshold_match = _STACK_THRESHOLD.search(description)
     if threshold_match:
@@ -1097,6 +1671,53 @@ def _parse_conditional_amp(description: str, recorder: _EffectRecorder) -> None:
         recorder.record("self_health_gate", f"self_{self_gate.group(1)}")
         recorder.record("self_health_gate_ratio", float(self_gate.group(2)) / 100.0)
 
+    dark_harvest_damage = _DARK_HARVEST_DAMAGE.search(description)
+    if dark_harvest_damage:
+        recorder.record("base_damage", float(dark_harvest_damage.group(1)))
+        recorder.record("soul_damage", float(dark_harvest_damage.group(2)))
+
+    dark_harvest_threshold = _DARK_HARVEST_THRESHOLD.search(description)
+    if dark_harvest_threshold:
+        recorder.record(
+            "health_threshold_ratio", (float(dark_harvest_threshold.group(1)) / 100.0)
+        )
+
+    dark_harvest_reset = _DARK_HARVEST_TAKEDOWN_RESET.search(description)
+    if dark_harvest_reset:
+        recorder.record("takedown_reset_seconds", float(dark_harvest_reset.group(1)))
+
+    guardian_window = _GUARDIAN_TRIGGER_WINDOW.search(description)
+    if guardian_window:
+        recorder.record("trigger_window_seconds", float(guardian_window.group(1)))
+
+    guardian_duration = _GUARDIAN_SHIELD_DURATION.search(description)
+    if guardian_duration:
+        recorder.record("shield_duration_seconds", float(guardian_duration.group(1)))
+
+    aftershock_duration = _AFTERSHOCK_DURATION.search(description)
+    if aftershock_duration:
+        recorder.record(
+            "resistance_duration_seconds", float(aftershock_duration.group(1))
+        )
+
+    aftershock_radius = _AFTERSHOCK_RADIUS.search(description)
+    if aftershock_radius:
+        recorder.record("shockwave_radius", float(aftershock_radius.group(1)))
+
+    # Summon Aery carries two separate flight times and a target linger in
+    # prose.  Keep these source-specific fields separate so a consumer never
+    # applies the damage landing time to the ally shield.
+    aery_fields = (
+        (_AERY_DAMAGE_FLIGHT, "damage_flight_seconds"),
+        (_AERY_SHIELD_FLIGHT, "shield_flight_seconds"),
+        (_AERY_SHIELD_DURATION, "shield_duration_seconds"),
+        (_AERY_LINGER, "linger_seconds"),
+    )
+    for pattern, key in aery_fields:
+        match = pattern.search(description)
+        if match:
+            recorder.record(key, float(match.group(1)))
+
 
 def rune_payload(
     name: str, wikitext: str, icon: str = "", *, path: str, row: int
@@ -1110,10 +1731,15 @@ def rune_payload(
     a parse warning, never a second copy of the fact.
     """
     params = parse_rune_template(wikitext)
-    description = "\n".join(
-        params.get(key, "") for key in ("description", "description2")
-    ).strip()
-    effects, warnings = parse_effects(description)
+    description_keys = ["description"]
+    description_keys.extend(
+        sorted(
+            (key for key in params if re.fullmatch(r"description\d+", key)),
+            key=lambda key: int(key.removeprefix("description")),
+        )
+    )
+    description = "\n".join(params.get(key, "") for key in description_keys).strip()
+    effects, warnings = parse_rune_effects(name, description)
     warnings = _certify_roster_agreement(params, path, row) + warnings
     payload: dict[str, Any] = {
         "name": name,

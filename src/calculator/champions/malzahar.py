@@ -34,6 +34,7 @@ have, so the slot is out of scope.
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -49,6 +50,7 @@ from .slotlib import (
     extract_value,
     find_named_leveling,
     fixed_count_pet_row,
+    with_control,
 )
 
 # E: 16 ticks over 4s (every 0.25s); R: 10 ticks over 2.5s (every 0.25s).
@@ -275,17 +277,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Malzahar",
     PACKET_SHA256,
     packet_part_timings={"Q": {"time_offset": _Q_PORTAL_SECONDS}},
+    # Override the packet DoT rows with the full-total tick pricing above,
+    # and the packet's single-attack W with the sourced voidling swarm.
     slot_parsers={
-        # Override the packet DoT rows with the full-total tick pricing above and
-        # the packet's single-attack W with the sourced voidling swarm, then
-        # rebuild the parser so the module's parse_abilities sees them.
-        "W": _void_swarm,  # Override the packet DoT rows with the full-total tick pricing above and
-        # the packet's single-attack W with the sourced voidling swarm, then
-        # rebuild the parser so the module's parse_abilities sees them.
-        "E": _malefic_visions,  # Override the packet DoT rows with the full-total tick pricing above and
-        # the packet's single-attack W with the sourced voidling swarm, then
-        # rebuild the parser so the module's parse_abilities sees them.
+        "W": _void_swarm,
+        "E": _malefic_visions,
         "R": _nether_grasp,
+    },
+    # The portals' sourced Silence Duration row carries MODULE_CC's reviewed
+    # kind and its control atom onto the packet's Q entry.
+    slot_wrappers={
+        "Q": partial(with_control, kind="silence", duration_attr="Silence Duration"),
     },
     cc_kinds=MODULE_CC,
 )

@@ -112,7 +112,7 @@ _ENEMY = {
     "level": 18,
     "items": [],
     "role": "mid",
-    "ability_ranks": dict(_RANKS),
+    "ability_ranks": {"Q": 5, "W": 5, "E": 0, "R": 3},
 }
 
 

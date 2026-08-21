@@ -1,0 +1,2190 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynPassiveRangeMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveRangeMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "CaitlynBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "CaitlynBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect1": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": 0.0556,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    16.0,
+    14.0,
+    12.0,
+    10.0,
+    8.0,
+    6.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    80.0,
+    130.0,
+    180.0,
+    230.0,
+    280.0,
+    330.0
+   ],
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect1": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 15375
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": 0.0556,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    35.0,
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap_in_HeadShotBonusDamage": true
+   },
+   "effect_amounts": {
+    "spell0_effect0": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.5,
+    "max_rank": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 3.0,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    35.0,
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap_in_HeadShotBonusDamage": true
+   },
+   "effect_amounts": {
+    "spell0_effect0": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.5,
+    "max_rank": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 3.0,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    35.0,
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap_in_HeadShotBonusDamage": true
+   },
+   "effect_amounts": {
+    "spell0_effect0": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.5,
+    "max_rank": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 3.0,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    35.0,
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0
+   ],
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "ratios": {
+    "ap_in_HeadShotBonusDamage": true
+   },
+   "effect_amounts": {
+    "spell0_effect0": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.5,
+    "max_rank": 0.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 3.0,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynW"
+   ],
+   "evidence": "tag:Trait_Trap"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynWSnare",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 2
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynWSnare"
+   ],
+   "evidence": "name:snare"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "CaitlynWSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynWAbility/CaitlynWSight"
+   ],
+   "evidence": "name:sight"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "CaitlynCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ap_in_RTotalDamage": true
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.468,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": 0.468,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "cast_range": [
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0,
+    3500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ap_in_RTotalDamage": true
+   },
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "channel",
+    "atoms": []
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.468,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "max_rank": 90.0
+   },
+   "cast_time_seconds": 0.468,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CaitlynQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap_in_InitialDamage": true
+   },
+   "effect_amounts": {
+    "spell0_effect2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect4": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.4500000476837158,
+     1.600000023841858,
+     1.75,
+     1.899999976158142,
+     2.049999952316284
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    6.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    10.0,
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    210.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "ap_in_InitialDamage": true
+   },
+   "effect_amounts": {
+    "spell0_effect2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect4": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.4500000476837158,
+     1.600000023841858,
+     1.75,
+     1.899999976158142,
+     2.049999952316284
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "max_rank": 6.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "caitlyn Passive (Yordle Snap Trap)",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "cast",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Yordle Snap Trap"
+   ],
+   "binary": [],
+   "source": "wiki-map",
+   "evidence": "wiki-map"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    60.0,
+    120.0,
+    180.0,
+    240.0,
+    300.0,
+    360.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     0.0,
+     60.0,
+     120.0,
+     180.0,
+     240.0,
+     300.0,
+     360.0
+    ],
+    "spell0_effect1": [
+     1.0,
+     1.2000000476837158,
+     1.399999976158142,
+     1.600000023841858,
+     1.7999999523162842,
+     2.0,
+     2.200000047683716
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.167,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.167,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynEMissile"
+   ],
+   "inherited_from": "CaitlynE",
+   "evidence": "inherited:CaitlynE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    60.0,
+    120.0,
+    180.0,
+    240.0,
+    300.0,
+    360.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     0.0,
+     60.0,
+     120.0,
+     180.0,
+     240.0,
+     300.0,
+     360.0
+    ],
+    "spell0_effect1": [
+     1.0,
+     1.2000000476837158,
+     1.399999976158142,
+     1.600000023841858,
+     1.7999999523162842,
+     2.0,
+     2.200000047683716
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.167,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.167,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynEAbility/CaitlynEMissile"
+   ],
+   "inherited_from": "CaitlynE",
+   "evidence": "inherited:CaitlynE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "CaitlynRMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    215.0,
+    260.0,
+    300.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     215.0,
+     260.0,
+     300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.667,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.667,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynRMissile"
+   ],
+   "inherited_from": "CaitlynR",
+   "evidence": "inherited:CaitlynR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    50.0,
+    90.0,
+    130.0,
+    170.0,
+    215.0,
+    260.0,
+    300.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     50.0,
+     90.0,
+     130.0,
+     170.0,
+     215.0,
+     260.0,
+     300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.667,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.667,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynRAbility/CaitlynRMissile"
+   ],
+   "inherited_from": "CaitlynR",
+   "evidence": "inherited:CaitlynR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "CaitlynQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     0.0,
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0
+    ],
+    "spell0_effect1": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "spell0_effect2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ2"
+   ],
+   "inherited_from": "CaitlynQ",
+   "evidence": "inherited:CaitlynQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynQ2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0,
+    1300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    25.0,
+    70.0,
+    115.0,
+    160.0,
+    205.0,
+    250.0
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     0.0,
+     25.0,
+     70.0,
+     115.0,
+     160.0,
+     205.0,
+     250.0
+    ],
+    "spell0_effect1": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "spell0_effect2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "spell0_effect3": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynQAbility/CaitlynQ2"
+   ],
+   "inherited_from": "CaitlynQ",
+   "evidence": "inherited:CaitlynQ"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "CaitlynPassiveCount",
+  "trigger": "on_attack",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "hit",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Headshot"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveCount"
+   ],
+   "evidence": "wiki:Headshot on-attack stack counter; object name:count"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "CaitlynPassiveMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": {
+    "spell0_effect0": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "spell0_effect1": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "spell0_effect2": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "spell0_effect3": [
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25,
+     1.25
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile",
+    "atoms": []
+   },
+   {
+    "state": "cast",
+    "duration": 0.3,
+    "behavior": "windup",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "max_rank": 0.0
+   },
+   "cast_time_seconds": 0.3,
+   "uptime_fraction": null,
+   "reset_on": null,
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.on-hit"
+  ],
+  "provenance": {
+   "wiki": [
+    "Headshot",
+    "Physical Damage"
+   ],
+   "binary": [
+    "Characters/Caitlyn/Spells/CaitlynPassiveAbility/CaitlynPassiveMissile"
+   ],
+   "evidence": "wiki:Headshot empowered basic attack bonus physical damage; object name:missile"
+  }
+ }
+]

@@ -235,7 +235,7 @@ class TestREndlessBanquet:
         assert "stat_buff" not in _parse(belveth_data, 6)["R"]
 
     def test_true_form_stat_buff(self, belveth_data) -> None:
-        """Rank 2, 50 bonus AD, 100 AP: 250 + 75 + 150 = 475 HP; +15% AS."""
+        """Rank 2, 50 bonus AD, 100 AP: 250 + 75 + 150 = 475 HP; +13% AS."""
         abilities = _parse(
             belveth_data,
             11,
@@ -245,7 +245,7 @@ class TestREndlessBanquet:
         )
         buff = abilities["R"]["stat_buff"]
         assert buff["health"] == pytest.approx(475.0)
-        assert buff["total_attack_speed_percent"] == pytest.approx(15.0)
+        assert buff["total_attack_speed_percent"] == pytest.approx(13.0)
 
     def test_r_onhit_per_stack_value(self, belveth_data) -> None:
         """Rank 1, 50 bonus AD: 2 + 3% x 50 = 3.5 true damage per stack."""
@@ -365,7 +365,7 @@ class TestFightEngineIntegration:
     def test_true_form_multiplies_total_attack_speed(
         self, belveth_data, attacker_stats
     ) -> None:
-        """R rank 3 True Form: final AS x1.25, applied AFTER bonus AS,
+        """R rank 3 True Form: final AS x1.20, applied AFTER bonus AS,
         and the champion stats panel reflects health + attack speed."""
         on = _parse(belveth_data, 18, ranks=_ALL_MAX, options={"true_form": True})
         off = _parse(belveth_data, 18, ranks=_ALL_MAX)
@@ -374,7 +374,7 @@ class TestFightEngineIntegration:
         _fight(stats_on, on)
         _fight(stats_off, off)
         assert stats_on["attack_speed"] == pytest.approx(
-            1.25 * stats_off["attack_speed"]
+            1.20 * stats_off["attack_speed"]
         )
         assert stats_on["health"] > stats_off["health"]
 

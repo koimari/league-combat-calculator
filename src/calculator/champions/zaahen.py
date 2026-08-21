@@ -31,7 +31,9 @@ opening health, not a mid-fight trigger.
 from functools import partial
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
@@ -252,4 +254,63 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
-SELF_HEALING_RULE = declare_healing_rule("Zaahen")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Zaahen self-healing events from its authored packet."""
+    healing = []
+    # The Darkin Glaive (Q): the empowered attack heals him for "Champion
+    # Healing" — 5/6/7/8/9% of his maximum health (halved against
+    # minions/monsters; champion targets assumed).  The Wiki unit ("% of
+    # his maximum health") is not a slotlib-recognised unit, so the percent
+    # is read raw and priced against the sourced max health.
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_heal_pct = _healing._leveling_value(
+        _healing._ability(champion_data, "Q"), "Champion Healing", q_rank
+    )
+    q_heal = q_heal_pct / 100.0 * champion_stat(champion_stats, "health")
+    # One payment per cast: the empowered attack strikes twice and the
+    # cache grants one heal, and the heal lands on-attack even when the
+    # paired strike packet was fully blocked.
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        _healing._heal_from_damage(
+            healing,
+            payment.event,
+            q_heal,
+            "The Darkin Glaive",
+            link_to_damage=False,
+        )
+    # Grim Deliverance (R): flat heal per champion hit
+    # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
+    # AD)); the 1v1 pair fight sees exactly one hit per R cast.
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(
+        _healing._ability(champion_data, "R"),
+        "Healing per Champion hit",
+        r_rank,
+        champion_stats,
+        {},
+    )
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+    ):
+        _healing._heal_from_damage(
+            healing,
+            payment.event,
+            r_heal,
+            "Grim Deliverance",
+            link_to_damage=False,
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Zaahen", derive_self_healing)

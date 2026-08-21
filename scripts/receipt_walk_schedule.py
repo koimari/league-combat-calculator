@@ -134,6 +134,7 @@ from calculator import interpreters  # noqa: E402
 from calculator import item_coverage  # noqa: E402
 from calculator import shield_ledger  # noqa: E402
 from calculator import trigger_stream  # noqa: E402
+from calculator.defensive_effects import option_reader  # noqa: E402
 from calculator.item_behavior import (
     DefenseOption,
     DefenseSubject,
@@ -1060,7 +1061,12 @@ def _probe_subject(owners: Sequence[str]) -> DefenseSubject:
     options = {
         owner: {option.value: 1.0 for option in DefenseOption} for owner in owners
     }
-    return DefenseSubject(level=PROBE_LEVEL, stats=PROBE_LEVEL_STATS, options=options)
+    return DefenseSubject(
+        level=PROBE_LEVEL,
+        stats=PROBE_LEVEL_STATS,
+        options=options,
+        option_value=option_reader(options),
+    )
 
 
 def resolved_fields(family: str, owners: Sequence[str]) -> dict[str, tuple[str, ...]]:

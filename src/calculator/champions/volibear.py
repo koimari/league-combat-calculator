@@ -25,6 +25,7 @@ from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
@@ -251,4 +252,52 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q's stun/MS, W's heal and R's bonus health remain utility/state " "only",
 ]
 
-SELF_HEALING_RULE = declare_healing_rule("Volibear")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Volibear self-healing events from its authored packet."""
+    healing = []
+    w = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats, {})
+    w_missing_pct = _healing._leveling_modifier(w, "Heal", w_rank, 1)
+
+    def frenzied_maul_heal(
+        current_health: float,
+        maximum_health: float,
+        flat: float = w_flat,
+        missing_pct: float = w_missing_pct,
+    ) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+
+    # One bite, one heal: the cached note is "Frenzied Maul deals bonus
+    # damage and heals if the target is still Wounded after the cast time",
+    # so the payment is the cast, not the parts this module prices that bite
+    # with (base slash + Wounded surplus).  The first W applies the Wound;
+    # the heal lands on every later W.
+    for index, payment in enumerate(
+        _healing._payments(_healing.HealAnchor.CAST, "W", damage_events, cast_timeline)
+    ):
+        if index < 1:
+            continue
+        healing.append(
+            {
+                "time": float(payment.event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": frenzied_maul_heal,
+                "source": "Frenzied Maul",
+                "kind": "champion_ability",
+                **_healing._trigger_fields(payment.event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Volibear", derive_self_healing)

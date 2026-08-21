@@ -1,5 +1,7 @@
 """Tests for Aatrox champion ability parsing and damage calculation."""
 
+import pytest
+
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
@@ -9,6 +11,38 @@ from tests import cc_review
 
 class TestQThreeCasts:
     """Tests for Q (The Darkin Blade) three-cast mechanic."""
+
+    @pytest.mark.parametrize(
+        ("variant", "attribute"),
+        [
+            (0, "First Cast Damage"),
+            (1, "First Sweetspot Damage"),
+            (2, "Second Cast Damage"),
+            (3, "Second Sweetspot Damage"),
+            (4, "Third Cast Damage"),
+            (5, "Third Sweetspot Damage"),
+            (6, "Maximum Non-Minion Non-Sweetspot Damage"),
+            (7, "Maximum Non-Minion Sweetspot Damage"),
+        ],
+    )
+    def test_q_variant_selects_the_matching_sourced_row(
+        self, aatrox_data, parse_at, variant, attribute
+    ) -> None:
+        stats, abilities = parse_at(
+            aatrox_data,
+            9,
+            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+            champion_options={"q_variant": variant},
+        )
+        q = abilities["Q"]
+        expected = extract_named(
+            aatrox_data["abilities"]["Q"][0],
+            attribute,
+            q["rank"],
+            stats,
+        )
+        assert q["total_raw"] == pytest.approx(expected)
+        assert q["detail"] == f"Q variant: {attribute}."
 
     def test_q_returns_physical_damage(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(

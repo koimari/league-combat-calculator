@@ -11,6 +11,7 @@ from .healing_contract import declare_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import extract_cooldown, extract_named, on_hit_entry, simple_damage
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -109,4 +110,29 @@ MODULE_COVERAGE = {
     slot: ("modeled" if slot != "R" else "no_damage") for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Kha'Zix")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Kha'Zix self-healing events from its authored packet."""
+    healing = []
+    w = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    w_heal = _healing.extract_named(w, "Heal", w_rank, champion_stats)
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+    ):
+        event = payment.event
+        _healing._heal_from_damage(
+            healing, event, w_heal, "Void Spike", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Kha'Zix", derive_self_healing)

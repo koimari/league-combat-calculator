@@ -30,6 +30,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
+from .slotlib import with_control
 
 PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
 
@@ -96,6 +97,10 @@ def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
     entry: dict[str, Any] = {
         "name": "Garden of Thorns (Plants)",
         "damage_type": "magic",
+        # Plants are summons, not Zyra: a charm, stun or root on her stops
+        # her casting and does not stop a plant that is already on the
+        # field from attacking.
+        "cast_while_disabled": True,
         "cooldown": 0.0,
         "total_raw": per * count,
         "parts": (
@@ -155,6 +160,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     packet_part_timings={"Q": {"time_offset": _Q_SPROUT_SECONDS}},
     slot_parsers={
         "W": _plants,
+    },
+    # E's root duration is sourced off the packet's own "Root Duration"
+    # attribute rather than restated here.
+    slot_wrappers={
+        "E": lambda compiled: with_control(
+            compiled,
+            kind="root",
+            duration_attr="Root Duration",
+        ),
     },
     slot_order=("P", "Q", "W", "E", "R"),
     cc_kinds=MODULE_CC,

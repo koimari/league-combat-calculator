@@ -132,6 +132,13 @@ ARMED_MODIFIER_FIELDS = frozenset(
         # reads it at application time, only at arming time — so the claim
         # this sentinel makes about what is absent is unchanged.
         "armed_by",
+        # MERGE: a modifier may name the one participant whose damage
+        # it prices, and may declare that it applies from every
+        # source.  Both are read at application time against the
+        # packet, not against a position or a holder's liveness, so
+        # the absence this sentinel claims is unchanged.
+        "source_participant",
+        "all_sources",
         "damage_classes",
         "attack_classes",
     }
@@ -643,7 +650,10 @@ class TestIsAttackOrSpellVersusFromAllSources:
             "attack_classes": frozenset(AttackClass),
         }
         assert AttackClass.OTHER in unmake["attack_classes"]
-        assert not _modifier_applies(unmake, proc), (
+        # MERGE: ``_modifier_applies`` gained a source-restriction
+        # argument; Unmake names no ``source_participant``, so the
+        # restriction is inert and the source id is passed as "".
+        assert not _modifier_applies(unmake, proc, ""), (
             "D-04: the walk now prices AttackClass.OTHER damage for a "
             "from-all-sources modifier.  That is the correction this "
             "sentinel defers, not a free improvement: re-read Phase 0's "

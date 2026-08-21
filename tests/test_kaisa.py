@@ -11,6 +11,7 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_module_contract,
+    get_champion_module_meta,
     get_champion_options_meta,
     get_comparison_curve_unavailable_reason,
     get_supported_fight_modes,
@@ -440,6 +441,29 @@ def test_custom_cast_orders_stay_refused():
     )
     assert reordered.status_code == 400
     assert "certified W -> Q sequence" in reordered.get_json()["error"]
+
+
+# ---------------------------------------------------------------------------
+# E/R disposition.  Both slots used to be unwired: E a stock zero-damage
+# receipt and R absent from SLOTS entirely.  Both are wired now — E prices
+# its sourced attack-speed window and R anchors the timed Plasma ledger —
+# and both still deal nothing, which is the pair of facts pinned here.  The
+# coverage dict itself is pinned by ``TestCoverageMap``.
+# ---------------------------------------------------------------------------
+
+
+def test_e_and_r_are_wired_timed_only_zero_damage_rows(kaisa_data):
+    assert set(get_champion_module_meta("Kai'Sa")["slots"]) >= {"E", "R"}
+
+    # One rotation prices neither: E's window and R's ledger are both
+    # statements about a fight with a duration.
+    _, one_rotation = _abilities(kaisa_data)
+    assert "E" not in one_rotation
+    assert "R" not in one_rotation
+
+    payload = _timed_payload(12)
+    assert payload["breakdown"]["R"]["total_damage"] == 0.0
+    assert "E" not in payload["breakdown"]
 
 
 def test_sources_options_and_unrestricted_modes_are_public_receipts():

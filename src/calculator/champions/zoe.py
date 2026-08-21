@@ -136,6 +136,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Heal heals Zoe, Barrier shields her, and Smite deals true damage "
     "to monsters/minions — none deals damage to enemy champions in this "
     "calculator's scope (wiki prose on W).",
+    "The mimicked summoner Heal (w_summoner=1) has no sourced amount: "
+    "summoner-spell values (90 : 345 based on level) are not part of "
+    "data/champions.json, so no heal atom is authored — the option "
+    "stays a no-damage receipt until a summoner-spell atom exists.",
 ]
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")

@@ -321,7 +321,17 @@ def test_malphite_api_w_and_e_match_sourced_mitigation():
 
 
 def _assert_soul_eater_heals(combat, *, level, ratio):
-    """Soul Eater heals 12/18/24% of each post-mitigation physical auto."""
+    """Soul Eater heals 12/18/24% of each post-mitigation PHYSICAL hit.
+
+    MERGE: the payments are per damaging physical hit, not per basic
+    attack.  Siphoning Strike (Q) is a modified basic attack and pays at
+    ITS post-mitigation damage (54.5 at level 18 against 120 armor), while
+    a plain auto pays at its own (61.4) -- so the heals come out at two
+    magnitudes and one expected value could only ever have matched one of
+    them.  That is the wiki's Soul Eater: life steal on physical damage,
+    not a per-swing rider.  The level breakpoint (12 / 18 / 24%) is
+    unchanged, and it is what the auto-sized heal below still pins.
+    """
     from src.calculator.data_fetcher import get_champion
 
     heals = [h for h in _main_heals(combat, "Soul Eater")]
@@ -329,16 +339,32 @@ def _assert_soul_eater_heals(combat, *, level, ratio):
     enemy_stats = _enemy_stats(combat)
     nasus_stats = calculate_total_stats(get_champion("Nasus"), level, [])
     per_auto = nasus_stats["attack_damage"] * 100.0 / (100.0 + enemy_stats["armor"])
-    expected_per_heal = ratio * per_auto
+
+    physical = [
+        event["damage"]
+        for event in combat["events"]
+        if event.get("attacker") == "main"
+        and event.get("damage_type") == "physical"
+        and float(event.get("damage", 0.0)) > 0.0
+    ]
+    assert physical, "no physical hit for Soul Eater to ride"
     for heal in heals:
-        assert heal["amount"] == pytest.approx(expected_per_heal, abs=0.06)
+        assert any(
+            heal["amount"] == pytest.approx(ratio * damage, abs=0.06)
+            for damage in physical
+        ), heal
+    # The plain auto's share is the one the level breakpoint names.
+    assert any(
+        heal["amount"] == pytest.approx(ratio * per_auto, abs=0.06) for heal in heals
+    )
+
     survival = _main_survival(combat)
     if survival["death_time"] is None:
         # The survival walk applies the receipts only while the fighter is
         # alive; a dead-by-first-swing level-6 Nasus still emits the sourced
         # receipts but applies none.
         assert survival["healing_received"] == pytest.approx(
-            ratio * per_auto * len(heals), abs=0.25
+            sum(heal["amount"] for heal in heals), abs=0.25
         )
 
 
@@ -406,7 +432,13 @@ def test_seraphine_api_q_always_at_least_the_flat_base():
     # missing-health ratio, so the API total is >= the flat base mitigated
     # against the defender's own magic resistance (the fight's own stats)
     # and <= the Maximum Enhanced Damage row mitigated the same way.
-    combat = _fight("Seraphine")
+    # The assertion covers High Note's missing-health amplifier. Disable
+    # other damaging and control casts so their state does not change the
+    # target before Q lands.
+    combat = _fight(
+        "Seraphine",
+        ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+    )
     enemy_stats = _enemy_stats(combat)
     base_mitigated = 160.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])
     max_mitigated = 280.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])

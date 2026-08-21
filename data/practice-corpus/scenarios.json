@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -146,7 +146,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -174,7 +177,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -193,7 +196,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -210,7 +216,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -233,7 +239,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -250,7 +259,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -272,7 +281,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -289,7 +301,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -327,7 +339,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -350,7 +362,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -369,7 +384,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -405,7 +420,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -424,7 +439,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -432,16 +450,16 @@
     "kind": "ability_event",
     "source": "R",
     "raw_damage": 325.0,
-    "damage": 213.8,
+    "damage": 235.3,
     "time": 0.0,
-    "formula": "Primordial Burst rank 3 minimum: 325 + 75% AP (0 AP) = 325 raw magic at full target HP; post-mitigation vs 52 MR = 213.8"
+    "formula": "Primordial Burst rank 3 minimum: 325 + 75% AP (0 AP), scaled by 1.5% per 1% target missing health and capped at 66.66% missing. R lands at t=0.0 and is priced against the target state at that instant: W's meteor lands at 1.221s and has taken nothing off yet, so the missing-health scaling is at its floor and the raw damage is the 325 minimum; post-mitigation vs 52 MR = 235.3"
    },
    "practice_tool_steps": "Load Veigar, buy nothing. Level 18, rank 3 R. Practice Tool: R a full-health practice dummy; combat log shows the minimum Primordial Burst of 325 magic damage (before the dummy's magic resistance)."
   },
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -460,7 +478,10 @@
      {
       "champion": "Ahri",
       "level": 18,
-      "role": "mid"
+      "role": "mid",
+      "ranks": {
+       "E": 0
+      }
      }
     ]
    },
@@ -477,7 +498,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -525,7 +546,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -564,7 +585,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -572,7 +593,7 @@
     "role": "top",
     "items": [],
     "ranks": {
-     "Q": 5,
+     "Q": 0,
      "W": 5,
      "E": 5,
      "R": 3
@@ -592,19 +613,19 @@
    "expected": {
     "kind": "revive",
     "first_death_time": 4.312,
-    "revive_time": 6.0,
+    "revive_time": 10.312,
     "revive_health_restored": 2114.0,
     "revive_source": "Rebirth",
-    "death_time": 11.858,
+    "death_time": 15.091,
     "revived": true,
-    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive lands at 6.0 in this fight; she is killed again at 11.858"
+    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (P3 package 3P: death at 4.312 -> revive at 10.312 -> killed again at 15.091)"
    },
    "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
   },
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -671,7 +692,7 @@
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -720,7 +741,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -769,7 +790,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -808,7 +829,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -852,15 +873,15 @@
     "bonus_health": 400,
     "max_health": 2990.0,
     "triggered": true,
-    "death_time": 9.702,
-    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 9.702 (F2: Aatrox and Zed enemies now play their optimal rotations, shifting the incoming damage timeline earlier)."
+    "death_time": 11.858,
+    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 11.858 after the modeled crowd-control downtime (F2: Aatrox and Zed enemies play their optimal rotations). A hostile control is staged at TransitionRank.DEBUFF_ARM (participant_timeline._pair_packet), so it takes effect AFTER everything that landed at its own timestamp: Apprehend's airborne at t=0 does not erase the enemies' opening volley (8 packets, 826.0 post-mitigation), whose casts were already in flight at the landing instant, and the lock runs from there. Which of the two the engine schedules first at t=0 is a rotation-layout artifact rather than a sourced fact, so it must not delete a volley."
    },
    "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
   },
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "308d918c1f905e42cc6a9b583c8003c184a73be2",
+   "sha": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",

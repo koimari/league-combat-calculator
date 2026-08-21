@@ -15,13 +15,13 @@ composition and the score compiler build the same keys.
 
 from __future__ import annotations
 
+import math
 from enum import Enum, IntEnum
 from collections.abc import Iterable, Mapping
 from threading import Lock
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
-from ..trigger_stream import is_immobilizing_event
 from .pricing import DeclaredPacket
 
 # ---------------------------------------------------------------------------
@@ -200,6 +200,13 @@ class ActionKind(Enum):
     INVULNERABLE = "invulnerable"
     UNTARGETABLE = "untargetable"
     SPELL_SHIELD = "spell_shield"
+    CROWD_CONTROL = "crowd_control"
+    # P2 Slice 8: a passive IMMUNITY arm (Dr. Mundo Goes Where He
+    # Pleases) — the next hostile immobilizing control is RESISTED before
+    # it ever applies (never a truncation): the arm packet sorts before
+    # same-timestamp controls and the resist gate sits inside
+    # _apply_crowd_control after the spell-shield/Black-Shield gates.
+    CROWD_CONTROL_RESIST = "crowd_control_resist"
     STAT_BUFF = "stat_buff"
     DAMAGE_MODIFIER = "damage_modifier"
     ON_HIT_MAGIC = "on_hit_magic"
@@ -435,11 +442,35 @@ class SurvivalAction(NamedTuple):
     # two-stack branch.
     immobilized: bool = False
     cc_kind: str = ""
+    cc_duration: float = 0.0
+    skillshot: bool = False
+    area_damage: bool = False
+    damage_over_time: bool = False
     baseline_effective_armor: float | None = None
     baseline_effective_mr: float | None = None
     # Heal fields
     healing_category: str = ""
     amount_formula: Any = None
+    requires_existing_shield: bool = False
+    # P2 Slice 5: a self-cast that fires while the caster is crowd-
+    # controlled (Gangplank W Remove Scurvy — game canCastWhileDisabled;
+    # the QSS/Mercurial item precedent dispatches utility-kind cleanses
+    # before the attacker gate).  The gate exempts HEAL kinds carrying
+    # the flag from the crowd-control branch ONLY — stasis, invulnerable
+    # and untargetable still block (the Cleanse atom: castable while
+    # disabled, but not under suppression/stasis).
+    cast_while_disabled: bool = False
+    cast_blocked_by_attacker_control: bool = False
+    # P2 Slice 7: the per-cast cleanse group (Milio R fan-out — one cast
+    # authors one packet per recipient; the group is the shared one-use
+    # latch key so all recipients of one cast consume ONE use).
+    cleanse_group: str = ""
+    # P3 package 3T: the compiled path pre-authors Maw's post-Lifeline
+    # omnivamp heals with this gate; the kernel applies them only after
+    # the threshold event armed the holder's omnivamp flag.
+    requires_maw_lifeline_omnivamp: bool = False
+    shield_gate_subject: int = -1
+    shield_gate_time: float | None = None
     requires_holder_health_ratio: float = 0.0
     requires_damage_free_seconds: float = 0.0
     overheal_to_temporary_health: bool = False
@@ -450,17 +481,31 @@ class SurvivalAction(NamedTuple):
     defy_trigger_slot: int = NO_SLOT
     # Timed / state kinds
     duration: float = 0.0
+    # Revive windows: the sourced delay between the lethal hit and the
+    # resurrection (the kernel re-anchors the window to the death time, so
+    # a pre-lethal candidate never revives early).
+    delay: float = 0.0
     health_ratio: float = 0.0
+    on_block_heal_amount: float = 0.0
+    on_block_heal_delay: float = 0.0
+    on_block_heal_source: str = ""
     # Stat buff fields
     bonus_attack_speed_percent: float = 0.0
+    bonus_armor: float = 0.0
+    bonus_magic_resistance: float = 0.0
+    bonus_health: float = 0.0
     ability_power: float = 0.0
     ability_haste: float = 0.0
     on_hit_magic_damage: float = 0.0
+    shield_pool: str = ""
+    crowd_control_immunity_while_shield: bool = False
+    crowd_control_immunity_source: str = ""
     # Damage-modifier fields
     persistent: bool = False
     multiplier: float = 1.0
     damage_reduction: bool = False
     next_event_only: bool = False
+    all_sources: bool = False
     armor_reduction_percent: float = 0.0
     mr_reduction_percent: float = 0.0
     resistance_type: str = ""
@@ -478,10 +523,43 @@ class SurvivalAction(NamedTuple):
     # instead of quietly applying to everything.
     damage_classes: frozenset[DamageClass] = frozenset()
     attack_classes: frozenset[AttackClass] = frozenset()
+    # A *restriction*, not a holder: the modifier applies only to damage
+    # whose source is this participant (Aatrox's own curse amplifying only
+    # his packets).  Distinct from ``holder`` above, which names who armed
+    # it; a modifier may be armed by one participant and restricted to
+    # another's damage.  ``""`` is "no source restriction".
+    source_participant: str = ""
     # Utility fields
+    # Which utility transition this packet is, when its kind classified as
+    # ``ActionKind.UTILITY``.  The cleanse dispatch reads it (QSS/Mercurial
+    # ride ``cleanse``-kind utility packets), which is why the field exists
+    # again after the S-wave deleted it as unread.
+    utility_kind: str = ""
     gold_amount: float = 0.0
     ward_uses: float = 0.0
     duration_set: bool = False
+
+    @property
+    def event_id(self) -> str:
+        """This packet's id as text; ``""`` when it names none.
+
+        Derived, never stored: :data:`event_slot` is the identity the kernel
+        compares, and this is its rendering.  It exists because a module the
+        kernel *imports* -- ``delivery_eligibility``, which cannot import
+        back -- selects packets by the public id a request names, and a
+        reader on the far side of a one-way boundary cannot reach
+        :data:`EVENT_SLOTS` to resolve a slot for itself.
+        """
+        return EVENT_SLOTS.text(self.event_slot)
+
+    # Cleanse-activation fields (item actives that remove crowd control).
+    # ``cleanse`` marks a packet as a cleanse activation (Mikael's Purify
+    # rides its heal packet with the marker; QSS/Mercurial ride cleanse-kind
+    # utility packets); ``cleanse_item`` names the declaration item so the
+    # walk can resolve the sourced eligibility without parsing display
+    # labels.
+    cleanse: bool = False
+    cleanse_item: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -545,6 +623,16 @@ def declared_modifier_classes(
     return action.damage_classes, action.attack_classes
 
 
+# Every distinct class set an enum vocabulary can spell, shared.  A set of
+# enum members is immutable and content-addressed, so two packets declaring
+# the same classes may hold one object -- and a vocabulary of N members can
+# only spell 2**N of them, which is what bounds this table.  ``frozenset()``
+# is not a CPython singleton the way ``()`` is, so the empty set gets its own
+# name: an absent declaration is the common case and it allocated per action.
+_NO_CLASSES: frozenset = frozenset()
+_CLASS_SETS: dict[frozenset, frozenset] = {}
+
+
 def declared_class_set(value: Any, vocabulary: type) -> frozenset:
     """One packet's declared class set, failing closed to the empty set.
 
@@ -553,14 +641,14 @@ def declared_class_set(value: Any, vocabulary: type) -> frozenset:
     string that looks like a class is exactly the drift the enum retires.
     """
     if not value:
-        return frozenset()
+        return _NO_CLASSES
     members = frozenset(value if isinstance(value, Iterable) else (value,))
     if not all(isinstance(member, vocabulary) for member in members):
         raise TypeError(
             f"a packet declared {sorted(map(str, members))} where "
             f"{vocabulary.__name__} members are required"
         )
-    return members
+    return _CLASS_SETS.setdefault(members, members)
 
 
 # ---------------------------------------------------------------------------
@@ -620,6 +708,13 @@ _I_IS_ABILITY = _INDEX("is_ability")
 _I_BASIC_ATTACK = _INDEX("basic_attack")
 _I_BASELINE_ARMOR = _INDEX("baseline_effective_armor")
 _I_BASELINE_MR = _INDEX("baseline_effective_mr")
+_I_IMMOBILIZED = _INDEX("immobilized")
+_I_CC_KIND = _INDEX("cc_kind")
+_I_CC_DURATION = _INDEX("cc_duration")
+_I_SKILLSHOT = _INDEX("skillshot")
+_I_DAMAGE_OVER_TIME = _INDEX("damage_over_time")
+_I_AREA_DAMAGE = _INDEX("area_damage")
+_I_ABILITY_INSTANCE = _INDEX("ability_instance")
 
 
 def compiled_damage_action(
@@ -645,10 +740,17 @@ def compiled_damage_action(
     basic_attack: bool,
     baseline_effective_armor: float | None,
     baseline_effective_mr: float | None,
+    immobilized: bool = False,
+    cc_kind: str = "",
+    cc_duration: float = 0.0,
+    skillshot: bool = False,
+    damage_over_time: bool = False,
+    area_damage: bool = False,
+    ability_instance: Any = None,
 ) -> SurvivalAction:
     """Build a compiler damage action without keyword-default parsing.
 
-    Exactly ``SurvivalAction(**those twenty-one fields)``: every other field
+    Exactly ``SurvivalAction(**those twenty-eight fields)``: every other field
     keeps its class default, ``reactive=False`` and the phase included.
     The phase is the load-bearing one — this function has no ``_I_PHASE``
     because the class default *is* ``TransitionRank.DAMAGE``, which is what the
@@ -685,6 +787,14 @@ def compiled_damage_action(
     ``support_resistance_reduction_unavailable`` rather than inventing a
     mitigation ratio.  A default of ``None`` here would spell the same
     refusal for a compiler that simply forgot to pass the number it had.
+
+    The delivery facts a certified packet carries — ``immobilized``,
+    ``cc_kind``, ``cc_duration``, ``skillshot``, ``damage_over_time``,
+    ``area_damage`` and ``ability_instance`` — keep their neutral defaults
+    instead, because they are the *absence* of a declaration rather than a
+    number a compiler could forget: a packet that armed no control, was not
+    a skillshot and delivered no area component says so by not saying
+    anything, and every one of them is inert at its default.
     """
     row = _ACTION_DEFAULT_ROW.copy()
     row[_I_SORT_KEY] = sort_key
@@ -709,6 +819,13 @@ def compiled_damage_action(
     row[_I_BASIC_ATTACK] = basic_attack
     row[_I_BASELINE_ARMOR] = baseline_effective_armor
     row[_I_BASELINE_MR] = baseline_effective_mr
+    row[_I_IMMOBILIZED] = immobilized
+    row[_I_CC_KIND] = cc_kind
+    row[_I_CC_DURATION] = cc_duration
+    row[_I_SKILLSHOT] = skillshot
+    row[_I_DAMAGE_OVER_TIME] = damage_over_time
+    row[_I_AREA_DAMAGE] = area_damage
+    row[_I_ABILITY_INSTANCE] = ability_instance
     return tuple.__new__(SurvivalAction, row)
 
 
@@ -737,10 +854,35 @@ def action_key(
     ``_pair_packet``'s pair-local event numbering depends on that — if an
     engine event ever arrived without its sequence, the packet builder
     rejects that instead of letting numbering become order-relevant.
+
+    The timestamp is required to be **finite** here rather than at the one
+    constructor, and that is where the check belongs: ``float()`` already
+    rejects a malformed time, and NaN/inf is the one value it accepts that
+    no total order can place.  Every action reaches this function -- the
+    composition through ``_sk``, the compiler and ``action_from_event``
+    directly -- so one guard covers every author.
     """
+    # Element 1 must be a rank on every key or the keys are not
+    # comparable in one order: a caller holding a number would put its
+    # ``0.0`` ahead of a ``BARRIER_GRANT`` that is spelled ``1``, which
+    # is how a hostile control came to resolve before the Black Shield
+    # that blocks it.  Every author now names a rank, so a non-member
+    # is a defect rather than an older spelling to translate.
+    if not isinstance(phase, TransitionRank):
+        raise TypeError(
+            f"action_key: phase must be a TransitionRank, got "
+            f"{phase!r} (event_id={event.get('_event_id')!r})"
+        )
+    time_value = float(event_time)
+    if not math.isfinite(time_value):
+        raise ValueError(
+            f"action_key: event time must be finite, got {event_time!r} "
+            f"(event_id={event.get('_event_id')!r}); a non-finite timestamp "
+            "cannot establish a stable total order"
+        )
     source_id = event.get("attacker", participant_id)
     return (
-        float(event_time),
+        time_value,
         ordering_slot(phase),
         event_sequence(event),
         *participant_order(source_id),
@@ -756,11 +898,34 @@ def action_key(
 
 _HEAL_KINDS = frozenset({"heal", "regen"})
 
+# The utility transitions, by packet kind.  Public because the one
+# constructor that stamps ``SurvivalAction.utility_kind`` lives in
+# ``program.compile`` and this is the vocabulary it stamps from; the walk's
+# cleanse dispatch then compares against a member of this set rather than a
+# display label.
+UTILITY_KINDS = frozenset(
+    {"on_hit_magic", "movement", "cleanse", "slow", "economy", "vision"}
+)
+
 # The support ladder, by packet kind.  A sourced barrier arms before damage
 # and a sourced heal recovers after it; they must not share one rank merely
 # because both are support effects.
 _STATE_GRANT_KINDS = frozenset(
-    {"stasis", "invulnerability", "untargetable", "spell_shield"}
+    {
+        "stasis",
+        "invulnerability",
+        "untargetable",
+        "spell_shield",
+        # A passive resist arm is a state grant for the same reason the four
+        # above are: it is in force before anything at its own timestamp.
+        # A hostile *control* is not -- it is something that happens TO the
+        # subject, and it must resolve after the barrier that can block it
+        # (Morgana's Black Shield grants its immunity at ``BARRIER_GRANT``).
+        # It classifies from its kind like every other packet, which lands
+        # it at ``UTILITY_ARM`` -- the rank the retired float ladder's
+        # ``else 1.0`` fall-through meant.
+        "crowd_control_resist",
+    }
 )
 # Public because the published support receipt orders barriers ahead of
 # everything else too, and one spelling of "which kinds are barriers"
@@ -840,6 +1005,8 @@ _STANDALONE_KINDS = {
     "invulnerability": ActionKind.INVULNERABLE,
     "untargetable": ActionKind.UNTARGETABLE,
     "spell_shield": ActionKind.SPELL_SHIELD,
+    "crowd_control": ActionKind.CROWD_CONTROL,
+    "crowd_control_resist": ActionKind.CROWD_CONTROL_RESIST,
     "shield": ActionKind.SHIELD,
     "stat_buff": ActionKind.STAT_BUFF,
     "damage_modifier": ActionKind.DAMAGE_MODIFIER,
@@ -956,6 +1123,7 @@ __all__ = [
     "SUPPORT_RANK_KEY",
     "SurvivalAction",
     "TransitionRank",
+    "UTILITY_KINDS",
     "action_key",
     "attack_class_of",
     "classify_event_kind",

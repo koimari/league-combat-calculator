@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import pytest
 
+from src.calculator.defensive_effects import option_reader
+
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters.defense_state import declared_defenses
 from src.calculator.interpreters import INTERPRETERS, resolve_defense
@@ -27,7 +29,12 @@ from src.calculator.item_behavior import (
 
 def _subject(options: dict | None = None) -> DefenseSubject:
     """A level-18 subject, with whatever scenario inputs a case supplies."""
-    return DefenseSubject(level=18, stats={"health": 2000.0}, options=options or {})
+    return DefenseSubject(
+        level=18,
+        stats={"health": 2000.0},
+        options=options or {},
+        option_value=option_reader(options or {}),
+    )
 
 
 def _rule(owner: str, mechanic: DefenseMechanic) -> BehaviorRule:
@@ -118,17 +125,27 @@ def test_stasis_is_never_assumed_active_by_item_presence() -> None:
     active = resolve_defense(
         rule, _subject({"Zhonya's Hourglass": {"stasis_active_seconds": 1.5}})
     )
-    over = resolve_defense(
-        rule, _subject({"Zhonya's Hourglass": {"stasis_active_seconds": 9.0}})
-    )
 
     assert idle.fields == () and idle.notes == ()
     assert _granted(active)["starting_stasis_duration"] == pytest.approx(1.5)
     assert (
         _granted(active)["starting_stasis_source"] == "Zhonya's Hourglass — Time Stop"
     )
-    # Capped at the sourced duration, never at what the scenario asked for.
-    assert _granted(over)["starting_stasis_duration"] == pytest.approx(2.5)
+
+
+def test_a_stasis_window_longer_than_the_sourced_duration_is_refused() -> None:
+    """The request boundary owns the domain; the seam never sees an excess.
+
+    ``DefenseSubject.option`` reads through ``item_effects``' typed accessor,
+    so the sourced 2.5s Time Stop duration is the option's contract.  Nine
+    seconds is refused by name rather than quietly capped.
+    """
+    rule = _rule("Zhonya's Hourglass", DefenseMechanic.TIME_STOP)
+
+    with pytest.raises(ValueError, match=r"stasis_active_seconds must be between 0"):
+        resolve_defense(
+            rule, _subject({"Zhonya's Hourglass": {"stasis_active_seconds": 9.0}})
+        )
 
 
 def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(

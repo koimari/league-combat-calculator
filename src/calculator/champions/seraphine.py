@@ -5,8 +5,7 @@ teammate (Shield Strength 60-140 + 20% AP; scope self_and_all_teammates).
 The event is authored by the engine's ally-support scanner from cached
 leveling at the W cast time; the module declares W in SLOTS so the fight
 rotation casts it.  W's conditional pulse heal ("% of target's missing
-health") is dynamic and is NOT emitted as a flat packet — it requires the
-target's live missing-health state, which the support scanner does not carry.
+health") uses a live missing-health formula and the caster's shield state.
 
 P1 addition over the reviewed packet:
 - Q (High Note) prices the missing-health amplifier: "Against champions
@@ -25,7 +24,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+    with_control,
+)
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
@@ -131,6 +136,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": _high_note,
         "P": _stage_presence,
     },
+    # The kinds above are the reviewed answer; these wrappers read each
+    # one's sourced duration off the packet ("Disable Duration" is the
+    # window E's 99% slow and R's charm both last).
+    slot_wrappers={
+        "E": lambda parser: with_control(
+            parser, kind="slow", duration_attr="Disable Duration"
+        ),
+        "R": lambda parser: with_control(
+            parser, kind="charm", duration_attr="Disable Duration"
+        ),
+    },
     cc_kinds=MODULE_CC,
 )
 
@@ -143,9 +159,18 @@ OPTIONS = list(OPTIONS) + [
         "max": _NOTE_CAP,
         "label": "Notes on the empowered attack",
     },
+    {
+        "key": "w_already_shielded",
+        "type": "bool",
+        "default": False,
+        "label": "W caster already has a shield for the first pulse",
+    },
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "W (Surround Sound) pulses its sourced missing-health heal after 2.5 "
+    "seconds when Seraphine has a shield at cast time; the first cast can "
+    "use the explicit w_already_shielded option",
     "Q (High Note) prices the missing-health amplifier: base (60-160 + "
     "40% AP) plus 0.75 x base x the target's live missing-health ratio "
     "(0%:75% based on missing health; equals the cached Maximum Enhanced "

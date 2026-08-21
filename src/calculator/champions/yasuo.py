@@ -13,8 +13,11 @@ Stack mechanics modeled (E3):
 - P (Way of the Wanderer): Flow shield (125 : 674.46 by level) is a
   state row; crit conversion and reduced crit damage are passive stats.
 
-W (Wind Wall) and R (Last Breath) keep the reviewed CP10.10 packet
-pricing. All numeric values are read from the champion JSON data.
+- W (Wind Wall) is a selected projectile-defense window: the cached
+  active duration, the slots (or specific incoming event ids) the
+  scenario names, and nothing else.  R (Last Breath) keeps the reviewed
+  CP10.10 packet pricing.  All numeric values are read from the champion
+  JSON data.
 
 Coverage: P and W are ``no_damage``, not ``out_of_scope``.  Way of the
 Wanderer deals nothing — it grants the Flow shield and the crit
@@ -29,11 +32,20 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .module_helpers import no_damage
+from .module_helpers import (
+    CRIT_CHANCE_MULTIPLIER,
+    CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+    crit_conversion_certification,
+    crit_conversion_payload,
+    no_damage,
+)
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
     extract_cooldown,
+    extract_description_control_duration,
+    extract_description_duration,
     extract_named,
     extract_value,
 )
@@ -41,19 +53,19 @@ from .slotlib import (
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
 
 
-# P prose-sourced constants (data/champions.json, Yasuo P): "Yasuo's total
-# critical strike chance is doubled from all other sources. Additionally,
-# every 1% critical strike chance in excess of 100% is converted into 0.5
-# bonus attack damage. Yasuo's critical strikes deal only 90% of the
-# critical damage champions usually have."  The 0.9 crit-damage factor is
-# also the champion's game stat ``criticalStrikeDamageModifier`` (verified
-# in data/champions.json stats).  The engine applies the payload once in
-# ``_apply_stat_buff_ultimates`` so auto attacks AND ability parts with
-# ``crit_effectiveness`` (Steel Tempest's AD-ratio portion) share the
-# converted crit chance/multiplier.
-_CRIT_CHANCE_MULTIPLIER = 2.0
-_CRIT_DAMAGE_MULTIPLIER_FACTOR = 0.9
-_EXCESS_CRIT_BONUS_AD_PER_PERCENT = 0.5
+# P4: the crit-conversion rule is the shared module_helpers rule (the
+# 0.9 factor's atom hash is f375a24fbf0555e1 for Yasuo).
+(
+    _CRIT_CHANCE_MULTIPLIER,
+    _CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    _EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+) = (
+    CRIT_CHANCE_MULTIPLIER,
+    CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+)
+CERTIFIED_CONSTANTS, ATOM_IDS = crit_conversion_certification("f375a24fbf0555e1")
+certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 
 
 def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -74,12 +86,32 @@ def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
             "and Steel Tempest's crit-eligible AD portion."
         ),
     )
-    entry["crit_modifier"] = {
-        "crit_chance_multiplier": _CRIT_CHANCE_MULTIPLIER,
-        "crit_damage_multiplier_factor": _CRIT_DAMAGE_MULTIPLIER_FACTOR,
-        "excess_crit_bonus_ad_per_percent": _EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-    }
+    entry["crit_modifier"] = crit_conversion_payload()
+    entry["certified_constants"] = dict(CERTIFIED_CONSTANTS)
+    entry["atom_ids"] = dict(ATOM_IDS)
     return entry
+
+
+# The Q3 knock-up has no cached leveling row: its only source is the
+# "Gathering Storm Bonus" branch of the Q description, which is also the
+# branch that states the empower exists at all.
+_Q3_BRANCH = "Gathering Storm Bonus"
+
+
+def _q3_knockup_duration(ability: dict[str, Any]) -> float:
+    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
+    for index, effect in enumerate(ability.get("effects") or []):
+        if _Q3_BRANCH not in str(effect.get("description") or ""):
+            continue
+        duration = extract_description_control_duration(ability, index)
+        if duration:
+            return float(duration)
+        break
+    raise ValueError(
+        f"Yasuo Q: the cached {_Q3_BRANCH!r} branch states no knock-up "
+        "duration, so the Q3 control fails closed rather than shipping an "
+        "invented interval"
+    )
 
 
 def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -108,28 +140,29 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
     ad_part = ctx.stat("attack_damage") * ad_ratio
     # Both parts are the one thrust — the split is crit eligibility, not a
-    # second hit — so they share the cast instant.  Authoring it is what
-    # carries the cast into the event ledger; a two-part entry cannot use
-    # the single-part ``event_order_certified`` certification.
+    # second hit — so the ledger sees ONE landing: the flat part carries
+    # the cast instant (and with it the control marker), and the AD part
+    # rides that same event rather than booking a second one.
     #
     # The knock-up is a property of the branch, not of the slot, so it is
     # authored here rather than in MODULE_CC: only the 2-stack cast is the
-    # whirlwind that "additionally knocks up enemies hit for 0.9 seconds".
-    cc_kind = "knockup" if stacks >= 2 else "none"
+    # whirlwind that "additionally knocks up enemies hit for 0.9 seconds",
+    # and that sentence is where its duration is read from.
+    knockup = _q3_knockup_duration(ability) if stacks >= 2 else 0.0
     entry["parts"] = (
-        DamagePart("physical", flat, time_offset=0.0, cc_kind=cc_kind),
         DamagePart(
             "physical",
-            ad_part,
-            crit_effectiveness=1.0,
+            flat,
             time_offset=0.0,
-            cc_kind=cc_kind,
+            cc_kind="knockup" if stacks >= 2 else "none",
+            cc_duration=knockup,
         ),
+        DamagePart("physical", ad_part, crit_effectiveness=1.0),
     )
     if stacks >= 2:
         entry["detail"] = (
             "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
-            "same sourced damage as a normal thrust, adding a 0.9s "
+            f"same sourced damage as a normal thrust, adding a {knockup:g}s "
             "knock-up (crowd-control state, not damage)."
         )
     else:
@@ -139,6 +172,39 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
             "knock-up, a crowd-control state)."
         )
     return entry
+
+
+def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: expose Wind Wall as a selected projectile-defense atom."""
+    ability = ctx.ability()
+    rank = ctx.rank_for()
+    if ability is None or rank < 1:
+        return None
+    active = bool(ctx.options.get("w_active", False))
+    duration = extract_description_duration(ability)
+    if duration is None:
+        return None
+    selected_duration = float(ctx.option("w_active_seconds") or 0.0)
+    if selected_duration > 0.0:
+        duration = min(duration, selected_duration)
+    return {
+        "name": ability.get("name", "Wind Wall"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "total_raw": 0.0,
+        "damage_type": "magic",
+        "parts": (),
+        "defensive_interaction": {
+            "kind": "yasuo_wind_wall",
+            "active": active,
+            "duration": duration if active else 0.0,
+            "blocked_sources": list(ctx.options.get("w_blocked_skillshots", [])),
+        },
+        "detail": (
+            "Wind Wall destroys selected marked projectiles during the "
+            f"active window. Source duration: {duration:g}s."
+        ),
+    }
 
 
 def _per_target_lockout(ability: dict[str, Any], rank: int) -> float:
@@ -205,9 +271,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yasuo",
     PACKET_SHA256,
     assumption_overrides=(
-        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal Q; its empower "
-        "is the 0.9s knock-up, modeled as crowd-control state, so q_gathering_storm only changes "
-        "the Q row's detail",
+        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal Q. Its 0.9s "
+        "knock-up is an authored control interval on the cast's parts.",
         "E (Sweeping Blade) prices Ride the Wind stacks: base + N x per-stack bonus, capped at 4 "
         "stacks (the wiki Total Combined Damage)",
         "P (Way of the Wanderer) Intent is now priced: total crit chance is doubled (capped at "
@@ -217,12 +282,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q (Steel Tempest) splits the flat 20-120 base (never crits) from the 105% AD portion "
         "(crits at the converted crit stats, per the cached description 'damage based on its AD "
         "ratio can critically strike')",
-        "W (Wind Wall) is utility only; R (Last Breath) keeps the reviewed CP10.10 packet pricing",
+        "W (Wind Wall) uses the cached active-duration value as a selected projectile-defense "
+        "window. The scenario can name source slots, specific event ids (w_blocked_event_ids), or "
+        "leave the lists empty for every marked projectile. Event ids are positional per scenario "
+        "('attacker:defender:index'); changes to the build, ranks, or roster renumber them, and "
+        "any selected id that never matches an incoming event is reported on the survival receipt "
+        "as blocked_event_ids_unmatched. R (Last Breath) keeps the reviewed CP10.10 packet "
+        "pricing.",
     ),
     single_hit_slots=frozenset({"R"}),
     slot_parsers={
         "P": _way_of_the_wanderer,
         "Q": _steel_tempest,
+        "W": _wind_wall,
         "E": _sweeping_blade,
     },
     slot_order=("P", "Q", "W", "E", "R"),
@@ -245,6 +317,49 @@ OPTIONS = [
         "min": 0,
         "max": 4,
         "label": "Ride the Wind stacks",
+    },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": False,
+        "label": "W (Wind Wall) active against selected skillshots",
+    },
+    {
+        "key": "w_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "W active start time in seconds",
+    },
+    {
+        "key": "w_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 4.0,
+        "label": "W active seconds; zero uses the source duration",
+    },
+    {
+        "key": "w_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Skillshot slots to block; an empty list blocks all marked " "skillshots"
+        ),
+    },
+    {
+        "key": "w_blocked_event_ids",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Specific incoming event ids to destroy (e.g. "
+            "'main:enemy:Yasuo:1'). Event ids are positional per "
+            "scenario: builds, ranks, or roster changes renumber them. "
+            "An empty list blocks nothing by event id."
+        ),
     },
 ]
 

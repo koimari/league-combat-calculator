@@ -41,6 +41,20 @@ from src.calculator.item_behavior_catalog import registry_owners
 
 SRC_ROOT = Path(__file__).parents[1] / "src" / "calculator"
 
+# Counter 3's live population: registry entries `main` added whose families no
+# rule compiler reaches yet.  Doran's Helm (Helping Hand minion damage), Ionian
+# Boots of Lucidity (summoner-spell haste) and Lost Chapter (Enlighten) are
+# stat-derivation tags with no signature keys; Gluttonous Greaves' Slay
+# omnivamp is a sustain tag with no compiler.  Declaring them empties this set.
+UNDECLARED_ON_ARRIVAL = frozenset(
+    {
+        "Doran's Helm",
+        "Gluttonous Greaves",
+        "Ionian Boots of Lucidity",
+        "Lost Chapter",
+    }
+)
+
 
 class _StubInterpreter:
     """A registered interpreter, so the registry's own gates have a subject."""
@@ -114,6 +128,13 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
     (D-26): an owner the registries know, with its rule set emptied.  A test
     that retired itself the moment the population emptied would leave the
     fail-closed branch unproven exactly when nothing else covers it.
+
+    ``UNDECLARED_ON_ARRIVAL`` is the exact live population, named with its
+    cause: the merge brought four ``ITEM_EFFECTS`` entries in from ``main``
+    that no rule compiler reaches yet, which is precisely the "registry tag
+    lands before its declaration" case this branch exists for.  Pinned by
+    name rather than by count so a *fifth* still fails, and so the set
+    empties itself the day those four are declared.
     """
     owner = "Actualizer"
     assert catalog.registry_entries(owner), "the subject must have a registry entry"
@@ -124,9 +145,9 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
         assert isinstance(verdict, ReceiptOnly)
         assert owner in verdict.reason
         assert verdict.scope is scope
-    assert not catalog.undeclared_owners(), (
-        "counter 3 is back above zero; the live population, not this "
-        "synthetic subject, is what that regression should be read from"
+    assert catalog.undeclared_owners() == UNDECLARED_ON_ARRIVAL, (
+        "counter 3 moved off its named population; the live population, not "
+        "this synthetic subject, is what that regression should be read from"
     )
 
 

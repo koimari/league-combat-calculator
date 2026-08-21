@@ -44,7 +44,7 @@ WRITERS: dict[str, tuple[str, ...]] = {
     "bin": ("scripts/decompose_binaries.py",),
     "wiki": ("scripts/decompose_wiki.py",),
     "wiki-raw": ("scripts/decompose_wiki.py",),
-    "atoms": ("scripts/extract_atoms.py",),
+    "atoms": ("scripts/atomize.py", "scripts/extract_atoms.py"),
     "practice-corpus": (),  # hand-authored only
 }
 
@@ -253,6 +253,12 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
         "scanned trees ({survival,program} and stats.py) and outside this "
         "lane's edit scope, so counter 7 reading 0 says nothing about it"
     ),
+    "calculator.ability_atoms._ABILITY_ATOMS_MEMO": _version_keyed(
+        "one cached champion's atomized ability rows, keyed "
+        "(data_version(), champion_name); the fight path builds a fresh "
+        "champion mapping per request, so an identity key would re-atomize "
+        "every champion per request and retain the rows forever"
+    ),
     "calculator.stats._ITEM_STATS_MEMO": _version_keyed(
         "one cached item's extracted stat block"
     ),
@@ -297,6 +303,13 @@ UNGOVERNED_MEMOS: dict[str, MemoGovernance] = {
         "the validated contract of an imported champion module, re-verified "
         "against the registered module name on every hit; a module object "
         "cannot change inside a process, so no data/ refresh reaches it"
+    ),
+    "calculator.survival.actions._CLASS_SETS": _governed(Invalidator.IMPORTED_MODULE)(
+        "an interning table, not a derivation: it maps a frozenset of enum "
+        "members to itself so packets declaring the same classes share one "
+        "object.  Both key and value are members of a module-level enum "
+        "vocabulary, so nothing in data/ appears in it and a refresh cannot "
+        "make an entry wrong.  Bounded by the vocabulary at 2**N entries"
     ),
 }
 
@@ -398,6 +411,7 @@ def write_runtime_cache(
             tmp_path.unlink(missing_ok=True)
 
     from .data_fetcher import _read_json_version  # local: no import cycle
+    from .patch_identity import PatchIdentityError, canonical_patch
 
     # The file on disk has changed, so the parsed-JSON cache is stale and so
     # is everything derived from it.  Both are invalidated here, before the
@@ -416,6 +430,21 @@ def write_runtime_cache(
         "source_version": source_version,
         "source_hash": source_hash,
     }
+    if source_version:
+        try:
+            identity = canonical_patch(source_version)
+        except PatchIdentityError:
+            # Keep the source receipt. A non-Riot source version must not be
+            # relabelled as a guessed public patch.
+            pass
+        else:
+            metadata["public_patch"] = identity.public_patch
+            metadata["client_patch"] = identity.client_patch
+            metadata["patch_namespace"] = {
+                "public_patch": identity.public_patch,
+                "client_patch": identity.client_patch,
+                "source_version": source_version,
+            }
     meta_path = data_directory / f".{filename}.meta"
     with open(meta_path, "w", encoding="utf-8") as meta_file:
         json.dump(metadata, meta_file, indent=2)

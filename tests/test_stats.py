@@ -499,16 +499,16 @@ class TestNewItemStats:
     # ── Sterak's Gage ──
 
     def test_steraks_gage_bonus_ad(self, ahri_data: dict) -> None:
-        """Sterak's Gage: 45% base AD as bonus AD.
+        """Sterak's Gage: 50% base AD as bonus AD.
 
-        Ahri base AD at 18 = 104. Bonus = 104 * 0.45 = 46.8.
-        Total AD = round(104 + 46.8) = 151.
+        Ahri base AD at 18 = 104. Bonus = 104 * 0.5 = 52.
+        Total AD = round(104 + 52) = 156.
         """
         from src.calculator.data_fetcher import get_item_by_name
 
         steraks = get_item_by_name("Sterak's Gage")
         stats = calculate_total_stats(ahri_data, 18, [steraks])
-        assert stats["attack_damage"] == 151
+        assert stats["attack_damage"] == 156
 
     def test_steraks_reads_from_registry(
         self,

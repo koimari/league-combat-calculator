@@ -18,7 +18,9 @@ both Q and R are one slot per weapon, and the weapons do not control alike
 from dataclasses import replace
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
@@ -204,6 +206,60 @@ def _q(packet_q):
     return parse
 
 
+# HARDCODED: verify on patch updates — the Moonlight Vigil follow-up
+# prose (cached R effect[1]): "attacks based on Aphelios' current main
+# weapon will launch from the sky against each locked-on target,
+# dealing 100% AD physical damage and applying on-hit effects. These
+# attacks can critically strike for 100% : 130% (+ 0% : 9%) (based on
+# critical strike chance)".  The follow-up crit DAMAGE ramps with crit
+# chance (100% at 0% crit to 130% at 100%, plus 0-9%), so the expected
+# multiplier is 1 + (0.30 + 0.09) x crit^2 — the attacks are basic
+# attacks, not spells, but their crits are far weaker than the 200%
+# normal attacks use.
+_R_FOLLOWUP_CRIT_EXTRA = 0.30  # 100% : 130% ramp by crit chance
+_R_FOLLOWUP_CRIT_CHANCE_BONUS = 0.09  # (+ 0% : 9%) by crit chance
+_R_FOLLOWUP_DELAY = 0.3  # "After 0.3 seconds of the illumination"
+
+
+def _r_followup_expected_crit(ctx: SlotCtx) -> float:
+    """Expected crit multiplier of one follow-up attack at this build.
+
+    The sourced crit ("100% : 130% (+ 0% : 9%) based on critical strike
+    chance") is an expected value (the Caitlyn Headshot convention):
+    P(crit) = crit, crit damage = 1 + 0.39 x crit, so E = 1 + 0.39 x
+    crit^2.
+    """
+    crit = min(max(ctx.stat("critical_strike_chance") / 100.0, 0.0), 1.0)
+    return 1.0 + (_R_FOLLOWUP_CRIT_EXTRA + _R_FOLLOWUP_CRIT_CHANCE_BONUS) * (
+        crit * crit
+    )
+
+
+def _r_followup_part(ctx: SlotCtx, followups: int) -> tuple[DamagePart, float]:
+    """One follow-up part: 100% AD per locked-on target, special crit.
+
+    Returns ``(part, total)`` for the selected follow-up count.  Every
+    locked-on target is struck at the same instant, one illumination
+    after the blast, so the repeated part authors a zero interval rather
+    than a cadence it does not have.  The blast's own weapon control does
+    not ride these attacks — they are basic attacks from the sky — which
+    is what the reviewed ``"none"`` on the part states.
+    """
+    per_followup = ctx.stat("attack_damage") * _r_followup_expected_crit(ctx)
+    return (
+        DamagePart(
+            "physical",
+            amount=per_followup,
+            count=followups,
+            time_offset=_R_FOLLOWUP_DELAY,
+            hit_interval=0.0,
+            basic_damage=True,
+            cc_kind="none",
+        ),
+        per_followup * followups,
+    )
+
+
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("R")
     if not ability:
@@ -212,25 +268,49 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     base = (125.0, 175.0, 225.0)[r_rank - 1]
     ad = float(ctx.stat("bonus_attack_damage"))
     ap = float(ctx.stat("ability_power"))
+    initial = base + 0.20 * ad + ap
+    total = initial
+    followups = min(max(int(ctx.option("r_followup_targets")), 0), 5)
+    blast = DamagePart(
+        "physical",
+        amount=initial,
+        cc_kind=_R_CC_BY_WEAPON[_main_weapon(ctx)],
+        # The blast lands at the cast boundary.  With no follow-up it is
+        # the row's only part and says so through the certification below;
+        # beside a follow-up it authors the instant itself, because the two
+        # parts then sit at different instants and the row is a schedule.
+        time_offset=0.0 if followups else None,
+    )
+    parts = [blast]
+    if followups:
+        followup_part, followup_total = _r_followup_part(ctx, followups)
+        parts.append(followup_part)
+        total += followup_total
     # The cache carries no leveling row for Moonlight Vigil, so its bases stay
     # reviewed constants — but the cooldown row is there, and it falls by rank.
     entry = damage_entry(
         ability["name"],
         r_rank,
         extract_cooldown(ability, r_rank),
-        base + 0.20 * ad + ap,
+        total,
         "physical",
     )
-    entry["parts"] = (
-        DamagePart(
-            "physical",
-            amount=base + 0.20 * ad + ap,
-            cc_kind=_R_CC_BY_WEAPON[_main_weapon(ctx)],
-        ),
-    )
-    # One blast, priced once: the cast boundary is the hit.
-    entry["event_order_certified"] = "single_hit"
-    detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]} follow-up is event-ordered separately"
+    entry["parts"] = tuple(parts)
+    detail = f"Moonlight Vigil initial blast · {_WEAPON_LABELS[_main_weapon(ctx)]}"
+    if followups:
+        detail += (
+            f" + {followups} locked-on target follow-up attack(s) at 100% AD "
+            f"(expected crit {_r_followup_expected_crit(ctx):.3f}x)"
+        )
+        entry["applies_item_on_hits"] = {
+            "effectiveness": 1.0,
+            "hits": followups,
+            "triggers": ("on_hit",),
+        }
+    else:
+        # One blast, priced once: the cast boundary is the hit.
+        entry["event_order_certified"] = "single_hit"
+        detail += " follow-up is event-ordered separately"
     # The healing rule reads this marker to gate Severum's overheal-to-
     # shield conversion (the Shyvana dragon-form convention).
     if _main_weapon(ctx) == "severum" and bool(
@@ -247,9 +327,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     assumption_overrides=(
         "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
         "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at "
-        "100%. Moonlight Vigil follow-ups remain unmodeled.",
-        "Moonlight Vigil models the sourced initial blast; weapon-specific follow-up attacks "
-        "remain listed in the result as a separate coverage boundary.",
+        "100%.",
+        "Moonlight Vigil models the sourced initial blast; with r_followup_targets (default 0) "
+        "selected, each locked-on champion also takes one follow-up attack from the sky: 100% AD "
+        "physical basic damage applying on-hit effects at 100% (cached R prose), with the sourced "
+        "special crit — 'critically strike for 100% : 130% (+ 0% : 9%) (based on critical strike "
+        "chance)' — baked in as an expected-value multiplier 1 + 0.39 x crit^2 (the follow-up "
+        "crits are far weaker than the 200% normal attacks use).",
         "Severum's excess healing converts into a shield capped at the sourced per-level 'Heal' "
         "row (10 : 160 by level + 6% maximum health) that lingers for up to 30 seconds (wiki P "
         "prose); with aphelios_overheal_shield (default True) the healing rule stamps each Severum "
@@ -268,6 +352,18 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
+    {
+        "key": "r_followup_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Locked-on targets hit by Moonlight Vigil follow-up attacks "
+            "(each takes one 100% AD main-weapon attack with on-hits)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "R"},
+    },
     {
         "key": "aphelios_main_weapon",
         "type": "select",
@@ -309,8 +405,6 @@ OPTIONS = [
     },
 ]
 
-SELF_HEALING_RULE = declare_healing_rule("Aphelios")
-
 # E has no packet and no slot because the Weapon Queue System has nothing
 # to price — it is the prompt that reorders the next weapons, with no
 # gameplay effect of its own — so it is no_damage rather than an axis the
@@ -322,3 +416,86 @@ MODULE_COVERAGE = {
     "E": "no_damage",
     "R": "modeled",
 }
+
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Aphelios self-healing events from its authored packet."""
+    healing = []
+    r_detail = str(ability_damages.get("R", {}).get("detail", ""))
+    if "Severum" in r_detail:
+        severum = next(
+            (
+                entry
+                for entry in champion_data.get("abilities", {}).get("P", [])
+                if isinstance(entry, dict) and entry.get("name") == "Severum"
+            ),
+            {},
+        )
+        level = int(champion_stat(champion_stats, "level"))
+        basic_scaling = _healing.find_named_leveling(severum, "Per-Level Scaling", 0)
+        ability_scaling = _healing.find_named_leveling(severum, "Per-Level Scaling", 1)
+        basic_ratio = (
+            _healing.sum_modifiers(basic_scaling, level, champion_stats, {}) / 100.0
+            if basic_scaling is not None
+            else 0.0
+        )
+        ability_ratio = (
+            _healing.sum_modifiers(ability_scaling, level, champion_stats, {}) / 100.0
+            if ability_scaling is not None
+            else 0.0
+        )
+        # Severum's wiki passive converts excess healing into a shield
+        # capped at the per-level "Heal" row (10 : 160 by level + 6%
+        # maximum health), lingering for up to 30 seconds.  In the
+        # fight's deterministic state the conversion is driven by the
+        # survival walk: each heal event carries the sourced cap and
+        # duration, and the participant timeline converts the excess
+        # (heal in excess of the fighter's maximum health, i.e. all of
+        # it while at full health) into a timed shield (the
+        # ``_apply_overheal_shield`` receipt).
+        heal_leveling = _healing.find_named_leveling(severum, "Heal")
+        shield_cap = (
+            _healing.sum_modifiers(heal_leveling, level, champion_stats, {})
+            if heal_leveling is not None
+            else 0.0
+        )
+        # The module stamps the option state on Moonlight Vigil's
+        # detail (the Shyvana dragon-form convention): "overheal shield
+        # on" when the user enabled the conversion (default on).
+        overheal_shield = "overheal shield on" in r_detail
+        # Severum pays per hit, and per hit is what it says: "Severum's
+        # attacks heal Aphelios for 2% : 7.1% (based on level) of the
+        # post-mitigation damage dealt".  An attack that dealt nothing heals
+        # nothing, and Onslaught's six attacks are six payments of their own
+        # shares, not six copies of one.
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT,
+            lambda source: source in {"auto_attacks", "Q"},
+            damage_events,
+        ):
+            event = payment.event
+            # With Severum equipped the Q row is Onslaught, whose attacks
+            # count as ability attacks for the heal.
+            ratio = (
+                basic_ratio
+                if _healing._event_source(event) == "auto_attacks"
+                else ability_ratio
+            )
+            amount = max(0.0, float(event.get("damage", 0.0))) * ratio
+            _healing._heal_from_damage(healing, event, amount, "Severum")
+            if overheal_shield and amount > 0.0 and shield_cap > 0.0:
+                healing[-1]["overheal_to_shield"] = True
+                healing[-1]["overheal_shield_cap"] = shield_cap
+                healing[-1]["overheal_shield_duration"] = 30.0
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Aphelios", derive_self_healing)

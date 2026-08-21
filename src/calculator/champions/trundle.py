@@ -18,6 +18,7 @@ percent (``ability_spec.py``).
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from .engine import SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -142,4 +143,53 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Trundle")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Trundle self-healing events from its authored packet."""
+    healing = []
+    # Subjugate drains the target, "dealing magic damage and healing himself
+    # for the same amount" (wiki R effect[0]); Total Healing and Total Magic
+    # Damage share the same % of the target's maximum health leveling values.
+    # The engine's R event carries the drain's pre-mitigation damage, which is
+    # exactly the heal amount — the heal does not pass through magic resistance.
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source == "R"
+    ):
+        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        _healing._heal_from_damage(
+            healing, event, dealt, "Subjugate", link_to_damage=False
+        )
+    # King's Tribute (P): "Whenever a nearby enemy dies, Trundle heals himself
+    # for 1.8% : 5.94% (based on level) of their maximum health."  The module
+    # priced the per-death amount against the enemy this fight targets and
+    # carried it on the P row with the user's declared death count.  A heal a
+    # takedown pays has neither a cast nor a damage row, so each death rides
+    # one of the fight's first damaging hits, in order.
+    tribute = ability_damages.get("passive", {}).get("self_heal_state")
+    if isinstance(tribute, dict):
+        amount = float(tribute.get("amount", 0.0) or 0.0)
+        for payment in _healing._takedown_payments(
+            int(tribute.get("deaths", 0) or 0), damage_events
+        ):
+            healing.append(
+                {
+                    "time": float(payment.event.get("time", 0.0)),
+                    "amount": amount,
+                    "source": "King's Tribute",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                    **_healing._trigger_fields(payment.event),
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Trundle", derive_self_healing)

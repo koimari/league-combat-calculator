@@ -1,0 +1,5399 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SnareDuration": [
+     1.25,
+     1.25,
+     1.350000023841858,
+     1.4500000476837158,
+     1.5499999523162842,
+     1.649999976158142,
+     1.649999976158142
+    ],
+    "TargetsToHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "FreeCastCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "_effect_{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SnareDuration": [
+     1.25,
+     1.25,
+     1.350000023841858,
+     1.4500000476837158,
+     1.5499999523162842,
+     1.649999976158142,
+     1.649999976158142
+    ],
+    "TargetsToHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "FreeCastCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "_effect_{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraWAbility/LissandraW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    30.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SnareDuration": [
+     1.25,
+     1.25,
+     1.350000023841858,
+     1.4500000476837158,
+     1.5499999523162842,
+     1.649999976158142,
+     1.649999976158142
+    ],
+    "TargetsToHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "FreeCastCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "_effect_{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SnareDuration": [
+     1.25,
+     1.25,
+     1.350000023841858,
+     1.4500000476837158,
+     1.5499999523162842,
+     1.649999976158142,
+     1.649999976158142
+    ],
+    "TargetsToHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "FreeCastCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "_effect_{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraWAbility/LissandraW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.5,
+    9.0,
+    8.5,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0,
+    450.0
+   ],
+   "cast_radius": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    30.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SnareDuration": [
+     1.25,
+     1.25,
+     1.350000023841858,
+     1.4500000476837158,
+     1.5499999523162842,
+     1.649999976158142,
+     1.649999976158142
+    ],
+    "TargetsToHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "FreeCastCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "_effect_{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     30.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SnareDuration": [
+     1.25,
+     1.25,
+     1.350000023841858,
+     1.4500000476837158,
+     1.5499999523162842,
+     1.649999976158142,
+     1.649999976158142
+    ],
+    "TargetsToHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "FreeCastCD": [
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0,
+     8.0
+    ],
+    "_effect_{0e1136d1}": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{210f9ec0}": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 1029
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraW",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraWAbility/LissandraW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraRDamage",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    140.0,
+    120.0,
+    100.0,
+    80.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "cast_radius": [
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0,
+    710.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     75.0,
+     80.0,
+     80.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0,
+     600.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     75.0,
+     80.0,
+     80.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraRDamage",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 140.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraRDamage"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.cc-immunity",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    550.0,
+    550.0,
+    550.0,
+    400.0,
+    400.0,
+    550.0
+   ],
+   "cast_radius": [
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SelfCastMissingHPPerAbove": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StartingAoESize": [
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0
+    ],
+    "PercentMissingHPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     400.0,
+     550.0,
+     550.0,
+     550.0,
+     400.0,
+     400.0,
+     550.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraR"
+   ],
+   "evidence": "tag:Trait_Immune"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    550.0,
+    550.0,
+    550.0,
+    400.0,
+    400.0,
+    550.0
+   ],
+   "cast_radius": [
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SelfCastMissingHPPerAbove": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StartingAoESize": [
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0
+    ],
+    "PercentMissingHPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     400.0,
+     550.0,
+     550.0,
+     550.0,
+     400.0,
+     400.0,
+     550.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.untargetable",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    550.0,
+    550.0,
+    550.0,
+    400.0,
+    400.0,
+    550.0
+   ],
+   "cast_radius": [
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SelfCastMissingHPPerAbove": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StartingAoESize": [
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0
+    ],
+    "PercentMissingHPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     400.0,
+     550.0,
+     550.0,
+     550.0,
+     400.0,
+     400.0,
+     550.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraR"
+   ],
+   "evidence": "tag:Trait_Untargetable"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    550.0,
+    550.0,
+    550.0,
+    400.0,
+    400.0,
+    550.0
+   ],
+   "cast_radius": [
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SelfCastMissingHPPerAbove": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StartingAoESize": [
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0
+    ],
+    "PercentMissingHPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     400.0,
+     550.0,
+     550.0,
+     550.0,
+     400.0,
+     400.0,
+     550.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    550.0,
+    550.0,
+    550.0,
+    400.0,
+    400.0,
+    550.0
+   ],
+   "cast_radius": [
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SelfCastMissingHPPerAbove": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StartingAoESize": [
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0
+    ],
+    "PercentMissingHPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     400.0,
+     550.0,
+     550.0,
+     550.0,
+     400.0,
+     400.0,
+     550.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "LissandraR",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    120.0,
+    100.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    400.0,
+    550.0,
+    550.0,
+    550.0,
+    400.0,
+    400.0,
+    550.0
+   ],
+   "cast_radius": [
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0,
+    690.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ]
+   },
+   "effect_amounts": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "data_values": {
+    "APRatio": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "SlowAmount": [
+     -0.30000001192092896,
+     -0.44999998807907104,
+     -0.6000000238418579,
+     -0.75,
+     -0.8999999761581421,
+     -1.0499999523162842,
+     -1.2000000476837158
+    ],
+    "SlowDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "EnemyCastDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SelfCastDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ],
+    "SelfCastFlatHeal": [
+     50.0,
+     100.0,
+     150.0,
+     200.0,
+     250.0,
+     300.0,
+     350.0
+    ],
+    "SelfCastMissingHPRatio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "SelfCastMissingHPPerAbove": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "StartingAoESize": [
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0,
+     292.0
+    ],
+    "PercentMissingHPRatio": [
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929,
+     0.550000011920929
+    ],
+    "_effect_{0e1136d1}": [
+     400.0,
+     550.0,
+     550.0,
+     550.0,
+     400.0,
+     400.0,
+     550.0
+    ],
+    "_effect_{210f9ec0}": [
+     100.0,
+     100.0,
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 12298
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraR",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraR"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "LissandraRSpellShieldCheck",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0,
+     1500.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 4106
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraRSpellShieldCheck",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraRSpellShieldCheck"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraRSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "cast_radius": [
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0,
+    220.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "coefficient2": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0,
+     650.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraRSlow",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraRAbility/LissandraRSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LissandraEBuffer",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    15.0,
+    14.0,
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    60.0,
+    70.0,
+    80.0,
+    90.0,
+    100.0,
+    110.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "_effect_{210f9ec0}": [
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ],
+    "_effect_{210f9ec0}": [
+     60.0,
+     70.0,
+     80.0,
+     90.0,
+     100.0,
+     110.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LissandraEBuffer",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 15.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraEBuffer"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    27.0,
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    105.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraE"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraE",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    27.0,
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    105.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    27.0,
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    105.0
+   ],
+   "damage": [
+    25.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraE",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    27.0,
+    24.0,
+    21.0,
+    18.0,
+    15.0,
+    12.0,
+    12.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    80.0,
+    85.0,
+    90.0,
+    95.0,
+    100.0,
+    105.0
+   ],
+   "damage": [
+    25.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "data_values": {
+    "BaseDamage": [
+     25.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "_effect_{0e1136d1}": [
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0,
+     25000.0
+    ],
+    "_effect_{210f9ec0}": [
+     80.0,
+     85.0,
+     90.0,
+     95.0,
+     100.0,
+     105.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraE",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraEDamage",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0,
+     1100.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraEDamage",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraEDamage"
+   ],
+   "evidence": "name:damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "damage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "slowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "slowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SlowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "_effect_{0e1136d1}": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ],
+    "_effect_{210f9ec0}": [
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0
+    ]
+   },
+   "data_values": {
+    "damage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "slowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "slowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SlowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "_effect_{0e1136d1}": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ],
+    "_effect_{210f9ec0}": [
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraQAbility/LissandraQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0,
+    3.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0
+   ],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "damage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "slowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "slowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SlowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "_effect_{0e1136d1}": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ],
+    "_effect_{210f9ec0}": [
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0
+    ]
+   },
+   "data_values": {
+    "damage": [
+     45.0,
+     80.0,
+     115.0,
+     150.0,
+     185.0,
+     220.0,
+     255.0
+    ],
+    "slowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "slowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "SlowDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "SlowPercentage": [
+     -0.1599999964237213,
+     -0.20000000298023224,
+     -0.23999999463558197,
+     -0.2800000011920929,
+     -0.3199999928474426,
+     -0.36000001430511475,
+     -0.4000000059604645
+    ],
+    "_effect_{0e1136d1}": [
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0,
+     10000.0
+    ],
+    "_effect_{210f9ec0}": [
+     55.0,
+     60.0,
+     65.0,
+     70.0,
+     75.0,
+     80.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 13327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraQ",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 8.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraQAbility/LissandraQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "LissandraSlow",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraPassiveAbility/LissandraSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LissandraPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {},
+   "data_values": {},
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LissandraPassiveBuff",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraPassiveAbility/LissandraPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "LissandraCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraCritAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LissandraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LissandraBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraBasicAttack2",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "LissandraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "LissandraBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraBasicAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraEMissile"
+   ],
+   "inherited_from": "LissandraE",
+   "evidence": "inherited:LissandraE"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraEMissile"
+   ],
+   "inherited_from": "LissandraE",
+   "evidence": "inherited:LissandraE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraEMissile"
+   ],
+   "inherited_from": "LissandraE",
+   "evidence": "inherited:LissandraE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraEMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    13.0,
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    8.0
+   ],
+   "cast_range": [
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0,
+    1025.0
+   ],
+   "cast_radius": [
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0,
+    210.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0,
+     1025.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraEMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 13.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraEAbility/LissandraEMissile"
+   ],
+   "inherited_from": "LissandraE",
+   "evidence": "inherited:LissandraE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.25099998712539673,
+    "behavior": "LissandraQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraQAbility/LissandraQMissile"
+   ],
+   "inherited_from": "LissandraQ",
+   "evidence": "inherited:LissandraQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "LissandraQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0,
+    700.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {
+    "coefficient": [
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158,
+     1.2000000476837158
+    ]
+   },
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0,
+     700.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": 0.25099998712539673,
+    "behavior": "LissandraQMissile",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraQAbility/LissandraQMissile"
+   ],
+   "inherited_from": "LissandraQ",
+   "evidence": "inherited:LissandraQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "LissandraPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": "magic",
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraPassiveAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Lissandra",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraPassiveAbility/LissandraPassiveAttack"
+   ],
+   "evidence": "wiki:after 4s Frozen Thralls shatter for 120-520 (+50% AP) magic damage to nearby enemies"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "LissandraPassiveAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0,
+    625.0
+   ],
+   "cast_radius": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "data_values": {
+    "_effect_{0e1136d1}": [
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0,
+     625.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": 24527
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "LissandraPassiveAttack",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Lissandra",
+    "Crowd control",
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraPassiveAbility/LissandraPassiveAttack"
+   ],
+   "evidence": "wiki:while alive Frozen Thralls slow nearby enemies by 25%"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "LissandraPassive",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_radius": [],
+   "mana_cost": [],
+   "damage": [],
+   "duration": [],
+   "ratios": {},
+   "effect_amounts": {
+    "MoveSpeedMod": [
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25
+    ],
+    "ExplosionDelay": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "Range": [
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0
+    ],
+    "Radius": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "data_values": {
+    "MoveSpeedMod": [
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25,
+     -0.25
+    ],
+    "ExplosionDelay": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "Range": [
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0,
+     1350.0
+    ],
+    "Radius": [
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0,
+     450.0
+    ],
+    "_effect_{0e1136d1}": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "tick_rate": [],
+   "stacks_cap": [],
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "LissandraPassive",
+    "atoms": []
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Lissandra",
+    "Summon (unit)"
+   ],
+   "binary": [
+    "Characters/Lissandra/Spells/LissandraPassiveAbility/LissandraPassive"
+   ],
+   "evidence": "wiki:Iceborn Subjugation spawns a Frozen Thrall from the corpse of a nearby enemy champion that dies"
+  }
+ }
+]

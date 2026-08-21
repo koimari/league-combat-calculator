@@ -7,17 +7,21 @@ Why each slot is non-generic:
   "Maximum Magic Damage" (350 / 500 / 650 + 130 / 140 / 150% AP — the
   maximum row is exactly twice the minimum), with the description
   "deals magic damage, increased by 0% : 100% (based on target's missing
-  health)".  The previous packet priced the maximum row unconditionally.
-  The corrected parser prices the minimum row and scales it up to +100%
-  (the maximum row) linearly as the target's missing-health ratio rises
-  from 2/3 (target at 33% health) to 1.0 (target at 0 health), evaluated
+  health)" and the live tooltip ("1.5% per 1% of target's missing
+  health; capped at 66.66% missing health").  The previous packet priced
+  the maximum row unconditionally.  The corrected parser prices the
+  minimum row and scales it up to +100% (the maximum row) at 1.5% per 1%
+  missing health, capped at 66.66% missing health (target at 33% health;
+  the pass-16 decision: boost = min(1, missing_ratio / (2/3))), evaluated
   per cast against the target's live health by the fight engine.
 - Q (Baleful Strike) is a plain "Magic Damage" read (80 / 120 / 160 /
   200 / 240 + 50 / 55 / 60 / 65 / 70% AP).
 - W (Dark Matter) is a plain "Magic Damage" read (85 / 140 / 195 / 250 /
-  305 + 70 / 80 / 90 / 100 / 110% AP).
+  305 + 70 / 80 / 90 / 100 / 110% AP) whose strike lands 1.221 s from the
+  start of the cast.
 - P (Phenomenal Evil Power) and E (Event Horizon) deal no enemy damage
-  and are explicit no-damage slots.
+  and are explicit no-damage slots; E still authors the cage's sourced
+  stun as a typed control interval.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -28,25 +32,58 @@ from typing import Any, Callable
 from .engine import SlotCtx, build_parser
 from .module_helpers import delayed_damage, no_damage_parser
 from .source_receipts import load_champion_sources
-from .slotlib import extract_cooldown, extract_named, simple_damage
-from ..ability_spec import DamagePart
+from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
+from ..ability_spec import ControlEvent, DamagePart
 
-# Primordial Burst ramps from 0% to +100% extra damage between the target
-# at 33% health and the target at 0 health ("increased by 0% : 100% (based
-# on target's missing health)"; the Maximum row == 2x the Minimum row).
-_EXECUTE_MISSING_RATIO_START = 2.0 / 3.0
+# Primordial Burst gains +100% at 66.66% missing health and remains capped
+# thereafter ("increased by 0% : 100% (based on target's missing health)";
+# live tooltip "1.5% per 1% of target's missing health; capped at 66.66%
+# missing health"; the Maximum row == 2x the Minimum row; MaxExecuteMult
+# == 2.0 in the game files).  The pass-16 decision pins the curve to
+# min(1, missing_ratio / (2/3)) — NOT a ramp anchored at 2/3.
+_EXECUTE_MISSING_RATIO_CAP = 2.0 / 3.0
+
+
+def _event_horizon(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: one sourced stun interval after the cage rises."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+    return {
+        "name": ability.get("name", "Event Horizon"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "control_events": (
+            ControlEvent(
+                "stun",
+                extract_value(ability, "Stun Duration", rank),
+                time_offset=0.5,
+            ),
+        ),
+        "detail": "One edge stun after the sourced 0.5 second cage delay.",
+    }
 
 
 def _primordial_burst_scaled(base: float) -> Callable[[float], float]:
-    """R execute curve: +0% at 33% health, +100% (2x base) at 0 health."""
+    """R execute curve: +100% at 66.66% missing health, then capped.
+
+    boost = min(1, missing_ratio / (2/3)) — 1.5% per 1% missing health,
+    capped at 66.66% missing health (target at 33% health; pass-16
+    decision), evaluated per cast against the target's live health.
+    """
 
     def scaled(missing_ratio: float) -> float:
         boost = max(
             0.0,
             min(
                 1.0,
-                (missing_ratio - _EXECUTE_MISSING_RATIO_START)
-                / (1.0 - _EXECUTE_MISSING_RATIO_START),
+                missing_ratio / _EXECUTE_MISSING_RATIO_CAP,
             ),
         )
         return base * (1.0 + boost)
@@ -75,18 +112,23 @@ def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
         "event_order_certified": "single_hit",
         "detail": (
             "Minimum Magic Damage base, boosted up to +100% (Maximum row) "
-            "as the target's missing health crosses 33%"
+            "at 66.66% missing health, then capped"
         ),
     }
     return entry
 
 
 ASSUMPTIONS = [
-    "R (Primordial Burst) prices the Minimum Magic Damage row and ramps to "
-    "the Maximum row (+100%) as the target's missing health reaches 66.66% "
-    "('increased by 0% : 100% based on target's missing health').",
-    "Q and W price one enemy-champion hit each.",
-    "P and E deal no enemy damage and are explicit no-damage slots.",
+    "R (Primordial Burst) prices the Minimum Magic Damage row and reaches "
+    "the Maximum row (+100%) at 66.66% missing health, then caps "
+    "('increased by 0% : 100% based on target's missing health'; live "
+    "tooltip '1.5% per 1% of target's missing health; capped at 66.66% "
+    "missing health'; pass-16 curve min(1, missing_ratio / (2/3))).",
+    "Q and W price one enemy-champion hit each; W's strike lands 1.221s "
+    "from the start of the cast (the cached delay note).",
+    "P and E deal no enemy damage and are explicit no-damage slots; E "
+    "authors the cage's sourced stun as a control interval 0.5s after "
+    "the cast.",
 ]
 
 SOURCES = load_champion_sources("Veigar")
@@ -105,10 +147,7 @@ SLOTS = {
     # origin: "The delay starts at the beginning of the cast time." So
     # 1.221 s from the cast start is the whole sourced placement.
     "W": delayed_damage(delay=1.221, attr="Magic Damage", dmg_type="magic"),
-    "E": no_damage_parser(
-        "E",
-        "Event Horizon is a stun cage; no enemy damage.",
-    ),
+    "E": _event_horizon,
     "R": _primordial_burst,
 }
 
@@ -126,8 +165,9 @@ OPTIONS: list[dict[str, Any]] = []
 # Matter "deal[s] magic damage to enemies hit" on its delayed strike, and
 # Primordial Burst "deals magic damage, increased by 0% : 100%" — none of
 # the three applies control.  Event Horizon is where the kit's stun lives
-# ("knocked down and stunned for a duration"), but the cage deals no
-# damage, so it emits no event a marker could ride and stays absent.
+# ("knocked down and stunned for a duration"); the cage deals no damage,
+# so there is no part for a marker to ride and the slot authors the stun
+# as a typed ``control_events`` interval instead (``_event_horizon``).
 MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Veigar", cc_kinds=MODULE_CC)

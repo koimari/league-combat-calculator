@@ -64,6 +64,7 @@ from .item_behavior_catalog import (
 )
 from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
 from .item_outcomes import UTILITY_OUTCOMES
+from .item_source import effect_entries, effect_text
 
 # The attacker lane's five answers.  This vocabulary is a **user-visible label
 # set**, not only a payload key: the browser prints the status verbatim with
@@ -238,7 +239,8 @@ class ItemCoverage:
 # whose whole content is where one of its *cached stats* lands; that
 # declaration schedules nothing.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
-    "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions; the "
+    "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions "
+    "(a minion-class fight arms it through CLASS_RESTRICTED_ON_HITS); the "
     "full Wiki entry has no champion-facing sustain branch.",
     "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
@@ -246,12 +248,9 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Refillable Potion": "Potion charges restore the holder's health; they add no outgoing target damage.",
     "Executioner's Calling": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Oblivion Orb": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
-    "Quicksilver Sash": "Quicksilver is defensive cleanse.",
-    "Lost Chapter": "Enlighten restores mana on level-up; it adds no direct damage.",
     "Chempunk Chainsword": "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
     "timeline; it does not add direct damage.",
     "Cosmic Drive": "Spelldance grants movement speed, not direct damage.",
-    "Gluttonous Greaves": "Slay grants omnivamp, not outgoing damage.",
     "Morellonomicon": "Grievous Wounds reduces recipient healing in the coupled timeline; it "
     "does not add direct damage.",
     "Mortal Reminder": "Grievous Wounds reduces recipient healing in the coupled timeline; it "
@@ -264,6 +263,477 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Ionian Boots of Lucidity": "Ionian Insight grants summoner spell haste.",
     "Youmuu's Ghostblade": "Haunt and Wraith Step grant movement speed.",
 }
+
+
+# ---------------------------------------------------------------------------
+# Stats-only certification (docs/roadmap-100.md §1, the 92 SR-admitted
+# ``stats_only`` items)
+# ---------------------------------------------------------------------------
+#
+# ``stats_only`` means item_model_coverage found no OUTGOING-damage mechanic
+# on the item's OWN HOLDER to model -- it is not a claim that the cached
+# entry is textually numberless.  51 of the 92 SR-admitted stats_only items
+# have no passive/active in the cache at all (potions, wards, components,
+# most boots).  The other 41 carry a real, numeric passive/active -- shields
+# (Bloodthirster, Hexdrinker, Kaenic Rookern, the Lifeline family),
+# Grievous Wounds, movement speed, stasis, slows, or an ally-directed
+# heal/shield routed through the separate support ledger
+# (item_support_effects.py) -- and are still correctly ``stats_only``
+# because none of that text adds outgoing TDD from the item's own holder in
+# this 1v1 attacker fight model.
+#
+# The drift risk this section guards is narrower than "does this item have
+# numbers": every one of those 41 items is matched by NAME ONLY in
+# ``_REVIEWED_STATS_ONLY`` / the defensive-``effect_type`` branch above, so a
+# future Wiki refresh that silently appends a new outgoing-damage clause to
+# one of those named passives (without renaming it) would keep sailing
+# through as ``stats_only`` forever -- the classification never re-reads the
+# text.  Pin the exact cached branch text captured at certification time
+# (2026-08-20) so ``tests/test_stats_only_items.py`` fails loudly, not
+# silently, the moment any certified item's effect text changes at all.  A
+# text difference does not by itself prove a new mechanic appeared; it means
+# a human must re-read the branch and either re-pin the fingerprint (no
+# mechanic change) or reclassify the item (a mechanic was added).
+# Six items left this registry with the declaration-driven classifier: Diadem
+# of Songs, Dream Maker, Echoes of Helia, Moonstone Renewer and Solstice
+# Sleigh declare ally_packet mechanics the support ledger schedules
+# (``modeled_state``), and Spirit Visage declares a sustain multiplier
+# (``modeled_effect``).  None of them is ``stats_only`` any more, so the
+# drift guard no longer applies to them; it is not a de-certification.
+_STATS_ONLY_CERTIFIED_EFFECT_TEXT: dict[str, tuple[tuple[str, str, str], ...]] = {
+    "Bramble Vest": (
+        (
+            "passive",
+            "Thorns",
+            "When struck by a basic attack [[on-hit]], deal {{as|10 magic "
+            "damage}} to the attacker and, if they are a champion, inflict "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Force of Nature": (
+        (
+            "passive",
+            "Steadfast",
+            "Taking {{as|magic damage}} from champions generates a stack of "
+            "''Steadfast'' for 7 seconds, stacking up to 8 times with the "
+            "duration refreshing on subsequent {{as|magic damage}} from "
+            "them and whenever dealing damage to them. Becoming "
+            "{{tip|immobilize|immobilized}} by an enemy champion generates "
+            "2 stacks and also refreshes the duration. Once per {{tip|cast "
+            "instance}}, each incoming basic attack, ability, or item "
+            "effect can only generate 1 stack of ''Steadfast'' from their "
+            "damage every 1 second. At '''maximum''' stacks, gain {{as|70 "
+            "'''bonus''' magic resistance}} and {{as|6% '''bonus''' "
+            "movement speed}}.",
+        ),
+    ),
+    "Jak'Sho, The Protean": (
+        (
+            "passive",
+            "Voidborn Resilience",
+            "Gain a stack for each second [[Combat status|in combat]] with "
+            "enemy champions, stacking up to 5 times. At '''maximum''' "
+            "stacks, increase your {{as|'''bonus''' armor}} and "
+            "{{as|'''bonus''' magic resistance}} by 30% until the end of "
+            "combat.",
+        ),
+    ),
+    "Thornmail": (
+        (
+            "passive",
+            "Thorns",
+            "When struck by a basic attack [[on-hit]], deal {{as|20 {{as|(+ "
+            "10% '''bonus''' armor)}} magic damage|magic damage}} to the "
+            "attacker and, if they are a champion, inflict them with "
+            "{{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Armored Advance": (
+        (
+            "passive",
+            "Plating",
+            "Reduces all incoming {{tip|basic damage}} by 10% (''excluding "
+            "from [[turret]] attacks'').",
+        ),
+        (
+            "passive",
+            "Noxian Endurance",
+            "Taking {{as|physical damage}} from champions grants you a "
+            "{{tip|shield}} that absorbs {{pp|100 to 200|color=pd}} "
+            "{{as|(+ 8% '''bonus''' health)}} {{as|physical damage}} for 5 "
+            "seconds.",
+        ),
+    ),
+    "Banshee's Veil": (
+        (
+            "passive",
+            "Annul",
+            "Grants a {{tip|spell shield}} that blocks the next hostile "
+            "ability (40 second cooldown, timer restarts upon taking damage "
+            "from champions).",
+        ),
+    ),
+    "Bloodthirster": (
+        (
+            "passive",
+            "Ichorshield",
+            "Convert the {{tip|healing}} received from {{sti|life steal}} in "
+            "excess of {{as|'''maximum''' health}} into a {{tip|shield}} for "
+            "up to {{pp|165 + (315-165)/10*(x-1)|1;9 to 20 by "
+            "1|formula=165 base, then +15 per level starting from level "
+            "9.}}, which lasts until destroyed.",
+        ),
+    ),
+    "Boots of Swiftness": (("passive", "Fleetfooted", "Gain 25% [[slow resist]]."),),
+    "Celestial Opposition": (
+        (
+            "passive",
+            "Blessing of the Mountain",
+            "Become ''Blessed'' to reduce incoming champion damage by "
+            "{{rd|35%|25%}}, lingering for 2 seconds after taking damage "
+            "from a champion. After the linger ends, you lose ''Blessed'' "
+            "to unleash a shockwave around you that {{tip|slow|slows}} "
+            "enemies within 500 units by 50% for {{fd|1.5}} seconds (18 "
+            "second cooldown, timer restarts upon taking damage from "
+            "champions).",
+        ),
+        (
+            "active",
+            "Ward",
+            "Consumes a charge to place a {{tip|Stealth Ward}} at the "
+            "target location, which grants {{tip|sight}} of the "
+            "surrounding area. Charges refill upon visiting the shop.",
+        ),
+    ),
+    "Chainlaced Crushers": (
+        (
+            "passive",
+            "Noxian Persistence",
+            "Taking {{as|magic damage}} from champions grants you a "
+            "{{tip|shield}} that absorbs {{pp|100 to 200|color=md}} "
+            "{{as|(+ 8% '''bonus''' health)}} {{as|magic damage}} for 5 "
+            "seconds.",
+        ),
+    ),
+    "Chempunk Chainsword": (
+        (
+            "passive",
+            "Hackshorn",
+            "Dealing {{as|physical damage}} to enemy champions inflicts "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Cosmic Drive": (
+        (
+            "passive",
+            "Spelldance",
+            "Dealing {{as|magic|magic damage}} or {{as|true|true damage}} "
+            "damage to an enemy champion grants you {{as|20 '''bonus''' "
+            "movement speed|ms}} for 4 seconds.",
+        ),
+    ),
+    "Crimson Lucidity": (
+        (
+            "passive",
+            "Ionian Lucidity",
+            "Gain 20 [[Haste#Summoner spell haste|summoner spell haste]].",
+        ),
+        (
+            "passive",
+            "Noxian Haste",
+            "{{tip|heal|Healing}}, {{tip|shield|shielding}} or buffing an "
+            "ally, damaging abilities against champions, and using "
+            "[[summoner spell]]s grants you {{as|{{rd|10%|8%}} '''bonus''' "
+            "movement speed}} for 4 seconds. This can be triggered from the "
+            "same {{tip|cast instance}} only once every 4 seconds.",
+        ),
+    ),
+    "Doran's Helm": (
+        (
+            "passive",
+            "Helping Hand",
+            "Basic attacks deal {{as|5 '''bonus''' physical damage}} "
+            "[[on-hit]] against [[minions]].",
+        ),
+    ),
+    "Edge of Night": (
+        (
+            "passive",
+            "Annul",
+            "Grants a {{tip|spell shield}} that blocks the next hostile "
+            "ability (40 second cooldown, timer restarts upon taking damage "
+            "from champions).",
+        ),
+    ),
+    "Executioner's Calling": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|physical damage}} to enemy champions inflicts "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Guardian Angel": (
+        (
+            "passive",
+            "Rebirth",
+            "Upon taking [[death|lethal damage]], enter "
+            "{{tip|resurrection}} for 4 seconds, during which you are "
+            "{{tip|invulnerable}}, {{tip|untargetable}}, and unable to act, "
+            "and afterwards {{tip|heal}} for {{as|50% of '''base''' "
+            "health}} and restore {{as|100% of '''maximum''' mana}} (300 "
+            "second cooldown, starts after resurrection ends).",
+        ),
+    ),
+    "Gustwalker Hatchling": (
+        (
+            "passive",
+            "Jungle Companions",
+            "Summon a ''Gustwalker Hatchling'' companion to assist you in "
+            "combat against monsters.",
+        ),
+        (
+            "passive",
+            "Gustwalker's Gait",
+            "Feed your companion enough treats to evolve it and upgrade "
+            "your {{si|Smite}}. Upon the companion reaching its final "
+            "evolution, this item is consumed, granting you the "
+            "{{bi|Gustwalker's Gait}} buff.",
+        ),
+    ),
+    "Hexdrinker": (
+        (
+            "passive",
+            "Lifeline",
+            "If you would take {{as|magic damage}} that would reduce you "
+            "below {{as|30% of your '''maximum''' health}}, you first gain "
+            "a {{tip|shield}} that absorbs {{as|{{rd|110 to 280|82.5 to "
+            "210|pp=true}} magic damage}} for {{fd|2.5}} seconds.",
+        ),
+    ),
+    "Immortal Shieldbow": (
+        (
+            "passive",
+            "Lifeline",
+            "If you would take damage that would reduce you below "
+            "{{as|30% of your '''maximum''' health}}, you first gain a "
+            "{{tip|shield}} that absorbs {{rd|400 to 700 for 11|400*0.8 to "
+            "700*0.8 for 11|levels=1;9 to 18|pp=true}} damage for 3 "
+            "seconds.",
+        ),
+    ),
+    "Ionian Boots of Lucidity": (
+        (
+            "passive",
+            "Ionian Insight",
+            "Gain 10 [[Haste#Summoner spell haste|summoner spell haste]].",
+        ),
+    ),
+    "Kaenic Rookern": (
+        (
+            "passive",
+            "Magebane",
+            "After not taking {{as|magic damage}} for 15 seconds, gain a "
+            "{{tip|shield}} that absorbs {{as|magic damage}} equal to "
+            "{{as|15% of '''maximum''' health}} until destroyed.",
+        ),
+    ),
+    "Morellonomicon": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|magic damage}} to enemy champions inflicts them "
+            "with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Mortal Reminder": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|physical damage}} to enemy champions inflicts "
+            "them with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Mosstomper Seedling": (
+        (
+            "passive",
+            "Jungle Companions",
+            "Summon a ''Mosstomper Seedling'' companion to assist you in "
+            "combat against monsters.",
+        ),
+        (
+            "passive",
+            "Mosstomper's Courage",
+            "Feed your companion enough treats to evolve it and upgrade "
+            "your {{si|Smite}}. Upon the companion reaching its final "
+            "evolution, this item is consumed, granting you the "
+            "{{bi|Mosstomper's Courage}} buff.",
+        ),
+    ),
+    "Oblivion Orb": (
+        (
+            "passive",
+            "Grievous Wounds",
+            "Dealing {{as|magic damage}} to enemy champions inflicts them "
+            "with {{tip|Grievous Wounds}} for 3 seconds.",
+        ),
+    ),
+    "Phantom Dancer": (
+        ("passive", "Spectral Waltz", "Become permanently {{tip|ghosted}}."),
+    ),
+    "Plated Steelcaps": (
+        (
+            "passive",
+            "Plating",
+            "Reduces all incoming {{tip|basic damage}} by 10% (''excluding "
+            "from [[turret]] attacks'').",
+        ),
+    ),
+    "Protoplasm Harness": (
+        (
+            "passive",
+            "Lifeline",
+            "If you would take damage that would reduce you below "
+            "{{as|30% of your '''maximum''' health}}, you first gain "
+            "{{as|{{pp|100 to 300|tooltipSize=20}} '''bonus''' health}} for "
+            "5 seconds and {{tip|heal}} yourself for {{pp|100 to 400|"
+            "tooltipSize=20|color=heal}} {{as|(+ 175% '''bonus''' armor)}} "
+            "{{as|(+ 175% '''bonus''' magic resistance)}} over the same "
+            "duration, during which you also gain 15% increased [[size]], "
+            "{{as|10% '''bonus''' movement speed}}, and 25% "
+            "{{tip|tenacity}}.",
+        ),
+    ),
+    "Randuin's Omen": (
+        (
+            "passive",
+            "Resilience",
+            "Reduces incoming damage from {{tip|critical strike|critical "
+            "strikes}} by 30%.",
+        ),
+        (
+            "active",
+            "Humility",
+            "Unleash a shockwave around you that {{tip|slow|slows}} "
+            "nearby enemies by 70% for 2 seconds.",
+        ),
+    ),
+    "Refillable Potion": (
+        (
+            "passive",
+            None,
+            "Holds charges that refill upon visiting the [[shop]].",
+        ),
+    ),
+    "Rylai's Crystal Scepter": (
+        (
+            "passive",
+            "Rimefrost",
+            "Dealing {{tip|ability damage}} {{tip|slow|slows}} affected "
+            "[[unit]]s by 30% for 1 second.",
+        ),
+    ),
+    "Scorchclaw Pup": (
+        (
+            "passive",
+            "Jungle Companions",
+            "Summon a ''Scorchclaw Pup'' companion to assist you in "
+            "combat against monsters.",
+        ),
+        (
+            "passive",
+            "Scorchclaw's Slash",
+            "Feed your companion enough treats to evolve it and upgrade "
+            "your {{si|Smite}}. Upon the companion reaching its final "
+            "evolution, this item is consumed, granting you the "
+            "{{bi|Scorchclaw's Slash}} buff.",
+        ),
+    ),
+    "Seeker's Armguard": (
+        (
+            "active",
+            "Time Stop",
+            "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} "
+            "seconds, rendering you {{tip|untargetable}} and "
+            "{{tip|invulnerable}} for the duration but also unable to "
+            "move, declare [[basic attack]]s, cast [[champion "
+            "ability|abilities]], use [[summoner spell]]s, or [[active "
+            "ability items|activate items]].",
+        ),
+    ),
+    "Serylda's Grudge": (
+        (
+            "passive",
+            "Bitter Cold",
+            "Dealing [[ability damage]] to an enemy that is at or below "
+            "{{as|50% of their '''maximum''' health}} {{tip|slow|slows}} "
+            "them by 30% for 1 second.",
+        ),
+    ),
+    "Verdant Barrier": (
+        (
+            "passive",
+            "Annul",
+            "Grants a {{tip|spell shield}} that blocks the next hostile "
+            "ability (60 second cooldown, timer restarts upon taking damage "
+            "from champions).",
+        ),
+    ),
+    "Warden's Mail": (
+        (
+            "passive",
+            "Rock Solid",
+            "Every first incoming instance of {{tt|post-mitigation|Damage "
+            "calculated after modifiers}} {{tip|basic damage}} per "
+            "{{tip|cast instance}} is [[Damage modifier|reduced]] by 15, "
+            "with a '''maximum''' of 20% reduction each.",
+        ),
+    ),
+    "Youmuu's Ghostblade": (
+        (
+            "passive",
+            "Haunt",
+            "Gain {{as|{{rd|20|10}} '''bonus''' movement speed}} while "
+            "out-of-combat with enemy champions for 3 seconds.",
+        ),
+        (
+            "active",
+            "Wraith Step",
+            "Gain {{as|{{rd|20%|15%}} '''bonus''' movement speed}} and "
+            "{{tip|ghosted|ghosting}} for {{rd|6|4}} seconds.",
+        ),
+    ),
+    "Zhonya's Hourglass": (
+        (
+            "active",
+            "Time Stop",
+            "Put yourself in {{tip|stasis (buff)|stasis}} for {{fd|2.5}} "
+            "seconds, rendering you {{tip|untargetable}} and "
+            "{{tip|invulnerable}} for the duration but also unable to "
+            "move, declare [[basic attack]]s, cast [[champion "
+            "ability|abilities]], use [[summoner spell]]s, or [[active "
+            "ability items|activate items]].",
+        ),
+    ),
+}
+
+
+def stats_only_effect_fingerprint(
+    item: dict[str, Any],
+) -> tuple[tuple[str, str | None, str], ...]:
+    """Return one item's current ``(kind, effect_name, full_text)`` triples.
+
+    Used by the stats-only certification suite to diff a cached item's live
+    passive/active text against :data:`_STATS_ONLY_CERTIFIED_EFFECT_TEXT`.
+    An empty result means the cached item has no described passive or
+    active at all (the 51 undescribed stats-only items).
+    """
+    fingerprint = []
+    for kind, entry in effect_entries(item):
+        raw_name = entry.get("name")
+        name = str(raw_name) if raw_name is not None else None
+        fingerprint.append((kind, name, effect_text(entry)))
+    return tuple(fingerprint)
 
 
 # Concrete GitHub owners for source-backed gaps.  The full-entry audit exposes
@@ -383,6 +853,25 @@ def declares_only_defence(name: str) -> bool:
     return bool(families) and families <= _DEFENCE_FAMILIES
 
 
+def reviewed_as_inert(name: str) -> str | None:
+    """The reviewed "nothing runs here" sentence, when nothing contradicts it.
+
+    ``NO_RUNTIME_BEHAVIOR`` records a review — somebody read the full entry
+    and found no outgoing mechanic — and that outranks bare membership in the
+    options registry, because a record may join that registry carrying only
+    the citation a named boundary cites and an EMPTY options map.  Doran's
+    Helm and Ionian Boots do exactly that, and reading membership alone as
+    "its state is supplied through an explicit bounded scenario control"
+    publishes a control no request can pass.  An entry that does expose a
+    control contradicts the review and keeps its own rung.
+    """
+    if name not in NO_RUNTIME_BEHAVIOR:
+        return None
+    if ITEM_INPUT_OPTIONS.get(name, {}).get("options"):
+        return None
+    return NO_RUNTIME_BEHAVIOR[name]
+
+
 def declares_state(name: str) -> bool:
     """Declared behaviour whose numbers come out of supplied state."""
     families = _declared_families(name)
@@ -432,33 +921,120 @@ def gated_state_reason(name: str) -> str | None:
     return None
 
 
+# The suffix a registry entry uses for a key whose value is the *authority*
+# behind a gate rather than the gate's magnitude, and the one value of such a
+# key that means no current source authorizes it.  Two words of convention
+# rather than a list of items: any mechanic whose entry says its own gate is
+# unsourced is refused by the same rung, and an entry that later gains a
+# source stops being refused without anyone editing this file.
+_AUTHORITY_GATE_SUFFIX = "_gate_status"
+_AUTHORITY_UNAVAILABLE = "source_unavailable"
+
+
+def authority_gap_reason(name: str) -> str | None:
+    """The gate this item declares that no current source authorizes.
+
+    A gate decides whether the mechanic fires **at all**, so an unsourced one
+    is not a partial gap that the base case still covers: every trigger emits
+    a named denial and the mechanic contributes nothing.  Ranking a build on
+    that is the "scored as zero" failure the coverage lane exists to remove,
+    so the honest answer is ``withheld`` with the gate named.
+
+    Only ``*_gate_status`` is read, and deliberately.  A boundary or spatial
+    status ("we know the range, not the exact operator") narrows an amount the
+    rest of the declaration still prices; a *gate* leaves nothing behind it.
+    ``None`` means every gate the item declares is authorized.
+    """
+    for _, _, entry in registry_entries(name):
+        for key, value in sorted(entry.items()):
+            if not key.endswith(_AUTHORITY_GATE_SUFFIX):
+                continue
+            if str(value) != _AUTHORITY_UNAVAILABLE:
+                continue
+            gate = key[: -len(_AUTHORITY_GATE_SUFFIX)].replace("_", " ")
+            return (
+                f"{name}'s {gate} gate is authorized by no current source, so "
+                "every eligible trigger emits a named denial and the mechanic "
+                "is withheld rather than priced at zero."
+            )
+    return None
+
+
+# The suffix a registry key uses to declare that ONE named sub-effect has no
+# sourced magnitude.  It is a declaration and not a comment: nothing prices
+# the sub-effect, so the reason below can say which one is out of scope
+# without a table of item names beside it.
+_BOUNDARY_KEY_SUFFIX = "_unsourced"
+
+
+def declared_boundaries(name: str) -> tuple[str, ...]:
+    """Every sub-effect this item's own entry declares out of scope.
+
+    The key's stem names the mechanic the boundary is about — Gunmetal
+    Greaves' ``noxian_gait_magnitude_unsourced`` is Noxian Gait — so the
+    published sentence names it off the declaration rather than off a
+    sentence somebody typed beside the item.
+    """
+    found: list[str] = []
+    for _, _, entry in registry_entries(name):
+        for key, value in sorted(entry.items()):
+            if not key.endswith(_BOUNDARY_KEY_SUFFIX) or not value:
+                continue
+            stem = key[: -len(_BOUNDARY_KEY_SUFFIX)].rsplit("_", 1)[0]
+            found.append(stem.replace("_", " ").title())
+    return tuple(dict.fromkeys(found))
+
+
 def _state_reason(name: str, families: frozenset[RuleFamily]) -> str:
-    """Why a declared item's damage-relevant state is supplied rather than run."""
+    """Why a declared item's damage-relevant state is supplied rather than run.
+
+    The mechanic is named, not just the route: an item that reaches this rung
+    published one generic sentence for every member, which made the receipt
+    say the same thing about Purify, Slay and Noxian Gait.  Both halves are
+    read off declarations — the mechanic off its own rules, the boundary off
+    the ``*_unsourced`` key that declares it — so no item name enters here.
+    """
+    mechanics = _mechanic_list(behavior_rules(name))
     if name in ITEM_INPUT_OPTIONS:
-        return (
-            f"{name}'s damage-relevant state is supplied through an explicit "
-            "bounded scenario control, and its declared behaviour reads it."
+        subject = mechanics or f"{name}'s damage-relevant state"
+        sentence = (
+            f"{subject} is supplied through an explicit bounded scenario "
+            "control, and its declared behaviour reads it."
         )
-    return (
-        "The declared behaviour carries progression or cross-participant state "
-        "that the shared participant ledger schedules: "
-        + ", ".join(sorted(family.value for family in families & _STATE_FAMILIES))
-        + "."
-    )
+    else:
+        subject = mechanics or "The declared behaviour"
+        sentence = (
+            f"{subject} carries progression or cross-participant state that "
+            "the shared participant ledger schedules: "
+            + ", ".join(sorted(family.value for family in families & _STATE_FAMILIES))
+            + "."
+        )
+    boundaries = declared_boundaries(name)
+    if boundaries:
+        sentence += (
+            f"  {', '.join(boundaries)} stays out of scope: the entry declares "
+            "its magnitude unsourced, so nothing prices it."
+        )
+    return sentence
 
 
 def _declared_status(
     name: str, families: frozenset[RuleFamily]
 ) -> tuple[ItemCoverageStatus, str]:
     """The status of an item whose behaviour is declared, from its families."""
+    inert = reviewed_as_inert(name)
+    if inert is not None:
+        return "stats_only", inert
     if declares_only_defence(name):
         gated = gated_state_reason(name)
         if gated is not None:
             return "stats_only", gated
+        mechanics = _mechanic_list(behavior_rules(name))
+        subject = mechanics or "Every declared family on this item"
         return (
             "stats_only",
-            "Every declared family on this item is a defence: the represented "
-            "mechanic changes durability, not outgoing TDD.",
+            f"{subject} is a defence: the represented mechanic changes "
+            "durability, not outgoing TDD.",
         )
     if declares_state(name):
         return "modeled_state", _state_reason(name, families)
@@ -493,6 +1069,12 @@ def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverag
     """
     record = _cached_record(name)
     unserved = unserved_lanes(name, needed)
+    # Lane-scoped, and the lane is the argument: a gate decides whether the
+    # holder's own mechanic fires, so it refuses the lanes that PRICE that
+    # firing (the pair engine, and BIS ranking through it).  The target
+    # lane's question is what the actor wearing it survives, and the defence
+    # ladder behind that answer is unchanged by the gate.
+    unauthorized = authority_gap_reason(name) if needed & ATTACKER_LANES else None
     if unserved:
         status: ItemCoverageStatus = "withheld"
         reason = (
@@ -500,10 +1082,16 @@ def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverag
             "it there, so its contribution is withheld rather than priced as "
             "zero."
         )
+    elif unauthorized is not None:
+        status = "withheld"
+        reason = unauthorized
     else:
         families = _declared_families(name)
         if families:
             status, reason = _declared_status(name, families)
+        elif reviewed_as_inert(name) is not None:
+            status = "stats_only"
+            reason = NO_RUNTIME_BEHAVIOR[name]
         elif name in ITEM_INPUT_OPTIONS:
             status = "modeled_state"
             reason = "The item exposes its damage-relevant state as a scenario control."
@@ -1163,6 +1751,22 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
         "packet:Bandlepipes — Fanfare",
     ),
     "Cull": ("item_effects.item_state_receipts", "option:reap_minion_kills"),
+    # Three items the reviewed-absence table used to carry.  Each exposes a
+    # real bounded control, so the classifier reaches ``modeled_state``
+    # through it and "we looked and nothing runs" was the wrong claim: what
+    # runs is whatever the control arms.
+    "Gluttonous Greaves": (
+        "item_effects.item_state_receipts",
+        "option:slay_stacks",
+    ),
+    "Lost Chapter": (
+        "damage._enlighten_decl_for",
+        "option:enlighten_level_up_seconds",
+    ),
+    "Quicksilver Sash": (
+        "item_support_effects._active_seconds_for",
+        "option:active_seconds",
+    ),
     "Endless Hunger": (
         "item_effects.item_state_receipts",
         "option:feast_active_seconds",
@@ -1226,6 +1830,7 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Frozen Heart": "roster_composition.target_overrides",
     "Rod of Ages": "item_effects.input_option_stat_bonuses",
     "Guardian Angel": "defensive_effects.resolve_starting_defenses",
+    "Guardian's Horn": "defensive_effects.resolve_starting_defenses",
     "Immortal Path": "survival.transitions.recovery_multiplier",
     "Kaenic Rookern": "defensive_effects.resolve_starting_defenses",
     "Knight's Vow": "item_support_effects.schedule_knights_vow",
@@ -1274,6 +1879,7 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
     "Cosmic Drive": ("", "source"),
     "Cull": ("item_support_effects.derive_item_support_effects", "packet:Cull — Reap"),
     "Edge of Night": ("defensive_effects.resolve_starting_defenses", "effects"),
+    "Verdant Barrier": ("defensive_effects.resolve_starting_defenses", "effects"),
     "Force of Nature": ("survival.transitions.update_combat_state", "effects"),
     "Frozen Heart": ("roster_composition.target_overrides", "effects"),
     "Guardian Angel": ("defensive_effects.resolve_starting_defenses", "effects"),
@@ -1415,7 +2021,7 @@ _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
         "item_support_effects.derive_item_support_effects",
         ("Fimbulwinter — Everlasting",),
         "tests/test_item_support_effects.py"
-        "::test_fimbulwinter_everlasting_uses_current_mana_and_nearby_enemy_multiplier",
+        "::test_fimbulwinter_does_not_trigger_at_or_below_the_mana_gate",
     ),
     "Imperial Mandate": (
         "item_support_effects.derive_item_support_effects",
@@ -1827,6 +2433,22 @@ FRONTIER: Mapping[str, str] = {
         "Breaking Shockwave emits a walk packet no focused test exercises; #43 "
         "tracks the multi-target authoring debt."
     ),
+    "packet:Tear of the Goddess — Manaflow": (
+        "the Manaflow row is a PROJECTION of the typed mana ledger rather "
+        "than a mechanic of its own, so it owes no separate claim; #44 tracks "
+        "the charge-ledger review that would give it one."
+    ),
+    "packet:Umbral Glaive — Blackout": (
+        "Blackout is the ward-denial vision state, and the vision lane has no "
+        "focused test to quote yet; #40 tracks the review."
+    ),
+    "packet:{} — {}": (
+        "the cleanse actives compose their source from the item's own cleanse "
+        "declaration (``cleanse_eligibility.item_declaration``), so no literal "
+        "exists in the builder for a claim to quote — the declaration is the "
+        "home; #40 tracks giving the family its own AllyProducer member, "
+        "which retires this entry with the composed source."
+    ),
     "packet:Dream Maker — Purple Dream Bubble": (
         "Dream Maker's second walk packet: the item's support_packet claim "
         "quotes Blue Dream Bubble, and the Purple bubble's magic on-hit is "
@@ -1843,6 +2465,8 @@ __all__ = [
     "FRONTIER",
     "ItemCoverage",
     "NO_RUNTIME_BEHAVIOR",
+    "declared_boundaries",
+    "reviewed_as_inert",
     "SCORING_LANES",
     "item_model_coverage",
     "optimizer_candidate_coverage",
@@ -1852,6 +2476,7 @@ __all__ = [
     "require_optimizer_item_coverage",
     "require_target_item_coverage",
     "review_issue_refs",
+    "stats_only_effect_fingerprint",
     "target_build_coverage",
     "target_item_model_coverage",
 ]

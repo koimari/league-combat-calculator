@@ -34,9 +34,15 @@ class ActorRequest:
     role_quest_complete: bool = False
     ability_ranks: dict[str, int] | None = None
     champion_options: dict[str, Any] | None = None
+    support_target_selections: dict[str, int] | None = None
     cast_order: list[str] | None = None
     item_options: dict[str, dict[str, int]] | None = None
     ally_effects_enabled: bool = False
+    # The authored starting health of a roster card, bounded to
+    # (0, max health] by its parser.  ``None`` is full health -- the one
+    # way a participant enters the fight already wounded, read by
+    # ``survival.transitions.participant_pools``.
+    current_health: float | None = None
 
     @classmethod
     def of_params(cls, params: FightParams) -> "ActorRequest":
@@ -46,6 +52,7 @@ class ActorRequest:
             role_quest_complete=params.role_quest_complete,
             ability_ranks=params.ability_ranks,
             champion_options=params.champion_options,
+            support_target_selections=params.support_target_selections,
             cast_order=params.cast_order,
             item_options=params.item_options,
         )
@@ -153,9 +160,11 @@ def from_loadout(
             role_quest_complete=card.role_quest_complete,
             ability_ranks=card.ability_ranks,
             champion_options=card.champion_options,
+            support_target_selections=card.support_target_selections or None,
             cast_order=card.cast_order,
             item_options=card.item_options,
             ally_effects_enabled=card.ally_effects_enabled,
+            current_health=card.current_health,
         ),
         is_practice_dummy=card.is_practice_dummy,
     )
@@ -194,9 +203,14 @@ def actor_params(base: FightParams, actor: Combatant) -> FightParams:
         # the engine reads ``None`` as; the two are one answer here.
         ability_ranks=request.ability_ranks or None,
         champion_options=request.champion_options,
+        support_target_selections=request.support_target_selections,
         cast_order=request.cast_order,
         item_options=request.item_options,
         ally_stat_bonuses=None,
+        keystone=base.keystone if actor.participant_id == "main" else "",
+        keystone_options=(
+            base.keystone_options if actor.participant_id == "main" else {}
+        ),
     )
 
 
@@ -357,9 +371,12 @@ def actor_params_with_resource_restores(
 ) -> FightParams:
     """Attach one actor's typed external resource ledger to its fight params."""
     params = actor_params(base, actor)
-    if resource_restores is None:
-        return params
     return replace(
         params,
-        resource_restore_events=tuple(resource_restores.get(actor.participant_id, ())),
+        resource_restore_events=(
+            tuple(resource_restores.get(actor.participant_id, ()))
+            if resource_restores is not None
+            else ()
+        ),
+        resource_ledger_owner=actor.participant_id,
     )

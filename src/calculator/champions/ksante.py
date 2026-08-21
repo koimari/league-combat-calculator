@@ -88,6 +88,95 @@ def _ntofo(ctx: SlotCtx) -> dict[str, Any] | None:
     )(ctx)
 
 
+# W bonus-resistance ratios (P3 package 4A — typed declaration with
+# receipts).  The wiki's W rows carry the ratios ONLY inside the degraded
+# units text ("(+ 2% per 100 bonus armor) (+ 2% per 100 bonus magic
+# resistance) of target's maximum health"); the game file prices them as
+# MaxHealthDamageResistRatio 0.0002 per 1 bonus armor/MR (= 2% per 100)
+# and the All Out true-damage fraction RDamageIncreaseMin 0.1 /
+# RDamageIncreaseMax 0.8 of the physical formula — the wiki min/max true
+# rows are exactly those fractions (0.8% = 0.1 x 8%, 0.2% = 0.1 x 2%,
+# 6.4% = 0.8 x 8%, 1.6% = 0.8 x 2%).  The resist terms MUST use the
+# caster's BONUS armor/magic resistance (the game's mStat 1/6) — the
+# generic compound-unit resolver misattributes them to TOTAL stats.
+_W_PHYS_RESIST_PCT_PER_100 = 2.0
+_W_TRUE_MIN_RESIST_PCT_PER_100 = 0.2
+_W_TRUE_MAX_RESIST_PCT_PER_100 = 1.6
+
+
+def _require_row(ability: dict[str, Any], attribute: str) -> None:
+    """Fail loud when the named leveling row is absent (cache corruption)."""
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") == attribute:
+                return
+    raise KeyError(
+        f"K'Sante {ability.get('name', '?')} has no {attribute!r} leveling row"
+    )
+
+
+class _PathMakerRule:
+    """The typed Path Maker declaration (P3 package 4A).
+
+    W prices one physical packet: the cached flat row + the % max-health
+    term (base 8%, plus 2% per 100 BONUS armor and 2% per 100 BONUS
+    magic resistance — the game MaxHealthDamageResistRatio 0.0002,
+    wiki-fossilized in the degraded units).  In All Out the true-damage
+    range interpolates between the Minimum/Maximum Bonus True Damage
+    rows (the game's 10%..80% fractions of the physical formula) by the
+    w_charge fraction.  The bonus-resist terms are priced with the
+    caster's bonus stats (never the target's or the totals); the R
+    armor/MR-to-AD conversion and the 65% health threshold remain
+    named state.
+    """
+
+    def __init__(self) -> None:
+        self.physical_row_attribute = "Physical Damage"
+        self.min_true_row_attribute = "Minimum Bonus True Damage"
+        self.max_true_row_attribute = "Maximum Bonus True Damage"
+        self.base_max_health_percent = 8.0
+        self.resist_percent_per_100 = _W_PHYS_RESIST_PCT_PER_100
+        self.true_min_resist_percent_per_100 = _W_TRUE_MIN_RESIST_PCT_PER_100
+        self.true_max_resist_percent_per_100 = _W_TRUE_MAX_RESIST_PCT_PER_100
+        self.default = 1.0
+        self.min = 0.0
+        self.max = 1.0
+        self.step = 0.25
+        self.source = {
+            "label": "Local League Wiki cache — K'Sante W template + game file",
+            "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/W",
+            "revision_id": 3471720,
+            "revision_timestamp": "2022-10-16T16:25:10Z",
+            "parent_revision_id": 4011715,
+            "game_file": "data/bin/characters/ksante.bin.json "
+            "(MaxHealthDamage 0.08, MaxHealthDamageResistRatio 0.0002, "
+            "RDamageIncreaseMin 0.1 / Max 0.8)",
+            "note": "the resist ratios survive ONLY in the degraded units "
+            "text; the bonus attribution is game-verified (mStat 1/6 = "
+            "bonus armor / bonus magic resistance).",
+        }
+
+    def public_receipt(self) -> dict[str, Any]:
+        return {
+            "name": "K'Sante — Path Maker (W)",
+            "physical_row_attribute": self.physical_row_attribute,
+            "min_true_row_attribute": self.min_true_row_attribute,
+            "max_true_row_attribute": self.max_true_row_attribute,
+            "base_max_health_percent": self.base_max_health_percent,
+            "resist_percent_per_100": self.resist_percent_per_100,
+            "true_min_resist_percent_per_100": self.true_min_resist_percent_per_100,
+            "true_max_resist_percent_per_100": self.true_max_resist_percent_per_100,
+            "default": self.default,
+            "min": self.min,
+            "max": self.max,
+            "step": self.step,
+            "source": dict(self.source),
+        }
+
+
+KSANTE_PATH_MAKER_RULE = _PathMakerRule()
+
+
 def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -96,14 +185,34 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
-    physical = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    for attribute in (
+        "Physical Damage",
+        "Minimum Bonus True Damage",
+        "Maximum Bonus True Damage",
+    ):
+        _require_row(ability, attribute)
+    flat = extract_value(ability, "Physical Damage", rank, 0)
+    base_pct = extract_value(ability, "Physical Damage", rank, 1)
+    bonus_armor = ctx.stat("bonus_armor")
+    bonus_mr = ctx.stat("bonus_magic_resistance")
+    max_health = float(ctx.target_stat("target_max_health") or 0.0)
+    resist_pct = _W_PHYS_RESIST_PCT_PER_100 * (bonus_armor / 100.0) + (
+        _W_PHYS_RESIST_PCT_PER_100 * (bonus_mr / 100.0)
+    )
+    physical = flat + (base_pct + resist_pct) / 100.0 * max_health
     if bool(ctx.options.get("all_out", False)):
-        low = extract_named(
-            ability, "Minimum Bonus True Damage", rank, ctx.stats, ctx.target
+        min_flat = extract_value(ability, "Minimum Bonus True Damage", rank, 0)
+        min_pct = extract_value(ability, "Minimum Bonus True Damage", rank, 1)
+        max_flat = extract_value(ability, "Maximum Bonus True Damage", rank, 0)
+        max_pct = extract_value(ability, "Maximum Bonus True Damage", rank, 1)
+        min_resist_pct = _W_TRUE_MIN_RESIST_PCT_PER_100 * (bonus_armor / 100.0) + (
+            _W_TRUE_MIN_RESIST_PCT_PER_100 * (bonus_mr / 100.0)
         )
-        high = extract_named(
-            ability, "Maximum Bonus True Damage", rank, ctx.stats, ctx.target
+        max_resist_pct = _W_TRUE_MAX_RESIST_PCT_PER_100 * (bonus_armor / 100.0) + (
+            _W_TRUE_MAX_RESIST_PCT_PER_100 * (bonus_mr / 100.0)
         )
+        low = min_flat + (min_pct + min_resist_pct) / 100.0 * max_health
+        high = max_flat + (max_pct + max_resist_pct) / 100.0 * max_health
         true_value = low + (high - low) * charge
         # Both packets are the one dash, so the physical half lands at the
         # same authored instant as the true half.  In All Out "Path Maker
@@ -216,6 +325,7 @@ OPTIONS = [
         "max": 1.0,
         "step": 0.25,
         "label": "Path Maker charge fraction",
+        "state": KSANTE_PATH_MAKER_RULE.public_receipt(),
     },
     {
         "key": "r_terrain",

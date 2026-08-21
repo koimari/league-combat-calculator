@@ -722,6 +722,36 @@ def test_calculate_can_sum_one_damage_package_across_enemy_roster():
     assert all("timeline_coverage" in row["result"] for row in data["targets"])
 
 
+def test_calculate_applies_guardians_horn_to_enemy_ability_packets():
+    client = app_module.app.test_client()
+    base_payload = {
+        "champion": "Ezreal",
+        "level": 18,
+        "ability_ranks": {"Q": 5, "W": 0, "E": 0, "R": 0},
+        "enemies": [{"champion": "Ahri", "level": 18, "items": []}],
+    }
+    guarded_payload = {
+        **base_payload,
+        "enemies": [
+            {
+                "champion": "Ahri",
+                "level": 18,
+                "items": ["Guardian's Horn"],
+            }
+        ],
+    }
+
+    base = client.post("/api/calculate", json=base_payload)
+    guarded = client.post("/api/calculate", json=guarded_payload)
+
+    assert base.status_code == 200
+    assert guarded.status_code == 200
+    base_q = base.get_json()["targets"][0]["result"]["breakdown"]["Q"]
+    guarded_q = guarded.get_json()["targets"][0]["result"]["breakdown"]["Q"]
+    assert base_q["total_damage"] == pytest.approx(146.5)
+    assert guarded_q["total_damage"] == pytest.approx(131.5)
+
+
 def test_calculate_comparison_curve_recomputes_six_timed_windows():
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -1173,7 +1203,7 @@ def test_frontend_click_handlers_handle_missing_main_build_option_buckets():
     assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
 
 
-def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
+def test_damage_breakdown_leads_with_result_and_keeps_support_audit_disclosed():
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 
     assert "function breakdownOutcome" in source
@@ -1185,7 +1215,8 @@ def test_damage_breakdown_leads_with_result_and_keeps_event_audit_disclosed():
     # through killTimeLabel so a first-event defeat is "<1 s", never "0 s".
     assert "defeated at ${killTimeLabel(deathTime)" in source
     assert 'class="breakdown-audit"' in source
-    assert 'aria-label="Event order audit"' in source
+    assert 'aria-label="Recovery and support audit"' in source
+    assert 'aria-label="Event order audit"' not in source
 
 
 def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():
@@ -1265,7 +1296,7 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
 
     assert response.status_code == 200
     contract = response.get_json()["capabilities"]
-    assert contract["schema_version"] == 5
+    assert contract["schema_version"] == 6
     assert set(contract["participants"]) == {"main", "enemy", "ally"}
     assert (
         contract["participants"]["enemy"]["fields"]["champion"]["state_path"]
@@ -1739,6 +1770,18 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
     assert (
         options["Zhonya's Hourglass"]["options"]["stasis_active_seconds"]["max"] == 2.5
     )
+    # P3-3G: Mikael's Purify schema is served with the full bounded
+    # step-validated control and its source revision.
+    mikael_option = options["Mikael's Blessing"]["options"]["active_seconds"]
+    assert mikael_option == {
+        "type": "float",
+        "label": "Purify active seconds",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 30.0,
+        "step": 0.5,
+    }
+    assert options["Mikael's Blessing"]["source_revision_id"] == 3984364
     assert "function itemOptionSpec(id)" in source
     assert "definition.stat_effects?.[key]" in source
     assert "options[item.backendName || item.name] = { [spec.key]" in source
@@ -2037,7 +2080,7 @@ class TestIconUrlsAreHttps:
         )
         assert bloodmail["statConversions"]["bonus_health_to_ad_ratio"] == 0.025
         steraks = next(item for item in items if item["name"] == "Sterak's Gage")
-        assert steraks["statConversions"]["base_ad_to_bonus_ad_ratio"] == 0.45
+        assert steraks["statConversions"]["base_ad_to_bonus_ad_ratio"] == 0.5
         warmogs = next(item for item in items if item["name"] == "Warmog's Armor")
         assert warmogs["statConversions"]["item_bonus_health_ratio"] == 0.12
         dawncore = next(item for item in items if item["name"] == "Dawncore")
@@ -2187,7 +2230,7 @@ class TestIconUrlsAreHttps:
         )
 
         assert response.status_code == 200
-        assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 18.0
+        assert response.get_json()["champion_stats"]["magic_penetration_flat"] == 20.0
 
     def test_ability_icons_are_https(self):
         champions = app_module.app.test_client().get("/api/champions").get_json()

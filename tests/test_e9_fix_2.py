@@ -59,6 +59,7 @@ _DATA_BY_NAME = {
 }
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 
 # Unit-level parse context: level 18, no items (0 bonus AD / AP / crit).
 _PARSE_STATS = {
@@ -235,7 +236,7 @@ class TestIllaoiTentacleHeal:
                     "level": 18,
                     "items": [],
                     "role": "mid",
-                    "ability_ranks": _RANKS,
+                    "ability_ranks": _ENEMY_RANKS,
                 }
             ],
         )
@@ -504,6 +505,8 @@ class TestPantheonRows:
         abilities = _parse("Pantheon")
         percent = extract_value(_ability("Pantheon", "W"), "Physical Damage", 5, 0)
         assert abilities["W"]["total_raw"] == pytest.approx(percent / 100.0 * 2000.0)
+        assert abilities["W"]["parts"][0].cc_kind == "stun"
+        assert abilities["W"]["parts"][0].cc_duration == pytest.approx(1.0)
         data = _fight("Pantheon", target_health=2000)
         casts = int(data["breakdown"]["W"]["casts"])
         assert data["breakdown"]["W"]["total_damage"] == pytest.approx(
@@ -551,7 +554,7 @@ class TestRenataLeverageAndShield:
                     "level": 18,
                     "items": [],
                     "role": "mid",
-                    "ability_ranks": _RANKS,
+                    "ability_ranks": _ENEMY_RANKS,
                 }
             ],
         )

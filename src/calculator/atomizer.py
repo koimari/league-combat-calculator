@@ -118,6 +118,40 @@ def number_and_unit(text: str) -> tuple[list[float], list[str]]:
     return values, units
 
 
+def _content_stable_bytes(
+    domain: str, objects: dict[str, Any], source_ref: str | None
+) -> bytes:
+    """Canonical bytes for the parts of a domain payload that determine its
+    content identity: ``domain``, ``source_ref``, ``objects``. Deliberately
+    excludes ``generated_at`` — a live wall-clock timestamp — so hashing
+    this is reproducible across re-runs when the underlying content hasn't
+    changed."""
+    stable = {"domain": domain, "source_ref": source_ref, "objects": objects}
+    return json.dumps(stable, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def content_hash(domain: str, objects: dict[str, Any], source_ref: str | None) -> str:
+    """sha256 (first 16 hex chars) of the content-stable payload. This is
+    the exact hash published as the manifest's ``sha256`` receipt for a
+    domain, and is what ``hash_domain_file`` recomputes from disk."""
+    return hashlib.sha256(
+        _content_stable_bytes(domain, objects, source_ref)
+    ).hexdigest()[:16]
+
+
+def hash_domain_file(path: Path) -> str:
+    """Recompute the content-stable manifest hash for an on-disk domain
+    atom file (e.g. ``data/atoms/champions.json``). Reads the file's own
+    ``domain``/``source_ref``/``objects`` fields and ignores
+    ``generated_at``, so this equals the manifest's ``sha256`` for that
+    domain as long as the content hasn't changed — the receipt consistency
+    check tests rely on."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return content_hash(
+        payload["domain"], payload["objects"], payload.get("source_ref")
+    )
+
+
 def write_atoms(
     out_path: Path,
     *,
@@ -125,7 +159,16 @@ def write_atoms(
     objects: dict[str, list[dict[str, Any]]],
     source_ref: str | None = None,
 ) -> dict[str, Any]:
-    """Atomically write a domain atom file + manifest receipt."""
+    """Atomically write a domain atom file + manifest receipt.
+
+    The manifest's ``sha256`` is computed over the CONTENT-STABLE payload
+    only (``domain`` + ``source_ref`` + ``objects``, canonically
+    serialized) via :func:`content_hash` — NOT over the raw file bytes.
+    The file itself still carries a live ``generated_at`` timestamp (useful
+    metadata for humans inspecting the file), but that field is excluded
+    from the hash so re-running the atomizer with unchanged inputs produces
+    an identical manifest sha256 every time.
+    """
     payload = {
         "domain": domain,
         "generated_at": time.time(),
@@ -140,10 +183,18 @@ def write_atoms(
         "domain": domain,
         "object_count": len(objects),
         "atom_count": sum(len(rows) for rows in objects.values()),
-        "sha256": hashlib.sha256(out_path.read_bytes()).hexdigest()[:16],
+        "sha256": content_hash(domain, objects, source_ref),
         "source_ref": source_ref,
     }
     return manifest
+
+
+def write_manifest(path: Path, payload: dict[str, Any]) -> None:
+    """Atomically publish the domain manifest."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=1, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def split_effect_fragments(

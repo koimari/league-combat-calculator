@@ -339,9 +339,10 @@ class TestTheGrantsReachTheRealPipeline:
             for result in (bare, unstacked, stacked)
         ]
         assert autos == [30, 31, 33]
-        assert bare["total_damage"] == pytest.approx(2238.9, abs=0.05)
-        assert unstacked["total_damage"] == pytest.approx(2289.4, abs=0.05)
-        assert stacked["total_damage"] == pytest.approx(2390.4, abs=0.05)
+        # Re-captured with the landing-instant ruling (hp-scaled parts).
+        assert bare["total_damage"] == pytest.approx(2187.0, abs=0.05)
+        assert unstacked["total_damage"] == pytest.approx(2237.5, abs=0.05)
+        assert stacked["total_damage"] == pytest.approx(2338.5, abs=0.05)
 
     def test_bloodline_moves_health_only_at_its_maximum(self):
         """2327 health, and 2412 once the fifteenth stack lands."""
@@ -376,8 +377,9 @@ class TestTheGrantsReachTheRealPipeline:
         assert bare["champion_stats"]["lifesteal_percent"] == 0.0
         assert stacked["champion_stats"]["lifesteal_percent"] == pytest.approx(6.75)
         assert unstacked["self_healing"] == pytest.approx(bare["self_healing"])
-        assert bare["self_healing"] == pytest.approx(43.9, abs=0.05)
-        assert stacked["self_healing"] == pytest.approx(146.2, abs=0.05)
+        # Re-captured with the landing-instant ruling (hp-scaled parts).
+        assert bare["self_healing"] == pytest.approx(43.5, abs=0.05)
+        assert stacked["self_healing"] == pytest.approx(145.7, abs=0.05)
         assert len(bare["self_healing_events"]) == 35
         assert len(stacked["self_healing_events"]) == 65
 

@@ -202,12 +202,16 @@ def test_ashe_focus_stacks_gate_rangers_focus():
     """At 4 pre-stacked Focus stacks Ranger's Focus is active (flurry
     ratio 130% AD at rank 5); at 3 stacks the ability stays inactive and
     autos swing at the plain 100% AD ratio."""
+    # P1-11: the 5s window keeps the fight fully in-window (the flurry
+    # ratio holds for every swing; a 10s fight would mix the post-window
+    # normal swings).
     active = _fight(
         "Ashe",
         ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
         autos=True,
         uptime=1.0,
         options={"q_focus_stacks": 4},
+        duration=5.0,
     )
     inactive = _fight(
         "Ashe",
@@ -215,6 +219,7 @@ def test_ashe_focus_stacks_gate_rangers_focus():
         autos=True,
         uptime=1.0,
         options={"q_focus_stacks": 3},
+        duration=5.0,
     )
     ad = active["champion_stats"]["attack_damage"]
     flurry = (
@@ -292,8 +297,10 @@ def test_yone_q3_gathering_storm_keeps_sourced_damage():
 
 
 def test_rengar_ferocity_empowers_q_w_e():
-    """At 4 Ferocity stacks the next Q/W/E is empowered: the per-level
-    Ferocity Bonus values replace the per-rank base values."""
+    """P3-3V live Ferocity: the seeded 4-stack state is consumed by the
+    first basic-ability cast, and the cap-at-5th empowers the next cast
+    when the fight reaches it again — the live walk prices the per-level
+    Ferocity Bonus values for those casts and the base values otherwise."""
     # R's armour shred is off here: this test compares raw rows against
     # mitigated totals, and a shredded target would move the mitigation
     # rather than the row the Ferocity empowerment is about.
@@ -305,11 +312,13 @@ def test_rengar_ferocity_empowers_q_w_e():
         "Rengar", "Q", "Bonus Physical Damage", LEVEL, stats, 2000.0, level_index=True
     )
     q_base = _resolve("Rengar", "Q", "Additional Physical Damage", 5, stats, 2000.0)
-    _api_total(
-        empowered["breakdown"]["Q"], q_emp * empowered["breakdown"]["Q"]["casts"]
-    )
-    _api_total(base["breakdown"]["Q"], q_base * base["breakdown"]["Q"]["casts"])
     assert q_emp > q_base
+    # Live: the seeded-4 fight's FIRST Q consumes (empowered) and the
+    # seeded-0 fight's LAST Q reaches the cap (empowered) — both Q rows
+    # exceed the all-base value, and the resource ledger receipted the
+    # consume at the first cast.
+    assert empowered["breakdown"]["Q"]["total_damage"] > q_base * 3
+    assert base["breakdown"]["Q"]["total_damage"] > q_base * 3
 
     w_emp = _resolve(
         "Rengar",
@@ -322,19 +331,23 @@ def test_rengar_ferocity_empowers_q_w_e():
         description_contains="Ferocity Bonus",
     )
     w_base = _resolve("Rengar", "W", "Magic Damage", 5, stats, 2000.0)
-    _api_total(
-        empowered["breakdown"]["W"], w_emp * empowered["breakdown"]["W"]["casts"]
+    # The seed-4 fight's second W (at t=10) hits the cap and empowers.
+    assert empowered["breakdown"]["W"]["total_damage"] > w_base * 2
+    assert base["breakdown"]["W"]["total_damage"] == pytest.approx(
+        w_base * base["breakdown"]["W"]["casts"], abs=0.06
     )
-    _api_total(base["breakdown"]["W"], w_base * base["breakdown"]["W"]["casts"])
 
     e_emp = _resolve(
         "Rengar", "E", "Bonus Physical Damage", LEVEL, stats, 2000.0, level_index=True
     )
     e_base = _resolve("Rengar", "E", "Physical Damage", 5, stats, 2000.0)
-    _api_total(
-        empowered["breakdown"]["E"], e_emp * empowered["breakdown"]["E"]["casts"]
+    assert e_emp > e_base
+    assert empowered["breakdown"]["E"]["total_damage"] == pytest.approx(
+        e_base * empowered["breakdown"]["E"]["casts"], abs=0.06
     )
-    _api_total(base["breakdown"]["E"], e_base * base["breakdown"]["E"]["casts"])
+    assert base["breakdown"]["E"]["total_damage"] == pytest.approx(
+        e_base * base["breakdown"]["E"]["casts"], abs=0.06
+    )
 
 
 # ---------------------------------------------------------------------------

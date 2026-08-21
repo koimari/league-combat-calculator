@@ -67,13 +67,27 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "resource_type",
         "resource_restore",
         "resource_restore_per_proc",
+        "resource_restore_per_auto",
+        "mark_refund",
+        # P4-14: Darius W's asserted kill rule (cooldown halved + flat
+        # mana refund) — emitted only when the w_kill_assertion option is
+        # on; validated by the resource walk's fail-closed declaration.
+        "kill_refund",
         "resource_maximum_bonus",
         "resource_maximum_bonus_duration",
         "damage_type",
         "parts",
+        # P3 package 3V: the Ferocity-empowered part set (Rengar Q/W/E) —
+        # the engine prices it for live empowered casts chosen by the
+        # post-rotation stack walk.
+        "ferocity_parts",
         "cast_instances",
         "recast_of",
         "empowers_next_auto",
+        # P4: documentary certification surfaces on state rows (Yasuo/
+        # Yone P crit-conversion constants — the Asol rule pattern).
+        "atom_ids",
+        "certified_constants",
         "stat_buff",
         # A ``stat_buff`` an active grants is earned by casting it: the fight
         # engine skips the grant of a slot the resolved rotation never casts.
@@ -87,6 +101,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "proc_count",
         "dot_duration",
         "dot_tick_interval",
+        "deathfire_category",
         "stacking_dot",
         "stack_triggered_buff",
         "applies_dot_stack",
@@ -100,6 +115,8 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "target_max_health_sensitive",
         "requires_auto_timeline_coupling",
         "stored_damage",
+        "execute_threshold_ratio",
+        "execute_source",
         "detail",  # display text copied onto the ability's breakdown row
         "unit",  # count label for a proc row ("cleaves"); default is "hits"
         # producer diagnostics / display metadata
@@ -112,6 +129,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # into the damage timeline by the fight engine; they are not inferred
         # from aggregate totals.
         "damage_events",
+        "control_events",
+        "control_source_atoms",
+        "cc_reviewed",
         "event_phase",
         # Explicit module-owned proof that a dynamic packet is one hit at
         # the cast boundary; this is never inferred from part count alone.
@@ -131,7 +151,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # heals the caster, for a share the healing rule cannot derive from
         # the cache because it is champion-option state (Warwick's Eternal
         # Hunger heals 100% of its damage below 50% maximum health, 250%
-        # below 25%).  The champion's rule in ``healing_legacy`` reads it
+        # below 25%).  The champion's own heal resolver reads it
         # off the entry.
         "self_heal_share_of_damage",
         # Module-declared state the champion's self-heal rule reads
@@ -143,12 +163,30 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # Mordekaiser's Realm of Death drains — is priced here, where both
         # are in hand, and placed there.  The fight engine never reads it.
         "self_heal_state",
+        # Module-authored non-damage state packets.  The pipeline expands
+        # these once per accepted cast and sends them to the participant
+        # ledger as typed state transitions.
+        "self_state_events",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
         # once in ``_apply_stat_buff_ultimates`` so ability crit scaling and
         # the auto-attack simulation share the converted values.
         "crit_modifier",
+        # A source-backed ability projectile marker used by the coupled
+        # target-defense ledger.  It is stamped from the cached ability row.
+        "skillshot",
+        # A source-backed area-ability marker used by Jax Counter Strike.
+        "area_damage",
+        # This row's damage is NOT the caster's own action -- pets, summons
+        # and persistent zones.  A charmed, stunned or rooted Zyra stops
+        # casting; her plants keep attacking, and so does an Annie Tibbers
+        # or a Malzahar voidling.  The walk's attacker-state gate exempts
+        # such a row from crowd control only: the *target's* stasis,
+        # invulnerability and untargetability still block it, because those
+        # are facts about who is being hit rather than about who is acting.
+        "cast_while_disabled",
+        "defensive_interaction",
     }
 )
 
@@ -379,6 +417,15 @@ def _stamp_slot_facts(
     """
     ability_json = ctx.ability()
     _stamp_cast_time(entry, ability_json)
+    if ability_json is not None:
+        # Source-backed delivery markers the coupled target-defense ledger
+        # reads (Braum E / Yasuo W block projectiles; Jax E counters area
+        # damage): stamped from the cached ability row, never inferred.
+        if ability_json.get("projectile") not in (None, ""):
+            entry.setdefault("skillshot", True)
+        spell_effects = str(ability_json.get("spellEffects", "")).lower()
+        if "aoe" in spell_effects or "area of effect" in spell_effects:
+            entry.setdefault("area_damage", True)
     _stamp_resource_cost(
         entry,
         ability_json,
@@ -470,6 +517,18 @@ def _validate_cc_event_contract(
     while leaving the coarse row it rides on unreviewed.
     """
     parts = entry.get("parts") or ()
+    for part in parts:
+        # A sourced duration with no kind is half a declaration; the kind
+        # arrives from the part itself or from MODULE_CC (stamped before
+        # this check), never later.
+        if (
+            getattr(part, "cc_duration", 0.0) > 0
+            and getattr(part, "cc_kind", None) is None
+        ):
+            raise ValueError(
+                f"{champion_name} entry {result_key!r}: a part authors "
+                f"cc_duration={part.cc_duration} without a cc_kind"
+            )
     cc_parts = [part for part in parts if getattr(part, "cc_kind", None) is not None]
     if not cc_parts:
         return
@@ -629,6 +688,15 @@ def _apply_module_cc(
     all three alike, where a declaration on a row that DOES price damage
     returned quietly and stamped nothing.
     """
+    if kind == "none":
+        # The reviewed no-CC statement: the fight engine's event rows read
+        # it as ``cc_reviewed`` (a row with no kind at all is unreviewed).
+        if entry.get("control_events"):
+            raise ValueError(
+                f"{champion_name} slot {slot!r}: MODULE_CC declares no crowd "
+                "control but the entry authors control_events"
+            )
+        entry["cc_reviewed"] = True
     parts = entry.get("parts") or ()
     if not parts:
         marker = _empower_marker_part(entry, kind, champion_name, slot)

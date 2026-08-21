@@ -598,9 +598,21 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
     assert result["ranked_builds"][0]["items"] != result["ranked_builds"][1]["items"]
 
 
-def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
+def test_candidate_coverage_alone_does_not_certify_a_coarse_search(
     monkeypatch,
 ):
+    """Certification is a conjunction, and this is the half that fails.
+
+    Candidate coverage is complete here by construction, but one candidate
+    — Fimbulwinter — evaluates coarsely: Everlasting needs an authored
+    immobilize/slow marker on the ability packet that armed it, and Ahri's
+    W and R carry no ``cc_kind`` (``MODULE_CC`` names only the slots that
+    bear crowd control).  So the search is exhaustive over a complete
+    candidate set and still not certified, which is exactly the
+    distinction the two coverage fields exist to keep apart.  The
+    both-axes-true case is the test below, which makes the timelines exact
+    as well.
+    """
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda items: {
@@ -622,10 +634,15 @@ def test_candidate_item_coverage_alone_does_not_certify_partial_timelines(
         locked_boots="Sorcerer's Shoes",
     )
 
-    assert result["is_certified_best"] is False
+    assert result["candidate_coverage"]["complete"] is True
+    assert result["candidate_coverage"]["withheld_count"] == 0
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert result["search_timeline_coverage"]["complete"] is False
-    assert result["search_timeline_coverage"]["partial_evaluations"] > 0
+    assert result["is_certified_best"] is False
+    coverage = result["search_timeline_coverage"]
+    assert coverage["complete"] is False
+    assert coverage["excluded_evaluations"] == 0
+    assert coverage["partial_evaluations"] == 1
+    assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
 
 
 def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(

@@ -33,6 +33,7 @@ from .slotlib import (
     find_named_leveling,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 
 # Pick a Card's three card branches, in the cycle order the game presents
@@ -76,9 +77,20 @@ def _card_parser(occurrence: int, name: str, cc_kind: str):
     return parse
 
 
-_CARDS = tuple(
-    _card_parser(occurrence, name, cc_kind)
-    for occurrence, name, cc_kind in zip(_CARD_OCCURRENCES, _CARD_NAMES, _CARD_CC)
+# The Gold Card's stun rides a cached rank array ("Stun Duration",
+# 1 / 1.25 / 1.5 / 1.75 / 2 seconds), so its interval is sourced from the
+# packet.  The Red Card's slow has no such row — its cached "Slow" leveling
+# is the percentage, and the 2.5-second window lives in prose — so its part
+# carries the reviewed kind without an interval rather than reading a
+# percent as seconds.
+_CARDS = (
+    with_control(
+        _card_parser(_CARD_OCCURRENCES[0], _CARD_NAMES[0], _CARD_CC[0]),
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
+    _card_parser(_CARD_OCCURRENCES[1], _CARD_NAMES[1], _CARD_CC[1]),
+    _card_parser(_CARD_OCCURRENCES[2], _CARD_NAMES[2], _CARD_CC[2]),
 )
 
 

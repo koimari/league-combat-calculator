@@ -13,16 +13,16 @@
         "calculator/survival/accumulate.py": 1,
         "calculator/survival/compile.py": 1,
         "calculator/survival/score_state.py": 0,
-        "calculator/survival/transitions.py": 75
+        "calculator/survival/transitions.py": 129
       },
-      "kernel_baseline": 118,
+      "kernel_baseline": 133,
       "kernel_by_file": {
         "calculator/survival/accumulate.py": 1,
         "calculator/survival/compile.py": 1,
         "calculator/survival/score_state.py": 1,
-        "calculator/survival/transitions.py": 75
+        "calculator/survival/transitions.py": 130
       },
-      "kernel_value": 78,
+      "kernel_value": 133,
       "program_by_file": {},
       "program_target": 0,
       "program_value": 0,

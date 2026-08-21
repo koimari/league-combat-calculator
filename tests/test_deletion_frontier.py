@@ -10,6 +10,8 @@ Phase 0, and this module asserts only what its own commits deleted.
 import ast
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src"
 SURVIVAL = SRC / "calculator" / "survival"
@@ -101,27 +103,56 @@ def test_exactly_one_dispatch_ladder_survives_in_the_kernel() -> None:
     assert found == {"transitions.py:run_survival_walk"}
 
 
-# --- D-09: the write-only utility state -------------------------------------
+# --- D-09: the write-only utility state, and the half of it that came back ---
+#
+# D-09 deleted three things as unread.  The merge deliberately restored two of
+# them, because P2 Slice 4's typed cleanse contract reads them: the walk
+# dispatches a QSS/Mercurial self-cast on ``action.utility_kind == "cleanse"``
+# (``transitions.py``), and the vocabulary it compares against is now the
+# *public* ``survival.actions.UTILITY_KINDS``, stamped by the one constructor in
+# ``program.compile``.  The original bug is fixed rather than re-introduced:
+# D-09's field could only ever be ``""`` because it was stamped by testing an
+# ``ActionKind`` member for membership in a ``frozenset[str]``; the merged
+# constructor stamps from the event's kind *string* instead.
+#
+# So the pins below split.  ``utility_effects`` and the *private* spelling
+# ``_UTILITY_KINDS`` stay deleted — nothing reads the ledger entry D-09 removed,
+# and a second, module-private copy of the vocabulary is exactly the drift D-09
+# was about.  The field and the public set are pinned as live, with a reader, so
+# that "restored on purpose" cannot decay back into "write-only".
 
 
-def test_the_write_only_utility_state_is_gone_from_the_source() -> None:
-    """A field, its vocabulary and the state nobody ever read.
-
-    ``utility_kind`` could only ever be ``""``: it was set by testing an
-    ``ActionKind`` member for membership in a ``frozenset[str]``, and
-    ``ActionKind`` is not a string enum, so the comparison was permanently
-    false.  The ledger entry it fed was appended and never read back.
-    """
-    assert _holders("utility_kind") == []
-    assert _holders("_UTILITY_KINDS") == []
+def test_the_write_only_utility_ledger_state_is_still_gone() -> None:
+    """The half of D-09 nothing reads back stays deleted."""
     assert _holders("utility_effects") == []
+    assert _holders("_UTILITY_KINDS") == []
 
 
-def test_the_survival_action_carries_no_utility_kind() -> None:
-    """The field is gone from the typed interface, not merely unset."""
-    from src.calculator.survival.actions import SurvivalAction
+def test_the_survival_action_carries_a_read_utility_kind() -> None:
+    """The field is back on the typed interface *and* has a live reader.
 
-    assert "utility_kind" not in SurvivalAction._fields
+    Restored by the merge (SURVIVAL-API, "``utility_kind`` RESTORED — the
+    cleanse dispatch reads it").  Both halves are asserted: a field with no
+    reader is the D-09 defect, and a reader is what makes it not one.
+    """
+    from src.calculator.survival import transitions
+    from src.calculator.survival.actions import UTILITY_KINDS, SurvivalAction
+
+    assert "utility_kind" in SurvivalAction._fields
+    assert "cleanse" in UTILITY_KINDS
+
+    source = Path(transitions.__file__).read_text(encoding="utf-8")
+    assert 'action.utility_kind == "cleanse"' in source
+
+
+def test_the_utility_vocabulary_has_exactly_one_home() -> None:
+    """D-09's real subject: the set of kinds is declared once, not per module."""
+    declarers = [
+        path
+        for path in sorted(SRC.rglob("*.py"))
+        if "UTILITY_KINDS = " in path.read_text(encoding="utf-8")
+    ]
+    assert [path.name for path in declarers] == ["actions.py"]
 
 
 # --- The unused import ------------------------------------------------------

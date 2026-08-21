@@ -12,6 +12,7 @@ champions a test session happens to import first.
 """
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,9 @@ from src.calculator.champions.packet_module import (
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.scenario import load_public_champion
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.source_receipt import cache_patch  # noqa: E402
 
 LEVEL = 18
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -69,6 +73,13 @@ def _packet_specs():
 
 PACKET_SPECS = _packet_specs()
 
+# The 16.15-built asset against 16.16 champion data: one packet's rank-1
+# cooldown moved under it.  Camille's Tactical Sweep went 15/14/13/12/11 ->
+# 12/11.5/11/10.5/10 in 16.16.1, and the asset predates that.  Closed by the
+# patch-day rebuild (``python scripts/patch_update.py run``), which needs the
+# wiki index and the Axword checkout this tree does not carry.
+PATCH_DAY_STALE = {("Camille", "W"): (15.0, 12.0)}
+
 
 def _ctx(champion: str, slot: str) -> SlotCtx:
     return SlotCtx(
@@ -98,22 +109,42 @@ class TestPacketCooldownProvenance:
     def test_population_is_the_whole_asset(self) -> None:
         assert len(PACKET_SPECS) > 400
 
+    def test_the_asset_is_still_behind_the_cache_it_is_evidence_of(self) -> None:
+        """The expiry on the exception below, asserted rather than trusted.
+
+        ``reviewed-packets.json`` is a patch-day artifact: its builder
+        pre-flights the Local Wiki sqlite index and the Axword sibling
+        checkout and refuses to write without both, so it cannot be
+        regenerated from this tree.  Merging origin/main brought 16.16 data
+        in beside a 16.15-built asset.  When ``patch_update.py run``
+        rebuilds it the stamps agree again and ``PATCH_DAY_STALE`` goes red
+        as an unused exception — which is the point of pinning it here.
+        """
+        assert json.loads(_ASSET.read_text(encoding="utf-8"))["patch"] == "16.15"
+        assert cache_patch() != "16.15"
+
     def test_stored_scalar_is_only_ever_the_cache_rank_one_value(self) -> None:
         """The asset's scalar is evidence of rank 1 and of nothing else.
 
         This is what makes reading the cache a *fix* rather than a second
         opinion: the two agree at the only rank a scalar can express, and
         the scalar has nothing to say about any other.
+
+        ``PATCH_DAY_STALE`` is the one gap the merge opened and this tree
+        cannot close (see the test above).  It is spelled as an exact
+        expectation, not a skip: the stale scalar still has to be the value
+        it was, so a *second* drift is a failure rather than a widening.
         """
-        divergent = []
+        divergent = {}
         for champion, slot, spec in PACKET_SPECS:
             ability = _source_ability(champion, slot, spec)
             if ability is None:
                 continue
             stored = float(spec.get("cooldown", 0.0))
-            if abs(stored - extract_cooldown(ability, 1)) > 1e-9:
-                divergent.append((champion, slot, spec.get("name"), stored))
-        assert not divergent
+            fresh = extract_cooldown(ability, 1)
+            if abs(stored - fresh) > 1e-9:
+                divergent[(champion, slot)] = (stored, fresh)
+        assert divergent == PATCH_DAY_STALE
 
     def test_no_packet_serves_a_rank_one_cooldown_at_a_higher_rank(self) -> None:
         """The defect's own signature, swept over every packet in the asset."""

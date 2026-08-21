@@ -22,6 +22,14 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.delivery_eligibility import (
+    SPELL_SHIELD_ONE_USE_RULE,
+    DefenseWindow,
+    SourceReceipt,
+    SpellShieldComposition,
+    SpellShieldEligibility,
+)
+
 from src import app as app_module
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
@@ -206,8 +214,26 @@ def test_a_spell_shielded_trigger_emits_no_bonus():
             _hit(1, 1.0, 100.0, live_amp=CINDERBLOOM, is_ability=True),
         ],
         _target(1000.0),
+        # The kernel's spell-shield gate is the typed eligibility contract
+        # (P2 Slice 2), not the legacy ``spell_shield_until`` projection the
+        # branch this fixture predates read; arming the contract is what
+        # "a shield is up" now means.
         state_edits=lambda states: states[0].update(
-            {"spell_shield_until": 5.0, "spell_shield_source": "Banshee's Veil"}
+            {
+                "spell_shield_until": 5.0,
+                "spell_shield_source": "Banshee's Veil",
+                "spell_shield_eligibility": SpellShieldEligibility(
+                    name="spell_shield",
+                    window=DefenseWindow(start=0.0, until=5.0),
+                    block_rule=SPELL_SHIELD_ONE_USE_RULE,
+                    source=SourceReceipt(
+                        label="Banshee's Veil",
+                        url="https://wiki.leagueoflegends.com",
+                    ),
+                ),
+                "spell_shield_composition": SpellShieldComposition(),
+                "spell_shield_uses_remaining": 1,
+            }
         ),
     )
     assert _bonus(observed) == 0.0
@@ -334,13 +360,13 @@ def _roster(allies):
     return response.get_json()
 
 
-def _outgoing(body, participant_id="main"):
-    """One participant's coupled outgoing total."""
+def _death_time(body, participant_id=f"enemy:{ENEMY}"):
+    """When the roster killed one participant."""
     return next(
         row
         for row in body["combat"]["breakdown"]
         if row["participant_id"] == participant_id
-    )["total_damage"]
+    )["death_time"]
 
 
 def _applied(body):
@@ -355,14 +381,17 @@ def _applied(body):
 def test_the_contribution_rises_in_a_multi_attacker_roster():
     """The reason the walk owns this mechanic, as a number.
 
-    One attacker cannot bring this target under 40% inside the window, so
-    the amplifier measures zero.  Add one ally and the same holder's own
-    packets start landing on a target the roster has taken low — which is
-    precisely the input a pair engine cannot see and the pair preview
-    therefore cannot price.
+    Add one ally and the same holder's own packets land on a target the
+    roster took low sooner and harder — precisely the input a pair engine
+    cannot see and the pair preview therefore cannot price.  The claim is
+    the *rise*: the solo figure is no longer zero (this holder alone now
+    reaches the 40% threshold inside the window), so the two rosters are
+    compared against each other rather than against a stale zero.
     """
-    assert _applied(_roster(())) == 0.0
-    assert _applied(_roster((ALLY,))) > 0.0
+    solo = _applied(_roster(()))
+    with_ally = _applied(_roster((ALLY,)))
+    assert solo > 0.0
+    assert with_ally > solo
 
 
 def test_the_preview_survives_where_it_is_the_answer_and_is_not_the_applied_number():
@@ -388,15 +417,20 @@ def test_removing_the_coupled_interpreter_drops_it_to_zero_not_to_the_preview(
     The preview is still computed — it is the honest single-attacker answer
     and the pair breakdown publishes it — so an implementation that composed
     it when the coupled interpreter went missing would look healthy and be
-    wrong.  With the interpreter removed the roster total drops by the full
-    applied bonus, not to somewhere between: the applied total *is* the
-    coupled contribution alone.
+    wrong.  With the interpreter removed the applied total is zero, not the
+    preview.
+
+    The removal is read off the *fight*, not off the outgoing total: this
+    roster kills the target either way, so ``outgoing_damage_before_death``
+    saturates at the target's health pool and cannot carry the difference.
+    What the bonus moves is when the target dies.
     """
     from src.calculator import participant_timeline
 
     body = _roster((ALLY,))
-    with_amp = _outgoing(body)
     applied = _applied(body)
+    preview = body["breakdown"]["shadowflame_Shadowflame"]["total_damage"]
+    assert applied > 0.0 and preview > 0.0
     _roster.cache_clear()
     monkeypatch.setattr(
         participant_timeline, "_live_amps_of", lambda attacker, defender, params: ()
@@ -404,4 +438,4 @@ def test_removing_the_coupled_interpreter_drops_it_to_zero_not_to_the_preview(
     without = _roster((ALLY,))
     _roster.cache_clear()
     assert _applied(without) == 0.0
-    assert with_amp - _outgoing(without) == pytest.approx(applied, abs=0.15)
+    assert _death_time(without) > _death_time(body)

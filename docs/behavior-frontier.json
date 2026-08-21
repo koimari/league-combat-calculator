@@ -9,24 +9,39 @@
     "calculator/champions/viego.py": {
       "class_d": 1
     },
+    "calculator/cleanse_eligibility.py": {
+      "counter_1": 20
+    },
+    "calculator/damage.py": {
+      "counter_1": 22
+    },
+    "calculator/interaction_effects.py": {
+      "counter_1": 3
+    },
     "calculator/item_coverage.py": {
-      "class_c_claim_evidence": 220,
-      "counter_2": 21
+      "class_c_claim_evidence": 267,
+      "counter_2": 18
     },
     "calculator/item_effects.py": {
-      "class_c": 430
+      "class_c": 546
     },
     "calculator/item_outcomes.py": {
-      "class_c": 43
+      "class_c": 44
     },
     "calculator/item_source.py": {
-      "class_c": 8
+      "class_c": 7
+    },
+    "calculator/item_support_effects.py": {
+      "counter_1": 17
     },
     "calculator/loadout_rules.py": {
       "class_c": 28
     },
     "calculator/passive_parser.py": {
       "class_c": 92
+    },
+    "calculator/pipeline.py": {
+      "counter_1": 1
     },
     "calculator/role_quests.py": {
       "class_c": 21
@@ -41,15 +56,12 @@
       "class_d": 1
     },
     "calculator/trigger_stream.py": {
-      "class_c": 92
+      "class_c": 93
     }
   },
   "compiled_walk_refusals": {
     "consumed_by": "interpreters.uncompilable_item_receipt",
     "refused": {
-      "Banshee's Veil": [
-        "combat_state"
-      ],
       "Catalyst of Aeons": [
         "sustain"
       ],
@@ -59,6 +71,7 @@
       "Doran's Blade": [
         "sustain"
       ],
+      "Doran's Helm": [],
       "Doran's Ring": [
         "sustain"
       ],
@@ -68,37 +81,21 @@
       "Eclipse": [
         "cast_proc"
       ],
-      "Edge of Night": [
-        "combat_state"
-      ],
       "Fimbulwinter": [
         "ally_packet"
       ],
-      "Force of Nature": [
-        "combat_state"
-      ],
-      "Guardian Angel": [
-        "threshold_defense"
-      ],
+      "Gluttonous Greaves": [],
       "Immortal Path": [
         "sustain"
       ],
-      "Jak'Sho, The Protean": [
-        "combat_state"
-      ],
-      "Knight's Vow": [
-        "ally_packet"
-      ],
-      "Maw of Malmortius": [
-        "threshold_defense"
-      ],
-      "Verdant Barrier": [
-        "combat_state"
-      ]
+      "Ionian Boots of Lucidity": [],
+      "Lost Chapter": []
     },
     "scope": "survival_ledger_transition",
     "symbol": "interpreters.compilability_for",
-    "undeclared_base": []
+    "undeclared_base": [
+      "counter_3 is not yet 0: Doran's Helm, Gluttonous Greaves, Ionian Boots of Lucidity, Lost Chapter carry a registry entry no family declares, so the declaration base this fold reads is knowingly incomplete."
+    ]
   },
   "counters": {
     "counter_1": {
@@ -106,21 +103,21 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 0
+      "value": 63
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
       "provenance": "VERIFIED",
       "retires_at": "3.8",
       "target": "<= the reviewed NO_RUNTIME_BEHAVIOR reason count",
-      "value": 21
+      "value": 18
     },
     "counter_3": {
       "counts": "undeclared ITEM_EFFECTS + ALLY_ITEM_EFFECTS entries",
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 0
+      "value": 4
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -278,7 +275,7 @@
       "modules": {
         "calculator/item_coverage.py": "the reviewed no-runtime-behaviour set NO_RUNTIME_BEHAVIOR, the one name-keyed container 3.8's collapse left standing here: 'we looked and there is nothing' is a fact no declaration can carry, so it is reviewed prose by construction and criterion 2 keeps it as a non-increasing ratchet rather than retiring it.  Its members are counter 2's whole population *and* the count counter 2 is bounded by, which is what makes 'at or below the reviewed reason count' the end state rather than zero"
       },
-      "sites": 21
+      "sites": 18
     },
     "class_c_claim_evidence_containers": {
       "amendment": "umbrella criterion 7, Amendment A (2026-08-12): Phase 1's authored claim-evidence corpus and _REVIEW_ISSUE_REFS are Class C, not claim prose; counter 2 is measured net of them",
@@ -289,24 +286,26 @@
           "_ISSUE_REF_ONLY_ITEMS": "the two items whose only claim carrier is their tracked review, authored so the ref rides a claim instead of being published by nothing",
           "_REVIEW_ISSUE_REFS": "criterion 14's own blessed survivor: tracked review issues per item, routed onto a claim at import.  An issue reference states no coverage, so it is not the prose counter 2 is named for",
           "_SOURCE_REFS": "the wiki revision each claim's evidence was read from; a claim with no source is the sentence this phase deletes, so the table is mandated rather than retirable",
+          "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": "the cached wiki branch text each certified stats-only item was read at, pinned so tests/test_stats_only_items.py fails loudly when a refresh appends a mechanic to a passive without renaming it.  The member is the evidence a review was performed, not a claim about coverage, so it is the same exclusion _SOURCE_REFS carries for the same reason",
           "_SUPPORT_PACKET_CLAIMS": "the support-packet lane's authored claims, each quoting the packet source the totality check reads back",
           "_TARGET_CERTIFIED_IMPLS": "the target lane's certified half, same shape and same resolution",
           "_TARGET_MODELED_IMPLS": "the target lane's authored claims, each naming the implementation the resolver resolves it against",
           "_UTILITY_HOMES": "the utility lane's authored evidence: the module and symbol a utility outcome is delivered by"
         }
       },
-      "sites": 220,
+      "sites": 267,
       "sites_by_container": {
         "calculator/item_coverage.py": {
-          "_ATTACKER_STATE_HOMES": 19,
+          "_ATTACKER_STATE_HOMES": 22,
           "_DUAL_SIDED_MECHANICS": 5,
           "_ISSUE_REF_ONLY_ITEMS": 3,
           "_REVIEW_ISSUE_REFS": 22,
           "_SOURCE_REFS": 59,
+          "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": 42,
           "_SUPPORT_PACKET_CLAIMS": 19,
           "_TARGET_CERTIFIED_IMPLS": 9,
-          "_TARGET_MODELED_IMPLS": 41,
-          "_UTILITY_HOMES": 43
+          "_TARGET_MODELED_IMPLS": 42,
+          "_UTILITY_HOMES": 44
         }
       }
     },
@@ -320,7 +319,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 714
+      "sites": 831
     },
     "class_d_non_behavioural": {
       "modules": {
@@ -384,16 +383,13 @@
       "Crimson Lucidity",
       "Doran's Helm",
       "Executioner's Calling",
-      "Gluttonous Greaves",
       "Gustwalker Hatchling",
       "Ionian Boots of Lucidity",
-      "Lost Chapter",
       "Morellonomicon",
       "Mortal Reminder",
       "Mosstomper Seedling",
       "Oblivion Orb",
       "Phantom Dancer",
-      "Quicksilver Sash",
       "Refillable Potion",
       "Rylai's Crystal Scepter",
       "Scorchclaw Pup",
@@ -409,16 +405,13 @@
       "Crimson Lucidity",
       "Doran's Helm",
       "Executioner's Calling",
-      "Gluttonous Greaves",
       "Gustwalker Hatchling",
       "Ionian Boots of Lucidity",
-      "Lost Chapter",
       "Morellonomicon",
       "Mortal Reminder",
       "Mosstomper Seedling",
       "Oblivion Orb",
       "Phantom Dancer",
-      "Quicksilver Sash",
       "Refillable Potion",
       "Rylai's Crystal Scepter",
       "Scorchclaw Pup",
@@ -460,26 +453,26 @@
       "counter_1": {
         "bound": 0,
         "criterion": "criterion 1: runtime item-name dispatch reaches zero",
-        "gap": 0,
-        "measured": 0,
-        "met": true,
-        "owed_to": ""
+        "gap": 63,
+        "measured": 63,
+        "met": false,
+        "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
       },
       "counter_2": {
-        "bound": 21,
+        "bound": 18,
         "criterion": "criterion 1: claim-prose sites at or below the reviewed NO_RUNTIME_BEHAVIOR reason count",
         "gap": 0,
-        "measured": 21,
+        "measured": 18,
         "met": true,
         "owed_to": ""
       },
       "counter_3": {
         "bound": 0,
         "criterion": "criterion 2: every registry entry declares a rule or a reviewed NO_RUNTIME_BEHAVIOR",
-        "gap": 0,
-        "measured": 0,
-        "met": true,
-        "owed_to": ""
+        "gap": 4,
+        "measured": 4,
+        "met": false,
+        "owed_to": "post-merge lane: undeclared registry entries (frontier-open-debts.json)"
       },
       "counter_4/pair_engine": {
         "bound": 0,
@@ -517,7 +510,7 @@
       "belveth.py": 2,
       "blitzcrank.py": 1,
       "brand.py": 1,
-      "braum.py": 1,
+      "braum.py": 2,
       "briar.py": 1,
       "caitlyn.py": 2,
       "camille.py": 3,
@@ -548,11 +541,12 @@
       "module_helpers.py": 3,
       "morgana.py": 1,
       "nasus.py": 2,
-      "senna.py": 1,
+      "senna.py": 2,
       "sett.py": 1,
       "shyvana.py": 2,
       "sion.py": 2,
-      "slotlib.py": 4,
+      "sivir.py": 1,
+      "slotlib.py": 5,
       "smolder.py": 2,
       "soraka.py": 1,
       "syndra.py": 2,
@@ -562,11 +556,12 @@
       "tristana.py": 1,
       "twitch.py": 2,
       "varus.py": 1,
-      "veigar.py": 1,
+      "veigar.py": 2,
       "velkoz.py": 1,
       "vi.py": 2,
       "volibear.py": 1,
       "xayah.py": 1,
+      "yasuo.py": 1,
       "yorick.py": 1,
       "zed.py": 1,
       "zoe.py": 1,
@@ -575,18 +570,26 @@
     "input_vocabularies": "src/calculator/champions/inputs.py \u2014 the declared defaults that replaced the forbidden literals, each with a reason and a producer its name is asserted against",
     "issue": "issue #213",
     "produced_fallbacks_by_receiver": {
-      "chained": 1,
+      "burrow": 1,
+      "carnivore": 2,
+      "carried": 1,
+      "cast": 13,
+      "chained": 2,
       "entry": 15,
-      "event": 4,
+      "event": 48,
       "fix": 2,
       "part_timing": 1,
-      "spec": 3
+      "proc_auto": 2,
+      "realm": 1,
+      "spec": 3,
+      "tribute": 2,
+      "trigger_by_time": 1
     },
     "rule": "a .get(key, <literal>) on a champion input block (stats, target, options) is forbidden outright \u2014 D-24's source assertion, and the guard the declared zero_policy default only holds with; the same shape on a block the tree produced is pinned non-growing per receiver, and hand-built ability entries per module, so neither can widen without a decision",
     "totals": {
       "forbidden_input_fallbacks": 0,
-      "hand_built_entries": 91,
-      "produced_fallbacks": 26
+      "hand_built_entries": 97,
+      "produced_fallbacks": 94
     }
   }
 }

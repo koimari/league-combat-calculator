@@ -83,6 +83,8 @@ CONTROL_ATTRIBUTES = {
         ("main", "minor_runes"),
         ("main", "stat_shards"),
     ],
+    "data-keystone-option": [("main", "keystone")],
+    "data-keystone-option-key": [("main", "keystone")],
     "data-copy": [("main", "items")],
     # roster loadouts
     "data-roster-rank": [("enemy", "ability_ranks"), ("ally", "ability_ranks")],

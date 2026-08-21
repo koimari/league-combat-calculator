@@ -14,19 +14,32 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.pipeline import run_fight
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 
+# Options a pair needs before it can measure what it was written to measure.
+#
+# Nasus: ``r_q_cooldown_halved`` defaults on, so at R rank Siphoning Strike
+# comes up six times in the eight-second window and
+# ``_reattribute_empowered_swings`` correctly consumes *every* swing — the
+# auto row comes back empty (count 0, no events), and a crit-roll assertion
+# over an empty ledger can only ever be vacuous.  Turning the halving off
+# leaves three ordinary swings for the roll to land on.
+_PAIR_OPTIONS: dict[str, dict[str, object]] = {
+    "Nasus": {"r_q_cooldown_halved": False},
+}
+
 
 def _coverage(champion: str, items: list[str], **extra):
     """One timed level-18 fight's coverage block, through the public path."""
-    return calculate_payload(
-        {
-            "champion": champion,
-            "level": 18,
-            "items": items,
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-            **extra,
-        }
-    )["timeline_coverage"]
+    payload = {
+        "champion": champion,
+        "level": 18,
+        "items": items,
+        "fight_mode": "timed",
+        "include_auto_attacks": True,
+        **extra,
+    }
+    if champion in _PAIR_OPTIONS and "champion_options" not in payload:
+        payload["champion_options"] = dict(_PAIR_OPTIONS[champion])
+    return calculate_payload(payload)["timeline_coverage"]
 
 
 def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
@@ -36,16 +49,16 @@ def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
     invariant below is about the numbers the engine authored, so this runs
     the identically resolved scenario and reads the row itself.
     """
-    request = parse_scenario_request(
-        {
-            "champion": champion,
-            "level": 18,
-            "items": items,
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-        },
-        deterministic=deterministic,
-    )
+    payload = {
+        "champion": champion,
+        "level": 18,
+        "items": items,
+        "fight_mode": "timed",
+        "include_auto_attacks": True,
+    }
+    if champion in _PAIR_OPTIONS:
+        payload["champion_options"] = dict(_PAIR_OPTIONS[champion])
+    request = parse_scenario_request(payload, deterministic=deterministic)
     resolved = resolve_scenario(request)
     result = run_fight(
         resolved.champion_data,
@@ -131,6 +144,18 @@ class TestEmpoweredSwingReattributionPricesItsOwnLedger:
         for _ in range(CRIT_ROLL_RUNS):
             row = _auto_row(champion, [item])
             events = row["damage_events"]
+            # The precondition the crit guard below depends on, asserted as
+            # itself.  Every champion here forces swings with an
+            # ``empowers_next_auto`` ability, and a window whose casts
+            # consume the whole stream leaves the row with nothing to roll
+            # on -- Cho'Gath's does that at a six-second window.  Without
+            # this, that fixture drift reads as "no critical strike rolled",
+            # which names the symptom and not the cause.
+            assert events, (
+                f"{champion}/{item}: the empowered casts consumed every "
+                "swing, so this fixture no longer reaches the reattribution "
+                "it exists to price"
+            )
             crits = [event for event in events if event["critical_strike"]]
             rolled_a_crit = rolled_a_crit or bool(crits)
             assert len(events) == row["count"]

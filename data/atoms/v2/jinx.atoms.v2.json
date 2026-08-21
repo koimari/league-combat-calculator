@@ -1,0 +1,3342 @@
+[
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneJinxAttack",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "cast_frame": 8.699999809265137,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/ItemHurricaneJinxAttack"
+   ],
+   "evidence": "name:item"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.29,
+    "behavior": "ItemHurricaneJinxAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ItemHurricaneJinxAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ItemHurricaneJinxAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 4.0,
+   "cast_time_seconds": 0.29,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack4"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack4"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack5"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack5"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack5"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack5"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack5"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack5"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack5"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack5"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack6"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack6"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack6"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack6"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "JinxBasicAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxBasicAttack6"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxBasicAttack6"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxBasicAttack6"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxBasicAttack6"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxCatchMe/JinxPassiveKill (Get Excited! movement speed)",
+  "trigger": "on_takedown",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Jinx Get Excited!"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxPassiveAbility/JinxCatchMe",
+    "Characters/Jinx/Spells/JinxPassiveAbility/JinxPassiveKill"
+   ],
+   "evidence": "BuffData game_buff_tooltip_JinxCatchMe / JinxPassiveKill"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxCritAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxCritAttack"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack2"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxCritAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxCritAttack2"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxCritAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack3"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxCritAttack3"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxCritAttack3"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxCritAttack3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack4"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxCritAttack4"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxCritAttack4"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxCritAttack4"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack5"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxCritAttack5"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxCritAttack5"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxCritAttack5"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxCritAttack6",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "cast_frame": 8.5,
+   "missile_speed": 2750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxCritAttack6"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.283,
+    "behavior": "JinxCritAttack6"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxCritAttack6"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "JinxCritAttack6"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.283,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JinxE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    27.5,
+    24.0,
+    20.5,
+    17.0,
+    13.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GrenadeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "cast_frame": 15.0,
+   "missile_speed": 1750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "JinxE"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.5,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    27.5,
+    24.0,
+    20.5,
+    17.0,
+    13.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GrenadeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "cast_frame": 15.0,
+   "missile_speed": 1750.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "JinxE"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.5,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    27.5,
+    24.0,
+    20.5,
+    17.0,
+    13.5,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0,
+    925.0
+   ],
+   "mana_cost": [
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0,
+    90.0
+   ],
+   "damage": [
+    40.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0,
+    340.0
+   ],
+   "ratios": {
+    "RootDuration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GrenadeDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "duration": [
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5,
+    1.5
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029,
+   "cast_frame": 15.0,
+   "missile_speed": 1750.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "JinxE"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 27.5,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "JinxEHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23567,
+   "cast_frame": 7.974999904632568,
+   "missile_speed": 1100.0
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
+   ],
+   "inherited_from": "JinxE",
+   "evidence": "inherited:JinxE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "JinxEHit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxEHit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.266,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxEHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23567,
+   "cast_frame": 7.974999904632568,
+   "missile_speed": 1100.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
+   ],
+   "inherited_from": "JinxE",
+   "evidence": "inherited:JinxE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "JinxEHit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxEHit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.266,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxEHit",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 23567,
+   "cast_frame": 7.974999904632568,
+   "missile_speed": 1100.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEHit"
+   ],
+   "inherited_from": "JinxE",
+   "evidence": "inherited:JinxE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.266,
+    "behavior": "JinxEHit"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxEHit"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.266,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.trap",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxEMine (Flame Chompers unit)",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 1029,
+   "cast_frame": 7.5,
+   "missile_speed": 1450.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Jinx Flame Chompers!"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEMine"
+   ],
+   "evidence": "BuffData game_buff_tooltip_JinxEMine"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "JinxEMine (Flame Chompers unit)"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxEMine (Flame Chompers unit)"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "JinxEMineSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEMineSight"
+   ],
+   "evidence": "name:sight"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "JinxEMineSnare",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxEAbility/JinxEMineSnare"
+   ],
+   "evidence": "name:snare"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxPassiveKillAttackSpeed (Rev'd up attack-speed stacks)",
+  "trigger": "on_attack",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Jinx Switcheroo! (Pow-Pow Rev'd up attack-speed stacks)"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxPassiveAbility/JinxPassiveKillAttackSpeed"
+   ],
+   "evidence": "BuffData game_buff_tooltip_JinxPassiveKillAttackSpeed; wiki Q documents the stacking"
+  },
+  "states": [],
+  "cycle": {}
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxPassiveMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {
+    "BuffDuration": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "AssistMarkerDuration": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "duration": [
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0,
+    6.0
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxPassiveMarkerAbility/JinxPassiveMarker"
+   ],
+   "evidence": "name:mark"
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "ratios": {
+    "MinigunAttackSpeedDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "tick_rate": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519,
+   "cast_frame": 22.604999542236328,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.753,
+    "behavior": "JinxQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.9,
+   "cast_time_seconds": 0.753,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxQ",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "ratios": {
+    "MinigunAttackSpeedDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "tick_rate": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519,
+   "cast_frame": 22.604999542236328,
+   "missile_speed": 2000.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.753,
+    "behavior": "JinxQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.9,
+   "cast_time_seconds": 0.753,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421,
+    0.8999999761581421
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "damage": null,
+   "ratios": {
+    "MinigunAttackSpeedDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "duration": [
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5,
+    2.5
+   ],
+   "tick_rate": null,
+   "stacks_cap": 3.0,
+   "damage_type": "physical",
+   "affects_type_flags": 13519,
+   "cast_frame": 22.604999542236328,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQ"
+   ],
+   "evidence": "tag:Trait_Toggle"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.753,
+    "behavior": "JinxQ"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.9,
+   "cast_time_seconds": 0.753,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxQAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxQAttack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.toggle-form",
+  "family": "stack-transform-summon-resource",
+  "behavior": "JinxQAttack2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQAttack2"
+   ],
+   "inherited_from": "JinxQ",
+   "evidence": "inherited:JinxQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQAttack2"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "JinxQCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6794,
+   "cast_frame": 7.0,
+   "missile_speed": 2000.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxQAbility/JinxQCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.233,
+    "behavior": "JinxQCritAttack"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxQCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.233,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "JinxR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    85.0,
+    85.0,
+    65.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0
+   ],
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106,
+   "cast_frame": 7.5,
+   "missile_speed": 1700.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxRAbility/JinxR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "JinxR"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 85.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    85.0,
+    85.0,
+    65.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0
+   ],
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106,
+   "cast_frame": 7.5,
+   "missile_speed": 1700.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxRAbility/JinxR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "JinxR"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 85.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.execute",
+  "family": "damage",
+  "behavior": "JinxR",
+  "trigger": "threshold",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    85.0,
+    85.0,
+    65.0,
+    45.0,
+    45.0,
+    45.0,
+    45.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    5.0,
+    20.0,
+    35.0,
+    50.0,
+    65.0,
+    80.0,
+    95.0
+   ],
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 4106,
+   "cast_frame": 7.5,
+   "missile_speed": 1700.0
+  },
+  "relations": [
+   "stats.health",
+   "damage.missing-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Execution",
+    "True damage",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxRAbility/JinxR"
+   ],
+   "evidence": "rule:execute"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "JinxR"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 85.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0,
+    4.0,
+    3.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "damage": [
+    -40.0,
+    10.0,
+    60.0,
+    110.0,
+    160.0,
+    210.0,
+    260.0
+   ],
+   "ratios": {
+    "SlowDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ADRatio": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ]
+   },
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 13327,
+   "cast_frame": 1.9800000190734863,
+   "missile_speed": 1200.0
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxWAbility/JinxW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.066,
+    "behavior": "JinxW"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 9.0,
+   "cast_time_seconds": 0.066,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "JinxWMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0,
+    1500.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 6154,
+   "cast_frame": 7.53000020980835,
+   "missile_speed": 3300.0
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxWAbility/JinxWMissile"
+   ],
+   "inherited_from": "JinxW",
+   "evidence": "inherited:JinxW"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.251,
+    "behavior": "JinxWMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "JinxWMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.251,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "JinxWSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "ratios": {},
+   "duration": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Jinx/Spells/JinxWAbility/JinxWSight"
+   ],
+   "evidence": "name:sight"
+  },
+  "states": [],
+  "cycle": {}
+ }
+]

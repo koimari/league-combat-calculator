@@ -178,8 +178,11 @@ ASSUMPTIONS = [
     "Ablaze ticks count as ability damage, keeping item burns "
     "(Liandry's Torment, Blackfire Torch) refreshed for the full 4s "
     "after Brand's last cast",
-    "Q's stun, E's spread doubling, and R's slow are utility-only and "
-    "excluded from damage",
+    "Q's 1.75-second stun is sourced but conditional — it is Blaze's "
+    "'Ablaze Bonus' branch, so the rotation's opening Q (the applier) "
+    "stuns nothing.  One kind per slot cannot say both, so Q stays "
+    "unreviewed and its stun is not counted as target action downtime; "
+    "E's spread doubling and R's slow remain utility-only",
 ]
 
 # Cached kit review.  E "creates a blast that deals magic damage" and its

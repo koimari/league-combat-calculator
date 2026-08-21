@@ -29,11 +29,11 @@ Three properties are asserted at import rather than reviewed:
   :meth:`LedgerInputs.raw_stat`, which refuses any field the condition did
   not declare in ``requires_fields``.
 
-This module is a leaf on purpose.  It imports the interpreters and the
-capability projections the two gates already consumed and nothing else, so
-both the pipeline (above the engine) and the damage engine itself can ask it
-without a cycle.  In particular it never imports the champion healing
-registry: ``healing.self_heal_rule_owner`` hands it a typed
+This module is a leaf on purpose.  It imports the interpreters, the
+capability projections and the rune compiler the two gates already consumed,
+and nothing else, so both the pipeline (above the engine) and the damage
+engine itself can ask it without a cycle.  In particular it never imports the
+champion healing registry: ``healing.self_heal_rule_owner`` hands it a typed
 :class:`~.trigger_stream.ChampionSlotOwner` instead, which is also what makes
 the champion half of the answer a declaration rather than a name set.
 """
@@ -45,12 +45,18 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import Any, Protocol
+from typing import Any, NamedTuple, Protocol
 
-from .interpreters import periodic, spellblade, sustain
+from .interpreters import cast_proc, periodic, spellblade, sustain
 from .interpreters.sustain import declared_sustain
 from .interpreters.threshold_defense import threshold_health_owner
 from .item_behavior import ManaSpentHealRule, SustainStat
+from .rune_effects import (
+    KeystoneConquerorEffect,
+    KeystoneFleetEffect,
+    RunePage,
+    resolve_rune,
+)
 from .trigger_stream import (
     ChampionSlotOwner,
     EngineOwner,
@@ -79,6 +85,42 @@ class ResultProjection(Enum):
     RESOLVED_SHIELD_OUTCOME = "resolved_shield_outcome"
 
 
+class LightRow(NamedTuple):
+    """One positional row of the light tuple ledger, by name.
+
+    The light ledger is one of the two shapes
+    :attr:`ResultProjection.LIGHT_TUPLE_LEDGER` names, and this is the
+    whole of what it carries.  Declared here, beside the projection that
+    decides when a fight may be served in it, so the engine that writes
+    the rows, the compiler that walks them and a test that compares them
+    against the dict shape all read one statement of the layout rather
+    than three agreeing sets of indices.
+
+    A tuple subclass on purpose: ``LightRow._make(row)`` names the
+    positions without building a dict, which the compiler does tens of
+    thousands of times per request.
+    """
+
+    sort_key: tuple[Any, ...]
+    damage: float
+    damage_type: str
+    source_key: str
+    raw_formula: Any
+    raw_damage: float
+    declared: Any
+
+
+#: The light row fields a dict row spells the same way.  A reader holding
+#: both shapes compares exactly these; everything else is either the dict
+#: row's receipt metadata or the light row's packed sort key.
+SHARED_ROW_FIELDS: tuple[str, ...] = (
+    "damage",
+    "damage_type",
+    "source_key",
+    "raw_damage",
+)
+
+
 class AdequacyCondition(Enum):
     """One declared reason a fight cannot be served a narrowed result.
 
@@ -95,9 +137,12 @@ class AdequacyCondition(Enum):
     LIFESTEAL_STAT = "lifesteal_stat"
     OMNIVAMP_STAT = "omnivamp_stat"
     SATURATING_OMNIVAMP = "saturating_omnivamp"
+    KEYSTONE_SELF_HEAL = "keystone_self_heal"
     EMPOWERED_BASIC_ATTACK = "empowered_basic_attack"
     RAW_ROW_STREAM_HOLDER = "raw_row_stream_holder"
     EXECUTE_THRESHOLD_STAMP = "execute_threshold_stamp"
+    ORDERED_INTERACTION_METADATA = "ordered_interaction_metadata"
+    SELF_SHIELD_PROC = "self_shield_proc"
     PAIR_OUTCOME_STREAM = "pair_outcome_stream"
 
 
@@ -203,6 +248,7 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
     stats: Mapping[str, Any]
     damage_effects: Any
     ability_damages: Mapping[str, Any]
+    rune_page: RunePage
     fight_duration_seconds: float
     is_melee: bool
     target_threshold_health_heal: float
@@ -226,6 +272,8 @@ _OMNIVAMP_READER = "damage._add_omnivamp_events"
 _BASIC_ATTACK_READER = "damage._ordered_damage_events"
 _SUPPORT_SCAN_READER = "item_support_effects.derive_item_support_effects"
 _EXECUTE_READER = "damage._add_execute_display"
+_KEYSTONE_HEAL_READER = "pipeline._keystone_self_healing_events"
+_INTERACTION_ROW_READER = "damage._ordered_damage_events"
 _TAKEDOWN_READER = "trigger_stream.authored_triggers"
 _HEALING_READER = "healing.derive_self_healing"
 _THRESHOLD_READER = "damage._resolve_starting_shield_outcome"
@@ -300,6 +348,15 @@ _DECLARATIONS: tuple[AdequacyDeclaration, ...] = (
         ),
     ),
     AdequacyDeclaration(
+        condition=AdequacyCondition.KEYSTONE_SELF_HEAL,
+        reader=_KEYSTONE_HEAL_READER,
+        requires_fields=frozenset(),
+        reason=(
+            "the selected keystone emits its own timestamped self-heal row, "
+            "which is materialized from the dict breakdown's heal events"
+        ),
+    ),
+    AdequacyDeclaration(
         condition=AdequacyCondition.EMPOWERED_BASIC_ATTACK,
         reader=_BASIC_ATTACK_READER,
         requires_fields=frozenset(),
@@ -326,6 +383,27 @@ _DECLARATIONS: tuple[AdequacyDeclaration, ...] = (
             "the build arms an execute threshold, whose per-event stamps the "
             "positional schema cannot carry, so the engine stays fail-closed "
             "for the item"
+        ),
+    ),
+    AdequacyDeclaration(
+        condition=AdequacyCondition.ORDERED_INTERACTION_METADATA,
+        reader=_INTERACTION_ROW_READER,
+        requires_fields=frozenset(),
+        reason=(
+            "an ability row carries interaction metadata — a skillshot flag, "
+            "a control event, a crowd-control duration or an execute "
+            "threshold — that the positional schema cannot carry, so the "
+            "coupled walk would lose the interaction it applies"
+        ),
+    ),
+    AdequacyDeclaration(
+        condition=AdequacyCondition.SELF_SHIELD_PROC,
+        reader=_INTERACTION_ROW_READER,
+        requires_fields=frozenset(),
+        reason=(
+            "a cooldown proc attaches a self shield to the damage event it "
+            "rides, and the positional row has no field for it, so the "
+            "shield would be silently dropped"
         ),
     ),
     AdequacyDeclaration(
@@ -461,6 +539,70 @@ def _saturating_omnivamp_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ..
     return (EngineOwner(_OMNIVAMP_READER),) if percent else ()
 
 
+def _keystone_self_heal_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
+    """Whether the selected keystone can emit a self-heal packet.
+
+    Conqueror pays its heal at max stacks in every fight that reaches them,
+    so selecting it is the demand.  Fleet Footwork's Energized heal needs the
+    charges to already be held: a fight that starts below the cap cannot
+    reach it inside the window the light ledger is offered for, which is the
+    same reading the keystone's own materializer takes.
+    """
+    keystone = inputs.rune_page.keystone
+    if not keystone:
+        return ()
+    effect = resolve_rune(keystone)
+    if isinstance(effect, KeystoneConquerorEffect):
+        return (EngineOwner(_KEYSTONE_HEAL_READER),)
+    if not isinstance(effect, KeystoneFleetEffect):
+        return ()
+    options = inputs.rune_page.options.get(keystone, {})
+    charges = int(options.get("starting_charges", 0) or 0)
+    return (EngineOwner(_KEYSTONE_HEAL_READER),) if charges >= effect.charge_cap else ()
+
+
+def _ordered_interaction_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
+    """Whether an ability row carries interaction metadata a tuple would lose."""
+    for entry in inputs.ability_damages.values():
+        if not isinstance(entry, Mapping):
+            continue
+        # The ENTRY's ``skillshot`` is a kit fact the walk reads off the
+        # parse, which both ledger shapes carry unchanged; only metadata
+        # that rides an individual ROW is lost by the positional schema.
+        # Reading the kit fact here refused every skillshot champion a
+        # light ledger, plain build and all.
+        if entry.get("control_events"):
+            return (EngineOwner(_INTERACTION_ROW_READER),)
+        if float(entry.get("execute_threshold_ratio", 0.0) or 0.0) > 0:
+            return (EngineOwner(_INTERACTION_ROW_READER),)
+        for part in entry.get("parts", ()):
+            if getattr(part, "cc_duration", 0.0) > 0.0 or getattr(
+                part, "skillshot", False
+            ):
+                return (EngineOwner(_INTERACTION_ROW_READER),)
+        for event in entry.get("damage_events", ()):
+            if isinstance(event, Mapping) and (
+                event.get("cc_duration", 0.0) or event.get("skillshot")
+            ):
+                return (EngineOwner(_INTERACTION_ROW_READER),)
+    return ()
+
+
+def _self_shield_proc_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
+    """Every held cast proc that attaches a self shield to its event.
+
+    Asked of the DECLARATION, like every other item condition here: a proc
+    whose rule carries no ``self_shield`` cannot attach one whatever the
+    fight resolves its magnitudes to, and a second such item is answered
+    without a second clause.  Reading resolved effects instead would need a
+    level and a fight window this record does not carry — and would name the
+    one item that has the field today rather than the shape.
+    """
+    return tuple(
+        ItemOwner(owner) for owner in cast_proc.self_shield_owners(inputs.item_names)
+    )
+
+
 def _empowered_auto_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
     """Whether an ability empowers the next basic attack."""
     empowered = any(
@@ -513,9 +655,12 @@ _LEDGER_PROBES: Mapping[
         AdequacyCondition.LIFESTEAL_STAT: _lifesteal_owners,
         AdequacyCondition.OMNIVAMP_STAT: _omnivamp_owners,
         AdequacyCondition.SATURATING_OMNIVAMP: _saturating_omnivamp_owners,
+        AdequacyCondition.KEYSTONE_SELF_HEAL: _keystone_self_heal_owners,
         AdequacyCondition.EMPOWERED_BASIC_ATTACK: _empowered_auto_owners,
         AdequacyCondition.RAW_ROW_STREAM_HOLDER: _raw_row_stream_owners,
         AdequacyCondition.EXECUTE_THRESHOLD_STAMP: _execute_threshold_owners,
+        AdequacyCondition.ORDERED_INTERACTION_METADATA: _ordered_interaction_owners,
+        AdequacyCondition.SELF_SHIELD_PROC: _self_shield_proc_owners,
     }
 )
 

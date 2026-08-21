@@ -33,6 +33,7 @@ recast's fear plus 90% slow are crowd control the model does not price).
 from functools import partial
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
@@ -120,9 +121,9 @@ def _eternal_hunger(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = on_hit_entry(ability.get("name", "Eternal Hunger"), per_hit, "magic")
     health_percent = min(max(float(ctx.option("p_self_health_percent")), 0.0), 100.0)
     share = _hunger_heal_share(health_percent)
-    # The healing rule (healing_legacy, "Warwick") pays this share of every
-    # post-mitigation Eternal Hunger hit.  The module owns the health state,
-    # so the share is published here rather than re-derived there.
+    # ``derive_self_healing`` below pays this share of every post-mitigation
+    # Eternal Hunger hit.  The slot owns the health state, so the share is
+    # published on the entry rather than re-derived by the resolver.
     entry["self_heal_share_of_damage"] = share
     entry["detail"] = (
         f"{per_hit:.2f} bonus magic damage on-hit (6 : 60.76 based on level "
@@ -261,4 +262,62 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Warwick")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Warwick self-healing events from its authored packet."""
+    healing = []
+    q = _healing._ability(champion_data, "Q")
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_ratio = _healing.extract_named(
+        q, "Healing Percentage", q_rank, champion_stats, {}
+    )
+    for event in damage_events:
+        source = _healing._event_source(event)
+        if source == "Q":
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0)) * q_ratio / 100.0,
+                "Jaws of the Beast",
+            )
+        elif source == "R":
+            # Infinite Duress explicitly heals for 100% of all
+            # post-mitigation damage dealt to its target.
+            _healing._heal_from_damage(
+                healing, event, float(event.get("damage", 0.0)), "Infinite Duress"
+            )
+    # Eternal Hunger (P): "While below 50% maximum health, Warwick also
+    # heals for 100% of the post-mitigation damage dealt by Eternal Hunger,
+    # increased to 250% while below 25% maximum health" (cached P
+    # description).  Warwick's own health is module state, so ``_eternal_hunger``
+    # owns the threshold and publishes the resulting share on its P entry;
+    # this pays that share of every on-hit event the passive authored.  A
+    # healthy Warwick publishes 0 and heals none.
+    hunger_share = float(
+        ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
+    )
+    if hunger_share > 0.0:
+        for payment in _healing._payments(
+            _healing.HealAnchor.DAMAGING_HIT,
+            "on_hit_ability_passive",
+            damage_events,
+        ):
+            event = payment.event
+            _healing._heal_from_damage(
+                healing,
+                event,
+                float(event.get("damage", 0.0)) * hunger_share,
+                "Eternal Hunger",
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Warwick", derive_self_healing)

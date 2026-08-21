@@ -16,7 +16,7 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
-from src.calculator.healing_legacy import _taric_starlights_touch
+from src.calculator.healing_helpers import _taric_starlights_touch
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
@@ -161,10 +161,20 @@ def _taric_timeline(*, with_ally: bool):
             "fight_mode": "one_rotation",
             "role": "support",
             "cast_order": ["Q", "W", "E", "R"],
+            # Keep the heal ownership test focused on Q. Taric E's sourced
+            # stun correctly prevents Ahri from acting at the opening cast.
+            "ability_ranks": {"Q": 5, "W": 0, "E": 0, "R": 0},
         },
         deterministic=True,
     )
-    enemies = [ChampionLoadout(champion="Ahri", level=18, role="mid").resolve()]
+    enemies = [
+        ChampionLoadout(
+            champion="Ahri",
+            level=18,
+            role="mid",
+            ability_ranks={"E": 0},
+        ).resolve()
+    ]
     allies = (
         [ChampionLoadout(champion="Ashe", level=18, role="bottom").resolve()]
         if with_ally
@@ -243,7 +253,14 @@ def test_taric_compiled_score_path_matches_receipt():
             },
             deterministic=True,
         )
-        enemies = [ChampionLoadout(champion="Ahri", level=18, role="mid").resolve()]
+        enemies = [
+            ChampionLoadout(
+                champion="Ahri",
+                level=18,
+                role="mid",
+                ability_ranks={"E": 0},
+            ).resolve()
+        ]
         allies = (
             [ChampionLoadout(champion="Ashe", level=18, role="bottom").resolve()]
             if with_ally

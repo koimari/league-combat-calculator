@@ -1399,7 +1399,13 @@ class TestValuesSourcedFromTheCache:
         from src.calculator.data_fetcher import fetch_item_data
         from src.calculator.passive_parser import parse_item_effect
 
-        assert "Muramana" not in item_effects._STATIC_VALUE_KEYS_BY_ITEM
+        # P3-3E: the Shock/Awe NUMBERS stay parser-owned (a Muramana static
+        # entry exists but pins only the wiki revision receipt keys).
+        static = item_effects._STATIC_VALUE_KEYS_BY_ITEM.get("Muramana", frozenset())
+        assert "max_mana_ratio_on_hit" not in static
+        assert "max_mana_ratio_ability_melee" not in static
+        assert "max_mana_ratio_ability_ranged" not in static
+        assert "max_mana_to_ad_ratio" not in static
         parsed = parse_item_effect("Muramana", fetch_item_data())
 
         assert parsed["max_mana_ratio_on_hit"] == pytest.approx(0.012)

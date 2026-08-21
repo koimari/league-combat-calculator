@@ -11,8 +11,21 @@ declares W in SLOTS so the fight rotation casts it.
 Coverage: P (Surging Tides) grants movement speed to allies Nami's
 abilities touch. Movement speed is an axis the engine does not have, so
 the slot is out of scope.
+
+Wave-2 ally support: the scanner also emits Ebb and Flow's
+RETURN BOUNCE as a second heal packet on the same cast ("each bounce
+modifying the effectiveness of the next by -20% (+ 15% per 100 AP)" of the
+original, never below the sourced Minimum Heal row — the second bounce
+keeps 60% + 30% per 100 AP, which is exactly the Minimum Heal row at 0 AP).
+Cast on the selected teammate, the stream bounces to the enemy and back to
+the same teammate in a two-champion lane (the cached notes allow the final
+bounce to re-target an already-affected champion), so the return-bounce
+packet uses the same one_teammate scope with its own selection key
+(``heal:W:<cast>:bounce``).
 """
 
+from .. import healing_helpers as _healing
+from .inputs import champion_stat
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 
@@ -45,10 +58,51 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # its own three-tick timing above.
     single_hit_slots=frozenset({"Q", "W", "R"}),
     cc_kinds=MODULE_CC,
+    assumption_overrides=(
+        "W (Ebb and Flow) emits two ally heal packets per cast on the "
+        "selected teammate: the sourced Heal row (55-155 + 40% AP) and the "
+        "return bounce at 60% + 30% per 100 AP of the original, never below "
+        "the sourced Minimum Heal row (93 + 24% AP at rank 5) — the cached "
+        "prose reduces each bounce by -20% (+ 15% per 100 AP) of the "
+        "original, and the Minimum row is exactly 60% of the Heal row at "
+        "every rank.  The bounce damage against the enemy keeps the module's "
+        "full Magic Damage row (the first-bounce reduction of the damage "
+        "half is not separately priced).",
+    ),
 )
 MODULE_COVERAGE = {
     slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Nami")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Nami self-healing events from its authored packet."""
+    healing = []
+    w_rank = _healing._rank(ability_damages, "W")
+    w_ability = _healing._ability(champion_data, "W")
+    base = _healing.extract_named(w_ability, "Heal", w_rank, champion_stats, {})
+    floor = _healing.extract_named(
+        w_ability, "Minimum Heal", w_rank, champion_stats, {}
+    )
+    ap = champion_stat(champion_stats, "ability_power")
+    amount = max(floor, base * (0.80 + 0.15 * ap / 100.0))
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+    ):
+        event = payment.event
+        _healing._heal_from_damage(
+            healing, event, amount, "Ebb and Flow", link_to_damage=False
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Nami", derive_self_healing)

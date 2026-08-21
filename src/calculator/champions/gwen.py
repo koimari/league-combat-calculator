@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -241,14 +243,81 @@ OPTIONS = [
         "max": 3,
         "label": "Needlework casts",
     },
+    {
+        "key": "w_active",
+        "type": "bool",
+        "default": False,
+        "label": "W (Hallowed Mist) active against selected skillshots",
+    },
+    {
+        "key": "w_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "W active start time in seconds",
+    },
+    {
+        "key": "w_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 4.0,
+        "label": "W active seconds; zero uses the sourced four-second duration",
+    },
+    {
+        "key": "w_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Skillshot slots to destroy; an empty list destroys all marked skillshots"
+        ),
+    },
 ]
 
 ASSUMPTIONS = [
-    "A Thousand Cuts is an explicit max-health magic on-hit; its champion heal and minion/monster caps are not applied to champion TDD.",
-    "Q exposes Snippy stack count and center true-damage conversion instead of treating the six-snip maximum as universal.",
-    "R's first, second and third casts remain separate ordered events, each carrying the sourced passive rider.",
+    "A Thousand Cuts is an explicit max-health magic on-hit; its champion "
+    "heal and minion/monster caps are not applied to champion TDD.",
+    "Q exposes Snippy stack count and center true-damage conversion instead "
+    "of treating the six-snip maximum as universal.",
+    "R's first, second and third casts remain separate ordered events, each "
+    "carrying the sourced passive rider.",
+    "Hallowed Mist destroys selected champion projectiles during its sourced "
+    "four-second window; the single-target model exposes the source selection "
+    "as the outside-mist contract.",
 ]
 
 SOURCES = load_champion_sources("Gwen")
 
-SELF_HEALING_RULE = declare_healing_rule("Gwen")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Gwen self-healing events from its authored packet."""
+    healing = []
+    p_level = int(champion_stat(champion_stats, "level"))
+    per_instance_cap = _healing.extract_named(
+        _healing._ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+    )
+    for event in _healing._attributed_events(
+        damage_events,
+        lambda source, _event: source == "on_hit_ability_passive",
+    ):
+        dealt = float(event.get("damage", 0.0))
+        _healing._heal_from_damage(
+            healing,
+            event,
+            min(0.50 * dealt, per_instance_cap),
+            "A Thousand Cuts",
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Gwen", derive_self_healing)

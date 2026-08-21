@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from ..healing_helpers import _ability
 
 
 def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -144,4 +147,50 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Gragas")
 
-SELF_HEALING_RULE = declare_healing_rule("Gragas")
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Happy Hour pays 5.5% of maximum health on each ability CAST.
+
+    Cached Wiki text: "Periodically, after casting an ability, Gragas heals
+    himself for 5.5% of his maximum health".  The heal triggers on the
+    cast, not on damage landing, so the cast timeline is the occasion; one
+    cast pays one self-heal (actor-wide receipt).
+    """
+    healing: list[dict] = []
+    p_text = " ".join(
+        effect.get("description", "")
+        for effect in _ability(champion_data, "P").get("effects", [])
+    )
+    ratio_match = re.search(
+        r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
+        p_text,
+        flags=re.IGNORECASE,
+    )
+    ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
+    per_cast = ratio * champion_stat(champion_stats, "health")
+    if per_cast > 0.0:
+        for cast in cast_timeline or []:
+            slot = cast.get("slot")
+            if slot not in {"Q", "W", "E", "R"}:
+                continue
+            healing.append(
+                {
+                    "time": float(cast.get("time", 0.0)),
+                    "amount": per_cast,
+                    "source": f"Happy Hour · {slot}",
+                    "kind": "champion_passive",
+                    "actor_wide": True,
+                }
+            )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Gragas", derive_self_healing)

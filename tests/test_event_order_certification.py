@@ -317,9 +317,17 @@ def test_optimize_api_labels_partial_candidate_search_without_claiming_certified
     payload = response.get_json()
     assert payload["timeline_coverage"]["complete"] is True
     assert payload["is_certified_best"] is False
+    # MERGE: the label is coupled to search coverage (optimizer.py) - an
+    # item-scope gap is only reported when the SEARCH covered everything.
+    # These two searches carry coarse candidate evaluations (7 here), so
+    # the partial label is the certification, and it is the same fact the
+    # partial_evaluations assertion below states.
     assert payload["selection_certification"] == "partial_or_unexhaustive"
-    assert payload["search_timeline_coverage"]["certification"] == (
-        "partial_candidate_event_order"
+    # Coarse candidate evaluations make the SEARCH partial, which is the
+    # certification the coverage block reports.
+    assert (
+        payload["search_timeline_coverage"]["certification"]
+        == "partial_candidate_event_order"
     )
     assert payload["search_timeline_coverage"]["partial_evaluations"] > 0
     assert payload["candidate_coverage"]["complete"] is True
@@ -346,6 +354,11 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
     assert payload["timeline_coverage"]["certification"] == "event_order_certified"
     assert payload["timeline_coverage"]["coarse_sources"] == []
     assert payload["is_certified_best"] is False
+    # MERGE: the label is coupled to search coverage (optimizer.py) - an
+    # item-scope gap is only reported when the SEARCH covered everything.
+    # These two searches carry coarse candidate evaluations (7 here), so
+    # the partial label is the certification, and it is the same fact the
+    # partial_evaluations assertion below states.
     assert payload["selection_certification"] == "partial_or_unexhaustive"
 
 

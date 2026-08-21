@@ -451,7 +451,12 @@ class TestDerivedPathRotations:
             (
                 "Syndra",
                 ["Q", "Q2", "E", "W", "R"],
-                ["E", "Q", "Q2"],
+                # W joined the setup set with main's Syndra execute edge
+                # (R is a missing-health/stored execute, so it follows
+                # W's damage).  The ORDER is unchanged: a new edge that
+                # agrees with the pinned sequence adds a member here and
+                # moves nothing.
+                ["E", "Q", "Q2", "W"],
                 ["E", "Q2", "R", "W"],
                 {"Q": 5, "Q2": 5, "W": 5, "E": 5, "R": 1, "passive": 1},
                 ("sphere", "stun", "cc_enabler", "@4024662"),

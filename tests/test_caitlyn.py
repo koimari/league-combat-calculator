@@ -671,12 +671,19 @@ class TestOptionsMeta:
         assert [option["key"] for option in meta["options"]] == [
             "p_pre_stacks",
             "w_traps",
+            # Piltover Peacemaker's pass-through count: the formula reads
+            # it, so it is a declared row the frontend renders rather than
+            # a parse-only key with a call-site default (D-24).
+            "q_secondary_targets",
         ]
         assert meta["options"][0]["min"] == 0
         assert meta["options"][0]["max"] == 5
         assert meta["options"][0]["default"] == 0
         assert meta["options"][1]["min"] == 0
         assert meta["options"][1]["default"] == 1
+        assert meta["options"][2]["min"] == 0
+        assert meta["options"][2]["max"] == 5
+        assert meta["options"][2]["default"] == 0
 
     def test_assumptions_documented(self) -> None:
         meta = get_champion_options_meta("Caitlyn")

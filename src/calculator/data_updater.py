@@ -103,7 +103,7 @@ from .rune_parser import (
     RESERVED_CACHE_KEYS,
     SHARDS_KEY,
     adaptive_force_payload,
-    parse_effects,
+    parse_rune_effects,
     path_order,
     rune_payload,
     shard_payload,
@@ -561,12 +561,12 @@ def update_runes(
     return runes
 
 
-def _reparse_entry(entry: dict[str, Any]) -> None:
+def _reparse_entry(entry: dict[str, Any], name: str = "") -> None:
     """Recompute one cached rune's or shard option's effects, in place."""
     description = entry.get("description")
     if not description:
         return
-    effects, warnings = parse_effects(description)
+    effects, warnings = parse_rune_effects(name, description)
     entry["effects"] = effects
     entry.pop("parse_warnings", None)
     if warnings:
@@ -589,7 +589,7 @@ def reparse_cached_rune_effects(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, 
                 for option in slot.get("options", ()):
                     _reparse_entry(option)
         elif name not in RESERVED_CACHE_KEYS:
-            _reparse_entry(entry)
+            _reparse_entry(entry, name)
     meta_path = data_dir / ".runes.json.meta"
     previous = (
         json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}

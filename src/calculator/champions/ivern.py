@@ -13,6 +13,7 @@ from .slotlib import (
     extract_named,
     on_hit_entry,
     simple_damage,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -154,8 +155,16 @@ SLOTS = {
         name="Friend of the Forest",
         reason="Grove channel, health/mana cost, camp release and full bounty are jungle utility state.",
     ),
-    "Q": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # The vine damages "the first enemy hit and root[s] them"; the root's
+    # duration is read off the packet's own Root Duration row rather than
+    # restated, and the single-hit certification is what carries the kind
+    # into the event ledger.
+    "Q": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="root",
+        duration_attr="Root Duration",
     ),
     "W": _brushmaker,
     "E": _triggerseed,
@@ -197,5 +206,11 @@ ASSUMPTIONS = [
     "ordinary swing)",
     "Daisy Smash!'s 3-second lockout, knockup/stun CC, spawn damage "
     "reduction and leash range are state, not modeled",
+    "E (Triggerseed) shields the target allied champion, Daisy, or Ivern "
+    "himself (cached prose 'or himself', so the scanner profile is "
+    "self-or-target one_teammate): the roster model shields the selected "
+    "teammate for the sourced Shield Strength (75-235 + 50% AP) for 2s "
+    "and falls back to Ivern in a solo fight; the sourced explosion "
+    "damage after 2s and the slow are the module's E damage entry.",
 ]
 SOURCES = load_champion_sources("Ivern")

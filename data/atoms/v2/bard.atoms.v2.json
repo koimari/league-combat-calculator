@@ -1,0 +1,2560 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardPSpiritAmmoCount",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardPTooltip_D_nSAbility/BardPSpiritAmmoCount"
+   ],
+   "evidence": "name:ammo"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "BardPSpiritMissileSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardPTooltip_D_nSAbility/BardPSpiritMissileSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardPChimePickupSpeedStacks",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.on-hit",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Stack",
+    "Stacking",
+    "Buff",
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardPTooltip_D_nSAbility/BardPChimePickupSpeedStacks"
+   ],
+   "evidence": "name:stack"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stasis",
+  "family": "crowd-control-mobility",
+  "behavior": "BardRStasis",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardRAbility/BardRStasis"
+   ],
+   "evidence": "name:stasis"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BardR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    110.0,
+    95.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "RStasisDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "cast_frame": 10.0,
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 3400.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardRAbility/BardR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "BardR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    110.0,
+    95.0,
+    80.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": [
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0,
+    3400.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "RStasisDuration": [
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5,
+     2.5
+    ]
+   },
+   "cast_frame": 10.0,
+   "cooldown_rank1": 10.0,
+   "cooldown_rank_max": 10.0,
+   "range": 3400.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardRAbility/BardR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardRMissileRange1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 1028,
+   "missile_speed": 2100.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 25000.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardRAbility/BardRMissileRange1"
+   ],
+   "evidence": "name:11"
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardQInitialTargetDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQInitialTargetDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardQShackleDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQShackleDebuff"
+   ],
+   "evidence": "name:debuff"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BardQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "APRatio": [
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8
+    ],
+    "SlowAmountPercentage": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "SlowDuration": [
+     0.8,
+     1.0,
+     1.2,
+     1.4,
+     1.6,
+     1.8,
+     2.0
+    ],
+    "StunDuration": [
+     0.8,
+     1.0,
+     1.2,
+     1.4,
+     1.6,
+     1.8,
+     2.0
+    ]
+   },
+   "cast_frame": 10.0,
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": 0.067,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BardQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     40.0,
+     80.0,
+     120.0,
+     160.0,
+     200.0,
+     240.0,
+     280.0
+    ],
+    "APRatio": [
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8,
+     0.8
+    ],
+    "SlowAmountPercentage": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "SlowDuration": [
+     0.8,
+     1.0,
+     1.2,
+     1.4,
+     1.6,
+     1.8,
+     2.0
+    ],
+    "StunDuration": [
+     0.8,
+     1.0,
+     1.2,
+     1.4,
+     1.6,
+     1.8,
+     2.0
+    ]
+   },
+   "cast_frame": 10.0,
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": 0.067,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BardW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "ChargeupTime": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxPacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "HealingMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "Ammo_Limit": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "Ammo_Cooldown": [
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0
+    ],
+    "MoveSpeed_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MoveSpeed_Base": [
+     0.175,
+     0.2,
+     0.225,
+     0.25,
+     0.275,
+     0.3,
+     0.325
+    ],
+    "MoveSpeed_Ratio": [
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006
+    ],
+    "APRatio_Min": [
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4
+    ],
+    "APRatio_Max": [
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7
+    ],
+    "MinimumHeal": [
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0
+    ],
+    "MaximumHeal": [
+     12.5,
+     50.0,
+     87.5,
+     125.0,
+     162.5,
+     200.0,
+     237.5
+    ]
+   },
+   "missile_speed": 20.0,
+   "cast_frame": 10.0,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "ChargeupTime": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxPacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "HealingMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "Ammo_Limit": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "Ammo_Cooldown": [
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0
+    ],
+    "MoveSpeed_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MoveSpeed_Base": [
+     0.175,
+     0.2,
+     0.225,
+     0.25,
+     0.275,
+     0.3,
+     0.325
+    ],
+    "MoveSpeed_Ratio": [
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006
+    ],
+    "APRatio_Min": [
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4
+    ],
+    "APRatio_Max": [
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7
+    ],
+    "MinimumHeal": [
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0
+    ],
+    "MaximumHeal": [
+     12.5,
+     50.0,
+     87.5,
+     125.0,
+     162.5,
+     200.0,
+     237.5
+    ]
+   },
+   "missile_speed": 20.0,
+   "cast_frame": 10.0,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0,
+    70.0
+   ],
+   "affects_type_flags": 1029,
+   "effect_amounts": {
+    "ChargeupTime": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "MaxPacks": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "HealingMult": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "Ammo_Limit": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "Ammo_Cooldown": [
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0,
+     18.0
+    ],
+    "MoveSpeed_Duration": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "MoveSpeed_Base": [
+     0.175,
+     0.2,
+     0.225,
+     0.25,
+     0.275,
+     0.3,
+     0.325
+    ],
+    "MoveSpeed_Ratio": [
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006,
+     0.0006
+    ],
+    "APRatio_Min": [
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4,
+     0.4
+    ],
+    "APRatio_Max": [
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7,
+     0.7
+    ],
+    "MinimumHeal": [
+     0.0,
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0
+    ],
+    "MaximumHeal": [
+     12.5,
+     50.0,
+     87.5,
+     125.0,
+     162.5,
+     200.0,
+     237.5
+    ]
+   },
+   "missile_speed": 20.0,
+   "cast_frame": 10.0,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 25000.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BardWActualHealing",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardWActualHealing"
+   ],
+   "evidence": "name:heal"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardWActualHealing",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardWActualHealing"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BardWHealthPack",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "affects_type_flags": 1029,
+   "missile_speed": 20.0,
+   "cast_frame": 10.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 800.0,
+   "damage_type": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardWHealthPack"
+   ],
+   "evidence": "name:heal"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "BardWDirectHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "affects_type_flags": 1029,
+   "missile_speed": 20.0,
+   "cast_frame": 10.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 800.0,
+   "damage_type": null
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardWDirectHeal"
+   ],
+   "evidence": "name:heal"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardWDirectHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "affects_type_flags": 1029,
+   "missile_speed": 20.0,
+   "cast_frame": 10.0,
+   "cooldown_rank1": null,
+   "cooldown_rank_max": null,
+   "range": 800.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardWDirectHeal"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BardBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 10.5,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BardBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 10.5,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BardBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 10.5,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BardBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 10.5,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "BardBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 10.5,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "BardBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 10.5,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.5,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "BardCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "affects_type_flags": 5327,
+   "missile_speed": 2000.0,
+   "cast_frame": 12.0,
+   "cooldown_rank1": 0.0,
+   "cooldown_rank_max": 0.0,
+   "range": 550.0,
+   "damage_type": null
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 12.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 12.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BardQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "affects_type_flags": 7231,
+   "missile_speed": 1500.0,
+   "cast_frame": 15.074999809265137,
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic"
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQMissile2"
+   ],
+   "inherited_from": "BardQ",
+   "evidence": "inherited:BardQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 15.075,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 15.074999809265137,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BardQMissile2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0,
+    525.0
+   ],
+   "affects_type_flags": 7231,
+   "missile_speed": 1500.0,
+   "cast_frame": 15.074999809265137,
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic"
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQMissile2"
+   ],
+   "inherited_from": "BardQ",
+   "evidence": "inherited:BardQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 15.075,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 15.074999809265137,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "BardQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 1500.0,
+   "cast_frame": 15.074999809265137,
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic"
+  },
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQMissile"
+   ],
+   "inherited_from": "BardQ",
+   "evidence": "inherited:BardQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 15.075,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 15.074999809265137,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "BardQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0,
+    950.0
+   ],
+   "affects_type_flags": 6154,
+   "missile_speed": 1500.0,
+   "cast_frame": 15.074999809265137,
+   "cooldown_rank1": 12.0,
+   "cooldown_rank_max": 7.0,
+   "range": 25000.0,
+   "damage_type": "magic"
+  },
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardQAbility/BardQMissile"
+   ],
+   "inherited_from": "BardQ",
+   "evidence": "inherited:BardQ"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 15.075,
+    "behavior": "windup"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "missile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 15.074999809265137,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardPChimes",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Traveler's Call",
+    "Chimes"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardPTooltip_D_nSAbility/BardPChimes"
+   ],
+   "evidence": "review:wiki-passive-chimes-spawn"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-minion",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardPSpirits",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Traveler's Call",
+    "Spirits"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardPTooltip_D_nSAbility/BardPSpirits"
+   ],
+   "evidence": "review:wiki-passive-meeps"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "BardPChimePickupSpeedBoost",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Traveler's Call",
+    "movement speed"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardPTooltip_D_nSAbility/BardPChimePickupSpeedBoost"
+   ],
+   "evidence": "review:wiki-chime-pickup-movespeed"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summoned-terrain-structure",
+  "family": "stack-transform-summon-resource",
+  "behavior": "BardECreateDoor",
+  "trigger": "on_cast",
+  "target_policy": "all",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "affects_type_flags": 7183,
+   "cast_frame": 10.0
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magical Journey",
+    "corridor",
+    "terrain"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardEAbility/BardECreateDoor"
+   ],
+   "evidence": "review:wiki-magical-journey-door"
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 10.0,
+    "behavior": "windup"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 10.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "BardWSpeedBoost",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {},
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Caretaker's Shrine",
+    "movement speed"
+   ],
+   "binary": [
+    "Characters/Bard/Spells/BardWAbility/BardWSpeedBoost"
+   ],
+   "evidence": "review:wiki-shrine-movespeed"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "apply_effect"
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "buff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  }
+ }
+]

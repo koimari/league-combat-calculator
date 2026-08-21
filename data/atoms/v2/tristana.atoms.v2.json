@@ -1,0 +1,1571 @@
+[
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TristanaEDebuff",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TristanaEDebuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaEAbility/TristanaEDebuff",
+    "Characters/Tristana/Spells/TristanaEAbility/TristanaECharge"
+   ],
+   "evidence": "name:debuff; refined:charge-mark stacks"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TristanaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      30.0,
+      45.0,
+      60.0,
+      75.0,
+      90.0,
+      105.0,
+      120.0
+     ],
+     [
+      35.0,
+      60.0,
+      85.0,
+      110.0,
+      135.0,
+      160.0,
+      185.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6282
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "TristanaE"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TristanaE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaEAbility/TristanaE"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TristanaE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    50.0,
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    70.0
+   ],
+   "damage": [
+    30.0,
+    45.0,
+    60.0,
+    75.0,
+    90.0,
+    105.0,
+    120.0
+   ],
+   "duration": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      30.0,
+      45.0,
+      60.0,
+      75.0,
+      90.0,
+      105.0,
+      120.0
+     ],
+     [
+      35.0,
+      60.0,
+      85.0,
+      110.0,
+      135.0,
+      160.0,
+      185.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": 4.0,
+   "damage_type": "physical",
+   "affects_type_flags": 6282
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.267,
+    "behavior": "TristanaE"
+   },
+   {
+    "state": "persistent",
+    "duration": 4.0,
+    "behavior": "TristanaE"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 16.0,
+   "cast_time_seconds": 0.267,
+   "uptime_fraction": 0.25,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaEAbility/TristanaE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TristanaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.215,
+    "behavior": "TristanaBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.215,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TristanaBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.215,
+    "behavior": "TristanaBasicAttack2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.215,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "TristanaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    175.0,
+    225.0,
+    275.0,
+    325.0,
+    375.0,
+    425.0,
+    475.0
+   ],
+   "duration": [
+    0.25,
+    0.4000000059604645,
+    0.550000011920929,
+    0.699999988079071,
+    0.8500000238418579,
+    1.0,
+    1.149999976158142
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      175.0,
+      225.0,
+      275.0,
+      325.0,
+      375.0,
+      425.0,
+      475.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.342,
+    "behavior": "TristanaR"
+   },
+   {
+    "state": "persistent",
+    "duration": 0.25,
+    "behavior": "TristanaR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.342,
+   "uptime_fraction": 0.0025,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaRAbility/TristanaR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.knockback",
+  "family": "crowd-control-mobility",
+  "behavior": "TristanaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    175.0,
+    225.0,
+    275.0,
+    325.0,
+    375.0,
+    425.0,
+    475.0
+   ],
+   "duration": [
+    0.25,
+    0.4000000059604645,
+    0.550000011920929,
+    0.699999988079071,
+    0.8500000238418579,
+    1.0,
+    1.149999976158142
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      175.0,
+      225.0,
+      275.0,
+      325.0,
+      375.0,
+      425.0,
+      475.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.342,
+    "behavior": "TristanaR"
+   },
+   {
+    "state": "persistent",
+    "duration": 0.25,
+    "behavior": "TristanaR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.342,
+   "uptime_fraction": 0.0025,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Types of Crowd Control"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaRAbility/TristanaR"
+   ],
+   "evidence": "tag:Trait_KnockBack"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TristanaR",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    175.0,
+    225.0,
+    275.0,
+    325.0,
+    375.0,
+    425.0,
+    475.0
+   ],
+   "duration": [
+    0.25,
+    0.4000000059604645,
+    0.550000011920929,
+    0.699999988079071,
+    0.8500000238418579,
+    1.0,
+    1.149999976158142
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      175.0,
+      225.0,
+      275.0,
+      325.0,
+      375.0,
+      425.0,
+      475.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.342,
+    "behavior": "TristanaR"
+   },
+   {
+    "state": "persistent",
+    "duration": 0.25,
+    "behavior": "TristanaR"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 100.0,
+   "cast_time_seconds": 0.342,
+   "uptime_fraction": 0.0025,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaRAbility/TristanaR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TristanaQ",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    21.0,
+    20.0,
+    19.0,
+    18.0,
+    17.0,
+    16.0,
+    16.0
+   ],
+   "cast_range": [
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0,
+    20.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "damage": null,
+   "duration": [
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0,
+    7.0
+   ],
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 9221
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.101,
+    "behavior": "TristanaQ"
+   },
+   {
+    "state": "persistent",
+    "duration": 7.0,
+    "behavior": "TristanaQ"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 21.0,
+   "cast_time_seconds": 0.101,
+   "uptime_fraction": 0.3333,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaQAbility/TristanaQ"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "TristanaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      35.0,
+      70.0,
+      105.0,
+      140.0,
+      175.0,
+      210.0,
+      245.0
+     ],
+     [
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.151,
+    "behavior": "TristanaW"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "TristanaW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": 0.151,
+   "uptime_fraction": 0.0833,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaWAbility/TristanaW"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TristanaW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      35.0,
+      70.0,
+      105.0,
+      140.0,
+      175.0,
+      210.0,
+      245.0
+     ],
+     [
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.151,
+    "behavior": "TristanaW"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "TristanaW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": 0.151,
+   "uptime_fraction": 0.0833,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaWAbility/TristanaW"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "TristanaW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      35.0,
+      70.0,
+      105.0,
+      140.0,
+      175.0,
+      210.0,
+      245.0
+     ],
+     [
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.151,
+    "behavior": "TristanaW"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "TristanaW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": 0.151,
+   "uptime_fraction": 0.0833,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaWAbility/TristanaW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "TristanaW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    24.0,
+    22.0,
+    20.0,
+    18.0,
+    16.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    30.0,
+    35.0,
+    40.0,
+    45.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": null,
+   "effect_amounts": {
+    "damage_spine": [
+     [
+      35.0,
+      70.0,
+      105.0,
+      140.0,
+      175.0,
+      210.0,
+      245.0
+     ],
+     [
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0,
+      350.0
+     ]
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.151,
+    "behavior": "TristanaW"
+   },
+   {
+    "state": "persistent",
+    "duration": 2.0,
+    "behavior": "TristanaW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 24.0,
+   "cast_time_seconds": 0.151,
+   "uptime_fraction": 0.0833,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaWAbility/TristanaW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "TristanaWSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TristanaWSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaWAbility/TristanaWSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "TristanaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.215,
+    "behavior": "TristanaCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.215,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "TristanaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.215,
+    "behavior": "TristanaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.215,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "TristanaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375,
+    554.0999755859375
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.215,
+    "behavior": "TristanaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": 0.215,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.stack",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TristanaECharge",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "TristanaECharge"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Explosive Charge"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaEAbility/TristanaECharge"
+   ],
+   "evidence": "refined:wiki-description (on-hit stacks up to 4, +25% damage each, detonates at max)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "TristanaPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "effect_amounts": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "TristanaPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Draw a Bead"
+   ],
+   "binary": [
+    "Characters/Tristana/Spells/TristanaPassiveAbility/TristanaPassive"
+   ],
+   "evidence": "refined:wiki-description+leveling (range 550->717.65 by level)"
+  }
+ }
+]

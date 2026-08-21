@@ -106,18 +106,21 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target
     )
 
-    # "Subsequent Bolt Minimum/Maximum Magic Damage" (effects[2]) are
-    # deliberately NOT read: those are the 20%-damage bolts pulled
-    # through OTHER marked enemies — this is a single-target calc, the
-    # primary target never takes them. Do not "fix" this by adding them.
-    entry = damage_entry(
-        ability.get("name", "Twofold Hex"),
-        rank,
-        extract_cooldown(ability, rank),
-        first + recast_min,  # full-HP bound (hp-scaled entries store a bound)
-        "magic",
+    # "Subsequent Bolt Minimum/Maximum Magic Damage" are the 20%-damage
+    # bolts pulled through OTHER marked enemies.  The primary target
+    # takes none by default (single-target calc); with
+    # ``q_marked_enemies`` set, each additional marked enemy's expunge
+    # bolt passes through the primary target, dealing one subsequent
+    # bolt (missing-health interpolated like the main recast).
+    bolt_min = extract_named(
+        ability, "Subsequent Bolt Minimum Magic Damage", rank, ctx.stats, ctx.target
     )
-    entry["parts"] = (
+    bolt_max = extract_named(
+        ability, "Subsequent Bolt Maximum Magic Damage", rank, ctx.stats, ctx.target
+    )
+    extra_marks = min(max(int(ctx.option("q_marked_enemies")), 0), 5)
+
+    parts = [
         # The recast is available after 0.1 seconds; retaining that sourced
         # delay matters for Spirit Abjuration's per-hit stack order.
         DamagePart("magic", first, time_offset=0.0),
@@ -127,11 +130,52 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
             hp_scaled_damage=_expunge_scaled(recast_min, recast_max),
             time_offset=0.1,
         ),
+    ]
+    bound = first + recast_min
+    if extra_marks:
+        parts.append(
+            DamagePart(
+                "magic",
+                amount=bolt_min,  # full-HP bound for the diagnostic
+                hp_scaled_damage=_expunge_scaled(bolt_min, bolt_max),
+                count=extra_marks,
+                time_offset=0.1,
+            )
+        )
+        bound += bolt_min * extra_marks
+
+    entry = damage_entry(
+        ability.get("name", "Twofold Hex"),
+        rank,
+        extract_cooldown(ability, rank),
+        bound,  # full-HP bound (hp-scaled entries store a bound)
+        "magic",
     )
+    entry["parts"] = tuple(parts)
+    if extra_marks:
+        entry["detail"] = (
+            f"{extra_marks} additional marked enemy expunge bolt(s) pass "
+            "through the primary target at 20% of the recast "
+            "(missing-health scaled)"
+        )
     return entry
 
 
-OPTIONS: list[dict[str, Any]] = []
+OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "q_marked_enemies",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Additional enemies marked by Q: each expunge bolt passing "
+            "through the primary target deals the sourced 20% "
+            "subsequent-bolt damage"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
+]
 
 ASSUMPTIONS = [
     "Passive procs every 3rd damaging hit; autos AND damaging ability "
@@ -143,8 +187,11 @@ ASSUMPTIONS = [
     "Q recast always fires once per Q cast (auto-recast at mark end)",
     "Q recast missing-HP scaling evaluated against the fight sim's "
     "tracked target HP (BotRK-style decreasing-HP model)",
-    "Q subsequent bolts (20% to other marked enemies) not modeled — "
-    "single-target calc",
+    "Q subsequent bolts (the sourced 'Subsequent Bolt Minimum/Maximum "
+    "Magic Damage' rows, exactly 20% of the main recast) are priced "
+    "per additional marked enemy selected via q_marked_enemies (default "
+    "0 = single-target); each expunge bolt passing through the primary "
+    "target is missing-health interpolated like the main recast",
     "W (Across the Veil) is utility only (dash/invisibility/MS) — not modeled",
     "R rift zone / slows are utility — only the leap damage is modeled",
 ]

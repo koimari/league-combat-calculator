@@ -29,6 +29,7 @@ from src.calculator.champions.slotlib import (
 )
 
 _ENEMY_NAMES = ["Ahri", "Annie", "Orianna"]
+_ENEMY_RANKS = {"Q": 5, "W": 5, "E": 0, "R": 3}
 
 _DATA = json.loads(
     Path(__file__)
@@ -70,7 +71,7 @@ def _fight(
                 "level": 18,
                 "items": [],
                 "role": "mid",
-                "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+                "ability_ranks": _ENEMY_RANKS,
             }
         ],
     }

@@ -25,9 +25,9 @@ Why each slot is non-generic:
   Two coupled stats with flat+percent parts exceed the ``stat_buff``
   factory (one stat, flat or percent). Stats-panel only: no damage in
   the kit scales off resistances, so nothing feeds back into parsing.
-- E (Unbreakable) is pure directional damage MITIGATION (35-55%, first
-  hit blocked) + 10% MS — no damage dealt, no self stats the model
-  uses, and incoming damage is not modeled. Deliberately absent.
+- E (Unbreakable) is a typed directional projectile-defense atom. The
+  selected active window blocks the first selected hit and reduces later
+  selected hits by the sourced rank value.
 - R (Glacial Fissure) is a clean generic read ("Magic Damage",
   150/250/350 + 60% AP); knockup and slow field are CC only.
 """
@@ -45,6 +45,7 @@ from .slotlib import (
     find_named_leveling,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -60,18 +61,6 @@ _TRIGGER_PER_LEVEL = 10.0
 _BONUS_AUTO_RATIO = 0.4  # immunity-window autos deal 40% of the trigger
 # Stack-immunity window after a proc: 8/6/4s at champion levels 1/6/11.
 _IMMUNITY_BREAKPOINTS = ((11, 4.0), (6, 6.0), (1, 8.0))
-# HARDCODED: verify on patch updates — Unbreakable (E) is projectile-
-# blocking CC/mitigation state, not a shield: the cached leveling row
-# supplies only the barrier duration (3/3.25/3.5/3.75/4s) and the
-# description prose says the first champion-damage instance through the
-# barrier is reduced by 100%, with further instances reduced by
-# 35-55% (rank-based, wiki prose).  The shared ledger's shield events
-# price absorbing barriers, and the directional projectile block is not
-# expressible as a flat shield amount — the ability stays documented
-# state with the sourced duration pinned here.
-_UNBREAKABLE_REDUCTION_MIN = 0.35  # 35% at rank 1 (wiki prose)
-_UNBREAKABLE_REDUCTION_MAX = 0.55  # 55% at rank 5 (wiki prose)
-
 # Event kinds for the passive's hit timeline; Q sorts before autos on
 # equal timestamps (the rotation leads the fight model, as in damage.py).
 _Q_HIT = 0
@@ -182,6 +171,9 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
                     "damage_type": "magic",
                     "damage": trigger,
                     "event_precision": "exact",
+                    "cc_kind": "stun",
+                    "cc_duration": 1.25 + 0.5 * (ctx.level - 1) / 17.0,
+                    "cc_reviewed": True,
                 }
             )
 
@@ -281,6 +273,44 @@ def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
 _stand_behind_me.phase = BUFF
 
 
+def _unbreakable(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: expose the selected directional projectile-defense atom."""
+    ability = ctx.ability()
+    rank = ctx.rank_for()
+    if ability is None or rank < 1:
+        return None
+    reduction = extract_value(ability, "Damage reduction", rank) / 100.0
+    duration = extract_value(ability, "Barrier Duration", rank)
+    active = bool(ctx.option("e_active"))
+    selected_duration = float(ctx.option("e_active_seconds") or 0.0)
+    if selected_duration > 0.0:
+        duration = min(duration, selected_duration)
+    return {
+        "name": ability.get("name", "Unbreakable"),
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "total_raw": 0.0,
+        "damage_type": "magic",
+        "parts": (),
+        "defensive_interaction": {
+            "kind": "braum_unbreakable",
+            "active": active,
+            "duration": duration if active else 0.0,
+            "damage_reduction": reduction,
+            "full_block_first": True,
+            "blocked_sources": list(ctx.option("e_blocked_skillshots")),
+        },
+        "detail": (
+            "Directional barrier: first selected champion hit is fully "
+            f"reduced, later selected hits lose {reduction:.0%} damage. "
+            f"Source duration at rank: {duration:g}s."
+        ),
+    }
+
+
+_unbreakable.phase = BUFF
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "w_active",
@@ -289,6 +319,49 @@ OPTIONS: list[dict[str, Any]] = [
         "label": (
             "W (Stand Behind Me) active: grants self 20-40 (+36% bonus) "
             "armor and magic resistance"
+        ),
+    },
+    {
+        "key": "e_active",
+        "type": "bool",
+        "default": False,
+        "label": "E (Unbreakable) active against selected skillshots",
+    },
+    {
+        "key": "e_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "E active start time in seconds",
+    },
+    {
+        "key": "e_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 4.0,
+        "label": "E active seconds; zero uses the sourced rank duration",
+    },
+    {
+        "key": "e_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Skillshot slots to block; an empty list blocks all marked " "skillshots"
+        ),
+    },
+    {
+        "key": "e_blocked_event_ids",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Specific incoming event ids to block (e.g. "
+            "'main:enemy:Braum:1'). Event ids are positional per "
+            "scenario: builds, ranks, or roster changes renumber them. "
+            "An empty list blocks nothing by event id."
         ),
     },
 ]
@@ -310,17 +383,20 @@ ASSUMPTIONS = [
     "Passive stacks last 4s (refreshing) — with autos in the timeline "
     "they never expire mid-buildup; without autos (Q-only stacking) the "
     "expiry IS modeled, so the passive correctly never procs off Q alone",
-    "Passive stun (1.25-1.75s) and R knockup/slow are CC only and not "
-    "valued as damage",
+    "Passive stun (1.25-1.75s) is an authored control interval. R's "
+    "maximum knock-up duration is sourced from the cached rank row; the "
+    "slow field remains utility",
     "Q's 2.5% max HP scaling uses Braum's own built max HP",
     "Q applies a passive stack but no on-hit effects and no "
     "immunity-window bonus (autos only)",
-    "E (Unbreakable) is documented as CC/mitigation state: a "
-    "directional projectile barrier lasting 3/3.25/3.5/3.75/4s (cached "
-    "Barrier Duration row) that reduces the first champion-damage "
-    "instance by 100% and further instances by 35-55% (wiki prose, "
-    "module constants). The ledger's shield events price absorbing "
-    "barriers, so no flat shield amount is invented",
+    "E (Unbreakable) uses the cached Barrier Duration and Damage reduction "
+    "rows. The interaction atom blocks the first selected hit and reduces "
+    "later selected hits. The scenario chooses the active window, source "
+    "slots, and optional specific event ids (e_blocked_event_ids). Event "
+    "ids are positional per scenario ('attacker:defender:index'); changes "
+    "to the build, ranks, or roster renumber them, and any selected id that "
+    "never matches an incoming event is reported on the survival receipt "
+    "as blocked_event_ids_unmatched.",
     "W resistances affect the stats panel only; no damage in the kit "
     "scales off them",
 ]
@@ -328,10 +404,16 @@ ASSUMPTIONS = [
 SLOTS = {
     "Q": _winters_bite,
     "W": _stand_behind_me,
+    "E": _unbreakable,
     # One fissure sweep on one target, so one part and one hit — the
-    # certification that carries R's reviewed knockup into the ledger.
-    "R": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # certification that carries R's reviewed knockup into the ledger,
+    # with the interval itself read off the cached rank row.
+    "R": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="knockup",
+        duration_attr="Maximum Knock up Duration",
     ),
     "P": _concussive_blows,
 }
@@ -341,9 +423,11 @@ SLOTS = {
 # decaying over 2 seconds".  R (Glacial Fissure) damages "enemies within
 # its path as well as those around Braum", and "the first target hit is
 # knocked up for at least 0.6 seconds.  All other enemies hit are knocked
-# up for 0.6 seconds".  W is the shield/dash row with no damage part, and
-# P's Concussive Blows stun is the four-stack proc row the engine builds
-# from the auto stream, not a cast this module authors a part for.
+# up for 0.6 seconds".  W is the shield/dash row with no damage part and
+# E is the directional barrier, which controls nobody.  P's Concussive
+# Blows stun is not declared here because the proc is not a cast: the
+# slot authors its own timeline events and stamps the level-scaled stun
+# interval on the one that procs.
 MODULE_CC = {"Q": "slow", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Braum", cc_kinds=MODULE_CC)

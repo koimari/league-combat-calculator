@@ -19,6 +19,7 @@ whole campaign is about.
 from __future__ import annotations
 
 import ast
+import collections
 import importlib.util
 import json
 import sys
@@ -150,7 +151,24 @@ def test_the_declared_zero_reaches_a_payload_at_all() -> None:
         for entry in combat["dispositions"].values()
         if entry["disposition"] == "STRUCTURAL_ZERO"
     ]
-    assert len(declared) == 38
+    # Re-measured after the landing-instant ruling: 41, and the composition
+    # pinned by its composition rather than as a bare figure, so a shift in
+    # *which* refusal reaches the payload is a failure and not a silent
+    # re-count.  ``attacker_state_blocked`` is the merged castability gate:
+    # a leaf refused because its caster was disabled when the cast was due.
+    # Re-measured once more after Whimsy stopped polymorphing the board on
+    # a self cast (one cast, one branch): far fewer leaves sit out a
+    # disabled window, so more attackers and targets die inside it.
+    assert collections.Counter(entry["reason"] for entry in declared) == {
+        "attacker_state_blocked": 8,
+        "trigger_event_skipped": 10,
+        "outside_window": 2,
+        # A control takes effect AFTER the damage at its own timestamp, so
+        # an opening volley lands and its attacker can die inside the window
+        # that used to be pure downtime.
+        "attacker_dead": 12,
+        "target_dead": 9,
+    }
     assert all(entry["reason"] for entry in declared)
 
 

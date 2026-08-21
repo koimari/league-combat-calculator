@@ -6,7 +6,12 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    with_control_event,
+)
 from .source_receipts import load_champion_sources
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
@@ -130,16 +135,20 @@ SLOTS = {
     "P": _spider_queen,
     "Q": _neurotoxin_or_bite,
     "W": _volatile_spiderling,
-    "E": _cocoon,
+    "E": with_control_event(
+        _cocoon,
+        kind="stun",
+        duration_attr="Stun Duration",
+    ),
     "R": _form_toggle,
 }
 # Cached kit review.  Neither Q form controls what it damages (Neurotoxin
 # fires a toxin, Venomous Bite pounces and reveals) and the Volatile
-# Spiderling only "explodes to deal magic damage to nearby enemies".  E is
-# absent rather than "none": Cocoon does stun, but it deals no damage, so
-# there is no event of its own to carry the answer.  W's Skittering Frenzy
-# form, R and P grant stats.
-MODULE_CC = {"Q": "none", "W": "none"}
+# Spiderling only "explodes to deal magic damage to nearby enemies".  E
+# (Cocoon) deals no damage, so it carries its stun as a sourced
+# ``control_event`` off the "Stun Duration" row instead of on a part.  W's
+# Skittering Frenzy form, R and P grant stats.
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Elise", cc_kinds=MODULE_CC)
 

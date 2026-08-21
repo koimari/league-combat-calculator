@@ -43,8 +43,10 @@ from .slotlib import (
     extract_value,
     stat_buff,
     sum_modifiers,
+    with_control_event,
 )
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 # HARDCODED: verify on patch updates — the passive's bonus-AD ratios
 # exist ONLY in the description prose; its modifier ``units`` are all
@@ -82,6 +84,18 @@ _P_BLEED_EFFECT = 1
 _P_PER_STACK_TOTAL = 0
 _P_MIGHT_EFFECT = 3
 _P_MIGHT_BONUS_AD = 0  # 230 / 280 — non-linear, read by level index
+
+# HARDCODED rule declaration — Crippling Strike's kill-triggered cooldown
+# halving and mana refund.  The cached W effects[1] prose ("If this attack
+# kills the target, half of Crippling Strike's cooldown is reduced and its
+# mana cost is refunded.") has no leveling row, so the atom catalog holds
+# no atom for it; the game binary corroborates the HALF via the W hit
+# spell's PercentCDRefund [50.0 x7] (the magnitude is data, the kill check
+# script-side) and the flat 40 via the cached cost row [40 x5] + the
+# binary mana [40 x6].  The kill is ASSERTED by the w_kill_assertion
+# option — the fight model's target never dies, so no input can prove it.
+W_KILL_COOLDOWN_FACTOR = 0.5
+W_KILL_REFUND_FLAT = 40.0
 
 
 def _per_level(
@@ -257,6 +271,20 @@ def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     # one part and one hit, which is what carries W's reviewed slow into
     # the event ledger.
     entry["event_order_certified"] = "single_hit"
+    if ctx.option("w_kill_assertion"):
+        # P4-14: the kill is asserted (the model's target never dies, so
+        # the input cannot prove it — the w_kill_assertion option is the
+        # r_execute_recast precedent).  Every accepted W empowered attack
+        # is assumed to kill: the cycle's cooldown is halved (the
+        # PercentCDRefund 50.0) and the flat 40 (the sourced cost) is
+        # refunded by the resource walk.  With the option off the entry
+        # stays byte-identical (the rule is simply not modeled).
+        entry["cooldown"] *= W_KILL_COOLDOWN_FACTOR
+        entry["kill_refund"] = {
+            "flat": W_KILL_REFUND_FLAT,
+            "source": "Darius W (Crippling Strike) kill refund",
+            "atoms": (),
+        }
     return entry
 
 
@@ -289,6 +317,12 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
     that option directly: a stack count R believed but the timeline did
     not would let R hit for 5 stacks while Noxian Might — granted by
     those very stacks — stayed off.
+
+    With ``r_execute_recast`` (default off) the cast is assumed to
+    EXECUTE the target, so the sourced free recast ("can also recast
+    the ability within 20 seconds at no cost", cached R prose) fires
+    once more against the same (max) stack count — the recast parts are
+    a second base + per-stack pair offset past the kill check.
     """
     ability = ctx.ability()
     if ability is None:
@@ -301,23 +335,15 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
     per_stack = extract_named(
         ability, "Bonus Damage Per Stack", rank, ctx.stats, ctx.target
     )
+    base_ratio = _ad_ratio(ability, "True Damage", rank)
     per_stack_ratio = _ad_ratio(ability, "Bonus Damage Per Stack", rank)
 
     # Parse-level view of the opening state; the engine re-resolves the
     # count against the timeline at R's cast time.
     stacks = _starting_stacks(ctx)
 
-    entry = damage_entry(
-        ability.get("name", "Noxian Guillotine"),
-        rank,
-        extract_cooldown(ability, rank),
-        base + per_stack * stacks,
-        "true",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "true", base, bonus_ad_ratio=_ad_ratio(ability, "True Damage", rank)
-        ),
+    parts = [
+        DamagePart("true", base, bonus_ad_ratio=base_ratio),
         DamagePart(
             "true",
             per_stack,
@@ -325,13 +351,67 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
             bonus_ad_ratio=per_stack_ratio,
             dot_stack_scaled=True,
         ),
+    ]
+    total = base + per_stack * stacks
+    execute_recast = bool(ctx.option("r_execute_recast"))
+    if execute_recast:
+        # The recast lands after the 0.15s death check and its own leap
+        # (R cast time again), at the same stack count the first R left.
+        recast_offset = R_CAST_TIME + 0.15 + R_CAST_TIME
+        parts.extend(
+            (
+                DamagePart(
+                    "true",
+                    base,
+                    bonus_ad_ratio=base_ratio,
+                    time_offset=recast_offset,
+                ),
+                DamagePart(
+                    "true",
+                    per_stack,
+                    count=stacks,
+                    bonus_ad_ratio=per_stack_ratio,
+                    dot_stack_scaled=True,
+                    time_offset=recast_offset,
+                ),
+            )
+        )
+        total *= 2.0
+
+    entry = damage_entry(
+        ability.get("name", "Noxian Guillotine"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "true",
     )
+    entry["parts"] = tuple(parts)
+    if execute_recast:
+        entry["detail"] = (
+            f"execute recast: both casts at {stacks} Hemorrhage stack(s) "
+            f"({base:g} + {stacks} x {per_stack:g} per cast)"
+        )
     entry["applies_dot_stack"] = True
     entry["cast_time"] = R_CAST_TIME
     return entry
 
 
 OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "r_execute_recast",
+        "type": "bool",
+        "default": False,
+        "label": (
+            "Assume R executes the target: the free recast fires once "
+            "more within 20 seconds (same stack count)"
+        ),
+        "rotation": {
+            "condition": "execute",
+            "kind": "execute",
+            "role": "execute",
+            "slot": "R",
+        },
+    },
     {
         "key": "starting_hemorrhage_stacks",
         "type": "int",
@@ -342,6 +422,21 @@ OPTIONS: list[dict[str, Any]] = [
             "Hemorrhage stacks on the target when the fight opens "
             "(5 = already stacked, so Noxian Might is up)"
         ),
+    },
+    {
+        "key": "w_kill_assertion",
+        "type": "bool",
+        "default": False,
+        "label": (
+            "Assume every accepted W empowered attack kills the target: "
+            "Crippling Strike's cooldown is halved (PercentCDRefund 50.0) "
+            "and its mana cost (40) is refunded"
+        ),
+        # NO rotation metadata: the kill does not reorder the rotation (an
+        # execute-role edge on the damage row would make the resolver
+        # derive a different order — the r_execute_recast metadata is R's
+        # own; W's kill is a resource/cooldown assertion, not a rotation
+        # edge).
     },
 ]
 
@@ -373,8 +468,15 @@ ASSUMPTIONS = [
     "its always-on armor-penetration passive is modeled",
     "Q models the outer blade only; the inner radius (handle, 35% "
     "damage, applies no stack) is a misplay and is not modeled",
-    "R is cast once — the free recast on execute is not modeled, since "
-    "the target does not die in this calculator",
+    "R is cast once by default; with r_execute_recast enabled the "
+    "cast is assumed to execute the target, so the sourced free recast "
+    "('recast the ability within 20 seconds at no cost', cached R "
+    "prose) fires once more against the same stack count — both casts "
+    "priced at 2 x (base + N x per-stack), the recast parts offset "
+    "past the 0.15s kill check; the model's target never dies, so the "
+    "execute is an assertion via the option, and the recast's mana "
+    "cost is not separately zeroed (one cast's cost is the module's "
+    "existing single-cast cost)",
     "Bleed uses committed accounting: every stack applied during the "
     "fight counts its full 5s of ticks, including past the fight "
     "cutoff; the bleed cannot crit",
@@ -382,8 +484,23 @@ ASSUMPTIONS = [
     "target is a champion",
     "Q's self-heal (17-51% of missing health by targets hit) is modeled in "
     "the ordered participant ledger; R's execute reset restores nothing here",
-    "W's kill-triggered cooldown reduction and mana refund are not modeled",
-    "CC is not modeled: Q's slow, E's pull/rebound/slow, W's 90% slow, and R's fear",
+    "W's kill-triggered cooldown reduction and mana refund are modeled as "
+    "an ASSERTION: the w_kill_assertion option assumes every accepted W "
+    "empowered attack kills (the model's target never dies, so no input "
+    "can prove a kill — the r_execute_recast precedent).  With the option "
+    "on, W's cooldown is halved (the binary PercentCDRefund 50.0; haste "
+    "applies to the halved base) and the flat 40 (the sourced cost row) "
+    "is refunded by the resource walk at the W cast time after the spend "
+    "(cast, hit, refund — it can only enable later casts).  The cached "
+    "notes' exclusion is jungle plants only ('The cooldown reduction and "
+    "mana refund will not trigger when killing jungle plants.') — the "
+    "modeled target is a champion, so the exclusion is trivially "
+    "satisfied; no structure/monster exclusion is sourced and none is "
+    "invented.  The in-game swing lands one auto interval after the cast "
+    "and the 4s empower window is never enforced (the model's hit time "
+    "is the cast time) — the coarse timing is documented, not modeled.",
+    "Q, W, and R slow effects are utility; E's sourced 1-second "
+    "airborne interval is counted as action downtime",
 ]
 
 SLOTS = {
@@ -393,6 +510,12 @@ SLOTS = {
     "W": _crippling_strike,
     "R": _noxian_guillotine,
 }
+SLOTS["E"] = with_control_event(
+    SLOTS["E"],
+    kind="airborne",
+    duration_attr="Airborne Duration",
+    effect_index=1,
+)
 
 # Reviewed crowd control, read from the cached kit.  Q (Decimate) swings
 # "to deal physical damage to nearby enemies" with no control clause.  W
@@ -418,4 +541,51 @@ parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 
 SOURCES = load_champion_sources("Darius")
 
-SELF_HEALING_RULE = declare_healing_rule("Darius")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Darius self-healing events from its authored packet.
+
+    Decimate's outer blade heals for 17% of missing health per enemy
+    champion hit, capped at 51% for three or more champions.  The heal is
+    paid on the CAST — one activation, however many hits the row authors —
+    and pair packets mark the cast so the coupled timeline coalesces those
+    per-target receipts before applying one live heal.
+    """
+    healing = []
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        event = payment.event
+        trigger_time = float(event.get("time", 0.0))
+        trigger_sequence = int(event.get("sequence", 0) or 0)
+
+        def missing_health_heal(
+            current_health: float,
+            maximum_health: float,
+            ratio: float = 0.17,
+        ) -> float:
+            return max(0.0, maximum_health - current_health) * ratio
+
+        healing.append(
+            {
+                "time": trigger_time,
+                "amount": 0.0,
+                "amount_formula": missing_health_heal,
+                "source": "Decimate",
+                "kind": "champion_ability",
+                "_darius_q_group": (trigger_time, trigger_sequence),
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Darius", derive_self_healing)

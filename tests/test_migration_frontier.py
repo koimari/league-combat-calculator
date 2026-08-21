@@ -52,12 +52,17 @@ def test_the_three_counters_reproduce_the_declared_baselines() -> None:
 
 
 def test_counter_6_counts_text_and_records_the_ast_call_count_beside_it() -> None:
-    """The 118 includes one occurrence that is prose, and the receipt says so.
+    """The kernel count includes occurrences that are prose, and both are named.
 
     ``score_state.py`` explains in a comment why the score ledger pays for no
-    rounding.  A counter that counted calls would read 117 against a plan that
-    says 118; a counter that counted only text could be driven down by
-    deleting a comment.  Recording both is what makes either move visible.
+    rounding, and ``transitions.py`` cites the rounding done elsewhere on the
+    revive timestamps it compares.  A counter that counted calls would read two
+    below the count the baseline is declared at; a counter that counted only
+    text could be driven down by deleting a comment.  Recording both is what
+    makes either move visible — including the direction nobody guards against,
+    where a comment is reworded to spell the counted token and the ratchet
+    tightens for free.  This equality is the sole home of that ledger, so it is
+    the pin a merge re-reads rather than a literal a merge may edit past.
     """
     report = migration_frontier.scan()
     prose_only = {
@@ -65,7 +70,10 @@ def test_counter_6_counts_text_and_records_the_ast_call_count_beside_it() -> Non
         for path, text in report.round_text.items()
         if text != report.round_calls[path]
     }
-    assert prose_only == {"calculator/survival/score_state.py": 1}
+    assert prose_only == {
+        "calculator/survival/score_state.py": 1,
+        "calculator/survival/transitions.py": 1,
+    }
 
 
 def test_the_committed_receipt_equals_the_tree() -> None:

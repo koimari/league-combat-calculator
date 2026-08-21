@@ -29,7 +29,10 @@ from scripts.repin_corpus import (
     load_corpus,
     non_legacy_scenarios,
 )
+
 from src import app as app_module
+
+pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CORPUS_PATH = REPO_ROOT / "data" / "practice-corpus" / "scenarios.json"

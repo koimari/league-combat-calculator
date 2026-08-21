@@ -364,3 +364,32 @@ class TestThePinnedPreCampaignOrdering:
         assert marks - {"none"}, f"{champion_name} {slot} no longer marks a kind"
         edges = detect_setup_consume_edges(champion_name, parsed, data, {})
         assert [e for e in edges if e.kind == "cc_setup" and e.setup == slot]
+
+
+def test_syndra_100_stack_execute_places_r_last() -> None:
+    syndra = next(
+        champion
+        for champion in fetch_champion_data().values()
+        if champion.get("name") == "Syndra"
+    )
+    stats = {"attack_damage": 80.0, "ability_power": 200.0}
+    options = {"splinters": 100, "r_spheres": 3}
+    abilities = parse_champion_abilities(
+        syndra,
+        11,
+        200.0,
+        ability_ranks={"Q": 5, "W": 3, "E": 1, "R": 2},
+        champion_stats=stats,
+        champion_options=options,
+    )
+
+    order, rule = resolve_cast_order(
+        "Syndra",
+        abilities,
+        champion_data=syndra,
+        champion_options=options,
+    )
+
+    assert order[-1] == "R"
+    assert rule is not None
+    assert "execute" in rule.rationale.lower()

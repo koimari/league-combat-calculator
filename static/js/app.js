@@ -1,4 +1,12 @@
-const DDRAGON = "https://ddragon.leagueoflegends.com/cdn/16.15.1/img";
+// Asset and patch identity come from the cache's own provenance, served on
+// /api/config as data_snapshot.patch — never pinned here. Empty until the
+// bootstrap lands: an unsourced patch shows no icon rather than a stale one.
+let ddragonBase = "";
+let servedPatchLabel = "";
+
+function ddragonAsset(suffix) {
+  return ddragonBase ? `${ddragonBase}/${suffix}` : "";
+}
 
 let DATA = { champions: [], items: [] };
 let BIS_PROFILES = {};
@@ -43,6 +51,7 @@ const engine = {
   registration: new Map(),
   itemOptions: {},
   championOptions: {},
+  keystoneOptions: {},
   keystones: [],
   runes: [],
   runeShards: [],
@@ -108,6 +117,8 @@ const state = {
     statShardsB: ["", "", ""],
     runeOptionsA: {},
     runeOptionsB: {},
+    keystoneOptionsA: {},
+    keystoneOptionsB: {},
     comparisonEnabled: false,
     baseDamage: 0,
     apRatio: 0,
@@ -115,6 +126,7 @@ const state = {
     adRatio: 0,
     abilityInputs: {},
     championOptions: {},
+    supportTargetSelections: {},
   },
   targets: [],
   allies: [],
@@ -639,18 +651,25 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
 }
 
 /**
- * The variant index a slot starts on: the one matching its bound boolean
- * option's module default.  Variant 0 is Jayce's hammer kit, but his module
- * defaults hammer_stance to false (cannon) — a fresh pick must not flip the
- * form.  Slots without a bound form toggle start on their first variant.
+ * The variant index a slot starts on: the one matching its bound option's
+ * module default.  Variant 0 is Jayce's hammer kit, but his module defaults
+ * hammer_stance to false (cannon) — a fresh pick must not flip the form.  A
+ * boolean toggle maps through VARIANT_BOOLEAN_OPTIONS; an option whose default
+ * is already an index is clamped to the slot's variant list.  Slots without a
+ * bound option start on their first variant.
  */
-function defaultFormVariantIndex(slot) {
+function defaultFormVariantIndex(slot, count = 1) {
   const binding = abilityOptionBinding(slot, "ability_variants");
-  if (!(binding in VARIANT_BOOLEAN_OPTIONS)) return 0;
+  if (!binding) return 0;
   const option = (engine.championOptions[state.attacker.champion]?.options || [])
     .find((entry) => entry.key === binding);
-  const trueIndex = VARIANT_BOOLEAN_OPTIONS[binding];
-  return option?.default ? trueIndex : 1 - trueIndex;
+  const clamp = (index) => Math.max(0, Math.min(count - 1, Math.trunc(index)));
+  if (binding in VARIANT_BOOLEAN_OPTIONS) {
+    const trueIndex = VARIANT_BOOLEAN_OPTIONS[binding];
+    return clamp(option?.default ? trueIndex : 1 - trueIndex);
+  }
+  const value = Number(option?.default);
+  return Number.isFinite(value) ? clamp(value) : 0;
 }
 
 /**
@@ -706,7 +725,7 @@ function resetAbilityInputs() {
   });
   state.attacker.abilityInputs = Object.fromEntries(activeAbilityKit().map((ability) => [ability.slot, {
     rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
-    variant: defaultFormVariantIndex(ability.slot),
+    variant: defaultFormVariantIndex(ability.slot, ability.variants?.length || 1),
   }]));
 }
 
@@ -798,7 +817,7 @@ function newRosterLoadout(kind) {
 
 function championImage(name) {
   const champion = getChampion(name);
-  return champion ? `${DDRAGON}/champion/${champion.key}.png` : "";
+  return champion ? ddragonAsset(`champion/${champion.key}.png`) : "";
 }
 
 function isPracticeDummy(loadout) {
@@ -815,13 +834,13 @@ function practiceDummyStatValue(loadout, key) {
 }
 
 function itemImage(id) {
-  return `${DDRAGON}/item/${Number(id)}.png`;
+  return ddragonAsset(`item/${Number(id)}.png`);
 }
 
 function abilityImage(ability) {
   if (!ability?.icon) return "";
   if (ability.icon.startsWith("http")) return ability.icon;
-  return `${DDRAGON}/${ability.slot === "P" ? "passive" : "spell"}/${ability.icon}`;
+  return ddragonAsset(`${ability.slot === "P" ? "passive" : "spell"}/${ability.icon}`);
 }
 
 function itemName(id, fallback = "Empty slot") {
@@ -1529,9 +1548,17 @@ function optionSlot(option) {
 }
 
 function abilityBindsChampionOption(key) {
-  const option = (engine.championOptions[state.attacker.champion]?.options || [])
-    .find((entry) => entry.key === key);
-  return Boolean(option && optionSlot(option));
+  const definitions = engine.championOptions[state.attacker.champion]?.options || [];
+  const option = definitions.find((entry) => entry.key === key);
+  if (option && optionSlot(option)) return true;
+  // A legacy alias of an option that already renders on its ability card is
+  // the same control under an older name; the shared block must not repeat it.
+  return definitions.some((entry) =>
+    entry.key !== key
+      && Array.isArray(entry.legacy_keys)
+      && entry.legacy_keys.includes(key)
+      && Boolean(optionSlot(entry))
+  );
 }
 
 /**
@@ -1708,6 +1735,7 @@ function engineBuild(side) {
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     item_options: engineItemOptions(itemIds, itemStacks, itemOptionValues),
     keystone: state.attacker[`keystone${side}`] || "",
+    keystone_options: engineKeystoneOptions(side),
     minor_runes: (state.attacker[`minorRunes${side}`] || []).filter(Boolean),
     stat_shards: statShardsPayload(side),
     rune_options: runeOptionsPayload(side),
@@ -1736,10 +1764,28 @@ function runeOptionsPayload(side) {
   );
 }
 
+/** The selected keystone's own count options, clamped to their schema. */
+function engineKeystoneOptions(side) {
+  const name = state.attacker[`keystone${side}`] || "";
+  const schemas = engine.keystoneOptions[name]?.options || {};
+  const provided = state.attacker[`keystoneOptions${side}`] || {};
+  return Object.fromEntries(Object.entries(schemas).map(([key, option]) => {
+    const parsed = Number.parseInt(provided[key] ?? option.default ?? 0, 10);
+    const fallback = Number(option.default ?? 0);
+    const value = Number.isFinite(parsed) ? parsed : fallback;
+    return [key, Math.min(Math.max(value, Number(option.min ?? value)), Number(option.max ?? value))];
+  }));
+}
+
 function engineChampionOptions() {
   const champion = state.attacker.champion;
   const definition = engine.championOptions[champion];
   if (!definition?.options) return {};
+  const legacyVariantKeys = new Set(
+    definition.options
+      .filter((option) => abilityBindsChampionOption(option.key))
+      .flatMap((option) => Array.isArray(option.legacy_keys) ? option.legacy_keys : []),
+  );
   const options = Object.fromEntries(
     definition.options.map((option) => [
       option.key,
@@ -1747,6 +1793,9 @@ function engineChampionOptions() {
     ]),
   );
   definition.options.forEach((option) => {
+    // A legacy alias never reaches the engine: the option it aliases carries
+    // the value, and the backend rejects both keys arriving together.
+    if (legacyVariantKeys.has(option.key)) delete options[option.key];
     const variantAbility = activeAbilityKit().find((ability) =>
       ability.variants?.length > 1
         && abilityOptionBinding(ability.slot, "ability_variants") === option.key
@@ -1818,6 +1867,7 @@ function engineTarget(target) {
     champion_options: Object.fromEntries(
       Object.entries(target.championOptions || {}).map(([key, value]) => [key, value]),
     ),
+    support_target_selections: { ...(target.supportTargetSelections || {}) },
     // Let the backend apply the champion's sourced level order for
     // transformation/stance kits; their generic rank controls are not a
     // legal manual allocation.
@@ -1851,6 +1901,7 @@ function engineFightPayload(side) {
     include_actives: true,
     include_crossover: state.attacker.comparisonEnabled,
     champion_options: engineChampionOptions(),
+    support_target_selections: { ...(state.attacker.supportTargetSelections || {}) },
     ability_ranks: engineAbilityRanks(),
     // The engine's rotation count is not a public control: the window is
     // the one number a user sets (the Fight length slider).
@@ -2084,7 +2135,6 @@ function renderExactBreakdown(aResult, bResult) {
   }).join("");
   const combatSection = combatRows ? `<section class="combat-participant-ledger"><header><div><p class="eyebrow">Team-fight ledger</p><h2>Participant survival</h2></div><span>Output · incoming · endpoint</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Participant</th><th><i class="legend-a"></i>Output before defeat</th><th>Applied incoming damage</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${combatRows}</tbody></table></div></section>` : "";
   const labels = new Map((aResult?.combat?.participants || []).map((participant) => [participant.participant_id, `${participant.champion} · ${participant.team}`]));
-  const eventRows = (aResult?.combat?.events || []).filter((event) => Number(event.damage || 0) > 0 || event.skipped_reason).map((event) => `<tr><td><strong>${one(event.time)}s · ${escapeHtml(labels.get(event.attacker) || event.attacker || "Participant")}</strong><small>${escapeHtml(labels.get(event.target) || event.target || "Target")} · ${escapeHtml(event.source || "event")} · ${escapeHtml(event.event_precision || "exact")}${event.skipped_reason ? ` · ${escapeHtml(event.skipped_reason)}` : ""}</small></td><td>${fmt(event.damage || 0)}</td></tr>`).join("");
   const healingRows = healingEventsForResult(aResult).filter((event) => Number(event.raw_amount || event.amount || 0) > 0).map((event) => {
     const factor = Number(event.healing_reduction_factor || 1);
     const wound = factor < 1 ? ` · Grievous Wounds ${Math.round((1 - factor) * 100)}%` : "";
@@ -2111,13 +2161,69 @@ function renderExactBreakdown(aResult, bResult) {
   }).join("");
   const utility = aResult?.combat?.utility_outcomes?.focus || null;
   const targetAllocation = aResult?.combat?.target_allocation || null;
+  const supportControls = supportTargetControls(aResult);
   const utilitySummary = utility ? `<section class="utility-outcome-ledger" aria-label="Utility outcome dimensions"><header><div><p class="eyebrow">Utility objective</p><h2>Applied non-TDD outcomes</h2></div><span>Native units · no guessed conversion</span></header><p class="utility-outcome-note">${escapeHtml(utility.metric_note || "Movement, slows, cleanse, economy, and vision remain separate from TDD.")}</p><div class="utility-outcome-chips"><span>Movement ${fmt(utility.movement?.speed_percent_seconds || 0)} %·s</span><span>Slow ${fmt(utility.slow?.percent_seconds || 0)} %·s</span><span>Cleanse ${fmt(utility.cleanse?.event_count || 0)} events</span><span>Economy ${fmt(utility.economy?.gold || 0)} gold</span><span>Vision ${fmt(utility.vision?.ward_uses || 0)} wards</span><span>Secondary ${fmt(utility.multi_target?.allocated_packet_count || 0)}/${fmt(utility.multi_target?.packet_count || 0)} allocated</span></div></section>` : "";
   const allocationNote = targetAllocation && targetAllocation.secondary_packet_count ? `<p class="utility-target-allocation" role="status">Target allocation: ${targetAllocation.complete ? "complete" : "withheld"} · ${fmt(targetAllocation.allocated_secondary_packet_count || 0)}/${fmt(targetAllocation.secondary_packet_count || 0)} secondary packets use the authored roster-index policy.</p>` : "";
-  const eventSection = eventRows || healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Audit trail <span>Event order · timestamps</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Event order audit"><header><div><p class="eyebrow">Event order</p><h2>Timestamped events</h2></div><span>Outgoing · incoming · recovery · support</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Event</th><th>Applied value</th></tr></thead><tbody>${eventRows}${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
+  const eventSection = healingRows || supportRows || utilitySummary ? `<details class="breakdown-audit"><summary>Recovery and support <span>Healing · protection · utility</span></summary>${utilitySummary}${allocationNote}<section class="combat-event-ledger" aria-label="Recovery and support audit"><header><div><p class="eyebrow">Recovery and support</p><h2>Applied effects</h2></div><span>Healing · protection · utility</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Effect</th><th>Applied value</th></tr></thead><tbody>${healingRows}${supportRows}</tbody></table></div></section></details>` : "";
   const outcome = `<p class="breakdown-outcome" role="status">${escapeHtml(breakdownOutcome(aMainTotal, bResult ? bMainTotal : null))}</p>`;
   $("damageBreakdown").innerHTML = `${outcome}${combatSection}${eventSection}<header><div><p class="eyebrow">Damage breakdown</p><h2>Damage sources</h2></div><span>${state.targets.length} ${plural(state.targets.length, "target")} · ${one(configuredFightWindow())}s window</span></header><div class="damage-table-wrap"><table class="damage-table"><thead><tr><th>Source</th><th><i class="legend-a"></i>Build A</th>${bResult ? `<th><i class="legend-b"></i>Build B</th><th>A − B</th>` : ""}</tr></thead><tbody>${body}<tr class="damage-total"><td><strong>Main output before defeat</strong><small>Post-mitigation output · ${escapeHtml(survivalStatus((aResult?.combat?.participants || []).find((participant) => participant.participant_id === "main")?.survival))}</small></td><td>${fmt(aMainTotal)}</td>${totalB}</tr></tbody></table></div>`;
+  if (supportControls) $("damageBreakdown").insertAdjacentHTML("beforeend", supportControls);
 }
 
+
+function supportSelectionOwner(attacker) {
+  if (attacker === "main") return state.attacker;
+  if (!String(attacker || "").startsWith("ally:")) return null;
+  return state.allies.find((ally) => `ally:${ally.champion}` === attacker) || null;
+}
+
+function supportSelectionTeammates(attacker) {
+  if (attacker === "main") return state.allies.filter((ally) => ally.champion);
+  const owner = supportSelectionOwner(attacker);
+  if (!owner) return [];
+  return [
+    ...(state.attacker.champion ? [state.attacker] : []),
+    ...state.allies.filter((ally) => ally.champion && ally !== owner),
+  ];
+}
+
+function supportTargetControls(result) {
+  const selectionScopes = new Set([
+    "one_teammate",
+    "self_and_one_teammate",
+    "explicit_selected_ally",
+    "healed_or_shielded_ally",
+    "most_wounded_ally",
+    "nearest_most_wounded_ally",
+    "other_nearest_wounded_ally",
+  ]);
+  const packets = new Map();
+  (result?.combat?.support_events || []).forEach((event) => {
+    const attacker = String(event.attacker || "");
+    const key = String(event.target_selection_key || "");
+    if (!attacker || !key || !selectionScopes.has(String(event.target_scope || ""))) return;
+    if (String(event.target || "") === attacker) return;
+    packets.set(`${attacker}:${key}`, event);
+  });
+  const controls = [...packets.values()].map((event) => {
+    const owner = supportSelectionOwner(event.attacker);
+    const teammates = supportSelectionTeammates(event.attacker);
+    if (!owner || !teammates.length) return "";
+    if (!owner.supportTargetSelections) owner.supportTargetSelections = {};
+    const selected = Math.min(
+      Math.max(0, Number(owner.supportTargetSelections[event.target_selection_key] ?? 0)),
+      teammates.length - 1,
+    );
+    const choices = teammates.map((teammate, index) => {
+      const name = teammate.champion || (teammate === state.attacker ? "Main champion" : "Teammate");
+      return `<option value="${index}" ${index === selected ? "selected" : ""}>${escapeHtml(name)}</option>`;
+    }).join("");
+    const label = `${String(event.source || event.kind || "Support packet")} · ${String(event.kind || "effect")}`;
+    return `<label class="support-target-control"><span>${escapeHtml(label)}</span><select class="support-target-selection" data-capability-field="support_target_selections" data-option-key="${escapeHtml(event.target_selection_key)}" data-value="${escapeHtml(event.attacker)}" aria-label="Choose recipient for ${escapeHtml(label)}">${choices}</select></label>`;
+  }).filter(Boolean).join("");
+  if (!controls) return "";
+  return `<section class="support-target-panel" aria-label="Support recipients"><header><div><p class="eyebrow">Support recipients</p><h2>Choose who receives each single-target effect</h2></div><span>Area effects keep their sourced roster scope</span></header><div class="support-target-grid">${controls}</div></section>`;
+}
 
 function engineErrorBox() {
   return document.getElementById("engineError");
@@ -2172,11 +2278,19 @@ function scheduleEngineCalculation() {
     }
     hideEngineError();
     const builds = state.attacker.comparisonEnabled ? ["A", "B"] : ["A"];
+    // Two builds go behind one request boundary (/api/compare); one build
+    // posts itself. Either way the response is normalised to a result list.
     const payloads = builds.map((side) => engineFightPayload(side));
-    Promise.all(payloads.map((payload) => postJson("/api/calculate", payload).then((response) => response.json())))
+    const request = payloads.length === 2
+      ? postJson("/api/compare", { builds: payloads })
+      : postJson("/api/calculate", payloads[0]);
+    request.then((response) => response.json())
       .then((results) => {
         if (requestId !== engine.requestId) return;
-        const failure = results.find((result) => result.error);
+        const calculationResults = Array.isArray(results.results)
+          ? results.results
+          : [results];
+        const failure = calculationResults.find((result) => result.error);
         if (failure) {
           if (status) {
             status.textContent = "error";
@@ -2192,8 +2306,8 @@ function scheduleEngineCalculation() {
         // it to decide between RECALCULATING and the settled delta.
         engine.pending = false;
         engine.responses = {
-          a: results[0],
-          b: results[1] || null,
+          a: calculationResults[0],
+          b: calculationResults[1] || null,
           requests: { a: payloads[0], b: payloads[1] || null },
         };
         syncPracticeDummyStatsFromResponse(engine.responses.a);
@@ -2410,7 +2524,7 @@ function applyRailDisclosure() {
   if (patch && editing) {
     patch.textContent = `SETUP · STEP ${STEP_IDS.indexOf(state.ui.expandedStep) + 1} OF ${STEP_IDS.length}`;
   } else if (patch) {
-    patch.textContent = "26.15";
+    patch.textContent = servedPatchLabel || "PATCH UNKNOWN";
   }
 }
 
@@ -2731,7 +2845,13 @@ function renderPrototypeChampion() {
     portraitImage.removeAttribute("src");
     portraitImage.alt = "";
   }
-  document.querySelector(".editor-identity")?.classList.toggle("is-empty", !champion);
+  document.querySelector(".champion-card")?.classList.toggle("is-empty", !champion);
+  document.querySelector(".champion-identity")?.classList.toggle("is-empty", !champion);
+  const identityControls = $("identityControls");
+  if (identityControls) {
+    identityControls.hidden = !champion;
+    identityControls.setAttribute("aria-hidden", String(!champion));
+  }
   const roleSelect = $("roleSelect");
   const roleCapability = capabilityFor("main", "role");
   if (roleSelect) {
@@ -2782,6 +2902,8 @@ function renderPrototypeChampion() {
   // a recalculation keeps the previous values on screen and marks the grid
   // pending, so the portrait, identity and controls never flash empty.
   const statsGrid = $("statsGrid");
+  statsGrid.hidden = !champion;
+  statsGrid.setAttribute("aria-hidden", String(!champion));
   const refreshing = Boolean(stats) && engine.loadoutStatsPending;
   statsGrid.innerHTML = stats ? prototypeStats(stats) : `<div class="matrix-placeholder">Patch-pinned stats appear once the backend resolves this loadout.</div>`;
   statsGrid.classList.toggle("is-pending", refreshing);
@@ -2941,7 +3063,7 @@ function renderEventTimeline(combatEvents, duration, eventLabel, sourceLabel = (
     : "");
   const note = shown.length === live.length
     ? `${combatEvents.length} ordered ${plural(combatEvents.length, "event")}, oldest first`
-    : `First ${shown.length} of ${combatEvents.length} ordered events — the full sequence is in the ledger below`;
+    : `First ${shown.length} of ${combatEvents.length} ordered events`;
   return `<div class="timeline-axis"><span>0:00</span><span>${one(duration / 2)}s</span><span>${one(duration)}s</span></div>
     <ol class="timeline-events" aria-label="Ordered combat events">${lanes}</ol>
     <small class="timeline-note">${escapeHtml(note)}</small>`;
@@ -3050,7 +3172,15 @@ function renderDuelSide(side) {
   if (includeBootsForSide(side)) {
     rows.push(duelRowHtml(state.attacker[`questBoot${side}`], questBootPath(side)));
   }
-  const keystoneRow = `<button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="${escapeHtml(keystone.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>`;
+  const keystoneSchemas = engine.keystoneOptions[state.attacker[`keystone${side}`]]?.options || {};
+  const keystoneValues = state.attacker[`keystoneOptions${side}`] || {};
+  const keystoneControls = Object.entries(keystoneSchemas).map(([key, option]) => {
+    const value = keystoneValues[key] ?? option.default;
+    const min = option.min == null ? "" : ` min="${option.min}"`;
+    const max = option.max == null ? "" : ` max="${option.max}"`;
+    return `<label class="keystone-option"><span>${escapeHtml(option.label || key)}</span><input type="number" ${capabilityAttributes("main", "keystone")} data-keystone-option="${escapeHtml(side)}" data-keystone-option-key="${escapeHtml(key)}" value="${escapeHtml(value)}" step="1"${min}${max} /></label>`;
+  }).join("");
+  const keystoneRow = `<div class="duel-slot"><button type="button" class="duel-row is-keystone ${keystone ? "" : "is-empty"}" ${capabilityAttributes("main", "keystone")} data-picker="keystone" data-path="attacker.keystone${side}" aria-label="${keystone ? `Change ${escapeHtml(keystone.name)}` : "Add a keystone"}"><span class="item-icon">${keystone ? `<img src="${escapeHtml(keystone.icon)}" alt="${escapeHtml(keystone.name)}" />` : ""}</span><span class="duel-row-copy"><strong>${keystone ? escapeHtml(keystone.name) : "Add keystone"}</strong><small>${keystone ? `${escapeHtml(keystone.path || "")} keystone` : "rune slot"}</small></span></button>${keystoneControls ? `<div class="duel-slot-controls keystone-options">${keystoneControls}</div>` : ""}</div>`;
   const runeHead = `<div class="duel-side-head duel-rune-head"><span class="duel-side-kicker">Runes</span><span class="duel-side-note">any row opens the page</span></div>`;
   const invite = filled.length || keystone
     ? ""
@@ -3191,6 +3321,7 @@ function copyRunePage(from, to) {
   state.attacker[`runeOptions${to}`] = Object.fromEntries(
     Object.entries(state.attacker[`runeOptions${from}`] || {}).map(([name, values]) => [name, { ...values }]),
   );
+  state.attacker[`keystoneOptions${to}`] = { ...(state.attacker[`keystoneOptions${from}`] || {}) };
 }
 
 /** One rune by name from the whole roster the config published. */
@@ -4253,7 +4384,9 @@ async function openBackendBis(path) {
 function optimizerDamagePackageReady() {
   const champion = getChampion(state.attacker.champion);
   const completeSourcedKit = activeAbilityKit().filter((ability) => ["Q", "W", "E", "R"].includes(ability.slot)).length === 4;
-  const selectedAbilities = completeSourcedKit && activeAbilityKit().some((ability) => abilityInput(ability.slot).casts > 0 && (ability.slot === "P" || abilityInput(ability.slot).rank > 0));
+  // The engine schedules casts itself, so a kit counts as selected once the
+  // passive is in it or a slot holds a rank.
+  const selectedAbilities = completeSourcedKit && activeAbilityKit().some((ability) => ability.slot === "P" || abilityInput(ability.slot).rank > 0);
   const manualPackage = state.attacker.baseDamage > 0 || state.attacker.apRatio > 0 || state.attacker.physicalDamage > 0 || state.attacker.adRatio > 0;
   // The backend has a dedicated reviewed module for every cached champion.
   // A sparse client formula catalogue (for example a passive-only tank kit)
@@ -4279,31 +4412,41 @@ async function requestBis(path) {
   return result;
 }
 
+async function requestBisBatch(path, slots) {
+  const payload = bisBackendPayload(path);
+  if (!payload) throw new Error("Invalid roster optimization path");
+  payload.slots = slots;
+  const response = await postJson("/api/bis/batch", payload);
+  const result = await response.json();
+  if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
+  return result;
+}
+
 async function optimizeRosterPathFromTimeline(path) {
-  let tested = 0;
   const [root, indexText] = path.split(".");
   const loadout = state[root][Number(indexText)];
-  if (loadout.includeBoots) {
-    const bootResult = await requestBis(`${path}.boots`);
-    if (!bootResult.coverage?.complete) throw new Error(bootResult.coverage?.note || "BIS withheld until event order is complete");
-    tested += Number(bootResult.candidate_count || 0);
-    const boot = bootResult.candidates?.[0] && findItemByBackendName(bootResult.candidates[0].name);
-    if (boot) loadout.boots = boot.id;
-  }
-  // Greedy slot passes keep every candidate on the same complete team
-  // timeline.  Re-running after each slot lets item interactions and deaths
-  // change the next slot's result instead of freezing a stat-only estimate.
+  const slots = [];
+  if (loadout.includeBoots) slots.push({ slot_kind: "boots", slot_index: 0 });
   for (let slot = 0; slot < rosterOrdinarySlotCount(loadout); slot += 1) {
-    const result = await requestBis(`${path}.items.${slot}`);
+    slots.push({ slot_kind: "item", slot_index: slot });
+  }
+  const batch = await requestBisBatch(path, slots);
+  const results = Array.isArray(batch.results) ? batch.results : [];
+  for (let index = 0; index < results.length; index += 1) {
+    const result = results[index];
     if (!result.coverage?.complete) throw new Error(result.coverage?.note || "BIS withheld until event order is complete");
-    tested += Number(result.candidate_count || 0);
+    const slot = slots[index];
     const candidate = result.candidates?.[0];
     const item = candidate && findItemByBackendName(candidate.name);
     if (!item) continue;
-    setPath(`${path}.items.${slot}`, item.id);
-    state[root][Number(indexText)].itemStacks[slot] = 0;
+    if (slot.slot_kind === "boots") {
+      loadout.boots = item.id;
+    } else {
+      setPath(`${path}.items.${slot.slot_index}`, item.id);
+      state[root][Number(indexText)].itemStacks[slot.slot_index] = 0;
+    }
   }
-  return tested;
+  return Number(batch.tested || 0);
 }
 
 async function startRosterOptimization(rootOrPath) {
@@ -5034,6 +5177,10 @@ document.addEventListener("click", (event) => {
     const selectedPath = pickerContext.path;
     if (pickerContext.type === "item") setStackValue(pickerContext.path, 0);
     setPath(pickerContext.path, pickerContext.type === "item" ? Number(option.dataset.pickerValue) : option.dataset.pickerValue);
+    if (pickerContext.type === "keystone") {
+      const side = selectedPath.endsWith("B") ? "B" : "A";
+      state.attacker[`keystoneOptions${side}`] = {};
+    }
     if (pickerContext.type === "item") {
       if (/^attacker\.build[AB]\./.test(selectedPath)) {
         normalizeAttackerSupportItemsForRole();
@@ -5111,6 +5258,32 @@ document.addEventListener("input", (event) => {
 
 document.addEventListener("change", (event) => {
   if (event.target.closest("[data-level-range]")) return render();
+  const supportSelection = event.target.closest(".support-target-selection");
+  if (supportSelection) {
+    const owner = supportSelectionOwner(supportSelection.dataset.value);
+    if (!owner) return;
+    if (!owner.supportTargetSelections) owner.supportTargetSelections = {};
+    owner.supportTargetSelections[supportSelection.dataset.optionKey] = Number(supportSelection.value) || 0;
+    invalidateOptimization();
+    return scheduleEngineCalculation();
+  }
+  const keystoneOption = event.target.closest("[data-keystone-option]");
+  if (keystoneOption) {
+    const side = keystoneOption.dataset.keystoneOption === "B" ? "B" : "A";
+    const key = keystoneOption.dataset.keystoneOptionKey;
+    const name = state.attacker[`keystone${side}`] || "";
+    const option = engine.keystoneOptions[name]?.options?.[key];
+    if (!option) return;
+    const parsed = Number.parseInt(keystoneOption.value, 10);
+    const fallback = Number(option.default ?? 0);
+    const value = Number.isFinite(parsed) ? parsed : fallback;
+    state.attacker[`keystoneOptions${side}`][key] = Math.min(
+      Math.max(value, Number(option.min ?? value)),
+      Number(option.max ?? value),
+    );
+    invalidateOptimization();
+    return render();
+  }
   const dummyStat = event.target.closest("[data-dummy-stat]");
   if (dummyStat) {
     const parts = dummyStat.dataset.dummyStat.split(".");
@@ -5256,6 +5429,12 @@ Promise.all([
     });
     engine.itemOptions = config.item_options || {};
     engine.championOptions = config.champion_options || {};
+    engine.keystoneOptions = config.keystone_options || {};
+    const servedPatch = config.data_snapshot?.patch || {};
+    ddragonBase = servedPatch.source_version
+      ? `https://ddragon.leagueoflegends.com/cdn/${servedPatch.source_version}/img`
+      : "";
+    servedPatchLabel = servedPatch.public || "";
     engine.capabilities = config.capabilities || { participants: {}, scenario: { fields: {} } };
     applyControlCapabilities();
     maybeInitConsentAnalytics();

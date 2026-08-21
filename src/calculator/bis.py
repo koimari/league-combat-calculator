@@ -7,8 +7,10 @@ this module means the API and any future consumer cannot silently disagree.
 Flask owns only HTTP decoding, cache/rate policy, and error translation.
 """
 
+from copy import deepcopy
 from dataclasses import replace
 import math
+import time
 from collections.abc import Mapping
 
 from .interpreters import (
@@ -36,7 +38,7 @@ from .program.views import (
     published_tag,
     refuse_previewed,
 )
-from .participant_timeline import build_participant_timeline
+from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
 from .scenario import (
@@ -691,7 +693,12 @@ def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
     return name_every_number(payload, RankingWriter())
 
 
-def bis_payload(data: Mapping[str, object]) -> dict:
+def bis_payload(
+    data: Mapping[str, object],
+    *,
+    pair_result_cache: dict | None = None,
+    search_context: CoupledSearchContext | None = None,
+) -> dict:
     """Rank one slot and return the complete JSON-safe BIS receipt."""
     request = parse_scenario_request(data, deterministic=True, parse_crossover=False)
     subject_team = request_string(data, "subject_team", "main")
@@ -760,6 +767,19 @@ def bis_payload(data: Mapping[str, object]) -> dict:
     withheld: list[dict[str, object]] = []
     target_filtered: list[dict[str, object]] = []
     fight_params = resolved.fight_params
+    # The candidate receipt exposes survival, breakdown, and coverage only.
+    # Reuse fixed roster packets across the candidate loop.  The compiled
+    # walk is safe for a main-slot search because its roster stays fixed.  A
+    # roster-slot search still gets the pair cache, whose key includes the
+    # changing actor's full loadout signature.
+    if pair_result_cache is None:
+        pair_result_cache = {}
+    # A candidate is ranked on the receipt's objective block, which the
+    # compiled score projection does not carry, so BIS never creates a
+    # search context of its own; one handed in by a caller still applies
+    # only to a fixed-roster main-slot search.
+    if candidate_item_options or subject_team != "main":
+        search_context = None
     for candidate in candidates:
         try:
             candidate_params = fight_params
@@ -824,6 +844,11 @@ def bis_payload(data: Mapping[str, object]) -> dict:
                 enemies=candidate_enemies,
                 allies=candidate_allies,
                 focus_participant_id=focus_id,
+                pair_result_cache=pair_result_cache,
+                reuse_main_stats=(
+                    subject_team == "main" and not candidate_params.ally_stat_bonuses
+                ),
+                search_context=search_context,
             )
             coverage = combat.get("timeline_coverage", {})
             timing_exclusions = applicability_exclusion_sources(coverage)
@@ -938,3 +963,128 @@ def bis_payload(data: Mapping[str, object]) -> dict:
     }
     payload["dispositions"] = _bis_dispositions(payload)
     return payload
+
+
+def _batch_replace_subject_slot(
+    data: dict[str, object],
+    *,
+    subject_team: str,
+    subject_index: int,
+    slot: Mapping[str, object],
+    candidate_name: str,
+) -> None:
+    """Apply one certified winner before the next batch slot is scored."""
+    slot_index = int(slot["slot_index"])
+    slot_kind = str(slot["slot_kind"])
+    if subject_team == "main":
+        loadout = data
+    else:
+        roster_key = "allies" if subject_team == "ally" else "enemies"
+        roster = data.get(roster_key)
+        if not isinstance(roster, list) or subject_index >= len(roster):
+            return
+        loadout = roster[subject_index]
+        if not isinstance(loadout, dict):
+            return
+    if slot_kind == "boots":
+        loadout["boots"] = candidate_name
+        return
+    items = loadout.get("items", [])
+    if not isinstance(items, list):
+        items = []
+    if slot_index >= len(items):
+        items.append(candidate_name)
+    else:
+        items[slot_index] = candidate_name
+    loadout["items"] = items
+
+
+def _bis_batch_result(result: Mapping[str, object]) -> dict[str, object]:
+    """Keep only fields needed to apply a dependent browser slot."""
+    return {
+        key: result.get(key)
+        for key in (
+            "candidate_count",
+            "certified_candidate_count",
+            "partial_candidate_count",
+            "withheld_candidate_count",
+            "coverage",
+            "target_coverage_filtered",
+            "timing_excluded_candidate_count",
+        )
+    } | {
+        "candidates": list(result.get("candidates", []))[:1],
+    }
+
+
+def bis_batch_payload(data: Mapping[str, object]) -> dict:
+    """Score dependent BIS slots in one request with shared pair state.
+
+    The browser's greedy roster path needs the winner from slot N before it
+    can score slot N+1.  Keeping that loop in one process removes request
+    overhead and allows the timeline caches to survive between slots.  The
+    response keeps one winner row per slot because the browser does not show
+    the full candidate tables on this path.
+    """
+    raw_slots = data.get("slots")
+    if not isinstance(raw_slots, list) or not raw_slots:
+        raise ValueError("slots must be a non-empty list")
+    if len(raw_slots) > MAX_LOADOUT_ITEMS + 1:
+        raise ValueError("slots may contain at most 7 entries")
+    scenario = deepcopy(dict(data))
+    scenario.pop("slots", None)
+    subject_team = request_string(scenario, "subject_team", "main")
+    subject_index = request_int(scenario, "subject_index", 0, 0, 4)
+    pair_result_cache: dict = {}
+    batch_search_context = None
+    results: list[dict] = []
+    selected: list[dict[str, object]] = []
+    tested = 0
+    started = time.perf_counter()
+    for raw_slot in raw_slots:
+        if not isinstance(raw_slot, Mapping):
+            raise ValueError("each batch slot must be an object")
+        slot_kind = request_string(raw_slot, "slot_kind", "item")
+        if slot_kind not in {"item", "boots"}:
+            raise ValueError("slot_kind must be item or boots")
+        slot_index = request_int(raw_slot, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+        current = deepcopy(scenario)
+        current["slot_kind"] = slot_kind
+        current["slot_index"] = slot_index
+        result = bis_payload(
+            current,
+            pair_result_cache=pair_result_cache,
+            search_context=batch_search_context,
+        )
+        results.append(_bis_batch_result(result))
+        tested += int(result.get("candidate_count", 0) or 0)
+        winner = (
+            result.get("candidates", [{}])[0]
+            if result.get("coverage", {}).get("complete") and result.get("candidates")
+            else None
+        )
+        if not isinstance(winner, Mapping):
+            continue
+        winner_name = str(winner.get("name", ""))
+        if not winner_name:
+            continue
+        _batch_replace_subject_slot(
+            scenario,
+            subject_team=subject_team,
+            subject_index=subject_index,
+            slot={"slot_index": slot_index, "slot_kind": slot_kind},
+            candidate_name=winner_name,
+        )
+        selected.append(
+            {
+                "slot_index": slot_index,
+                "slot_kind": slot_kind,
+                "name": winner_name,
+            }
+        )
+    return {
+        "results": results,
+        "selected": selected,
+        "tested": tested,
+        "optimization_time_ms": round((time.perf_counter() - started) * 1000, 1),
+    }

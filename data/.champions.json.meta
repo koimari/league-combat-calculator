@@ -1,4 +1,14 @@
 {
-  "fetched_at": 1786113324.862417,
-  "filename": "champions.json"
+  "fetched_at": 1787268652.393148,
+  "filename": "champions.json",
+  "source_url": "https://wiki.leagueoflegends.com/en-us/List_of_champions",
+  "source_version": "16.16.1",
+  "source_hash": null,
+  "public_patch": "26.16",
+  "client_patch": "16.16",
+  "patch_namespace": {
+    "public_patch": "26.16",
+    "client_patch": "16.16",
+    "source_version": "16.16.1"
+  }
 }

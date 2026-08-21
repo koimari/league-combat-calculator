@@ -33,6 +33,21 @@ declares it:
   channel: Plasma publishes its own breakdown row, ``passive_plasma``,
   carried by W's ``post_hit_proc`` in one-rotation and by R's in timed,
   so P has no ``SLOTS`` entry of its own and names the channel instead.
+
+Sourced but not priced, with the evidence pinned so a later session can
+wire them without re-deriving:
+
+- E carries no damage node at all — four cached effect rows (charge-up,
+  the 40-80% Bonus Attack Speed window, the on-attack cooldown refund, the
+  stealth evolution) and no damage-calculation node under ``KaisaEAbility``
+  in the game binary (``data/gamefiles/characters/kaisa.bin.json``).
+- R's shield IS sourced: Shield Strength 100/150/200 + 90/135/180% total
+  AD + 120% AP for 2 seconds (cached R effects[0]), corroborated by the
+  binary's ``KaisaR`` (``RBaseValue``, ``RTotalADRatio``, ``RAPRatio`` 1.2,
+  ``RShieldDuration`` 2.0), which also carries the 100 flat mana cost and
+  the per-rank cooldown the wiki JSON does not cache.  The engine's shield
+  ledger rides damage events and R deals none, so the row stays an
+  assumption rather than a priced grant.
 """
 
 import math

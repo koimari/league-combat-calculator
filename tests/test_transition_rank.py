@@ -655,18 +655,36 @@ def _declared_ranks(path: Path) -> list[tuple[str, str]]:
     return found
 
 
-def test_the_packet_authors_that_declare_a_rank_are_exactly_four() -> None:
+def test_every_packet_author_declares_a_named_rank() -> None:
     """The population that used to write an open float, now named.
 
-    Three at 0A; C4 adds Abyssal Mask's Unmake, the one persistent
-    cross-participant modifier, which declares ``AURA_ARM`` because the
-    kind ladder would otherwise arm an aura like a triggered debuff.
+    Four of these were named before the last author converted (three at 0A,
+    plus C4's Abyssal Mask Unmake); the rest are the retired ``_priority``
+    floats, each carrying the rank
+    ``survival.actions._rank_from_legacy_float`` translated its float into,
+    so the walk's total order is unchanged and only the spelling moved.  The
+    census is pinned rather than counted because a *new* declaration is a
+    reordering somebody must argue for, and a rank that appears here without
+    one is the argument going missing.
     """
     declared = _declared_ranks(ITEM_SUPPORT) + _declared_ranks(TIMELINE)
     assert sorted(declared) == [
+        # Abyssal Mask's Unmake aura, Tear's Manaflow grant, Fimbulwinter's
+        # denial receipt and its late self shield.
         ("item_support_effects.py", "AURA_ARM"),
+        ("item_support_effects.py", "BARRIER_GRANT"),
+        ("item_support_effects.py", "DAMAGE"),
         ("item_support_effects.py", "DAMAGE"),
         ("item_support_effects.py", "LATE_BARRIER"),
+        # Guardian's reactive shield and Glacial Augment's ally reduction;
+        # Glacial's icy zone and Stormraider's surge; Aftershock's
+        # resistances; Grasp's permanent health; Eclipse's self shield.
+        ("participant_timeline.py", "AURA_ARM"),
+        ("participant_timeline.py", "AURA_ARM"),
+        ("participant_timeline.py", "BARRIER_GRANT"),
+        ("participant_timeline.py", "BARRIER_GRANT"),
+        ("participant_timeline.py", "DAMAGE"),
+        ("participant_timeline.py", "DEBUFF_ARM"),
         ("participant_timeline.py", "LATE_BARRIER"),
     ]
 
@@ -781,8 +799,10 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
 
     All three split ranks keep the published name they had, so the derived
     phase list is byte-identical across the split and D-63's chain does not
-    advance: S6 takes no version.  (S9 took 4 and the rune page took 5;
-    neither is S6's, which is the point.)
+    advance: S6 takes no version.  (S9 took 4, the rune page took 5 and the
+    survival row's certification fields took 6; none of them is S6's, which
+    is the point — the pin moves when *another* change publishes something,
+    never when this one does.)
     """
     from src.calculator.capabilities import (
         CAPABILITY_SCHEMA_VERSION,
@@ -802,7 +822,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         "healing_and_regeneration",
         "death_or_terminal_cutoff",
     ]
-    assert CAPABILITY_SCHEMA_VERSION == 5
+    assert CAPABILITY_SCHEMA_VERSION == 6
 
 
 def test_s6_moved_the_ordering_and_not_the_classification() -> None:

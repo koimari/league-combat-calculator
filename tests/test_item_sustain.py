@@ -85,37 +85,54 @@ def test_dorans_ring_converts_only_when_mana_cannot_be_gained():
 
 
 def test_catalyst_heals_from_timestamped_mana_spent_with_sourced_caps():
+    """Eternity heal packets are a projection of the typed ledger's accepted
+    spend receipts (P3 package 3A): the pipeline emits exactly the heal rows
+    the ledger's ``catalyst`` section carries, with the sourced per-cast and
+    per-second caps applied at the cast timestamps.  The fixture builds the
+    section the way the ledger does (accepted spends 100 at 0.1 / 0.2 / 1.1:
+    the 0.2 cast shares the 0-second bucket, so its heal is fully clamped)."""
+    from src.calculator.item_effects import catalyst_eternity_declaration
+    from src.calculator.resource_ledger import (
+        OP_SPEND,
+        ResourceEvent,
+        ResourceLedger,
+        catalyst_eternity_heal_schedule,
+    )
+
     item = get_item_by_name("Catalyst of Aeons")
+    declaration = catalyst_eternity_declaration()
+    ledger = ResourceLedger("main", maximum=500.0, current=500.0)
+    events = [
+        ResourceEvent(
+            owner="main",
+            operation=OP_SPEND,
+            amount=100.0,
+            time=time,
+            source=f"ability {slot} cast",
+            sequence=ordinal,
+            tier=1.0,
+            detail={"slot": slot, "ordinal": ordinal + 1},
+        )
+        for ordinal, (time, slot) in enumerate(((0.1, "Q"), (0.2, "W"), (1.1, "E")))
+    ]
+    heal_rows = catalyst_eternity_heal_schedule(
+        ledger.run(events),
+        heal_ratio=declaration["mana_spent_heal_ratio"],
+        cap_per_cast=declaration["mana_spent_heal_cap_per_cast"],
+        cap_per_second=declaration["mana_spent_heal_cap_per_second"],
+    )
     result = {
         "champion_stats": {},
         "damage_events": [],
         "breakdown": {},
-        "cast_timeline": [
-            {
-                "time": 0.1,
-                "slot": "Q",
-                "ordinal": 1,
-                "resource_before": 500.0,
-                "resource_after": 400.0,
-                "resource_cost": 100.0,
+        "notes": [],
+        "resource_ledger": {
+            "contract": "resource_ledger_v1",
+            "catalyst": {
+                "declaration": declaration,
+                "heals": [row.public() for row in heal_rows],
             },
-            {
-                "time": 0.2,
-                "slot": "W",
-                "ordinal": 1,
-                "resource_before": 400.0,
-                "resource_after": 300.0,
-                "resource_cost": 100.0,
-            },
-            {
-                "time": 1.1,
-                "slot": "E",
-                "ordinal": 1,
-                "resource_before": 300.0,
-                "resource_after": 200.0,
-                "resource_cost": 100.0,
-            },
-        ],
+        },
     }
     events = _item_self_healing_events(result, [item], 2.0)
     assert [event["amount"] for event in events if "Catalyst" in event["source"]] == [

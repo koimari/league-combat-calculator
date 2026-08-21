@@ -1,7 +1,7 @@
 {
  "artifact": "migration_frontier_movements",
  "since": "067c94c",
- "how_derived": "For every commit after 067c94c that touches docs/migration-frontier.json, each counter value the commit records differently from its parent, with the sentence its own body states the move in. at_report_tip holds those counters as 067c94c left them -- the values the close report's section 5 states -- and applying every movement in order must land on the tree's committed receipt.",
+ "how_derived": "For every commit after 067c94c that touches docs/migration-frontier.json, each counter value the commit records differently from its parent, with the sentence its own body states the move in. at_report_tip holds those counters as 067c94c left them -- the values the close report's section 5 states -- and applying every movement in order must land on the tree's committed receipt. A merge is one such commit and records one row for the range it brings in, keyed by the merged-in tip rather than by a commit on this branch, because no single commit on either side moved the counter: the range did.",
  "why_it_is_pinned": "The chain is checkable against the tree without reading history: a counter that moves without a row here leaves docs/migration-frontier.json away from this ledger's endpoint, which is red on the commit that lands it. That was the property the walk over 067c94c..HEAD bought, and it cost the suite the whole repository on every run.",
  "read_by": "tests/test_migration_frontier.py",
  "at_report_tip": {
@@ -19,6 +19,15 @@
    "from": 75,
    "to": 78,
    "cause": "`docs/migration-frontier.json` counter 6 moves 75 -> 78: the three `round(..., 6)` calls in the new receipt, spelled exactly as `reprice_dynamic_resistance`'s own receipt spells its. It is a non-increasing ratchet against a baseline of 118, so 78 holds it with headroom, and R-36 puts the regenerated receipt in this commit rather than in one it forbids."
+  },
+  {
+   "sha": "320f619f",
+   "subject": "merge origin/main (e201490d..320f619f) into command-amp-and-gnar-mega (PR #202)",
+   "counter": "counter_6",
+   "key": "kernel_value",
+   "from": 78,
+   "to": 133,
+   "cause": "`docs/migration-frontier.json` counter 6 moves 78 -> 133, and the non-increasing baseline is re-declared from 118 to the same 133 in scripts/migration_frontier.py with its reason beside it. The file set the ratchet counts is not the one that declared 118: survival/receipt_state.py's 38 occurrences leave with the module, survival/compile.py falls 6 -> 1, and survival/transitions.py arrives from main at 130 against this branch's whole-kernel 78, because main's transitions round every certification field at the write site that publishes it (temporary_health, incoming_damage_multiplier, the crowd-control and projectile interval rows, the resource-ledger before/after rows). Nothing on this branch rounds anything new -- accumulate.py 1 and score_state.py 1 are unmoved, and counter_6.program_value is still 0, so program/precision.py is still the only registry. The work that drives 133 back down is unchanged in kind: fold transitions.py's per-write rounding into the end-of-walk projection precision.py owns."
   }
  ]
 }

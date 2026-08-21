@@ -33,6 +33,11 @@ SCANNED_TREES = ("src", "tests", "scripts")
 #: the count noticing.  Split so this constant is not itself a match.
 DEPARTURE_MARKER = "left this " + "frontier at"
 
+#: The phrase every arrival comment carries, for the same reason: a module
+#: that lands on the frontier without one is a member the arithmetic below
+#: cannot see.  Split so this constant is not itself a match.
+ARRIVAL_MARKER = "joined this " + "frontier with"
+
 #: How a frontier comment spells a count, so both readers below resolve one.
 _NUMBER_WORDS = {
     "one": 1,
@@ -67,7 +72,8 @@ class FrontierEntry:
 # `survival/{accumulate, actions, compile, transitions}` directly.  Two have
 # left since, each with a departure comment at the foot of the dict --
 # `survival.receipt_state` at Phase 4 S4, `survival.score_state` at S10 and
-# `healing_legacy` at the heal-anchor slice -- leaving the **three** below.  That is the frontier working, and it is why
+# `healing_legacy` at the heal-anchor slice -- and one arrived, `comparison`,
+# leaving the **four** below.  That is the frontier working, and it is why
 # neither the ten nor the six is written down anywhere as a target.
 #
 # Both counts above are facts about what follows, so both are asserted rather
@@ -89,6 +95,19 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
         reason=(
             "the exception vocabulary src/app.py and optimizer.py raise; every "
             "assertion about it runs through an app response instead"
+        ),
+    ),
+    # `comparison` joined this frontier with the one-request compare
+    # boundary: the module is new, and the two complete results it returns
+    # are asserted through `/api/compare` in `tests/test_app.py`, so it has
+    # behaviour coverage and no front door.  Recorded as an arrival for the
+    # reason the departures below are recorded: the set is the receipt.
+    "comparison": FrontierEntry(
+        owning_phase="none - arrived with the compare boundary",
+        reason=(
+            "the one-request build-comparison boundary, exercised only "
+            "through /api/compare in tests/test_app.py rather than through "
+            "its own module"
         ),
     ),
     "practice_dummy": FrontierEntry(
@@ -205,15 +224,21 @@ def test_the_frontier_comment_adds_up_from_its_own_departures() -> None:
     in the commit that fixed exactly this defect one line above.
 
     So the arithmetic is the assertion: the stated six, minus the departures
-    the file actually names, is the length of the dict.
+    the file actually names and plus the arrivals it names, is the length of
+    the dict.  Arrivals are counted the same way departures are, because a
+    member that lands with no sentence is as invisible as one that leaves
+    with none.
     """
     source = Path(__file__).read_text(encoding="utf-8")
     stated = re.search(r"and \*\*(\w+)\*\* after Phase 0's", source)
     assert stated is not None, "the comment no longer states where it started"
     # The marker constant is spelled in halves, so it is not itself a match.
     departures = source.count(DEPARTURE_MARKER)
+    arrivals = source.count(ARRIVAL_MARKER)
     assert departures > 0, "no departure is named"
-    assert _NUMBER_WORDS[stated.group(1)] - departures == len(FRONT_DOOR_FRONTIER)
+    assert _NUMBER_WORDS[stated.group(1)] - departures + arrivals == len(
+        FRONT_DOOR_FRONTIER
+    )
 
 
 def scanned_sources() -> dict[str, str]:

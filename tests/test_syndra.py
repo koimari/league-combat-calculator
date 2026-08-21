@@ -351,6 +351,17 @@ class TestUnleashedPowerSpheres:
         )["R"]
         assert entry["total_raw"] == pytest.approx(600.0)
 
+    def test_r_execute_is_active_at_100_splinters(self, syndra_data) -> None:
+        entry = _parse(syndra_data, options={"splinters": 100})["R"]
+
+        assert entry["execute_threshold_ratio"] == pytest.approx(0.15)
+        assert entry["execute_source"] == "Unleashed Power"
+
+    def test_r_execute_is_inactive_below_100_splinters(self, syndra_data) -> None:
+        entry = _parse(syndra_data, options={"splinters": 99})["R"]
+
+        assert "execute_threshold_ratio" not in entry
+
 
 # ---------------------------------------------------------------------------
 # Rotation: Q must precede E (the stun consumes a sphere)
@@ -815,6 +826,31 @@ class TestFightIntegration:
             fight_duration_seconds=5.0,
         )
         assert result["breakdown"]["R"]["total_damage"] == pytest.approx(980.0)
+
+    def test_r_event_carries_the_execute_threshold(
+        self, syndra_data, attacker_stats
+    ) -> None:
+        stats = attacker_stats(ability_power=600.0)
+        abilities = parse_abilities(
+            syndra_data,
+            18,
+            600.0,
+            ability_ranks={"Q": 0, "W": 0, "E": 0, "R": 3},
+            champion_stats=stats,
+            champion_options={"splinters": 100, "r_spheres": 3},
+        )
+
+        result = _fight(stats, abilities, one_rotation=True)
+        r_events = [
+            event for event in result["damage_events"] if event["source_key"] == "R"
+        ]
+
+        assert r_events
+        assert all(
+            event["execute_threshold_ratio"] == pytest.approx(0.15)
+            for event in r_events
+        )
+        assert all(event["execute_source"] == "Unleashed Power" for event in r_events)
 
 
 # ---------------------------------------------------------------------------

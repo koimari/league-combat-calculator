@@ -31,7 +31,7 @@ live meanings of that word already.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
 from enum import Enum
 from typing import NamedTuple, Union
@@ -1807,11 +1807,13 @@ class PenetrationChannelRule:
 class ManaflowRule:
     """The charge ledger that accrues permanent bonus mana.
 
-    Five items carry it and two of them stop there; the other three also
-    transform at a maximum, which is why ``max_charges`` and
-    ``transform_bonus_mana`` are one optional pair and not two independent
-    references.  A record carrying one of them and not the other is a broken
-    parse, refused at compile time rather than declared as a weaker ledger.
+    Both ceilings are optional and they are not the same ceiling: a charge
+    cap says how many charges the ledger banks, and ``transform_bonus_mana``
+    says the mana at which the item becomes another item.  Tear of the
+    Goddess carries the first and not the second — it banks four charges and
+    transforms into nothing — so the refusal is one-way: a transform with no
+    charge cap is a parse that dropped a key, while a cap with no transform
+    is an ordinary component ledger.
     """
 
     granted: DerivedStat
@@ -1999,6 +2001,7 @@ class DefenseMechanic(Enum):
     BOUNDLESS_VITALITY = "boundless_vitality"
     PLATING = "plating"
     ROCK_SOLID = "rock_solid"
+    UNDAUNTED = "undaunted"
     RESILIENCE = "resilience"
     THORNS = "thorns"
 
@@ -2031,6 +2034,9 @@ class DefenseField(Enum):
     INCOMING_DAMAGE_LINGER = "incoming_damage_linger"
     INCOMING_DAMAGE_COOLDOWN = "incoming_damage_cooldown"
     INCOMING_DAMAGE_SOURCE = "incoming_damage_source"
+    CHAMPION_DAMAGE_FLAT_REDUCTION = "champion_damage_flat_reduction"
+    CHAMPION_DOT_DAMAGE_FLAT_REDUCTION = "champion_dot_damage_flat_reduction"
+    CHAMPION_DAMAGE_FLAT_SOURCE = "champion_damage_flat_source"
     BASIC_DAMAGE_FLAT_REDUCTION = "basic_damage_flat_reduction"
     BASIC_DAMAGE_FLAT_REDUCTION_CAP = "basic_damage_flat_reduction_cap"
     CRITICAL_STRIKE_DAMAGE_MULTIPLIER = "critical_strike_damage_multiplier"
@@ -2106,6 +2112,9 @@ DEFENSE_FIELD_COMBINE: dict[DefenseField, DefenseCombine] = {
     DefenseField.INCOMING_DAMAGE_LINGER: DefenseCombine.SET,
     DefenseField.INCOMING_DAMAGE_COOLDOWN: DefenseCombine.SET,
     DefenseField.INCOMING_DAMAGE_SOURCE: DefenseCombine.SET,
+    DefenseField.CHAMPION_DAMAGE_FLAT_REDUCTION: DefenseCombine.SET,
+    DefenseField.CHAMPION_DOT_DAMAGE_FLAT_REDUCTION: DefenseCombine.SET,
+    DefenseField.CHAMPION_DAMAGE_FLAT_SOURCE: DefenseCombine.SET,
     DefenseField.BASIC_DAMAGE_FLAT_REDUCTION: DefenseCombine.SET,
     DefenseField.BASIC_DAMAGE_FLAT_REDUCTION_CAP: DefenseCombine.SET,
     DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER: DefenseCombine.MULTIPLY,
@@ -2307,6 +2316,7 @@ class AllyProducer(Enum):
     RAGE = "rage"
     SHARED_RICHES = "shared_riches"
     WARD = "ward"
+    NIGHTSTALKER = "nightstalker"
     # explicit actives
     DEVOTION = "devotion"
     PURIFY = "purify"
@@ -3324,13 +3334,15 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a stat derivation names the stat it grants"
         )
-    if isinstance(payload, ManaflowRule) and (
-        (payload.max_charges is None) != (payload.transform_bonus_mana is None)
+    if (
+        isinstance(payload, ManaflowRule)
+        and payload.transform_bonus_mana is not None
+        and payload.max_charges is None
     ):
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a manaflow ledger that transforms declares "
-            "both its charge ceiling and the mana the transform grants; one "
-            "without the other is a parse that dropped a key"
+            "the charge ceiling it transforms at; a transform with no ceiling "
+            "is a parse that dropped a key"
         )
     for name in STAT_DERIVATION_REQUIRED_REFERENCES[type(payload)]:
         _validate_stat_reference(rule, name, getattr(payload, name), optional=False)
@@ -3604,6 +3616,10 @@ class DefenseSubject:
     level: int
     stats: Mapping[str, float]
     options: Mapping[str, Mapping[str, int | float]]
+    # The typed reader for a supplied option (bounds, step, finiteness are
+    # the option's contract).  Injected by the caller that owns the item
+    # data layer, so this declaration layer stays a leaf.
+    option_value: Callable[[str, str], float] | None = None
 
     def stat(self, name: str) -> float:
         """One of the subject's resolved stats, absent meaning zero.
@@ -3630,9 +3646,23 @@ class DefenseSubject:
         return bool(self.stats.get("is_melee", False))
 
     def option(self, owner: str, option: DefenseOption) -> float:
-        """One declared input option, zero when the scenario supplied none."""
+        """One declared input option, validated, zero when none was supplied.
+
+        Read through the typed accessor rather than off the mapping: the
+        schema's bounds, step and finiteness are the option's contract, and a
+        resolver that took the raw value would price an out-of-domain
+        activation a request could never have passed.  A scenario that
+        supplied nothing reads 0.0 — an absence, not a defaulted magnitude.
+        """
         supplied = self.options.get(owner) or {}
-        return float(supplied.get(option.value, 0.0))
+        if option.value not in supplied:
+            return 0.0
+        if self.option_value is None:
+            raise ValueError(
+                f"{owner} option {option.value!r} was supplied but the subject "
+                "carries no typed option reader"
+            )
+        return self.option_value(owner, option.value)
 
 
 @dataclass(frozen=True, slots=True)

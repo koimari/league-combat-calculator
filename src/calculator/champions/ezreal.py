@@ -35,6 +35,24 @@ PASSIVE_MAX_STACKS = 5
 Q_REFUND_SECONDS = 1.5  # each Q hit refunds this off every current cooldown
 Q_MIN_PERIOD = 1.0  # sanity floor on Q's post-refund cast period (seconds)
 
+# HARDCODED rule declaration — Essence Flux's mark-detonation refund flat
+# (wiki prose only: "If the mark was detonated with an ability, Ezreal
+# restores 60 mana plus the mana cost of that ability"; no leveling row,
+# so the atom catalog holds no atom for it — verified by the P3S2
+# provenance audit; the game binary's ManaReturn [60 x7] corroborates the
+# flat 60 at every rank, and the "+ mana cost of that ability" clause is
+# script-side, wiki-sourced only).
+# https://wiki.leagueoflegends.com/en-us/Ezreal (revision 4041697)
+W_MARK_REFUND_FLAT = 60.0
+
+# HARDCODED rule declaration — Essence Flux's mark lifetime.  The cached
+# prose "marks ... for 4 seconds" (effects[0]) and the game binary's
+# DetonationTimeout [4.0 x7] agree; the atom ``timing.active_duration``
+# [4.0] (b32849b968950b8e) is the same 4s mark window.  The engine
+# enforces it: a detonation landing after the window is receipted
+# ``mark_expired`` and never refunds (P1 Slice 13).
+W_MARK_WINDOW_SECONDS = 4.0
+
 
 # ---------------------------------------------------------------------------
 # Q cooldown-refund model (continuous rate, every Q assumed to hit)
@@ -169,7 +187,53 @@ def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _essence_flux(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: Essence Flux — mark bonus damage + the ability-detonation refund.
+
+    The damage is the plain effect[1] read; the entry additionally carries
+    the typed ``mark_refund`` rule so the shared resource walk can refund
+    ``60 + <detonating ability's mana cost>`` when the mark is detonated
+    BY AN ABILITY (the next accepted ability cast after this W in the
+    fight's schedule).  The ``w_mark_detonation`` option chooses the
+    detonation means; ``basic_attack`` disables the refund entirely (the
+    mark is detonated by a basic attack, which sources no mana back).
+    """
+    entry = _with_q_refund(
+        simple_damage(
+            attr="Bonus Magic Damage",
+            dmg_type="magic",
+            event_order_certified="single_hit",
+        )
+    )(ctx)
+    if entry is None:
+        return None
+    detonation = str(ctx.options.get("w_mark_detonation", "ability"))
+    if detonation not in {"ability", "basic_attack"}:
+        raise ValueError(
+            f"unknown w_mark_detonation {detonation!r}; supported: "
+            "ability, basic_attack"
+        )
+    entry["mark_refund"] = {
+        "flat": W_MARK_REFUND_FLAT,
+        "window_seconds": W_MARK_WINDOW_SECONDS,
+        "source": "Ezreal W (Essence Flux) mark refund",
+        "atoms": (),
+        "detonation": detonation,
+    }
+    return entry
+
+
 OPTIONS: list[dict[str, Any]] = [
+    {
+        "key": "w_mark_detonation",
+        "type": "select",
+        "default": "ability",
+        "label": "W mark detonation",
+        "choices": [
+            {"value": "ability", "label": "Ability (refunds 60 + its mana cost)"},
+            {"value": "basic_attack", "label": "Basic attack (no mana refund)"},
+        ],
+    },
     {
         "key": "passive_stacks",
         "type": "int",
@@ -191,23 +255,32 @@ ASSUMPTIONS = [
     "Q consuming spellblade (Sheen/Trinity) in an auto-less burst "
     "rotation is not modeled; with an auto stream the engine's existing "
     "spellblade model yields the same proc count",
-    "W's mana refund and mana costs are not modeled",
+    "W's mana refund is modeled on the shared mana ledger: when the mark "
+    "is detonated BY AN ABILITY (the next accepted ability cast after the "
+    "W in the fight's schedule — every cast is assumed to hit), Ezreal "
+    "restores 60 mana plus that ability's mana cost (the cost actually "
+    "paid, Actualizer discount included). The w_mark_detonation option "
+    "chooses the detonation means; basic_attack detonation restores "
+    "nothing. The flat 60 is a typed rule declaration (wiki prose + game "
+    "binary ManaReturn; no atom exists). The 4s mark window IS modeled "
+    "(cache prose + the binary DetonationTimeout 4.0 + the atom "
+    "timing.active_duration b32849b968950b8e): a detonation landing "
+    "after the window is receipted mark_expired and never refunds. The "
+    "mark is always detonated within its window (every cast is assumed "
+    "to hit); target-side spell "
+    "shields are not modeled); an undetonated mark at the end of the "
+    "fight is receipted, never guessed",
     "Life steal applying to Q is not modeled (healing out of scope)",
 ]
 
 SLOTS = {
     "P": _rising_spell_force,
     "Q": _mystic_shot,
+    # W carries the mark-detonation mana refund as well as its damage.
     # Each of W/E/R is one damage instance with no sourced travel or tick
     # phase, so the single-hit certification is what carries them into the
     # event ledger MODULE_CC is read from.
-    "W": _with_q_refund(
-        simple_damage(
-            attr="Bonus Magic Damage",
-            dmg_type="magic",
-            event_order_certified="single_hit",
-        )
-    ),
+    "W": _essence_flux,
     "E": _with_q_refund(
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
@@ -222,9 +295,10 @@ SLOTS = {
 
 # Ezreal's cached kit applies no crowd control at all: Q is a bolt that
 # only refunds cooldowns, W marks and detonates, E blinks and reveals, R
-# grants sight.  P is the module's zero-damage attack-speed buff slot — it
-# authors no damage part the ledger can carry a review on, so it is left
-# undeclared rather than stamped.
+# grants sight.  Every entry has been reviewed against the pinned Wiki
+# record and the game binary.  P is the module's zero-damage attack-speed
+# buff slot — it authors no damage part the ledger can carry a review on,
+# so it is left undeclared rather than stamped.
 MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Ezreal", cc_kinds=MODULE_CC)

@@ -25,6 +25,7 @@ from .inputs import champion_stat
 from .engine import SlotCtx
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
 
@@ -182,4 +183,45 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(cached passive prose; all four bloblets assumed to survive).",
 ]
 
-SELF_HEALING_RULE = declare_healing_rule("Zac")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Zac self-healing events from its authored packet."""
+    healing = []
+    p = _healing._ability(champion_data, "P")
+    level = int(champion_stat(champion_stats, "level"))
+    chunk_pct = _healing.extract_named(
+        p, "Max Health Damage", level, champion_stats, {}
+    )
+
+    def cell_division_heal(
+        _current_health: float,
+        maximum_health: float,
+        pct: float = chunk_pct,
+    ) -> float:
+        return maximum_health * pct / 100.0
+
+    for event in _healing._attributed_events(
+        damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
+    ):
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": cell_division_heal,
+                "source": "Cell Division",
+                "kind": "champion_passive",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Zac", derive_self_healing)

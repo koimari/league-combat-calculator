@@ -1,0 +1,1868 @@
+[
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NamiW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0
+   ],
+   "damage": [
+    36.0,
+    57.0,
+    78.0,
+    99.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 5135,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiWAbility/NamiW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NamiW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0
+   ],
+   "damage": [
+    36.0,
+    57.0,
+    78.0,
+    99.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 5135,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiWAbility/NamiW"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "NamiW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0
+   ],
+   "damage": [
+    36.0,
+    57.0,
+    78.0,
+    99.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 5135,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiW",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiWAbility/NamiW"
+   ],
+   "evidence": "tag:Trait_ActiveHeal"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NamiW",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    10.0,
+    10.0,
+    10.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    70.0,
+    75.0,
+    80.0,
+    85.0,
+    90.0
+   ],
+   "damage": [
+    36.0,
+    57.0,
+    78.0,
+    99.0,
+    120.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 5135,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 10.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiWAbility/NamiW"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.debuff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NamiQDebuff",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 1029,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiQDebuff",
+    "atoms": [
+     "stack-transform-summon-resource.debuff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQDebuff"
+   ],
+   "evidence": "name:debuff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NamiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 1029,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiQ",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQ"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NamiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 1029,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NamiQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 1029,
+   "cast_time": 0.25,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQ"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "NamiESlowtt",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "damage": [
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0
+   ],
+   "duration": null,
+   "ratios": {
+    "slow": [
+     {
+      "values": [
+       15.0,
+       20.0,
+       25.0,
+       30.0,
+       35.0
+      ],
+      "units": [
+       "%",
+       "%",
+       "%",
+       "%",
+       "%"
+      ]
+     },
+     {
+      "values": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ],
+      "units": [
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP"
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": null,
+   "cast_time": null,
+   "level_scaling": {
+    "per-level scaling": [
+     33.0,
+     34.94,
+     36.88,
+     38.82,
+     40.76,
+     42.71,
+     44.65,
+     46.59,
+     48.53,
+     50.47,
+     52.41,
+     54.35,
+     56.29,
+     58.24,
+     60.18,
+     62.12,
+     64.06,
+     66.0
+    ]
+   },
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiEAbility/NamiESlowtt"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NamiE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "damage": [
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0
+   ],
+   "duration": null,
+   "ratios": {
+    "slow": [
+     {
+      "values": [
+       15.0,
+       20.0,
+       25.0,
+       30.0,
+       35.0
+      ],
+      "units": [
+       "%",
+       "%",
+       "%",
+       "%",
+       "%"
+      ]
+     },
+     {
+      "values": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ],
+      "units": [
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP"
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 1,
+   "cast_time": 0.25,
+   "level_scaling": {
+    "per-level scaling": [
+     33.0,
+     34.94,
+     36.88,
+     38.82,
+     40.76,
+     42.71,
+     44.65,
+     46.59,
+     48.53,
+     50.47,
+     52.41,
+     54.35,
+     56.29,
+     58.24,
+     60.18,
+     62.12,
+     64.06,
+     66.0
+    ]
+   },
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiEAbility/NamiE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "NamiE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    11.0,
+    11.0,
+    11.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    55.0,
+    60.0,
+    65.0,
+    70.0,
+    75.0
+   ],
+   "damage": [
+    60.0,
+    105.0,
+    150.0,
+    195.0,
+    240.0
+   ],
+   "duration": null,
+   "ratios": {
+    "slow": [
+     {
+      "values": [
+       15.0,
+       20.0,
+       25.0,
+       30.0,
+       35.0
+      ],
+      "units": [
+       "%",
+       "%",
+       "%",
+       "%",
+       "%"
+      ]
+     },
+     {
+      "values": [
+       5.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ],
+      "units": [
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP",
+       "% per 100 AP"
+      ]
+     }
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 1,
+   "cast_time": 0.25,
+   "level_scaling": {
+    "per-level scaling": [
+     33.0,
+     34.94,
+     36.88,
+     38.82,
+     40.76,
+     42.71,
+     44.65,
+     46.59,
+     48.53,
+     50.47,
+     52.41,
+     54.35,
+     56.29,
+     58.24,
+     60.18,
+     62.12,
+     64.06,
+     66.0
+    ]
+   },
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "NamiE",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiEAbility/NamiE"
+   ],
+   "evidence": "tag:Trait_AttackBuff_Duration"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NamiR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 13327,
+   "cast_time": 0.5,
+   "level_scaling": null,
+   "calc_coefficients": {
+    "calc_coef_0": 0.6000000238418579
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NamiR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NamiR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 13327,
+   "cast_time": 0.5,
+   "level_scaling": null,
+   "calc_coefficients": {
+    "calc_coef_0": 0.6000000238418579
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NamiR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NamiR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 13327,
+   "cast_time": 0.5,
+   "level_scaling": null,
+   "calc_coefficients": {
+    "calc_coef_0": 0.6000000238418579
+   }
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "NamiR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "NamiCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    54.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NamiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    54.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cast_time": 0.32260000705718994,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.32260000705718994,
+    "behavior": "NamiBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.32260000705718994,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NamiBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    54.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cast_time": 0.32260000705718994,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.32260000705718994,
+    "behavior": "NamiBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": 0.32260000705718994,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "NamiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    54.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "NamiBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    550.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    54.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NamiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 23567,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQMissile"
+   ],
+   "inherited_from": "NamiQ",
+   "evidence": "inherited:NamiQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NamiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 23567,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQMissile"
+   ],
+   "inherited_from": "NamiQ",
+   "evidence": "inherited:NamiQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NamiQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    12.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+   ],
+   "damage": [
+    90.0,
+    145.0,
+    200.0,
+    255.0,
+    310.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 23567,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 12.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiQAbility/NamiQMissile"
+   ],
+   "inherited_from": "NamiQ",
+   "evidence": "inherited:NamiQ"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "NamiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 7183,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiRMissile",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiRMissile"
+   ],
+   "inherited_from": "NamiR",
+   "evidence": "inherited:NamiR"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "NamiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 7183,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiRMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiRMissile"
+   ],
+   "inherited_from": "NamiR",
+   "evidence": "inherited:NamiR"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "NamiRMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": 7183,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiRMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Nami/Spells/NamiRAbility/NamiRMissile"
+   ],
+   "inherited_from": "NamiR",
+   "evidence": "inherited:NamiR"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.movement-speed",
+  "family": "crowd-control-mobility",
+  "behavior": "NamiPassive (Surging Tides)",
+  "trigger": "passive",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": {
+    "calc_coef_0": 0.25
+   }
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Surging Tides \u2014 Nami's abilities grant 100 (+25% AP) bonus movement speed to allied champions hit, decaying over 1.5 seconds"
+   ],
+   "binary": [
+    "NamiPassive"
+   ],
+   "evidence": "DataValues FlatMS 100.0 + wiki P"
+  }
+ },
+ {
+  "atom_id": "vision-economy.reveal",
+  "family": "vision-economy",
+  "behavior": "NamiRVision",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    120.0,
+    110.0,
+    100.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    150.0,
+    250.0,
+    350.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "MAGIC_DAMAGE",
+   "affects_type_flags": null,
+   "cast_time": null,
+   "level_scaling": null,
+   "calc_coefficients": null
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "NamiRVision",
+    "atoms": [
+     "vision-economy.reveal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 120.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Tidal Wave \u2014 granting sight around its trajectory as it travels"
+   ],
+   "binary": [
+    "NamiRVision"
+   ],
+   "evidence": "wiki R sight + bin object"
+  }
+ }
+]

@@ -1,0 +1,5239 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    150.0,
+    250.0,
+    350.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 17413
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "crowd-control-mobility.channel"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 200.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioRSpellPassive"
+   ],
+   "evidence": "tag:Trait_ChannelSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioE",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockupDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioE",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioEAbility/GalioE"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockupDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioEAbility/GalioE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "MinTotalDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "MinimumWBaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "MaximumWBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "PassiveShieldHealthRatio": [
+     0.05999999865889549,
+     0.07500000298023224,
+     0.09000000357627869,
+     0.10499999672174454,
+     0.11999999731779099,
+     0.13500000536441803,
+     0.15000000596046448
+    ],
+    "MRRatio": [
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001
+    ],
+    "PhysicalDRPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReductionBase": [
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MaxChargeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SelfSlowPercent": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "CCDurationMin": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HpRatio": [
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05
+    ],
+    "CCDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "DRLingerDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ApRatio": [
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "BaseApRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW2"
+   ],
+   "inherited_from": "GalioW",
+   "evidence": "inherited:GalioW"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockupDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioE",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioEAbility/GalioE"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "GalioRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    150.0,
+    250.0,
+    350.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 17413
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "crowd-control-mobility.slow"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 200.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioRSpellPassive"
+   ],
+   "evidence": "tag:PositiveEffect_MoveBlock"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioPassiveAttack",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 23178
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Colossal Smash"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioPassiveAbility/GalioPassiveAttack"
+   ],
+   "evidence": "wiki:P-empowered-area-magic-damage; binary flags 23178"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "QMissileDamage": [
+     0.7
+    ],
+    "{85f4c0e9}": [
+     0.01
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SuperQDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SuperQMonsterMaxDamage": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "SuperQBasePercentage": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TornadoTicks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1818,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQMissile"
+   ],
+   "inherited_from": "GalioQ",
+   "evidence": "inherited:GalioQ"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioQSuper",
+  "trigger": "on_converge",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0,
+    120.0
+   ],
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Winds of War"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQSuper"
+   ],
+   "evidence": "wiki:Q-converged-blast-magic-damage"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "MinTotalDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "MinimumWBaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "MaximumWBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "PassiveShieldHealthRatio": [
+     0.05999999865889549,
+     0.07500000298023224,
+     0.09000000357627869,
+     0.10499999672174454,
+     0.11999999731779099,
+     0.13500000536441803,
+     0.15000000596046448
+    ],
+    "MRRatio": [
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001
+    ],
+    "PhysicalDRPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReductionBase": [
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MaxChargeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SelfSlowPercent": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "CCDurationMin": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HpRatio": [
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05
+    ],
+    "CCDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "DRLingerDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ApRatio": [
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "GalioW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "BaseApRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW2"
+   ],
+   "inherited_from": "GalioW",
+   "evidence": "inherited:GalioW"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "GalioBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "galiobasicattack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "GalioCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "galiocritattack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "damage": [
+    65.0,
+    100.0,
+    135.0,
+    170.0,
+    205.0,
+    240.0,
+    275.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     65.0,
+     100.0,
+     135.0,
+     170.0,
+     205.0,
+     240.0,
+     275.0
+    ],
+    "KnockupDuration": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "MinRange": [
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0,
+     250.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0682,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioEAbility/GalioE"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "QMissileDamage": [
+     0.7
+    ],
+    "{85f4c0e9}": [
+     0.01
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SuperQDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SuperQMonsterMaxDamage": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "SuperQBasePercentage": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TornadoTicks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1818,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQMissile"
+   ],
+   "inherited_from": "GalioQ",
+   "evidence": "inherited:GalioQ"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioQMissileR",
+  "trigger": "on_hit",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Winds of War"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQMissileR"
+   ],
+   "evidence": "wiki:Q-windblast-magic-damage; binary flags 6154"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioW",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "MinTotalDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "MinimumWBaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "MaximumWBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "PassiveShieldHealthRatio": [
+     0.05999999865889549,
+     0.07500000298023224,
+     0.09000000357627869,
+     0.10499999672174454,
+     0.11999999731779099,
+     0.13500000536441803,
+     0.15000000596046448
+    ],
+    "MRRatio": [
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001
+    ],
+    "PhysicalDRPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReductionBase": [
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MaxChargeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SelfSlowPercent": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "CCDurationMin": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HpRatio": [
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05
+    ],
+    "CCDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "DRLingerDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ApRatio": [
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "GalioW2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "BaseApRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW2"
+   ],
+   "inherited_from": "GalioW",
+   "evidence": "inherited:GalioW"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "GalioQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    11.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    7.0
+   ],
+   "cast_range": [
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0,
+    825.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    35.0,
+    70.0,
+    105.0,
+    140.0,
+    175.0,
+    210.0,
+    245.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "QMissileDamage": [
+     0.7
+    ],
+    "{85f4c0e9}": [
+     0.01
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     35.0,
+     70.0,
+     105.0,
+     140.0,
+     175.0,
+     210.0,
+     245.0
+    ],
+    "SuperQDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SuperQMonsterMaxDamage": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "SuperQBasePercentage": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "TornadoTicks": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 11.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1818,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQ"
+   ],
+   "evidence": "tag:Trait_DoT"
+  }
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "GalioQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 6154
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 11.0,
+    "behavior": "GalioQ",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissile",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": 0.0,
+    "behavior": "GalioQMissileR",
+    "atoms": [
+     "damage.dot"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioQSuper",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioQAbility/GalioQMissile"
+   ],
+   "inherited_from": "GalioQ",
+   "evidence": "inherited:GalioQ"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "GalioBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "affects_type_flags": 512
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": null,
+    "behavior": "galiobasicattack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:Trait_Shield"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "GalioRShield",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioRShield"
+   ],
+   "evidence": "name:shield"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "GalioW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "MinTotalDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "MinimumWBaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "MaximumWBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "PassiveShieldHealthRatio": [
+     0.05999999865889549,
+     0.07500000298023224,
+     0.09000000357627869,
+     0.10499999672174454,
+     0.11999999731779099,
+     0.13500000536441803,
+     0.15000000596046448
+    ],
+    "MRRatio": [
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001
+    ],
+    "PhysicalDRPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReductionBase": [
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MaxChargeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SelfSlowPercent": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "CCDurationMin": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HpRatio": [
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05
+    ],
+    "CCDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "DRLingerDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ApRatio": [
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW"
+   ],
+   "evidence": "tag:Trait_PassiveShield"
+  }
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "GalioW2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "BaseApRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW2"
+   ],
+   "inherited_from": "GalioW",
+   "evidence": "inherited:GalioW"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "GalioW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0,
+    14.0
+   ],
+   "cast_range": [
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0,
+    275.0
+   ],
+   "mana_cost": [
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0,
+    50.0
+   ],
+   "duration": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "ratios": {
+    "MinTotalDamage": [
+     0.3
+    ]
+   },
+   "effect_amounts": {
+    "MinimumWBaseDamage": [
+     10.0,
+     20.0,
+     30.0,
+     40.0,
+     50.0,
+     60.0,
+     70.0
+    ],
+    "MaximumWBaseDamage": [
+     30.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0,
+     210.0
+    ],
+    "PassiveShieldHealthRatio": [
+     0.05999999865889549,
+     0.07500000298023224,
+     0.09000000357627869,
+     0.10499999672174454,
+     0.11999999731779099,
+     0.13500000536441803,
+     0.15000000596046448
+    ],
+    "MRRatio": [
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001,
+     0.0007999999797903001
+    ],
+    "PhysicalDRPercent": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "DamageReductionBase": [
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896,
+     0.3499999940395355,
+     0.4000000059604645,
+     0.44999998807907104,
+     0.5
+    ],
+    "MaxChargeDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "SelfSlowPercent": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "CCDurationMin": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "HpRatio": [
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05,
+     9.999999747378752e-05
+    ],
+    "CCDurationMax": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "DRLingerDuration": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ],
+    "ApRatio": [
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007,
+     0.00039999998989515007
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 18.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1111,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW"
+   ],
+   "evidence": "tag:Trait_Parry"
+  }
+ },
+ {
+  "atom_id": "interaction.parry",
+  "family": "interaction",
+  "behavior": "GalioW2",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage": [
+    20.0,
+    40.0,
+    60.0,
+    80.0,
+    100.0,
+    120.0,
+    140.0
+   ],
+   "effect_amounts": {
+    "BaseDamage": [
+     20.0,
+     40.0,
+     60.0,
+     80.0,
+     100.0,
+     120.0,
+     140.0
+    ],
+    "BaseApRatio": [
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579,
+     0.6000000238418579
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 6666
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "interaction.parry"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "interaction.parry"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 0.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioW2"
+   ],
+   "inherited_from": "GalioW",
+   "evidence": "inherited:GalioW"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "ratios": {
+    "TotalDamage": [
+     1.0,
+     0.4,
+     0.6
+    ]
+   },
+   "effect_amounts": {
+    "ChargeRatePerHit": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "PassiveCooldown": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   }
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GalioPassiveAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassiveBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Colossal Smash"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioPassiveAbility/GalioPassive"
+   ],
+   "evidence": "wiki:P-passive-ready-state"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GalioPassiveAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassiveBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioPassiveAbility/GalioPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioPassiveCD",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 0.0,
+    "behavior": "GalioPassiveAttack",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassiveBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Colossal Smash"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioPassiveAbility/GalioPassiveCD"
+   ],
+   "evidence": "wiki:P-internal-cooldown-tracker"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    180.0,
+    180.0,
+    160.0,
+    140.0,
+    140.0,
+    140.0,
+    140.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    50.0,
+    150.0,
+    250.0,
+    350.0,
+    450.0,
+    550.0,
+    650.0
+   ],
+   "duration": [
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75,
+    0.75
+   ],
+   "ratios": {
+    "TotalDamage": [
+     0.7,
+     1.0
+    ]
+   },
+   "effect_amounts": {
+    "BaseDamage": [
+     50.0,
+     150.0,
+     250.0,
+     350.0,
+     450.0,
+     550.0,
+     650.0
+    ],
+    "StunDurationOuter": [
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75,
+     0.75
+    ],
+    "TemporaryWShieldDuration": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "damage_type": "magic",
+   "affects_type_flags": 16385
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 180.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.0042,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioR"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    200.0,
+    200.0,
+    180.0,
+    160.0,
+    140.0,
+    120.0,
+    120.0
+   ],
+   "cast_range": [
+    4000.0,
+    4000.0,
+    4750.0,
+    5500.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0,
+    100.0
+   ],
+   "damage": [
+    0.0,
+    150.0,
+    250.0,
+    350.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "damage_type": "magic",
+   "affects_type_flags": 17413
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": 180.0,
+    "behavior": "GalioR",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "GalioRShield",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": 200.0,
+    "behavior": "GalioRSpellPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": 200.0,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioRAbility/GalioRSpellPassive"
+   ],
+   "evidence": "tag:PositiveEffect_Boon"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioWBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "damage_type": "magic"
+  },
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioWBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioWPassive",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield of Durand"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioWPassive"
+   ],
+   "evidence": "wiki:W-passive-damage-reduction"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioWPassiveCD",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield of Durand"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioWPassiveCD"
+   ],
+   "evidence": "wiki:W-passive-cooldown-tracker"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "GalioWPassiveDefense",
+  "trigger": "passive",
+  "target_policy": "self",
+  "parameters": {},
+  "states": [
+   {
+    "state": "recast",
+    "duration": 18.0,
+    "behavior": "GalioW",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWBuff",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveCD",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "GalioWPassiveDefense",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": 0.0,
+    "behavior": "GalioW2",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Shield of Durand"
+   ],
+   "binary": [
+    "Characters/Galio/Spells/GalioWAbility/GalioWPassiveDefense"
+   ],
+   "evidence": "wiki:W-passive-defensive-buff"
+  }
+ }
+]

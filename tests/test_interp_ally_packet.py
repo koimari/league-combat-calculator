@@ -257,10 +257,21 @@ class TestTheCompiledLaneAnswerIsDerived:
         assert "self_shield_payload" in compilability.reason
         assert compilability.scope is ReceiptScope.SURVIVAL_LEDGER_TRANSITION
 
-    def test_a_producer_that_reroutes_damage_names_its_own_clause(self) -> None:
-        compilability = _slot(AllyProducer.SACRIFICE).rule.compilability
-        assert isinstance(compilability, ReceiptOnly)
-        assert "re-routes" in compilability.reason
+    def test_a_producer_that_reroutes_damage_is_derived_like_any_other(self) -> None:
+        """Rerouting stopped being a refusal clause; the axes still decide.
+
+        The compiled kernel now stages Knight's Vow itself
+        (``stage_knights_vow_redirect_actions`` / ``stage_knights_vow_heals``),
+        so ``redirects_incoming_damage`` is a declared fact the packet
+        carries rather than a reason to withhold.  What is pinned here is
+        that the verdict is still *derived* from the three kernel clauses —
+        Sacrifice trips none of them — and not restored as a per-item note.
+        """
+        rule = _slot(AllyProducer.SACRIFICE).rule
+        payload = rule.payload
+        assert isinstance(payload, AllyPacketRule)
+        assert payload.redirects_incoming_damage is True
+        assert isinstance(rule.compilability, Compilable)
 
     def test_a_non_support_kind_names_the_kind_the_kernel_refuses(self) -> None:
         compilability = _slot(AllyProducer.GOING_SLEDDING).rule.compilability

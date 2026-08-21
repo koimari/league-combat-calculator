@@ -4,9 +4,9 @@
       "attacker": "src.calculator.item_coverage.item_model_coverage",
       "target": "src.calculator.item_coverage.target_item_model_coverage"
     },
-    "git_head": "92d5bbffbfbdc8459927eddd72e89beeeeffafce",
+    "git_head": "fbcc5bb1b527878725ad6d84bc8bcc523bd58bc1",
     "item_count": 324,
-    "items_fetched_at": 1786113359.0537379,
+    "items_fetched_at": 1787268672.008812,
     "lanes": [
       "attacker",
       "target"
@@ -21,7 +21,7 @@
         "name": "Abyssal Mask",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Unmake carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -30,7 +30,7 @@
         "name": "Actualizer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Actualizer's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Ability Part Amp, Active Window Cast Economy is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -90,7 +90,7 @@
         "name": "Archangel's Staff",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Archangel's Staff's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Ability Power From Bonus Mana, Mana Charge is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -99,7 +99,7 @@
         "name": "Ardent Censer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Sanctify carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -108,7 +108,7 @@
         "name": "Armored Advance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Noxian Endurance is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -131,7 +131,7 @@
           "progression",
           "resource"
         ],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Ultimate Refund carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -170,7 +170,7 @@
           "ally_support",
           "stat_buff"
         ],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
+        "reason": "Attack Speed Percent Grant, Fanfare carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -181,7 +181,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Annul is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -219,7 +219,7 @@
         "name": "Black Cleaver",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Armor Reduction, Carve carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -286,7 +286,7 @@
         "name": "Bloodletter's Curse",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Mr Reduction, Vile Decay carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -295,7 +295,7 @@
         "name": "Bloodsong",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Expose Weakness, Spellblade carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -304,7 +304,7 @@
         "name": "Bloodthirster",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Ichorshield is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -345,7 +345,7 @@
         "name": "Bramble Vest",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Thorns is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -381,7 +381,7 @@
         "name": "Celestial Opposition",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Blessing Of The Mountain is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -399,7 +399,7 @@
         "name": "Chainlaced Crushers",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Noxian Persistence is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -497,7 +497,7 @@
         "name": "Cryptbloom",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Life From Death carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -530,7 +530,7 @@
           "progression",
           "on_hit"
         ],
-        "reason": "Cull's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "On Hit Heal, Reap is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -568,7 +568,7 @@
         "name": "Dawncore",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Ability Power From Bonus Mana Regen Percent carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -650,7 +650,7 @@
         "name": "Diadem of Songs",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Consonance carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -699,7 +699,7 @@
         "name": "Doran's Helm",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions; the full Wiki entry has no champion-facing sustain branch.",
+        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions (a minion-class fight arms it through CLASS_RESTRICTED_ON_HITS); the full Wiki entry has no champion-facing sustain branch.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -737,7 +737,7 @@
         "name": "Dream Maker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Blue Bubble, Purple Bubble carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -766,7 +766,7 @@
         "name": "Echoes of Helia",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Soul Siphon carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -786,7 +786,7 @@
         "outcome_dimensions": [
           "spell_protection"
         ],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Annul is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -871,7 +871,7 @@
         "name": "Endless Hunger",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Endless Hunger's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Ability Haste From Bonus Attack Damage, Omnivamp Percent Grant is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -918,7 +918,7 @@
         "name": "Experimental Hexplate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Attack Speed Percent Grant, Ultimate Haste Grant carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -965,9 +965,9 @@
         "name": "Fiendhunter Bolts",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "Attack Speed Percent Grant, Empowered Autos, Ultimate Haste Grant carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Fiendish Codex": {
         "calculation_eligible": true,
@@ -983,7 +983,7 @@
         "name": "Fimbulwinter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Fimbulwinter's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Everlasting, Health From Bonus Mana is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1037,7 +1037,7 @@
           "movement",
           "defense"
         ],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Steadfast is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1048,7 +1048,7 @@
         "outcome_dimensions": [
           "attack_speed_reduction"
         ],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Attack Speed Percent Aura carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1139,9 +1139,9 @@
         "name": "Gluttonous Greaves",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Slay grants omnivamp, not outgoing damage.",
+        "reason": "Gluttonous Greaves's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Goredrinker": {
         "calculation_eligible": false,
@@ -1161,7 +1161,7 @@
         "outcome_dimensions": [
           "revive"
         ],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Rebirth is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1206,15 +1206,13 @@
         "status": "modeled_effect"
       },
       "Guardian's Horn": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Guardian's Horn",
-        "optimizer_eligible": false,
+        "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
-        "review_issue_refs": [
-          40
-        ],
-        "status": "withheld"
+        "reason": "Undaunted is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "review_issue_refs": [],
+        "status": "stats_only"
       },
       "Guardian's Orb": {
         "calculation_eligible": false,
@@ -1252,9 +1250,9 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "Lifesteal Percent Grant is supplied through an explicit bounded scenario control, and its declared behaviour reads it.  Noxian Gait stays out of scope: the entry declares its magnitude unsourced, so nothing prices it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Gusto": {
         "calculation_eligible": false,
@@ -1322,7 +1320,7 @@
           "progression",
           "health_state"
         ],
-        "reason": "Heartsteel's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Empowered Hit is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1364,7 +1362,7 @@
         "name": "Hexdrinker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Lifeline Hexdrinker is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1433,7 +1431,7 @@
           "progression",
           "stat_conversion"
         ],
-        "reason": "Hubris's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Attack Damage Per Stack is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1460,7 +1458,7 @@
         "name": "Immortal Path",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Immortal Path's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Below Half Healing, Whole Total Amp is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1469,7 +1467,7 @@
         "name": "Immortal Shieldbow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Lifeline Shieldbow is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1478,7 +1476,7 @@
         "name": "Imperial Mandate",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Command carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1516,7 +1514,7 @@
         "name": "Jak'Sho, The Protean",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Voidborn Resilience is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1563,7 +1561,7 @@
         "name": "Kaenic Rookern",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Magebane is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1592,7 +1590,7 @@
         "name": "Knight's Vow",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Knight's Vow's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Sacrifice is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1716,7 +1714,7 @@
           "ally_support",
           "shield"
         ],
-        "reason": "Locket of the Iron Solari's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Devotion is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1743,9 +1741,9 @@
         "name": "Lost Chapter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Enlighten restores mana on level-up; it adds no direct damage.",
+        "reason": "Lost Chapter's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Lucky Dice": {
         "calculation_eligible": true,
@@ -1770,16 +1768,16 @@
         "name": "Malignance",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "Ultimate Haste Grant, Ultimate Proc carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Manamune": {
         "calculation_eligible": true,
         "name": "Manamune",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Manamune's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Attack Damage From Max Mana, Mana Charge is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1788,7 +1786,7 @@
         "name": "Maw of Malmortius",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Lifeline Maw carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1812,9 +1810,9 @@
           "cleanse",
           "movement"
         ],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "Lifesteal Percent Grant is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Mercury's Treads": {
         "calculation_eligible": true,
@@ -1834,7 +1832,7 @@
           "cleanse",
           "sustain"
         ],
-        "reason": "Mikael's Blessing's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Purify is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1865,7 +1863,7 @@
         "name": "Moonstone Renewer",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Starlit Grace carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1912,9 +1910,9 @@
         "name": "Muramana",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "Attack Damage From Max Mana, On Hit carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Nashor's Tooth": {
         "calculation_eligible": true,
@@ -2028,7 +2026,7 @@
         "name": "Overlord's Bloodmail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Overlord's Bloodmail's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Attack Damage From Bonus Health is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2050,7 +2048,7 @@
         "outcome_dimensions": [
           "movement"
         ],
-        "reason": "Phage's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Rage is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2090,7 +2088,7 @@
         "name": "Plated Steelcaps",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Plating is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2128,7 +2126,7 @@
         "name": "Protoplasm Harness",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Lifeline Protoplasm is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2170,16 +2168,16 @@
         "name": "Quicksilver Sash",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Quicksilver is defensive cleanse.",
+        "reason": "The item exposes its damage-relevant state as a scenario control.",
         "review_issue_refs": [],
-        "status": "stats_only"
+        "status": "modeled_state"
       },
       "Rabadon's Deathcap": {
         "calculation_eligible": true,
         "name": "Rabadon's Deathcap",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Ability Power Multiplier carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2213,7 +2211,7 @@
           "slow",
           "critical_mitigation"
         ],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Resilience is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2289,7 +2287,7 @@
           "ally_support",
           "sustain"
         ],
-        "reason": "Redemption's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Intervention is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2349,7 +2347,7 @@
         "name": "Riftmaker",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Riftmaker's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Omnivamp Percent On Saturation, Whole Total Amp is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2373,7 +2371,7 @@
           "health_state",
           "resource"
         ],
-        "reason": "Rod of Ages's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Ability Power Per Stack, Health Per Stack, Mana Per Stack is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2419,7 +2417,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "Runic Compass's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Shared Riches, Ward is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2497,7 +2495,7 @@
         "name": "Seraph's Embrace",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Ability Power From Bonus Mana, Lifeline Seraph carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2576,7 +2574,7 @@
           "movement",
           "ally_support"
         ],
-        "reason": "Shurelya's Battlesong's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Inspiring Speech is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2600,7 +2598,7 @@
           "movement",
           "sustain"
         ],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
+        "reason": "Going Sledding carries progression or cross-participant state that the shared participant ledger schedules: ally_packet.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2665,7 +2663,7 @@
         "name": "Staff of Flowing Water",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
+        "reason": "Ability Power Grant, Rapids carries progression or cross-participant state that the shared participant ledger schedules: ally_packet, stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2715,7 +2713,7 @@
         "name": "Sterak's Gage",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Attack Damage From Base Attack Damage, Lifeline Sterak carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2749,7 +2747,7 @@
           "slow",
           "movement"
         ],
-        "reason": "Stridebreaker's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Active, Breaking Shockwave is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2801,7 +2799,7 @@
           "movement",
           "stat_conversion"
         ],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Adaptive Force From Total Move Speed carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2846,7 +2844,7 @@
           "progression",
           "resource"
         ],
-        "reason": "Tear of the Goddess's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Mana Charge is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2896,7 +2894,7 @@
         "name": "Thornmail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Thorns is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -2998,7 +2996,7 @@
         "outcome_dimensions": [
           "vision"
         ],
-        "reason": "Umbral Glaive's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Empowered Hit, Nightstalker is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3024,8 +3022,10 @@
         "calculation_eligible": true,
         "name": "Verdant Barrier",
         "optimizer_eligible": true,
-        "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "outcome_dimensions": [
+          "spell_protection"
+        ],
+        "reason": "Annul is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3074,7 +3074,7 @@
         "name": "Warden's Mail",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Every declared family on this item is a defence: the represented mechanic changes durability, not outgoing TDD.",
+        "reason": "Rock Solid is a defence: the represented mechanic changes durability, not outgoing TDD.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -3083,7 +3083,7 @@
         "name": "Warmog's Armor",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "The declared behaviour carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
+        "reason": "Health Multiplier, Threshold Regeneration carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3092,7 +3092,7 @@
         "name": "Whispering Circlet",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Whispering Circlet's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Heal And Shield Power From Bonus Mana, Mana Charge is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3110,7 +3110,7 @@
         "name": "Winter's Approach",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Winter's Approach's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Health From Bonus Mana, Mana Charge is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3155,7 +3155,7 @@
           "ally_support",
           "vision"
         ],
-        "reason": "World Atlas's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Shared Riches, Ward is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3184,7 +3184,7 @@
         "name": "Yun Tal Wildarrows",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Yun Tal Wildarrows's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Attack Speed Percent Grant, Critical Strike Chance Per Stack, Swing Rate is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -3211,9 +3211,9 @@
         "name": "Zeke's Convergence",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Damage-relevant effects are declared and every declared family has an interpreter on the lanes this request needs.",
+        "reason": "Ultimate Haste Grant, Ultimate Proc carries progression or cross-participant state that the shared participant ledger schedules: stat_derivation.",
         "review_issue_refs": [],
-        "status": "modeled_effect"
+        "status": "modeled_state"
       },
       "Zephyr": {
         "calculation_eligible": false,
@@ -4106,7 +4106,7 @@
         "calculation_eligible": true,
         "name": "Fimbulwinter",
         "outcome_dimensions": [],
-        "reason": "Everlasting is scheduled from the exactly-timed damage ledger \u2014 the shield is scheduled after an authored immobilize, or a slow for a melee holder, so the moment it arrives is an event and not a fight constant \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
+        "reason": "Everlasting, Health From Bonus Mana is scheduled from the exactly-timed damage ledger \u2014 the shield is scheduled after an authored immobilize, or a slow for a melee holder, so the moment it arrives is an event and not a fight constant \u2014 so an uncertified timed fight is withheld rather than mis-timed.",
         "review_issue_refs": [],
         "status": "modeled_event_certified"
       },
@@ -4165,7 +4165,7 @@
         "outcome_dimensions": [
           "attack_speed_reduction"
         ],
-        "reason": "The passive-target model runs this as engine code rather than as a declared rule: Winter's Caress is a live enemy-only aura the roster composition applies to the opposing swing schedule; its target_attack_speed_aura entry compiles to no rule until stat_derivation is declared.",
+        "reason": "Attack Speed Percent Aura changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       },
@@ -4308,14 +4308,12 @@
         "status": "not_target_relevant"
       },
       "Guardian's Horn": {
-        "calculation_eligible": false,
+        "calculation_eligible": true,
         "name": "Guardian's Horn",
         "outcome_dimensions": [],
-        "reason": "This cached passive or active is declared by no BehaviorRule and no registry entry; calculation is withheld.",
-        "review_issue_refs": [
-          40
-        ],
-        "status": "withheld"
+        "reason": "Undaunted changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
+        "review_issue_refs": [],
+        "status": "modeled"
       },
       "Guardian's Orb": {
         "calculation_eligible": false,
@@ -4536,9 +4534,9 @@
         "calculation_eligible": true,
         "name": "Immortal Path",
         "outcome_dimensions": [],
-        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
+        "reason": "Below Half Healing changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       },
       "Immortal Shieldbow": {
         "calculation_eligible": true,
@@ -5357,9 +5355,9 @@
           "health_state",
           "resource"
         ],
-        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
+        "reason": "Health Per Stack changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       },
       "Ruby Crystal": {
         "calculation_eligible": true,
@@ -5944,7 +5942,9 @@
       "Verdant Barrier": {
         "calculation_eligible": true,
         "name": "Verdant Barrier",
-        "outcome_dimensions": [],
+        "outcome_dimensions": [
+          "spell_protection"
+        ],
         "reason": "Annul changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
@@ -5997,7 +5997,7 @@
         "calculation_eligible": true,
         "name": "Warmog's Armor",
         "outcome_dimensions": [],
-        "reason": "The passive-target model runs this as engine code rather than as a declared rule: Warmog's Heart is a live combat-state regeneration the participant timeline schedules; its stat_conversion entry compiles to no rule until stat_derivation is declared.",
+        "reason": "Health Multiplier, Threshold Regeneration changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
         "status": "modeled"
       },
@@ -6021,9 +6021,9 @@
         "calculation_eligible": true,
         "name": "Winter's Approach",
         "outcome_dimensions": [],
-        "reason": "Nothing this item declares changes incoming damage, durability or combat healing in the passive-target model.",
+        "reason": "Health From Bonus Mana changes what this actor survives, and every rule behind it has an interpreter on the target lane.",
         "review_issue_refs": [],
-        "status": "not_target_relevant"
+        "status": "modeled"
       },
       "Wit's End": {
         "calculation_eligible": true,

@@ -65,7 +65,7 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
     assert row["damage_events"] == [
         {
             "time": 0.0,
-            "damage": 80.0,
+            "damage": 100.0,
             "damage_type": "physical",
             "event_precision": "exact",
             # `cast_proc` retired off the pair engine on 2026-08-16, so this
@@ -77,7 +77,15 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             # Five positions since umbrella Amendment R, Ruling 1: the fifth
             # is the basic-attack swing composition, and an item proc no swing
             # delivered carries None there and is priced exactly as before.
-            "declared": ("eclipse.proc", 80.0, "other", None, None, None),
+            # MERGE: the declared magnitude is 100.0, not 80.0 -- the
+            # 16.16.1 registry prices Eclipse's proc at 5% of the
+            # target's maximum health for a ranged holder (8% melee),
+            # so 5% of the 2000-health target is 100.0, which is what
+            # the applied damage above has always been.  Data files
+            # take main's patch.  The row also names the target it
+            # was delivered to.
+            "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+            "target_id": "target:0",
         }
     ]
     assert row["pair_preview_of"] == "eclipse.proc"
@@ -98,13 +106,21 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
     assert row["damage_events"] == [
         {
             "time": 0.5,
-            "damage": 80.0,
+            "damage": 100.0,
             "damage_type": "physical",
             "event_precision": "hit",
             # Five positions since umbrella Amendment R, Ruling 1: the fifth
             # is the basic-attack swing composition, and an item proc no swing
             # delivered carries None there and is priced exactly as before.
-            "declared": ("eclipse.proc", 80.0, "other", None, None, None),
+            # MERGE: the declared magnitude is 100.0, not 80.0 -- the
+            # 16.16.1 registry prices Eclipse's proc at 5% of the
+            # target's maximum health for a ranged holder (8% melee),
+            # so 5% of the 2000-health target is 100.0, which is what
+            # the applied damage above has always been.  Data files
+            # take main's patch.  The row also names the target it
+            # was delivered to.
+            "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+            "target_id": "target:0",
         }
     ]
     assert "proc_Eclipse" in fight["timeline_coverage"]["exact_sources"]

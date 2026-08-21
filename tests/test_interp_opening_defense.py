@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import pytest
 
+from src.calculator.defensive_effects import option_reader
+
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters import INTERPRETERS, resolve_defense
 from src.calculator.interpreters.defense_state import DefenseInterpretationError
@@ -35,7 +37,12 @@ def _subject(**stats: float) -> DefenseSubject:
     base = {"health": 2000.0, "bonus_health": 0.0, "is_melee": False}
     base.update(stats)
     options = base.pop("options", {})
-    return DefenseSubject(level=int(base.pop("level", 18)), stats=base, options=options)
+    return DefenseSubject(
+        level=int(base.pop("level", 18)),
+        stats=base,
+        options=options,
+        option_value=option_reader(options),
+    )
 
 
 def _rule(owner: str, mechanic: DefenseMechanic) -> BehaviorRule:
@@ -133,18 +140,30 @@ def test_a_starting_ichorshield_is_an_input_and_never_an_assumption() -> None:
     empty = resolve_defense(rule, _subject())
     supplied = resolve_defense(
         rule,
-        DefenseSubject(
-            level=18,
-            stats={"health": 2000.0},
-            options={"Bloodthirster": {"starting_ichorshield": 400}},
-        ),
+        _subject(options={"Bloodthirster": {"starting_ichorshield": 315}}),
     )
 
     assert "general_shield" not in _granted(empty)
     assert "starts empty" in empty.notes[0]
-    # Capped at the sourced level maximum, never at what was asked for.
     assert _granted(supplied)["general_shield"] == pytest.approx(315.0)
     assert "explicitly supplied" in supplied.notes[0]
+
+
+def test_a_starting_ichorshield_above_the_sourced_maximum_is_refused() -> None:
+    """Out-of-range input is rejected at the boundary, never clamped here.
+
+    ``DefenseSubject.option`` reads through ``item_effects``' typed accessor,
+    so the declared domain (0..315, the level-18 cap) is the option's
+    contract.  A resolver that silently capped 400 would price an activation
+    no request could have passed.
+    """
+    rule = _rule("Bloodthirster", DefenseMechanic.ICHORSHIELD)
+
+    with pytest.raises(ValueError, match=r"starting_ichorshield must be between 0"):
+        resolve_defense(
+            rule,
+            _subject(options={"Bloodthirster": {"starting_ichorshield": 400}}),
+        )
 
 
 def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(

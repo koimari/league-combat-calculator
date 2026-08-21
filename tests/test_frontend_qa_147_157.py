@@ -490,12 +490,16 @@ def test_timeline_labels_are_not_truncated_to_fragments(source: str):
 
 def test_timeline_lanes_are_the_one_home_for_events(source: str):
     """Each lane carries the event's ledger index; the ledger table below keeps
-    the summaries (objective, event order, healing, support) and no longer
-    repeats the event rows."""
+    the summaries (objective, event order, healing, support) and the damage
+    breakdown neither repeats the event rows."""
     timeline = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
     assert "data-event-index" in timeline
     ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]
+    breakdown = source.split("function renderExactBreakdown(")[1].split("\nfunction ")[
+        0
+    ]
     assert "eventRows" not in ledger
+    assert "combat?.events" not in breakdown
 
 
 def test_timeline_label_size_meets_the_legibility_floor(css: str):

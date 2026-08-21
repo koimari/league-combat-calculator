@@ -51,17 +51,25 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from operator import itemgetter
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
+from ..resistance import (
+    apply_armor_penetration,
+    apply_magic_penetration,
+    apply_resistance,
+)
 from ..survival.actions import (
     EVENT_SLOTS,
     NO_SLOT,
+    UTILITY_KINDS,
     ActionKind,
     SurvivalAction,
     TransitionRank,
     action_key,
+    classify_event_kind,
     classify_prefetched,
     compiled_damage_action,
     declared_class_set,
@@ -85,6 +93,7 @@ from ..survival.pricing import (
     DeclaredPacket,
     route_declared_packet,
 )
+from ..ledger_projection import LightRow
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
@@ -212,8 +221,21 @@ def action_from_event(
     attacker_index = index_of.get(str(attacker_id), -1) if attacker_id else -1
     event_id = get("_event_id")
     time_value = float(get("time", 0.0))
+    if not math.isfinite(time_value):
+        raise ValueError(
+            f"action_from_event: event time must be finite, got "
+            f"{time_value!r} (event_id={event_id!r}); a non-finite "
+            f"timestamp cannot establish a stable total order"
+        )
     trigger_id = get("_trigger_event_id")
     batch_id = get("_deferred_batch_id")
+    # A shield gate names its subject as a participant id, or as the literal
+    # ``"attacker"`` meaning "whoever dealt this packet"; the kernel wants a
+    # roster slot either way.
+    shield_gate_target = get("shield_gate_target")
+    if shield_gate_target == "attacker":
+        shield_gate_target = attacker_id
+    shield_gate_time_raw = get("shield_gate_time")
     # The one reference the *walk* authors rather than reads: ``trigger_defy``
     # stamps the slot it already holds, so this key carries a slot and the
     # other three carry the id text a pre-walk author wrote.
@@ -287,6 +309,10 @@ def action_from_event(
         # refactor's.
         immobilized=is_immobilizing_event(event) or bool(get("crowd_control")),
         cc_kind=cc_kind,
+        cc_duration=max(0.0, float(get("cc_duration", 0.0) or 0.0)),
+        skillshot=bool(get("skillshot")),
+        area_damage=bool(get("area_damage")),
+        damage_over_time=bool(get("damage_over_time")),
         # The live-predicate amplifier the composition stamped on this
         # packet, if its holder declared one that rides this damage class.
         # ``None`` is "nobody declared one", which the kernel tells apart
@@ -303,6 +329,19 @@ def action_from_event(
         baseline_effective_mr=(float(baseline_mr) if baseline_mr is not None else None),
         healing_category=str(get("healing_category", "")),
         amount_formula=get("amount_formula"),
+        requires_existing_shield=bool(get("requires_existing_shield")),
+        cast_while_disabled=bool(get("cast_while_disabled")),
+        cast_blocked_by_attacker_control=bool(get("cast_blocked_by_attacker_control")),
+        cleanse_group=str(get("cleanse_group", "") or ""),
+        requires_maw_lifeline_omnivamp=bool(get("requires_maw_lifeline_omnivamp")),
+        shield_gate_subject=(
+            index_of.get(str(shield_gate_target), -1)
+            if shield_gate_target is not None
+            else -1
+        ),
+        shield_gate_time=(
+            float(shield_gate_time_raw) if shield_gate_time_raw is not None else None
+        ),
         requires_holder_health_ratio=max(
             0.0, float(get("requires_holder_health_ratio", 0.0) or 0.0)
         ),
@@ -320,18 +359,36 @@ def action_from_event(
         ),
         defy_trigger_slot=int(defy_slot) if defy_slot is not None else NO_SLOT,
         duration=max(0.0, float(get("duration", 0.0) or 0.0)),
+        delay=max(0.0, float(get("delay", 0.0) or 0.0)),
         health_ratio=max(0.0, float(get("health_ratio", 0.0) or 0.0)),
+        on_block_heal_amount=max(0.0, float(get("on_block_heal_amount", 0.0) or 0.0)),
+        on_block_heal_delay=max(0.0, float(get("on_block_heal_delay", 0.0) or 0.0)),
+        on_block_heal_source=str(get("on_block_heal_source", "") or ""),
         bonus_attack_speed_percent=float(get("bonus_attack_speed_percent", 0.0) or 0.0),
+        bonus_armor=float(get("bonus_armor", 0.0) or 0.0),
+        bonus_magic_resistance=float(get("bonus_magic_resistance", 0.0) or 0.0),
+        bonus_health=float(get("bonus_health", 0.0) or 0.0),
         ability_power=float(get("ability_power", 0.0) or 0.0),
         ability_haste=float(get("ability_haste", 0.0) or 0.0),
         on_hit_magic_damage=float(get("on_hit_magic_damage", 0.0) or 0.0),
+        shield_pool=str(get("shield_pool", "") or ""),
+        crowd_control_immunity_while_shield=bool(
+            get("crowd_control_immunity_while_shield")
+        ),
+        crowd_control_immunity_source=str(
+            get("crowd_control_immunity_source", "") or ""
+        ),
         persistent=bool(get("persistent")),
         multiplier=float(get("multiplier", 1.0) or 1.0),
         damage_reduction=bool(get("damage_reduction")),
         next_event_only=bool(get("next_event_only")),
+        all_sources=bool(get("all_sources")),
         armor_reduction_percent=float(get("armor_reduction_percent", 0.0) or 0.0),
         mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
         resistance_type=str(get("resistance_type", "")),
+        # A *restriction* on which participant's damage this modifier applies
+        # to, never the holder: ``holder`` below still resolves the owner.
+        source_participant=str(get("source_participant", "")),
         # The packet declares its holder as a participant id, because that is
         # what an item support author knows; the kernel wants the roster slot.
         # An owner outside this roster resolves to ``-1`` and arms no skip,
@@ -341,9 +398,15 @@ def action_from_event(
         holder=index_of.get(str(get("owner", "")), -1),
         damage_classes=declared_class_set(get("damage_classes"), DamageClass),
         attack_classes=declared_class_set(get("attack_classes"), AttackClass),
+        # ``kind_str`` is the event's authored kind string — the typed
+        # utility marker must come from the event, not the classified
+        # ActionKind enum (an enum is never a member of the string set).
+        utility_kind=kind_str if kind_str in UTILITY_KINDS else "",
         gold_amount=float(get("gold_amount", 0.0) or 0.0),
         ward_uses=float(get("ward_uses", 0.0) or 0.0),
         duration_set="duration" in event,
+        cleanse=bool(get("cleanse")),
+        cleanse_item=str(get("cleanse_item", "") or ""),
     )
 
 
@@ -472,6 +535,13 @@ def revive_candidate_actions(
                     attacker=-1,
                     aidx=aidx,
                     amount=revive_amount,
+                    # The sourced stasis window itself, carried onto the
+                    # candidate: the kernel re-anchors it to the *death*
+                    # time, so a candidate authored off a pre-lethal packet
+                    # cannot resurrect before death + delay.  Without it the
+                    # window is zero and the compiled path revives on the
+                    # first candidate at or after death.
+                    delay=revive_delay,
                     source=revive_source,
                     source_key=revive_key,
                     sequence=int(action.sequence or 0),
@@ -631,6 +701,24 @@ class WalkCompiler:
                     # the two paths.
                     is_ability=bool(event.get("is_ability")),
                     basic_attack=bool(event.get("basic_attack")),
+                    # The delivery facts a certified packet carries.  They
+                    # are read off the same keys ``action_from_event`` reads,
+                    # and the compiled path needs every one of them: Force of
+                    # Nature's Steadfast counts an immobilizing hit double and
+                    # throttles per *cast instance*, the spell-shield gate
+                    # groups a multi-part cast by the same instance, and a
+                    # Knight's Vow redirect child copies the control window
+                    # off its parent.  Unstamped, all three price differently
+                    # on the two paths with nothing saying so.
+                    immobilized=(
+                        is_immobilizing_event(event) or bool(event.get("crowd_control"))
+                    ),
+                    cc_kind=str(event.get("cc_kind", "")),
+                    cc_duration=max(0.0, float(event.get("cc_duration", 0.0) or 0.0)),
+                    skillshot=bool(event.get("skillshot")),
+                    area_damage=bool(event.get("area_damage")),
+                    damage_over_time=bool(event.get("damage_over_time")),
+                    ability_instance=event.get("ability_instance"),
                     # ``_pair_packet`` stamps these only when the fight
                     # published a finite figure, so ``get`` returning
                     # ``None`` is the same absent-means-refuse the receipt
@@ -833,6 +921,14 @@ class WalkCompiler:
         # ordinal in tuple position 1 — is a phase nobody can grep for, which
         # is exactly how both row shapes escaped the first migration pass.
         damage_phase = ordering_slot(TransitionRank.DAMAGE)
+        # A control-ONLY event is not damage and does not sort as damage: it
+        # takes effect after everything that landed at its own timestamp, the
+        # same rank ``_pair_packet`` gives it on the receipt side.  A control
+        # that RIDES damage keeps the damage rank, because it resolves with
+        # the packet it rode in on.  The two builders must agree here or the
+        # adapters disagree about which same-instant hits a control erases --
+        # the ``control_events`` loop below is where they did.
+        control_phase = ordering_slot(TransitionRank.DEBUFF_ARM)
         known_ids = len(id_strings)
         aidx = self.next_aidx
         # Per fight, not per event: the engine publishes one pair of final
@@ -879,10 +975,15 @@ class WalkCompiler:
         aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
         for index, row in enumerate(result.get("damage_events", [])):
             if light:
-                key = row[0]
+                # The positional layout is declared once, in
+                # ``ledger_projection.LightRow``; naming it here costs one
+                # tuple-subclass construction and buys the loop out of seven
+                # magic indices that nothing could grep for.
+                light_row = LightRow._make(row)
+                key = light_row.sort_key
                 time_value = key[0]
                 sequence = key[3]
-                source_key = row[3]
+                source_key = light_row.source_key
             else:
                 if "sequence" not in row:
                     # See action_key: pair-local event ids stay
@@ -905,15 +1006,15 @@ class WalkCompiler:
                 # downstream of the first preview.
                 continue
             if light:
-                damage_type = row[2]
+                damage_type = light_row.damage_type
                 # One number for both readers: a light row's damage is the
                 # engine's own, and the clamp below belongs to the dict
                 # shape, whose ``damage`` field can carry a negative for a
                 # transition the wound tuple still prices at face value.
-                wound_damage = damage = row[1]
-                raw_formula = row[4]
-                raw_damage = row[5]
-                declaration = row[6]
+                wound_damage = damage = light_row.damage
+                raw_formula = light_row.raw_formula
+                raw_damage = light_row.raw_damage
+                declaration = light_row.declared
                 source = source_key
                 # A light ledger row carries no delivery metadata, so
                 # neither flag can be answered from it.  That is recorded
@@ -922,6 +1023,12 @@ class WalkCompiler:
                 # attack class must not read ``False`` as "this was neither
                 # an attack nor a spell".
                 is_ability = basic_attack = False
+                # Nor can it answer any delivery fact.  Their neutral values
+                # are what the tuple shape *is*, not a guess about the packet.
+                immobilized = skillshot = area_damage = damage_over_time = False
+                cc_kind = ""
+                cc_duration = 0.0
+                ability_instance = None
             else:
                 damage_type = row["damage_type"]
                 wound_damage = row["damage"]
@@ -932,6 +1039,22 @@ class WalkCompiler:
                 source = str(row.get("source", source_key))
                 is_ability = bool(row.get("is_ability"))
                 basic_attack = bool(row.get("basic_attack"))
+                # The delivery facts a certified packet carries, read off the
+                # same keys ``action_from_event`` reads.  Force of Nature's
+                # Steadfast counts an immobilizing hit double and throttles
+                # per cast instance, the spell-shield gate groups a
+                # multi-part cast by that same instance, and a Knight's Vow
+                # redirect child copies the control window off its parent --
+                # unstamped, all three price differently on the two paths.
+                immobilized = is_immobilizing_event(row) or bool(
+                    row.get("crowd_control")
+                )
+                cc_kind = str(row.get("cc_kind", ""))
+                cc_duration = max(0.0, float(row.get("cc_duration", 0.0) or 0.0))
+                skillshot = bool(row.get("skillshot"))
+                area_damage = bool(row.get("area_damage"))
+                damage_over_time = bool(row.get("damage_over_time"))
+                ability_instance = row.get("ability_instance")
             if index < known_ids:
                 event_id = id_strings[index]
             else:
@@ -1005,6 +1128,13 @@ class WalkCompiler:
                     basic_attack,
                     baseline_armor,
                     baseline_mr,
+                    immobilized,
+                    cc_kind,
+                    cc_duration,
+                    skillshot,
+                    damage_over_time,
+                    area_damage,
+                    ability_instance,
                 )
             )
             if time_value <= duration:
@@ -1018,6 +1148,52 @@ class WalkCompiler:
             # — the same sentence the two loops used to say twice.
             if source_key == "auto_attacks" or basic_attack:
                 strikes_append((aidx, time_value, sequence, attacker_i))
+            aidx += 1
+        # Standalone crowd-control intervals.  The engine publishes each
+        # control application as its own row, and the receipt adapter stages
+        # one action per row (``_pair_packet``'s control loop).  Compiling
+        # the same fight without them would give the score walk a roster
+        # nobody could be immobilized in — two adapters disagreeing about
+        # one fight, which is the whole shape one kernel exists to refuse.
+        # The sort slot is the receipt adapter's own ``0.0``: a control
+        # interval is in force before the damage at its timestamp resolves.
+        for control_index, raw_event in enumerate(result.get("control_events", ())):
+            event = {
+                **raw_event,
+                "attacker": attacker_id,
+                "target": defender_id,
+                "_event_id": f"{attacker_id}:{defender_id}:control:{control_index}",
+            }
+            # Cast grouping, spelled as the engine already stamped it: the
+            # cast id IS ``slot:ordinal``, which is what the receipt side
+            # derives from the cast timeline, so one blocked cast still
+            # costs one spell-shield use on both adapters.
+            instance = raw_event.get("application_id") or raw_event.get("cast_id")
+            if instance is not None:
+                event["ability_instance"] = instance
+            time_value = float(event.get("time", 0.0))
+            event["_sk"] = (
+                time_value,
+                control_phase,
+                event_sequence(event),
+                order_a,
+                order_b,
+                defender_id,
+                event["_event_id"],
+                str(event.get("source", event.get("source_key", ""))),
+            )
+            actions_append(
+                action_from_event(
+                    event,
+                    TransitionRank.DEBUFF_ARM,
+                    defender_i,
+                    {attacker_id: attacker_i},
+                    subject_id=defender_id,
+                    aidx=aidx,
+                )
+            )
+            if time_value <= duration:
+                order_append((aidx, time_value))
             aidx += 1
         self.unclassified_delivery = self.unclassified_delivery or light
         self.next_aidx = aidx
@@ -1201,7 +1377,22 @@ class WalkCompiler:
                     sort_key=action_key(time_value, priority, target_id, template),
                     time=time_value,
                     phase=priority,
-                    kind=ActionKind.SHIELD if kind == "shield" else ActionKind.HEAL,
+                    # The same classifier the receipt adapter runs, for the
+                    # reason the rank above uses ``support_transition_rank``:
+                    # one packet must become one action kind whichever
+                    # adapter compiles it.  The literal this replaces --
+                    # ``SHIELD if kind == "shield" else HEAL`` -- was a
+                    # two-way fold that was correct only while the receipt
+                    # admitted exactly those two kinds.  It stopped being
+                    # correct the moment the state kinds were admitted: a
+                    # ``crowd_control_resist`` arm (Dr. Mundo's passive) or a
+                    # ``stasis``/``spell_shield``/``invulnerability``/
+                    # ``untargetable`` grant compiled as a zero-amount HEAL,
+                    # which is silence -- the score walk left the holder
+                    # unprotected while the receipt walk armed it, and the
+                    # two priced the same fight differently with nothing
+                    # saying so.
+                    kind=classify_event_kind(template, priority),
                     subject=subject_i,
                     attacker=attacker_i,
                     aidx=aidx,
@@ -1211,6 +1402,38 @@ class WalkCompiler:
                     source=str(template.get("source", "")),
                     event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
                     sequence=template.get("sequence"),
+                    # The typed facts a barrier carries into the shield
+                    # ledger.  They read the same template fields
+                    # ``action_from_event`` reads off the same packet: the
+                    # two builders must produce the same tuple from one
+                    # dict, and a field only one of them stamps is a
+                    # mechanic one walk applies and the other drops.
+                    duration=max(0.0, float(template.get("duration", 0.0) or 0.0)),
+                    duration_set="duration" in template,
+                    shield_pool=str(template.get("shield_pool", "") or ""),
+                    crowd_control_immunity_while_shield=bool(
+                        template.get("crowd_control_immunity_while_shield")
+                    ),
+                    crowd_control_immunity_source=str(
+                        template.get("crowd_control_immunity_source", "") or ""
+                    ),
+                    requires_holder_health_ratio=max(
+                        0.0,
+                        float(template.get("requires_holder_health_ratio", 0.0) or 0.0),
+                    ),
+                    requires_existing_shield=bool(
+                        template.get("requires_existing_shield")
+                    ),
+                    requires_maw_lifeline_omnivamp=bool(
+                        template.get("requires_maw_lifeline_omnivamp")
+                    ),
+                    overheal_to_temporary_health=bool(
+                        template.get("overheal_to_temporary_health")
+                    ),
+                    temporary_health_duration=max(
+                        0.0,
+                        float(template.get("temporary_health_duration", 0.0) or 0.0),
+                    ),
                 )
             )
             self.support_entries.append((target_id, attacker_i, aidx, kind == "heal"))
@@ -1273,6 +1496,14 @@ class WalkCompiler:
                 multiplier=float(template.get("multiplier", 1.0) or 1.0),
                 damage_reduction=bool(template.get("damage_reduction")),
                 next_event_only=bool(template.get("next_event_only")),
+                # The declared escape from the delivery gate: a modifier
+                # that reads "from all sources" prices packets no attack
+                # class covers (an auto-attack's true-damage rider).  The
+                # receipt path stamps it in ``action_from_event``; omitting
+                # it here made the two walks disagree by exactly the
+                # unpriced packets, which no equality gate could attribute.
+                all_sources=bool(template.get("all_sources")),
+                source_participant=str(template.get("source_participant", "")),
                 armor_reduction_percent=float(
                     template.get("armor_reduction_percent", 0.0) or 0.0
                 ),
@@ -1389,6 +1620,311 @@ class WalkCompiler:
                 )
                 if strike_time <= duration:
                     order.append((aidx, strike_time))
+
+
+def _knight_target_factor(
+    action: SurvivalAction,
+    source: Any,
+    target: Any,
+    raw_amount: float,
+) -> float | None:
+    """One recipient's mitigation factor for a Knight's Vow split.
+
+    The receipt walk computes it from the target's combatant stats (dynamic
+    bonuses are zero before the walk runs), the attacker's penetration, and
+    the target's basic-damage / flat-reduction defenses.  ``None`` is "this
+    packet's mitigation cannot be reconstructed", which leaves the packet
+    unsplit rather than splitting it at a guessed factor.
+    """
+    damage_type = str(action.damage_type)
+    if damage_type == "physical":
+        effective = apply_armor_penetration(
+            float(target.stats.get("armor", 0.0) or 0.0),
+            float(source.stats.get("flat_armor_penetration", 0.0) or 0.0),
+            float(source.stats.get("armor_penetration_percent", 0.0) or 0.0) / 100.0,
+            float(source.stats.get("armor_penetration_bonus_percent", 0.0) or 0.0)
+            / 100.0,
+            float(target.stats.get("bonus_armor", 0.0) or 0.0),
+        )
+    elif damage_type == "magic":
+        effective = apply_magic_penetration(
+            float(target.stats.get("magic_resistance", 0.0) or 0.0),
+            float(source.stats.get("magic_penetration_flat", 0.0) or 0.0),
+            float(source.stats.get("magic_penetration_percent", 0.0) or 0.0) / 100.0,
+        )
+    elif damage_type == "true":
+        return 1.0
+    else:
+        return None
+    factor = apply_resistance(1.0, effective)
+    if not math.isfinite(factor) or factor < 0.0:
+        return None
+    if action.basic_attack and damage_type != "true":
+        defenses = target.defenses
+        factor *= max(
+            0.0, float(getattr(defenses, "basic_damage_multiplier", 1.0) or 1.0)
+        )
+        flat = max(
+            0.0,
+            float(getattr(defenses, "basic_damage_flat_reduction", 0.0) or 0.0),
+        )
+        cap = max(
+            0.0,
+            float(getattr(defenses, "basic_damage_flat_reduction_cap", 0.0) or 0.0),
+        )
+        if flat > 0.0 and cap > 0.0:
+            mitigated = raw_amount * factor
+            factor = max(0.0, (mitigated - min(flat, mitigated * cap)) / raw_amount)
+    if damage_type != "true":
+        defenses = target.defenses
+        flat = max(
+            0.0,
+            float(
+                getattr(
+                    defenses,
+                    (
+                        "champion_dot_damage_flat_reduction"
+                        if action.damage_over_time
+                        else "champion_damage_flat_reduction"
+                    ),
+                    0.0,
+                )
+                or 0.0
+            ),
+        )
+        if flat > 0.0:
+            mitigated = raw_amount * factor
+            factor = max(0.0, (mitigated - min(flat, mitigated)) / raw_amount)
+    return factor
+
+
+def stage_knights_vow_redirect_actions(
+    compiler: WalkCompiler,
+    combatants: Sequence[Any],
+    tether: Mapping[str, Any],
+    redirect_children: MutableMapping[int, SurvivalAction],
+    next_aidx: int,
+) -> int:
+    """Stage the receipt walk's Knight's Vow pre-mitigation split onto one
+    compiled panel's typed damage actions.
+
+    For every incoming physical/magic damage action whose subject is the
+    Worthy ally and whose attacker is an enemy combatant, recover the raw
+    pre-mitigation amount (from ``raw_damage`` or the stamped baseline
+    resistance), compute each recipient's mitigation factor, replace the
+    parent action with the direct share, append the redirected child
+    (:attr:`ActionKind.REDIRECT`, trigger-linked to the parent, at the
+    reactive rank the receipt clone sorts at, CC fields copied so immobilize
+    windows stay byte-identical), and register the child under the parent's
+    event slot so the kernel's holder-health gate can cancel it.
+    Unrecoverable packets stay untouched: the receipt walk zeroes their
+    fraction with a named reason, and the compiled path simply never stages
+    them.
+    """
+    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+        return next_aidx
+    target = tether["target"]
+    holder = tether["holder"]
+    fraction = max(0.0, min(1.0, float(tether["redirect_fraction"])))
+    threshold = float(tether["threshold"])
+    target_id = str(target.participant_id)
+    holder_id = str(holder.participant_id)
+    target_i = next(
+        (
+            i
+            for i, combatant in enumerate(combatants)
+            if combatant.participant_id == target_id
+        ),
+        -1,
+    )
+    holder_i = next(
+        (
+            i
+            for i, combatant in enumerate(combatants)
+            if combatant.participant_id == holder_id
+        ),
+        -1,
+    )
+    if target_i < 0 or holder_i < 0:
+        return next_aidx
+    aidx = next_aidx
+    rebuilt: list[SurvivalAction] = []
+    for action in compiler.actions:
+        if (
+            action.subject != target_i
+            or action.kind not in _DAMAGE_ACTION_KINDS
+            or action.amount <= 0.0
+            or str(action.damage_type) not in {"physical", "magic"}
+            or action.deferred
+            or action.redirected
+        ):
+            rebuilt.append(action)
+            continue
+        source = (
+            combatants[action.attacker]
+            if 0 <= action.attacker < len(combatants)
+            else None
+        )
+        if source is None or str(source.participant_id) == target_id:
+            rebuilt.append(action)
+            continue
+        original_amount = max(0.0, float(action.amount))
+        raw_amount: float | None = None
+        try:
+            candidate = float(action.raw_damage or 0.0)
+        except (TypeError, ValueError):
+            candidate = 0.0
+        if candidate > 0.0 and math.isfinite(candidate):
+            raw_amount = candidate
+        else:
+            baseline = (
+                action.baseline_effective_armor
+                if str(action.damage_type) == "physical"
+                else action.baseline_effective_mr
+            )
+            if baseline is not None:
+                try:
+                    baseline_factor = apply_resistance(1.0, float(baseline))
+                    if baseline_factor > 0.0 and math.isfinite(baseline_factor):
+                        raw_amount = original_amount / baseline_factor
+                except (TypeError, ValueError, ZeroDivisionError):
+                    raw_amount = None
+        if raw_amount is None or not math.isfinite(raw_amount):
+            rebuilt.append(action)
+            continue
+        protected_factor = _knight_target_factor(action, source, target, raw_amount)
+        holder_factor = _knight_target_factor(action, source, holder, raw_amount)
+        if protected_factor is None or holder_factor is None:
+            rebuilt.append(action)
+            continue
+        direct_amount = max(0.0, raw_amount * (1.0 - fraction) * protected_factor)
+        redirected_amount = max(0.0, raw_amount * fraction * holder_factor)
+        parent = action._replace(
+            amount=direct_amount,
+            redirect_original_damage=original_amount,
+            redirect_holder_health_ratio=threshold,
+        )
+        child_text = f"{EVENT_SLOTS.text(action.event_slot)}:redirect"
+        child = SurvivalAction(
+            sort_key=action_key(
+                float(action.time),
+                TransitionRank.REACTIVE,
+                holder_id,
+                {"attacker": str(source.participant_id), "_event_id": child_text},
+            ),
+            time=float(action.time),
+            phase=TransitionRank.REACTIVE,
+            kind=ActionKind.REDIRECT,
+            subject=holder_i,
+            attacker=action.attacker,
+            aidx=aidx,
+            amount=redirected_amount,
+            damage_type=action.damage_type,
+            raw_damage=raw_amount * fraction,
+            source_key=action.source_key,
+            source=action.source,
+            event_slot=EVENT_SLOTS.slot(child_text),
+            sequence=action.sequence,
+            trigger=action.aidx,
+            trigger_slot=action.event_slot,
+            redirected=True,
+            redirect_holder_health_ratio=threshold,
+            redirect_original_damage=original_amount,
+            cc_kind=action.cc_kind,
+            cc_duration=action.cc_duration,
+            immobilized=action.immobilized,
+            skillshot=action.skillshot,
+            damage_over_time=action.damage_over_time,
+            basic_attack=action.basic_attack,
+            baseline_effective_armor=action.baseline_effective_armor,
+            baseline_effective_mr=action.baseline_effective_mr,
+        )
+        aidx += 1
+        if action.event_slot != NO_SLOT:
+            redirect_children[action.event_slot] = child
+        rebuilt.append(parent)
+        rebuilt.append(child)
+        # The child's applied amount belongs to the same attacker's outgoing
+        # total (the receipt mirrors it into the attacker's ledger); register
+        # it in the panel's damage order so the score breakdown attributes it
+        # identically.  The child shares the parent's timestamp: a child the
+        # walk never reaches (past the fight window) contributes a zero
+        # applied amount, so the unconditional entry is harmless.
+        compiler.damage_order[action.attacker].append((child.aidx, float(action.time)))
+    compiler.actions = rebuilt
+    return aidx
+
+
+def stage_knights_vow_heals(
+    compiler: WalkCompiler,
+    combatants: Sequence[Any],
+    tether: Mapping[str, Any],
+    next_aidx: int,
+) -> int:
+    """Stage the receipt scheduler's Sacrifice holder-heal onto one compiled
+    panel: the Worthy ally's outgoing physical/magic/true damage packets
+    author a holder heal (kind ``HEAL``, subject = the Knight's Vow holder,
+    gated by the typed holder-health ratio the kernel enforces)."""
+    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+        return next_aidx
+    holder = tether["holder"]
+    target = tether["target"]
+    heal_fraction = max(0.0, float(tether["heal_fraction"]))
+    threshold = float(tether["threshold"])
+    holder_id = str(holder.participant_id)
+    target_id = str(target.participant_id)
+    holder_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == holder_id), -1
+    )
+    target_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == target_id), -1
+    )
+    if holder_i < 0 or target_i < 0:
+        return next_aidx
+    aidx = next_aidx
+    appended: list[SurvivalAction] = []
+    for action in compiler.actions:
+        if (
+            action.attacker != target_i
+            or action.kind not in _DAMAGE_ACTION_KINDS
+            or action.amount <= 0.0
+            or str(action.damage_type) not in {"physical", "magic", "true"}
+        ):
+            continue
+        heal_amount = max(0.0, float(action.amount)) * heal_fraction
+        if heal_amount <= 0.0:
+            continue
+        heal_text = f"{EVENT_SLOTS.text(action.event_slot)}:kv_heal"
+        appended.append(
+            SurvivalAction(
+                sort_key=action_key(
+                    float(action.time),
+                    TransitionRank.RECOVERY,
+                    holder_id,
+                    {"attacker": holder_id, "_event_id": heal_text},
+                ),
+                time=float(action.time),
+                phase=TransitionRank.RECOVERY,
+                kind=ActionKind.HEAL,
+                subject=holder_i,
+                attacker=holder_i,
+                aidx=aidx,
+                amount=heal_amount,
+                healing_category="knights_vow",
+                source_key="Knight's Vow — Sacrifice",
+                source="Knight's Vow — Sacrifice",
+                event_slot=EVENT_SLOTS.slot(heal_text),
+                sequence=action.sequence,
+                requires_holder_health_ratio=threshold,
+            )
+        )
+        aidx += 1
+    if appended:
+        compiler.actions.extend(appended)
+        compiler.actions.sort(key=itemgetter(0))
+        for heal in appended:
+            compiler.support_entries.append((holder_id, holder_i, heal.aidx, True))
+    return aidx
 
 
 def grey_health_heal_action(

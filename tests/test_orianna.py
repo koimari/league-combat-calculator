@@ -253,15 +253,18 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "W": "slow",
             "E": "none",
-            "R": "immobilize",
+            "R": "stun",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         assert "enemies that move within the field are slowed" in cc_review.slot_text(
             data, "W"
         )
-        # R applies two immobilize kinds in one cast, which is what the
-        # un-narrowed "immobilize" states.
+        # R's one timed control is the stun the cache prices ("Stun
+        # Duration" 0.75s); the pull it also applies has no cached
+        # interval, so the kind narrows to the sourced one rather than
+        # stating the coarse "immobilize" over a number that is only the
+        # stun's.
         r_text = cc_review.slot_text(data, "R")
         assert "stuns them for 0.75 seconds, and pulls them over 325 units" in r_text
         # P is absent: Clockwork Windup rides the auto stream on-hit.

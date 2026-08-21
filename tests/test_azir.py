@@ -45,11 +45,11 @@ class TestQConqueringSands:
         assert abilities["Q"]["damage_type"] == "magic"
 
     def test_q_rank5_100ap(self, azir_data, parse_at) -> None:
-        """Q rank 5 with 100 AP: 140 + 55% * 100 = 195."""
+        """Q rank 5 with 100 AP: 155 + 55% * 100 = 210."""
         _, abilities = parse_at(
             azir_data, 18, ap=100.0, ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3}
         )
-        assert abilities["Q"]["total_raw"] == pytest.approx(195.0)
+        assert abilities["Q"]["total_raw"] == pytest.approx(210.0)
 
     def test_q_cooldown_rank5(self, azir_data, parse_at) -> None:
         _, abilities = parse_at(

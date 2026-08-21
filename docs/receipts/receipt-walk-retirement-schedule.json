@@ -103,6 +103,7 @@
      "by_declaration": {
       "banshees_veil.annul": {
        "consumed_at": [
+        "interaction_effects.resolve_spell_shield",
         "survival.receipt_state._build_state_uncached"
        ],
        "fields_no_engine_reads": [],
@@ -113,6 +114,7 @@
       },
       "edge_of_night.annul": {
        "consumed_at": [
+        "interaction_effects.resolve_spell_shield",
         "survival.receipt_state._build_state_uncached"
        ],
        "fields_no_engine_reads": [],
@@ -162,6 +164,7 @@
       },
       "verdant_barrier.annul": {
        "consumed_at": [
+        "interaction_effects.resolve_spell_shield",
         "survival.receipt_state._build_state_uncached"
        ],
        "fields_no_engine_reads": [],
@@ -212,6 +215,7 @@
    "declared_rules": [
     "bloodthirster.ichorshield",
     "celestial_opposition.blessing_of_the_mountain",
+    "guardians_horn.undaunted",
     "kaenic_rookern.magebane",
     "plated_steelcaps.plating",
     "randuins_omen.resilience",
@@ -226,6 +230,10 @@
        "status": "withheld"
       },
       "Celestial Opposition": {
+       "names_the_missing_pair": true,
+       "status": "withheld"
+      },
+      "Guardian's Horn": {
        "names_the_missing_pair": true,
        "status": "withheld"
       },
@@ -288,6 +296,19 @@
         "incoming_damage_source"
        ]
       },
+      "guardians_horn.undaunted": {
+       "consumed_at": [
+        "scenario.resolve_scenario"
+       ],
+       "fields_no_engine_reads": [
+        "champion_damage_flat_source"
+       ],
+       "resolved_fields": [
+        "champion_damage_flat_reduction",
+        "champion_damage_flat_source",
+        "champion_dot_damage_flat_reduction"
+       ]
+      },
       "kaenic_rookern.magebane": {
        "consumed_at": [
         "roster_composition.target_overrides",
@@ -302,6 +323,7 @@
       "plated_steelcaps.plating": {
        "consumed_at": [
         "participant_timeline._simulate_survival._target_factor",
+        "program.compile._knight_target_factor",
         "roster_composition.target_overrides",
         "scenario.resolve_scenario"
        ],
@@ -323,6 +345,7 @@
       "wardens_mail.rock_solid": {
        "consumed_at": [
         "participant_timeline._simulate_survival._target_factor",
+        "program.compile._knight_target_factor",
         "roster_composition.target_overrides",
         "scenario.resolve_scenario"
        ],
@@ -342,6 +365,7 @@
    "owners": [
     "Bloodthirster",
     "Celestial Opposition",
+    "Guardian's Horn",
     "Kaenic Rookern",
     "Plated Steelcaps",
     "Randuin's Omen",
@@ -421,11 +445,10 @@
       "guardian_angel.rebirth": {
        "consumed_at": [
         "participant_timeline._simulate_survival",
-        "program.compile.revive_candidate_actions"
+        "program.compile.revive_candidate_actions",
+        "survival.receipt_state._build_state_uncached"
        ],
-       "fields_no_engine_reads": [
-        "revive_cooldown"
-       ],
+       "fields_no_engine_reads": [],
        "resolved_fields": [
         "revive_cooldown",
         "revive_delay",

@@ -6819,9 +6819,9 @@
   },
   {
    "champion": "mordekaiser",
-   "atom_count": 21,
+   "atom_count": 20,
    "family_counts": {
-    "crowd-control-mobility": 4,
+    "crowd-control-mobility": 3,
     "damage": 12,
     "heal-shield": 3,
     "stack-transform-summon-resource": 2
@@ -13595,12 +13595,12 @@
  ],
  "totals": {
   "champions_processed": 173,
-  "atoms_classified": 5372,
+  "atoms_classified": 5371,
   "unclassified_real_mechanics": 1211,
   "unclassified_noise_artifacts": 700,
   "unclassified_total_objects": 1911,
   "family_counts": {
-   "crowd-control-mobility": 1028,
+   "crowd-control-mobility": 1027,
    "damage": 2991,
    "heal-shield": 289,
    "interaction": 155,

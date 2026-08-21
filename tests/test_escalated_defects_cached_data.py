@@ -13,6 +13,7 @@ filed" cannot quietly become "this is fine".
 
 from __future__ import annotations
 
+import ast
 import json
 import sys
 from pathlib import Path
@@ -157,11 +158,53 @@ def test_the_scheduled_home_check_has_a_red_it_can_reproduce() -> None:
     assert "(no home named)" in printed
 
 
-def test_no_runtime_module_reads_the_item_atoms() -> None:
-    """The second entry's same clause: the overstatement is available, not taken."""
-    hits = [
-        path.relative_to(ROOT).as_posix()
-        for path in (ROOT / "src").rglob("*.py")
-        if "data/atoms" in path.read_text(encoding="utf-8")
+def _executable_strings(path: Path) -> list[str]:
+    """Every string literal in one module that is not a docstring.
+
+    A comment cannot open a file and neither can a docstring, so the two are
+    excluded: what makes the entry's clause true or false is whether a runtime
+    module *names the artifact in code*.  Comments never reach the AST at all;
+    docstrings are subtracted explicitly.
+    """
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    docstrings = {
+        id(node.body[0].value)
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef))
+        and node.body
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+        and isinstance(node.body[0].value.value, str)
+    }
+    return [
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and id(node) not in docstrings
     ]
+
+
+def test_no_runtime_module_reads_the_item_atoms() -> None:
+    """The second entry's same clause: the overstatement is available, not taken.
+
+    Scope note (merge of origin/main): main added modules that *cite* the atom
+    corpus as sourced evidence — ``ability_atoms``, ``cleanse_eligibility`` and
+    six champion modules name ``data/atoms/...`` in comments and docstrings, and
+    ``cleanse_eligibility`` transcribes individual atom records (with hashes
+    independently recomputed) to publish as ``source_atoms`` receipts.  None of
+    that is a read: ``ability_atoms.required_ability_atom`` atomizes the cached
+    *champion* rows in memory through ``atomizer.atomize_abilities`` and opens no
+    file under ``data/atoms/``.  The entry's clause is about the ITEM atoms being
+    summed by a serving path, so this pins the clause it actually makes — no src
+    module names the artifact in executable code — instead of the prose scan it
+    used to, which a provenance comment was enough to break.
+    """
+    hits = sorted(
+        {
+            path.relative_to(ROOT).as_posix()
+            for path in (ROOT / "src").rglob("*.py")
+            if any("data/atoms" in text for text in _executable_strings(path))
+        }
+    )
     assert hits == []

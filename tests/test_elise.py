@@ -16,12 +16,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Elise")
-        assert elise.MODULE_CC == {"Q": "none", "W": "none"}
+        assert elise.MODULE_CC == {"Q": "none", "W": "none", "E": "stun"}
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
-        # E is absent rather than "none": Cocoon does stun, but it deals
-        # no damage, so no event of its own could carry an answer.
-        assert "E" not in elise.MODULE_CC
+        # E answers even though Cocoon deals no damage: the slot carries
+        # its stun as a control event sourced off the cached "Stun
+        # Duration" row, so a damageless cast still states its control.
         assert "stunning the first enemy hit" in cc_review.slot_text(data, "E")
 
     def test_every_ability_event_carries_the_review(self):

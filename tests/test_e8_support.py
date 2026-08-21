@@ -17,15 +17,15 @@ Documented missing engine hooks (not emitted by the current shared
 interfaces — see the E8d reply for file+function+why):
 - Taric Q per-charge heal (cached leveling has only "Maximum Charges"; the
   heal formula is prose "25 (+ 15% AP) (+ 1% of his maximum health) per
-  charge") and Taric R invulnerability (state, no heal/shield amount).
+  charge").
 - Bard W "Minimum Heal"/"Maximum Heal" rows are not in the support scanner's
   heal-attribute lookup set ({"Total Heal", "Heal", "Heal Per Tick"}).
 - Rakan P (Fancy Footwork) is a passive self-shield; the scanner reads only
   Q/W/E/R slots.
 - Yuumi E scope: the cached "grants herself a shield" prose yields
   target_scope "self"; the attached-bonus anchor target is not expressed.
-- Seraphine W heal is "% of target's missing health" (dynamic) — the scanner
-  emits the sourced shield but cannot price the heal.
+- Seraphine W heal is "% of target's missing health" (dynamic) and is gated
+  by the caster's shield state at cast time.
 """
 
 from dataclasses import replace
@@ -33,6 +33,7 @@ from dataclasses import replace
 import pytest
 
 from src import app as app_module
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import build_participant_timeline
@@ -271,6 +272,232 @@ def test_ally_ledger_receives_sourced_support(champion, source, kind, amount):
         )
 
 
+def test_taric_cosmic_radiance_targets_the_caster_and_selected_ally():
+    combat, ally_row = _roster_combat("Taric", ally="Jinx")
+    events = [
+        event
+        for event in combat["support_events"]
+        if event["attacker"] == "main"
+        and event["source"] == "Cosmic Radiance · Invulnerability"
+    ]
+
+    assert {event["target"] for event in events} == {"main", "ally:Jinx"}
+    assert all(event["kind"] == "invulnerability" for event in events)
+    assert all(event["duration"] == pytest.approx(2.5) for event in events)
+    assert all(event["activation_delay"] == pytest.approx(2.5) for event in events)
+    assert all(
+        event["activation_delay_atom"]["atom_id"] == "timing.invulnerability_delay"
+        for event in events
+    )
+    assert ally_row["survival"]["action_downtime"] >= 2.5
+
+
+def test_seraphine_w_publishes_the_priced_shield_and_no_zero_pulse_row():
+    """The roster path's half of the recipient-scaled-row ruling.
+
+    Surround Sound's pulse heals off each recipient's *missing* health, which
+    no scan-time stat holds, so the merged scanner refuses the row rather
+    than publishing a 0.0 amount for the walk to price later.  What reaches
+    the roster is the sourced caster-and-allies shield, carrying its own atom
+    receipt.  Per-recipient pricing is the deferred follow-up.
+    """
+    app_module.app.config["TESTING"] = True
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Seraphine",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 3,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 0, "W": 5, "E": 0, "R": 0},
+            "allies": [
+                {
+                    "champion": "Jinx",
+                    "level": 18,
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
+            ],
+            "enemies": [{"champion": "Ambessa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    support = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main" and event["source"].startswith("Surround Sound")
+    ]
+    assert {event["kind"] for event in support} == {"shield"}
+    assert {event["target"] for event in support} == {"main", "ally:Jinx"}
+    assert all(event["amount"] == pytest.approx(140.0) for event in support)
+    assert all(event["duration"] == pytest.approx(2.5) for event in support)
+    assert all(
+        event["duration_atom"]["source"] == "Seraphine.W[0].effects[0].description"
+        for event in support
+    )
+
+
+def test_seraphine_w_option_resurrects_no_zero_pulse_row_on_the_roster():
+    """``w_already_shielded`` assumes away a gate on a row that is refused.
+
+    Pinned on the roster path as well as the scanner's, because the option is
+    the one input that could put a zero-amount pulse back on the wire: it
+    exists only to drop the shield gate, and dropping a gate must not turn a
+    refusal into a published packet.
+    """
+    app_module.app.config["TESTING"] = True
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Seraphine",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 3,
+            "include_auto_attacks": False,
+            "ability_ranks": {"Q": 0, "W": 5, "E": 0, "R": 0},
+            "champion_options": {"w_already_shielded": True},
+            "allies": [
+                {
+                    "champion": "Jinx",
+                    "level": 18,
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
+            ],
+            "enemies": [{"champion": "Ambessa", "level": 18, "items": []}],
+        },
+    )
+
+    assert response.status_code == 200
+    support = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["target"] == "ally:Jinx"
+        and event["source"].startswith("Surround Sound")
+    ]
+    assert [event["kind"] for event in support] == ["shield"]
+    assert support[0]["amount"] == pytest.approx(140.0)
+
+
+def test_support_selection_can_choose_a_different_ally_per_packet_kind():
+    """Shield and heal packets expose separate roster selection keys."""
+    payload = {
+        "champion": "Sona",
+        "level": 18,
+        "items": [],
+        "fight_mode": "time_based",
+        "fight_duration": 6,
+        "include_auto_attacks": False,
+        "ability_ranks": {"Q": 0, "W": 5, "E": 0, "R": 0},
+        "allies": [
+            {
+                "champion": "Jinx",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+            {
+                "champion": "Ashe",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+        ],
+        "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+    }
+    default_response = app_module.app.test_client().post("/api/calculate", json=payload)
+    assert default_response.status_code == 200
+    default_support = [
+        event
+        for event in default_response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["source"].startswith("Aria of Perseverance")
+        and event["target"] != "main"
+    ]
+    selections = {event["target_selection_key"]: 1 for event in default_support}
+
+    selected_response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={**payload, "support_target_selections": selections},
+    )
+    assert selected_response.status_code == 200
+    selected_support = [
+        event
+        for event in selected_response.get_json()["combat"]["support_events"]
+        if event["attacker"] == "main"
+        and event["source"].startswith("Aria of Perseverance")
+    ]
+    assert {event["kind"] for event in selected_support} == {"shield", "heal"}
+    assert {
+        event["target"] for event in selected_support if event["target"] != "main"
+    } == {"ally:Ashe"}
+    assert all(
+        event["target_policy"] == "self_and_selected_teammate"
+        for event in selected_support
+    )
+    assert all(
+        event["target_selection_key"] in selections for event in selected_support
+    )
+
+
+def test_item_heal_uses_the_selected_ally_key():
+    """Mikael's Blessing can target the second teammate in the roster."""
+    payload = {
+        "champion": "Janna",
+        "level": 18,
+        "items": ["Mikael's Blessing"],
+        "item_options": {"Mikael's Blessing": {"active_seconds": 1.0}},
+        "fight_mode": "time_based",
+        "fight_duration": 2,
+        "include_auto_attacks": False,
+        "allies": [
+            {
+                "champion": "Jinx",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+            {
+                "champion": "Ashe",
+                "level": 18,
+                "items": [],
+                "ally_effects_enabled": True,
+            },
+        ],
+        "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+    }
+    client = app_module.app.test_client()
+    default_response = client.post("/api/calculate", json=payload)
+    assert default_response.status_code == 200
+    default_event = next(
+        event
+        for event in default_response.get_json()["combat"]["support_events"]
+        if event["source"] == "Mikael's Blessing — Purify"
+    )
+    assert default_event["target"] == "ally:Jinx"
+
+    selected_response = client.post(
+        "/api/calculate",
+        json={
+            **payload,
+            "support_target_selections": {default_event["target_selection_key"]: 1},
+        },
+    )
+    assert selected_response.status_code == 200
+    selected_event = next(
+        event
+        for event in selected_response.get_json()["combat"]["support_events"]
+        if event["source"] == "Mikael's Blessing — Purify"
+    )
+    assert selected_event["target"] == "ally:Ashe"
+    assert selected_event["target_policy"] == "selected_teammate"
+
+
 def test_yuumi_zoomies_emits_sourced_self_shield_ally_target_is_missing_hook():
     """Yuumi E (Zoomies) emits the sourced shield; its target is the anchor.
 
@@ -457,9 +684,12 @@ def test_revive_module_sourcing_matches_cached_rows():
             "self_and_all_teammates",
             "ally:Jinx",
         ),
-        # Spell Shield "Heal" 60/65/70/75/80% AD (+50% AP), rank 5:
-        # 80% of Sivir's level-18 total AD (102.0) == 81.6, to Sivir alone.
-        ("Sivir", "E", "Spell Shield", "heal", 81.6, "self", "main"),
+        # Sivir E's Spell Shield heal is NOT here any more: the wiki pays
+        # it only "upon successfully blocking a hostile effect", which a
+        # scanner row cannot express, so ("Sivir", "E") is a declared
+        # _STATE_AUTHORED_HEAL_SLOTS member and the champion module authors
+        # it on the spell-shield state.  Pinned by
+        # tests/test_support_effects.py::test_sivir_spell_shield_heals_only_sivir.
         # Aria of Perseverance "Shield Strength" 25/45/65/85/105 (+25% AP).
         (
             "Sona",
@@ -511,7 +741,15 @@ def test_revive_module_sourcing_matches_cached_rows():
         # Bastion "Shield Strength" 7/8/9/10/11% of the RECIPIENT's maximum
         # health; the scan holds only the caster's, so Taric's own copy is
         # priced (11% of his level-18 2328.0) and granted to him alone.
-        ("Taric", "W", "Bastion", "shield", 256.08, "self", "main"),
+        pytest.param(
+            "Taric",
+            "W",
+            "Bastion",
+            "shield",
+            256.08,
+            "self",
+            "main",
+        ),
         # Fey Feathers "Shield" 30:247.94 by level (+95% AP) at 18, riding
         # the Q cast as a self_shield_events payload.
         ("Rakan", "P", "Fey Feathers", "shield", 247.94, "self", "main"),

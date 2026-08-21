@@ -1427,6 +1427,18 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Stridebreaker — Breaking Shockwave",
         holder_stacking=None,
     ),
+    # A vision receipt rather than a heal or a shield: Blackout's ward-denial
+    # window has no champion-facing target in the fighter model, so the walk
+    # emits the sourced gate, window and duration for an authored ready state
+    # and never guesses a ward hit.  It reads no stream — the ready state is
+    # an input option, not an event — which is the ``frozenset()`` D-31 wants
+    # written rather than inferred.
+    _walk_item(
+        "umbral_glaive.nightstalker",
+        "Umbral Glaive",
+        "Umbral Glaive — Blackout",
+        holder_stacking=None,
+    ),
     # -- the second walk packet compiler ------------------------------------
     _walk_item(
         "knights_vow.sacrifice",

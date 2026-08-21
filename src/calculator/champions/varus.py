@@ -14,8 +14,9 @@ Why each slot is non-generic:
   ``blight_stacks`` option (default 3 = the sourced max) — one sourced
   detonation per Q cast. E and R also detonate in-game; re-stacking a
   target between casts is not double-priced here (conservative single
-  detonator model). Q reads the MAXIMUM (fully-charged) damage rows; the
-  0-50% charge scaling is not modeled.
+  detonator model). Q interpolates between the sourced Minimum/Maximum damage rows by
+  the q_charge_fraction option (default 1.0 = fully charged; the
+  0-50% charge ramp is the wiki prose).
 - E (Hail of Arrows) is physical damage ("Physical Damage" — the packet's
   magic label was wrong; in-game and the JSON both say physical).
 - P (Living Vengeance) is an on-takedown steroid: +30% bonus attack
@@ -24,8 +25,9 @@ Why each slot is non-generic:
   are cached prose (the passive has no leveling row), and the whole
   thing is gated on ``p_champion_takedown`` because a takedown is not
   implied by a damage package.
-- R (Chain of Corruption) is a plain "Magic Damage" read; the root/chain
-  is CC only.
+- R (Chain of Corruption) reads "Magic Damage" and attaches the sourced
+  2-second root to the primary hit; secondary chain spread stays outside the
+  single-target model.
 """
 
 from typing import Any
@@ -43,6 +45,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
     find_named_leveling,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -104,8 +107,23 @@ def _blight_detonation(ctx: SlotCtx, rank: int) -> float:
     return per_stack * stacks
 
 
+def _charge_fraction(ctx: SlotCtx) -> float:
+    """Q charge fraction: 0.0 = minimum (0% charge) .. 1.0 = fully charged.
+
+    The wiki prose (cached Q): the charge "increases Piercing Arrow's ...
+    effects over the first 1.25 seconds of the channel", and the damage
+    "as well as any detonated Blight stacks are both increased by
+    0% : 50% (based on channel time)".  The sourced Minimum/Maximum rows
+    are the two endpoints of that ramp, so the arrow interpolates between
+    them; the detonation and W-active empower keep the module's existing
+    reviewed rows (test-locked) — see ASSUMPTIONS.
+    """
+    fraction = float(ctx.option("q_charge_fraction"))
+    return min(max(fraction, 0.0), 1.0)
+
+
 def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: fully-charged arrow damage + the Blight detonation it triggers."""
+    """Q: charge-interpolated arrow damage + the Blight detonation."""
     ability = ctx.ability()
     if ability is None:
         return None
@@ -113,9 +131,17 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
 
-    arrow = extract_named(
+    fraction = _charge_fraction(ctx)
+    minimum = extract_named(
+        ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
+    )
+    maximum = extract_named(
         ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
     )
+    # The sourced rows are exact endpoints of the 0% : 50% charge ramp
+    # (80/53.33 = 120/80 = 1.5 at every rank, including the % bonus AD
+    # modifiers), so interpolation is the sourced 0-50% scaling.
+    arrow = minimum + (maximum - minimum) * fraction
     entry = damage_entry(
         ability.get("name", "Piercing Arrow"),
         rank,
@@ -125,13 +151,19 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", arrow),)
     entry["event_order_certified"] = "single_hit"
+    if fraction < 1.0:
+        entry["detail"] = (
+            f"{fraction * 100:g}% charge: {arrow:g} physical "
+            f"(between the sourced Minimum {minimum:g} and Maximum "
+            f"{maximum:g} rows)"
+        )
 
     detonation = _blight_detonation(ctx, rank)
     empower = _w_active_empower(ctx, rank)
     if detonation > 0 or empower > 0:
         stacks = min(
             _BLIGHT_MAX_STACKS,
-            max(0, int(ctx.options.get("blight_stacks", _BLIGHT_MAX_STACKS))),
+            max(0, int(ctx.option("blight_stacks"))),
         )
         parts = []
         detail = []
@@ -265,6 +297,19 @@ OPTIONS: list[dict[str, Any]] = [
         ),
     },
     {
+        "key": "q_charge_fraction",
+        "type": "float",
+        "default": 1.0,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.25,
+        "label": (
+            "Piercing Arrow channel charge (1.0 = fully charged; the "
+            "arrow interpolates between the sourced Minimum and Maximum "
+            "damage rows)"
+        ),
+    },
+    {
         "key": "w_active_empower",
         "type": "bool",
         "default": True,
@@ -329,7 +374,8 @@ ASSUMPTIONS = [
     "E's desecrated ground applies Grievous Wounds for 3 seconds (wiki "
     "prose); the coupled timeline wounds enemies it damages with the "
     "patch-wide 40% window",
-    "R root/chain and Q self-slow are CC/utility only and not valued as " "damage",
+    "R's primary-target root is a sourced 2-second action lock; secondary "
+    "chain spread and Q's self-slow are outside the single-target model",
 ]
 
 
@@ -339,8 +385,14 @@ SLOTS = {
     "E": simple_damage(
         attr="Physical Damage", dmg_type="physical", event_order_certified="single_hit"
     ),
-    "R": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # The root is sourced off the cached "Root Duration" row rather than
+    # only declared, so the part carries its own duration and atom.
+    "R": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="root",
+        duration_attr="Root Duration",
     ),
     "P": _living_vengeance,
 }

@@ -920,12 +920,40 @@ def test_a_counter_drifting_away_from_its_target_fails_the_gate() -> None:
 
 
 def test_a_met_target_recorded_outstanding_fails_the_gate() -> None:
-    """A target the tree has reached may not stay recorded as owed."""
+    """A target the tree has reached may not stay recorded as owed.
+
+    The target is *found* rather than named: which counters are met is a fact
+    about the tree, and a control that hard-codes one stops being a control
+    the day that counter opens — which is what a merge of an unmeasured kernel
+    does to it.  Finding one keeps the red the injection's and not the
+    tree's.
+    """
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
-    committed["targets"]["targets"]["counter_1"]["met"] = False
+    met = sorted(
+        key for key, entry in committed["targets"]["targets"].items() if entry["met"]
+    )
+    assert met, "no target is met, so this control would prove nothing"
+    committed["targets"]["targets"][met[0]]["met"] = False
     failures = behavior_frontier.check(report, committed)
-    assert any("counter_1 is met=True in the tree" in f for f in failures)
+    assert any(f"{met[0]} is met=True in the tree" in f for f in failures)
+
+
+def test_an_open_counter_names_the_committed_record_that_retires_it() -> None:
+    """The counter-1..3 half of the join counter 4's lanes already assert.
+
+    A gap with no owner prints "no receipt in the tree names who retires it",
+    which is the honest rendering and not a pass; a gap with one names it, and
+    a met counter names nothing.  Both directions, so a stale row cannot be
+    told from a live one by reading the receipt.
+    """
+    targets = _receipt()["targets"]["targets"]
+    for key in ("counter_1", "counter_2", "counter_3"):
+        entry = targets[key]
+        expected = "" if entry["met"] else behavior_frontier.debt_owner(key)
+        assert entry["owed_to"] == expected, key
+        if not entry["met"]:
+            assert expected, f"{key} is open and no committed record owns it"
 
 
 def test_a_moved_bound_is_a_deliberate_diff_in_the_artifact() -> None:

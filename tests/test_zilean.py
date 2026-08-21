@@ -28,8 +28,23 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Zilean")
-        assert zilean.MODULE_CC == {"Q": "none"}
+        # Q's kind depends on the second-bomb state, so it is authored PER
+        # PART by ``_time_bomb`` rather than declared per slot; the module
+        # therefore declares no slot kind of its own.
+        assert zilean.MODULE_CC == {}
         assert zilean.parse_abilities.cc_kinds == zilean.MODULE_CC
+        lone = parse_champion_abilities(
+            data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
+        )
+        assert [part.cc_kind for part in lone["Q"]["parts"]] == ["none"]
+        detonated = parse_champion_abilities(
+            data,
+            18,
+            100.0,
+            {"Q": 5, "W": 5, "E": 5, "R": 3},
+            champion_options={"q_second_bomb": True},
+        )
+        assert [part.cc_kind for part in detonated["Q"]["parts"]] == ["stun"]
         q_text = cc_review.slot_text(data, "Q")
         assert "the bomb explodes to deal magic damage to nearby enemies" in q_text
         # The only control word is the double-bomb detonation, which needs
@@ -47,14 +62,19 @@ class TestReviewedCrowdControl:
         (part,) = parsed["Q"]["parts"]
         assert part.time_offset == 3.0
 
-    def test_the_out_of_scope_slots_stay_absent(self):
-        """E holds the enemy slow, but Time Warp deals no damage."""
+    def test_the_damageless_slots_stay_absent_from_the_review(self):
+        """E holds the enemy slow, but Time Warp deals no damage.
+
+        MERGE: a slot that emits a declared zero-damage row is
+        ``no_damage``, not ``out_of_scope`` -- "we looked and it prices
+        nothing" is a different answer from "nothing looked".  Either way
+        it authors no damage event, so it carries no reviewable control.
+        """
         data = cc_review.kit("Zilean")
+        coverage = get_champion_module_contract("Zilean").coverage
         for slot in ("W", "E"):
             assert slot not in zilean.MODULE_CC, slot
-            assert (
-                get_champion_module_contract("Zilean").coverage[slot] == "out_of_scope"
-            ), slot
+            assert coverage[slot] == "no_damage", slot
         assert "if the target is an enemy, they are slowed" in (
             cc_review.slot_text(data, "E")
         )

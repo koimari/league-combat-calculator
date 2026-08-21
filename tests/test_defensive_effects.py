@@ -180,6 +180,24 @@ def test_celestial_opposition_resolves_blessed_reduction():
     )
 
 
+def test_guardians_horn_resolves_both_flat_damage_reduction_atoms():
+    defenses = resolve_starting_defenses(
+        "Ahri", 18, _stats(), [{"name": "Guardian's Horn"}]
+    )
+
+    assert defenses.champion_damage_flat_reduction == pytest.approx(15.0)
+    assert defenses.champion_dot_damage_flat_reduction == pytest.approx(3.75)
+    assert defenses.public_summary()["incoming_damage"] == {
+        "basic_damage_multiplier": 1.0,
+        "basic_damage_flat_reduction": 0.0,
+        "basic_damage_flat_reduction_cap": 0.0,
+        "critical_strike_damage_multiplier": 1.0,
+        "champion_damage_flat_reduction": 15.0,
+        "champion_dot_damage_flat_reduction": 3.75,
+        "champion_damage_flat_source": "Guardian's Horn — Undaunted",
+    }
+
+
 def test_bloodthirster_starting_shield_requires_explicit_bounded_state():
     empty = resolve_starting_defenses("Ahri", 18, _stats(), [{"name": "Bloodthirster"}])
     supplied = resolve_starting_defenses(

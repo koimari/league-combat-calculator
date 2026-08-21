@@ -335,6 +335,22 @@ def cast_proc_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     )
 
 
+def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
+    """Every held owner whose cast proc attaches a self shield to its event.
+
+    Answered from the declarations alone, with no build context: the tuple
+    ledger's adequacy question is "could this build attach a self shield to
+    a damage event", which is a property of what the items declare and not
+    of the fight that resolves their magnitudes.  Owners come back in build
+    order so a receipt names them the way the caller supplied the build.
+    """
+    return tuple(
+        rule.owner
+        for rule in cast_proc_rules(owners)
+        if getattr(rule.payload, "self_shield", None) is not None
+    )
+
+
 def resolve_slots(
     owners: Sequence[str],
     *,
@@ -386,6 +402,7 @@ __all__ = [
     "CastProcWalkInterpreter",
     "cast_proc_rules",
     "proc_mechanic_id",
+    "self_shield_owners",
     "cooldown_proc_effect",
     "repeated_target_multiplier",
     "resolve_slots",

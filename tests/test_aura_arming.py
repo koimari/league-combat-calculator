@@ -198,6 +198,7 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         # C4 took 2 for this phase list; 3.8's coverage flip took 3 for a
         # different payload and S9's dispositions took 4, so the seven names
         # are still C4's and the version has moved twice past it (5 is the
-        # rune page's request fields and catalogs).
-        assert CAPABILITY_SCHEMA_VERSION == 5
+        # rune page's request fields and catalogs, 6 the survival row's
+        # certification fields).
+        assert CAPABILITY_SCHEMA_VERSION == 6
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

@@ -33,8 +33,9 @@ Why each slot is non-generic:
 - R (Unleashed Power) must read "Magic Damage per Sphere" — the
   "Minimum/Maximum Magic Damage" rows are precomputed 3- and 7-sphere
   totals that would double-count with the sphere-count option. The
-  100-splinter execute is not modeled (the fight target never dies —
-  the Darius R call).
+  100-splinter upgrade executes a target when R leaves it below 15% of
+  maximum health. The entry carries that terminal threshold into the
+  shared participant ledger.
 """
 
 from typing import Any
@@ -68,11 +69,14 @@ W_TRUE_RATIO_BASE = 0.12
 W_TRUE_RATIO_PER_100_AP = 0.02
 
 # Splinters of Wrath thresholds (wiki; the 80-stack E upgrade is
-# utility only and the 100-stack R execute is not modeled).
+# utility only).
 SPLINTERS_Q_SECOND_CHARGE = 40
 SPLINTERS_W_TRUE_DAMAGE = 60
+SPLINTERS_R_EXECUTE = 100
 SPLINTERS_FULL = 120
 _MAX_SPLINTERS = 120
+
+R_EXECUTE_HEALTH_RATIO = 0.15
 
 _DEFAULT_SPLINTERS = 120
 _R_MIN_SPHERES = 3  # R always fires 3 of its own
@@ -295,6 +299,9 @@ def _unleashed_power(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     entry["parts"] = (DamagePart("magic", per_sphere, count=spheres),)
+    if _splinters(ctx) >= SPLINTERS_R_EXECUTE:
+        entry["execute_threshold_ratio"] = R_EXECUTE_HEALTH_RATIO
+        entry["execute_source"] = entry["name"]
     return entry
 
 
@@ -307,7 +314,7 @@ OPTIONS: list[dict[str, Any]] = [
         "max": _MAX_SPLINTERS,
         "label": (
             "Splinters of Wrath stacks (40: Q gains a 2nd charge; 60: W "
-            "bonus true damage; 100: R execute — not modeled; 120: +15% "
+            "bonus true damage; 100: R executes below 15% max HP; 120: +15% "
             "total AP)"
         ),
     },
@@ -332,8 +339,8 @@ ASSUMPTIONS = [
     "At 60+ splinters W's bonus true damage uses the exact formula "
     "(12% + 2% per 100 AP) of W's magic damage, computed in the module "
     "(quadratic in AP)",
-    "R's 100-splinter execute (kills targets it would bring below 15% "
-    "max HP) is not modeled — the fight target never dies",
+    "At 100+ splinters R executes a target when R leaves it below 15% "
+    "maximum health; the resolved combo places R after the other damage casts",
     "R sphere count is user-set (default 3 = no setup; max 7 with "
     "spheres banked on the field); the Min/Max JSON damage rows are "
     "derived totals and are not used",

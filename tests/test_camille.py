@@ -247,9 +247,9 @@ class TestWTacticalSweep:
         assert abilities["W"]["damage_type"] == "physical"
 
     def test_w_rank5_outer_cone_default(self, camille_data) -> None:
-        """160 + 60 (60% x 100 bAD) + (8% + 2.5%) x 3000 = 535."""
+        """160 + 60 (60% x 100 bAD) + (9% + 2.5%) x 3000 = 565."""
         abilities = _parse(camille_data, ALL_MAXED)
-        assert abilities["W"]["total_raw"] == pytest.approx(535.0)
+        assert abilities["W"]["total_raw"] == pytest.approx(565.0)
 
     def test_w_rank5_inner_only(self, camille_data) -> None:
         """Outer cone off: 160 + 60 = 220."""
@@ -258,20 +258,20 @@ class TestWTacticalSweep:
 
     def test_w_monster_values_never_leak(self, camille_data) -> None:
         """Only inner + outer champion values: with 0 bonus AD the total
-        is 160 + 8% x 3000 = 400 — any monster-effect leak breaks this."""
+        is 160 + 9% x 3000 = 430 — any monster-effect leak breaks this."""
         abilities = _parse(
             camille_data,
             ALL_MAXED,
             stats={"attack_damage": 200.0, "bonus_attack_damage": 0.0},
         )
-        assert abilities["W"]["total_raw"] == pytest.approx(400.0)
+        assert abilities["W"]["total_raw"] == pytest.approx(430.0)
 
     def test_w_cooldown(self, camille_data) -> None:
-        """W cooldown 15/14/13/12/11."""
+        """W cooldown 12/11.5/11/10.5/10."""
         r1 = _parse(camille_data, {"Q": 0, "W": 1, "E": 0, "R": 0})
         r5 = _parse(camille_data, ALL_MAXED)
-        assert r1["W"]["cooldown"] == pytest.approx(15.0)
-        assert r5["W"]["cooldown"] == pytest.approx(11.0)
+        assert r1["W"]["cooldown"] == pytest.approx(12.0)
+        assert r5["W"]["cooldown"] == pytest.approx(10.0)
 
 
 # ---------------------------------------------------------------------------

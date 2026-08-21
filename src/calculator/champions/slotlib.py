@@ -33,9 +33,10 @@ shared output shells use entry builders instead of flag-heavy factories.
 """
 
 import re
+from dataclasses import replace
 from typing import Any, Callable
 
-from ..ability_spec import DamagePart, Disposition, ZeroPolicy
+from ..ability_spec import ControlEvent, DamagePart, Disposition, ZeroPolicy
 from .attribute_classifier import (
     classify_damage_type,
     is_damage_attribute,
@@ -58,6 +59,150 @@ _MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
 # identity-verified the same way.
 _NAMED_LEVELING_MEMO: dict[tuple[int, str, int], tuple[dict, Any]] = {}
 _PRIMARY_LEVELING_MEMO: dict[int, tuple[dict, Any]] = {}
+
+_PROSE_SECONDS_RE = re.compile(
+    r"(?<![\w.])(?P<value>\d+(?:\.\d+)?)\s+seconds?\b", re.IGNORECASE
+)
+_PROSE_SHIELD_SECONDS_RE = re.compile(
+    r"\bshield(?:s|ed|ing)?\b.*?\bfor\s+(?:up to\s+)?"
+    r"(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
+    re.IGNORECASE,
+)
+_PROSE_INVULNERABILITY_DELAY_RE = re.compile(
+    r"\bdescends?\b.*?\bover\s+(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
+    re.IGNORECASE,
+)
+_PROSE_INVULNERABILITY_DURATION_RE = re.compile(
+    r"\binvulnerable\b.*?\bfor\s+(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
+    re.IGNORECASE,
+)
+_PROSE_CONTROL_DURATION_RE = re.compile(
+    r"\b(?:airborne|charm(?:s|ed|ing)?|fear(?:s|ed|ing)?|"
+    r"immobiliz(?:e|es|ed|ing)|knockback|knockup|"
+    r"knock(?:s|ed|ing)?\s+(?:\w+\s+)?up|polymorph(?:s|ed|ing)?|"
+    r"root(?:s|ed|ing)?|sleep(?:s|ed|ing)?|slow(?:s|ed|ing)?|"
+    r"stun(?:s|ned|ning)?|"
+    r"suppression|suppress(?:es|ed|ing)?|taunt(?:s|ed|ing)?)\b"
+    r".*?\bfor\s+(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
+    re.IGNORECASE,
+)
+_PROSE_DAMAGE_REDUCTION_CAP_RE = re.compile(
+    r"\bcapped\s+at\s+(?P<value>\d+(?:\.\d+)?)\s*%\s+of\s+"
+    r"(?:the\s+)?damage\s+instance\b",
+    re.IGNORECASE,
+)
+_PROSE_DAMAGE_REDUCTION_RE = re.compile(
+    r"\b(?:gains?|has)\s+(?P<value>\d+(?:\.\d+)?)\s*%\s+" r"damage\s+reduction\b",
+    re.IGNORECASE,
+)
+
+
+def extract_description_duration(
+    ability: dict[str, Any], effect_index: int = 0
+) -> float | None:
+    """Read the first seconds value from one cached effect description."""
+    effects = ability.get("effects") or []
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return None
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return None
+    description = str(effect.get("description") or "")
+    match = _PROSE_SECONDS_RE.search(description)
+    return float(match.group("value")) if match else None
+
+
+def extract_description_shield_duration(
+    ability: dict[str, Any], effect_index: int = 0
+) -> float | None:
+    """Read the duration attached to a shield phrase in one effect."""
+    effects = ability.get("effects") or []
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return None
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return None
+    description = str(effect.get("description") or "")
+    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", description)
+    for sentence in sentences:
+        match = _PROSE_SHIELD_SECONDS_RE.search(sentence)
+        if match:
+            return float(match.group("value"))
+    return None
+
+
+def extract_description_invulnerability_timing(
+    ability: dict[str, Any], effect_index: int = 0
+) -> tuple[float | None, float | None]:
+    """Read a sourced invulnerability delay and window from one description."""
+    effects = ability.get("effects") or []
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return None, None
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return None, None
+    description = str(effect.get("description") or "")
+    delay_match = _PROSE_INVULNERABILITY_DELAY_RE.search(description)
+    duration_match = _PROSE_INVULNERABILITY_DURATION_RE.search(description)
+    return (
+        float(delay_match.group("value")) if delay_match else None,
+        float(duration_match.group("value")) if duration_match else None,
+    )
+
+
+def extract_description_control_duration(
+    ability: dict[str, Any], effect_index: int = 0
+) -> float | None:
+    """Read the first action-blocking control duration from one description."""
+    durations = extract_description_control_durations(ability, effect_index)
+    return durations[0] if durations else None
+
+
+def extract_description_control_durations(
+    ability: dict[str, Any], effect_index: int = 0
+) -> list[float]:
+    """Read every action-blocking control duration from one description."""
+    effects = ability.get("effects") or []
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return []
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return []
+    description = str(effect.get("description") or "")
+    return [
+        float(match.group("value"))
+        for match in _PROSE_CONTROL_DURATION_RE.finditer(description)
+    ]
+
+
+def extract_description_damage_reduction_cap(
+    ability: dict[str, Any], effect_index: int = 0
+) -> float | None:
+    """Read a percentage cap on one pre-mitigation damage instance."""
+    effects = ability.get("effects") or []
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return None
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return None
+    description = str(effect.get("description") or "")
+    match = _PROSE_DAMAGE_REDUCTION_CAP_RE.search(description)
+    return float(match.group("value")) if match else None
+
+
+def extract_description_damage_reduction(
+    ability: dict[str, Any], effect_index: int = 0
+) -> float | None:
+    """Read a sourced percentage of incoming damage reduction."""
+    effects = ability.get("effects") or []
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return None
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return None
+    description = str(effect.get("description") or "")
+    match = _PROSE_DAMAGE_REDUCTION_RE.search(description)
+    return float(match.group("value")) if match else None
 
 
 # An ability's rank array holds one value per rank — five, or six for
@@ -483,7 +628,7 @@ MODULE_FORMULA_ZERO = ZeroPolicy(
 
 Every numeric leaf a champion authors is born in one of the two builders
 below, so this is the single place the disposition has to be stated — the
-397 call sites across 151 champion modules are deliberately **not** edited,
+397 call sites across 152 champion modules are deliberately **not** edited,
 and a required-no-default field there would be a campaign-wide champion
 sweep smuggled in by an idiom.  Those two figures are measured, not
 recalled: ``tests/test_zero_policy.py`` counts the calls and states the
@@ -748,6 +893,73 @@ def _resolve_source(
     return ctx.ability(src_slot, src_index), src_slot
 
 
+def _control_duration_atom(
+    ctx: SlotCtx,
+    source: tuple[str, int] | None,
+    attribute: str,
+    rank: int,
+    effect_index: int = 0,
+) -> tuple[float, dict[str, Any]]:
+    """Read a control duration through the validated ability atom catalog."""
+    src_slot, src_index = source if source else (ctx.slot, 0)
+    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
+    from ..ability_atoms import (
+        AbilityAtomQuery,
+        ranked_ability_atom_value,
+        required_ability_atom,
+        required_ranked_attribute_atom,
+    )
+
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    try:
+        value, atom = required_ranked_attribute_atom(
+            ctx.champion_name,
+            champion_data,
+            src_slot,
+            attribute,
+            rank,
+            entry_index=src_index,
+        )
+    except KeyError:
+        source_path = (
+            f"{ctx.champion_name}.{src_slot}[{src_index}].effects[{effect_index}]"
+            ".description"
+        )
+        query = AbilityAtomQuery(
+            source=source_path,
+            behavior="timing",
+            evidence_prefix="control duration@",
+        )
+        atom = required_ability_atom(
+            ctx.champion_name,
+            champion_data,
+            src_slot,
+            query=query,
+        )
+        value = ranked_ability_atom_value(atom, 1, source=source_path)
+    units = atom.get("units", [])
+    allowed_units = {"seconds", "s"}
+    if not isinstance(units, list) or any(
+        str(unit).strip().lower() not in allowed_units for unit in units
+    ):
+        raise ValueError(
+            f"{ctx.champion_name} {src_slot} control duration atom must use seconds"
+        )
+    receipt = {
+        key: atom[key]
+        for key in (
+            "atom_id",
+            "behavior",
+            "source",
+            "values",
+            "units",
+            "evidence",
+            "hash",
+        )
+    }
+    return value, receipt
+
+
 def _resolve_casts(
     casts: int | str,
     ability: dict[str, Any],
@@ -919,6 +1131,141 @@ def simple_damage(
         return entry
 
     parse.phase = DAMAGE
+    return parse
+
+
+def with_control(
+    parser: SlotParser,
+    *,
+    kind: str,
+    duration_attr: str,
+    source: tuple[str, int] | None = None,
+    ranks: str = "rank",
+    part_index: int = 0,
+    effect_index: int = 0,
+) -> SlotParser:
+    """Attach one sourced action-blocking control interval to a damage slot."""
+    if not kind.strip():
+        raise ValueError("with_control kind must be a non-empty string")
+    if ranks not in {"rank", "level"}:
+        raise ValueError("with_control ranks must be 'rank' or 'level'")
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is None:
+            return None
+        ability, source_slot = _resolve_source(ctx, source)
+        if ability is None:
+            raise ValueError(
+                f"{ctx.champion_name} {ctx.slot}: control source ability is missing"
+            )
+        rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
+        duration, duration_atom = _control_duration_atom(
+            ctx, source, duration_attr, rank, effect_index
+        )
+        if duration <= 0.0:
+            raise ValueError(
+                f"{ctx.champion_name} {ctx.slot}: sourced control duration "
+                f"{duration_attr!r} is missing or zero"
+            )
+        parts = list(entry.get("parts", ()))
+        if not parts or part_index >= len(parts):
+            raise ValueError(
+                f"{ctx.champion_name} {ctx.slot}: control part index "
+                f"{part_index} is absent"
+            )
+        if not isinstance(parts[part_index], DamagePart):
+            raise TypeError(
+                f"{ctx.champion_name} {ctx.slot}: control part is not a DamagePart"
+            )
+        part = parts[part_index]
+        parts[part_index] = replace(
+            part,
+            cc_kind=kind,
+            cc_duration=duration,
+            control_source_atoms=(
+                *part.control_source_atoms,
+                {
+                    key: duration_atom[key]
+                    for key in (
+                        "atom_id",
+                        "behavior",
+                        "source",
+                        "values",
+                        "units",
+                        "evidence",
+                        "hash",
+                    )
+                },
+            ),
+        )
+        entry["parts"] = tuple(parts)
+        return entry
+
+    parse.phase = getattr(parser, "phase", DAMAGE)
+    return parse
+
+
+def with_control_event(
+    parser: SlotParser,
+    *,
+    kind: str,
+    duration_attr: str,
+    source: tuple[str, int] | None = None,
+    ranks: str = "rank",
+    time_offset: float | None = 0.0,
+    effect_index: int = 0,
+) -> SlotParser:
+    """Add one sourced control event, including to a utility-only slot."""
+    if not kind.strip():
+        raise ValueError("with_control_event kind must be a non-empty string")
+    if ranks not in {"rank", "level"}:
+        raise ValueError("with_control_event ranks must be 'rank' or 'level'")
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        ability, source_slot = _resolve_source(ctx, source)
+        if ability is None:
+            raise ValueError(
+                f"{ctx.champion_name} {ctx.slot}: control source ability is missing"
+            )
+        rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
+        if rank < 1:
+            return entry
+        duration, duration_atom = _control_duration_atom(
+            ctx, source, duration_attr, rank, effect_index
+        )
+        if duration <= 0.0:
+            raise ValueError(
+                f"{ctx.champion_name} {ctx.slot}: sourced control duration "
+                f"{duration_attr!r} is missing or zero"
+            )
+        if entry is None:
+            entry = {
+                "name": ability.get("name", f"Ability {ctx.slot}"),
+                "rank": rank,
+                "cooldown": extract_cooldown(ability, rank),
+                "damage_type": "magic",
+                "total_raw": 0.0,
+                "parts": (),
+            }
+        controls = list(entry.get("control_events", ()))
+        controls.append(
+            ControlEvent(
+                kind,
+                duration,
+                time_offset=time_offset,
+                skillshot=False,
+            )
+        )
+        entry["control_events"] = tuple(controls)
+        entry["control_source_atoms"] = [
+            *entry.get("control_source_atoms", []),
+            duration_atom,
+        ]
+        return entry
+
+    parse.phase = getattr(parser, "phase", DAMAGE)
     return parse
 
 

@@ -111,8 +111,20 @@ def _channel_receipts(name: str, slot: str, channel: str) -> list[tuple[str, flo
             "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
         }
     )
+    # What the channel PAID, which is the priced amount -- not what the
+    # fighter had room to receive.  Morgana's Q root and R stun leave Aatrox
+    # five of six seconds of downtime, so she takes no damage and every Soul
+    # Siphon receipt overheals to an applied 0.0; the rule still priced it.
+    # ``applied_amount`` is still read, because a formula heal prices 0.0 and
+    # only the walk resolves its real number.
     return [
-        (event["source"], float(event.get("applied_amount", event["amount"])))
+        (
+            event["source"],
+            max(
+                float(event.get("amount") or 0.0),
+                float(event.get("applied_amount") or 0.0),
+            ),
+        )
         for event in payload["combat"]["healing_events"]
         if event["attacker"] == "main"
     ]

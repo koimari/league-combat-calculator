@@ -21,8 +21,14 @@ Both of E's leveling entries are named "Bonus Magic Damage", so
 ``_bonus_magic_damage_levelings`` collects both in JSON order.
 """
 
+from dataclasses import replace
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+)
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
@@ -169,12 +175,73 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: damage plus a facing-selected stun or slow state.
+
+    One cone blast, no travel or tick phase in the packet, so the row is
+    certified as one landing — which is also what puts it in the event
+    ledger where the control marker below can be read.
+    """
+    parser = simple_damage(
+        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    )
+    entry = parser(ctx)
+    if entry is None:
+        return None
+    source = "Cassiopeia.R[0].effects[0].description"
+    atom = required_ability_atom(
+        ctx.champion_name,
+        {"name": ctx.champion_name, "abilities": ctx.abilities},
+        "R",
+        query=AbilityAtomQuery(
+            source=source,
+            behavior="timing",
+            evidence_prefix="control duration@",
+        ),
+    )
+    duration = ranked_ability_atom_value(atom, 1, source=source)
+    if atom.get("units") != ["s"]:
+        raise ValueError("Cassiopeia R control duration atom must use seconds")
+    kind = "stun" if bool(ctx.option("r_target_facing")) else "slow"
+    part = entry["parts"][0]
+    entry["parts"] = (
+        replace(
+            part,
+            cc_kind=kind,
+            cc_duration=duration,
+            control_source_atoms=(
+                *part.control_source_atoms,
+                {
+                    key: atom[key]
+                    for key in (
+                        "atom_id",
+                        "behavior",
+                        "source",
+                        "values",
+                        "units",
+                        "evidence",
+                        "hash",
+                    )
+                },
+            ),
+        ),
+    )
+    entry["detail"] = f"Petrifying Gaze facing branch: {kind} for {duration:g}s"
+    return entry
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "target_poisoned",
         "type": "bool",
         "default": True,
         "label": "Target poisoned (E enhanced damage)",
+    },
+    {
+        "key": "r_target_facing",
+        "type": "bool",
+        "default": True,
+        "label": "R target faces Cassiopeia (stun instead of slow)",
     },
 ]
 
@@ -186,9 +253,12 @@ ASSUMPTIONS = [
     "E's healing against poisoned targets is not modeled (damage calculator)",
     "Passive (Serpentine Grace) is movement-speed only and not modeled",
     "R's facing condition does not change damage either way; for crowd "
-    "control the duel's target is engaged with Cassiopeia and therefore "
-    "facing her, so R's reviewed control is the stun branch ('Enemies "
-    "with their facing direction towards her are instead stunned')",
+    "control it selects the branch — R applies the sourced stun when the "
+    "target faces Cassiopeia ('Enemies with their facing direction "
+    "towards her are instead stunned'), which the duel's target engaged "
+    "with her is, and the r_target_facing option selects the sourced "
+    "slow branch when it faces away.  The duration is read from the "
+    "cached R description atom, never a literal",
 ]
 
 SLOTS = {
@@ -198,20 +268,17 @@ SLOTS = {
     "Q": _noxious_blast,
     "W": _miasma,
     "E": _twin_fang,
-    # One cone blast, no travel or tick phase in the packet.
-    "R": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
-    ),
+    "R": _petrifying_gaze,
 }
 
 # Cached kit review.  Q's blast only poisons ("taking magic damage every
 # 0.429 seconds"), W's clouds leave enemies "grounded and slowed" — a
 # ground is not an immobilizing effect, the slow is the control — and E's
-# fangs apply nothing at all.  R is left unreviewed: it slows enemies
-# struck, and stuns "instead" those "with their facing direction towards
-# her" — which the duel's target, engaged with Cassiopeia, is (see
-# ASSUMPTIONS).
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun"}
+# fangs apply nothing at all.  R is absent because its kind is a property
+# of the cast rather than of the slot: the facing branch selects stun or
+# slow, so ``_petrifying_gaze`` authors the kind (and its sourced
+# duration) on the part itself.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 

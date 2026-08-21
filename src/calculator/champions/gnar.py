@@ -36,6 +36,7 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..ability_spec import ControlEvent, DamagePart
 from ..stats import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
@@ -69,6 +70,19 @@ MEGA_BONUS_AD = (6.0, 2.3)  # 66/5.5 vs 60/3.2: +45.1 at level 18
 MEGA_BONUS_ARMOR = (4.0, 3.0)  # 36/6.7 vs 32/3.7: +55 at level 18
 MEGA_BONUS_MR = (3.0, 3.5)  # 33/4.8 vs 30/1.3: +62.5 at level 18
 MEGA_ATTACK_SPEED_LOSS = (0.0, 5.5)  # 0.5 vs 6.0/lvl: -93.5 at level 18
+# P4 GAME-FILE AUTHORITY (verified 2026-08-09 against the local client
+# 16.15.8024387): all five constants PASS vs the GnarBig CharacterRecord
+# root minus Gnar's root — extracted from the local client WAD
+# (Gnar.wad.client -> data/characters/gnarbig/gnarbig.bin,
+# Characters/GnarBig/CharacterRecords/Root: HP 640/122, AD 66/5.5,
+# armor 36/6.7, MR 33/4.8, AS 0.625 + 0.5%/lvl) minus the Mini root
+# (540/79, 60/3.2, 32/3.7, 30 + 1.3/lvl, 0.625 + 6%/lvl).  The
+# GnarPassive in-repo tooltip calcs are STALE (AD 6.0->48.5 uses the
+# old 2.5/lvl delta; the wiki's 5.7 growth claim is wrong — the game
+# says 5.5); the root is the authority.  The REPO-LEVEL parsed GnarBig
+# root remains absent (decompose_binaries.py extracts one path per WAD
+# and gnarbig is not a WAD unit) — the fail-closed record: re-derive
+# the constants from the parsed root when it lands (tests flip).
 
 # HARDCODED: catching Q refunds 40% (Mini) / 70% (Mega) of the
 # cooldown (wiki prose) -> remaining-cooldown multiplier per form.
@@ -144,13 +158,64 @@ _rage_gene.phase = BUFF
 # Q: Boomerang Throw (Mini) / Boulder Toss (Mega)
 # ---------------------------------------------------------------------------
 
+
+def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q Mini: primary hit plus return-pass hits at the sourced 50% row.
+
+    The cached prose: the boomerang "deals physical damage to enemies
+    in its path ... After reaching its maximum range or hitting an
+    enemy, the boomerang flies back ... dealing 50% damage to
+    subsequent enemies" — the "Reduced Damage" row is exactly 50% of
+    "Physical Damage" at every rank.  Each ``q_secondary_targets``
+    enemy hit on the return pass takes one reduced hit (enemies can be
+    hit only once per pass, so the primary never double-dips).
+    """
+    ability = ctx.ability("Q", 0)
+    if ability is None:
+        return None
+    rank = ctx.rank_for("Q")
+    if rank < 1:
+        return None
+
+    primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
+    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
+    total = primary + reduced * secondary
+    entry = damage_entry(
+        ability.get("name", "Boomerang Throw"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    if secondary:
+        # The return pass lands on its own targets, one hit each, so the
+        # row is timed rather than certified as one landing — the timing
+        # is what carries Q's reviewed slow into the event ledger.
+        parts = [
+            DamagePart("physical", primary, time_offset=0.0),
+            DamagePart(
+                "physical", reduced, count=secondary, time_offset=0.0, hit_interval=0.0
+            ),
+        ]
+        entry["detail"] = (
+            f"primary hit + {secondary} return-pass target(s) at the "
+            f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
+        )
+    else:
+        # One boomerang, one enemy: one part and one hit, the
+        # certification that carries the same answer.
+        parts = [DamagePart("physical", primary)]
+        entry["event_order_certified"] = "single_hit"
+    entry["parts"] = tuple(parts)
+    return entry
+
+
 _q_forms = (
-    simple_damage(
-        attr="Physical Damage",
-        dmg_type="physical",
-        source=("Q", 0),
-        event_order_certified="single_hit",
-    ),
+    # Mini's boomerang states its own landing count (the return pass may
+    # carry more than one); Mega's boulder "stops on the first enemy hit",
+    # so its row is one part and one hit.
+    _boomerang_throw,
     simple_damage(
         attr="Physical Damage",
         dmg_type="physical",
@@ -305,7 +370,18 @@ _r_cast = by_option(
 
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: Mega-only cast; Mini Gnar cannot cast it (emits nothing)."""
-    return _r_cast(ctx) if _form_index(ctx) else None
+    entry = _r_cast(ctx) if _form_index(ctx) else None
+    if entry is None or not bool(ctx.option("r_wall")):
+        return entry
+    # The cast's own control is the knock away MODULE_CC declares on the
+    # damage part.  The wall branch adds a second, separate control: enemies
+    # that "collide with terrain ... are stunned instantly instead of slowed
+    # after a delay", for the cached Disable Duration.  It is its own
+    # interval rather than the part's kind, because one part carries one
+    # kind and the knock away is what the damage lands with.
+    duration = extract_value(ctx.ability(), "Disable Duration", ctx.rank_for())
+    entry["control_events"] = (ControlEvent("stun", duration),)
+    return entry
 
 
 OPTIONS = [
@@ -325,7 +401,20 @@ OPTIONS = [
         "key": "r_wall",
         "type": "bool",
         "default": True,
-        "label": "R into wall (1.5x damage + stun)",
+        "label": "R into wall (1.5x damage + sourced stun)",
+    },
+    {
+        "key": "q_secondary_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Mini Q: enemies hit on the boomerang's return pass (each "
+            "takes the sourced 50% Reduced Damage row; Mega's boulder "
+            "stops on the first enemy)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
     },
 ]
 
@@ -339,10 +428,14 @@ ASSUMPTIONS = [
     "Hyper's 300 damage cap vs monsters ignored (champion targets)",
     "E Hop assumes the bounce lands on an enemy (damage + attack speed "
     "buff always included)",
-    "Q Boomerang 'Reduced Damage' (subsequent targets) not modeled — "
-    "single-target full damage, one hit per throw",
+    "Q Mini prices the primary hit at full damage plus one sourced 50% "
+    "Reduced Damage hit per q_secondary_targets on the return pass "
+    "(default 0); enemies can be hit only once per pass, and Mega's "
+    "boulder stops on the first enemy (no reduced row)",
     "Mega E shockwave hits a single target once (no double-dip)",
-    "R is unavailable in Mini form (emits no damage entry)",
+    "R is unavailable in Mini form (emits no damage entry); the Mega wall "
+    "branch carries the sourced stun interval, and the open branch the "
+    "knock-away, whose duration the cache does not carry",
     "Forms share ability cooldowns",
 ]
 
@@ -357,10 +450,11 @@ SLOTS = {
 # Both Q forms slow "for 2 seconds" and both E forms slow "by 80% for 0.5
 # seconds", so each slot has one answer across the form swap.  R is
 # Mega-only and "knock[s] away nearby enemies" before its damage — the
-# knockback is the immobilize under either r_wall branch (the wall branch
-# adds a stun, the open branch a delayed slow).  W's kind rides Wallop
-# itself (above) because Mini's W is an on-hit shell; P is the Mega
-# stat-buff row and applies nothing.
+# knockback is the immobilize the damage lands with under either r_wall
+# branch, and the wall branch's terrain stun is a second control the slot
+# authors on top of it (see ``_r``).  W's kind rides Wallop itself (above)
+# because Mini's W is an on-hit shell; P is the Mega stat-buff row and
+# applies nothing.
 MODULE_CC = {"Q": "slow", "E": "slow", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Gnar", cc_kinds=MODULE_CC)

@@ -301,7 +301,14 @@ def test_olafs_three_steroids_reach_one_fight():
 
 
 def test_singed_insanity_potion_amplifies_his_own_poison():
-    """One Bonus Stats row becomes ability power, armour and magic resist."""
+    """One Bonus Stats row becomes AP, both resistances and movement speed.
+
+    Four stats, not three: the cached description names the row's grants as
+    "ability power, bonus armor, bonus magic resistance, bonus movement
+    speed", and ``champions/singed.py`` grants the same flat number to all
+    four.  Only the row's health/mana regeneration is left without a
+    ``stat_buff`` key, because nothing in a fixed-window fight reads it.
+    """
     bonus = _row("Singed", "R", "Bonus Stats")
     assert bonus == pytest.approx(85.0)
     entry = _slot_entry("Singed", "R")
@@ -309,6 +316,7 @@ def test_singed_insanity_potion_amplifies_his_own_poison():
         "ability_power": pytest.approx(bonus),
         "armor": pytest.approx(bonus),
         "magic_resistance": pytest.approx(bonus),
+        "move_speed": pytest.approx(bonus),
     }
     build = _build_stats("Singed")
     result = _fight("Singed")

@@ -31,11 +31,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
+from .inputs import champion_stat
 from .engine import SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 
@@ -45,7 +47,7 @@ PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f
 # details").  Sourced from the Community Dragon game files (current
 # patch; the wiki pet infobox on the fandom mirror is stale — it still
 # lists the Maiden at 0/10/40 + 50% AD while the game file says
-# 50/100/150 + 30% AD):
+# 50/75/100 + 30% bonus AD; the 13.21 patch moved the rank bases):
 #   https://raw.communitydragon.org/latest/game/data/characters/
 #     yorick/yorick.bin.json  (YorickPassive / YorickR spell calcs)
 #     yorickghoulmelee/yorickghoulmelee.bin.json  (Mist Walker unit)
@@ -56,8 +58,8 @@ PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f
 # physical.  Attack speed 0.5 : 1.18 (based on level, wiki) -> 5
 # attacks in the 5s window at level 18.
 # Maiden attack: YorickBigGhoulDamage = RBigGhoulBonusAD
-# (50/100/150 at R rank 1/2/3) (+ 30% AD, MaidenADRatio), magic.
-# Attack speed 1.0 -> 5 attacks in the 5s window.
+# (50/75/100 at R rank 1/2/3, the 13.21 rank bases) (+ 30% bonus AD,
+# MaidenADRatio), magic.  Attack speed 1.0 -> 5 attacks in the 5s window.
 _MIST_WALKER_DAMAGE_START = 15.0  # level 1
 _MIST_WALKER_DAMAGE_END = 100.0  # level 18
 # Pet AD ratios price BONUS AD, not total AD (autoresearch pass 35): the
@@ -121,7 +123,8 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
         "detail": (
             f"{walkers} Mist Walker(s) x {attacks} attacks = {count} attacks of "
             f"{per:.2f} physical (15 : 100 based on level x stat progression + "
-            "20% AD); attacks spread over the fight window, pet pathing not modeled"
+            "20% bonus AD); attacks spread over the fight window, pet pathing "
+            "not modeled"
         ),
     }
     return entry
@@ -156,7 +159,7 @@ def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["detail"] = (
         f"Maiden of the Mist: {attacks} basic attacks of {per:.2f} magic "
-        f"({base:.0f} at R rank {rank} + 30% AD) at 1.0 attack speed; the "
+        f"({base:.0f} at R rank {rank} + 30% bonus AD) at 1.0 attack speed; the "
         "Touch of the Maiden mark is not modeled"
     )
     return entry
@@ -174,9 +177,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yorick",
     PACKET_SHA256,
     assumption_overrides=(
-        "Mist Walker attack damage (15 : 100 by level x stat progression + 20% AD, physical) and "
-        "Maiden attack damage (50/100/150 by R rank + 30% AD, magic) are game-file constants — the "
-        "wiki pet infobox is stale; verify on patch updates against Community Dragon",
+        "Mist Walker attack damage (15 : 100 by level x stat progression + 20% bonus AD, "
+        "physical) and Maiden attack damage (50/75/100 by R rank + 30% bonus AD, magic — 13.21 "
+        "rank bases) are game-file constants — the wiki pet infobox is stale; verify on patch "
+        "updates against Community Dragon",
         "Mist Walkers attack at 0.5 : 1.18 attack speed (based on level): the default 5 attacks "
         "per walker fills the 5-second one-rotation window; pet pathing, HP and leash range are "
         "not modeled",
@@ -229,4 +233,49 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Yorick")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Yorick self-healing events from its authored packet."""
+    healing = []
+    q = _healing._ability(champion_data, "Q")
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_level = int(champion_stat(champion_stats, "level"))
+    q_flat = _healing._leveling_flat_at_level(q, "Heal", q_level)
+    q_missing_ratio = (
+        _healing._leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
+    )
+
+    def last_rites_heal(
+        current_health: float,
+        maximum_health: float,
+        flat: float = q_flat,
+        missing_ratio: float = q_missing_ratio,
+    ) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_ratio
+
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        event = payment.event
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": last_rites_heal,
+                "source": "Last Rites",
+                "kind": "champion_ability",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Yorick", derive_self_healing)

@@ -80,9 +80,19 @@ def test_validate_catalog_is_called_at_import() -> None:
 
 
 def test_every_action_kind_has_a_family() -> None:
-    """All nineteen survival transitions land in the eighteen families."""
+    """All twenty-one survival transitions land in a family.
+
+    Twenty-one, not nineteen: the merge of origin/main added
+    ``CROWD_CONTROL`` and ``CROWD_CONTROL_RESIST`` (the standalone control
+    interval and the resist that shortens it), both mapped to
+    ``RuleFamily.COMBAT_STATE``.  The count is a pin on *deliberate* growth —
+    the closure above is what makes the map total.
+    """
     assert frozenset(catalog.ACTION_KIND_FAMILY) == frozenset(ActionKind)
-    assert len(ActionKind) == 19
+    assert len(ActionKind) == 21
+    assert catalog.ACTION_KIND_FAMILY[ActionKind.CROWD_CONTROL] is (
+        catalog.ACTION_KIND_FAMILY[ActionKind.CROWD_CONTROL_RESIST]
+    )
 
 
 def test_a_new_action_kind_fails_the_catalog() -> None:

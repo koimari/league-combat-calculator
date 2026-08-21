@@ -29,6 +29,7 @@ rung ladder reads it back.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -63,11 +64,21 @@ def unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
     ``healing_category`` is not a rejection: every compiled heal action
     carries the field, so the kernel's vamp carve-outs (received-healing
     multiplier exemption, ichor conversion) apply identically (issue #169).
+
+    P2 Slice 4: a heal packet carrying the cleanse marker (Mikael's Purify)
+    fails closed with ``support_cleanse`` — the compiled kernel cannot
+    reproduce the action-downtime truncation, so the caller falls back to
+    the authoritative receipt walk instead of silently dropping the
+    cleanse (score/receipt parity, HANDOVER section 9).
     """
+    if event.get("cleanse") or event.get("cleanse_item"):
+        return "support_cleanse"
     if event.get("overheal_to_shield"):
         return "overheal_to_shield"
-    if event.get("requires_holder_health_ratio"):
-        return "requires_holder_health_ratio"
+    # ``requires_holder_health_ratio`` (Knight's Vow Sacrifice heals,
+    # P3 package 3S) is enforced by the shared kernel's heal gate — the
+    # compiled walk applies the identical ordered check, so the template
+    # is representable.
     if event.get("requires_damage_free_seconds"):
         return "requires_damage_free_seconds"
     if event.get("_deferred"):
@@ -128,25 +139,97 @@ def unrepresentable_modifier_receipt(template: Mapping[str, Any]) -> str | None:
         return "modifier_amount_formula"
     if template.get("_deferred"):
         return "deferred_transition"
+    # A *timed* modifier with no window is not a modifier the kernel arms:
+    # the walk keeps an entry only while ``until > time``, so a zero window
+    # is an authoring failure and reads back as one instead of compiling to
+    # an entry that can never apply.  A persistent modifier declares no
+    # window and is exempt.
+    if not template.get("persistent") and _template_duration(template) <= 0.0:
+        return "support_duration=0"
+    # The payloads themselves must be numbers the kernel can arithmetic on.
+    # A non-finite or negative multiplier is not a modifier the score ledger
+    # can stage identically to the walk, and mis-compiling one is silent, so
+    # each reads back as its own named receipt.
+    if template.get("damage_reduction"):
+        amount = _finite_or_none(template.get("amount", 0.0), floor=0.0)
+        if amount is None:
+            return "support_damage_modifier_amount=nonfinite"
+    else:
+        multiplier = _finite_or_none(template.get("multiplier", 1.0) or 1.0, floor=0.0)
+        if multiplier is None:
+            return "support_damage_modifier_multiplier=nonfinite"
+    for field in ("armor_reduction_percent", "mr_reduction_percent"):
+        if _finite_or_none(template.get(field, 0.0)) is None:
+            return f"support_damage_modifier_{field}=nonfinite"
     return None
+
+
+def _finite_or_none(value: Any, *, floor: float | None = None) -> float | None:
+    """One template payload as a finite float, or ``None`` if it is not one.
+
+    ``None`` is the refusal, so a caller that forgets to check it gets a
+    ``TypeError`` rather than a mis-compiled zero.
+    """
+    try:
+        number = float(value or 0.0)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number):
+        return None
+    if floor is not None and number < floor:
+        return None
+    return number
+
+
+def _template_duration(template: Mapping[str, Any]) -> float:
+    """One template's armed window, clamped at zero and never raising."""
+    number = _finite_or_none(template.get("duration", 0.0))
+    return max(0.0, number) if number is not None else 0.0
+
+
+# The resolved support kinds whose whole transition is a timed *state* grant:
+# the kernel arms the state, expires it on its own window, and both adapters
+# read back the same armed entry, so the only thing that can refuse one is a
+# window it cannot arm.
+_STAGED_STATE_KINDS = frozenset(
+    {"spell_shield", "stasis", "invulnerability", "untargetable"}
+)
 
 
 def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
     """Return a named receipt when a resolved support template cannot ride
     the compiled score kernel, else None."""
+    if template.get("_guardian_reactive"):
+        return "guardian_reactive_shield"
     kind = str(template.get("kind", ""))
+    if kind == "crowd_control_resist":
+        # P2 Slice 8: the Dr. Mundo passive IMMUNITY arm is representable
+        # -- it only sets the armed state, and the RESIST gate lives in the
+        # shared kernel (``_apply_crowd_control``), so both adapters apply
+        # it identically (the score ledger ignores the receipts).
+        return None
+    if kind in _STAGED_STATE_KINDS:
+        if kind == "spell_shield" and template.get("on_block_heal_amount", 0.0):
+            return "support_spell_shield_on_block_heal"
+        if _template_duration(template) <= 0.0:
+            return "support_duration=0"
+        return None
     if kind not in _STAGED_SUPPORT_KINDS:
         return f"support_kind={kind}"
     if kind == "damage_modifier":
         return unrepresentable_modifier_receipt(template)
-    try:
-        duration = max(0.0, float(template.get("duration", 0.0) or 0.0))
-    except (TypeError, ValueError):
-        duration = 0.0
-    if duration > 0.0:
-        return f"support_duration={template.get('duration')}"
     if template.get("amount_formula") is not None:
+        # An amount only the walk can price: the compiler stamps a number
+        # and would stamp the wrong one.
         return "support_amount_formula"
+    if kind == "shield":
+        # Timed shields are represented by the shared typed shield ledger.
+        # The support action carries its pool and any while-held CC immunity.
+        return unrepresentable_heal_receipt(template)
+    # Timed heals (Cryptbloom's Life From Death carries its sourced 1.75s
+    # nova window on the packet) apply FLAT in both walks — the shared
+    # kernel never reads action.duration for heals — so the duration is
+    # metadata, not a rejection (P3 package 3K).
     return unrepresentable_heal_receipt(template)
 
 

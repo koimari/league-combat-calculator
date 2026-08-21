@@ -19,6 +19,7 @@ from .item_coverage import (
     require_target_item_coverage,
     target_build_coverage,
 )
+from .interaction_effects import target_physical_damage_reduction_params
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
 from .pipeline import FightParams, validate_cast_order_shape
@@ -33,6 +34,7 @@ from .practice_dummy import (
 from .role_quests import require_level_within_cap, validate_role
 from .rune_effects import RunePage, validate_rune_page
 from .request_parsing import (
+    request_index_map,
     request_int as _request_int,
     request_string as _request_string,
     request_string_list as _request_string_list,
@@ -96,6 +98,26 @@ def _validate_champion_options(
                     f"{field}.{key} must be one of "
                     f"{sorted(choice['value'] for choice in option.get('choices', []))}"
                 )
+        elif option_type == "string_list":
+            if not isinstance(option_value, list):
+                raise ValueError(f"{field}.{key} must be a list")
+            maximum = int(option.get("max_items", 24))
+            if len(option_value) > maximum:
+                raise ValueError(f"{field}.{key} may contain at most {maximum} entries")
+            parsed_values: list[str] = []
+            for value in option_value:
+                if not isinstance(value, str) or not value.strip():
+                    raise ValueError(f"{field}.{key} entries must be strings")
+                value = value.strip()
+                if len(value) > 100:
+                    raise ValueError(
+                        f"{field}.{key} entries must be at most 100 characters"
+                    )
+                parsed_values.append(value)
+            if len(set(parsed_values)) != len(parsed_values):
+                raise ValueError(f"{field}.{key} must not contain duplicates")
+            parsed[key] = parsed_values
+            continue
         else:
             if isinstance(option_value, bool) or not isinstance(
                 option_value, (int, float)
@@ -154,12 +176,17 @@ class ChampionLoadout:
     ally_effects_enabled: bool = False
     ability_ranks: dict[str, int] = dataclass_field(default_factory=dict)
     champion_options: dict[str, Any] = dataclass_field(default_factory=dict)
+    support_target_selections: dict[str, int] = dataclass_field(default_factory=dict)
     cast_order: list[str] | None = None
     target_stats: dict[str, float] = dataclass_field(default_factory=dict)
     # A page that selects nothing stays ``None`` rather than an empty
     # ``RunePage``, so a loadout with no runes takes the same code path
     # through ``calculate_total_stats`` it took before runes existed.
     rune_page: RunePage | None = None
+    #: Optional starting health for this participant.  ``None`` means the
+    #: participant starts the fight at full health; a number starts them at
+    #: exactly that many health, bounded by their resolved maximum health.
+    current_health: float | None = None
 
     @property
     def is_practice_dummy(self) -> bool:
@@ -273,6 +300,11 @@ class ChampionLoadout:
                 field=f"{field}.champion_options",
             )
         )
+        support_target_selections = request_index_map(
+            value.get("support_target_selections"),
+            field=f"{field}.support_target_selections",
+            maximum_index=MAX_ALLIES - 1,
+        )
         cast_order = value.get("cast_order")
         if is_practice_dummy and cast_order is not None:
             raise ValueError(f"{field} practice dummies have no cast order")
@@ -280,6 +312,20 @@ class ChampionLoadout:
         # checks it; which slots this roster member may be told to cast is
         # decided against its parsed kit in ``validate_for_champion`` (D-11).
         validate_cast_order_shape(cast_order, field=f"{field}.cast_order")
+
+        raw_current_health = value.get("current_health")
+        if raw_current_health is None:
+            current_health = None
+        else:
+            if isinstance(raw_current_health, bool) or not isinstance(
+                raw_current_health, (int, float)
+            ):
+                raise ValueError(f"{field}.current_health must be a number")
+            current_health = float(raw_current_health)
+            if not math.isfinite(current_health):
+                raise ValueError(f"{field}.current_health must be finite")
+            if current_health <= 0.0:
+                raise ValueError(f"{field}.current_health must be greater than 0")
 
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
@@ -301,9 +347,11 @@ class ChampionLoadout:
             ally_effects_enabled=ally_effects_enabled,
             ability_ranks=ability_ranks,
             champion_options=champion_options,
+            support_target_selections=support_target_selections,
             cast_order=list(cast_order) if cast_order is not None else None,
             target_stats=target_stats,
             rune_page=rune_page,
+            current_health=current_health,
         )
 
     def resolve(self) -> "ResolvedLoadout":
@@ -340,6 +388,17 @@ class ChampionLoadout:
         )
         if self.is_practice_dummy:
             stats = apply_stat_overrides(stats, self.target_stats)
+        # The starting-health input is bounded by the participant's resolved
+        # maximum health, which is only known here.  A request that asks for
+        # more health than the build provides fails closed instead of being
+        # silently clamped.
+        if self.current_health is not None:
+            maximum_health = float(stats.get("health", 0.0) or 0.0)
+            if self.current_health > maximum_health:
+                raise ValueError(
+                    "current_health must not exceed "
+                    f"{self.champion}'s maximum health ({maximum_health:g})"
+                )
         return ResolvedLoadout(
             request=self,
             champion_data=champion_data,
@@ -386,6 +445,7 @@ class ResolvedLoadout:
             "ally_effects_enabled": self.request.ally_effects_enabled,
             "ability_ranks": dict(self.request.ability_ranks),
             "champion_options": dict(self.request.champion_options),
+            "support_target_selections": dict(self.request.support_target_selections),
             "cast_order": (
                 list(self.request.cast_order)
                 if self.request.cast_order is not None
@@ -652,6 +712,7 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
             target_bonus_health=enemy.stats["bonus_health"],
             target_armor=enemy.stats["armor"],
             target_magic_resistance=enemy.stats["magic_resistance"],
+            **target_physical_damage_reduction_params(enemy),
             target_magic_shield=enemy.defenses.magic_shield,
             target_physical_shield=enemy.defenses.physical_shield,
             target_general_shield=enemy.defenses.general_shield,
@@ -661,6 +722,12 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
             ),
             target_basic_damage_flat_reduction_cap=(
                 enemy.defenses.basic_damage_flat_reduction_cap
+            ),
+            target_champion_damage_flat_reduction=(
+                enemy.defenses.champion_damage_flat_reduction
+            ),
+            target_champion_dot_damage_flat_reduction=(
+                enemy.defenses.champion_dot_damage_flat_reduction
             ),
             target_critical_strike_damage_multiplier=(
                 enemy.defenses.critical_strike_damage_multiplier

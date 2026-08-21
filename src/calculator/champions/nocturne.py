@@ -25,6 +25,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_value,
+    with_control_event,
     with_item_on_hits,
 )
 
@@ -34,6 +35,34 @@ PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b
 # prose ("Shroud of Darkness' bonus attack speed is doubled for 5
 # seconds"); both percentages are JSON leveling rows.
 _W_ENHANCED_SECONDS = 5.0
+
+
+# Unspeakable Horror's fear lands when the tether completes: "if the tether
+# is not broken, the target is feared for a duration" (cached E prose), and
+# the packet's four 0.5s ticks below span exactly that 2-second tether.
+_E_TETHER_SECONDS = 2.0
+
+
+def _tether_fear(compiled):
+    """E: the sourced fear the held tether ends on.
+
+    ``with_control_event`` reads the Disable Duration row off the packet,
+    so the interval and its source atom come from the same evidence the
+    ticks do.  Breaking the tether is the enemy's answer, not the cast's,
+    so it is the ``e_tether_holds`` state rather than a module default.
+    """
+    armed = with_control_event(
+        compiled,
+        kind="fear",
+        duration_attr="Disable Duration",
+        time_offset=_E_TETHER_SECONDS,
+    )
+
+    def parse(ctx):
+        return armed(ctx) if ctx.option("e_tether_holds") else compiled(ctx)
+
+    parse.phase = getattr(compiled, "phase", None) or armed.phase
+    return parse
 
 
 def _shroud_of_darkness(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -105,11 +134,26 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "P": partial(
             with_item_on_hits, effectiveness=1.0, hits=1, triggers=("on_hit",)
         ),
+        "E": _tether_fear,
     },
     cc_kinds=MODULE_CC,
 )
 
 OPTIONS = list(OPTIONS) + [
+    {
+        "key": "e_tether_holds",
+        "type": "bool",
+        "default": True,
+        "label": "Unspeakable Horror tether holds",
+        "rotation": {
+            "role": "self_state",
+            "slot": "E",
+            "note": (
+                "Arms E's sourced fear at the end of its 2-second tether; "
+                "breaking the tether is the enemy's answer, not a cast edge."
+            ),
+        },
+    },
     {
         "key": "w_spellshield_block",
         "type": "bool",
@@ -135,6 +179,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "spell shield to block, which a damage package does not imply.  When "
     "armed, only the difference between the two rows is time-weighted "
     "over the sourced 5-second window.",
+    "E (Unspeakable Horror) authors its sourced fear (Disable Duration) at "
+    "the end of the 2-second tether when e_tether_holds is on, the "
+    "default the four priced tether ticks already assume.  Turning it off "
+    "withholds the fear interval only; the packet's tick count is not "
+    "re-derived for a tether broken early.",
 ]
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.

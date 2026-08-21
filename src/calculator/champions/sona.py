@@ -1,10 +1,16 @@
 """Sona — CP10.8 full-entry-reviewed packet module.
 
 E8d ally-support: W (Aria of Perseverance) heals and shields the caster and
-one selected teammate.  The event is authored by the engine's ally-support
-scanner from the cached W leveling (Heal 30-90 + 30% AP; Shield Strength
-25-105 + 25% AP; scope self_and_one_teammate) at the W cast time; the module
-declares W in SLOTS so the fight rotation casts it.
+one selected teammate.  The heal is authored once by ``derive_self_healing``
+below (the self copy plus the fan-out clone to the selected teammate under
+the ``heal:W:<cast>`` selection key, "heals herself and sends out a tone to
+heal the most wounded allied champion nearby") and the Melody shield stays
+scanner-owned under ``shield:W:<cast>``, read from the cached W leveling
+(Heal 30-90 + 30% AP; Shield Strength 25-105 + 25% AP; scope
+self_and_one_teammate) at the W cast time; both packets expose independent
+roster selection keys, and the deterministic roster model treats the
+selected teammate as the "most wounded" target.  The module declares W in
+SLOTS so the fight rotation casts it.
 
 P (Power Chord) is ``modeled``: the sourced chord (240.0 bonus magic damage
 at level 18, 0 AP) rides the attack three basic abilities empower.
@@ -15,6 +21,7 @@ which ``slotlib``'s ``stat_buff`` dispatch has no key for.
 
 from typing import Any
 
+from ..healing_helpers import _ability, _rank
 from .engine import ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
@@ -89,9 +96,57 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "level + 20% AP) once per three basic abilities (selectable); the "
     "Staccato / Diminuendo / Tempo riders the last-cast tag adds are not "
     "applied, and Accelerando's ability haste is unpriced.",
+    "W (Aria of Perseverance) heals the caster and the selected teammate "
+    "the sourced Heal (30-90 + 30% AP) via the E1-rule fan-out "
+    "(heal:W:<cast> key) and shields the caster and the same selected "
+    "teammate the sourced Melody Shield Strength (25-105 + 25% AP) for "
+    "1.5s (shield:W:<cast> key); the in-game 'most wounded allied "
+    "champion nearby' selection is the explicit roster teammate choice.",
 ]
 MODULE_COVERAGE = {
     slot: ("out_of_scope" if slot == "E" else "modeled") for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Sona")
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Aria of Perseverance: the sourced Heal row, once per W cast.
+
+    The heal is paid on the cast — "heals herself and sends out a tone to
+    heal the most wounded allied champion nearby" — so it rides the cast
+    timeline and declares its own fan-out scope; the roster's selected
+    teammate stands in for the most wounded ally.
+    """
+    del damage_events, fight_duration_seconds
+    heal = extract_named(
+        _ability(champion_data, "W"),
+        "Heal",
+        _rank(ability_damages, "W"),
+        champion_stats,
+    )
+    if heal <= 0.0:
+        return []
+    healing = [
+        {
+            "time": float(cast.get("time", 0.0)),
+            "amount": heal,
+            "source": "Aria of Perseverance",
+            "kind": "champion_ability",
+            "actor_wide": True,
+            "target_scope": "self_and_one_teammate",
+            "_event_id": f"sona:w:{cast_index}",
+        }
+        for cast_index, cast in enumerate(cast_timeline or [])
+        if cast.get("slot") == "W"
+    ]
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Sona", derive_self_healing)

@@ -37,6 +37,7 @@ PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771
 # "% per 100 bonus health" (0.4 at every rank).
 _MORTAL_WILL_BONUS_AD_RATIO = 1.15
 _W_BONUS_HEALTH_PER_100 = 0.4
+_W_STUN_SECONDS = 1.0
 
 
 def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -115,6 +116,13 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
         value,
         "physical",
         event_order_certified="single_hit",
+    )
+    # HARDCODED: verify on patch updates — the cached W description states
+    # the interval in prose ("stuns them for 1 second"), with no leveling
+    # row to read it from.  The kind restates MODULE_CC's declaration
+    # because a duration cannot be authored without one.
+    entry["parts"] = (
+        DamagePart("physical", value, cc_kind="stun", cc_duration=_W_STUN_SECONDS),
     )
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
@@ -201,6 +209,37 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
         "default": False,
         "label": "R edge hit (Reduced Damage row)",
     },
+    {
+        "key": "e_active",
+        "type": "bool",
+        "default": False,
+        "label": "E (Aegis Assault) active against selected skillshots",
+    },
+    {
+        "key": "e_active_from",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 120.0,
+        "label": "E active start time in seconds",
+    },
+    {
+        "key": "e_active_seconds",
+        "type": "float",
+        "default": 0.0,
+        "min": 0.0,
+        "max": 1.5,
+        "label": "E active seconds; zero uses the sourced 1.5 second duration",
+    },
+    {
+        "key": "e_blocked_skillshots",
+        "type": "string_list",
+        "default": [],
+        "max_items": 24,
+        "label": (
+            "Front-facing skillshot slots to block; an empty list blocks all marked skillshots"
+        ),
+    },
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -215,11 +254,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "per 100 AP + 0.4% per 100 bonus health of the target's maximum "
     "health); the AP and bonus-health per-100 terms are the cached "
     "modifiers with the garbled '% per 100 Pantheon's bonus health' unit "
-    "pinned as '% per 100 bonus health'",
+    "pinned as '% per 100 bonus health'. The champion hit stuns for one "
+    "second, from the cached ability description",
     "R prices the center Magic Damage row by default; the Reduced edge "
     "row (150-350 + 50% AP) is exposed through the r_edge option.  The R "
     "passive armor penetration (10-30% by rank) is a self-stat, not "
     "enemy damage.",
+    "E Aegis Assault blocks selected marked skillshots during the sourced "
+    "1.5 second front-facing channel; direction is represented by the "
+    "explicit source selection.",
 ]
 
 # P emits a row and there is nothing left for it to price — Mortal Will's

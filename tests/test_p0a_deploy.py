@@ -464,10 +464,12 @@ def test_runtime_manifests_include_redis():
     runtime_in = Path("requirements-runtime.in").read_text(encoding="utf-8")
     runtime_lock = Path("requirements-runtime.txt").read_text(encoding="utf-8")
     pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
-    assert "redis==7.4.1" in runtime_in
-    assert "redis==7.4.1" in runtime_lock
+    redis_pin = next(
+        line.strip() for line in runtime_in.splitlines() if line.startswith("redis==")
+    )
+    assert redis_pin in runtime_lock
     assert "--hash=sha256:" in runtime_lock
-    assert '"redis==7.4.1"' in pyproject
+    assert f'"{redis_pin}"' in pyproject
 
 
 def test_deploy_runbook_covers_managed_infrastructure_and_rollback():

@@ -25,7 +25,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
-from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    on_hit_entry,
+)
 
 # HARDCODED: verify on patch updates — Pain of Wrath's second instance
 # lands 1.25 seconds after the first (wiki W effect prose; the JSON
@@ -88,6 +94,11 @@ def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     if rank < 1:
         return None
     increased = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
+    # The primary target "is stunned for the same duration, and knocked up
+    # for a modified duration": the cached "Stun Duration" and "Knock Up
+    # Duration" rows are the same 1 / 1.5 / 2 seconds, so one un-narrowed
+    # immobilize of that length states both without inventing a number.
+    immobilize_duration = extract_value(ability, "Knock Up Duration", rank)
     entry = damage_entry(
         ability.get("name", "Depth Charge"),
         rank,
@@ -99,7 +110,14 @@ def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
         # certified at the cast boundary rather than given a made-up delay.
         event_order_certified="single_hit",
     )
-    entry["parts"] = (DamagePart("magic", amount=increased),)
+    entry["parts"] = (
+        DamagePart(
+            "magic",
+            amount=increased,
+            cc_kind="immobilize",
+            cc_duration=immobilize_duration,
+        ),
+    )
     entry["detail"] = (
         "Primary-target final eruption (Increased Damage); the chase "
         "eruptions along the charge's path hit other enemies and are not "

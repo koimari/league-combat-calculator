@@ -36,12 +36,20 @@ class TestReviewedCrowdControl:
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
-def test_p_is_modeled_through_the_48_6_soul_eater_lifesteal() -> None:
+def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
     """P emits a row with no enemy damage; the heal rule prices the slot.
 
-    A level-18 itemless timed fight with autos pays Soul Eater 48.6 — the
-    receipt behind P's ``modeled`` label.  W stays out of scope: Wither is
-    CC magnitude, an axis the engine does not have.
+    A level-18 itemless timed fight with autos pays Soul Eater 88.2 — the
+    receipt behind P's ``modeled`` label.  Six physical swings at the
+    level-18 24% share: five ordinary autos on the 1.75-second cadence
+    (14.4 each) and the Siphoning-Strike-empowered one (16.2, off the
+    larger hit).  That last payment is the one a rule reading only the
+    ``auto_attacks`` row misses — Q rides a basic attack rather than
+    replacing one, so the engine attributes that swing to the Q row —
+    which is why ``derive_self_healing`` reads both rows, and why this
+    receipt is larger than the auto-row-only 48.6 it replaces.  W stays
+    out of scope: Wither is CC magnitude, an axis the engine does not
+    have.
     """
     import pytest
 
@@ -66,4 +74,4 @@ def test_p_is_modeled_through_the_48_6_soul_eater_lifesteal() -> None:
         for event in payload["self_healing_events"]
         if event["source"] == "Soul Eater"
     )
-    assert paid == pytest.approx(48.6, abs=0.1)
+    assert paid == pytest.approx(88.2, abs=0.1)

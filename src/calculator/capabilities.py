@@ -53,9 +53,16 @@ from .survival.actions import TransitionRank, public_phase
 # (with each rune's path, row and model coverage) and the stat-shard table
 # beside the keystone list it already published.
 #
+#
+# 6 is the survival row's certification fields: the participant ledger row
+# gained the crowd-control interval and immunity block, the cleanse receipt,
+# the revive-stasis lifecycle, the projectile-defense and spell-shield
+# receipts, the Guardian and Aftershock blocks, the action-downtime union and
+# the permanent-bonus-health ledger.
+#
 # The version moves for a change to the *published payload* and for nothing
 # else, so a derivation edit that comes out byte-identical leaves it alone.
-CAPABILITY_SCHEMA_VERSION = 5
+CAPABILITY_SCHEMA_VERSION = 6
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in
@@ -257,6 +264,15 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
             ),
             conditional=True,
             availability="champion_declared",
+        ),
+        "support_target_selections": _field(
+            payload_field="support_target_selections",
+            state_path=(
+                "attacker.supportTargetSelections"
+                if is_main
+                else loadout_path("supportTargetSelections")
+            ),
+            frontend_token="data-capability-field",
         ),
         "cast_order": _field(
             payload_field="cast_order",

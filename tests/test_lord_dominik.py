@@ -41,10 +41,10 @@ def test_level_14_rengar_ldr_against_ambessa_target_context() -> None:
     result = run_fight(rengar, 14, rengar_items, params)
     amplifier = result["breakdown"]["damage_amp_Lord Dominik's Regards"]
 
-    assert ambessa_stats["bonus_health"] == pytest.approx(850.0)
-    assert amplifier["multiplier"] == pytest.approx(1.085)
+    assert ambessa_stats["bonus_health"] == pytest.approx(900.0)
+    assert amplifier["multiplier"] == pytest.approx(1.09)
     assert amplifier["total_damage"] == pytest.approx(
-        result["total_damage"] * 0.085 / 1.085
+        result["total_damage"] * 0.09 / 1.09
     )
     # base armor untouched + bonus armor x 0.65
     assert result["effective_armor"] == pytest.approx(

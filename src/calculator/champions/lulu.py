@@ -13,13 +13,22 @@ on-hit entry prices bolts x per-bolt so reducing the barrage keeps the
 sourced per-bolt row exact.
 
 W (Whimsy) and R (Wild Growth) are both "herself or an ally" casts, so
-each one declares who it lands on.  Only the **self** branch is priced
-here — that is the buff the main champion's own fight holds — and it
-takes the cached row through ``stat_buff``: W's Bonus Attack Speed
-(20-30%) for its Effect Duration row, R's Bonus Health (275-575 + 55%
-AP) for 7 seconds.  An ally cast reaches the roster through the
-ally-support scanner, not this slot; W's enemy cast is a polymorph, for
-which no engine field carries a magnitude.
+each one declares who it lands on.  Neither carries a damage attribute
+anywhere in the cache — W's leveling rows are "Disable Duration",
+"Bonus Attack Speed" and "Effect Duration"; R's are "Bonus Health" and
+"Slow" (data/champions.json Lulu W/R, cross-checked against
+data/atoms/lulu.atoms.json where every LuluW*/LuluR* atom carries
+``damage_type: null``).  What each one DOES carry is priced: only the
+**self** branch reaches this fighter's stats — that is the buff the
+main champion's own fight holds — and it takes the cached row through
+``stat_buff``: W's Bonus Attack Speed (20-30%) for its Effect Duration
+row, R's Bonus Health (275-575 + 55% AP) for 7 seconds.  An ally cast
+reaches the roster through the ally-support scanner, not this slot.
+W's enemy cast is the OTHER branch of the same active — the cache
+states them as "Self / Ally Cast" and "Enemy Cast" — so it prices the
+sourced "Disable Duration" polymorph as a control event and grants no
+attack speed at all; R's 1-second knock-up has no duration row in the
+cache, so it stays named rather than authored.
 """
 
 from typing import Any
@@ -34,6 +43,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     on_hit_entry,
+    with_control_event,
 )
 
 # HARDCODED: verify on patch updates — the 3-bolt barrage and each bolt's
@@ -76,7 +86,17 @@ _pix_bolts.phase = ONHIT
 
 
 def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: the self cast's 20-30% attack speed for its Effect Duration."""
+    """W: one cast, one branch — the self/ally buff OR the enemy polymorph.
+
+    The cache states them as two mutually exclusive halves of one active:
+    "Self / Ally Cast ... granting the target bonus attack speed" (the
+    Bonus Attack Speed / Effect Duration rows) and "Enemy Cast ...
+    polymorphs them into a harmless critter for a duration" (the Disable
+    Duration row).  ``lulu_whimsy_target`` picks which one this cast was,
+    and the branch it picks is the only one priced: a self cast that also
+    polymorphed would be one cast modelled twice, and it would broadcast
+    a control nobody cast onto every enemy on the board.
+    """
     ability = ctx.ability("W")
     if ability is None:
         return None
@@ -111,10 +131,18 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
             "this slot"
         ),
         enemy_text=(
-            "cast on an enemy: a 1.2-2s polymorph and disarm, for which "
-            "no engine field carries a magnitude"
+            "cast on an enemy: the sourced Disable Duration polymorph "
+            "(1.2-2s) and its disarm; the branch grants no attack speed"
         ),
     )
+    if target == _ENEMY_CAST:
+        # Only the enemy branch authors control, and it reads its own
+        # sourced row rather than restating one here.
+        entry = with_control_event(
+            lambda _ctx, built=entry: built,
+            kind="polymorph",
+            duration_attr="Disable Duration",
+        )(ctx)
     return entry
 
 
@@ -178,8 +206,12 @@ def _cast_detail(
 
 # Cached kit review: Q's bolts deal damage "and slow[] them by 80%
 # decaying over 2 seconds"; E's enemy cast only damages and reveals.  W's
-# polymorph and R's knock-up are real control but neither ability deals
-# damage, so no slot event carries them.
+# polymorph and R's knock-up are real control on abilities that deal no
+# damage, so neither can ride a damage part: W's rides its own control
+# event off the sourced "Disable Duration" row, authored by ``_whimsy``
+# on the enemy branch alone because the kind is a property of the cast
+# and not of the slot, and R's has no duration row in the cache to
+# author at all.
 MODULE_CC = {"Q": "slow", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -203,13 +235,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(5 : 39 by level) + 5% AP (module constants; the AP ratio is wiki "
     "prose). The second Per-Level Scaling row is the full 3-bolt total "
     "(15 : 117 + 15% AP).",
-    "W (Whimsy) and R (Wild Growth) price their SELF cast only — the "
-    "cached Bonus Attack Speed row (20-30%) for its Effect Duration row "
-    "and the Bonus Health row (275-575 + 55% AP) for the sourced 7 "
-    "seconds.  lulu_whimsy_target / lulu_wild_growth_target name who the "
-    "cast lands on; an ally cast is the roster's and reaches it through "
-    "the ally-support scanner, and W's enemy cast is a polymorph whose "
-    "magnitude no engine field carries.",
+    "W (Whimsy) and R (Wild Growth) carry no damage attribute at all; "
+    "each prices its SELF cast only — the cached Bonus Attack Speed row "
+    "(20-30%) for its Effect Duration row and the Bonus Health row "
+    "(275-575 + 55% AP) for the sourced 7 seconds.  "
+    "lulu_whimsy_target / lulu_wild_growth_target name who the cast "
+    "lands on; an ally cast is the roster's and reaches it through the "
+    "ally-support scanner.",
+    "W's two cached branches are mutually exclusive and only the one "
+    "lulu_whimsy_target names is priced: a self/ally cast grants the "
+    "Bonus Attack Speed row and authors no control, and an enemy cast "
+    "authors the sourced Disable Duration polymorph and grants no "
+    "attack speed.  The polymorph reaches every enemy in the fight "
+    "because a control event carries no target of its own; the cached "
+    "cast is single-target, so a multi-enemy roster overstates who it "
+    "holds.",
+    "R's 1-second knock-up is real control the cache gives no duration "
+    "row for, so it is named rather than authored as an event.",
     "R's bonus health is held for the whole fight rather than for its "
     "sourced 7 seconds: a health pool is not a rate, so the stat_buff "
     "channel can only grant or withhold it.",

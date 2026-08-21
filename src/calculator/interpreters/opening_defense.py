@@ -53,6 +53,10 @@ NOTES: Mapping[DefenseMechanic, str] = {
         "instance of each attack or cast."
     ),
     DefenseMechanic.RESILIENCE: "Resilience reduces damage from critical strikes.",
+    DefenseMechanic.UNDAUNTED: (
+        "Undaunted blocks a flat amount of every champion attack and "
+        "ability, and a smaller flat amount of damage-over-time abilities."
+    ),
 }
 
 # The Ichorshield's two disclosures: the scenario supplied a starting shield,
@@ -79,6 +83,9 @@ EVERLASTING_NOTE = (
 # citation label naming the revision it was read from.
 BLESSED_SOURCE = "{owner} — Blessed"
 
+# The state-source label Undaunted publishes beside its two reductions.
+UNDAUNTED_SOURCE = "{owner} — Undaunted"
+
 
 class OpeningDefenseResolverInterpreter:  # pylint: disable=too-few-public-methods
     """The defensive resolver's answer for the ``opening_defense`` family."""
@@ -104,6 +111,8 @@ class OpeningDefenseResolverInterpreter:  # pylint: disable=too-few-public-metho
             return _one_multiplier(slot, DefenseField.BASIC_DAMAGE_MULTIPLIER)
         if mechanic is DefenseMechanic.ROCK_SOLID:
             return _rock_solid(slot)
+        if mechanic is DefenseMechanic.UNDAUNTED:
+            return _undaunted(slot)
         if mechanic is DefenseMechanic.RESILIENCE:
             return _one_multiplier(slot, DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER)
         raise DefenseInterpretationError(
@@ -196,8 +205,35 @@ def _rock_solid(slot: DefenseSlot) -> DefenseOutcome:
     )
 
 
+def _undaunted(slot: DefenseSlot) -> DefenseOutcome:
+    """Two flat reductions over champion damage, and the state's source.
+
+    Its own field pair rather than Rock Solid's: this reduction applies to
+    every champion attack and ability, and its second number is a separate
+    sourced amount for damage over time rather than a cap on the first.
+    """
+    return DefenseOutcome(
+        fields=(
+            slot.grant(
+                DefenseField.CHAMPION_DAMAGE_FLAT_REDUCTION,
+                slot.value("champion_damage_flat_reduction"),
+            ),
+            slot.grant(
+                DefenseField.CHAMPION_DOT_DAMAGE_FLAT_REDUCTION,
+                slot.value("champion_dot_damage_flat_reduction"),
+            ),
+            slot.grant(
+                DefenseField.CHAMPION_DAMAGE_FLAT_SOURCE,
+                UNDAUNTED_SOURCE.format(owner=slot.owner),
+            ),
+        ),
+        notes=(NOTES[slot.mechanic],),
+    )
+
+
 __all__ = [
     "BLESSED_SOURCE",
+    "UNDAUNTED_SOURCE",
     "EVERLASTING_NOTE",
     "ICHORSHIELD_EMPTY_NOTE",
     "ICHORSHIELD_SUPPLIED_NOTE",

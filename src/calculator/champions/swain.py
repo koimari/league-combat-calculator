@@ -28,11 +28,13 @@ per Tick row carries a "% of his bonus health" ratio.
 from dataclasses import replace
 from typing import Any
 
+from .inputs import champion_stat
 from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import STEROID_ZERO, damage_entry
+from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
 
@@ -176,4 +178,60 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
-SELF_HEALING_RULE = declare_healing_rule("Swain")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Swain self-healing events from its authored packet.
+
+    Demonic Ascension drains nearby enemies, healing a flat amount per
+    0.5-second tick per target affected (cached R effect[1]: Heal per Tick
+    7.5/15/22.5 + 2.5% AP + 0.75% of his bonus health).  The Reduced Heal
+    per Tick entry is the 90%-reduced minion/monster variant, so a
+    champion duel pays the full amount.  The R packet prices one drain
+    tick per cast, so each R hit that dealt damage heals one tick's flat
+    value.  The "% of his bonus health" unit is not a generic scaling
+    unit, so it is resolved with an explicit override rather than silently
+    dropped.
+    """
+    healing = []
+    r_ability = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    heal_leveling = _healing.find_named_leveling(r_ability, "Heal per Tick")
+
+    def swain_bonus_health(unit: str, value: float) -> float | None:
+        if unit == "% of his bonus health":
+            return value / 100.0 * champion_stat(champion_stats, "bonus_health")
+        return None
+
+    heal_per_tick = (
+        _healing.sum_modifiers(
+            heal_leveling,
+            r_rank,
+            champion_stats,
+            {},
+            modifier_override=swain_bonus_health,
+        )
+        if heal_leveling is not None
+        else 0.0
+    )
+    for payment in _healing._payments(
+        _healing.HealAnchor.DAMAGING_HIT, "R", damage_events
+    ):
+        _healing._heal_from_damage(
+            healing,
+            payment.event,
+            heal_per_tick,
+            "Demonic Ascension",
+            link_to_damage=False,
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Swain", derive_self_healing)

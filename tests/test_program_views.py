@@ -1,8 +1,8 @@
 """The views: one projection per consumer shape, and none of them rounds.
 
 This file is the front door for every module under ``program/views/`` and it
-**binds each one as a symbol** — ``from src.calculator.program.views import
-survival`` — because a package import backs the package and nothing inside
+**binds each one as a symbol** — ``from src.calculator.program.views
+import survival`` — because a package import backs the package and nothing inside
 it.  As the remaining views land they are added to that import, which is
 what keeps the derived front-door registry honest about all five rather than
 about one mention of a directory.
@@ -23,6 +23,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import ability_spec
 from src.calculator.ability_spec import Measured, Starved, StructuralZero, Withheld
 from src.calculator.program import precision
@@ -99,6 +100,23 @@ def _state(**overrides: object) -> dict[str, object]:
         "spell_shield_used": False,
         "spell_shield_source": "",
         "spell_shield_until": 0.0,
+        "spell_shield_heal_triggered": False,
+        "permanent_bonus_health_received": 0.0,
+        "permanent_bonus_health_events": [],
+        "revive_stasis_windows": [],
+        "crowd_control_until": 0.0,
+        "crowd_control_immunity_until": 0.0,
+        "crowd_control_immunity_source": "",
+        "crowd_control_intervals": [],
+        "action_downtime_intervals": [],
+        "projectile_defense": None,
+        "projectile_defense_blocked": [],
+        "guardian_cooldown_until": 0.0,
+        "guardian_trigger_events": [],
+        "aftershock_until": 0.0,
+        "aftershock_bonus_armor": 0.0,
+        "aftershock_bonus_magic_resistance": 0.0,
+        "aftershock_trigger_events": [],
         "force_stacks": 0,
         "force_stacks_until": 0.0,
         "force_stack_events": [],
@@ -118,7 +136,7 @@ def _combatant(**defenses: object) -> SimpleNamespace:
     """One participant, carrying only what the projection reads off it."""
     return SimpleNamespace(
         participant_id="target",
-        defenses=SimpleNamespace(damage_deferral_fraction=0.0, **defenses),
+        defenses=StartingDefenses(damage_deferral_fraction=0.0, **defenses),
     )
 
 
@@ -230,8 +248,10 @@ def test_the_row_key_order_is_the_published_order() -> None:
         "damage_taken",
     ]
     assert keys[
-        keys.index("spell_shield_until") + 1 : keys.index("spell_shield_until") + 3
+        keys.index("spell_shield_until") + 1 : keys.index("spell_shield_until") + 5
     ] == [
+        "guardian",
+        "aftershock",
         "force_of_nature",
         "jaksho",
     ]
@@ -451,7 +471,7 @@ def _actor(participant_id: str = "main", team: str = "main", champion: str = "Sy
         team=team,
         level=13,
         champion_data={"name": champion},
-        defenses=SimpleNamespace(damage_deferral_fraction=0.0),
+        defenses=StartingDefenses(damage_deferral_fraction=0.0),
     )
 
 

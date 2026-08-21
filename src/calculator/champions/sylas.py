@@ -31,6 +31,7 @@ conversion has nothing to convert.
 from dataclasses import replace
 from typing import Any
 
+from .. import healing_helpers as _healing
 from .engine import ONHIT, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
@@ -143,7 +144,44 @@ MODULE_COVERAGE = {
     for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Sylas")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Sylas self-healing events from its authored packet."""
+    healing = []
+    w = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    min_heal = _healing.extract_named(w, "Minimum Heal", w_rank, champion_stats)
+    max_heal = _healing.extract_named(w, "Maximum Heal", w_rank, champion_stats)
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+    ):
+        event = payment.event
+        if float(event.get("damage", 0.0)) <= 0.0:
+            continue
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": _healing._missing_health_scaled_heal(
+                    min_heal, max_heal
+                ),
+                "source": "Kingslayer",
+                "kind": "champion_ability",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Sylas", derive_self_healing)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Abscond/Abduct) carries no shield in the current kit: the CP-era "

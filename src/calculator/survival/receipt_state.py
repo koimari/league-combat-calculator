@@ -17,6 +17,14 @@ from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
 from .outcome_state import OutcomeLedger
 from .transitions import participant_pools
 from ..data_registry import data_version
+from ..interaction_effects import (
+    defense_composition,
+    defense_eligibility,
+    resolve_physical_damage_reduction,
+    resolve_projectile_defense,
+    resolve_spell_shield,
+)
+from ..delivery_eligibility import initial_full_block_uses
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives from exactly seven values:
@@ -60,7 +68,65 @@ _STATE_KEY_STATS = (
 #: where the guard that checks the key covers every stat the prototype reads
 #: structurally cannot see it.  Now the prototype does not read health at
 #: all, so the key really is every input it has.
-_PER_CALL_FIELDS = ("pools", "starting_shield")
+#:
+#: The ten defence-contract fields joined for the same reason, and they are
+#: this merge's own finding: the resolvers behind them read the combatant's
+#: ``champion_data``, ``level``, ``request.champion_options`` and ``items``
+#: — four inputs the value key structurally cannot see — so resolving them
+#: inside the memoized construction would hand two combatants with one
+#: defence record and four matching resistances the same Braum window, the
+#: same Annul contract and the same Amumu reduction.  They are resolved per
+#: call instead, beside the pools.
+_PER_CALL_FIELDS = (
+    "pools",
+    "starting_shield",
+    "projectile_defense",
+    "projectile_defense_eligibility",
+    "projectile_defense_composition",
+    "projectile_defense_uses_remaining",
+    "physical_damage_reduction",
+    "spell_shield_eligibility",
+    "spell_shield_composition",
+    "spell_shield_uses_remaining",
+    "spell_shield_cooldown_seconds",
+    "spell_shield_cooldown_atom",
+)
+
+
+def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
+    """The ten :data:`_PER_CALL_FIELDS` a defence resolver decides.
+
+    One home for the resolution, so the prototype declares the slots and
+    this fills them.  ``None`` throughout is "this combatant holds no such
+    contract", which is what every reader of these fields already tests for.
+    """
+    projectile_defense = resolve_projectile_defense(combatant)
+    composition = defense_composition(projectile_defense)
+    spell_shield = resolve_spell_shield(combatant)
+    return {
+        "projectile_defense": projectile_defense,
+        "projectile_defense_eligibility": defense_eligibility(projectile_defense),
+        "projectile_defense_composition": composition,
+        "projectile_defense_uses_remaining": (
+            initial_full_block_uses(composition) if composition is not None else None
+        ),
+        "physical_damage_reduction": resolve_physical_damage_reduction(combatant),
+        "spell_shield_eligibility": (
+            spell_shield.eligibility if spell_shield is not None else None
+        ),
+        "spell_shield_composition": (
+            spell_shield.composition if spell_shield is not None else None
+        ),
+        "spell_shield_uses_remaining": (1 if spell_shield is not None else None),
+        "spell_shield_cooldown_seconds": (
+            spell_shield.cooldown_seconds if spell_shield is not None else None
+        ),
+        "spell_shield_cooldown_atom": (
+            dict(spell_shield.cooldown_atom)
+            if spell_shield is not None and spell_shield.cooldown_atom is not None
+            else None
+        ),
+    }
 
 
 def _state_proto_key(
@@ -121,14 +187,16 @@ def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, An
         proto, container_keys = memo
     # The prototype itself is never handed out: the walk mutates its state,
     # so every caller gets a clone with its own pools and containers.  The
-    # two :data:`_PER_CALL_FIELDS` are filled here and nowhere else — they
-    # are this combatant's health, which the shared prototype must not hold.
+    # :data:`_PER_CALL_FIELDS` are filled here and nowhere else — this
+    # combatant's health, and the defence contracts resolved from inputs the
+    # memo key cannot see, neither of which the shared prototype may hold.
     pools = participant_pools(combatant)
     state = dict(proto)
     state["pools"] = pools
     state["starting_shield"] = sum(
         (pools.magic_shield, pools.physical_shield, pools.general_shield)
     )
+    state.update(_resolved_defence_contracts(combatant))
     for key in container_keys:
         state[key] = proto[key].copy()
     return state
@@ -190,6 +258,8 @@ def _build_state_uncached(
         "temporary_health_until": 0.0,
         "temporary_health_expired_at": None,
         "temporary_health_source": "",
+        "permanent_bonus_health_received": 0.0,
+        "permanent_bonus_health_events": [],
         "healing_reduction_until": 0.0,
         "healing_reduction_factor": 1.0,
         "healing_reduction_sources": set(),
@@ -201,6 +271,41 @@ def _build_state_uncached(
         "venom_factor": 1.0,
         "venom_events": [],
         "death_time": None,
+        "action_downtime_intervals": (
+            [
+                {
+                    "kind": "stasis",
+                    "start": 0.0,
+                    "end": starting_stasis_duration,
+                    "source": str(
+                        getattr(defenses, "starting_stasis_source", "") or ""
+                    ),
+                }
+            ]
+            if starting_stasis_duration > 0.0
+            else []
+        ),
+        "crowd_control_until": 0.0,
+        "crowd_control_intervals": [],
+        "crowd_control_immunity_until": 0.0,
+        "crowd_control_immunity_source": "",
+        # P2 Slice 3: the typed crowd-control immunity ledger.  The exact
+        # Black Shield ``shield_ledger.TimedShield`` entry is the ONLY
+        # immunity holder; the legacy projection fields above stay for
+        # the pinned public rows and are re-derived from the ledger.
+        "crowd_control_immunity_grants": [],
+        "crowd_control_immunity_blocked": [],
+        "crowd_control_immunity_decisions": [],
+        "crowd_control_immunity_eligibility": None,
+        # P2 Slice 4: the typed item-cleanse ledger.  ``cleanse_uses`` is
+        # the per-item one-use-per-fight latch on the HOLDER row;
+        # ``cleanse_use`` is its public receipt; ``cleanse`` is the
+        # recipient's last processed activation receipt; ``cleanse_denied``
+        # lists spent-use denials.
+        "cleanse_uses": {},
+        "cleanse_use": None,
+        "cleanse": None,
+        "cleanse_denied": [],
         "execute_time": None,
         "execute_source": "",
         # Combat-state mechanics are event-driven.  These fields are
@@ -218,6 +323,32 @@ def _build_state_uncached(
         "spell_shield_source": str(defenses.spell_shield_source),
         "spell_shield_used": False,
         "spell_shield_blocked_cast": None,
+        "spell_shield_heal_amount": 0.0,
+        "spell_shield_heal_delay": 0.0,
+        "spell_shield_heal_source": "",
+        "spell_shield_heal_triggered": False,
+        "spell_shield_heal_time": None,
+        # The kernel spell-shield contract (P2 Slice 2).  Annul shields
+        # resolve from the starting defenses and the held item; Sivir's timed
+        # shield is armed later by the walk's SPELL_SHIELD action.  These
+        # five and the four projectile-defence slots below are
+        # :data:`_PER_CALL_FIELDS` — declared here, filled by
+        # :func:`_resolved_defence_contracts`.
+        "spell_shield_eligibility": None,
+        "spell_shield_composition": None,
+        "spell_shield_uses_remaining": None,
+        "spell_shield_blocked_packets": [],
+        "spell_shield_decisions": [],
+        "spell_shield_cooldown_seconds": None,
+        "spell_shield_cooldown_atom": None,
+        "projectile_defense": None,
+        "projectile_defense_eligibility": None,
+        "projectile_defense_composition": None,
+        "projectile_defense_uses_remaining": None,
+        "projectile_defense_full_block_events": set(),
+        "projectile_defense_blocked": [],
+        "projectile_defense_event_id_matches": set(),
+        "physical_damage_reduction": None,
         "ichorshield_cap": max(
             0.0,
             float(defenses.bloodthirster_shield_cap),
@@ -232,6 +363,19 @@ def _build_state_uncached(
         "reactive_shield_cooldown": max(0.0, float(defenses.reactive_shield_cooldown)),
         "reactive_shield_source": str(defenses.reactive_shield_source),
         "reactive_shield_cooldown_until": 0.0,
+        # Guardian is an owner-side threshold ledger.  The holder keeps the
+        # damage window and the paired shield activation so either protected
+        # participant can trigger the same sourced cooldown.
+        "guardian_cooldown_until": 0.0,
+        "guardian_damage_history": [],
+        "guardian_pending_shields": {},
+        "guardian_trigger_events": [],
+        # Aftershock snapshots its two resistance bonuses on an accepted
+        # immobilize and keeps them active for the sourced 2.5-second window.
+        "aftershock_bonus_armor": 0.0,
+        "aftershock_bonus_magic_resistance": 0.0,
+        "aftershock_until": 0.0,
+        "aftershock_trigger_events": [],
         "incoming_damage_multiplier": max(
             0.0, float(defenses.incoming_damage_multiplier)
         ),
@@ -258,6 +402,34 @@ def _build_state_uncached(
         "revive_health_restored": 0.0,
         "revived": False,
         "revive_used": False,
+        # P3-3P (Guardian Angel Rebirth, and the champion revives that share
+        # the interface): the armed revive is carried into the kernel so the
+        # death transition can author the explicit resurrection stasis, and
+        # so the sourced cooldown — not a one-shot boolean — is the re-arm
+        # gate.  Every value comes from the resolved defenses (which read the
+        # typed item/champion registries); a zero cooldown NEVER re-arms
+        # (fail-closed: an unsourced cooldown keeps the one-use rule).
+        "revive_armed_amount": max(
+            0.0, float(getattr(defenses, "revive_health_amount", 0.0) or 0.0)
+        ),
+        "revive_delay": max(0.0, float(getattr(defenses, "revive_delay", 0.0) or 0.0)),
+        "revive_cooldown": max(
+            0.0, float(getattr(defenses, "revive_cooldown", 0.0) or 0.0)
+        ),
+        "revive_armed_source": str(getattr(defenses, "revive_source", "") or ""),
+        # ``revive_ready_at`` is the re-arm timestamp: 0.0 while the revive
+        # has never fired, then ``revive_time + revive_cooldown`` (the wiki
+        # rule: the cooldown starts after the resurrection ends).
+        "revive_ready_at": 0.0,
+        # The explicit resurrection stasis window (start/end/source), armed
+        # at the lethal packet and closed by the revive.  The public row
+        # carries it as ``rebirth_stasis`` beside the stasis_* projection.
+        "revive_stasis_until": 0.0,
+        # The death timestamp whose lethal packet armed the window above.
+        # ``-inf`` means "no death has armed a resurrection": the applied
+        # revive refuses to fire for a death that never entered stasis.
+        "revive_stasis_death": float("-inf"),
+        "revive_stasis_windows": [],
         "terminal_phase": "alive",
         "damage_deferral_pending": 0.0,
         "damage_deferral_cleared": 0.0,
@@ -273,6 +445,7 @@ def _build_state_uncached(
         # ordered walk adds only source-backed resistance deltas.
         "force_stacks": 0,
         "force_stacks_until": 0.0,
+        "force_cast_last_times": {},
         "force_last_stack_time": None,
         "force_last_cast_key": None,
         "force_stack_events": [],

@@ -19,13 +19,43 @@ rows. All numeric values are read from the champion JSON data.
 
 from __future__ import annotations
 
+# pylint: disable=duplicate-code  # Yone deliberately mirrors Yasuo's Q/P
+# crit-conversion shape (the shared module_helpers rule); the parallel
+# blocks are the documented contract, not accidental duplication.
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .module_helpers import no_damage
+from .module_helpers import (
+    CRIT_CHANCE_MULTIPLIER,
+    CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+    crit_conversion_certification,
+    crit_conversion_payload,
+    no_damage,
+)
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_description_control_duration,
+    extract_named,
+    extract_value,
+)
+
+# P4: the crit-conversion rule is the shared module_helpers rule (the
+# 0.9 factor's atom hash is 1142fbe0a600fcc8 for Yone).
+(
+    _CRIT_CHANCE_MULTIPLIER,
+    _CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    _EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+) = (
+    CRIT_CHANCE_MULTIPLIER,
+    CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+)
+CERTIFIED_CONSTANTS, ATOM_IDS = crit_conversion_certification("1142fbe0a600fcc8")
+certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 
 # HARDCODED: verify on patch updates — the 5-second Spirit Form window
 # and the +0.5s earliest recast are prose in the cached E description
@@ -43,11 +73,19 @@ PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf
 
 
 def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: soul-mark state row (no enemy damage)."""
+    """P: soul-mark state row (no enemy damage) + the crit conversion.
+
+    The P4 fix: Yone's P carries the SAME crit_modifier payload as
+    Yasuo's (the cached P prose is verbatim Yasuo's; the 0.9
+    criticalStrikeDamageModifier stat is in the cache for both) so the
+    engine converts Yone's crit chance (x2), reduces the crit damage
+    (x0.9), and grants 0.5 AD per excess % — for autos AND the Q's
+    AD-ratio part.
+    """
     ability = ctx.ability()
     if ability is None:
         return None
-    return no_damage(
+    entry = no_damage(
         ctx,
         name=ability.get("name", "Way of the Hunter"),
         reason=(
@@ -55,6 +93,33 @@ def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
             "mitigation damage dealt during Spirit Form (E row); the "
             "mark itself deals no direct damage."
         ),
+    )
+    if entry is not None:
+        entry["crit_modifier"] = crit_conversion_payload()
+        entry["certified_constants"] = dict(CERTIFIED_CONSTANTS)
+        entry["atom_ids"] = dict(ATOM_IDS)
+    return entry
+
+
+# The Q3 knock-up has no cached leveling row: its only source is the
+# "Gathering Storm Bonus" branch of the Q description, which is also the
+# branch that states the empower exists at all.
+_Q3_BRANCH = "Gathering Storm Bonus"
+
+
+def _q3_knockup_duration(ability: dict[str, Any]) -> float:
+    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
+    for index, effect in enumerate(ability.get("effects") or []):
+        if _Q3_BRANCH not in str(effect.get("description") or ""):
+            continue
+        duration = extract_description_control_duration(ability, index)
+        if duration:
+            return float(duration)
+        break
+    raise ValueError(
+        f"Yone Q: the cached {_Q3_BRANCH!r} branch states no knock-up "
+        "duration, so the Q3 control fails closed rather than shipping an "
+        "invented interval"
     )
 
 
@@ -75,19 +140,37 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
         damage,
         "physical",
     )
+    # P4: the flat/AD-ratio split (Yasuo's shape) — only the AD-ratio
+    # portion crits ("Mortal Steel's damage based on its AD ratio can
+    # critically strike"; the binary TotalDamageCrit = base + AD x
+    # (crit stat x ratio)).
+    flat = extract_value(ability, "Physical Damage", rank, 0)
+    ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
+    ad_part = ctx.stat("attack_damage") * ad_ratio
+    # Both parts are the one thrust — the split is crit eligibility, not a
+    # second hit — so the ledger sees ONE landing: the flat part carries
+    # the cast instant (and with it the control marker), and the AD part
+    # rides that same event rather than booking a second one.
+    #
     # The knock-up is a property of the branch, not of the slot, so it is
     # authored here rather than in MODULE_CC: only the 2-stack cast is the
-    # whirlwind that "additionally knock[s] up enemies hit in their path".
+    # whirlwind that "additionally knock[s] up enemies hit in their path",
+    # and that sentence is where its duration is read from.
+    knockup = _q3_knockup_duration(ability) if stacks >= 2 else 0.0
     entry["parts"] = (
-        DamagePart("physical", damage, cc_kind="knockup" if stacks >= 2 else "none"),
+        DamagePart(
+            "physical",
+            flat,
+            time_offset=0.0,
+            cc_kind="knockup" if stacks >= 2 else "none",
+            cc_duration=knockup,
+        ),
+        DamagePart("physical", ad_part, crit_effectiveness=1.0),
     )
-    # One thrust on the first enemy hit; the cached packet has no separate
-    # travel or tick phase to place.
-    entry["event_order_certified"] = "single_hit"
     if stacks >= 2:
         entry["detail"] = (
             "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
-            "same sourced damage as a normal thrust, adding a 0.75s "
+            f"same sourced damage as a normal thrust, adding a {knockup:g}s "
             "knock-up (crowd-control state, not damage)."
         )
     else:

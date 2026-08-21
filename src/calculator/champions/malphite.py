@@ -41,6 +41,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    with_control,
 )
 
 PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
@@ -138,6 +139,11 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
 _thunderclap.phase = BUFF
 
 
+def _unstoppable_force(packet_r):
+    """R: the reviewed arrival, carrying its sourced knockup interval."""
+    return with_control(packet_r, kind="knockup", duration_attr="Knock Up Duration")
+
+
 # Reviewed crowd control, read from the cached kit.  Q (Seismic Shard)
 # "deals magic damage and slows them for 3 seconds upon impact".  E
 # (Ground Slam) deals "magic damage to nearby enemies and crippl[es] them
@@ -166,6 +172,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
     slot_wrappers={
         "Q": _seismic_shard,
+        # R's knockup interval is read off the cached "Knock Up Duration"
+        # row rather than restated here, so the ledger gets the sourced
+        # 1.5s as target action downtime.
+        "R": _unstoppable_force,
     },
     cc_kinds=MODULE_CC,
 )
@@ -184,4 +194,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Increased Bonus Armor row) for the whole fight, matching the E8c "
     "full-window Granite Shield assumption; the shield-break revert to "
     "the un-tripled value is part of that documented boundary",
+    "R's sourced 1.5-second knockup counts as target action downtime",
 ]

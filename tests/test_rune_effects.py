@@ -76,6 +76,46 @@ class TestResolveKeystone:
         with pytest.raises(ValueError, match="not modeled"):
             rune_effects.resolve_rune("Synthetic Keystone")
 
+    def test_fleet_footwork_resolves_charge_heal_and_speed(self):
+        effect = rune_effects.resolve_keystone("Fleet Footwork")
+        assert isinstance(effect, rune_effects.KeystoneFleetEffect)
+        assert effect.charge_cap == pytest.approx(100.0)
+        assert effect.move_speed_duration_seconds == pytest.approx(1.0)
+        assert effect.bonus_move_speed_percent(True) == pytest.approx(20.0)
+        assert effect.bonus_move_speed_percent(False) == pytest.approx(15.0)
+        stats = {"bonus_attack_damage": 100.0, "ability_power": 50.0}
+        assert effect.heal_amount(18, stats, False) == pytest.approx(103.5)
+        assert effect.heal_amount(
+            18, stats, False, against_minion=True
+        ) == pytest.approx(15.525)
+
+    def test_conqueror_resolves_force_stack_timing_and_healing(self):
+        effect = rune_effects.resolve_keystone("Conqueror")
+        assert isinstance(effect, rune_effects.KeystoneConquerorEffect)
+        assert effect.max_stacks == 12
+        assert effect.stacks_per_application == 2
+        assert effect.stack_duration_seconds == pytest.approx(5.0)
+        assert effect.cast_instance_interval_seconds == pytest.approx(4.0)
+        assert effect.adaptive_force_at(18, 12) == pytest.approx(48.0)
+        assert effect.max_adaptive_force_at(18) == pytest.approx(48.0)
+        assert effect.bonus_attack_damage_at(18, 12) == pytest.approx(28.8)
+        assert effect.ability_power_at(18, 12) == pytest.approx(48.0)
+        assert effect.heal_amount(100.0, True) == pytest.approx(8.0)
+        assert effect.heal_amount(100.0, False) == pytest.approx(5.0)
+
+    def test_deathfire_resolves_burn_states_and_tick_formula(self):
+        effect = rune_effects.resolve_keystone("Deathfire Touch")
+        assert isinstance(effect, rune_effects.KeystoneDeathfireEffect)
+        assert effect.duration_for("spell_damage") == pytest.approx(4.0)
+        assert effect.duration_for("area_damage") == pytest.approx(2.0)
+        assert effect.duration_for("persistent_damage") == pytest.approx(1.0)
+        assert effect.duration_for("persistent_area_damage") == pytest.approx(1.0)
+        assert effect.duration_for("pet_damage") == pytest.approx(1.0)
+        stats = {"bonus_attack_damage": 100.0, "ability_power": 100.0}
+        assert effect.raw_tick(18, stats) == pytest.approx(10.75)
+        assert effect.raw_tick(18, stats, amplified=True) == pytest.approx(18.8125)
+        assert effect.amp_ratio == pytest.approx(0.75)
+
     def test_electrocute_resolves(self):
         effect = rune_effects.resolve_rune("Electrocute")
         assert effect.rune_name == "Electrocute"
@@ -83,6 +123,128 @@ class TestResolveKeystone:
         assert effect.stack_window_seconds == 3.0
         assert effect.cooldown_seconds == 20.0
         assert effect.proc_delay_seconds == 0.25
+
+    def test_summon_aery_resolves_with_separate_flight_receipts(self):
+        effect = rune_effects.resolve_keystone("Summon Aery")
+        assert isinstance(effect, rune_effects.KeystoneAeryEffect)
+        assert effect.damage_flight_seconds == pytest.approx(0.45)
+        assert effect.shield_flight_seconds == pytest.approx(0.35)
+        assert effect.shield_duration_seconds == pytest.approx(2.0)
+        assert effect.linger_seconds == pytest.approx(2.0)
+
+    def test_guardian_resolves_threshold_cooldown_and_shield_formula(self):
+        effect = rune_effects.resolve_keystone("Guardian")
+        assert isinstance(effect, rune_effects.KeystoneGuardianEffect)
+        assert effect.threshold_at(1) == pytest.approx(50.0)
+        assert effect.threshold_at(18) == pytest.approx(165.0)
+        assert effect.cooldown_at(1) == pytest.approx(75.0)
+        assert effect.cooldown_at(18) == pytest.approx(40.0)
+        assert effect.trigger_window_seconds == pytest.approx(2.5)
+        assert effect.shield_duration_seconds == pytest.approx(2.0)
+        assert effect.shield_amount(
+            18, {"ability_power": 100.0, "bonus_health": 500.0}
+        ) == pytest.approx(150.0 + 20.0 + 30.0)
+
+    def test_aftershock_resolves_capped_resistance_and_shockwave(self):
+        effect = rune_effects.resolve_keystone("Aftershock")
+        assert isinstance(effect, rune_effects.KeystoneAftershockEffect)
+        assert effect.cooldown_seconds == pytest.approx(20.0)
+        assert effect.duration_seconds == pytest.approx(2.5)
+        assert effect.shockwave_radius == pytest.approx(350.0)
+        stats = {"bonus_armor": 100.0, "bonus_magic_resistance": 20.0}
+        assert effect.resistance_bonus(18, stats, "armor") == pytest.approx(120.0)
+        assert effect.resistance_bonus(18, stats, "magic_resistance") == pytest.approx(
+            60.0
+        )
+        assert effect.resistance_bonus(
+            18, {"bonus_armor": 300.0}, "armor"
+        ) == pytest.approx(150.0)
+        assert effect.shockwave_raw_damage(
+            18, {"bonus_health": 500.0}
+        ) == pytest.approx(160.0)
+
+    def test_glacial_resolves_zone_slow_and_source_filter_values(self):
+        effect = rune_effects.resolve_keystone("Glacial Augment")
+        assert isinstance(effect, rune_effects.KeystoneGlacialEffect)
+        assert effect.cooldown_seconds == pytest.approx(25.0)
+        assert effect.ray_count == 3
+        assert effect.zone_radius_units == pytest.approx(700.0)
+        assert effect.zone_width_units == pytest.approx(80.0)
+        assert effect.zone_duration(2.0) == pytest.approx(5.0)
+        assert effect.slow_ratio(
+            {
+                "bonus_attack_damage": 100.0,
+                "ability_power": 200.0,
+                "heal_and_shield_power_percent": 20.0,
+            }
+        ) == pytest.approx(0.20 + 0.07 + 0.12 + 0.18)
+        assert effect.damage_reduction_ratio == pytest.approx(0.15)
+
+    def test_stormraider_resolves_damage_window_and_movement_burst(self):
+        effect = rune_effects.resolve_keystone("Stormraider's Surge")
+        assert isinstance(effect, rune_effects.KeystoneStormraiderEffect)
+        assert effect.cooldown_at(1) == pytest.approx(20.0)
+        assert effect.cooldown_at(18) == pytest.approx(10.0)
+        assert effect.damage_threshold_ratio == pytest.approx(0.25)
+        assert effect.damage_window_seconds == pytest.approx(3.0)
+        assert effect.duration_seconds == pytest.approx(4.0)
+        assert effect.bonus_move_speed_percent(True) == pytest.approx(48.0)
+        assert effect.bonus_move_speed_percent(False) == pytest.approx(36.0)
+        assert effect.slow_resist_ratio == pytest.approx(0.50)
+
+    def test_grasp_resolves_timed_stack_and_health_riders(self):
+        effect = rune_effects.resolve_keystone("Grasp of the Undying")
+        assert isinstance(effect, rune_effects.KeystoneGraspEffect)
+        assert effect.stack_cadence_seconds == pytest.approx(1.0)
+        assert effect.stack_generation_seconds == pytest.approx(3.0)
+        assert effect.max_stacks == 4
+        assert effect.ready_window_seconds == pytest.approx(5.0)
+        stats = {"health": 2000.0}
+        assert effect.raw_damage(stats, True) == pytest.approx(70.0)
+        assert effect.raw_damage(stats, False) == pytest.approx(28.0)
+        assert effect.heal_amount(stats, True) == pytest.approx(26.0)
+        assert effect.bonus_health(False) == pytest.approx(2.0)
+
+    def test_hail_of_blades_resolves_timed_attack_window_and_true_rider(self):
+        effect = rune_effects.resolve_keystone("Hail of Blades")
+        assert isinstance(effect, rune_effects.KeystoneHailOfBladesEffect)
+        assert effect.initial_stacks == 2
+        assert effect.stack_duration_seconds == pytest.approx(3.0)
+        assert effect.reset_stack_limit == 2
+        assert effect.cooldown_seconds == pytest.approx(10.0)
+        assert effect.bonus_attack_speed_percent(True) == pytest.approx(90.0)
+        assert effect.bonus_attack_speed_percent(False) == pytest.approx(60.0)
+        assert effect.raw_damage(
+            _inputs(level=18, bonus_ad=100.0, ap=50.0)
+        ) == pytest.approx(20.0 + 12.0 + 5.0)
+
+    def test_lethal_tempo_resolves_stack_speed_bolt_and_expiry_values(self):
+        effect = rune_effects.resolve_keystone("Lethal Tempo")
+        assert isinstance(effect, rune_effects.KeystoneLethalTempoEffect)
+        assert effect.max_stacks == 6
+        assert effect.stack_duration_seconds == pytest.approx(6.0)
+        assert effect.expiry_step_seconds == pytest.approx(0.5)
+        assert effect.attack_speed_percent(True, 6) == pytest.approx(36.0)
+        assert effect.attack_speed_percent(False, 6) == pytest.approx(28.8)
+        inputs = _inputs(level=18)
+        inputs = DamageInputs(
+            champion_stats={"bonus_attack_damage": 100.0, "bonus_attack_speed": 20.0},
+            level=18,
+            is_melee=True,
+            target_max_health=1000.0,
+            target_current_health=1000.0,
+        )
+        assert effect.bolt_raw_damage(inputs, True, 6) == pytest.approx(30.0 * 1.56)
+
+    def test_dark_harvest_resolves_threshold_and_soul_formula(self):
+        effect = rune_effects.resolve_keystone("Dark Harvest")
+        assert isinstance(effect, rune_effects.KeystoneDarkHarvestEffect)
+        assert effect.health_threshold_ratio == pytest.approx(0.50)
+        assert effect.cooldown_seconds == pytest.approx(35.0)
+        assert effect.proc_delay_seconds == pytest.approx(1.75)
+        assert effect.takedown_reset_seconds == pytest.approx(1.0)
+        assert effect.raw_damage(_inputs()) == pytest.approx(30.0)
+        assert effect.raw_damage(_inputs(), souls=2) == pytest.approx(52.0)
 
 
 class TestElectrocuteFormula:
@@ -427,240 +589,116 @@ class TestArcaneComet:
             rune_effects.resolve_rune("Arcane Comet")
 
 
-class TestSummonAery:
-    def test_aery_resolves_to_an_instance_stream_proc(self):
-        effect = rune_effects.resolve_rune("Summon Aery")
-        assert isinstance(effect, rune_effects.RuneProcEffect)
-        assert effect.trigger is rune_effects.RuneTrigger.DAMAGE_INSTANCES
-        assert effect.stacks_required == 1
-        assert effect.stack_window_seconds is None
-
-    def test_damage_is_the_cached_leveling_and_ratios(self):
-        effect = rune_effects.resolve_rune("Summon Aery")
-        cached = _cached("Summon Aery")
-        assert effect.raw_damage(_inputs(level=18)) == pytest.approx(
-            cached["leveling"][0][17]
-        )
-        assert effect.raw_damage(
-            _inputs(level=18, bonus_ad=100.0, ap=200.0)
-        ) == pytest.approx(
-            cached["leveling"][0][17]
-            + cached["bonus_ad_ratio"] * 100.0
-            + cached["ap_ratio"] * 200.0
-        )
-
-    def test_the_round_trip_is_the_cached_pounce_plus_the_declared_return(self):
-        effect = rune_effects.resolve_rune("Summon Aery")
-        pounce = _cached("Summon Aery")["proc_delay_seconds"]
-        assert effect.proc_delay_seconds == pytest.approx(pounce)
-        assert effect.cooldown_seconds == pytest.approx(
-            pounce + rune_effects.SUMMON_AERY_ASSUMED_RETURN_SECONDS
-        )
-
-    def test_the_assumed_round_trip_and_the_withheld_shield_are_disclosed(self):
-        effect = rune_effects.resolve_rune("Summon Aery")
-        assert any("assumed" in note for note in effect.disclosures)
-        assert any(
-            "shield is withheld" in note for note in effect.disclosures
-        ), effect.disclosures
-
-    def test_swapped_leveling_tables_raise_with_context(self, monkeypatch):
-        # Damage is leveling[0] by sentence order; a reworded page leading
-        # with the ally shield would double every pounce.
-        broken = {
-            name: (
-                {
-                    **entry,
-                    "effects": {
-                        **entry["effects"],
-                        "leveling": list(reversed(entry["effects"]["leveling"])),
-                    },
-                }
-                if name == "Summon Aery"
-                else entry
-            )
-            for name, entry in rune_effects.RUNE_EFFECTS.items()
-        }
-        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Summon Aery.*leveling"):
-            rune_effects.resolve_rune("Summon Aery")
-
-
-class TestHailOfBlades:
-    def test_hail_of_blades_is_a_basic_attack_proc_on_its_cached_cooldown(self):
-        effect = rune_effects.resolve_rune("Hail of Blades")
-        assert effect.trigger is rune_effects.RuneTrigger.BASIC_ATTACKS
-        assert effect.cooldown_seconds == pytest.approx(
-            rune_effects.RUNE_EFFECTS["Hail of Blades"]["cooldown"]
-        )
-        assert effect.stacks_required == 1
-
-    def test_damage_is_true_and_reads_the_cached_leveling_and_ratios(self):
-        effect = rune_effects.resolve_rune("Hail of Blades")
-        cached = _cached("Hail of Blades")
-        assert effect.damage_type({"bonus_attack_damage": 500.0}) == "true"
-        assert effect.raw_damage(
-            _inputs(level=18, bonus_ad=100.0, ap=100.0)
-        ) == pytest.approx(
-            cached["leveling"][0][17]
-            + cached["bonus_ad_ratio"] * 100.0
-            + cached["ap_ratio"] * 100.0
-        )
-
-    def test_the_attack_speed_half_is_withheld_in_the_cached_words(self):
-        effect = rune_effects.resolve_rune("Hail of Blades")
-        melee, ranged = _cached("Hail of Blades")["attack_speed_ratios"]
-        withheld = next(note for note in effect.disclosures if "withheld" in note)
-        assert f"{melee * 100:g}%" in withheld and f"{ranged * 100:g}%" in withheld
-
-    def test_a_scalar_cooldown_still_reads(self):
-        # Top-level, not in ``effects``: prove the accessor reads the entry.
-        assert rune_effects.rune_effect_value("Hail of Blades", "cooldown") == 10.0
-
-    def test_its_priced_numbers_are_pinned_to_the_patch_they_came_from(self):
-        """A tripwire for the re-pull, not a second source.
-
-        Every other test here reads the cache, so a wiki rebalance moves the
-        answer with nothing saying so — 16.16 moved all four of these at
-        once (base 4 -> 2, bonus AD 8% -> 12%, AP 6% -> 10%, attack speed
-        120% -> 90%) and no test noticed. Re-pin these on patch day, with
-        the change explained, exactly as the golden baseline is re-captured.
-        """
-        cached = _cached("Hail of Blades")
-        assert cached["leveling"][0][0] == pytest.approx(2.0)
-        assert cached["leveling"][0][17] == pytest.approx(20.0)
-        assert cached["bonus_ad_ratio"] == pytest.approx(0.12)
-        assert cached["ap_ratio"] == pytest.approx(0.10)
-        assert cached["attack_speed_ratios"] == [0.9, 0.6]
-
-
-class TestGraspOfTheUndying:
-    def test_damage_is_the_cached_share_of_the_holders_maximum_health(self):
-        effect = rune_effects.resolve_rune("Grasp of the Undying")
-        melee_ratio, ranged_ratio = _cached("Grasp of the Undying")[
-            "max_health_damage_ratios"
-        ]
-        assert effect.raw_damage(
-            _inputs(is_melee=True, health=2000.0)
-        ) == pytest.approx(melee_ratio * 2000.0)
-        assert effect.raw_damage(
-            _inputs(is_melee=False, health=2000.0)
-        ) == pytest.approx(ranged_ratio * 2000.0)
-        assert effect.damage_type({"bonus_attack_damage": 500.0}) == "magic"
-
-    def test_exactly_one_proc_is_priced_and_the_reason_is_published(self):
-        effect = rune_effects.resolve_rune("Grasp of the Undying")
-        assert effect.cooldown_seconds == float("inf")
-        assert any("floor of one" in note for note in effect.disclosures)
-
-    def test_the_heal_and_permanent_health_are_withheld(self):
-        effect = rune_effects.resolve_rune("Grasp of the Undying")
-        assert any("heal" in note and "withheld" in note for note in effect.disclosures)
-
-
-class TestLethalTempo:
-    def test_the_bolt_starts_one_swing_past_the_cached_maximum_stacks(self):
-        effect = rune_effects.resolve_rune("Lethal Tempo")
-        assert effect.stacks_required == _cached("Lethal Tempo")["max_stacks"] + 1
-        assert effect.consumes_stacks is False
-        assert effect.trigger is rune_effects.RuneTrigger.BASIC_ATTACKS
-
-    def test_damage_reads_the_cached_melee_and_ranged_tables(self):
-        effect = rune_effects.resolve_rune("Lethal Tempo")
-        melee, ranged = _cached("Lethal Tempo")["melee_ranged_leveling"]
-        assert effect.raw_damage(_inputs(level=18, is_melee=True)) == pytest.approx(
-            melee[17]
-        )
-        assert effect.raw_damage(_inputs(level=18, is_melee=False)) == pytest.approx(
-            ranged[17]
-        )
-
-    def test_the_bolt_grows_with_the_builds_bonus_attack_speed(self):
-        effect = rune_effects.resolve_rune("Lethal Tempo")
-        cached = _cached("Lethal Tempo")
-        melee_per_as = cached["damage_per_bonus_attack_speed_ratios"][0]
-        melee_base = cached["melee_ranged_leveling"][0][17]
-        assert effect.raw_damage(
-            _inputs(level=18, is_melee=True, bonus_attack_speed=50.0)
-        ) == pytest.approx(melee_base * (1.0 + melee_per_as * 50.0))
-
-    def test_the_attack_speed_half_is_withheld(self):
-        effect = rune_effects.resolve_rune("Lethal Tempo")
-        assert any(
-            "attack speed" in note and "withheld" in note for note in effect.disclosures
-        )
-
-
-class TestDeathfireTouch:
-    def test_one_tick_per_damaging_cast_at_the_cached_cadence(self):
-        effect = rune_effects.resolve_rune("Deathfire Touch")
-        cached = _cached("Deathfire Touch")
-        assert effect.trigger is rune_effects.RuneTrigger.DAMAGING_CASTS
-        assert effect.cooldown_seconds == 0.0
-        assert effect.proc_delay_seconds == pytest.approx(
-            cached["tick_interval_seconds"]
-        )
-
-    def test_the_tick_reads_the_base_table_and_the_cached_ratios(self):
-        effect = rune_effects.resolve_rune("Deathfire Touch")
-        cached = _cached("Deathfire Touch")
-        assert effect.damage_type({"bonus_attack_damage": 500.0}) == "magic"
-        assert effect.raw_damage(
-            _inputs(level=18, bonus_ad=100.0, ap=100.0)
-        ) == pytest.approx(
-            cached["leveling"][0][17]
-            + cached["bonus_ad_ratio"] * 100.0
-            + cached["ap_ratio"] * 100.0
-        )
-
-    def test_the_withheld_duration_and_escalation_are_disclosed(self):
-        effect = rune_effects.resolve_rune("Deathfire Touch")
-        assert any("floor of one per cast" in note for note in effect.disclosures)
-
-    def test_swapped_leveling_tables_raise_with_context(self, monkeypatch):
-        # leveling[1] is leveling[0] escalated; leading with it would
-        # overstate every tick by the escalation.
-        broken = {
-            name: (
-                {
-                    **entry,
-                    "effects": {
-                        **entry["effects"],
-                        "leveling": list(reversed(entry["effects"]["leveling"])),
-                    },
-                }
-                if name == "Deathfire Touch"
-                else entry
-            )
-            for name, entry in rune_effects.RUNE_EFFECTS.items()
-        }
-        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Deathfire Touch.*leveling"):
-            rune_effects.resolve_rune("Deathfire Touch")
-
-
 # Every key each new compiler reads out of the rune's ``effects`` block.
 # Deleting one must raise, naming the rune and the key: rule 5's "no literal
 # fallbacks" is only a claim until every read is proven to have no fallback.
 _COMPILED_KEYS = {
-    "Summon Aery": ("leveling", "bonus_ad_ratio", "ap_ratio", "proc_delay_seconds"),
-    "Hail of Blades": ("leveling", "bonus_ad_ratio", "ap_ratio", "attack_speed_ratios"),
+    "Summon Aery": (
+        "leveling",
+        "bonus_ad_ratio",
+        "ap_ratio",
+        "damage_flight_seconds",
+        "shield_flight_seconds",
+        "shield_duration_seconds",
+        "linger_seconds",
+    ),
+    "Guardian": (
+        "leveling",
+        "ap_ratio",
+        "bonus_health_ratio",
+        "trigger_window_seconds",
+        "shield_duration_seconds",
+    ),
+    "Aftershock": (
+        "leveling",
+        "bonus_health_ratio",
+        "bonus_armor_ratio",
+        "bonus_magic_resistance_ratio",
+        "flat_armor",
+        "flat_magic_resistance",
+        "resistance_duration_seconds",
+        "shockwave_radius",
+    ),
     "Grasp of the Undying": (
-        "max_health_damage_ratios",
-        "max_health_heal_ratios",
-        "permanent_bonus_health",
+        "grasp_damage_melee_ranged_ratios",
+        "grasp_heal_melee_ranged_ratios",
+        "grasp_bonus_health_melee_ranged",
+        "combat_stack_generation_seconds",
+        "ready_window_seconds",
+        "max_stacks",
+    ),
+    "Hail of Blades": (
+        "leveling",
+        "bonus_ad_ratio",
+        "ap_ratio",
+        "hail_bonus_attack_speed_melee_ranged",
+        "hail_initial_stacks",
+        "hail_stack_duration_seconds",
+        "hail_reset_stack_limit",
     ),
     "Lethal Tempo": (
-        "melee_ranged_leveling",
-        "damage_per_bonus_attack_speed_ratios",
-        "attack_speed_ratios",
+        "lethal_tempo_attack_speed_percent_melee_ranged",
+        "lethal_tempo_bolt_damage_melee_by_level",
+        "lethal_tempo_bolt_damage_ranged_by_level",
+        "lethal_tempo_stack_duration_seconds",
+        "lethal_tempo_expiry_step_seconds",
+        "max_stacks",
+    ),
+    "Fleet Footwork": (
+        "fleet_heal_melee_by_level",
+        "fleet_heal_ranged_by_level",
+        "fleet_bonus_ad_ratio_melee_ranged",
+        "fleet_ap_ratio_melee_ranged",
+        "fleet_bonus_move_speed_melee_ranged",
+        "fleet_move_speed_duration_seconds",
+        "fleet_minion_heal_effectiveness",
+        "fleet_charge_cap",
+    ),
+    "Conqueror": (
+        "conqueror_adaptive_force_by_level",
+        "conqueror_adaptive_force_max_by_level",
+        "conqueror_heal_melee_ranged_ratios",
+        "conqueror_stack_duration_seconds",
+        "conqueror_cast_instance_interval_seconds",
+        "conqueror_stacks_per_application",
         "max_stacks",
     ),
     "Deathfire Touch": (
         "leveling",
+        "deathfire_bonus_ad_ratios_by_state",
+        "deathfire_ap_ratios_by_state",
+        "deathfire_tick_interval_seconds",
+        "deathfire_amp_delay_seconds",
+        "deathfire_amp_ratio",
+        "deathfire_duration_seconds",
+    ),
+    "Dark Harvest": (
+        "health_threshold_ratio",
+        "base_damage",
+        "soul_damage",
         "bonus_ad_ratio",
         "ap_ratio",
-        "tick_interval_seconds",
+        "proc_delay_seconds",
+        "takedown_reset_seconds",
+    ),
+    "Stormraider's Surge": (
+        "stormraider_damage_threshold_ratio",
+        "stormraider_damage_window_seconds",
+        "stormraider_duration_seconds",
+        "stormraider_bonus_move_speed_melee_ranged",
+        "stormraider_slow_resist_ratio",
+    ),
+    "Glacial Augment": (
+        "glacial_ray_count",
+        "glacial_zone_radius_units",
+        "glacial_zone_width_units",
+        "glacial_zone_base_duration_seconds",
+        "glacial_zone_duration_cc_ratio",
+        "glacial_slow_base_ratio",
+        "glacial_slow_bonus_ad_ratio_per_100",
+        "glacial_slow_ap_ratio_per_100",
+        "glacial_slow_heal_shield_ratio_per_10",
+        "glacial_damage_reduction_ratio",
     ),
 }
 
@@ -673,70 +711,57 @@ def test_every_compiled_number_fails_loud_when_the_cache_loses_it(
     monkeypatch, name, key
 ):
     monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", _without(name, key))
-    with pytest.raises(KeyError, match=f"{name}.*{key}"):
+    with pytest.raises(KeyError) as raised:
         rune_effects.resolve_rune(name)
+    # ``str`` of a KeyError is its argument's repr, which backslash-escapes
+    # the apostrophe in "Stormraider's Surge".
+    message = str(raised.value).replace("\\'", "'")
+    assert name in message
+    assert key in message
 
 
-def test_hail_of_blades_fails_loud_without_its_top_level_cooldown(monkeypatch):
+def test_dark_harvest_fails_loud_without_its_top_level_cooldown(monkeypatch):
     broken = {
         name: (
             {k: v for k, v in entry.items() if k != "cooldown"}
-            if name == "Hail of Blades"
+            if name == "Dark Harvest"
             else entry
         )
         for name, entry in rune_effects.RUNE_EFFECTS.items()
     }
     monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-    with pytest.raises(KeyError, match="Hail of Blades.*cooldown"):
-        rune_effects.resolve_rune("Hail of Blades")
+    with pytest.raises(KeyError, match="Dark Harvest.*cooldown"):
+        rune_effects.resolve_rune("Dark Harvest")
 
 
 class TestKeystonesThatBookNoDamage:
-    """The eight keystones that price nothing, and the two reasons why.
+    """Unsealed Spellbook prices nothing, and says so rather than refusing.
 
-    ``STRUCTURAL_ZERO`` is "zero is the answer"; ``WITHHELD`` is "the number
-    exists and this engine has no channel for it". Both are compiled and
-    selectable — a keystone that refuses is the failure being removed — and
-    both publish their receipt.
+    Its effect is a summoner-spell selection state — the holder picks the
+    equipped and swapped spells, each spell has its own effect — and the
+    cached template carries no numeric value for the rune itself. It is
+    still compiled and selectable; a keystone that refuses is the failure
+    this shape removes.
     """
 
-    @pytest.mark.parametrize(
-        "name",
-        ["Unsealed Spellbook", "Glacial Augment", "Stormraider's Surge"],
-    )
-    def test_the_three_zero_damage_keystones_declare_a_structural_zero(self, name):
+    def test_unsealed_spellbook_declares_a_structural_zero(self):
+        name = "Unsealed Spellbook"
         effect = rune_effects.resolve_rune(name)
         assert isinstance(effect, rune_effects.RuneNoDamageEffect)
         assert effect.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
         assert effect.receipts[0].startswith(f"{name} deals no damage in any fight:")
 
-    @pytest.mark.parametrize(
-        "name",
-        [
-            "Conqueror",
-            "Fleet Footwork",
-            "Aftershock",
-            "Guardian",
-            "Dark Harvest",
-        ],
-    )
-    def test_the_five_channel_less_keystones_declare_a_withhold(self, name):
-        effect = rune_effects.resolve_rune(name)
-        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
-        assert effect.zero_policy.disposition is Disposition.WITHHELD
-        assert effect.receipts[0].startswith(f"{name} is not priced:")
-
-    def test_stormraiders_zero_discloses_its_one_swiftmarch_caveat(self):
-        effect = rune_effects.resolve_rune("Stormraider's Surge")
-        assert any("Swiftmarch" in note for note in effect.receipts)
-
-    def test_dark_harvests_missing_health_gate_is_the_stated_reason(self):
-        # The cache carries every term of its damage and no threshold, so
-        # the engine cannot say when the reap lands.
-        assert "health_threshold" not in _cached("Dark Harvest")
-        effect = rune_effects.resolve_rune("Dark Harvest")
-        assert "maximum health" in effect.zero_policy.reason
-        assert any("soul" in note for note in effect.receipts)
+    def test_it_is_the_only_keystone_that_books_none(self):
+        booked_none = {
+            name
+            for name, entry in rune_effects.RUNE_EFFECTS.items()
+            if isinstance(entry, dict)
+            and entry.get("row") == 0
+            and isinstance(
+                rune_effects.resolve_rune(name), rune_effects.RuneNoDamageEffect
+            )
+        }
+        assert booked_none == {"Unsealed Spellbook"}
 
     def test_a_receipt_without_a_reason_is_rejected(self):
         with pytest.raises(ValueError, match="reason"):
@@ -754,6 +779,16 @@ class TestRuneCatalog:
         assert by_name["Electrocute"]["path"] == "Domination"
         assert by_name["Electrocute"]["row"] == 0
         assert by_name["Coup de Grace"]["row"] == 3
+        assert by_name["First Strike"]["implemented"] is True
+        assert by_name["Press the Attack"]["implemented"] is True
+        assert by_name["Arcane Comet"]["implemented"] is True
+        assert by_name["Summon Aery"]["implemented"] is True
+        assert by_name["Guardian"]["implemented"] is True
+        assert by_name["Aftershock"]["implemented"] is True
+        assert by_name["Grasp of the Undying"]["implemented"] is True
+        assert by_name["Dark Harvest"]["implemented"] is True
+        assert by_name["Fleet Footwork"]["implemented"] is True
+        assert by_name["Conqueror"]["implemented"] is True
         assert all(entry["path"] for entry in catalog)
         assert all(entry["icon"] for entry in catalog)
         assert {entry["row"] for entry in catalog} == {0, 1, 2, 3}
@@ -802,6 +837,11 @@ class TestValidateKeystoneRequest:
     def test_valid_name_passes_through(self):
         page = rune_effects.validate_rune_page("Electrocute")
         assert page.keystone == "Electrocute"
+        assert rune_effects.validate_keystone_request("Electrocute") == "Electrocute"
+        assert (
+            rune_effects.validate_keystone_request("Deathfire Touch")
+            == "Deathfire Touch"
+        )
 
     def test_non_string_rejected(self):
         with pytest.raises(ValueError, match="keystone"):
@@ -823,6 +863,31 @@ class TestValidateKeystoneRequest:
         )
         with pytest.raises(ValueError, match="not modeled"):
             rune_effects.validate_rune_page("Synthetic Keystone")
+            rune_effects.validate_keystone_request("Unsealed Spellbook")
+
+    def test_fleet_options_require_bounded_integer_charges(self):
+        assert rune_effects.validate_keystone_options(
+            {"starting_charges": 100}, "Fleet Footwork"
+        ) == {"starting_charges": 100}
+        with pytest.raises(ValueError, match="integer"):
+            rune_effects.validate_keystone_options(
+                {"starting_charges": 10.5}, "Fleet Footwork"
+            )
+        with pytest.raises(ValueError, match="between"):
+            rune_effects.validate_keystone_options(
+                {"starting_charges": 101}, "Fleet Footwork"
+            )
+
+    def test_conqueror_options_require_bounded_integer_stacks(self):
+        assert rune_effects.validate_keystone_options(
+            {"starting_stacks": 12}, "Conqueror"
+        ) == {"starting_stacks": 12}
+        with pytest.raises(ValueError, match="integer"):
+            rune_effects.validate_keystone_options(
+                {"starting_stacks": 2.5}, "Conqueror"
+            )
+        with pytest.raises(ValueError, match="between"):
+            rune_effects.validate_keystone_options({"starting_stacks": 13}, "Conqueror")
 
 
 class TestRefreshRuneEffects:

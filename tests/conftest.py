@@ -49,6 +49,45 @@ from tests.coverage_resolver import (
     record_session,
 )
 
+
+@pytest.fixture
+def authorized_fimbulwinter_mana_gate(monkeypatch):
+    """Supply a complete hypothetical gate for tests of sibling mechanics.
+
+    Production remains source-unavailable. Tests that isolate the sourced
+    shield formula, trigger rule, cadence, or cooldown must opt into this
+    explicit declaration.
+    """
+    from src.calculator import item_effects, item_support_effects
+
+    declaration = {
+        "status": "script_authorized",
+        "threshold_ratio": 0.20,
+        "comparison": "current_mana > maximum_mana * ratio",
+        "current_mana_term": "post_cast_current_mana",
+        "maximum_mana_term": "holder_maximum_mana",
+        "manaless_behavior": "deny",
+        "source_url": "test://fimbulwinter-mana-gate",
+        "source_revision_id": "test-only",
+    }
+
+    monkeypatch.setitem(
+        item_effects.ITEM_EFFECTS["Fimbulwinter"],
+        "everlasting_mana_threshold_ratio",
+        0.20,
+    )
+    monkeypatch.setattr(
+        item_effects,
+        "fimbulwinter_mana_gate_authority",
+        lambda: dict(declaration),
+    )
+    monkeypatch.setattr(
+        item_support_effects,
+        "fimbulwinter_mana_gate_authority",
+        lambda: dict(declaration),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Champion data fixtures
 # ---------------------------------------------------------------------------
@@ -104,12 +143,15 @@ jayce_data = _champion_fixture("Jayce")
 # Data key differs from the display/dispatcher name "Kai'Sa".
 kaisa_data = _champion_fixture("Kaisa")
 karthus_data = _champion_fixture("Karthus")
+kindred_data = _champion_fixture("Kindred")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
 lissandra_data = _champion_fixture("Lissandra")
+lulu_data = _champion_fixture("Lulu")
 orianna_data = _champion_fixture("Orianna")
 rakan_data = _champion_fixture("Rakan")
 shen_data = _champion_fixture("Shen")
+singed_data = _champion_fixture("Singed")
 soraka_data = _champion_fixture("Soraka")
 syndra_data = _champion_fixture("Syndra")
 taliyah_data = _champion_fixture("Taliyah")

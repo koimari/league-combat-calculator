@@ -394,6 +394,17 @@ def main() -> None:
             "No champions in the cached source — refusing to write an empty "
             "BIS profiles asset"
         )
+    if args.output.exists() and "auxiliary_source" not in profiles:
+        published = json.loads(args.output.read_text(encoding="utf-8"))
+        if "auxiliary_source" in published:
+            raise SystemExit(
+                f"The published asset carries "
+                f"{published['auxiliary_source']['merged_damage_packets']} "
+                f"auxiliary damage packets and this run found none: "
+                f"{args.auxiliary_source} is missing.  Writing would delete "
+                f"them silently.  Clone the sibling repo, or pass "
+                f"--auxiliary-source explicitly."
+            )
     args.output.write_text(
         json.dumps(profiles, ensure_ascii=False, separators=(",", ":")) + "\n",
         encoding="utf-8",

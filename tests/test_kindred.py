@@ -108,8 +108,8 @@ class TestCoverageMap:
     ``no_damage`` reading the map had before it.  Mark of the Kindred is
     range and scaling state.  Lamb's Respite is a minimum-health floor plus
     a heal the ally scanner pays (375 to each teammate in the zone and to
-    Kindred), so its zero damage row is ``modeled`` — a state row the engine
-    consumes — while ``coverage_truth`` still reads it as a zero.
+    Kindred) — not enemy damage — so it emits an explicit ``no_damage``
+    row, which is the same zero ``coverage_truth`` reads.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
@@ -118,7 +118,7 @@ class TestCoverageMap:
             "Q": "modeled",
             "W": "modeled",
             "E": "modeled",
-            "R": "modeled",
+            "R": "no_damage",
         }
         assert coverage_truth.emitted("Kindred") == {
             "P": coverage_truth.ZERO,

@@ -39,28 +39,39 @@ C = lp.AdequacyCondition
 # a row may raise more (a real item rarely does exactly one thing), which is
 # why the coverage assertion is over the union rather than per row.
 MATRIX: tuple[
-    tuple[str, str, tuple[str, ...], float, tuple[lp.AdequacyCondition, ...]], ...
+    tuple[str, str, tuple[str, ...], str, float, tuple[lp.AdequacyCondition, ...]], ...
 ] = (
-    ("plain", "Annie", ("Luden's Echo",), 0.0, ()),
-    ("threshold_heal", "Annie", ("Luden's Echo",), 250.0, (C.TARGET_THRESHOLD_HEAL,)),
-    ("healing_rule", "Aatrox", (), 0.0, (C.CHAMPION_SELF_HEAL_RULE,)),
-    ("item_heal", "Annie", ("Sundered Sky",), 0.0, (C.ITEM_SELF_HEAL_PACKETS,)),
-    ("item_regen", "Annie", ("Crystalline Bracer",), 0.0, (C.ITEM_HEALTH_REGEN,)),
-    ("lifesteal", "Annie", ("Bloodthirster",), 0.0, (C.LIFESTEAL_STAT,)),
-    ("omnivamp", "Annie", ("Hextech Gunblade",), 0.0, (C.OMNIVAMP_STAT,)),
-    ("saturating", "Malphite", ("Riftmaker",), 0.0, (C.SATURATING_OMNIVAMP,)),
-    ("empowered_auto", "Jax", (), 0.0, (C.EMPOWERED_BASIC_ATTACK,)),
-    ("raw_stream", "Annie", ("Imperial Mandate",), 0.0, (C.RAW_ROW_STREAM_HOLDER,)),
-    ("execute", "Annie", ("The Collector",), 0.0, (C.EXECUTE_THRESHOLD_STAMP,)),
-    ("pair_outcome", "Annie", ("Cryptbloom",), 0.0, (C.PAIR_OUTCOME_STREAM,)),
+    ("plain", "Annie", ("Luden's Echo",), "", 0.0, ()),
+    (
+        "threshold_heal",
+        "Annie",
+        ("Luden's Echo",),
+        "",
+        250.0,
+        (C.TARGET_THRESHOLD_HEAL,),
+    ),
+    ("healing_rule", "Aatrox", (), "", 0.0, (C.CHAMPION_SELF_HEAL_RULE,)),
+    ("item_heal", "Annie", ("Sundered Sky",), "", 0.0, (C.ITEM_SELF_HEAL_PACKETS,)),
+    ("item_regen", "Annie", ("Crystalline Bracer",), "", 0.0, (C.ITEM_HEALTH_REGEN,)),
+    ("lifesteal", "Annie", ("Bloodthirster",), "", 0.0, (C.LIFESTEAL_STAT,)),
+    ("omnivamp", "Annie", ("Hextech Gunblade",), "", 0.0, (C.OMNIVAMP_STAT,)),
+    ("saturating", "Malphite", ("Riftmaker",), "", 0.0, (C.SATURATING_OMNIVAMP,)),
+    ("keystone_heal", "Annie", (), "Conqueror", 0.0, (C.KEYSTONE_SELF_HEAL,)),
+    ("empowered_auto", "Jax", (), "", 0.0, (C.EMPOWERED_BASIC_ATTACK,)),
+    ("raw_stream", "Annie", ("Imperial Mandate",), "", 0.0, (C.RAW_ROW_STREAM_HOLDER,)),
+    ("execute", "Annie", ("The Collector",), "", 0.0, (C.EXECUTE_THRESHOLD_STAMP,)),
+    ("interaction", "Malphite", (), "", 0.0, (C.ORDERED_INTERACTION_METADATA,)),
+    ("self_shield", "Annie", ("Eclipse",), "", 0.0, (C.SELF_SHIELD_PROC,)),
+    ("pair_outcome", "Annie", ("Cryptbloom",), "", 0.0, (C.PAIR_OUTCOME_STREAM,)),
 )
 
 
-def _params(threshold_heal: float) -> FightParams:
+def _params(threshold_heal: float, keystone: str = "") -> FightParams:
     """A timed score-only fight, long enough for a ramp-armed grant to arm."""
-    params = FightParams.from_request(
-        {"fight_mode": "timed", "fight_duration": 8}, deterministic=True
-    )
+    request: dict[str, object] = {"fight_mode": "timed", "fight_duration": 8}
+    if keystone:
+        request["keystone"] = keystone
+    params = FightParams.from_request(request, deterministic=True)
     if not threshold_heal:
         return params
     return replace(
@@ -71,7 +82,12 @@ def _params(threshold_heal: float) -> FightParams:
     )
 
 
-def _inputs(champion: str, item_names: tuple[str, ...], threshold_heal: float):
+def _inputs(
+    champion: str,
+    item_names: tuple[str, ...],
+    threshold_heal: float,
+    keystone: str = "",
+):
     """The two input records one matrix row resolves to, live off ``run_fight``.
 
     Captured through the engines' own builders rather than assembled here, so
@@ -101,7 +117,7 @@ def _inputs(champion: str, item_names: tuple[str, ...], threshold_heal: float):
             get_champion(champion),
             18,
             [get_item_by_name(name) for name in item_names],
-            _params(threshold_heal),
+            _params(threshold_heal, keystone),
             score_only=True,
         )
     finally:
@@ -118,9 +134,11 @@ def test_every_condition_is_declared_and_probed_exactly_once():
     assert set(lp.DECLARATIONS) == set(C)
     probed = list(lp.LEDGER_CONDITIONS) + list(lp.SHIELD_OUTCOME_CONDITIONS)
     assert set(probed) == set(C)
-    # Ten ledger clauses (D-38's count) and two shield-outcome ones, sharing
-    # one — so the twelve probe slots cover eleven distinct conditions.
-    assert len(lp.LEDGER_CONDITIONS) == 10
+    # Thirteen ledger clauses — D-38's ten plus the keystone self-heal, the
+    # ordered interaction metadata and the self-shield proc — and two
+    # shield-outcome ones, sharing one, so the fifteen probe slots cover
+    # fourteen distinct conditions.
+    assert len(lp.LEDGER_CONDITIONS) == 13
     assert len(lp.SHIELD_OUTCOME_CONDITIONS) == 2
     assert len(probed) == len(set(probed)) + 1
 
@@ -187,12 +205,12 @@ def test_the_healing_registry_owns_every_declaring_champion():
 
 
 @pytest.mark.parametrize(
-    ("label", "champion", "item_names", "threshold_heal", "fires"),
+    ("label", "champion", "item_names", "keystone", "threshold_heal", "fires"),
     MATRIX,
     ids=[row[0] for row in MATRIX],
 )
-def test_the_fight_returns_the_projection_the_conditions_chose(
-    label, champion, item_names, threshold_heal, fires
+def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    label, champion, item_names, keystone, threshold_heal, fires
 ):
     """The gate's answer *is* the projection, on every matrix row.
 
@@ -202,7 +220,7 @@ def test_the_fight_returns_the_projection_the_conditions_chose(
     value — the two would agree even if the call site had been rewired to
     something else.
     """
-    captured = _inputs(champion, item_names, threshold_heal)
+    captured = _inputs(champion, item_names, threshold_heal, keystone)
     ledger_inputs = captured["ledger"]
     shield_inputs = captured["shield"]
 
@@ -224,8 +242,8 @@ def test_the_fight_returns_the_projection_the_conditions_chose(
 def test_the_matrix_raises_every_declared_condition():
     """The projection choice is not vacuous: each condition fires somewhere."""
     raised: set[lp.AdequacyCondition] = set()
-    for _label, champion, item_names, threshold_heal, _fires in MATRIX:
-        captured = _inputs(champion, item_names, threshold_heal)
+    for _label, champion, item_names, keystone, threshold_heal, _fires in MATRIX:
+        captured = _inputs(champion, item_names, threshold_heal, keystone)
         raised |= {demand.condition for demand in lp.ledger_demands(captured["ledger"])}
         raised |= {
             demand.condition for demand in lp.shield_outcome_demands(captured["shield"])

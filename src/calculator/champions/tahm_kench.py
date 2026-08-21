@@ -17,6 +17,7 @@ cannot read it.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
@@ -165,4 +166,45 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Tahm Kench")
 
 
-SELF_HEALING_RULE = declare_healing_rule("Tahm Kench")
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Tahm Kench self-healing events from its authored packet."""
+    healing = []
+    q = _healing._ability(champion_data, "Q")
+    q_rank = _healing._rank(ability_damages, "Q")
+    q_flat = _healing.extract_named(q, "Heal", q_rank, champion_stats, {})
+    q_missing_pct = _healing._leveling_modifier(q, "Heal", q_rank, 1)
+
+    def tongue_lash_heal(
+        current_health: float,
+        maximum_health: float,
+        flat: float = q_flat,
+        missing_pct: float = q_missing_pct,
+    ) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+
+    for payment in _healing._payments(
+        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+    ):
+        event = payment.event
+        healing.append(
+            {
+                "time": float(event.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": tongue_lash_heal,
+                "source": "Tongue Lash",
+                "kind": "champion_ability",
+                **_healing._trigger_fields(event),
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Tahm Kench", derive_self_healing)

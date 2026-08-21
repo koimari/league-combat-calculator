@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
@@ -72,7 +73,114 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+# P2 Slice 5 — Remove Scurvy typed declaration.  The heal values are the
+# cached W rows (atom-backed: ability.heal.modifier_0/1/2 +
+# timing.cooldown — hashes verified); the cleanse scope (CC-only,
+# airborne displacement-override) is wiki prose + the game file
+# (canCastWhileDisabled true / cannotBeSuppressed true — the QSS/
+# Mercurial flag pair).  The heal is authored by the E1 self-heal rule
+# (healing.py: flat + 90% AP + 13% missing health, live); the cleanse
+# rides the Slice 4 item-cleanse kernel via one kind="cleanse" packet
+# per W cast.  W stays OUT of outgoing damage.
+_W_HEAL_FLAT = (45.0, 70.0, 95.0, 120.0, 145.0)
+_W_HEAL_AP_PERCENT = 90.0
+_W_HEAL_MISSING_HEALTH_PERCENT = 13.0
+_W_COOLDOWN = (22.0, 20.0, 18.0, 16.0, 14.0)
+_W_COST = (60.0, 70.0, 80.0, 90.0, 100.0)
+_W_EXCLUDED_CONTROL_KINDS = ("airborne", "knockback", "knockup")
+
+
+class _RemoveScurvyRule:
+    """The typed Remove Scurvy declaration (P2 Slice 5).
+
+    The heal (flat + 90% AP + 13% missing health) and the cleanse are
+    SEPARATE authored effects: the heal is the E1 self-heal receipt, the
+    cleanse is the Slice 4 kernel packet per W cast.  The W cast is the
+    activation — there is NO user toggle (the source supports the cast,
+    not an optional cleanse); every W cast heals AND cleanses (one-use
+    per fight).  The cleanse is CC-only and castable while disabled
+    (not under suppression/stasis); the airborne displacement override
+    is a named boundary.
+    """
+
+    def __init__(self) -> None:
+        self.heal_flat = _W_HEAL_FLAT
+        self.heal_ap_percent = _W_HEAL_AP_PERCENT
+        self.heal_missing_health_percent = _W_HEAL_MISSING_HEALTH_PERCENT
+        self.cooldown = _W_COOLDOWN
+        self.cost = _W_COST
+        self.target_scope = "self"
+        self.excluded_control_kinds = _W_EXCLUDED_CONTROL_KINDS
+
+    @property
+    def source(self) -> dict[str, Any]:
+        """The provenance receipt (wiki + game file + atom hashes)."""
+        return {
+            "label": "Local League Wiki cache — Gangplank W template + game file",
+            "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/W",
+            "revision_id": 2864237,
+            "revision_timestamp": "2019-11-03T20:09:46Z",
+            "parent_revision_id": 4002542,
+            "parent_revision_timestamp": "2026-03-26T01:37:40Z",
+            "game_file": "data/bin/characters/gangplank.bin.json "
+            "(BaseHeal, PercentHeal 13, StatByCoefficient 0.9 AP, "
+            "canCastWhileDisabled true, cannotBeSuppressed true)",
+            "atoms": [
+                "ability.heal.modifier_0 170a83b48f7844c3",
+                "ability.heal.modifier_1 c8f4c57b1502d6c1",
+                "ability.heal.modifier_2 a89abd1a84627e06",
+                "timing.cooldown 3cab27d68bef338c",
+            ],
+            "note": "cleanse scope is CC-only, wiki-prose; the airborne "
+            "displacement override needs a blink/dash (named boundary).",
+        }
+
+    def public_receipt(self) -> dict[str, Any]:
+        """The public declaration receipt (the heal + cleanse contract)."""
+        return {
+            "name": "Gangplank — Remove Scurvy (W)",
+            "heal": {
+                "flat": list(self.heal_flat),
+                "ap_percent": self.heal_ap_percent,
+                "missing_health_percent": self.heal_missing_health_percent,
+            },
+            "cooldown": list(self.cooldown),
+            "cost": list(self.cost),
+            "target_scope": self.target_scope,
+            "excluded_control_kinds": list(self.excluded_control_kinds),
+            "source": dict(self.source),
+        }
+
+
+REMOVE_SCURVY_RULE = _RemoveScurvyRule()
+
+
+def _require_w_rows(ability: dict[str, Any]) -> None:
+    """Fail loud when the W heal row or its modifiers are missing.
+
+    The heal (healing.py) and the typed declaration both read the cached
+    "Heal" row; a missing row must never price a silent zero (the repo's
+    fail-closed convention).
+    """
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != "Heal":
+                continue
+            modifiers = leveling.get("modifiers", [])
+            if len(modifiers) < 3:
+                raise KeyError(
+                    "Gangplank W 'Heal' row is missing the flat / % AP / "
+                    "% missing health modifiers"
+                )
+            return
+    raise KeyError("Gangplank Remove Scurvy has no 'Heal' leveling row")
+
+
 def _remove_scurvy(ctx: SlotCtx) -> dict[str, Any] | None:
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    _require_w_rows(ability)
     return no_damage(
         ctx,
         name="Remove Scurvy",
@@ -184,4 +292,55 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Gangplank")
 
-SELF_HEALING_RULE = declare_healing_rule("Gangplank")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Gangplank self-healing events from its authored packet."""
+    healing = []
+    w = _healing._ability(champion_data, "W")
+    w_rank = _healing._rank(ability_damages, "W")
+    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats)
+    w_missing_ratio = (
+        _healing._leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+    )
+
+    def remove_scurvy_heal(
+        current_health: float,
+        maximum_health: float,
+        flat: float = w_flat,
+        missing_ratio: float = w_missing_ratio,
+    ) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_ratio
+
+    for cast in cast_timeline or []:
+        if cast.get("slot") != "W":
+            continue
+        healing.append(
+            {
+                "time": float(cast.get("time", 0.0)),
+                "amount": 0.0,
+                "amount_formula": remove_scurvy_heal,
+                "source": "Remove Scurvy",
+                "kind": "champion_ability",
+                "actor_wide": True,
+                # Remove Scurvy is the game's canCastWhileDisabled: being
+                # crowd-controlled is the reason to cast it, so the heal
+                # is exempt from the walk's attacker-state gate on the
+                # crowd-control branch only (stasis, invulnerable and
+                # untargetable still block it — the wiki Cleanse atom).
+                # It rides no damage event, so the cast is all it has to
+                # name; the flag is what says so.
+                "cast_while_disabled": True,
+            }
+        )
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Gangplank", derive_self_healing)

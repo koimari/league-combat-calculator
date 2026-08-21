@@ -84,10 +84,15 @@ def _refusal(event: Mapping[str, Any]) -> str | None:
 # tuples is what keeps the quantity family the one that writes leaves.
 _SUPPORT_QUANTITY_KEYS = (
     "bonus_attack_speed_percent",
+    "bonus_armor",
+    "bonus_magic_resistance",
+    "bonus_health",
+    "permanent_bonus_health",
     "on_hit_magic_damage",
     "ability_power",
     "ability_haste",
     "bonus_move_speed_percent",
+    "slow_resist_percent",
     "slow_percent",
     "chain_fraction",
     "multiplier",
@@ -102,6 +107,31 @@ _SUPPORT_QUANTITY_KEYS = (
     "nearby_enemy_count",
     "multi_target_multiplier",
     "cooldown_until",
+    "aftershock_duration",
+    "aftershock_cooldown",
+    "glacial_ray_count",
+    "glacial_zone_radius_units",
+    "glacial_zone_width_units",
+    "glacial_zone_duration",
+    "glacial_slow_percent",
+    "glacial_damage_reduction_ratio",
+    "stormraider_damage_threshold_ratio",
+    "stormraider_damage_window_seconds",
+    "stormraider_trigger_damage",
+    "stormraider_target_max_health",
+    "stormraider_cooldown_seconds",
+    "fleet_starting_charges",
+    "fleet_charge_cap",
+    "fleet_move_speed_duration_seconds",
+    "stacks_before",
+    "stacks_after",
+    "stacks_gained",
+    "max_stacks",
+    "adaptive_force",
+    "shield_gate_time",
+    "activation_delay",
+    "on_block_heal_amount",
+    "on_block_heal_delay",
     "gold_amount",
     "ward_uses",
     "quest_threshold",
@@ -115,14 +145,25 @@ _SUPPORT_FLAG_KEYS = (
     "cleanse",
     "persistent",
     "completion_granted",
+    "requires_existing_shield",
+    "shield_gate_assumed",
 )
 
 _SUPPORT_LABEL_KEYS = (
     "resistance_type",
     "owner",
+    "aftershock_trigger_kind",
+    "source_participant",
+    "shield_gate_target",
     "range_assumption",
     "trigger_kind",
+    "packet",
+    "trigger_source",
     "source_url",
+    "on_block_heal_source",
+    "range_center",
+    "range_input_status",
+    "range_boundary_status",
     # The two H2 fields.  ``cc_scope`` is the reviewed CcScope a crowd-control
     # mark was routed under and ``cc_scope_disclosure`` is the sentence that
     # qualifies it when the reading was the shipped default rather than a
@@ -174,6 +215,28 @@ def _damage_event_rows(
             refusal,
         )
         leaf.raw("event_precision", event.get("event_precision", "exact"))
+        # The delivery and control facts a certified packet carries.  Every
+        # one is conditional, so an absent key is "this packet declared
+        # none" rather than a measured zero -- which is why the boolean
+        # three publish only ``True`` and never ``False``.
+        if event.get("cc_kind") is not None:
+            leaf.raw("cc_kind", str(event["cc_kind"]))
+        if event.get("cc_duration") is not None:
+            leaf.measured(
+                "cc_duration",
+                round_field("events.cc_duration", float(event["cc_duration"])),
+            )
+        if event.get("control_source_atoms"):
+            leaf.structure(
+                "control_source_atoms",
+                [dict(atom) for atom in event["control_source_atoms"]],
+            )
+        if event.get("damage_over_time"):
+            leaf.raw("damage_over_time", True)
+        if event.get("skillshot"):
+            leaf.raw("skillshot", True)
+        if event.get("area_damage"):
+            leaf.raw("area_damage", True)
         if event.get("_event_id") is not None:
             leaf.raw("event_id", str(event["_event_id"]))
         if event.get("_trigger_event_id") is not None:
@@ -283,6 +346,20 @@ def _damage_event_rows(
             )
         if event.get("support_on_hit_magic"):
             leaf.structure("support_on_hit_magic", list(event["support_on_hit_magic"]))
+        # The three kernel-authored interaction receipts that ride a damage
+        # packet: the control it applied, the immunity that refused that
+        # control, and the projectile defense that reduced or destroyed the
+        # packet.  Each is written by ``transitions`` through the ledger, so
+        # publishing them is what makes a blocked packet's *reason* readable
+        # rather than inferable from a zero.
+        if event.get("crowd_control"):
+            leaf.structure("crowd_control", dict(event["crowd_control"]))
+        if event.get("crowd_control_blocked"):
+            leaf.structure(
+                "crowd_control_blocked", dict(event["crowd_control_blocked"])
+            )
+        if event.get("projectile_defense"):
+            leaf.structure("projectile_defense", dict(event["projectile_defense"]))
         if isinstance(event.get("targeting"), Mapping):
             leaf.structure("targeting", dict(event["targeting"]))
         if event.get("_deferred_from"):
@@ -441,6 +518,17 @@ def _support_event_rows(
             "amount",
             round_field("support_events.amount", float(event.get("amount", 0.0))),
         )
+        # The pre-mitigation figure the packet was authored at.  A support
+        # heal that healing reduction cut still says what it was worth, the
+        # same way the healing rows do, so a reader comparing a self copy
+        # with its fan-out copy reads one field on both.
+        leaf.measured(
+            "raw_amount",
+            round_field(
+                "support_events.raw_amount",
+                float(event.get("raw_amount", event.get("amount", 0.0))),
+            ),
+        )
         _outcome(
             leaf,
             "applied_amount",
@@ -456,8 +544,65 @@ def _support_event_rows(
         # and a zero applied amount never has to be interpreted.
         if event.get("dedupe"):
             leaf.raw("dedupe", event["dedupe"])
+        leaf.measured(
+            "reduced_amount",
+            round_field(
+                "support_events.reduced_amount",
+                float(event.get("reduced_amount", event.get("amount", 0.0))),
+            ),
+        )
+        # By name only.  Main's projection fell back to
+        # ``reduced_amount - applied_amount`` when the key was absent, which
+        # made the view a second producer of a published number; the
+        # composition that annotates the packet writes it, and an event with
+        # no overheal publishes none.
+        if event.get("overheal") is not None:
+            leaf.measured(
+                "overheal",
+                round_field("support_events.overheal", float(event["overheal"])),
+            )
+        if event.get("healing_reduction_factor") is not None:
+            leaf.measured(
+                "healing_reduction_factor",
+                round_field(
+                    "support_events.healing_reduction_factor",
+                    float(event["healing_reduction_factor"]),
+                ),
+            )
         leaf.raw("target_scope", event.get("target_scope", ""))
         leaf.raw("target_policy", event.get("target_policy", ""))
+        # Which declared selection rule picked this recipient.  Published
+        # unconditionally, with the empty string for a packet whose producer
+        # names no rule, because "this template selected nobody in
+        # particular" is an answer a consumer reads rather than infers.
+        leaf.raw("target_selection_key", event.get("target_selection_key", ""))
+        if event.get("shield_pool"):
+            leaf.raw("shield_pool", str(event["shield_pool"]))
+        # The pair is published together or not at all: a while-held immunity
+        # with no named source would be an unattributed capability.
+        if event.get("crowd_control_immunity_while_shield"):
+            leaf.raw("crowd_control_immunity_while_shield", True)
+            leaf.raw(
+                "crowd_control_immunity_source",
+                str(
+                    event.get("crowd_control_immunity_source", event.get("source", ""))
+                ),
+            )
+        for key in ("source_atom", "duration_atom", "activation_delay_atom"):
+            if event.get(key) is not None:
+                leaf.structure(key, dict(event[key]))
+        if event.get("amount_formula_atom") is not None:
+            leaf.structure("amount_formula_atom", dict(event["amount_formula_atom"]))
+        if event.get("source_atoms"):
+            leaf.structure(
+                "source_atoms", [dict(atom) for atom in event["source_atoms"]]
+            )
+        if event.get("aftershock") is not None:
+            leaf.structure("aftershock", dict(event["aftershock"]))
+        if event.get("crowd_control_blocked") is not None:
+            leaf.structure(
+                "crowd_control_blocked", dict(event["crowd_control_blocked"])
+            )
         for key in _SUPPORT_QUANTITY_KEYS:
             if event.get(key) is not None:
                 leaf.measured(
@@ -546,6 +691,20 @@ def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     root.raw("support_events", support_events)
     root.raw("utility_outcomes", _utility_block(program, result, writer))
     root.structure("target_allocation", result.target_allocation)
+    # A denial is a receipt with no applied amount, so it is published as
+    # its own section rather than as a zero packet a reader would have to
+    # interpret.  Ordered by (time, reason) so two denials at one
+    # timestamp read the same way on every run.
+    root.structure(
+        "item_denial_receipts",
+        sorted(
+            (dict(receipt) for receipt in result.item_denial_receipts),
+            key=lambda row: (
+                float(row.get("time", 0.0) or 0.0),
+                str(row.get("reason", "")),
+            ),
+        ),
+    )
     root.raw("objective", tdd_leaves(program, result, writer, rows))
     root.structure("timeline_coverage", result.timeline_coverage)
     payload["dispositions"] = writer.entries()

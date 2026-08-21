@@ -1,0 +1,7212 @@
+[
+ {
+  "atom_id": "crowd-control-mobility.sleep",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeESleepCountdown",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_Slow",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepCountdown"
+   ],
+   "evidence": "name:sleep"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource-duration-indicator",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeESleepCountdown",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_Slow",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Manaless",
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepCountdown"
+   ],
+   "evidence": "name:countdown"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "crowd-control-mobility.sleep",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeESleepStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZoeESleepStun",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepStun"
+   ],
+   "evidence": "name:sleep"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeESleepStun",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZoeESleepStun",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepStun"
+   ],
+   "evidence": "name:stun"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "primary": 0.44999998807907104,
+    "secondary": 0.44999998807907104
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     70.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0
+    ],
+    "effect_1": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_4": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896
+    ],
+    "effect_5": [
+     70.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0
+    ],
+    "effect_6": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "effect_7": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "effect_8": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "effect_9": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.30000001192092896,
+    "behavior": "ZoeE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeE",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.30000001192092896,
+   "uptime_fraction": 0.0556,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeE"
+   ],
+   "evidence": "tag:Trait_ImmobilizingCCSpell"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeE",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.44999998807907104,
+    "secondary": 0.44999998807907104
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     70.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0
+    ],
+    "effect_1": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_4": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896
+    ],
+    "effect_5": [
+     70.0,
+     70.0,
+     110.0,
+     150.0,
+     190.0,
+     230.0
+    ],
+    "effect_6": [
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104,
+     0.44999998807907104
+    ],
+    "effect_7": [
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142,
+     1.399999976158142
+    ],
+    "effect_8": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "effect_9": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.30000001192092896,
+    "behavior": "ZoeE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeE",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.30000001192092896,
+   "uptime_fraction": null,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeE"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.sleep",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeESleepCountdownSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZoeESleepCountdownSlow",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepCountdownSlow"
+   ],
+   "evidence": "name:sleep"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeESleepCountdownSlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZoeESleepCountdownSlow",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepCountdownSlow"
+   ],
+   "evidence": "name:slow"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.resource-duration-indicator",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeESleepCountdownSlow",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": null,
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    2.25
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZoeESleepCountdownSlow",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.125,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Manaless",
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeESleepCountdownSlow"
+   ],
+   "evidence": "name:countdown"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerExhaust",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_4": [
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0,
+     30.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerExhaust",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerExhaust"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "heal-shield.shield",
+  "family": "heal-shield",
+  "behavior": "ZoeW_SummonerBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     95.0,
+     95.0,
+     95.0,
+     95.0,
+     95.0,
+     95.0
+    ],
+    "effect_1": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeW_SummonerBarrier",
+    "atoms": [
+     "heal-shield.shield"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.shield-reduction",
+   "heal-shield.shield-destruction",
+   "heal-shield.heal-and-shield-power"
+  ],
+  "provenance": {
+   "wiki": [
+    "Shield",
+    "Heal and shield power",
+    "Grievous Wounds",
+    "Overheal"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerBarrier"
+   ],
+   "evidence": "name:barrier"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerBarrier",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     95.0,
+     95.0,
+     95.0,
+     95.0,
+     95.0,
+     95.0
+    ],
+    "effect_1": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeW_SummonerBarrier",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerBarrier"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "heal-shield.heal",
+  "family": "heal-shield",
+  "behavior": "ZoeW_SummonerHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "effect_1": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "effect_2": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "effect_3": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_4": [
+     826.0,
+     826.0,
+     826.0,
+     826.0,
+     826.0,
+     826.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeW_SummonerHeal",
+    "atoms": [
+     "heal-shield.heal"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "sustain"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "heal-shield.heal-amplification",
+   "heal-shield.healing-negation",
+   "heal-shield.overheal"
+  ],
+  "provenance": {
+   "wiki": [
+    "Healing",
+    "Heal",
+    "Health"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerHeal"
+   ],
+   "evidence": "name:heal"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerHeal",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896,
+     0.30000001192092896
+    ],
+    "effect_1": [
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0,
+     75.0
+    ],
+    "effect_2": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ],
+    "effect_3": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_4": [
+     826.0,
+     826.0,
+     826.0,
+     826.0,
+     826.0,
+     826.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1029.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeW_SummonerHeal",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerHeal"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZoeW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    3000.0,
+    3000.0,
+    4500.0,
+    6000.0,
+    0.0,
+    0.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.4000000059604645,
+    "secondary": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "effect_1": [
+     3000.0,
+     3000.0,
+     4500.0,
+     6000.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "effect_3": [
+     2500.0,
+     2500.0,
+     2500.0,
+     2500.0,
+     2500.0,
+     2500.0
+    ],
+    "effect_4": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "effect_5": [
+     20.0,
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0
+    ],
+    "effect_6": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "effect_8": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071
+    ],
+    "effect_9": [
+     2.0,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "ZoeW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeW",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": 0.009999999776482582,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeW",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    3000.0,
+    3000.0,
+    4500.0,
+    6000.0,
+    0.0,
+    0.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.4000000059604645,
+    "secondary": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "effect_1": [
+     3000.0,
+     3000.0,
+     4500.0,
+     6000.0,
+     0.0,
+     0.0
+    ],
+    "effect_2": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ],
+    "effect_3": [
+     2500.0,
+     2500.0,
+     2500.0,
+     2500.0,
+     2500.0,
+     2500.0
+    ],
+    "effect_4": [
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0,
+     60.0
+    ],
+    "effect_5": [
+     20.0,
+     20.0,
+     50.0,
+     80.0,
+     110.0,
+     140.0
+    ],
+    "effect_6": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "effect_8": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071
+    ],
+    "effect_9": [
+     2.0,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 8192.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.009999999776482582,
+    "behavior": "ZoeW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeW",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": 0.009999999776482582,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW"
+   ],
+   "evidence": "tag:Trait_Low_Damage"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeW_S5_SummonerSmiteDuel",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_S5_SummonerSmiteDuel",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_S5_SummonerSmiteDuel"
+   ],
+   "evidence": "tag:Trait_SummonerSmite"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_S5_SummonerSmiteDuel",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_S5_SummonerSmiteDuel",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_S5_SummonerSmiteDuel"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeW_SummonerTeleport",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     4.5,
+     4.5,
+     4.5,
+     4.5,
+     4.5,
+     4.5
+    ],
+    "effect_2": [
+     360.0,
+     360.0,
+     360.0,
+     360.0,
+     360.0,
+     360.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1108.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerTeleport",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 80.0,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerTeleport"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerTeleport",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     4.5,
+     4.5,
+     4.5,
+     4.5,
+     4.5,
+     4.5
+    ],
+    "effect_2": [
+     360.0,
+     360.0,
+     360.0,
+     360.0,
+     360.0,
+     360.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 1108.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerTeleport",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 80.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerTeleport"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.dot",
+  "family": "damage",
+  "behavior": "ZoeW_SummonerDot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 3.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_2": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_3": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerDot",
+    "atoms": [
+     "damage.dot"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "heal-shield.grievous-wounds",
+   "damage.damage-instance"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage over time",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerDot"
+   ],
+   "evidence": "name:dot"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-periodic",
+  "family": "damage",
+  "behavior": "ZoeW_SummonerDot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0,
+    5.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 3.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_2": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_3": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerDot",
+    "atoms": [
+     "damage.tag-periodic"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerDot"
+   ],
+   "evidence": "name:dot"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.damage-over-time",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerDot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {
+    "primary": 3.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_2": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_3": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerDot",
+    "atoms": [
+     "stack-transform-summon-resource.damage-over-time"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerDot"
+   ],
+   "evidence": "name:dot"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerDot",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {
+    "primary": 3.0
+   },
+   "effect_amounts": {
+    "effect_0": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_1": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "effect_2": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_3": [
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0,
+     100.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 4106.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerDot",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerDot"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerBoost",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    90.0,
+    90.0,
+    75.0,
+    60.0,
+    45.0,
+    30.0
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421,
+     0.6499999761581421
+    ],
+    "effect_1": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221.0
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 90.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.2222,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerBoost"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeW_S5_SummonerSmitePlayerGanker",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_S5_SummonerSmitePlayerGanker",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_S5_SummonerSmitePlayerGanker"
+   ],
+   "evidence": "tag:Trait_SummonerSmite"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_S5_SummonerSmitePlayerGanker",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_S5_SummonerSmitePlayerGanker",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 80.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_S5_SummonerSmitePlayerGanker"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerHaste",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0,
+    200.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     27.0,
+     27.0,
+     27.0,
+     27.0,
+     27.0,
+     27.0
+    ],
+    "effect_2": [
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0,
+     2.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221.0
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 80.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerHaste"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeW_SummonerSmite",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": [
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0,
+    15.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6152.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerSmite",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerSmite"
+   ],
+   "evidence": "tag:Trait_SummonerSmite"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeW_SummonerSmite",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.25,
+    0.25,
+    0.25,
+    0.25,
+    0.25
+   ],
+   "cast_range": [
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0,
+    500.0
+   ],
+   "mana_cost": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "damage": null,
+   "duration": [
+    20.0
+   ],
+   "ratios": {},
+   "effect_amounts": {
+    "effect_0": [
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0,
+     15.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6152.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeW_SummonerSmite",
+    "atoms": [
+     "stack-transform-summon-resource.summon"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.25,
+    "rank_max": 0.25
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 80.0,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [
+   "damage.damage-instance",
+   "damage.aoe"
+  ],
+  "provenance": {
+   "wiki": [
+    "Champion summoned units",
+    "Pets"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeW_SummonerSmite"
+   ],
+   "evidence": "name:summon"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZoeQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "damage": [
+    180.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQ",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQ"
+   ],
+   "evidence": "tag:Trait_AoE"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeQ",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0,
+    65.0
+   ],
+   "damage": [
+    180.0
+   ],
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQ",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQ"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.sleep",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeQMis2SleepCombo",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0
+   ],
+   "ratios": {
+    "primary": 1.2000000476837158
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ],
+    "effect_0": [
+     0.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQMis2SleepCombo",
+    "atoms": [
+     "crowd-control-mobility.sleep"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQMis2SleepCombo",
+    "atoms": [
+     "crowd-control-mobility.sleep"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": 0.1176,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Slow resist"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQMis2SleepCombo"
+   ],
+   "evidence": "name:sleep"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "ZoeBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttack3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttack3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "ZoeBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttack3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttack3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "ZoeBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttack2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttack2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "ZoeBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttack2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttack2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoePassiveSheenBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {
+    "buff_data": {
+     "mDescription": "game_buff_tooltip_ZoePassiveSheenBuff",
+     "__type": "BuffData"
+    }
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoePassiveAbility/ZoePassiveSheenBuff"
+   ],
+   "evidence": "name:buff"
+  },
+  "_unresolved": true
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6826.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial2",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6826.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial2",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial2"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeBasicAttackPassive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackPassive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackPassive",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackPassive"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeBasicAttackPassive",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackPassive",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackPassive",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackPassive"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6826.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial3",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6826.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial3",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial3"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7850.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial1",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial1",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial1"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial1",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7850.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial1",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial1",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial1"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoeBasicAttackSpecial1",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7850.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial1",
+    "atoms": [
+     "stack-transform-summon-resource.additive-stacking"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial1",
+    "atoms": [
+     "stack-transform-summon-resource.additive-stacking"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial1"
+   ],
+   "evidence": "name:11"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6826.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial4",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6826.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial4",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial4"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "ZoeCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeCritAttack",
+    "atoms": [
+     "damage.critical-strike"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeCritAttack"
+   ],
+   "evidence": "rule:crit"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttackSpecial",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttackSpecial",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttackSpecial"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.blink",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    8.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    0.95
+   ],
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     -0.30000001192092896,
+     -0.30000001192092896,
+     -0.4000000059604645,
+     -0.5,
+     -0.6000000238418579,
+     -0.699999988079071
+    ],
+    "effect_1": [
+     1.5,
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5
+    ],
+    "effect_2": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_3": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_4": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_5": [
+     100.0,
+     100.0,
+     200.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeR",
+    "atoms": [
+     "crowd-control-mobility.blink"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0864,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Blink",
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeRAbility/ZoeR"
+   ],
+   "evidence": "tag:PositiveEffect_Teleport"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeR",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    11.0,
+    8.0,
+    5.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": null,
+   "duration": [
+    0.95
+   ],
+   "ratios": {
+    "primary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     -0.30000001192092896,
+     -0.30000001192092896,
+     -0.4000000059604645,
+     -0.5,
+     -0.6000000238418579,
+     -0.699999988079071
+    ],
+    "effect_1": [
+     1.5,
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5
+    ],
+    "effect_2": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_3": [
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5,
+     0.5
+    ],
+    "effect_4": [
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0,
+     3.0
+    ],
+    "effect_5": [
+     100.0,
+     100.0,
+     200.0,
+     300.0,
+     300.0,
+     300.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeR",
+    "atoms": [
+     "crowd-control-mobility.dash"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 11.0,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": 0.0864,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeRAbility/ZoeR"
+   ],
+   "evidence": "tag:Trait_PlayerSelectedDashDirection"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "ZoeBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttack",
+    "atoms": [
+     "damage.basic-attack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "ZoeBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7375.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 1.0,
+    "behavior": "ZoeBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeBasicAttack",
+    "atoms": [
+     "damage.tag-basicattack"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 1.0,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "crowd-control-mobility.immobilize",
+  "family": "crowd-control-mobility",
+  "behavior": "ZoeEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": null,
+   "duration": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "ratios": {
+    "primary": 0.4000000059604645,
+    "secondary": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     60.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0
+    ],
+    "effect_1": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_4": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071
+    ],
+    "effect_5": [
+     60.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0
+    ],
+    "effect_6": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "effect_7": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "effect_8": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "effect_9": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.30000001192092896,
+    "behavior": "ZoeEMis",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEMis",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEMis",
+    "atoms": [
+     "crowd-control-mobility.immobilize"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.30000001192092896,
+   "uptime_fraction": 0.0556,
+   "reset_on": [],
+   "tempo_class": "engage"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control/Summary",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEMis"
+   ],
+   "evidence": "inherited:ZoeE"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.4000000059604645,
+    "secondary": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     60.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0
+    ],
+    "effect_1": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.15000000596046448,
+     0.20000000298023224,
+     0.25,
+     0.30000001192092896
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_4": [
+     0.30000001192092896,
+     0.30000001192092896,
+     0.4000000059604645,
+     0.5,
+     0.6000000238418579,
+     0.699999988079071
+    ],
+    "effect_5": [
+     60.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0
+    ],
+    "effect_6": [
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645,
+     0.4000000059604645
+    ],
+    "effect_7": [
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842,
+     1.2999999523162842
+    ],
+    "effect_8": [
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25,
+     2.25
+    ],
+    "effect_9": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.30000001192092896,
+    "behavior": "ZoeEMis",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEMis",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEMis",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.30000001192092896,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEMis"
+   ],
+   "evidence": "inherited:ZoeE"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZoeQMis2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0
+   ],
+   "damage": [
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 1.2000000476837158
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ],
+    "effect_0": [
+     0.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQMis2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQMis2",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQMis2"
+   ],
+   "evidence": "inherited:ZoeQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeQMis2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0
+   ],
+   "damage": [
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 1.2000000476837158
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ],
+    "effect_0": [
+     0.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQMis2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQMis2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQMis2"
+   ],
+   "evidence": "inherited:ZoeQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZoeQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0
+   ],
+   "damage": [
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 1.2000000476837158
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQMissile",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQMissile"
+   ],
+   "evidence": "inherited:ZoeQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeQMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    8.5,
+    8.0,
+    7.5,
+    7.0,
+    6.5
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    45.0,
+    50.0,
+    55.0,
+    60.0
+   ],
+   "damage": [
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 1.2000000476837158
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     180.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 8.5,
+    "rank_max": 6.5
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQMissile"
+   ],
+   "evidence": "inherited:ZoeQ"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "ZoeQRecast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355,
+    "secondary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0
+    ],
+    "effect_1": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQRecast",
+    "atoms": [
+     "damage.aoe"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQRecast",
+    "atoms": [
+     "damage.aoe"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "rank_max": 1.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "AoE",
+    "Recast"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQRecast"
+   ],
+   "evidence": "refined:wiki-Q"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeQRecast",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    40.0,
+    40.0,
+    40.0
+   ],
+   "damage": [
+    40.0,
+    40.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355,
+    "secondary": 0.6000000238418579
+   },
+   "effect_amounts": {
+    "effect_0": [
+     40.0,
+     40.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0
+    ],
+    "effect_1": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 13327.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeQRecast",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeQRecast",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 1.0,
+    "rank_max": 1.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Recast"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeQAbility/ZoeQRecast"
+   ],
+   "evidence": "refined:wiki-Q"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "ZoePassive",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": [
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0,
+    40.0
+   ],
+   "ratios": {
+    "primary": 0.20000000298023224
+   },
+   "effect_amounts": {
+    "effect_0": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "effect_1": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "effect_2": [
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224,
+     0.20000000298023224
+    ],
+    "effect_8": [
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0,
+     20.0
+    ],
+    "effect_9": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoePassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   },
+   {
+    "state": "persistent",
+    "duration": null,
+    "behavior": "ZoePassive",
+    "atoms": [
+     "stack-transform-summon-resource.buff"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": null,
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "More Sparkles!"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoePassiveAbility/ZoePassive"
+   ],
+   "evidence": "refined:wiki-P"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEb",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0
+   ],
+   "cast_range": [
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0,
+    800.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355,
+    "secondary": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     60.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ],
+    "effect_5": [
+     60.0,
+     60.0,
+     100.0,
+     140.0,
+     180.0,
+     220.0
+    ],
+    "effect_6": [
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355,
+     0.3499999940395355
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeEb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEb",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [
+    "kill"
+   ],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Sleepy Trouble Bubble"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEb"
+   ],
+   "evidence": "refined:name:ZoeEb"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEb2",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0
+   ],
+   "cast_range": [
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     0.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeEb2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEb2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEb2",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Sleepy Trouble Bubble"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEb2"
+   ],
+   "evidence": "refined:name:ZoeEb2"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEb3",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0
+   ],
+   "cast_range": [
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     0.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeEb3",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEb3",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEb3",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Sleepy Trouble Bubble"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEb3"
+   ],
+   "evidence": "refined:name:ZoeEb3"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEb4",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0
+   ],
+   "cast_range": [
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     0.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeEb4",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEb4",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEb4",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Sleepy Trouble Bubble"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEb4"
+   ],
+   "evidence": "refined:name:ZoeEb4"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEb5",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    16.0,
+    16.0,
+    15.5,
+    15.0,
+    14.5,
+    14.0
+   ],
+   "cast_range": [
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0,
+    2875.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.3499999940395355
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     0.0,
+     60.0,
+     90.0,
+     120.0,
+     150.0,
+     180.0
+    ],
+    "effect_1": [
+     0.0,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5
+    ],
+    "effect_2": [
+     5.0,
+     5.0,
+     15.0,
+     25.0,
+     35.0,
+     45.0
+    ],
+    "effect_3": [
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0,
+     5.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeEb5",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEb5",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEb5",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 16.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Sleepy Trouble Bubble"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEb5"
+   ],
+   "evidence": "refined:name:ZoeEb5"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeEc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    18.0,
+    17.0,
+    16.0,
+    15.0,
+    14.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": [
+    80.0,
+    80.0,
+    80.0,
+    80.0,
+    80.0
+   ],
+   "damage": [
+    250.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.4000000059604645
+   },
+   "effect_amounts": {
+    "wiki_effect_radius": [
+     250.0
+    ],
+    "effect_0": [
+     0.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0
+    ],
+    "effect_1": [
+     0.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7178.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeEc",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeEc",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 18.0,
+    "rank_max": 14.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Sleepy Trouble Bubble"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeEAbility/ZoeEc"
+   ],
+   "evidence": "refined:name:ZoeEc"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeWPassive",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0,
+    600.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    30.0,
+    30.0,
+    75.0,
+    110.0,
+    145.0,
+    180.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.4000000059604645,
+    "secondary": 0.20000000298023224
+   },
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     30.0,
+     75.0,
+     110.0,
+     145.0,
+     180.0
+    ],
+    "effect_1": [
+     20.0,
+     15.0,
+     32.5,
+     55.0,
+     72.5,
+     90.0
+    ],
+    "effect_2": [
+     0.0,
+     60.0,
+     150.0,
+     220.0,
+     190.0,
+     360.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 9221.0
+  },
+  "states": [
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeWPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeWPassive",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Spell Thief bolt"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeWPassive"
+   ],
+   "evidence": "refined:name:ZoeWPassive"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeWPassiveMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0,
+    5.0
+   ],
+   "cast_range": [
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0,
+    300.0
+   ],
+   "mana_cost": null,
+   "damage": [
+    0.0,
+    90.0,
+    140.0,
+    190.0,
+    240.0,
+    290.0
+   ],
+   "duration": null,
+   "ratios": {
+    "primary": 0.699999988079071
+   },
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     90.0,
+     140.0,
+     190.0,
+     240.0,
+     290.0
+    ]
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 7183.0
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeWPassiveMissile",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 9.0,
+    "rank_max": 5.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Spell Thief bolt"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeWPassiveMissile"
+   ],
+   "evidence": "refined:name:ZoeWPassiveMissile"
+  },
+  "_unresolved": false
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "ZoeWPassiveMissileTwo",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    10.0,
+    10.0,
+    9.0,
+    8.0,
+    7.0,
+    6.0
+   ],
+   "cast_range": [
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0,
+    725.0
+   ],
+   "mana_cost": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {},
+   "effect_amounts": {},
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154.0
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "ZoeWPassiveMissileTwo",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "ZoeWPassiveMissileTwo",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ZoeWPassiveMissileTwo",
+    "atoms": [
+     "damage.damage-instance"
+    ]
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank1": 10.0,
+    "rank_max": 6.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "poke"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Magic damage",
+    "Spell Thief bolt"
+   ],
+   "binary": [
+    "Characters/Zoe/Spells/ZoeWAbility/ZoeWPassiveMissileTwo"
+   ],
+   "evidence": "refined:name:ZoeWPassiveMissileTwo"
+  },
+  "_unresolved": false
+ }
+]

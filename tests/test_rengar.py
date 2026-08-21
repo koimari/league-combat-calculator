@@ -6,6 +6,14 @@ from tests import cc_review
 
 
 def _e_part(ferocity):
+    """The E part set the fight prices at this Ferocity.
+
+    Bola Strike carries BOTH answers on one entry — ``parts`` is the base
+    bola that slows, ``ferocity_parts`` the empowered one that roots — and
+    ``damage.py`` prices the second set once the cast consumes the 4-stack
+    cap.  Reading whichever set that cast spends is what makes the control
+    answer per-branch rather than per-slot.
+    """
     abilities = parse_champion_abilities(
         get_champion("Rengar"),
         18,
@@ -13,7 +21,8 @@ def _e_part(ferocity):
         ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
         champion_options={"p_ferocity": ferocity},
     )
-    (part,) = abilities["E"]["parts"]
+    key = "ferocity_parts" if ferocity >= 4 else "parts"
+    (part,) = abilities["E"][key]
     return part
 
 

@@ -1,0 +1,6217 @@
+[
+ {
+  "atom_id": "damage.tag-item",
+  "family": "damage",
+  "behavior": "ItemHurricaneKalistaAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0,
+    1400.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    45.0,
+    85.0,
+    125.0,
+    165.0,
+    205.0,
+    245.0,
+    285.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     45.0,
+     85.0,
+     125.0,
+     165.0,
+     205.0,
+     245.0,
+     285.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "ItemHurricaneKalistaAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/ItemHurricaneKalistaAttack"
+   ],
+   "evidence": "name:item"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaAllyMarker",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaAllyMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaAllyMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttack"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackNone",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNone"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackNone"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackNone",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNone"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackNone"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.blind",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaBasicAttackNoneMiss",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaBasicAttackNoneMiss"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNoneMissMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNoneMiss"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackNoneMiss"
+   ],
+   "evidence": "name:miss"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackNoneMiss",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaBasicAttackNoneMiss"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNoneMissMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNoneMiss"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackNoneMiss"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackNoneMiss",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaBasicAttackNoneMiss"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNoneMissMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackNoneMiss"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackNoneMiss"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackPow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackPow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackPow"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackPow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackPow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackPow"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaBasicAttackSlow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.basic-attack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackSlow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "damage.tag-basicattack",
+  "family": "damage",
+  "behavior": "KalistaBasicAttackSlow",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0,
+    4.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": [
+    35.0,
+    80.0,
+    125.0,
+    170.0,
+    215.0,
+    260.0,
+    305.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.6000000238418579
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6826,
+   "effect_amounts": {
+    "effect_0": [
+     35.0,
+     80.0,
+     125.0,
+     170.0,
+     215.0,
+     260.0,
+     305.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaBasicAttackSlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 4.0,
+    "rank_max": 4.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Attack effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaBasicAttackSlow"
+   ],
+   "evidence": "name:basicattack"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaCoopStrikeAlly",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaCoopStrikeAlly"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
+   ],
+   "evidence": "manual: Oathsworn applies Soul-Mark (wiki W passive)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaCoopStrikeMarkAlly",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaCoopStrikeMarkAlly"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaCoopStrikeMarkSelf",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaCoopStrikeMarkSelf"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.proc",
+  "family": "damage",
+  "behavior": "KalistaCoopStrikeProc",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaCoopStrikeProc"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "sustained"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "On-damage effects"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeProc"
+   ],
+   "evidence": "name:proc"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaCoopStrikeSelf",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaCoopStrikeSelf"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
+   ],
+   "evidence": "manual: W Soul-Marked applies mark to target hit (wiki W passive)"
+  }
+ },
+ {
+  "atom_id": "damage.critical-strike",
+  "family": "damage",
+  "behavior": "KalistaCritAttack",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0,
+    550.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 5327,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaCritAttack"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Critical strike",
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCritAttack"
+   ],
+   "evidence": "rule:crit"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.slow",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaESlow",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_3": [
+     17.0,
+     20.0,
+     22.0,
+     25.0,
+     27.0,
+     30.0,
+     32.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KalistaESlow"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaESlow"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Slow resist",
+    "Movement speed",
+    "Cleanse",
+    "Combat status"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaESlow"
+   ],
+   "evidence": "name:slow"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaExpunge",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25,
+   "damage": [
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0,
+    30.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_3": [
+     17.0,
+     20.0,
+     22.0,
+     25.0,
+     27.0,
+     30.0,
+     32.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KalistaExpunge"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaExpunge"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
+   ],
+   "evidence": "manual: E Rend rips spears for physical damage (wiki E)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaExpungeMarker",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7183,
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_3": [
+     17.0,
+     20.0,
+     22.0,
+     25.0,
+     27.0,
+     30.0,
+     32.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KalistaExpungeMarker"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaExpungeMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaExpungeWrapper",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25,
+   "damage": [
+    0.0,
+    5.0,
+    10.0,
+    15.0,
+    20.0,
+    25.0,
+    30.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "physical",
+   "affects_type_flags": 7183,
+   "effect_amounts": {
+    "effect_0": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     0.0,
+     5.0,
+     10.0,
+     15.0,
+     20.0,
+     25.0,
+     30.0
+    ],
+    "effect_3": [
+     17.0,
+     20.0,
+     22.0,
+     25.0,
+     27.0,
+     30.0,
+     32.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25,
+    "behavior": "KalistaExpungeWrapper"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaExpungeWrapper"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaExpungeWrapperAbility/KalistaExpungeMarker"
+   ],
+   "evidence": "manual: E Rend rips spears for physical damage (wiki E)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KalistaMysticShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "cast_time": null,
+   "damage": [
+    -55.0,
+    10.0,
+    75.0,
+    140.0,
+    205.0,
+    270.0,
+    335.0
+   ],
+   "duration": null,
+   "ratios": {
+    "TotalADRatio": 1.0499999523162842
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     -55.0,
+     10.0,
+     75.0,
+     140.0,
+     205.0,
+     270.0,
+     335.0
+    ],
+    "TotalADRatio": [
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "TotalADRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
+   ],
+   "evidence": "tag:Trait_AoE"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShot",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "cast_time": null,
+   "damage": [
+    -55.0,
+    10.0,
+    75.0,
+    140.0,
+    205.0,
+    270.0,
+    335.0
+   ],
+   "duration": null,
+   "ratios": {
+    "TotalADRatio": 1.0499999523162842
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     -55.0,
+     10.0,
+     75.0,
+     140.0,
+     205.0,
+     270.0,
+     335.0
+    ],
+    "TotalADRatio": [
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "TotalADRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShot"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [
+   "damage.resistance-mitigation",
+   "heal-shield.life-steal",
+   "heal-shield.omnivamp",
+   "heal-shield.grey-health"
+  ],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
+   ],
+   "evidence": "tag:Trait_DamageAbility"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.3499999940395355,
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3499999940395355,
+    "behavior": "KalistaMysticShotMis"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaMysticShotMisMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShotMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMis"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMis",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.3499999940395355,
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.3499999940395355,
+    "behavior": "KalistaMysticShotMis"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaMysticShotMisMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShotMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.3499999940395355,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMis"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMisTrue",
+  "trigger": "on_cast",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0,
+    9.0
+   ],
+   "cast_range": [
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0,
+    10000.0
+   ],
+   "mana_cost": [
+    60.0,
+    65.0,
+    70.0,
+    75.0,
+    80.0,
+    85.0
+   ],
+   "cast_time": null,
+   "damage": [
+    -55.0,
+    10.0,
+    75.0,
+    140.0,
+    205.0,
+    270.0,
+    335.0
+   ],
+   "duration": null,
+   "ratios": {
+    "TotalADRatio": 1.0499999523162842
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 13327,
+   "effect_amounts": null,
+   "data_values": {
+    "BaseDamage": [
+     -55.0,
+     10.0,
+     75.0,
+     140.0,
+     205.0,
+     270.0,
+     335.0
+    ],
+    "TotalADRatio": [
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842,
+     1.0499999523162842
+    ]
+   },
+   "calculations": {
+    "TotalDamage": [
+     "BaseDamage",
+     "TotalADRatio"
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShotMisTrue"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 9.0,
+    "rank_max": 9.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShot"
+   ],
+   "evidence": "variant of KalistaMysticShot (Q Pierce missile)"
+  }
+ },
+ {
+  "atom_id": "damage.aoe",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaMysticShotMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaMysticShotMissileMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShotMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage",
+    "Damage over time"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMissile"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "damage.damage-instance",
+  "family": "damage",
+  "behavior": "KalistaMysticShotMissile",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": [
+    30.0,
+    90.0,
+    150.0,
+    245.0,
+    315.0,
+    440.0,
+    565.0
+   ],
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaMysticShotMissile"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaMysticShotMissileMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaMysticShotMissile"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "burst",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Damage"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaMysticShotAbility/KalistaMysticShotMissile"
+   ],
+   "inherited_from": "KalistaMysticShot",
+   "evidence": "inherited:KalistaMysticShot"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPAltarBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0,
+    1100.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.4000000059604645
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 23567,
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     80.0,
+     110.0,
+     140.0,
+     170.0,
+     200.0,
+     230.0
+    ],
+    "effect_1": [
+     13.0,
+     12.0,
+     11.0,
+     10.0,
+     9.0,
+     8.0,
+     7.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPAltarBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPAltarBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPAltarChannel",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0,
+    2.0
+   ],
+   "cast_range": [
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0,
+    250.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 2.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     375.0,
+     625.0,
+     875.0,
+     1125.0,
+     0.0,
+     0.0,
+     250.0
+    ],
+    "effect_1": [
+     75.0,
+     150.0,
+     225.0,
+     300.0,
+     0.0,
+     0.0,
+     75.0
+    ],
+    "effect_2": [
+     180.0,
+     150.0,
+     120.0,
+     90.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "KalistaPAltarChannel"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPAltarChannel"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 2.0,
+    "rank_max": 2.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPAltarChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.root",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPBondingRootAlly",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPBondingRootAlly"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Dash",
+    "Blink",
+    "Cleanse"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPBondingRootAlly"
+   ],
+   "evidence": "name:root"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     130.0,
+     160.0,
+     185.0
+    ],
+    "effect_1": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "KalistaPChannel"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPChannel"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPInvocation",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ModesASCap": 6.0,
+    "ModesAStoADRatio": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": {
+    "DashSpeedDivisor": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GameModeInteger": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ModesASCap": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModesAStoADRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "MoveSpeedMultiplier": [
+     null,
+     null
+    ],
+    "{c3169619}": [
+     null,
+     null
+    ],
+    "{091295b4}": [
+     null
+    ],
+    "{5728f7e1}": [
+     null
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPInvocation"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
+   ],
+   "evidence": "manual: Oathsworn bond invocation (wiki P)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPassiveAllyBuff",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveAllyBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveAllyBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPassiveBuff",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ModesASCap": 6.0,
+    "ModesAStoADRatio": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": {
+    "DashSpeedDivisor": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GameModeInteger": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ModesASCap": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModesAStoADRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "MoveSpeedMultiplier": [
+     null,
+     null
+    ],
+    "{c3169619}": [
+     null,
+     null
+    ],
+    "{091295b4}": [
+     null
+    ],
+    "{5728f7e1}": [
+     null
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveBuff"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.channel",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveChannel",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0,
+    650.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "effect_0": [
+     25.0,
+     50.0,
+     75.0,
+     100.0,
+     130.0,
+     160.0,
+     185.0
+    ],
+    "effect_1": [
+     80.0,
+     100.0,
+     120.0,
+     140.0,
+     160.0,
+     180.0,
+     200.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "channel",
+    "duration": null,
+    "behavior": "KalistaPassiveChannel"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveChannel"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Interrupt",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveChannel"
+   ],
+   "evidence": "name:channel"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPassiveCoopStrike",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveCoopStrike"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkSelf"
+   ],
+   "evidence": "manual: W Soul-Marked applies mark to target hit (wiki W passive)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveDashSpell",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveDashSpell"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashSpell"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveDashSpellActual",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveDashSpellActual"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashSpellActual"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaPassiveDashTargeter",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveDashTargeter"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveDashTargeter"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaPassiveOn",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ModesASCap": 6.0,
+    "ModesAStoADRatio": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": {
+    "DashSpeedDivisor": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GameModeInteger": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ModesASCap": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModesAStoADRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "MoveSpeedMultiplier": [
+     null,
+     null
+    ],
+    "{c3169619}": [
+     null,
+     null
+    ],
+    "{091295b4}": [
+     null
+    ],
+    "{5728f7e1}": [
+     null
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaPassiveOn"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
+   ],
+   "evidence": "manual: Martial Poise passive active state (wiki P)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDash",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyDash"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyDash"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDashCantCast0",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyDashCantCast0"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast0"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDashCantCast1",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyDashCantCast1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast1"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.additive-stacking",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRAllyDashCantCast1",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyDashCantCast1"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Stacking",
+    "Mana"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast1"
+   ],
+   "evidence": "name:11"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDashCantCast2",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyDashCantCast2"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast2"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyDashCantCast3",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyDashCantCast3"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "engage",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary",
+    "Crowd control",
+    "Blink",
+    "Interrupt"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRAllyDashCantCast3"
+   ],
+   "evidence": "name:dash"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyStun",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "effect_1": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     450.0,
+     550.0,
+     600.0
+    ],
+    "effect_2": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0,
+     575.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyStun"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 75.0,
+    "rank_max": 75.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStun"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyStunBuffer",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "effect_1": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     450.0,
+     550.0,
+     600.0
+    ],
+    "effect_2": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0,
+     575.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyStunBuffer"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 75.0,
+    "rank_max": 75.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunBuffer"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRAllyStunBuffer",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "effect_1": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     450.0,
+     550.0,
+     600.0
+    ],
+    "effect_2": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0,
+     575.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyStunBuffer"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 75.0,
+    "rank_max": 75.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunBuffer"
+   ],
+   "evidence": "name:buff"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.stun",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRAllyStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "effect_1": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     450.0,
+     550.0,
+     600.0
+    ],
+    "effect_2": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0,
+     575.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyStunMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 75.0,
+    "rank_max": 75.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "peel"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Crowd control",
+    "Types of Crowd Control",
+    "Types of Crowd Control/Summary",
+    "Cleanse",
+    "Tenacity"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunMarker"
+   ],
+   "evidence": "name:stun"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRAllyStunMarker",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0,
+    75.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": [
+    100.0,
+    100.0,
+    100.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     2.0,
+     2.5,
+     3.0,
+     3.5,
+     4.0,
+     4.5
+    ],
+    "effect_1": [
+     0.0,
+     50.0,
+     100.0,
+     150.0,
+     450.0,
+     550.0,
+     600.0
+    ],
+    "effect_2": [
+     125.0,
+     200.0,
+     275.0,
+     350.0,
+     425.0,
+     500.0,
+     575.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRAllyStunMarker"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 75.0,
+    "rank_max": 75.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyStunMarker"
+   ],
+   "evidence": "name:mark"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRInvuln",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": null,
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": null,
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRInvuln"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff",
+    "Invulnerability"
+   ],
+   "binary": [
+    "KalistaRInvuln"
+   ],
+   "evidence": "manual: R renders Oathsworn invulnerable and untargetable (wiki R Fate's Call)"
+  }
+ },
+ {
+  "atom_id": "crowd-control-mobility.dash",
+  "family": "crowd-control-mobility",
+  "behavior": "KalistaRMis",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.5
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "effect_1": [
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0,
+     40.0
+    ],
+    "effect_2": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ],
+    "effect_3": [
+     15.0,
+     50.0,
+     85.0,
+     120.0,
+     155.0,
+     190.0,
+     225.0
+    ],
+    "effect_4": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRMis"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Dash",
+    "Types of Crowd Control/Summary"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaRxAbility/KalistaRAllyDash"
+   ],
+   "evidence": "variant of KalistaRAllyDash (R Oathsworn dash missile)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.buff",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaRSpellPassive",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": null,
+   "cast_range": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "ModesASCap": 6.0,
+    "ModesAStoADRatio": 0.699999988079071
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": null,
+   "effect_amounts": null,
+   "data_values": {
+    "DashSpeedDivisor": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ],
+    "GameModeInteger": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "ModesASCap": [
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0,
+     6.0
+    ],
+    "ModesAStoADRatio": [
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071,
+     0.699999988079071
+    ]
+   },
+   "calculations": {
+    "MoveSpeedMultiplier": [
+     null,
+     null
+    ],
+    "{c3169619}": [
+     null,
+     null
+    ],
+    "{091295b4}": [
+     null
+    ],
+    "{5728f7e1}": [
+     null
+    ]
+   },
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaRSpellPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": null,
+    "rank_max": null
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Buff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaPassiveBuffAbility/KalistaPassiveBuff"
+   ],
+   "evidence": "manual: R hold/tether state for Oathsworn (wiki R Fate's Call)"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.ammo",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaW",
+  "trigger": "on_cast",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0,
+    30.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.5,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "MarkDuration": 4.0
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 15567,
+   "effect_amounts": {
+    "effect_0": [
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0,
+     80.0
+    ],
+    "effect_2": [
+     100.0,
+     125.0,
+     150.0,
+     175.0,
+     200.0,
+     225.0,
+     250.0
+    ],
+    "effect_3": [
+     100.0,
+     90.0,
+     80.0,
+     70.0,
+     60.0,
+     50.0,
+     40.0
+    ],
+    "effect_5": [
+     50.0,
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0,
+     200.0
+    ],
+    "effect_6": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ]
+   },
+   "data_values": {
+    "MarkDuration": [
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "MaximumMonsterDamage": [
+     75.0,
+     100.0,
+     125.0,
+     150.0,
+     175.0,
+     200.0,
+     225.0
+    ],
+    "MaxHealthDamage": [
+     0.07999999821186066,
+     0.10000000149011612,
+     0.11999999731779099,
+     0.14000000059604645,
+     0.1599999964237213,
+     0.18000000715255737,
+     0.20000000298023224
+    ],
+    "PerTargetCooldown": [
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0,
+     10.0
+    ],
+    "AmmoRechargeTooltip": [
+     100.0,
+     90.0,
+     80.0,
+     70.0,
+     60.0,
+     50.0,
+     40.0
+    ]
+   },
+   "calculations": null,
+   "max_ammo": [
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "ammo_recharge": [
+    100.0,
+    90.0,
+    80.0,
+    70.0,
+    60.0,
+    50.0,
+    50.0
+   ]
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.5,
+    "behavior": "KalistaW"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaW"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 30.0,
+    "rank_max": 30.0
+   },
+   "cast_time_seconds": 0.5,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Ability resource"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaWAbility/KalistaW"
+   ],
+   "evidence": "tag:Trait_Ammo"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.mark",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaWAllyPassive",
+  "trigger": "on_effect",
+  "target_policy": "ally",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0,
+    25000.0
+   ],
+   "mana_cost": null,
+   "cast_time": null,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 0.30000001192092896
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 7375,
+   "effect_amounts": {
+    "effect_0": [
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0,
+     50.0
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaWAllyPassive"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": null,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Debuff"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaCoopStrikeMarkAlly"
+   ],
+   "evidence": "manual: allied basic attacks apply Soul-Mark (wiki W passive)"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "KalistaWSeen",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaWSeen"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaWSeenMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaWSeen"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaWSight"
+   ],
+   "evidence": "variant of KalistaWSight (W Sentinel grants sight)"
+  }
+ },
+ {
+  "atom_id": "vision-economy.sight",
+  "family": "vision-economy",
+  "behavior": "KalistaWSight",
+  "trigger": "on_effect",
+  "target_policy": "enemy",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": "magic",
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaWSight"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaWSightMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaWSight"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "utility",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Sight",
+    "Ward",
+    "Vision score",
+    "Stealth"
+   ],
+   "binary": [
+    "Characters/Kalista/Spells/KalistaWSight"
+   ],
+   "evidence": "name:sight"
+  }
+ },
+ {
+  "atom_id": "stack-transform-summon-resource.summon",
+  "family": "stack-transform-summon-resource",
+  "behavior": "KalistaWSpawnMinion",
+  "trigger": "on_effect",
+  "target_policy": "self",
+  "parameters": {
+   "cooldown": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "cast_range": [
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0,
+    1200.0
+   ],
+   "mana_cost": null,
+   "cast_time": 0.25099998712539673,
+   "damage": null,
+   "duration": null,
+   "ratios": {
+    "mCoefficient": 1.2000000476837158
+   },
+   "tick_rate": null,
+   "stacks_cap": null,
+   "damage_type": null,
+   "affects_type_flags": 6154,
+   "effect_amounts": {
+    "effect_0": [
+     30.0,
+     90.0,
+     150.0,
+     245.0,
+     315.0,
+     440.0,
+     565.0
+    ],
+    "effect_1": [
+     2.25,
+     2.5,
+     2.75,
+     3.0,
+     3.25,
+     3.5,
+     3.75
+    ]
+   },
+   "data_values": null,
+   "calculations": null,
+   "max_ammo": null,
+   "ammo_recharge": null
+  },
+  "states": [
+   {
+    "state": "cast",
+    "duration": 0.25099998712539673,
+    "behavior": "KalistaWSpawnMinion"
+   },
+   {
+    "state": "travel",
+    "duration": null,
+    "behavior": "KalistaWSpawnMinionMissile"
+   },
+   {
+    "state": "impact",
+    "duration": null,
+    "behavior": "KalistaWSpawnMinion"
+   }
+  ],
+  "cycle": {
+   "cooldown_seconds": {
+    "rank_1": 0.0,
+    "rank_max": 0.0
+   },
+   "cast_time_seconds": 0.25099998712539673,
+   "uptime_fraction": null,
+   "reset_on": [],
+   "tempo_class": "setup",
+   "note": "cooldown from child spell object (0); ability-level cooldown not present in binary"
+  },
+  "relations": [],
+  "provenance": {
+   "wiki": [
+    "Summon"
+   ],
+   "binary": [
+    "KalistaWSpawnMinion"
+   ],
+   "evidence": "manual: W summons a Sentinel patrol (wiki W Sentinel)"
+  }
+ }
+]

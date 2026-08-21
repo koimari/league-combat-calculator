@@ -14,6 +14,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     simple_damage,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -269,10 +270,14 @@ SLOTS = {
     "P": _whisper,
     "final_round": _final_round,
     "Q": _dancing_grenade,
-    "W": simple_damage(
-        attr="Physical Damage",
-        dmg_type="physical",
-        event_order_certified="single_hit",
+    "W": with_control(
+        simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
+        kind="root",
+        duration_attr="Root Duration",
     ),
     "E": _captive_audience,
     "R": _curtain_call,

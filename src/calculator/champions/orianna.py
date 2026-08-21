@@ -13,9 +13,10 @@ Why each slot is non-generic:
   ramp: auto 1 at 0 stacks (x1.00), auto 2 at 1 (x1.15), auto 3+ at 2
   (x1.30). The passive applies SPELL effects, not on-hit effects — it
   never declares ``applies_item_on_hits``.
-- Q must read "Magic Damage" explicitly so the 70%-effectiveness
-  "Reduced Damage" row (secondary targets) can never be picked up — the
-  single-target calc always uses full damage on the primary target.
+- Q reads "Magic Damage" and the 70%-effectiveness "Reduced Damage" row
+  separately: the primary target takes the full row and each target
+  selected by ``q_secondary_targets`` takes one reduced hit, so the
+  reduction can never silently land on the primary.
 - W reads "Magic Damage" explicitly; the speed-field/slow row
   ("Movement Speed Modifier") is utility and must not leak into damage.
 - E's pass-through damage is gated by the ``e_passes_through_target``
@@ -23,11 +24,12 @@ Why each slot is non-generic:
   ("Shield Strength") and ball-attached resistances ("Bonus
   Resistances") are defensive-only and excluded.
 - R reads "Magic Damage" explicitly for symmetry with the rest of the
-  kit; stun/pull is utility, not modeled.
+  kit; the sourced stun is attached to the damage part.
 """
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
     damage_entry,
@@ -37,6 +39,7 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -87,6 +90,55 @@ def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
 _clockwork_windup.phase = ONHIT
 
 
+def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Q: primary-target magic damage plus reduced hits beyond the first.
+
+    The cached prose: the ball "deal[s] magic damage to enemies it
+    passes through and nearby enemies upon arrival, reduced to 70%
+    against those hit beyond the first" — the "Reduced Damage" row is
+    exactly 70% of "Magic Damage" at every rank.  Each secondary target
+    selected via ``q_secondary_targets`` takes one reduced hit.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    rank = ctx.rank_for()
+    if rank < 1:
+        return None
+
+    primary = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
+    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
+    total = primary + reduced * secondary
+    entry = damage_entry(
+        ability.get("name", "Command: Attack"),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "magic",
+    )
+    # One arrival: the primary and every secondary target are struck at
+    # the cast boundary together, which is the instant each part authors
+    # (a zero interval between simultaneous hits).
+    parts = [DamagePart("magic", primary, time_offset=0.0)]
+    if secondary:
+        parts.append(
+            DamagePart(
+                "magic",
+                reduced,
+                count=secondary,
+                time_offset=0.0,
+                hit_interval=0.0,
+            )
+        )
+        entry["detail"] = (
+            f"primary target + {secondary} secondary target(s) at the "
+            f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
+        )
+    entry["parts"] = tuple(parts)
+    return entry
+
+
 def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: pass-through magic damage; zero when the ball stops on an ally.
 
@@ -119,6 +171,18 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
 
 OPTIONS: list[dict[str, Any]] = [
     {
+        "key": "q_secondary_targets",
+        "type": "int",
+        "default": 0,
+        "min": 0,
+        "max": 5,
+        "label": (
+            "Enemies hit by the ball beyond the first (each takes the "
+            "sourced 70% Reduced Damage row)"
+        ),
+        "rotation": {"role": "irrelevant", "slot": "Q"},
+    },
+    {
         "key": "e_passes_through_target",
         "type": "bool",
         "default": True,
@@ -132,23 +196,25 @@ ASSUMPTIONS = [
     "mid-fight (4s refresh window, sustained attacking)",
     "Passive applies spell effects, not on-hit effects — it does not "
     "trigger on-hit items",
-    "Q always hits the target as the primary (full damage; the 70% "
-    "secondary-target reduction is not modeled)",
+    "Q prices the primary target at full damage plus one sourced 70% "
+    "Reduced Damage hit per q_secondary_targets (default 0) — the "
+    "cached prose's 'reduced to 70% against those hit beyond the first'",
     "W speed field and slow are not modeled (utility)",
     "E shield (55-195 +45% AP) and bonus armor/MR (6-30) are not "
     "modeled (defensive only)",
     "E damage assumes the ball passes through the target (toggleable "
     "via champion option)",
-    "R stun/pull is not modeled (utility)",
+    "R stuns the target for the sourced 0.75-second interval; the pull is "
+    "utility and is not modeled",
 ]
 
 SLOTS = {
     # Each command moves the ball once and damages what it crosses once,
     # with no sourced sub-cast phase, so each certifies the cast boundary
-    # its reviewed control rides on.
-    "Q": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
-    ),
+    # its reviewed control rides on.  Q is the exception: it can price more
+    # than one target off one arrival, so its parts author that instant
+    # directly instead of certifying a single landing.
+    "Q": _command_attack,
     "W": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
@@ -158,16 +224,23 @@ SLOTS = {
     ),
     "P": _clockwork_windup,
 }
+SLOTS["R"] = with_control(
+    SLOTS["R"],
+    kind="stun",
+    duration_attr="Stun Duration",
+)
 
 # Cached kit review.  Q's ball and E's fly-through only "deal[] magic
 # damage".  W's pulse damages and "leaves behind an electric field ...
 # enemies that move within the field are slowed by the same amount", which
 # is the control the pulse's own targets stand in.  R "deals magic damage
 # to nearby enemies, stuns them for 0.75 seconds, and pulls them over 325
-# units": two immobilize kinds in one cast, which is what the un-narrowed
-# "immobilize" states.  P is absent — Clockwork Windup is an on-hit rider
-# on the auto stream, not an ability event of its own.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "immobilize"}
+# units"; the stun is the interval the cache prices ("Stun Duration"), so
+# the slot names that kind and reads its length rather than standing in the
+# coarser "immobilize" — the pull stays named-but-unmodeled utility.  P is
+# absent — Clockwork Windup is an on-hit rider on the auto stream, not an
+# ability event of its own.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Orianna", cc_kinds=MODULE_CC)
 

@@ -3,15 +3,17 @@
 # Ships only the runtime: src/, static/, templates/, and the data/ cache.
 # vendor/ (the wiki scraper) stays out — patch-day data updates run locally
 # and arrive here as committed changes to data/.
-FROM python:3.14.6-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
+FROM python:3.15.0rc1-slim@sha256:858b8c9b2c764d1a3076e2c2ed64fb3f76ca2ec068ec81c1c059d3a5fcc1088e
 
 WORKDIR /app
 
 COPY requirements-runtime.txt .
 RUN apt-get update \
     && apt-get upgrade --yes \
+    && apt-get install --no-install-recommends --yes libpq5 \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --require-hashes -r requirements-runtime.txt \
+    && pip uninstall --yes pip \
     && addgroup --system app \
     && adduser --system --ingroup app app
 

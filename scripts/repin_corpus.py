@@ -180,7 +180,7 @@ def reprobe_failures(
         try:
             _KIND_ASSERTIONS[kind](_run_calculate(scenario["setup"]), expected)
         except AssertionError as exc:
-            failures.append((scenario["id"], str(exc).splitlines()[0]))
+            failures.append((scenario["id"], (str(exc).splitlines() or [repr(exc)])[0]))
     return tuple(failures)
 
 

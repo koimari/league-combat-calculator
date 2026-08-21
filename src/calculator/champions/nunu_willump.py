@@ -19,6 +19,13 @@ cone cleave lands on secondary targets a 1v1 does not have.
 
 from typing import Any
 
+from ..healing_helpers import (
+    HealAnchor,
+    _ability,
+    _payments,
+    _rank,
+    _trigger_fields,
+)
 from .engine import BUFF, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
@@ -159,4 +166,54 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
-SELF_HEALING_RULE = declare_healing_rule("Nunu & Willump")
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+def derive_self_healing(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
+    """Price Consume's champion heal, re-read at the heal's own timestamp.
+
+    "Willump takes a bite ... healing himself" for the sourced Base
+    Champion Heal, "increased by 50% if Willump is below 50% of his
+    maximum health" — a live health test, so the amount is a formula the
+    participant ledger evaluates when the heal lands rather than a number
+    fixed at parse time.
+    """
+    del fight_duration_seconds
+    base = extract_named(
+        _ability(champion_data, "Q"),
+        "Base Champion Heal",
+        _rank(ability_damages, "Q"),
+        champion_stats,
+        {},
+    )
+
+    def consume_heal(
+        current_health: float,
+        maximum_health: float,
+        base_amount: float = base,
+    ) -> float:
+        if maximum_health > 0.0 and current_health < maximum_health * 0.5:
+            return base_amount * 1.5
+        return base_amount
+
+    healing = [
+        {
+            "time": float(payment.event.get("time", 0.0)),
+            "amount": 0.0,
+            "amount_formula": consume_heal,
+            "source": "Consume",
+            "kind": "champion_ability",
+            **_trigger_fields(payment.event),
+        }
+        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+    ]
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Nunu & Willump", derive_self_healing)

@@ -34,7 +34,7 @@ from ..item_behavior import (
     RuleFamily,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..item_effects import PerHitEffect, damage_source
+from ..item_effects import CLASS_RESTRICTED_ON_HITS, PerHitEffect, damage_source
 from . import damage_formula
 
 # The field a strike rule compiles to for inspection: its term count.  A
@@ -139,6 +139,12 @@ PAIR_INTERPRETER = OnHitStrikePairInterpreter()
 WALK_INTERPRETER = OnHitStrikeWalkInterpreter()
 
 
+# The mechanic slug a class-restricted on-hit row previews.  One prefix and
+# the entry's own target class, so the id follows the adjudication instead of
+# being a second spelling of it.
+CLASS_RESTRICTED_MECHANIC_PREFIX = "class_restricted_on_hit"
+
+
 def strike_mechanic_id(owner: str) -> str:
     """*owner*'s on-hit strike mechanic id, or a stop.
 
@@ -155,12 +161,20 @@ def strike_mechanic_id(owner: str) -> str:
     make unrepresentable.
     """
     rules = strike_rules([owner])
-    if not rules:
-        raise OnHitStrikeInterpretationError(
-            f"{owner} authors an on-hit row and declares no on_hit_strike "
-            "rule, so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    if rules:
+        return rules[0].mechanic_id
+    restricted = CLASS_RESTRICTED_ON_HITS.get(owner)
+    if restricted is not None:
+        # A class-restricted branch is adjudicated rather than declared, and
+        # deliberately so: it is armed only by a fight whose own target class
+        # matches, never by the interpreter-owned strike stream, so it can
+        # never be the double count the stop below exists to prevent.  Its id
+        # is derived from the adjudication rather than spelled here.
+        return f"{CLASS_RESTRICTED_MECHANIC_PREFIX}.{restricted['target_class']}"
+    raise OnHitStrikeInterpretationError(
+        f"{owner} authors an on-hit row and declares no on_hit_strike "
+        "rule, so its pair row has no mechanic to be a preview of"
+    )
 
 
 def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
@@ -232,6 +246,7 @@ def per_hit_effects(
 
 
 __all__ = [
+    "CLASS_RESTRICTED_MECHANIC_PREFIX",
     "ON_HIT_BREAKDOWN_PREFIX",
     "ON_HIT_SUFFIX",
     "STRIKE_TERM_COUNT_FIELD",

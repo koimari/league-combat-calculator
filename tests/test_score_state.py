@@ -138,8 +138,16 @@ class TestTriggerLinkageIsWriteOnceAndFailsClosed:
 class TestItCannotScheduleAWalkAuthoredHeal:
     """The refusal that says a compiler bug is a bug and not a number."""
 
-    def test_scheduling_one_raises_and_names_the_compilation_that_should_have(
+    def test_scheduling_one_raises_and_names_the_wiring_that_should_have(
         self,
     ) -> None:
-        with pytest.raises(AssertionError, match="failed compilation"):
+        """An unwired ledger names the three injections it is missing.
+
+        The score path may schedule a walk-authored heal (Maw's post-Lifeline
+        omnivamp) only once its caller hands over the live actions list, the
+        roster index and the event compiler.  Without them the ledger refuses
+        by name rather than dropping the heal, which would be a build priced
+        one way by the walk and another by the score.
+        """
+        with pytest.raises(AssertionError, match="compiler wiring"):
             ScoreLedger(1).schedule_heal({"amount": 5.0}, "main")

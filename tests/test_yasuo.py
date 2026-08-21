@@ -14,12 +14,12 @@ from tests import cc_review, coverage_truth
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 
-def _q_kinds(**options):
-    """The kinds Steel Tempest's parts carry for one option state."""
+def _q_parts(**options):
+    """Steel Tempest's parts for one option state."""
     parsed = parse_champion_abilities(
         cc_review.kit("Yasuo"), 18, 100.0, _RANKS, champion_options=options or None
     )
-    return sorted({part.cc_kind for part in parsed["Q"]["parts"]})
+    return parsed["Q"]["parts"]
 
 
 class TestReviewedCrowdControl:
@@ -45,14 +45,30 @@ class TestReviewedCrowdControl:
         assert "yasuo will be knocked down by any immobilizing" in e_text
 
     def test_steel_tempest_carries_the_branch_it_is_cast_on(self):
-        """The whirlwind knocks up; the ordinary thrust does not."""
+        """The whirlwind knocks up; the ordinary thrust does not.
+
+        One thrust is ONE landing, so the branch's kind rides the part
+        that carries the cast instant — the flat base.  The AD-ratio part
+        is the same hit split for crit eligibility, not a second one: it
+        books no event of its own and therefore states no kind (a marker
+        the ledger cannot see reviews nothing —
+        ``engine._validate_cc_event_contract``).  Under ``MODULE_CC``'s
+        vocabulary a reviewed *absence* is the string ``"none"``, never
+        ``None``.
+        """
         data = cc_review.kit("Yasuo")
         assert "Q" not in yasuo.MODULE_CC
         assert "additionally knocks up enemies hit for 0.9 seconds" in (
             cc_review.slot_text(data, "Q")
         )
-        assert _q_kinds() == ["none"]
-        assert _q_kinds(q_gathering_storm=2) == ["knockup"]
+        thrust = _q_parts()
+        assert [part.cc_kind for part in thrust] == ["none", None]
+        assert thrust[0].cc_duration == 0.0
+        whirlwind = _q_parts(q_gathering_storm=2)
+        assert [part.cc_kind for part in whirlwind] == ["knockup", None]
+        assert whirlwind[0].cc_duration == 0.9
+        # Same sourced damage either way: the empower is the knock-up.
+        assert [part.amount for part in thrust] == [part.amount for part in whirlwind]
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Yasuo") == []

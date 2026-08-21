@@ -11,7 +11,8 @@ Why each slot is non-generic:
   per-direction cooldown is wiki prose (the JSON cooldown field holds only
   the 1s cast lockout).
 - W (Above and Below) is the one generic-shaped slot: a plain
-  "Magic Damage" attribute read (knockup/slow are utility, not modeled).
+  "Magic Damage" attribute read with its sourced knock-up interval; the slow
+  remains utility.
 - E (Royal Maelstrom) computes its slash count from final bonus attack
   speed — floor(6 + bonus AS% / 40) — and interpolates per-slash damage
   between the JSON min/max attributes by target missing health; slashes
@@ -42,6 +43,7 @@ from .slotlib import (
     find_named_leveling,
     simple_damage,
     sum_modifiers,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -388,8 +390,9 @@ ASSUMPTIONS = [
     "the 1s cast lockout); its bonus-AS haste conversion (0.25 haste per "
     "1% bonus AS) is not modeled",
     "Monster/minion-only damage components skipped (champion combat calculator)",
-    "Void Remora pets, R heal, E damage reduction/lifesteal, and W "
-    "knockup/slow skipped (no enemy champion damage)",
+    "Void Remora pets, R heal, and E damage reduction/lifesteal remain "
+    "outside the combat ledger; W knock-up downtime is sourced and counted, "
+    "while its slow remains utility",
     "True Form's total-AS increase multiplies final attack speed and does "
     "not count as bonus AS for E's slash count",
     "'Based on level' scalings read the JSON per-level arrays (which "
@@ -402,9 +405,15 @@ SLOTS = {
     "P": _death_in_lavender,
     "Q": _void_surge,
     # One tail slam on one target, so one part and one hit — the
-    # certification that carries W's reviewed knockup into the ledger.
-    "W": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # certification that carries W's reviewed knockup into the ledger,
+    # with the interval read off the cached "Knock Up Duration" row
+    # (0.6-1.0s) rather than left unsourced.
+    "W": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="knockup",
+        duration_attr="Knock Up Duration",
     ),
     "E": _royal_maelstrom,
     "R": _endless_banquet,

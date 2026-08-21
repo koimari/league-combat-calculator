@@ -117,7 +117,12 @@ def test_rakan_gleaming_quill_heals_per_level_plus_ap():
     The heal is per-LEVEL (20 entries for levels 1-20), not per rank:
     40 : 230 (+ 55% AP) at level 18 -> 210 (+ 55% AP).
     """
-    combat = _fight("Rakan", ap_item="Rabadon's Deathcap")
+    # Keep the Q heal timing isolated from Rakan's separate R charm.
+    combat = _fight(
+        "Rakan",
+        ap_item="Rabadon's Deathcap",
+        ranks={"Q": 5, "W": 5, "E": 5, "R": 0},
+    )
     ap = _main_ap(combat)
     flat = _flat_value("Rakan", "Q", "Heal", 18)
     ratio = _ap_ratio_percent("Rakan", "Q", "Heal", 18)

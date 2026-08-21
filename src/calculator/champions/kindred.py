@@ -21,12 +21,28 @@ modifier override Mounting Dread uses), over ``w_attacks`` attacks
 (Wolf attacks at 25% of Kindred's bonus attack speed; the count is the
 player-controlled option, default 3 attacks in the window).
 
-Coverage: P is ``no_damage``, not ``out_of_scope`` — Mark of the Kindred
-deals nothing; its marks are the range/attack-speed/scaling state the other
-slots already read.  R (Lamb's Respite) deals nothing either, but its end
-heal is priced — the ally scanner pays every teammate in the zone and the
-caster's own copy — so the slot is ``modeled`` as a state row the engine
-consumes.  Q, W and E each price their own row.
+Coverage (roadmap session 4, 2026-08-20): every stale ``out_of_scope``
+label closes, with no behavior change -- ``MODULE_COVERAGE`` was simply
+stale for slots the CP10.3 packet review had already closed, the identical
+stale-label pattern Alistar-P/Anivia-P were corrected under in the prior
+roadmap session.  P (Mark of the Kindred) and R (Lamb's Respite) each emit
+an explicit ``no_damage`` row: P's marks are the range/attack-speed/scaling
+state the other slots already read, and R's minimum-health zone is state
+(its end heal is paid by ``derive_self_healing`` below -- the ally scanner
+pays every teammate in the zone and the caster's own copy -- not as enemy
+damage).  Q, W and E each price their own row.
+
+  - Q (Dance of Arrows): the atoms capture (data/atoms/kindred.atoms.json,
+    behavior KindredQ) and the cached leveling both carry a real
+    "Physical Damage" row; ``_dance_of_arrows`` already prices it via
+    ``typed_damage``. Simple mislabel fix.
+  - R (Lamb's Respite): the atoms capture's KindredR rows are
+    ``damage.aoe`` with ``damage_type: null`` (a structural AoE-zone tag,
+    not a priced formula -- the "minimum-health, can't die" zone), plus a
+    self-only ``heal-shield.heal`` (already paid by
+    ``derive_self_healing`` below) and a self buff. No enemy-damage
+    number exists to price; the no-death zone stays state, matching the
+    Kai'Sa-R precedent for a sourced-but-structurally-non-damage rider.
 """
 
 from __future__ import annotations
@@ -34,6 +50,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .module_helpers import no_damage, typed_damage
@@ -45,6 +62,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .. import healing_helpers as _healing
 
 
 def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -327,12 +345,76 @@ ASSUMPTIONS = [
     "default 100) the next basic attack heals Kindred for the "
     "missing-health share of the sourced 47 : 81 (based on level) heal "
     "(healing.py; the heal is not triggered at full health)",
-    "R (Lamb's Respite) is the reviewed no-damage packet",
+    "R (Lamb's Respite) is the reviewed no-damage packet: the minimum-"
+    "health zone and end heal are defensive/utility state, not enemy "
+    "damage (roadmap session 4: reclassified from out_of_scope to "
+    "no_damage, no behavior change)",
+    "Q (Dance of Arrows) is the reviewed physical-damage packet (roadmap "
+    "session 4: reclassified from out_of_scope to modeled, no behavior "
+    "change -- the slot always priced real damage)",
 ]
 
 SOURCES = load_champion_sources("Kindred")
 MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
+    slot: ("no_damage" if slot in {"P", "R"} else "modeled") for slot in "PQWER"
 }
 
-SELF_HEALING_RULE = declare_healing_rule("Kindred")
+
+# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def derive_self_healing(
+    champion_data,
+    champion_stats,
+    ability_damages,
+    damage_events,
+    cast_timeline=None,
+    fight_duration_seconds=None,
+):
+    """Resolve Kindred self-healing events from its authored packet."""
+    healing = []
+    r = _healing._ability(champion_data, "R")
+    r_rank = _healing._rank(ability_damages, "R")
+    r_heal = _healing.extract_named(r, "Heal", r_rank, champion_stats)
+    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    for cast_time in _healing._cast_slot_times(cast_timeline, "R"):
+        heal_time = cast_time + 4.0
+        if heal_time > duration + 1e-9:
+            continue
+        healing.append(
+            {
+                "time": heal_time,
+                "amount": r_heal,
+                "source": "Lamb's Respite",
+                "kind": "champion_ability",
+                "actor_wide": True,
+            }
+        )
+    # W passive Hunter's Vigor: at 100 stacks the next basic attack
+    # heals Kindred for 0% : 100% (based on her missing health) of the
+    # sourced per-level heal (47 : 81, data/champions.json W "Heal"
+    # per-level row).  The module emits the W_vigor receipt only at
+    # 100 stacks; the heal pays on the first basic-attack damage event
+    # (the deterministic next auto) and is naturally zero at full
+    # health (the wiki says it is not triggered there).
+    if "W_vigor" in ability_damages:
+        level = int(champion_stat(champion_stats, "level"))
+        heal = _healing.extract_named(
+            _healing._ability(champion_data, "W"), "Heal", level, champion_stats, {}
+        )
+        for event in _healing._attributed_events(
+            damage_events, lambda source, _event: source == "auto_attacks"
+        ):
+            healing.append(
+                {
+                    "time": float(event.get("time", 0.0)),
+                    "amount": 0.0,
+                    "amount_formula": _healing._missing_health_scaled_heal(0.0, heal),
+                    "source": "Hunter's Vigor",
+                    "kind": "champion_passive",
+                    **_healing._trigger_fields(event),
+                }
+            )
+            break
+    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+
+
+SELF_HEALING_RULE = declare_healing_rule("Kindred", derive_self_healing)

@@ -31,6 +31,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     simple_damage,
+    with_control,
 )
 from .source_receipts import load_champion_sources
 
@@ -169,8 +170,15 @@ SLOTS = {
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
     "E": _explosive_charge,
-    "R": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # The interval the target cannot act is the cached "Stun Duration"
+    # row (0.4/0.55/0.7s); the knock-back's own row is a DISTANCE, not a
+    # time, so the reviewed un-narrowed kind takes the sourced duration.
+    "R": with_control(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        kind="immobilize",
+        duration_attr="Stun Duration",
     ),
     "P": _draw_a_bead,
 }

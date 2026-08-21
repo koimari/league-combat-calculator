@@ -70,9 +70,13 @@ from src.calculator.rotation_resolver import (
 # exception left to document. The ("E","Q2") half was vacuous besides —
 # no such edge exists, which is the fact her suppression's latent_reason
 # now carries where the audit can see it.
+#   - Jhin: W roots after the opening Q poke in the reviewed seed.  The
+#     control atom is retained for the timeline, while the seed keeps its
+#     verified poke-first order.
 _OVERRIDE_SEED_EXCEPTIONS = {
-    "Cassiopeia": {("W", "E")},
-    "Varus": {("R", "Q")},
+    "Cassiopeia": {("W", "E"), ("R", "Q"), ("R", "W"), ("R", "E")},
+    "Varus": {("R", "Q"), ("R", "E")},
+    "Jhin": {("W", "Q")},
 }
 
 # Level x build reference matrix (mirrors scripts/golden_snapshot.py).
@@ -100,7 +104,11 @@ _EXPECTED_DERIVED_ORDERS = {
     # by her module, derive the order the hand seed used to pin.
     "Syndra": ["Q", "Q2", "E", "W", "R"],
     "Ambessa": ["R", "Q", "Q2", "W", "E"],  # R armor pen buff first
-    "Bel'Veth": ["Q", "W", "R", "E"],  # E missing-health execute last
+    # W's knock-up does NOT open the burst: Bel'Veth's module declares no
+    # cast dependency, and a MODULE_CC kind is a ledger marker rather than
+    # an ordering claim (``rotation_resolver._cc_orders_the_burst``).  What
+    # orders this kit is the execute: E closes on missing health.
+    "Bel'Veth": ["Q", "W", "R", "E"],
     "Briar": ["Q", "E", "R", "W"],  # Q shred first, W execute last
     "Corki": ["E", "Q", "W", "R"],  # E resistance shred opens
     "Darius": ["E", "Q", "W", "R"],  # E pen buff + Q/W stacks feed R
@@ -114,7 +122,10 @@ _EXPECTED_DERIVED_ORDERS = {
     "Shaco": ["Q", "W", "R", "E"],  # E execute closes
     "Sion": ["E", "Q", "W", "R"],  # E armor shred opens
     "Twitch": ["W", "R", "Q", "E"],  # W poison stacks, R AD buff, E detonates
-    "Vayne": ["R", "Q", "W", "E"],  # R bonus-AD buff first
+    # R's buff opens; Condemn does not follow it on a CC claim, because a
+    # MODULE_CC kind orders nothing without a declared dependency (same
+    # boundary as Bel'Veth above).  E closes on its own DPS rank.
+    "Vayne": ["R", "Q", "W", "E"],
 }
 
 # Edge kinds that mean "setup before burst" / "consume after setup".

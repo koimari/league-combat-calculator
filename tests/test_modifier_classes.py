@@ -13,6 +13,7 @@ from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.program.compile import action_from_event
 from src.calculator.survival.actions import (
     SurvivalAction,
+    TransitionRank,
     attack_class_of,
     damage_class_of,
     declared_modifier_classes,
@@ -30,6 +31,15 @@ ALL_ATTACK = frozenset(AttackClass)
 # one packets from slot 0 skip and packets from any other slot pay.
 _MAIN = 0
 _OTHER = 1
+
+
+# MERGE: ``_modifier_applies`` gained a third argument -- a modifier may
+# name the one participant whose damage it prices, which is a different
+# question from who armed it.  Nothing below declares
+# ``source_participant``, so the restriction is inert and the source id is
+# passed as "" rather than invented.
+def _applies(modifier, action, source_id=""):
+    return _modifier_applies(modifier, action, source_id)
 
 
 def _modifier(**overrides):
@@ -76,7 +86,7 @@ class TestPacketClasses:
         """``None`` is honest, and it is in no declared set."""
         action = _packet(damage_type="")
         assert damage_class_of(action) is None
-        assert not _modifier_applies(_modifier(holder=-1), action)
+        assert not _applies(_modifier(holder=-1), action)
 
     @pytest.mark.parametrize(
         "fields,expected",
@@ -121,7 +131,12 @@ class TestTheDeclarationIsRequired:
 
     def test_an_event_without_a_declaration_fails_closed_to_empty(self):
         """Absent metadata is the neutral value, never a guessed set."""
-        action = action_from_event({"kind": "damage_modifier", "time": 0.0}, 1.0, 0, {})
+        action = action_from_event(
+            {"kind": "damage_modifier", "time": 0.0},
+            TransitionRank.DEBUFF_ARM,
+            0,
+            {},
+        )
         assert action.damage_classes == frozenset()
         assert action.attack_classes == frozenset()
 
@@ -129,7 +144,10 @@ class TestTheDeclarationIsRequired:
         """A spelling that looks like a class is the drift the enum retires."""
         with pytest.raises(TypeError, match="DamageClass members are required"):
             action_from_event(
-                {"kind": "damage_modifier", "damage_classes": ["magic"]}, 1.0, 0, {}
+                {"kind": "damage_modifier", "damage_classes": ["magic"]},
+                TransitionRank.DEBUFF_ARM,
+                0,
+                {},
             )
 
     def test_the_armed_modifier_carries_the_declaration(self):
@@ -151,19 +169,19 @@ class TestOnePredicateDecidesApplicability:
     """The owner skip, the class match and the delivery gate, in one place."""
 
     def test_the_owner_is_skipped_because_the_pair_engine_priced_it(self):
-        assert not _modifier_applies(_modifier(), _packet(attacker=_MAIN))
+        assert not _applies(_modifier(), _packet(attacker=_MAIN))
 
     def test_every_other_source_is_priced(self):
-        assert _modifier_applies(_modifier(), _packet())
+        assert _applies(_modifier(), _packet())
 
     @pytest.mark.parametrize("damage_type", ["physical", "true"])
     def test_a_magic_only_curse_leaves_the_other_classes_alone(self, damage_type):
         """C3's correction, at the predicate: 12% *magic* damage."""
-        assert not _modifier_applies(_modifier(), _packet(damage_type=damage_type))
+        assert not _applies(_modifier(), _packet(damage_type=damage_type))
 
     def test_a_from_all_sources_amp_prices_every_class(self):
         for damage_type in ("magic", "physical", "true"):
-            assert _modifier_applies(
+            assert _applies(
                 _modifier(damage_classes=ALL_DAMAGE),
                 _packet(damage_type=damage_type),
             )
@@ -176,17 +194,15 @@ class TestOnePredicateDecidesApplicability:
             damage_classes=ALL_DAMAGE,
             attack_classes=frozenset({AttackClass.BASIC_ATTACK}),
         )
-        assert _modifier_applies(
-            basic_only, _packet(is_ability=False, basic_attack=True)
-        )
-        assert not _modifier_applies(basic_only, _packet())
+        assert _applies(basic_only, _packet(is_ability=False, basic_attack=True))
+        assert not _applies(basic_only, _packet())
 
     def test_the_delivery_gate_still_excludes_what_is_neither(self):
         """Characterized, not corrected: see the sentinel for why it stays."""
         proc = _packet(is_ability=False, source_key="item_burn")
         assert attack_class_of(proc) is AttackClass.OTHER
         assert AttackClass.OTHER in _modifier()["attack_classes"]
-        assert not _modifier_applies(_modifier(), proc)
+        assert not _applies(_modifier(), proc)
 
 
 class TestTheHolderIsARosterSlot:
@@ -207,7 +223,7 @@ class TestTheHolderIsARosterSlot:
         """The packet declares a participant id; the kernel stores the index."""
         action = action_from_event(
             {"kind": "damage_modifier", "owner": "ally:Lulu"},
-            1.0,
+            TransitionRank.DEBUFF_ARM,
             0,
             {"main": _MAIN, "ally:Lulu": _OTHER},
         )
@@ -219,18 +235,18 @@ class TestTheHolderIsARosterSlot:
         "declares no holder"."""
         action = action_from_event(
             {"kind": "damage_modifier", "owner": "enemy:Ghost"},
-            1.0,
+            TransitionRank.DEBUFF_ARM,
             0,
             {"main": _MAIN},
         )
         assert action.holder == -1
-        assert _modifier_applies(_modifier(holder=action.holder), _packet())
+        assert _applies(_modifier(holder=action.holder), _packet())
 
     def test_the_skip_is_an_index_compare_not_an_id_compare(self):
         """Two slots, one modifier: the arming slot skips, the other pays."""
         armed = _modifier(holder=_MAIN)
-        assert not _modifier_applies(armed, _packet(attacker=_MAIN))
-        assert _modifier_applies(armed, _packet(attacker=_OTHER))
+        assert not _applies(armed, _packet(attacker=_MAIN))
+        assert _applies(armed, _packet(attacker=_OTHER))
 
 
 class _LedgerCtx:
