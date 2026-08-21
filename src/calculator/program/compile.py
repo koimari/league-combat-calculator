@@ -648,240 +648,6 @@ class WalkCompiler:
         # supplies the packets it applies to.
         self.staged_modifier = False
 
-    def add_packet(
-        self,
-        packet: Mapping[str, Any],
-        attacker_i: int,
-        defender_i: int,
-        grievous_by_dtype: Mapping[str, Any],
-        duration: float,
-        heal_dedup: dict[tuple[str, float], float],
-        *,
-        suppress_actor_wide_heals: bool = False,
-    ) -> None:
-        """Compile one pair packet's damage events and self-heals.
-
-        ``heal_dedup`` spans the attacker's packets, replaying the legacy
-        actor-wide heal deduplication across that attacker's pair fights.
-        ``suppress_actor_wide_heals`` marks a packet whose actor-wide copies
-        are never the legacy-kept copy: an enemy attacker's ordered pair
-        list is ``[main, *allies]``, so the receipt walk always keeps the
-        main-pair copy and this compiler must skip the ally-pair copies —
-        the engine may price them differently per defender (issue #169,
-        Dr. Mundo's Maximum Dosage).  Trigger-linked actor-wide heals still
-        fail closed before the skip.
-        """
-        actions_append = self.actions.append
-        order_append = self.damage_order[attacker_i].append
-        strikes_append = self.auto_strikes_into[defender_i].append
-        heals = packet["heals"]
-        aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
-        aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
-        aidx = self.next_aidx
-        for event in packet["events"]:
-            # Packet events are enriched engine-ledger rows: these fields
-            # are written unconditionally, so index them directly.
-            time_value = event["time"]
-            damage_type = event["damage_type"]
-            damage = event["damage"]
-            raw_formula = event.get("raw_formula")
-            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
-            live_formula = (
-                raw_formula if callable(raw_formula) and raw_damage > 0 else None
-            )
-            grievous = grievous_by_dtype.get(damage_type)
-            # Issue #137: fail closed on any damage transition the score
-            # kernel cannot stage (execute thresholds, redirects, deferred
-            # batches, stack self-shields) instead of silently erasing it.
-            damage_receipt = unrepresentable_damage_receipt(event)
-            if damage_receipt is not None:
-                raise UncompilableActionError(
-                    receipt=damage_receipt,
-                    source=str(event.get("source", event.get("source_key", "packet"))),
-                )
-            # Champion-applied wounds (Katarina R, Varus E) arrive stamped
-            # on the packet events by ``_pair_packet``; the walk consumes
-            # them exactly like a thorns strike-back wound.
-            wound = None
-            wound_duration = float(event.get("grievous_duration", 0.0) or 0.0)
-            if wound_duration > 0.0:
-                wound = (
-                    wound_duration,
-                    str(event.get("_wound_source", "Grievous Wounds")),
-                )
-            actions_append(
-                SurvivalAction(
-                    sort_key=event["_sk"],
-                    time=time_value,
-                    # ``_pair_packet`` authored this key at the damage rank
-                    # (``participant_timeline``); the action names the rank
-                    # rather than reading the ordering slot back out of the
-                    # key, which is a fold and not a phase.
-                    phase=TransitionRank.DAMAGE,
-                    kind=(
-                        ActionKind.PLAIN_DAMAGE
-                        if live_formula is None and grievous is None and wound is None
-                        else ActionKind.DAMAGE
-                    ),
-                    subject=defender_i,
-                    attacker=attacker_i,
-                    aidx=aidx,
-                    amount=damage if damage > 0.0 else 0.0,
-                    damage_type=damage_type,
-                    raw_formula=live_formula,
-                    raw_damage=raw_damage,
-                    grievous=grievous,
-                    wound=wound,
-                    reactive=False,
-                    source_key=str(event.get("source_key", "")),
-                    source=str(event.get("source", event.get("source_key", ""))),
-                    event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
-                    sequence=event.get("sequence"),
-                    live_amp=event.get("_live_amp"),
-                    # Composed once, by ``_pair_packet``, exactly like
-                    # ``_live_amp`` beside it: this method compiles packets
-                    # that path already enriched, and re-composing the
-                    # declaration here would be a second reader of one
-                    # declaration.
-                    declared=event.get("_declared"),
-                    # How the packet was delivered, read off the same two
-                    # enriched fields ``action_from_event`` reads (H5).  An
-                    # armed damage modifier restricts itself by attack class
-                    # (D-04), so a compiled packet that could not say which
-                    # class it belongs to would be amplified differently on
-                    # the two paths.
-                    is_ability=bool(event.get("is_ability")),
-                    basic_attack=bool(event.get("basic_attack")),
-                    # The delivery facts a certified packet carries.  They
-                    # are read off the same keys ``action_from_event`` reads,
-                    # and the compiled path needs every one of them: Force of
-                    # Nature's Steadfast counts an immobilizing hit double and
-                    # throttles per *cast instance*, the spell-shield gate
-                    # groups a multi-part cast by the same instance, and a
-                    # Knight's Vow redirect child copies the control window
-                    # off its parent.  Unstamped, all three price differently
-                    # on the two paths with nothing saying so.
-                    immobilized=(
-                        is_immobilizing_event(event) or bool(event.get("crowd_control"))
-                    ),
-                    cc_kind=str(event.get("cc_kind", "")),
-                    cc_duration=max(0.0, float(event.get("cc_duration", 0.0) or 0.0)),
-                    skillshot=bool(event.get("skillshot")),
-                    area_damage=bool(event.get("area_damage")),
-                    damage_over_time=bool(event.get("damage_over_time")),
-                    ability_instance=event.get("ability_instance"),
-                    # ``_pair_packet`` stamps these only when the fight
-                    # published a finite figure, so ``get`` returning
-                    # ``None`` is the same absent-means-refuse the receipt
-                    # adapter reads off the same key.
-                    baseline_effective_armor=event.get("_baseline_effective_armor"),
-                    baseline_effective_mr=event.get("_baseline_effective_mr"),
-                )
-            )
-            if time_value <= duration:
-                order_append((aidx, time_value))
-            if aidx_by_key is not None:
-                aidx_by_key[
-                    (
-                        event["source_key"],
-                        trigger_time_key(time_value),
-                        event["sequence"],
-                    )
-                ] = aidx
-                aidx_by_source_time[
-                    (event["source_key"], trigger_time_key(time_value))
-                ].append(aidx)
-            if event["source_key"] == "auto_attacks" or event.get("basic_attack"):
-                strikes_append((aidx, time_value, event["sequence"], attacker_i))
-            aidx += 1
-        self.next_aidx = aidx
-        for event in heals:
-            # Issue #137: fail closed on any heal transition the score
-            # kernel cannot stage (Severum overheal-to-shield, vamp source
-            # categories, live gates) instead of silently erasing it.
-            heal_receipt = unrepresentable_heal_receipt(event)
-            if heal_receipt is not None:
-                raise UncompilableActionError(
-                    receipt=heal_receipt,
-                    source=str(event.get("source", event.get("source_key", "heal"))),
-                )
-            trigger = aidx_by_key.get(heal_trigger_key(event), -1)
-            if trigger < 0:
-                candidates = aidx_by_source_time.get(
-                    (
-                        str(event.get("_trigger_source", "")),
-                        trigger_time_key(event.get("_trigger_time", 0.0)),
-                    ),
-                    [],
-                )
-                if len(candidates) == 1:
-                    trigger = candidates[0]
-            if event.get("actor_wide"):
-                if "_trigger_source" in event:
-                    # Cross-pair dedup below keeps the copy that compiled
-                    # first; a trigger link would make copies
-                    # pair-dependent, so fail closed instead of guessing.
-                    raise UncompilableActionError(
-                        receipt="actor_wide_heal_trigger_link",
-                        source=str(event.get("source", "")),
-                    )
-                if suppress_actor_wide_heals:
-                    continue
-                dedup_key = (
-                    str(event.get("source", "")),
-                    float(event.get("time", 0.0)),
-                )
-                amount = max(0.0, float(event.get("amount", 0.0)))
-                kept = heal_dedup.get(dedup_key)
-                if kept is not None:
-                    if kept != amount:
-                        # The dedup keeps one copy per (source, time); that
-                        # is only sound while every copy is value-identical.
-                        # Fail closed onto the receipt walk, which owns the
-                        # legacy keep-first precedence.
-                        raise UncompilableActionError(
-                            receipt="actor_wide_heal_copies_disagree",
-                            source=str(event.get("source", "")),
-                        )
-                    continue
-                heal_dedup[dedup_key] = amount
-            aidx = self.next_aidx
-            self.next_aidx += 1
-            time_value = float(event.get("time", 0.0))
-            actions_append(
-                SurvivalAction(
-                    sort_key=event["_sk"],
-                    time=time_value,
-                    # As above: the packet's heals were keyed at the recovery
-                    # rank, so that is the rank this action carries.
-                    phase=TransitionRank.RECOVERY,
-                    kind=ActionKind.HEAL,
-                    subject=attacker_i,
-                    attacker=attacker_i,
-                    trigger=trigger,
-                    aidx=aidx,
-                    amount=max(0.0, float(event.get("amount", 0.0))),
-                    amount_formula=event.get("amount_formula"),
-                    healing_category=str(event.get("healing_category", "")),
-                    temporary_health_duration=(
-                        max(
-                            0.0,
-                            float(event.get("temporary_health_duration", 0.0) or 0.0),
-                        )
-                        if event.get("overheal_to_temporary_health")
-                        else 0.0
-                    ),
-                    overheal_to_temporary_health=bool(
-                        event.get("overheal_to_temporary_health")
-                    ),
-                    source_key=str(event.get("source_key", "")),
-                    source=str(event.get("source", event.get("source_key", ""))),
-                    event_slot=EVENT_SLOTS.slot(str(event.get("_event_id", ""))),
-                    sequence=event.get("sequence"),
-                )
-            )
-        self.coverage.append(packet["result"].get("timeline_coverage", {}))
-
     def add_engine_result(
         self,
         result: Mapping[str, Any],
@@ -899,54 +665,44 @@ class WalkCompiler:
         holder_amps: Any = None,
         suppress_actor_wide_heals: bool = False,
     ) -> None:
-        """Compile a fresh one-pair fight straight from the engine rows.
+        """Compile one pair fight from the engine's own rows.
 
-        Equivalent to ``_pair_packet`` + :meth:`add_packet` — identical sort
-        keys, trigger linkage, and heal dedup — minus the per-event dict
-        enrichment nothing in score mode ever reads.  The sort-key layout is
+        The one packet compiler: every roster pair, every signature panel and
+        every candidate's fresh fights reach the walk through here, so a fact
+        about a packet is decided once.  The sort-key layout is
         ``action_key``'s; both must change together.  ``id_strings`` is the
         search-lifetime cache of this pair's positional event-id strings.
 
-        ``defender_index`` mirrors ``_pair_packet``'s: later roster targets
-        are re-priced to a sourced reduced heal amount when the engine
-        authored one, so the compiled walk matches the ordered receipt.
+        A pair row the registry declares ``THEORETICAL`` is a *preview* of a
+        number the coupled walk owns, so it and its events are dropped
+        (:func:`~.build.pair_preview_sources`) — composing it would put the
+        walk's number and a preview of it into one total.  A preview the walk
+        *re-prices* keeps its packet: the walk is about to price it from its
+        declaration, and dropping it would delete the family's damage.
 
-        ``champion_wounds`` maps the attacker's wound-declaring source keys
-        (Katarina R, Varus E) to their packets; score mode skips
-        ``_pair_packet``'s per-event dict enrichment, so the wound tuple is
-        built here from the same sourced packets instead.
+        The four fields a pair fight cannot see for itself, and the caller
+        can:
 
-        "Equivalent to ``_pair_packet``" is a claim this method has to keep,
-        and the pair-preview exclusion is part of it: a pair row the registry
-        declares ``THEORETICAL`` is a preview of a number the coupled walk
-        owns, so composing it here would put the walk's number and a preview
-        of it into one score.  The receipt path drops those rows and their
-        events; so does this one, through the same
-        :func:`~.build.pair_preview_sources` join, because the surface that
-        picks the optimizer's winner is the worst place for the two paths to
-        disagree.
-
-        ``live_amps`` is the same claim one field over.  The attacker's
-        declared live-predicate amplifiers ride their own damage packets and
-        the kernel prices them at the instant of the hit; score mode skips
-        the enrichment that carries them on the receipt path, so the caller
-        hands them over here instead.  The default is empty because most
-        holders declare none — never because a caller may leave it out and
-        have the amplification quietly vanish, which is why the two stamping
-        sites read the same :func:`~.amp.live_amp_for`.
-
-        ``holder_amps`` is the third field of that same shape: the attacker's
-        own static, pair-local amplifiers, needed to compose the declaration
-        of a re-priced preview and required — not defaulted — the moment this
-        fight carries one.
+        * ``defender_index`` — the defender's slot in the attacker's ordered
+          roster.  A later target is re-priced to the sourced reduced heal
+          amount when the engine authored one (Vladimir's Hemoplague).
+        * ``champion_wounds`` — the attacker's wound-declaring source keys
+          (Katarina R, Varus E) mapped to their packets, so a champion wound
+          rides its damage event as the same receipt an item wound does.
+        * ``live_amps`` — the attacker's declared live-predicate amplifiers.
+          They ride their own damage packets so the bonus dies with its host.
+          The default is empty because most holders declare none, never
+          because a caller may leave it out.
+        * ``holder_amps`` — the attacker's own static, pair-local
+          amplifiers, needed to compose a re-priced preview's declaration and
+          required, not defaulted, the moment this fight carries one.
 
         ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal
-        copies are never the legacy-kept copy: an enemy attacker's ordered
-        pair list is ``[main, *allies]``, so the walk always keeps the
-        main-pair copy and the ally-pair copies must be skipped here — the
-        engine may price them differently per defender (issue #169,
-        Dr. Mundo's Maximum Dosage).  Trigger-linked actor-wide heals still
-        fail closed before the skip.
+        copies are never the kept copy: an enemy attacker's ordered pair list
+        is ``[main, *allies]``, so the walk always keeps the main-pair copy
+        and the ally-pair copies are skipped here — the engine may price them
+        differently per defender (issue #169, Dr. Mundo's Maximum Dosage).
+        Trigger-linked actor-wide heals still fail closed before the skip.
         """
         result_breakdown = result.get("breakdown") or {}
         previewed = pair_preview_sources(result_breakdown)
@@ -1326,7 +1082,9 @@ class WalkCompiler:
                     trigger = candidates[0]
             if event.get("actor_wide"):
                 if "_trigger_source" in event:
-                    # Same invariant as add_packet's dedup above.
+                    # The dedup below keeps the copy that compiled first; a
+                    # trigger link would make the copies pair-dependent, so
+                    # fail closed rather than guess which one to keep.
                     raise UncompilableActionError(
                         receipt="actor_wide_heal_trigger_link",
                         source=str(event.get("source", "")),
@@ -1341,7 +1099,9 @@ class WalkCompiler:
                 kept = heal_dedup.get(dedup_key)
                 if kept is not None:
                     if kept != amount:
-                        # Same fail-closed fallback as add_packet's dedup.
+                        # One copy per (source, time) is only sound while
+                        # every copy is value-identical.  Fail closed onto
+                        # the receipt walk, which owns the keep-first rule.
                         raise UncompilableActionError(
                             receipt="actor_wide_heal_copies_disagree",
                             source=str(event.get("source", "")),

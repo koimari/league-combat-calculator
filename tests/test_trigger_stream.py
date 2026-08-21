@@ -998,18 +998,17 @@ CC_KIND_READERS = {
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
     "src/calculator/damage.py": frozenset({"_damage_event_row"}),
-    # The three compiler entries are copies too, and the distinction is the
+    # The two compiler entries are copies too, and the distinction is the
     # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
-    # and none of them branches on it.  Every "is this an immobilize?"
-    # question they ask goes to ``is_immobilizing_event`` on the line above
-    # the copy, so the classifier still has one home.  ``add_packet`` and
-    # ``add_engine_result`` joined when the merge restored the delivery
-    # facts on compiled damage rows: Force of Nature's Steadfast and the
-    # spell-shield cast grouping read ``action.cc_kind`` off the action, and
-    # a compiled packet that carried none priced differently from the
-    # receipt packet with nothing saying so.
+    # and neither branches on it.  Every "is this an immobilize?" question
+    # they ask goes to ``is_immobilizing_event`` on the line above the copy,
+    # so the classifier still has one home.  ``add_engine_result`` joined
+    # when the merge restored the delivery facts on compiled damage rows:
+    # Force of Nature's Steadfast and the spell-shield cast grouping read
+    # ``action.cc_kind`` off the action, and a compiled packet that carried
+    # none priced differently from the receipt packet with nothing saying so.
     "src/calculator/program/compile.py": frozenset(
-        {"action_from_event", "add_packet", "add_engine_result"}
+        {"action_from_event", "add_engine_result"}
     ),
     # The receipt view publishes the token as a public field; a projection
     # that classified it would be a second classifier inside a layer that
