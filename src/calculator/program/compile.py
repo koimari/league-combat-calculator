@@ -93,7 +93,7 @@ from ..survival.pricing import (
     DeclaredPacket,
     route_declared_packet,
 )
-from ..ledger_projection import LightRow
+from ..ledger_projection import LightRow
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
@@ -846,6 +846,7 @@ class WalkCompiler:
         champion_wounds: Mapping[str, Any] | None = None,
         live_amps: Sequence[LiveAmpRider] = (),
         holder_amps: Any = None,
+        suppress_actor_wide_heals: bool = False,
     ) -> None:
         """Compile a fresh one-pair fight straight from the engine rows.
 
@@ -887,6 +888,14 @@ class WalkCompiler:
         own static, pair-local amplifiers, needed to compose the declaration
         of a re-priced preview and required — not defaulted — the moment this
         fight carries one.
+
+        ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal
+        copies are never the legacy-kept copy: an enemy attacker's ordered
+        pair list is ``[main, *allies]``, so the walk always keeps the
+        main-pair copy and the ally-pair copies must be skipped here — the
+        engine may price them differently per defender (issue #169,
+        Dr. Mundo's Maximum Dosage).  Trigger-linked actor-wide heals still
+        fail closed before the skip.
         """
         result_breakdown = result.get("breakdown") or {}
         previewed = pair_preview_sources(result_breakdown)
@@ -1225,6 +1234,8 @@ class WalkCompiler:
                         receipt="actor_wide_heal_trigger_link",
                         source=str(event.get("source", "")),
                     )
+                if suppress_actor_wide_heals:
+                    continue
                 dedup_key = (
                     str(event.get("source", "")),
                     float(event.get("time", 0.0)),
