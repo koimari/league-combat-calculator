@@ -61,6 +61,7 @@ from .rune_effects import (
     validate_rune_page,
 )
 from .stats import calculate_total_stats, get_item_stats
+from .trigger_stream import applies_control
 from .data_registry import data_version
 from .cast_dependency import (
     BASE_CAST_SLOTS,
@@ -490,6 +491,11 @@ def _rune_heal_times(result: Mapping[str, Any], effect: RuneHealEffect) -> list[
     the target survives pays no Triumph.
     """
     rows = _timestamped_damage_events(result)
+    if effect.trigger is RuneHealTrigger.IMPAIRING_INSTANCES:
+        # Whether a row applies control is the bus's answer, never a
+        # ``cc_kind`` compared against a string here — the same predicate
+        # the damage side's impaired stream asks.
+        rows = [row for row in rows if applies_control(row)]
     if not rows:
         return []
     if effect.trigger is RuneHealTrigger.TAKEDOWNS:

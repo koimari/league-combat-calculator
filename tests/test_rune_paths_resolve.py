@@ -1,10 +1,11 @@
-"""Resolve's minor runes: two priced runes and seven receipted refusals.
+"""Resolve's minor runes: three priced runes and six receipted refusals.
 
 Resolve is the durability path and the pair engine prices outgoing damage,
-so seven of its nine runes compile to a refusal that says which half this
-engine holds no channel for. Two are not refusals: Overgrowth's stacks buy
-maximum health, which the fight's stat block does read and health-scaling
-damage does spend, and Shield Bash prices the swing a self-shield armed.
+so six of its nine runes compile to a refusal that says which half this
+engine holds no channel for. Three are not refusals: Overgrowth's stacks buy
+maximum health, which the fight's stat block does read; Shield Bash prices
+the swing a self-shield armed; and Font of Life heals on the casts that
+impair, which is the impaired stream read from the impairing side.
 """
 
 import pytest
@@ -19,11 +20,10 @@ from src.calculator.rune_paths import resolve
 #: asserted as "some string".
 REFUSALS = {
     "Demolish": "damages turrets",
-    "Font of Life": "no rune healing channel",
     "Conditioning": "outgoing damage",
-    "Second Wind": "no rune healing channel",
+    "Second Wind": "carries neither the holder's health",
     "Bone Plating": "damage the holder receives",
-    "Revitalize": "no rune healing channel",
+    "Revitalize": "reaches the stat card and no heal packet",
     "Unflinching": "while the holder is crowd controlled",
 }
 
@@ -111,7 +111,7 @@ class TestOvergrowth:
 
 
 class TestResolveRefusals:
-    """Seven runes the pair engine holds no channel for, each saying which."""
+    """Six runes the pair engine holds no channel for, each saying which."""
 
     @pytest.mark.parametrize("name,reason", sorted(REFUSALS.items()))
     def test_each_refusal_is_withheld_and_names_the_half_it_refuses(self, name, reason):
@@ -245,6 +245,88 @@ def _shield_inputs(*, level, health=0.0, base_health=0.0):
         champion_stats={"health": health, "base_health": base_health},
         level=level,
         is_melee=True,
+        target_max_health=10000.0,
+        target_current_health=10000.0,
+    )
+
+
+class TestFontOfLife:
+    """A heal on the casts that impair — both channels meeting on one rune."""
+
+    def test_it_heals_its_cached_melee_and_ranged_tables(self):
+        """10 to 50 melee, 7 to 35 ranged, once per 20s."""
+        effect = rune_effects.resolve_rune("Font of Life")
+        assert isinstance(effect, rune_effects.RuneHealEffect)
+        assert effect.trigger is rune_effects.RuneHealTrigger.IMPAIRING_INSTANCES
+        assert effect.cooldown_seconds == 20.0
+        assert effect.amount(_heal_inputs(level=1, is_melee=True)) == pytest.approx(
+            10.0
+        )
+        assert effect.amount(_heal_inputs(level=18, is_melee=True)) == (
+            pytest.approx(50.0)
+        )
+        assert effect.amount(_heal_inputs(level=1, is_melee=False)) == pytest.approx(
+            7.0
+        )
+        assert effect.amount(_heal_inputs(level=18, is_melee=False)) == (
+            pytest.approx(35.0)
+        )
+
+    def test_the_ally_half_is_still_withheld_and_says_why_twice(self):
+        effect = rune_effects.resolve_rune("Font of Life")
+        assert "ally half is withheld twice over" in effect.disclosures[1]
+
+    @pytest.mark.parametrize(
+        "champion,amount",
+        [("Malphite", 50.0), ("Ashe", 35.0)],
+    )
+    def test_an_impairing_kit_heals_at_its_range_class(self, champion, amount):
+        """Malphite's melee 50 and Ashe's ranged 35, at the impairing cast."""
+        request = {**_IMPAIR_PROBE, "champion": champion}
+        bare = calculate_payload(
+            {key: value for key, value in request.items() if key != "minor_runes"}
+        )
+        healed = calculate_payload(dict(request))
+        packets = [
+            event
+            for event in healed["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+        assert [(packet["source"], packet["amount"]) for packet in packets] == [
+            ("Font of Life (rune)", pytest.approx(amount))
+        ]
+        assert healed["self_healing"] - bare["self_healing"] == pytest.approx(amount)
+        assert healed["total_damage"] == pytest.approx(bare["total_damage"])
+
+    def test_a_kit_that_reviews_no_control_heals_nothing(self):
+        """Annie declares no ``MODULE_CC``, so nothing impairs and nothing pays."""
+        healed = calculate_payload({**_IMPAIR_PROBE, "champion": "Annie"})
+        assert not [
+            event
+            for event in healed["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+
+
+#: A twenty-second window with Font of Life on the page — long enough for
+#: the impairing casts a kit makes, and one rune cooldown wide.
+_IMPAIR_PROBE = {
+    "level": 18,
+    "items": [],
+    "fight_mode": "time_based",
+    "fight_duration": 20.0,
+    "target_health": 10000.0,
+    "target_armor": 100.0,
+    "target_mr": 100.0,
+    "minor_runes": ["Font of Life"],
+}
+
+
+def _heal_inputs(*, level, is_melee):
+    return DamageInputs(
+        champion_stats={},
+        level=level,
+        is_melee=is_melee,
         target_max_health=10000.0,
         target_current_health=10000.0,
     )

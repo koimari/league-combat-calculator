@@ -68,23 +68,21 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     "Biscuit Delivery": (
         Disposition.WITHHELD,
         "its biscuits restore health and mana and each one consumed raises "
-        "maximum health permanently, and the engine has no rune healing "
-        "channel",
+        "maximum health permanently, and the fight model consumes none: they "
+        "arrive at fixed game minutes over a game one fight does not "
+        "simulate",
         (
-            "Biscuit Delivery's permanent maximum health is earned biscuit "
-            "by biscuit at fixed game minutes, over a game this one fight "
-            "does not simulate; the cache carries the biscuit's sale price "
-            "and not the health it grants.",
+            "Biscuit Delivery's permanent maximum health is unknown as well "
+            "as unearned: the cache carries the biscuit's sale price and not "
+            "the health consuming one grants.",
         ),
     ),
     "Time Warp Tonic": (
         Disposition.WITHHELD,
         "it adds a share of a consumed potion's restoration as an immediate "
-        "heal, and the engine has no rune healing channel",
-        (
-            "Time Warp Tonic prices nothing even where a heal channel "
-            "existed: the fight model consumes no potions.",
-        ),
+        "heal, and the fight model consumes no potions — the heal channel "
+        "exists and there is nothing to pay it on",
+        (),
     ),
     "Triple Tonic": (
         Disposition.WITHHELD,

@@ -21,8 +21,8 @@ DISPOSITIONS = {
     "Magical Footwear": ("WITHHELD", "buys no item on a clock"),
     "Cash Back": ("STRUCTURAL_ZERO", "gold never joins the fight's damage total"),
     "Triple Tonic": ("WITHHELD", "prices no consumable"),
-    "Time Warp Tonic": ("WITHHELD", "no rune healing channel"),
-    "Biscuit Delivery": ("WITHHELD", "raises maximum health permanently"),
+    "Time Warp Tonic": ("WITHHELD", "the fight model consumes no potions"),
+    "Biscuit Delivery": ("WITHHELD", "the fight model consumes none"),
     "Cosmic Insight": ("WITHHELD", "summoner-spell haste and item haste"),
     "Approach Velocity": ("WITHHELD", "no damage row reads movement speed"),
 }
@@ -86,10 +86,12 @@ class TestJackOfAllTrades:
         )
         assert item_stat_type_count({"attack_damage": 0.0}) == 0
 
-    def test_biscuit_delivery_withholds_health_earned_over_a_game(self):
+    def test_biscuit_delivery_withholds_health_that_is_unknown_as_well(self):
+        """Unearned *and* uncached: the receipt says both, not one."""
         effect = rune_effects.resolve_rune("Biscuit Delivery")
+        assert "over a game one fight does not simulate" in effect.zero_policy.reason
         assert any(
-            "over a game this one fight does not simulate" in receipt
+            "the cache carries the biscuit's sale price and not the health" in receipt
             for receipt in effect.receipts
         )
 

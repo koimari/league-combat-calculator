@@ -234,6 +234,11 @@ class RuneHealTrigger(Enum):
     #: Every damage instance the holder lands on the target, gated by the
     #: rune's own cooldown (Taste of Blood).
     DAMAGE_DEALT = "damage_dealt"
+    #: The instances that put the target under crowd control (Font of Life)
+    #: — :attr:`RuneTrigger.IMPAIRED_INSTANCES` read from the other side:
+    #: one rune is paid for landing damage on an impaired target and the
+    #: other for doing the impairing, and both are the same reviewed marker.
+    IMPAIRING_INSTANCES = "impairing_instances"
     #: The takedowns the fight actually scored — the target reaching zero
     #: health, at the instance that took it there (Triumph). None are
     #: invented: a fight the target survives pays nothing.
@@ -1253,9 +1258,10 @@ def _compile_grasp_of_the_undying(entry: Mapping[str, Any]) -> RuneProcEffect:
             "withheld and the count is a floor of one.",
             f"{name}'s heal ({melee_heal * 100:g}% / {ranged_heal * 100:g}% "
             f"maximum health) and permanent bonus health ({melee_health:g} / "
-            f"{ranged_health:g}) are withheld: the engine has no rune healing "
-            "channel, and the health is earned proc by proc over a game this "
-            "one fight does not simulate.",
+            f"{ranged_health:g}) are withheld: a rune resolves to one effect "
+            "and this one is its damage proc, so its heal has no packet to "
+            "ride; the health is earned proc by proc over a game this one "
+            "fight does not simulate.",
         ),
     )
 
@@ -1394,17 +1400,20 @@ _NO_DAMAGE_KEYSTONES: Mapping[str, tuple[Disposition, str, tuple[str, ...]]] = {
         "stat block is resolved once from the fight's opening state, so the "
         "engine has no channel to price a growing grant through",
         (
-            "Conqueror's heal at maximum stacks is withheld too: the engine "
-            "has no rune healing channel.",
+            "Conqueror's heal at maximum stacks is withheld too: a rune "
+            "resolves to one effect and this one is its stat grant, so the "
+            "heal has no packet to ride.",
         ),
     ),
     "Fleet Footwork": (
         Disposition.WITHHELD,
-        "its empowered attack heals and grants movement speed, and the "
-        "engine has no rune healing channel to price the heal through",
+        "its empowered attack heals on an Energized charge cycle no rune "
+        "trigger stream builds — the engine counts Energized charges from "
+        "item declarations, and a rune has no way to declare one",
         (
             "Fleet Footwork deals no damage of its own, so nothing is "
-            "understated in the damage total by withholding it.",
+            "understated in the damage total by withholding it; the heal "
+            "itself and its ratios are cached, so only the cycle is missing.",
         ),
     ),
     "Aftershock": (
