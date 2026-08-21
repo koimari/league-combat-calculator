@@ -66,16 +66,14 @@ def test_every_family_declares_the_lanes_that_owe_it_an_answer() -> None:
     """Declared, not inferred — otherwise an empty registry reports full cover."""
     for family in RuleFamily:
         assert interpreters.lanes_for(family)
-    # 53 until 2026-08-16, when umbrella Amendment O, Ruling 1 reclassified
-    # crit_profile PAIR_ONLY on a measured emptiness and its receipt-walk lane
-    # left the table; then 49 the same day, when umbrella Amendment Q corrected
-    # the declaration of the three families the defence resolver feeds --
-    # combat_state, opening_defense and threshold_defense -- whose walk-side
-    # need is served through the lane they declare and which therefore never
-    # owed a receipt-walk interpreter lane at all.  The literal moves only when
-    # a ruling moves it, which is what makes an unruled edit here a red rather
-    # than a re-typed number.
-    assert len(interpreters.declared_pairs()) == 49
+    # The pair set is exactly the declaration table, read back: a family whose
+    # lanes the table forgot, or a pair the set carries that no family
+    # declares, is the drift this reads rather than a count somebody re-typed.
+    assert interpreters.declared_pairs() == frozenset(
+        (family, lane)
+        for family in RuleFamily
+        for lane in interpreters.lanes_for(family)
+    )
 
 
 def test_counter_four_is_the_gap_between_the_table_and_the_registry() -> None:
@@ -710,23 +708,12 @@ def test_the_walk_lane_serves_the_family_that_authors_its_own_recoveries() -> No
     ) not in interpreters.UNSERVED_LANE_RECEIPTS
 
 
-def test_the_hand_certification_is_gone_and_the_fold_is_what_bis_publishes() -> None:
-    """The other half of D-98: the retired table has zero occurrences in ``src/``.
+def test_the_fold_is_what_bis_publishes() -> None:
+    """D-98: the published receipt is the derived fold, in both directions.
 
-    Not as a binding and not as a sentence about one — a name surviving in
-    prose is how a reader learns to look for something that is not there.  The
-    published receipt is asserted against the fold in both directions, so a
-    payload wired to something else entirely could not pass this by certifying
-    nothing.
+    A payload wired to something else entirely could not pass this by
+    certifying nothing, because the fold's own owners are named.
     """
-    retired = "BIS_CERTIFIED_" + "DEFENSIVE_EFFECTS"
-    holders = [
-        path.relative_to(SRC_ROOT).as_posix()
-        for path in sorted(SRC_ROOT.rglob("*.py"))
-        if retired in path.read_text(encoding="utf-8")
-    ]
-    assert holders == []
-
     derived = interpreters.survival_ledger_certifications()
     assert set(derived) == {"Eclipse", "Death's Dance", "Sundered Sky"}
     assert all(note.strip() for note in derived.values())

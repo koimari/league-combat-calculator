@@ -42,6 +42,25 @@ def test_the_receipt_is_committed_and_reproduces_on_this_commit() -> None:
     assert behavior_frontier.check(behavior_frontier.scan()) == ()
 
 
+def test_every_descriptive_counter_in_the_receipt_reproduces() -> None:
+    """Backlog W2S4: the blocks ``--check`` does not read are read here.
+
+    ``check`` compares the counter values and the exclusion *module sets*;
+    the per-block site totals and the per-container site counts are
+    descriptive, so a committed one could drift from the tree with the gate
+    green and be absorbed by the next unrelated ``--write``.  Whole-block
+    equality closes that: a descriptive counter that moves is a diff in a
+    committed artifact, exactly like a gated one.
+    """
+    fresh = behavior_frontier.build_receipt(behavior_frontier.scan())
+    committed = _receipt()
+    for name, block in fresh["exclusions"].items():
+        recorded = committed["exclusions"][name]
+        for field in ("sites", "sites_by_container"):
+            if field in block:
+                assert recorded.get(field) == block[field], f"{name}.{field}"
+
+
 def test_the_exclusion_sets_are_committed_beside_the_counters() -> None:
     """D-40: exclusions that live only in the tool can be edited to zero."""
     receipt = _receipt()

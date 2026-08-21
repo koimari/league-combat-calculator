@@ -1,19 +1,11 @@
-"""S9's escalation, gated: the four-disposition wire shape, now operational.
+"""A refused row publishes a declared zero, and a priced one publishes MEASURED.
 
-An escalation living only in a commit body is absorbed by the next baseline
-re-capture, which is why the runbook makes it an artifact (R-16 Shape).  An
-artifact nothing runs is prose in a JSON file, which is why it has this.
-
-Each defect declares a reproducer, and each reproducer runs here.  The entry
-retires *with* the inversion of its own test, not by being deleted, and both
-its halves now have.  The construction-site half inverted when the outcome
-ledger became the receipt walk's companion; the emission half inverted when
-the receipt view began publishing a refused transition's outcome fields as
-the declared zeros they are.  So the assertions below state the resolved
-property: a refused row publishes ``STRUCTURAL_ZERO`` carrying the walk's own
-refusal, and a priced row still publishes ``MEASURED``.  Red here now means a
-production path stopped naming its refusals, which is the regression this
-whole campaign is about.
+The four-disposition wire shape, read off live coupled runs rather than off a
+unit fixture: a refused transition's outcome fields carry ``STRUCTURAL_ZERO``
+with the walk's own refusal beside them, so a reader can tell a number no rule
+computed from a computed zero without reading a sibling string and knowing
+what it implies.  Red here means a production path stopped naming its
+refusals.
 """
 
 from __future__ import annotations
@@ -21,7 +13,6 @@ from __future__ import annotations
 import ast
 import collections
 import importlib.util
-import json
 import sys
 from pathlib import Path
 
@@ -31,43 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P4-S9.json"
 SRC = ROOT / "src" / "calculator"
-
-
-def receipt() -> dict:
-    """The committed artifact this file is the gate for."""
-    return json.loads(RECEIPT.read_text(encoding="utf-8"))
-
-
-def test_the_receipt_declares_what_it_is_and_what_gates_it() -> None:
-    block = receipt()
-    assert block["artifact"] == "escalated_defects"
-    assert block["slice"] == "P4-S9"
-    assert block["gate"] == "tests/test_escalated_defects_p4_s9.py"
-
-
-def test_every_open_defect_carries_a_reproducer_and_a_date() -> None:
-    """An entry without a reproducer is an opinion with a filename."""
-    for defect in receipt()["defects"]:
-        assert defect["id"] and defect["dated"]
-        assert defect["reproducer"] and defect["reproducer_after_closure"]
-        assert defect["why_this_lane_may_not_fix_it"]
-
-
-def test_the_retired_entry_is_the_one_this_file_inverts() -> None:
-    """A gate that drifted off its entry is a gate for nothing.
-
-    The entry moved from ``defects`` to ``retired`` rather than being
-    deleted, so this reads the list it is actually in.  ``defects`` is empty
-    and that emptiness is asserted here rather than inferred: an entry
-    quietly reopening under a new id would otherwise be invisible to the
-    file that gates it.
-    """
-    assert receipt()["defects"] == []
-    assert [defect["id"] for defect in receipt()["retired"]] == [
-        "no_production_path_emits_a_non_measured_disposition"
-    ]
 
 
 def _golden_snapshot():

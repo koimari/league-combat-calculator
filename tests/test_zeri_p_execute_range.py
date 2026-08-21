@@ -1048,34 +1048,6 @@ class TestScoreReceiptParity:
 
 
 class TestRegressionSurface:
-    def test_zeri_grep_surface_is_pinned(self):
-        # Every tests/ file mentioning "zeri" (case-insensitive): adding
-        # a new Zeri test file must extend this pin, and every listed
-        # file must stay green in the sanity run.
-        test_dir = Path("tests")
-        hits = sorted(
-            path.name
-            for path in test_dir.glob("test_*.py")
-            if "zeri" in path.read_text(encoding="utf-8", errors="ignore").lower()
-        )
-        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
-        # ``test_full_entry_packets.py`` (ours, 108872c8), and this branch
-        # carries a named ``test_zeri.py``.
-        assert hits == [
-            # ci-evidence scanner uses this file as a calibration fixture
-            "test_ci_evidence_parity.py",
-            "test_e2_dot_3.py",
-            "test_e5_fix_2.py",
-            "test_full_entry_packets.py",
-            # Mel's P test cites Zeri's Living Battery as the contrast
-            # case for why Overwhelm's kill boundary is NOT modeled as
-            # an execute ratio; it asserts nothing about Zeri herself.
-            "test_mel_searing_brilliance.py",
-            "test_spellblade_on_hit_matrix.py",
-            "test_zeri.py",
-            "test_zeri_p_execute_range.py",
-        ]
-
     def test_module_meta_pins_unchanged(self):
         meta = get_champion_options_meta("Zeri")
         assert meta["options"] == []

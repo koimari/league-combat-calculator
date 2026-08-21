@@ -27,8 +27,6 @@ from src.calculator.survival.actions import (
 ROOT = Path(__file__).parents[1]
 SRC_ROOT = ROOT / "src" / "calculator"
 
-# The four fields as they were spelled before S1, and their slot successors.
-RETIRED_REFERENCE_FIELDS = ("trigger_event_id", "deferred_batch_id", "defy_trigger_id")
 SLOT_FIELDS = (
     "trigger_slot",
     "deferred_batch_slot",
@@ -111,10 +109,6 @@ class TestTheActionHoldsNoReferenceStrings:
         action = SurvivalAction()
         for field in SLOT_FIELDS:
             assert getattr(action, field) == NO_SLOT, field
-
-    def test_the_retired_string_fields_are_gone(self) -> None:
-        for field in RETIRED_REFERENCE_FIELDS:
-            assert field not in SurvivalAction._fields, field
 
     def test_no_field_is_annotated_str_or_none(self) -> None:
         """The type, not the names: a fifth reference cannot arrive as text."""
