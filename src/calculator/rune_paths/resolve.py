@@ -117,7 +117,7 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     ),
     "Conditioning": (
         Disposition.WITHHELD,
-        "it grants armour and magic resistance after a time, and the pair "
+        "it grants armor and magic resistance after a time, and the pair "
         "engine prices the holder's outgoing damage",
         (),
     ),
@@ -141,7 +141,7 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     ),
     "Unflinching": (
         Disposition.WITHHELD,
-        "it grants armour and magic resistance while the holder is crowd "
+        "it grants armor and magic resistance while the holder is crowd "
         "controlled, and the pair engine prices the holder's outgoing damage",
         (),
     ),
