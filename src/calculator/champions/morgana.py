@@ -13,8 +13,11 @@ E9-1 closes the three remaining audit gaps over the CP10.4 packet:
   dealt by her abilities (authored by the HEALING_RULE_CHAMPIONS rule
   in healing.py); the passive slot itself stays a zero-damage row.
 
-Q (Dark Binding) packet is a correct single-instance read; E (Black
-Shield) is a documented no-damage shield.
+Q (Dark Binding) packet is a correct single-instance read.  E (Black
+Shield) deals no damage but is ``modeled``: the ally-support scanner prices
+its cached "Magic Shield Strength" row (320.0 to the target ally at rank 5,
+0 AP).  The ledger absorbs it as an ordinary pool — the magic-only
+restriction and the crowd-control immunity it carries are the boundary.
 """
 
 from typing import Any
@@ -165,8 +168,6 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "HEALING_RULE_CHAMPIONS); the passive deals no enemy damage "
     "itself.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "R"} else "out_of_scope") for slot in "PQWER"
-}
+COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 SELF_HEALING_RULE = declare_healing_rule("Morgana")

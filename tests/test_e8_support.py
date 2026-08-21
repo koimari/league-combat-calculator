@@ -417,3 +417,118 @@ def test_revive_module_sourcing_matches_cached_rows():
     assert zilr(18, {"ability_power": 0.0})["revive_health_amount"] == 1100.0
     assert zilr(18, {"ability_power": 100.0})["revive_health_amount"] == 1300.0
     assert zilr(18, {"ability_power": 0.0})["revive_cooldown"] == 60.0
+
+
+# ---------------------------------------------------------------------------
+# Census slice 2 — every support slot the map calls ``modeled`` publishes a
+# row in the COUPLED walk (docs/plans/utility-axis-census.md §2 slice 2).
+# Reaching ``derive_ally_effects`` is not the claim; reaching the ledger is.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("champion", "slot", "ability", "kind", "amount", "scope", "recipient"),
+    [
+        # Cozy Campfire "Total Heal" 70/90/110/130/150 (+15% AP), rank 5.
+        ("Milio", "W", "Cozy Campfire", "heal", 150.0, "one_teammate", "ally:Jinx"),
+        # Warm Hugs "Shield Strength" 45/75/105/135/165 (+45% AP), rank 5.
+        ("Milio", "E", "Warm Hugs", "shield", 165.0, "one_teammate", "ally:Jinx"),
+        # Breath of Life "Heal" 150/250/350 (+50% AP), rank 3 — owned by the
+        # healing rule and fanned out to the ally by the participant timeline.
+        (
+            "Milio",
+            "R",
+            "Breath of Life",
+            "heal",
+            350.0,
+            "self_and_all_teammates",
+            "ally:Jinx",
+        ),
+        # Valor "Shield Strength" 70/95/120/145/170 (+110% bonus AD), rank 5,
+        # no items: "granting herself a shield" — the caster's own ledger.
+        ("Riven", "E", "Valor", "shield", 170.0, "self", "main"),
+        # Surround Sound "Shield Strength" 60/80/100/120/140 (+20% AP), rank 5.
+        (
+            "Seraphine",
+            "W",
+            "Surround Sound",
+            "shield",
+            140.0,
+            "self_and_all_teammates",
+            "ally:Jinx",
+        ),
+        # Spell Shield "Heal" 60/65/70/75/80% AD (+50% AP), rank 5:
+        # 80% of Sivir's level-18 total AD (102.0) == 81.6, to Sivir alone.
+        ("Sivir", "E", "Spell Shield", "heal", 81.6, "self", "main"),
+        # Aria of Perseverance "Shield Strength" 25/45/65/85/105 (+25% AP).
+        (
+            "Sona",
+            "W",
+            "Aria of Perseverance",
+            "shield",
+            105.0,
+            "self_and_one_teammate",
+            "ally:Jinx",
+        ),
+        # Dark Passage "Shield Strength" 50/70/90/110/130 (+2 per Soul).
+        ("Thresh", "W", "Dark Passage", "shield", 130.0, "one_teammate", "ally:Jinx"),
+        # Zoomies "Shield" 65/90/115/140/165 (+40% AP), rank 5, to the anchor.
+        ("Yuumi", "E", "Zoomies", "shield", 165.0, "one_teammate", "ally:Jinx"),
+        # --- census slice 3: the row was cached; the hook was missing ------
+        # Caretaker's Shrine "Maximum Heal" 50/87.5/125/162.5/200 (+70% AP).
+        (
+            "Bard",
+            "W",
+            "Caretaker's Shrine",
+            "heal",
+            200.0,
+            "one_teammate",
+            "ally:Jinx",
+        ),
+        # Golden Aegis "Shield Strength" 60-140 (+70% bonus AD), rank 5.
+        ("Jarvan IV", "W", "Golden Aegis", "shield", 140.0, "self", "main"),
+        # Battle Dance "Shield Strength" 50/75/100/125/150 (+70% AP), rank 5.
+        ("Rakan", "E", "Battle Dance", "shield", 150.0, "one_teammate", "ally:Jinx"),
+        # Wish "Heal" 150/250/350 (+50% AP), rank 3.
+        ("Soraka", "R", "Wish", "heal", 350.0, "self_and_all_teammates", "ally:Jinx"),
+        # Stand United "Minimum Shield Strength" 120/220/320 (+135% AP
+        # + 15% bonus health), rank 3 — the floor, because the 0-60%
+        # missing-health increase is a live-health condition.
+        ("Shen", "R", "Stand United", "shield", 320.0, "one_teammate", "ally:Jinx"),
+        # Ki Barrier "Shield" 47:128.59 by level (+13% bonus health) at 18,
+        # riding the E cast as a self_shield_events payload.
+        ("Shen", "P", "Ki Barrier", "shield", 120.0, "self", "main"),
+        # Black Shield "Magic Shield Strength" 100-320 (+70% AP), rank 5.
+        (
+            "Morgana",
+            "E",
+            "Black Shield",
+            "shield",
+            320.0,
+            "one_teammate",
+            "ally:Jinx",
+        ),
+        # Bastion "Shield Strength" 7/8/9/10/11% of the RECIPIENT's maximum
+        # health; the scan holds only the caster's, so Taric's own copy is
+        # priced (11% of his level-18 2328.0) and granted to him alone.
+        ("Taric", "W", "Bastion", "shield", 256.08, "self", "main"),
+        # Fey Feathers "Shield" 30:247.94 by level (+95% AP) at 18, riding
+        # the Q cast as a self_shield_events payload.
+        ("Rakan", "P", "Fey Feathers", "shield", 247.94, "self", "main"),
+    ],
+)
+def test_a_modeled_support_slot_publishes_its_row_in_the_coupled_walk(
+    champion, slot, ability, kind, amount, scope, recipient
+):
+    from src.calculator.champions import get_champion_module_contract
+
+    assert get_champion_module_contract(champion).coverage[slot] == "modeled"
+    combat, _ally_row = _roster_combat(champion)
+    published = [
+        event
+        for event in _support_events(combat, ability)
+        if event["kind"] == kind and event["recipient"] == recipient
+    ]
+    assert published, f"{champion} {slot} ({ability}) published no {kind} row"
+    assert published[0]["amount"] == pytest.approx(amount)
+    assert published[0]["target_scope"] == scope

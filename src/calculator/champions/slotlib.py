@@ -583,6 +583,48 @@ def damage_entry(
     return entry
 
 
+def support_cast(
+    *,
+    default_name: str,
+    detail: str,
+    dmg_type: str = "magic",
+    resource_cost: float | None = None,
+) -> Any:
+    """A slot parser for a shield/heal-only ability that damages nothing.
+
+    ``support_effects`` hangs its packet on a CAST, so a shield- or heal-only
+    ability has to be in ``SLOTS`` for the rotation to schedule one — the
+    slot exists to produce the cast, not to price damage.  ``resource_cost``
+    is stated only when the cached cost row is something the engine's mana
+    ledger would mislabel (Soraka W's 10%-of-max-health cost).
+    """
+
+    def parse(ctx: Any) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+        rank = ctx.rank_for()
+        if rank < 1:
+            return None
+        entry = damage_entry(
+            ability.get("name", default_name),
+            rank,
+            extract_cooldown(ability, rank),
+            0.0,
+            dmg_type,
+        )
+        # The shared builder always writes one part; a support cast has none
+        # to price, and an authored zero part would put a zero-damage
+        # instance in the ledger.
+        entry["parts"] = ()
+        entry["detail"] = detail
+        if resource_cost is not None:
+            entry["resource_cost"] = resource_cost
+        return entry
+
+    return parse
+
+
 def attach_self_shield(
     entry: dict[str, Any],
     *,

@@ -13,7 +13,12 @@ Why each slot is non-generic:
   % armor reduction ``target_debuff`` (``q_armor_shred`` option, default
   True). damage.py applies the shred AFTER Q's own damage, so autos,
   passive procs, and R benefit but Q does not — matching in-game.
-- W (Golden Aegis) is shield/slow only — zero enemy damage, absent.
+- W (Golden Aegis) is shield/slow only: a zero-damage cast that exists so
+  the rotation casts it and the ally-support scanner prices the sourced
+  self shield (140.0 at rank 5 with no bonus AD, the cached "Shield
+  Strength" row).  The prose-only "+1.3% of his maximum health for each
+  enemy champion hit" has no leveling row and is not priced; the slow is
+  crowd control the model does not price.
 - E (Demacian Standard) is a BUFF-phase custom fn: magic active damage
   plus a bonus-attack-speed ``stat_buff``. The ``near_flag`` option
   (default True) doubles the AS bonus — Jarvan near his planted flag
@@ -32,6 +37,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     simple_damage,
+    support_cast,
 )
 from .source_receipts import load_champion_sources
 
@@ -173,6 +179,16 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _martial_cadence,
     "Q": _dragon_strike,
+    # Golden Aegis shields Jarvan himself ("Jarvan IV also grants himself a
+    # shield for 4 seconds", cached "Shield Strength" 60-140 + 70% bonus AD);
+    # the slot exists so the rotation casts it and the support scanner can
+    # price the shield.  The prose-only "+1.3% of his maximum health for each
+    # enemy champion hit" has no leveling row and is not priced.
+    "W": support_cast(
+        default_name="Golden Aegis",
+        detail="Self shield (sourced by the support scanner); the "
+        "per-champion-hit maximum-health increase is not priced.",
+    ),
     "E": _demacian_standard,
     "R": simple_damage(
         attr="Physical Damage",

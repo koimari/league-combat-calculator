@@ -108,10 +108,18 @@ class TestQDragonStrike:
 # ---------------------------------------------------------------------------
 
 
-class TestWAbsent:
-    def test_w_not_in_results(self, jarvan_iv_data, parse_at) -> None:
+class TestWIsAZeroDamageSupportCast:
+    """Golden Aegis shields Jarvan himself (140.0 at rank 5, 0 bonus AD).
+
+    The slot exists so the rotation casts it and the ally-support scanner
+    can price the cached "Shield Strength" row; the coupled probe is in
+    tests/test_e8_support.py.
+    """
+
+    def test_w_emits_no_damage(self, jarvan_iv_data, parse_at) -> None:
         _, abilities = parse_at(jarvan_iv_data, 18)
-        assert "W" not in abilities
+        assert abilities["W"]["total_raw"] == 0.0
+        assert abilities["W"]["parts"] == ()
 
 
 # ---------------------------------------------------------------------------

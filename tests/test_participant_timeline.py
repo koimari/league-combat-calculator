@@ -4937,8 +4937,10 @@ def test_support_attributes_match_the_profile_lookup_source():
 
     ``derive_ally_effects`` skips champions via ``_SUPPORT_ATTRIBUTES``;
     an attribute added to ``_support_profile``'s lookups without extending
-    that set would silently drop the champion's packets, so the set is
-    pinned to the ``_first_attribute`` tuples actually in the source.
+    that set would silently drop the champion's packets.  The gate is now
+    the union of the two declared lookup tuples, so what this asserts is
+    that the profile still reads THOSE tuples — an inline literal would
+    reopen the gap the union closes.
     """
     import inspect
     import re as re_module
@@ -4946,12 +4948,11 @@ def test_support_attributes_match_the_profile_lookup_source():
     from src.calculator import support_effects
 
     source = inspect.getsource(support_effects._support_profile)
-    lookups = re_module.findall(r"_first_attribute\(\s*ability,\s*\(([^)]*)\)", source)
-    assert lookups, "expected _first_attribute lookups in _support_profile"
-    named = set()
-    for group in lookups:
-        named.update(re_module.findall(r'"([^"]+)"', group))
-    assert named == set(support_effects._SUPPORT_ATTRIBUTES)
+    lookups = re_module.findall(r"_first_attribute\(ability, (\w+)\)", source)
+    assert sorted(lookups) == ["_HEAL_ATTRIBUTES", "_SHIELD_ATTRIBUTES"]
+    assert set(support_effects._SUPPORT_ATTRIBUTES) == set(
+        support_effects._SHIELD_ATTRIBUTES
+    ) | set(support_effects._HEAL_ATTRIBUTES)
 
 
 def test_healing_rule_champions_matches_the_dispatch_source():

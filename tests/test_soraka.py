@@ -20,11 +20,12 @@ def _parse(soraka_data, parse_at, second_hit):
 def test_soraka_e_counts_initial_hit_and_eruption(soraka_data, parse_at):
     _, abilities = _parse(soraka_data, parse_at, True)
 
-    # E8d: W (Astral Infusion) is now declared as a zero-damage support cast
-    # so the ally-support scanner can emit its sourced heal.
-    assert set(abilities) == {"Q", "W", "E"}
-    assert abilities["W"]["total_raw"] == 0.0
-    assert abilities["W"]["parts"] == ()
+    # W (Astral Infusion) and R (Wish) are declared as zero-damage support
+    # casts so the ally-support scanner can emit their sourced heals.
+    assert set(abilities) == {"Q", "W", "E", "R"}
+    for slot in ("W", "R"):
+        assert abilities[slot]["total_raw"] == 0.0
+        assert abilities[slot]["parts"] == ()
     assert parts_raw_total(abilities["Q"]["parts"], "magic") == pytest.approx(295.0)
     assert parts_raw_total(abilities["E"]["parts"], "magic") == pytest.approx(500.0)
     assert abilities["E"]["dot_duration"] == 1.5
@@ -46,8 +47,9 @@ def test_soraka_rotation_spends_only_offensive_spell_costs(
     result = fight(stats, abilities, target_magic_resistance=100)
 
     assert result["total_damage"] == pytest.approx(397.5)
-    # E8d: W (Astral Infusion) joins the rotation as a zero-damage support cast.
-    assert [event["slot"] for event in result["cast_timeline"]] == ["Q", "W", "E"]
+    # W (Astral Infusion) and R (Wish) join the rotation as zero-damage
+    # support casts; neither spends mana the offensive budget counts.
+    assert [event["slot"] for event in result["cast_timeline"]] == ["Q", "W", "E", "R"]
     assert abilities["Q"]["resource_cost"] + abilities["E"]["resource_cost"] == 155.0
     assert stats["max_mana"] >= 155.0
 

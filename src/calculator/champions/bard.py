@@ -11,21 +11,24 @@ Why each slot is non-generic:
 - Q (Cosmic Binding) parses generically ("Magic Damage" is exactly
   right); pinned to the explicit attr so a JSON reshuffle can't move
   it. The slow/stun is CC with no damage component.
-- W (Caretaker's Shrine) is an ally-only heal/MS buff — its "Minimum
-  Heal"/"Maximum Heal" attributes are NOT damage; absent from the map.
-  E8d: the engine's ally-support scanner looks up ("Total Heal", "Heal",
-  "Heal Per Tick") only, so Bard's "Minimum Heal"/"Maximum Heal" rows are
-  not readable by the support path — the W ally heal is a documented missing
-  engine hook (support_effects heal-attribute lookup), not an emitted packet.
-- E (Magical Journey) is a one-way terrain portal, zero damage — absent.
-- R (Tempered Fate) is 2.5s stasis, zero damage (stasis prevents damage
-  during it) — absent; no zero-damage display row wanted.
+- W (Caretaker's Shrine) is an ally-only heal: a zero-damage cast whose
+  only job is to exist, so the rotation casts it and the ally-support
+  scanner prices the sourced heal (200.0 to one teammate at rank 5, 0 AP,
+  the cached "Maximum Heal" row).  The 5-second charge that separates that
+  row from "Minimum Heal" is the boundary; the shrine is priced at full
+  power.
+- E (Magical Journey) is a one-way terrain portal: ``out_of_scope`` on the
+  terrain axis, which the fight engine does not model at all.
+- R (Tempered Fate) is 2.5s stasis on everything it hits: ``out_of_scope``
+  on the crowd-control magnitude axis — ``ability_spec.cc_kind`` is one
+  vocabulary string per part with no duration and no percent, so a stasis
+  can be declared but never priced.
 """
 
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .slotlib import ability_on_hit_entry, simple_damage
+from .slotlib import ability_on_hit_entry, simple_damage, support_cast
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
@@ -138,6 +141,15 @@ SLOTS = {
     # cast — the 300-unit continuation only reaches a second target.
     "Q": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    ),
+    # Caretaker's Shrine heals the ally who walks over it.  The slot exists
+    # so the rotation casts it and the support scanner can price the shrine
+    # at full power (cached "Maximum Heal", 50-200 + 70% AP); the 5-second
+    # charge that separates it from "Minimum Heal" is the boundary.
+    "W": support_cast(
+        default_name="Caretaker's Shrine",
+        detail="Ally heal (sourced by the support scanner) at the "
+        "fully-charged shrine; the 5s charge ramp is not modeled.",
     ),
 }
 

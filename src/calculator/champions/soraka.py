@@ -5,6 +5,14 @@ again after 1.5 seconds when the target remains in the zone. Its second hit is
 an explicit option because crowd control does not guarantee that condition.
 Soraka's passive and R do not damage enemies.
 
+R (Wish) is a zero-damage cast so the ally-support scanner prices the
+sourced team heal (350.0 to Soraka and every selected teammate at rank 3,
+0 AP); its "+50% on targets below 40% of their maximum health" is a
+live-health condition the scan cannot establish and is not priced.
+
+P (Salvation) stays ``out_of_scope`` on the movement-speed axis: its 90%
+bonus toward wounded allies has no ``stat_buff`` key at all.
+
 E8d: W (Astral Infusion) is an ally-only heal with no enemy damage.  The slot
 is declared here so the ability is CAST in the fight rotation; the engine's
 ally-support scanner then derives the heal packet from the cached W leveling
@@ -18,38 +26,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
-from .slotlib import extract_cooldown, extract_named, simple_damage
+from .slotlib import extract_cooldown, extract_named, simple_damage, support_cast
 from .source_receipts import load_champion_sources
-
-
-def _astral_infusion(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: zero-damage cast so the ally-support scanner emits the heal.
-
-    Astral Infusion heals the selected ally (cached "Heal" row, 90-170 +
-    50% AP); it costs 10% of Soraka's maximum health per cast, which the
-    engine's mana/energy resource ledger does not model.  The entry carries
-    the cached cooldown so the ability is scheduled like any other cast.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
-    return {
-        "name": ability.get("name", "Astral Infusion"),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        # The cached cost row is 10% of maximum health per cast — a health
-        # cost, not mana.  Declare zero so the engine's mana stamp cannot
-        # mislabel it as a 10-mana cast; the cost is documented, not modeled.
-        "resource_cost": 0.0,
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": "Ally-only heal (sourced by the support scanner); "
-        "costs 10% of max health per cast, not modeled as mana.",
-    }
 
 
 def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -113,8 +91,27 @@ SLOTS = {
     "Q": simple_damage(
         attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
     ),
-    "W": _astral_infusion,
+    # Astral Infusion heals the selected ally (cached "Heal" row, 90-170 +
+    # 50% AP).  The cached cost row is 10% of maximum health per cast — a
+    # health cost, not mana — so the entry declares zero rather than let the
+    # engine's mana stamp mislabel it as a 10-mana cast.
+    "W": support_cast(
+        default_name="Astral Infusion",
+        resource_cost=0.0,
+        detail="Ally-only heal (sourced by the support scanner); "
+        "costs 10% of max health per cast, not modeled as mana.",
+    ),
     "E": _equinox,
+    # Wish heals Soraka and every selected teammate (cached "Heal" row,
+    # 150/250/350 + 50% AP).  The cached "Increased Heal" row is the +50%
+    # applied to a recipient below 40% of their maximum health, which is a
+    # live-health condition the scan cannot establish, so the base row is
+    # what is priced.
+    "R": support_cast(
+        default_name="Wish",
+        detail="Team heal (sourced by the support scanner); the "
+        "below-40%-health increase is not priced.",
+    ),
 }
 
 # Reviewed crowd control, read from the cached kit.  Q (Starcall) deals
