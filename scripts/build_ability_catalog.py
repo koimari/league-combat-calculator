@@ -108,12 +108,8 @@ def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
 def catalogue_champions(raw: dict[str, Any]) -> list[dict[str, Any]]:
     """The cached champion rows a catalogue publishes, by display name.
 
-    Every cached champion is here, because an unregistered one is still a legal
-    ally or target.  What the registry buys is the other direction: a validated
-    module whose cache row is gone would leave the engine's own attacker absent
-    from the picker, so that fails the build.  The two rosters agreeing today is
-    a gate on the published asset (``tests/test_ability_catalog.py``), not a
-    filter here.
+    Every cached champion is here: an unregistered one is still a legal ally or
+    target.  A registered module with no cache row fails the build.
     """
     by_name = {str(champion.get("name", "")): champion for champion in raw.values()}
     absent = sorted(name for name in registered_champion_names() if name not in by_name)

@@ -161,11 +161,7 @@ def _ferocity_bonus(
 def _ferocity_state(ctx: SlotCtx) -> TimedStackState:
     """The kernel-owned Ferocity stack state seeded from the option.
 
-    ``p_ferocity`` is the explicit pre-stack state; the rule declares the
-    4-stack cap, the 1-second per-stack expiry (no refresh on subsequent
-    triggers), and the 10-second in-combat expiry freeze.  Live in-fight
-    gains are not wired: the rotation resolver does not feed per-cast
-    stack events into champion-module parses (named reason, ASSUMPTIONS).
+    ``p_ferocity`` is the pre-stack state; in-fight gains are not wired.
     """
     return TimedStackState(
         RENGAR_FEROCITY_STACK_RULE,

@@ -24,32 +24,14 @@ MAX_LEVEL = 20
 
 
 def growth_multiplier(level: int) -> float:
-    """The shared LoL stat-progression multiplier ``0.7025 + 0.0175 * (level-1)``.
-
-    This is the parenthesized term of the growth formula (1.0 at level 18);
-    formulas that scale a *relative* value by the progression curve (e.g.
-    Yorick's Mist Walker interpolation) use this, and ``growth_stat`` owns
-    the absolute per-level form.  Level-bound contract shared with
-    ``growth_stat``.
-    """
+    """The growth formula's progression term, ``0.7025 + 0.0175 * (level - 1)``."""
     if level < 1 or level > MAX_LEVEL:
         raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
     return 0.7025 + 0.0175 * (level - 1)
 
 
 def growth_stat(base: float, growth: float, level: int) -> float:
-    """Calculate a champion stat at a given level using the LoL growth formula.
-
-    Formula: base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))
-
-    Args:
-        base: The base stat value at level 1.
-        growth: The per-level growth value.
-        level: Champion level (1-20).
-
-    Returns:
-        The stat value at the given level (not rounded).
-    """
+    """``base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))``."""
     return base + growth * (level - 1) * growth_multiplier(level)
 
 
@@ -71,11 +53,10 @@ _ONE_ITEM_STAT_TYPE: dict[str, str] = {
 def item_stat_type_count(total_item_stats: Mapping[str, float]) -> int:
     """How many distinct stat types this build's items grant.
 
-    Counted off the build's own item stat totals rather than from a list of
-    stat names, so an item that stops granting a stat stops being counted
-    without anything here being edited.  Only the stat *blocks* are in
-    those totals: a stat an item passive grants conditionally is not a stat
-    "currently gained from items" for a build the fight has not started.
+    Counted off the build's own item stat totals rather than a list of stat
+    names, so an item that stops granting a stat stops being counted here.
+    Only stat blocks are in those totals: a stat an item passive grants
+    conditionally is not one the build currently has.
     """
     return len(
         {
@@ -97,25 +78,14 @@ def item_stat_type_count(total_item_stats: Mapping[str, float]) -> int:
 ATTACK_SPEED_CAP = 3.003
 
 
+# base AS and the AS ratio are separate per-champion values.
+# https://wiki.leagueoflegends.com/en-us/Attack_speed
 def calculate_attack_speed(
     base_attack_speed: float,
     attack_speed_ratio: float,
     bonus_percent: float,
 ) -> float:
-    """Calculate total attack speed.
-
-    Formula: base AS + (AS ratio × bonus AS%)
-    The AS ratio is a per-champion value separate from base AS.
-    See: https://wiki.leagueoflegends.com/en-us/Attack_speed
-
-    Args:
-        base_attack_speed: Champion's base attack speed at level 1.
-        attack_speed_ratio: Champion's attack speed ratio (scaling factor).
-        bonus_percent: Total bonus attack speed as a percentage (e.g., 20.0 for 20%).
-
-    Returns:
-        Total attacks per second.
-    """
+    """Attacks per second: ``base_AS + AS_ratio * (bonus_percent / 100)``."""
     return base_attack_speed + attack_speed_ratio * (bonus_percent / 100.0)
 
 
@@ -181,24 +151,22 @@ def get_champion_base_stats(
 
 # The optimizer recomputes candidate stats thousands of times over the same
 # cached item dicts, so the pure extraction below is memoized by
-# ``(data_version(), item_id)`` — a value derived from the record the cache
-# serves, never the record's address (Phase 4's cache rule, migration
-# frontier counter 7).  The pair is a value key because the data layer owns
-# the corpus: within one generation an item id names exactly one cached
-# record, every refresh goes through ``data_updater`` and moves the version
-# (D-49), and nothing may mutate a cached record in place (CLAUDE.md rule 2).
-# Each entry still keeps a strong reference to the record it was derived from
-# and re-checks it on the way out, so two records that somehow shared an id
-# would recompute rather than serve each other's stats.
+# ``(data_version(), item_id)``: a value derived from the record the cache
+# serves, never the record's address.  The pair is a value key because the
+# data layer owns the corpus: within one generation an item id names exactly
+# one cached record, every refresh goes through ``data_updater`` and moves
+# the version, and nothing may mutate a cached record in place (CLAUDE.md
+# rule 2).  Each entry keeps a strong reference to the record it was derived
+# from and re-checks it on the way out, so two records sharing an id
+# recompute rather than serve each other's stats.
 #
 # A record that declares no id is not memoized at all: sparse unit fixtures
 # are exactly those records, and a key derived from nothing is one entry
 # every fixture in the suite would share.
 #
 # The write goes through ``store_for_generation`` because this memo has no
-# size bound: prefixing the key made a superseded entry unreachable but not
-# collected, so the first write of a new generation drops the old one.  The
-# read stays a bare key lookup — a hit has already matched the live
+# size bound, so the first write of a new generation drops the old one.  The
+# read stays a bare key lookup: a hit has already matched the live
 # generation, and this is one of the optimizer's inner loops.
 _ITEM_STATS_MEMO: dict[tuple[int, int], tuple[dict[str, Any], dict[str, float]]] = {}
 # The schema verdict on the same record, keyed the same way.  Keep the
@@ -209,38 +177,13 @@ _ITEM_STATS_VALIDATION_MEMO: dict[
 ] = {}
 
 
+# ``None`` refuses to cache rather than sharing a bucket: a fixture declaring
+# no id would file every such fixture under one key.  ``bool`` is refused with
+# the non-integers because ``hash(True) == hash(1)``, so a bool-id fixture
+# would share the entry of the item whose id is 1.  A refusal is total: it
+# skips both memos this key gates, and every record it refuses is a fixture.
 def _record_key(item_data: Mapping[str, Any]) -> tuple[int, int] | None:
-    """One cached item record's value key, or ``None`` when it has none.
-
-    ``None`` is a refusal to cache rather than a shared bucket: a synthetic
-    fixture declares no id, and filing every such fixture under one key would
-    serve one test's stats to another.
-
-    **Three records are refused, not two.**  A missing id and a non-integer
-    id are the obvious pair; a ``bool`` id is the third, and it is excluded
-    explicitly because ``True == 1`` and ``hash(True) == hash(1)``, so a
-    fixture spelling one would not get its own entry — it would silently
-    share the entry of the item whose id is 1.  No row in
-    ``data/items.json`` has a bool id, so this refusal has never fired; it
-    is named here because an unnamed third case in a two-case docstring is
-    the drift this campaign is about, at the smallest scale it occurs.
-
-    Two costs the value key trades for correctness, named here because they
-    are the kind a benchmark notices and a reader does not.
-
-    * **A refusal is total.**  ``None`` skips *both* memos this key gates —
-      the extracted stats and the schema verdict — so a record declaring no
-      id re-walks its whole stat map on every call rather than hitting
-      ``_ITEM_STATS_VALIDATION_MEMO``.  Under the retired ``id()`` key it hit
-      both.  Every such record is a fixture: ``data/items.json``'s 324 rows
-      all carry an int id.
-    * **Two records sharing one id thrash.**  Identity-keying gave each its
-      own entry; a value key gives them one, and the ``memo[0] is item_data``
-      guard makes every call a miss whose write overwrites the other's entry
-      — so the pair loses caching entirely rather than merely serving each
-      other stale stats.  Correct, and worse than the address key was, for a
-      shape ``data/`` cannot produce and a fixture can.
-    """
+    """One cached item record's value key, or ``None`` when it has none."""
     item_id = item_data.get("id")
     if not isinstance(item_id, int) or isinstance(item_id, bool):
         return None

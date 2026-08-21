@@ -121,11 +121,8 @@ def number_and_unit(text: str) -> tuple[list[float], list[str]]:
 def _content_stable_bytes(
     domain: str, objects: dict[str, Any], source_ref: str | None
 ) -> bytes:
-    """Canonical bytes for the parts of a domain payload that determine its
-    content identity: ``domain``, ``source_ref``, ``objects``. Deliberately
-    excludes ``generated_at`` — a live wall-clock timestamp — so hashing
-    this is reproducible across re-runs when the underlying content hasn't
-    changed."""
+    """Canonical bytes for a domain payload's content identity; excludes
+    ``generated_at`` so re-runs over unchanged content hash the same."""
     stable = {"domain": domain, "source_ref": source_ref, "objects": objects}
     return json.dumps(stable, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
@@ -140,12 +137,9 @@ def content_hash(domain: str, objects: dict[str, Any], source_ref: str | None) -
 
 
 def hash_domain_file(path: Path) -> str:
-    """Recompute the content-stable manifest hash for an on-disk domain
-    atom file (e.g. ``data/atoms/champions.json``). Reads the file's own
-    ``domain``/``source_ref``/``objects`` fields and ignores
-    ``generated_at``, so this equals the manifest's ``sha256`` for that
-    domain as long as the content hasn't changed — the receipt consistency
-    check tests rely on."""
+    """Recompute the content-stable manifest hash for an on-disk domain atom
+    file. Reads the file's own ``domain``/``source_ref``/``objects`` and
+    ignores ``generated_at``, so it equals the manifest's ``sha256``."""
     payload = json.loads(path.read_text(encoding="utf-8"))
     return content_hash(
         payload["domain"], payload["objects"], payload.get("source_ref")

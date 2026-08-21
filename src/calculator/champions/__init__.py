@@ -241,23 +241,9 @@ def parse_abilities(
     target_stats: dict[str, float] | None = None,
     champion_options: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """Parse abilities for any champion.
+    """Ability damage for any champion, keyed by cast slot.
 
     Dispatches to a dedicated reviewed module. Unknown names fail closed.
-
-    Args:
-        champion_name: Display name of the champion (e.g., "Ahri").
-        champion_data: Raw champion data from the data fetcher.
-        level: Champion level (1-18).
-        total_ability_power: Total AP after items and multipliers.
-        ability_ranks: Optional ability rank overrides.
-        champion_stats: Champion's calculated stats (for AD/HP scaling).
-        target_stats: Target stats (for %HP abilities).
-        champion_options: Champion-specific options from the frontend
-            (e.g., ``{"sweetspot": True}`` for Aatrox).
-
-    Returns:
-        Ability damage dictionary keyed by Q/W/E/R.
     """
     contract = get_champion_module_contract(champion_name)
     return contract.parse_abilities(
@@ -301,15 +287,9 @@ def parse_champion_abilities(
 def get_champion_cast_order(champion_name: str) -> list[str] | None:
     """The champion's own rotation order, or ``None`` for the default.
 
-    A module declares ``CAST_ORDER`` when the engine's
-    ``(Q, Q2, W, E, R)`` misrepresents how the kit is actually used —
-    Jayce transforms INTO Cannon stance and only then casts its
-    abilities, so his R (and the resistance shred its empowered attack
-    applies) has to be resolved before Q/W, not after them.
-
-    Returns:
-        The declared order, or ``None`` when the champion has no module
-        or does not override the default.
+    A module declares ``CAST_ORDER`` when the engine's ``(Q, Q2, W, E, R)``
+    misrepresents how the kit is used: Jayce transforms into Cannon stance
+    and only then casts, so his R resolves before Q/W.
     """
     try:
         module = get_champion_module_contract(champion_name).module
@@ -320,21 +300,8 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
 
 
 def get_champion_cast_dependencies(champion_name: str) -> tuple[CastDependency, ...]:
-    """The champion's declared ordering prerequisites, or ``()``.
-
-    A module declares ``CAST_DEPENDENCIES`` when its own kit makes an
-    order mandatory rather than preferable — Syndra's Scatter the Weak
-    stuns only through a Dark Sphere her Q put on the field, so E after Q
-    is the mechanic, not a scheduling taste.  A champion that declares
-    none constrains nothing and keeps the resolver's inferred edges alone.
-
-    The validated contract is the only source: reading ``CAST_DEPENDENCIES``
-    off the module would hand out declarations that never passed the
-    import gate.
-
-    Returns:
-        The validated declarations, empty for a champion with no module
-        or one that declares none.
+    """The validated ``CAST_DEPENDENCIES``, or ``()``; never read off the
+    module, whose own copy never passed the import gate.
     """
     try:
         return get_champion_module_contract(champion_name).cast_dependencies
@@ -374,11 +341,11 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Typed rotation semantics for OPTIONS keys (issue #145)
+# Typed rotation semantics for OPTIONS keys
 #
 # The rotation resolver builds its setup/consume edges FROM these
-# declarations — there is no second hand-maintained vocabulary in
-# rotation_resolver.py anymore.  A module OPTIONS entry may carry an
+# declarations, and there is no second hand-maintained vocabulary in
+# rotation_resolver.py.  A module OPTIONS entry may carry an
 # inline ``rotation`` dict (authoritative at the option's source, e.g.
 # Diana's ``moonlight_reset``); every other key is classified here, as
 # data, so an unclassified option is a contract failure
@@ -399,12 +366,12 @@ def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
 #              produces the direct ``setup_slot -> slot`` edge without
 #              depending on applier-corpus phrases.
 #
-# Classification notes for the bulk (self_state/irrelevant): the report for
-# issue #145 verified that cross-slot semantics of the remaining options
-# (shreds, marks, executes, recasts) are ALREADY detected through parsed
-# atoms (``target_debuff``, ``post_hit_proc``, ``recast_of``, ...), so their
-# classification is receipt-only — they are acknowledged in the rotation
-# receipt without inventing duplicate edges.
+# Classification notes for the bulk (self_state/irrelevant): cross-slot
+# semantics of the remaining options (shreds, marks, executes, recasts) are
+# already detected through parsed atoms (``target_debuff``,
+# ``post_hit_proc``, ``recast_of``, ...), so their classification is
+# receipt-only: they are acknowledged in the rotation receipt without
+# inventing duplicate edges.
 # ─────────────────────────────────────────────────────────────────────────
 
 _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
@@ -922,11 +889,7 @@ def champion_options_meta_map() -> dict[str, dict[str, list]]:
 
 
 def registered_champion_names() -> list[str]:
-    """Sorted display names of every champion with a validated module.
-
-    Registration and review are one surface: a registered module is a
-    reviewed module.
-    """
+    """Sorted display names of every champion with a validated module."""
     return sorted(_CHAMPION_MODULES)
 
 
@@ -938,8 +901,5 @@ def engine_registration_kind(champion_name: str) -> str | None:
 
 
 def is_champion_supported(champion_name: str) -> bool:
-    """Check whether a champion has ability damage implemented.
-
-    Returns True only for cached champions with a dedicated module.
-    """
+    """Whether this champion has a dedicated module with ability damage."""
     return champion_name in _CHAMPION_MODULES

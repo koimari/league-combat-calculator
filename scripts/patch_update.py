@@ -19,9 +19,9 @@ golden diffs in the commit) starts from a focused report:
                golden compare. The baseline is re-captured only when every
                gate is green: a stale packet asset, a review-pending entry,
                a stale wiki cache, or an unacknowledged coverage frontier
-               entry aborts the run before capture (issue #134).
+               entry aborts the run before capture.
 
-Reviewed-packet gate (issue #134): the checked-in
+Reviewed-packet gate: the checked-in
 ``static/reviewed-packets.json`` must prove it was built from the current
 sources — the ``data/champions.json`` sha256 and Axword Meraki kit sha256
 receipts plus a current per-champion wiki revision receipt.  On a real patch
@@ -604,7 +604,7 @@ def rebuild_static_artifacts():
 
 
 # ---------------------------------------------------------------------------
-# Reviewed-packet freshness gate (issue #134)
+# Reviewed-packet freshness gate
 # ---------------------------------------------------------------------------
 
 
@@ -730,7 +730,7 @@ def check_reviewed_packets_current(
 
 
 # ---------------------------------------------------------------------------
-# Patch-day gates (issue #134): audit + staleness run before golden capture
+# Patch-day gates: audit + staleness run before golden capture
 # ---------------------------------------------------------------------------
 
 
@@ -800,10 +800,10 @@ def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int
 def run_coverage_census(output: Path | None = None) -> int:
     """Sweep every champion x mode/item/keystone cell and refresh its receipt.
 
-    The receipt legitimately moves on patch day (new items and champions
-    change the counts), so the gate is the sweep's own verdict: non-zero
-    means a frontier entry no residue row acknowledges, or an acknowledgement
-    that no longer reproduces, and it aborts the run.
+    The receipt legitimately moves on patch day, since new items and champions
+    change the counts, so the gate is the sweep's own verdict: non-zero means a
+    frontier entry no residue row acknowledges, or an acknowledgement that fails
+    to reproduce, and it aborts the run.
     """
     output = output or DEFAULT_CENSUS_OUTPUT
     print("== Gate: coverage census (full sweep, ~10 min) ==", flush=True)

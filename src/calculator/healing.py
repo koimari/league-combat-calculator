@@ -69,17 +69,9 @@ HEALING_RULE_CHAMPIONS = frozenset(_HEALING_RULES)
 
 
 def self_heal_rule_owner(champion_name: str) -> ChampionSlotOwner | None:
-    """Who owns this champion's reviewed self-heal rule, or ``None``.
-
-    The registry's answer to the question every consumer of
-    ``HEALING_RULE_CHAMPIONS`` was really asking, returned as the campaign's
-    typed owner rather than as membership in a name set.  A caller deciding
-    whether a narrowed fight result can still serve its readers gets a
-    receipt naming the declaration site, not a boolean it would have to
-    re-explain; and the registry that loads the declarations is the one thing
-    that can answer without importing the champion package, which the leaf
-    consuming this must not do.
-    """
+    """Who owns this champion's reviewed self-heal rule, or ``None``.  The
+    registry answers without importing the champion package, which the leaf
+    consuming this must not do."""
     if champion_name not in _HEALING_RULES:
         return None
     return ChampionSlotOwner(champion=champion_name, slot=SELF_HEAL_RULE_SLOT)

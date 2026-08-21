@@ -230,11 +230,10 @@ class SlotCtx:
     accumulates emitted entries in evaluation order.
 
     The three input blocks are read through :meth:`stat`, :meth:`target_stat`
-    and :meth:`option`, never with a ``.get(key, <literal>)`` — the fallback
-    literal is the shape that keeps a formula answering after its input stops
-    arriving, and D-24's declared ``zero_policy`` default would stamp the
-    resulting zero ``MEASURED``.  ``champions/inputs.py`` holds the
-    vocabularies and their declared defaults.
+    and :meth:`option`, never with a ``.get(key, <literal>)``: a fallback
+    literal keeps a formula answering after its input stops arriving, and the
+    resulting zero would be stamped ``MEASURED``.  ``champions/inputs.py``
+    holds the vocabularies and their declared defaults.
     """
 
     slot: str  # slot-map key being parsed
@@ -262,12 +261,10 @@ class SlotCtx:
     def option(self, key: str) -> Any:
         """One declared option: the user's value, or the module's default.
 
-        The default comes from the module's own ``OPTIONS`` row — the same
-        row the frontend renders — so the number a formula falls back to and
-        the number the user is shown cannot disagree.  A key the module never
-        declared raises: that is an option nothing wired, and a stack count
-        of zero from an unwired option is the failure D-24's guard exists to
-        make loud.
+        The default is the module's own ``OPTIONS`` row, the row the frontend
+        renders, so the fallback and the number the user sees cannot
+        disagree.  An undeclared key raises rather than yielding a zero that
+        would be published as a measured number.
         """
         if key not in self.option_defaults:
             raise ChampionInputError(
@@ -279,21 +276,15 @@ class SlotCtx:
         return self.option_defaults[key] if value is None else value
 
     def bump_stat(self, name: str, delta: float) -> float:
-        """Accumulate onto a declared build stat, returning the new value.
-
-        BUFF-phase slots add to the shared stat block; going through the
-        vocabulary keeps a mid-parse write from inventing a stat name no
-        reader could ever resolve.
-        """
+        """Accumulate onto a declared build stat, returning the new value."""
         updated = self.stat(name) + delta
         self.stats[name] = updated
         return updated
 
     def ability(self, slot: str | None = None, index: int = 0) -> dict | None:
-        """Return the ability JSON at (slot, index), or None if absent.
+        """The ability JSON at (slot, index), or ``None`` if absent.
 
-        Defaults to entry 0 of this parser's own slot; archetypes pass
-        their ``source=(slot, index)`` here for multi-entry slots.
+        Defaults to entry 0 of this parser's own slot.
         """
         entries = self.abilities.get(slot or self.slot, [])
         if index >= len(entries):
@@ -333,8 +324,7 @@ def _stamp_cast_time(
     One home instead of every slot parser plumbing it. Only castable
     entries (they carry a cooldown) occupy the timed fight's shared cast
     timeline; slot-fn-supplied values win; instant casts (0.0) stay
-    unstamped so entries stay lean and cast-time-less data keeps legacy
-    cast counts.
+    unstamped, so an entry with no cast time is counted as an instant.
     """
     if "cooldown" not in entry or "cast_time" in entry or ability_json is None:
         return
@@ -353,15 +343,11 @@ def _stamp_cast_time(
         entry["cast_time"] = cast_time
 
 
+# Camille's and Ambessa's Q2 are free recasts: one paid cast buys both halves.
+# A charge is not one, it is a whole cast stocked in advance, and a slot
+# parser that knows the difference stamps its own ``resource_cost``.
 def _is_free_recast(entry: dict[str, Any]) -> bool:
-    """Whether this entry is a recast the parent cast already paid for.
-
-    Camille's and Ambessa's Q2 are: one paid cast buys both halves, so the
-    second spends nothing of its own.  A *charge* is not one — it is a whole
-    cast that happens to have been stocked in advance — and a slot parser
-    that knows the difference says so by stamping its own ``resource_cost``,
-    which the early return below hands back untouched.
-    """
+    """Whether this entry is a recast the parent cast already paid for."""
     return bool(entry.get("recast_of"))
 
 
@@ -571,9 +557,9 @@ def _validate_cc_event_contract(
             )
 
 
-# A cast whose only damage is the basic attack it forces prices at zero
-# on its own account.  That is a declaration, not a computation, so the
-# marker part it carries says so with the campaign's own vocabulary.
+# A cast whose only damage is the basic attack it forces prices at zero on
+# its own account.  That is a declaration, not a computation, so the marker
+# part it carries is a structural zero with a reason.
 _EMPOWER_MARKER_ZERO = ZeroPolicy(
     disposition=Disposition.STRUCTURAL_ZERO,
     reason=(
@@ -698,10 +684,9 @@ def _apply_module_cc(
     the constant in ``MODULE_CC`` alone.
 
     A slot with no parts at all gets one built for it, stops the import,
-    or is a row that prices nothing at all — :func:`_empower_marker_part`
-    rules which.  What must not happen is the outcome this used to have for
-    all three alike, where a declaration on a row that DOES price damage
-    returned quietly and stamped nothing.
+    or is a row that prices nothing: :func:`_empower_marker_part` rules
+    which.  A declaration on a row that does price damage always stamps
+    rather than returning quietly.
     """
     if kind == CC_PER_PART:
         # The parts already carry the answer, and a branch that reviewed
@@ -835,11 +820,7 @@ def _certify_shared_instant(
 
 
 def _result_key(slot: str) -> str:
-    """Map a slot-map key to its key in the results dict.
-
-    The fight engine expects the passive under ``"passive"``; every
-    other slot keeps its own key.
-    """
+    """The results-dict key for a slot; the fight engine wants ``"passive"``."""
     return "passive" if slot == "P" else slot
 
 

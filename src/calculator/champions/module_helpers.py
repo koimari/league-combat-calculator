@@ -76,21 +76,13 @@ def typed_damage(
 def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
     """A :func:`slotlib.simple_damage` slot whose hit lands after a delay.
 
-    ``DamagePart.time_offset`` is seconds from the *cast start*, so an
-    ability the cache places on a post-cast delay ("strikes the target
-    location after 1.221 seconds") authors that number here instead of
-    certifying a cast-boundary hit it does not have.  Authoring it is also
-    what puts the row in the event ledger at all, which is where a
-    reviewed ``cc_kind`` becomes visible to control-armed item passives.
-
-    Where the cached entry says the delay excludes the cast time, the
-    caller adds the cached ``castTime`` and passes the sum — the offset's
-    origin is one fixed instant, so the champion module resolves the
-    source's convention rather than this helper guessing it.
-
-    Every keyword of ``simple_damage`` passes through unchanged (the
-    damage read, cooldown, and any per-part ``cc_kind``), so the delayed
-    slot and the plain one price identically.
+    ``DamagePart.time_offset`` is seconds from the cast start, so an ability
+    the cache places on a post-cast delay authors that number here rather
+    than certifying a cast-boundary hit it does not have.  Where the cached
+    entry says the delay excludes the cast time, the caller adds the cached
+    ``castTime`` and passes the sum, because the champion module is what
+    knows its source's convention.  Every ``simple_damage`` keyword passes
+    through unchanged, so the delayed slot and the plain one price alike.
     """
     base = simple_damage(**simple_damage_kwargs)
 
@@ -152,15 +144,8 @@ def missing_hp_fraction(ctx: SlotCtx) -> float:
 def buff_window_share(ctx: SlotCtx, duration: float) -> float:
     """Share of the fight window a self-buff lasting *duration* covers.
 
-    A ``stat_buff`` is one scalar for the whole fight, but the steroids
-    champions cast expire.  Blitzcrank's Overdrive set the rule this
-    states once: a buff shorter than the window contributes its own
-    duration's share of the bonus (a 5-second steroid in a 10-second
-    fight is half of it), and a buff at least as long as the window
-    contributes all of it.  The reserved ``fight_duration_seconds``
-    option is zero in one-rotation mode and in a direct parse call —
-    no window, so the per-cast model applies and the whole bonus lands.
-    """
+    ``fight_duration_seconds`` is zero in one-rotation mode and in a direct
+    parse call, so with no window the whole bonus lands."""
 
     window = float(ctx.option("fight_duration_seconds"))
     if window <= duration:

@@ -1,16 +1,11 @@
 """Who an event belongs to, and what its public id string is.
 
-Event identity in the coupled timeline is positional string concatenation
-today: four different f-strings, each spelled at the site that authors the
-event, each numbering its own events by enumeration order.  Nothing names the
-grammar those four strings share, so nothing can check that a fan-out clone's
-id is really its parent's id plus a role, and a mis-numbered id shows up only
-as a receipt row pointing at the wrong trigger.
-
-This module names the grammar.  An :class:`EventId` is an :data:`Origin` --
-who authored the event -- and an ordinal -- which of that origin's events it
-is.  :func:`event_id_text` is the single producer of the public string, and
-it is byte-identical to the four legacy formats it replaces:
+A public event id is positional string concatenation, so a mis-numbered id
+shows up only as a receipt row pointing at the wrong trigger.  This module
+names the grammar instead of leaving it to the authoring sites.  An
+:class:`EventId` is an :data:`Origin`, who authored the event, and an ordinal,
+which of that origin's events it is.  :func:`event_id_text` is the single
+producer of the public string.  The four origins render as:
 
 * :class:`PairOrigin` -- ``f"{attacker_id}:{defender_id}:{i}"``, authored by
   ``program.compile.WalkCompiler.add_engine_result`` and rebuilt by
@@ -105,10 +100,10 @@ class ReactiveOrigin:
 class DerivedOrigin:
     """One event's fan-out clone, named by the role it plays.
 
-    ``role`` is the suffix the legacy f-strings appended by hand.  Holding
-    the parent id instead of its rendered text is the whole point: a role is
-    a closed word about *this* parent, so an id can no longer be assembled
-    out of a string that names no event.
+    ``role`` is the suffix the rendered id carries.  Holding the parent id
+    instead of its rendered text is the point: a role is a closed word about
+    *this* parent, so an id cannot be assembled out of a string that names no
+    event.
     """
 
     parent: EventId
@@ -149,12 +144,10 @@ def origin_text(origin: Origin) -> str:
 def event_id_text(event: EventId) -> str:
     """The only producer of a public event-id string.
 
-    Byte-identical to the four legacy formats in this module's docstring: an
-    ordinal is appended after a colon, and :data:`UNNUMBERED` appends
-    nothing, which is exactly what a single-child fan-out clone published
-    before.  A negative ordinal other than :data:`UNNUMBERED` is a numbering
-    bug rather than an unnumbered id and raises, because the two would
-    otherwise render the same way for ``-1`` and differently for ``-2``.
+    An ordinal is appended after a colon; :data:`UNNUMBERED` appends nothing,
+    which is what a single-child fan-out clone publishes.  Any other negative
+    ordinal is a numbering bug and raises, because the two would otherwise
+    render alike for ``-1`` and differently for ``-2``.
     """
     text = origin_text(event.origin)
     if event.ordinal == UNNUMBERED:

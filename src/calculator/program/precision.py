@@ -327,14 +327,9 @@ class UnregisteredField(KeyError):
 
 
 def digits_for(field: str) -> int:
-    """The declared precision of *field*, or raise naming it.
+    """The declared precision of *field*, a bare name or ``block.name``.
 
-    Args:
-        field: the published field's path — a bare name, or ``block.name``
-            for a field inside a published sub-block.
-
-    Raises:
-        UnregisteredField: *field* has no declared precision.
+    Raises :class:`UnregisteredField` naming the field when none is declared.
     """
     try:
         return ROUNDING[field]
@@ -346,12 +341,7 @@ def digits_for(field: str) -> int:
 
 
 def round_field(field: str, value: float) -> float:
-    """Round *value* at *field*'s declared precision.
-
-    The only rounding ``program/`` performs.  ``None`` is not accepted: an
-    absent value and a value rounded to zero are different answers, and the
-    projection decides which one it has before it asks for a precision.
-    """
+    """Round *value* at *field*'s precision: the only rounding in ``program/``."""
     return round(float(value), digits_for(field))
 
 
@@ -380,18 +370,9 @@ def damage_cutoff(
     fight_duration_seconds: float,
     policy: CutoffPolicy,
 ) -> float:
-    """The last timestamp an actor's damage still counts at.
-
-    Args:
-        death_time: the actor's published death time, or ``None`` when the
-            actor survived the window.
-        fight_duration_seconds: the window, which is the cutoff for a
-            survivor.
-        policy: which death time to read; required, with no default, because
-            the choice is the decision this function exists to name.
-
-    Raises:
-        ValueError: *policy* is not a member of :class:`CutoffPolicy`.
+    """The last timestamp an actor's damage still counts at, which is the
+    window for a survivor.  *policy* is required and has no default, because
+    which death time to read is the decision this function names.
     """
     if policy is not CutoffPolicy.ROUNDED_DEATH_TIME:
         raise ValueError(f"unknown cutoff policy {policy!r}")
@@ -524,19 +505,11 @@ class SumPlan:
 
 
 def sum_plan(panels: Mapping[str, Sequence[Mapping[str, Any]]]) -> SumPlan:
-    """The plan over the receipt's published panels.
+    """The plan over the receipt's published rows, keyed by panel name.
 
-    Args:
-        panels: the published rows per panel name.  Every key must be one of
-            :data:`SUM_PANELS`; a row with no ``event_id`` contributes no
-            member, because an unidentified row is not something a union
-            over ids can double-count.
-
-    Raises:
-        DuplicateSumMember: one panel published one event id twice.
-        KeyError: *panels* names a panel this registry does not declare —
-            fail closed, because a fourth stream silently outside the plan
-            is exactly the gap this exists to close.
+    A row with no ``event_id`` contributes no member, because a union over ids
+    cannot double-count an unidentified row.  A panel outside :data:`SUM_PANELS`
+    raises: a fourth stream silently outside the plan is the gap this closes.
     """
     unknown = sorted(panel for panel in panels if panel not in SUM_PANELS)
     if unknown:

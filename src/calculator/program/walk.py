@@ -1,38 +1,17 @@
 """The one kernel call site, and the frozen result five views project.
 
-Two engines pricing one mechanic is failure mode C of the incident this
-campaign exists to close, and the timeline has two ``run_survival_walk`` call
-sites — one for the receipt, one for the score.  They agree because two
-pieces of composition code have been kept in step by hand, which is exactly
-the arrangement that stopped being true for Imperial Mandate.
+Two engines pricing one mechanic is how the receipt and the score come to
+disagree, so ``src/`` holds exactly one ``run_survival_walk(`` call
+expression: the one below.  Every view reads the :class:`WalkResult` it
+returns instead of re-running the walk in its own shape.  The result is
+frozen, which makes "every number a view emits is already a leaf of the
+result" a property rather than a review note.
 
-This module is where that becomes structural: one call site, one invocation
-per pass, and a :class:`WalkResult` the views read instead of re-running the
-walk in their own shape.  The result is **frozen** because a view that could
-mutate it would be a sixth producer of numbers wearing a projection's name;
-freezing it is what lets criterion 3 say "every number a view emits is
-already a leaf of the result" as a property rather than a review note.
-
-**The signature is a documented reading of the phase's Shape.**  Shape signs
-``walk(program, ledger)``; this kernel carries its ledger *on* the transition
-context (``TransitionContext.ledger``), so the parameter here is the context
-that holds it.  One object, not two: passing both would create a pair that
-can disagree, and the ledger the walk actually drives would be the one nobody
-passed.
-
-S4 landed the seam and the result type so the views had something to be
-projections *of*, and S9 repointed the timeline's two legacy call sites here
-with the five views.
-
-**Which means this module made criterion 1's counter worse before it made it
-better, and that was worth a sentence rather than a discovery.**  The
-criterion asks for exactly one ``run_survival_walk(`` call expression in
-``src/`` against a baseline of two; landing the seam beside the two it would
-replace made it **three** — ``participant_timeline.py`` twice and the one
-below — and it stayed three from S4 to S9.  A structural counter that rises
-mid-phase is the normal shape of a strangler stage, but a counter that rises
-with nothing saying so is indistinguishable from one nobody is driving.  It
-is now the criterion's one.
+The kernel carries its ledger on the transition context
+(``TransitionContext.ledger``), so this signature takes the context rather
+than the pair ``(program, ledger)``.  One object, not two: passing both
+creates a pair that can disagree, and the ledger the walk drives would be the
+one nobody passed.
 """
 
 from __future__ import annotations
@@ -59,11 +38,9 @@ from .rung import CompiledFast, Rung
 class AttackerOutcome:
     """One participant's folded numbers, exactly as the walk left them.
 
-    Every field is a **leaf**: a number some rule already computed, carried
-    here so a view can publish it without adding one.  That is the whole
-    trick behind "a view re-runs no arithmetic" — the folding that used to
-    happen inline in two composition tails happens once, in the composition,
-    and what reaches a view is the answer rather than the ingredients.
+    Every field is a leaf: a number some rule already computed, carried here so
+    a view can publish it without adding one.  The folding happens once, in the
+    composition, so what reaches a view is the answer and not the ingredients.
 
     The two composition paths derive these differently and legitimately so:
     the compiled score path reads the score ledger's parallel arrays, the
@@ -402,12 +379,12 @@ class WalkOrigin:
 class WalkResult:
     """Everything one walk produced, frozen at the moment it finished.
 
-    ``states`` is the kernel's per-participant state list — the same objects
-    the walk mutated, no longer mutable *through this record* — and
-    ``actions`` is the exact sequence it consumed, so a receipt row and a
-    score contribution can be traced to the same action rather than to two
-    reconstructions of it.  ``rung`` rides along because "which engine priced
-    this" is a property of the result and not of the caller's memory of it.
+    ``states`` is the kernel's per-participant state list, the same objects the
+    walk mutated and not mutable *through this record*, and ``actions`` is the
+    exact sequence it consumed, so a receipt row and a score contribution trace
+    to the same action rather than to two reconstructions of it.  ``rung`` rides
+    along because "which engine priced this" is a property of the result and not
+    of the caller's memory of it.
 
     ``outcomes``, ``grey_health`` and ``timeline_coverage`` are the folds the
     composition made after the kernel returned, empty until it does.  They are
@@ -486,28 +463,14 @@ def walk(
 ) -> WalkResult:
     """Run the kernel exactly once and freeze what it produced.
 
-    ``counters`` is the runtime half of the one-walk property (criterion 1).
-    One call expression in ``src/`` says a second engine has not been
-    *written*; only a count of entries says a composition did not enter the
-    one that exists twice per pass.  The sink is threaded from the caller
-    like every other work counter and is ``None`` outside an instrumented
-    search (R-24), so the cost with no sink installed is one ``is None``.
-
-    The body is one call, one settlement, one fold and one record: this
-    function adds no reordering and no filtering, because anything it added
-    would be a second engine growing inside the seam that exists to stop
-    there being one.  The one fold is :func:`survival_folds`, and it is here
-    rather than in the view for the reason criterion 3 names: three sums the
-    settled state implies belong to the walk that settled it, so what a
-    projection receives is a leaf.  The sort order is the compiler's eight-element key,
-    already applied by the caller — sorting again here by a second rule is
-    how two engines end up disagreeing about simultaneous events.
-
-    ``finalize_states`` is inside rather than beside: both composition paths
-    called it on the line after their own ``run_survival_walk``, which made
-    "the walk has settled" a two-line convention two callers had to keep.  A
-    caller that forgot it would read a state the kernel had not closed out,
-    and nothing would say so.
+    ``counters`` counts entries, which is what says a composition did not enter
+    the one walk twice per pass; the single call expression in ``src/`` only
+    says a second engine has not been written.  It is ``None`` outside an
+    instrumented search, so the cost with no sink is one ``is None``.  Nothing
+    here reorders or filters: the caller has already applied the compiler's
+    eight-element sort key, and a second rule is how two engines come to
+    disagree about simultaneous events.  :func:`survival_folds` and
+    ``finalize_states`` run inside, so a view receives settled leaves.
     """
     record_walk(counters)
     run_survival_walk(actions, ctx)

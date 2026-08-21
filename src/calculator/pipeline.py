@@ -660,10 +660,9 @@ def _saturated_omnivamp_percent(
 ) -> float:
     """The omnivamp this fight's length arms that the stat block does not hold.
 
-    A ramp-armed grant is a fight state rather than a stat, so it decides two
-    things this module owns: whether the light tuple ledger is adequate, and
-    what the published effective stats say.  Both read the declaration, so a
-    second such item is answered here instead of needing a second predicate.
+    A ramp-armed grant is a fight state, not a stat, so it decides both whether
+    the light tuple ledger is adequate and what the published effective stats
+    say.  Both read the declaration, so a second such item needs no predicate.
     """
     return sustain.saturating_stat_percent(
         [str(item.get("name", "")) for item in items],
@@ -826,21 +825,10 @@ def _bounded_request_float(
 def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
     """Reject a requested cast order no champion could satisfy.
 
-    Champion-agnostic on purpose: a cast order is a non-empty list of
-    distinct ability slots.  *Which* slots the champion actually offers is
-    a property of its parsed kit and is checked once, against
-    ``cast_dependency.orderable_slots``, in
-    :meth:`FightParams.validate_for_champion` (D-11).  Before that split
-    both request paths hard-coded ``sorted(order) == ["E","Q","R","W"]``,
-    which is why a Syndra order could never name the kit it actually has.
-
-    Args:
-        cast_order: The requested value, straight off the request.
-        field: How the caller's message names the field.
-
-    Raises:
-        ValueError: The value is not a list, holds a non-string, is empty,
-            or repeats a slot.
+    Champion-agnostic on purpose: a cast order is a non-empty list of distinct
+    ability slots.  Which slots a champion actually offers is a property of its
+    parsed kit, checked once against ``cast_dependency.orderable_slots`` in
+    :meth:`FightParams.validate_for_champion`, so no slot set is spelled here.
     """
     if cast_order is None:
         return
@@ -868,34 +856,12 @@ def cast_slot_surface(
 ) -> dict[str, Mapping[str, Any]]:
     """The parsed rows a cast order schedules, keyed as the cast vocabulary spells them.
 
-    Two adjustments separate the parse from ``cast_dependency``'s slot
-    vocabulary, and both are stated here rather than guessed at the call
-    site:
-
-    * The parse publishes the passive under ``"passive"``
-      (``champions/engine.py``'s ``_result_key``) while the cast vocabulary
-      spells it ``"P"``; both spellings occur across the roster because a
-      few modules build their results dict by hand.
-    * The parse also carries **rider rows** — Briar's Frenzy swing, Bel'Veth's
-      R on-hit, Annie's Tibbers attacks — which no cast order names and no
-      cast order drops, because the engine attributes them through their own
-      atoms.  They are not cast slots and are not offered to the request.
-
-    The two are told apart by **spelling, never by the ``recast_of`` stamp**:
-    a cast slot is a base slot letter optionally carrying a charge index
-    (``Q``, ``Q2``, ``R2``), and a rider row carries a descriptive suffix
-    (``W_frenzy``, ``R_onhit``, ``tibbers_attacks``).  Reading the stamp here
-    would make this function answer the very question
-    ``cast_dependency.orderable_slots`` exists to fail closed on: an
-    unstamped ``Q2`` would be filtered out as a rider and silently dropped
-    from a requested order, which is the defect shape D-11 kills, not one it
-    may reproduce one call earlier.  The stamp is read once, downstream.
-
-    Args:
-        ability_damages: The parsed ability package for this fight.
-
-    Returns:
-        Parsed entries by cast-vocabulary slot name.
+    The parse publishes the passive as ``"passive"`` and the cast vocabulary as
+    ``"P"``, and both spellings occur across the roster.  Cast slots are told
+    apart from rider rows (``W_frenzy``, ``R_onhit``) by spelling, never by the
+    ``recast_of`` stamp: reading the stamp here would filter an unstamped ``Q2``
+    out as a rider and silently drop it from a requested order, which is what
+    ``cast_dependency.orderable_slots`` fails closed on downstream.
     """
     surface: dict[str, Mapping[str, Any]] = {}
     for slot, entry in ability_damages.items():
@@ -909,14 +875,13 @@ def cast_slot_surface(
 
 
 def _request_target_class(data: Mapping[str, Any]) -> str:
-    """Read the public target-class selector (P3-3M), failing closed.
+    """Read the public target-class selector, failing closed.
 
-    Omitting the key keeps the historical champion-class fight, so every
-    existing request stays byte-identical. A supplied value must match a
-    :data:`item_effects.TARGET_CLASSES` spelling EXACTLY — no case folding
-    and no plural forms, so the request layer and ``FightConfig``'s own
-    guard share one spelling contract rather than the request layer
-    quietly widening what the kernel accepts.
+    Omitting the key selects the champion-class fight.  A supplied value must
+    match a :data:`item_effects.TARGET_CLASSES` spelling exactly, with no case
+    folding and no plurals, so the request layer and ``FightConfig``'s own guard
+    share one spelling contract rather than the request layer widening what the
+    kernel accepts.
     """
     value = request_string(data, "target_class", item_effects.DEFAULT_TARGET_CLASS)
     if value not in item_effects.TARGET_CLASSES:

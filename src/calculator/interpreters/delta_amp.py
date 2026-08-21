@@ -124,12 +124,7 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
 
 
 def _melee_ranged_split(magnitude: MeleeRangedSplit, ctx: BuildContext) -> float:
-    """Whichever of the two sourced rates the holder's range class earns.
-
-    One branch, no default: the context carries the class as a required
-    field, so there is no path on which a holder silently takes the ranged
-    rate because nobody said which they were.
-    """
+    """Whichever of the two sourced rates the holder's range class earns."""
     reference = magnitude.melee if ctx.holder_is_melee else magnitude.ranged
     return resolve(reference, ctx.level)
 
@@ -137,10 +132,7 @@ def _melee_ranged_split(magnitude: MeleeRangedSplit, ctx: BuildContext) -> float
 def _ramp_per_second(magnitude: RampPerSecond, ctx: BuildContext) -> float:
     """A time ramp's average value over the fight, capped by its maximum.
 
-    The ramp climbs ``per_second`` until it reaches ``maximum``, so it has
-    been at half its final height on average — hence the ``/ 2``.  The
-    fight is assumed to last long enough for the whole climb only when
-    ``duration`` allows it, which is what the ``min`` is for.
+    The ramp is at half its final height on average, hence the ``/ 2``.
     """
     per_second = resolve(magnitude.per_second, ctx.level)
     maximum = resolve(magnitude.maximum, ctx.level)
@@ -197,15 +189,13 @@ def _magnitude_fields(
     ctx: BuildContext,
     field: "Callable[[str, float], KernelField]",
 ) -> tuple[KernelField, ...]:
-    """The compiled numbers a magnitude contributes — one field, or two.
+    """The compiled numbers a magnitude contributes: one field, or two.
 
-    Every shape but :class:`StatScaled` resolves to a single fraction here.
-    A stat-scaled one cannot: half of it is a reading of the holder's stat
-    block, which this context deliberately does not carry, so its two sourced
-    halves compile separately and :meth:`PartAmp.fraction` folds them with
-    the reading.  Splitting the field rather than defaulting the stat is what
-    keeps "the holder had no bonus mana" and "nobody asked for the stat"
-    different answers.
+    Every shape but :class:`StatScaled` resolves to a single fraction.  A
+    stat-scaled one cannot: half of it reads the holder's stat block, which this
+    context does not carry, so its halves compile separately and
+    :meth:`PartAmp.fraction` folds them with the reading.  Splitting the field
+    keeps "the holder had no bonus mana" and "nobody asked" different answers.
     """
     if isinstance(magnitude, StatScaled):
         return (
@@ -231,10 +221,9 @@ def amp_fields(
     only thing that differs between them, so one body is what makes "the walk
     reads the same declaration the pair engine reads" a property of the tree
     rather than a claim two functions could drift out of.  The walk needs its
-    own reading because the holder's static amps used to reach it already
-    folded into the pair engine's rows, and a walk that prices a declaration
-    itself has nowhere to take them from (:func:`resolve_static_holder_amps`,
-    ``survival.pricing.DeclaredPacket``).
+    own reading because a walk that prices a declaration itself has nowhere to
+    take the holder's static amps from
+    (:func:`resolve_static_holder_amps`, ``survival.pricing.DeclaredPacket``).
     """
     payload = rule.payload
     if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
@@ -275,12 +264,18 @@ def amp_fields(
 class AmpSlot:
     """One chain slot, resolved for one build.
 
-    ``fractions`` runs parallel to ``rules`` — one sourced fraction per
-    holder, in build order — because the slot's occupants are additive among
-    themselves and a caller that reports per-source rows needs the parts,
-    not only the sum.  ``owner`` names the breakdown row, derived from the
-    rule rather than passed in, which is what removes the item name from the
-    engine's side of the call.
+    ``fractions`` runs parallel to ``rules``, one sourced fraction per holder in
+    build order, because the slot's occupants are additive among themselves and a
+    caller that reports per-source rows needs the parts, not only the sum.
+    ``owner`` names the breakdown row, derived from the rule rather than passed in,
+    which removes the item name from the engine's side of the call.
+
+    The fold spelling is load-bearing, not stylistic.  ``1.0 + sum(f)``, a running
+    ``+=`` per holder and ``math.fsum`` disagree in the last bits once a slot has
+    two occupants, and ``1.0 + 0.07 - 1.0`` is not ``0.07``.  So :attr:`multiplier`
+    is ``1.0 + sum(fractions)``, the engine's own spelling for the one slot that
+    can hold several mechanics (``WHOLE_TOTAL``), and :attr:`bonus_fraction` is
+    ``sum(fractions)`` rather than ``multiplier - 1.0``.
     """
 
     slot: AmpChainSlot
@@ -317,12 +312,7 @@ class AmpSlot:
         )
 
     def prices_damage_type(self, damage_type: str, index: int = 0) -> bool:
-        """Whether the holder's declared typing admits this damage class.
-
-        ``DamageClass``' string values are the engine's own spellings, so the
-        ledger's ``damage_type`` and the declaration's ``damage_classes`` are
-        one vocabulary rather than two that have to be kept in step.
-        """
+        """Whether the holder's declared typing admits this damage class."""
         typing = self.rules[index].payload.typing
         return damage_type in {cls.value for cls in typing.damage_classes}
 
@@ -362,21 +352,18 @@ class AmpSlot:
     ) -> tuple[tuple[float, float], ...]:
         """The armed windows *trigger_times* open, merged as the rule declares.
 
-        ``REFRESH`` is what this loop computes and now what the declaration
-        calls it: a trigger landing inside a live window moves that window's
-        end to its own time plus the duration.  The ``max`` is the identity
-        under a constant duration — ``time`` is not before the trigger that
-        opened the window, so ``time + duration`` is never the earlier of the
-        two — and it is kept because it is the spelling
-        ``survival.transitions._refresh_live_modifier`` uses for the same
-        merge, so the two engines' refresh is one shape rather than two.
+        ``REFRESH`` is what this loop computes and what the declaration calls it: a
+        trigger landing inside a live window moves that window's end to its own time
+        plus the duration.  The ``max`` is the identity under a constant duration,
+        since ``time`` is never before the trigger that opened the window, and it is
+        kept because ``survival.transitions._refresh_live_modifier`` spells the same
+        merge that way, so the two engines' refresh is one shape rather than two.
 
-        ``EXTEND`` is the additive reading — a second immobilize adding its
-        own duration to whatever is left — and ``INDEPENDENT`` a second
-        window beside the first.  Both deliberately have no arithmetic: no
-        rule declares them, and writing a branch nothing reaches is the
-        orphan D-51 forbids.  ``EXTEND`` is additionally the reading the
-        League Wiki's wording admits, kept unreached against the day a source
+        ``EXTEND`` is the additive reading, a second immobilize adding its own
+        duration to whatever is left, and ``INDEPENDENT`` a second window beside the
+        first.  Both deliberately have no arithmetic: no rule declares them, and a
+        branch nothing reaches is an orphan.  ``EXTEND`` is additionally the reading
+        the League Wiki's wording admits, kept unreached against the day a source
         settles it (``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``).
         """
         activation = self._trigger_activation(index)
@@ -402,31 +389,14 @@ class AmpSlot:
         time: float,
         index: int = 0,
     ) -> bool:
-        """Whether an event at *time* is inside one of *windows* (D-13).
+        """Whether an event at *time* is inside one of *windows*.
 
         ``OPEN_CLOSED`` is ``start < t <= end``: the trigger itself and
-        same-timestamp packets are outside, and an event exactly on the
-        expiry is inside.  That boundary used to be a comparison operator two
-        engines had to agree on by inspection; it is now the one thing the
-        declaration says and this method reads.  It is deliberately
-        timestamp-only coarseness — a same-tick packet ordered after the
-        trigger in the ledger is still excluded — and the coarseness is
-        *kept* rather than merely inherited, on measured grounds.  Consulting
-        the ledger's secondary key instead would read an ordering nothing
-        authored: champion ability packets never carry ``timeline_order`` (the
-        engine's own device for a same-instant claim, ``damage.py``'s ``+0.5``
-        and ``-1.0``), so their key falls back to a construction counter that
-        follows the rotation planner's slot list — reorder that list and the
-        same simultaneous packets change sides.  The coupled walk cannot make
-        the statement at all: its order is
-        ``(time, ordering_slot(rank), …)`` with ``TransitionRank.DAMAGE`` at 3
-        and ``DEBUFF_ARM`` at 6, so every packet at one timestamp resolves
-        before any debuff arms there.  Command is ``Subject.ANY_ATTACKER`` —
-        one rule, both engines — so amping the tie here alone would open a
-        divergence at the one instant the two currently agree on.  The defect
-        the measurement exposes is upstream, in a cast timeline that puts
-        three casts on one instant; it is not this window test's to absorb.
-        ``tests/test_phase0_sentinels.py`` prices what the tie is worth.
+        same-timestamp packets are outside, and an event exactly on the expiry is
+        inside.  The coarseness is timestamp-only and kept on measured grounds: a
+        ledger's secondary key would read an ordering nothing authored, and the
+        coupled walk resolves every packet at one timestamp before any debuff arms
+        there, so amping the tie here alone would open a divergence.
         """
         boundary = self._trigger_activation(index).boundary
         if boundary is not WindowBoundary.OPEN_CLOSED:
@@ -441,11 +411,10 @@ class AmpSlot:
     def exclusion(self, index: int = 0) -> Isolation:
         """What this holder's exclusion rule excludes, or a stop.
 
-        The engine subtracts a pool from the total it amps, and *which* pool
-        is a modelling ruling: Hypershot drops one event, Expose Weakness
-        drops the whole chain that armed it.  Reading it off the declaration
-        is what keeps that ruling somewhere a reader can find, instead of in
-        the shape of whichever sum the engine happens to build.
+        The engine subtracts a pool from the total it amps, and *which* pool is a
+        modelling ruling: Hypershot drops one event, Expose Weakness drops the whole
+        chain that armed it.  Reading it off the declaration keeps that ruling where
+        a reader can find it.
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, ExcludeTrigger):
@@ -517,27 +486,12 @@ class AmpSlot:
 
     @property
     def bonus_fraction(self) -> float:
-        """The holders' summed fraction — what a bonus is priced from.
-
-        Deliberately not ``multiplier - 1.0``: that round trip is not the
-        identity in floating point (``1.0 + 0.07 - 1.0`` is not ``0.07``),
-        and an amp priced from it would move every Command build's number by
-        the last bits for no reason anybody could name.
-        """
+        """The holders' summed fraction, which is what a bonus is priced from."""
         return sum(self.fractions)
 
     @property
     def multiplier(self) -> float:
-        """What the engine multiplies by: ``1.0`` plus the holders' sum.
-
-        The spelling is load-bearing, not stylistic.  ``1.0 + sum(f)`` and a
-        running ``+=`` per holder disagree in the last bits once a slot has
-        two occupants, and ``math.fsum`` disagrees with both.  This is the
-        engine's own spelling for the one slot that *can* hold several
-        mechanics (``WHOLE_TOTAL``); every other slot has a single holder, for
-        which all three coincide exactly.  Keeping one fold is what lets this
-        migration claim no number moved rather than no number moved much.
-        """
+        """What the engine multiplies by: ``1.0`` plus the holders' sum."""
         return 1.0 + sum(self.fractions)
 
     @property
@@ -618,13 +572,8 @@ class PartAmp:
     def multiplier(self, holder_stats: "Mapping[str, float]") -> float:
         """What the engine multiplies each priced part by.
 
-        One running sum from ``1.0`` over every holder's shares, in build
-        order — the association the registry's own compiled multipliers used,
-        which is what lets this migration claim no number moved rather than
-        no number moved much.  Holders are additive with each other for the
-        same reason the chain's occupants are; no registry entry puts two
-        items in one attack class today, so the fold is stated rather than
-        inferred from the one occupant every build has.
+        One running sum from ``1.0`` over every holder's shares, in build order.
+        Holders are additive with each other, as the chain's occupants are.
         """
         total = 1.0
         for index in range(len(self.rules)):
@@ -710,14 +659,9 @@ def _armed_part_multiplier(
 ) -> tuple[float, str]:
     """The walk's reading of one part amp: its multiplier and its holder.
 
-    ``armed`` is the caller's answer to whether the amp's activation is up at
-    all — an item active nobody triggered amplifies nothing — and an unarmed
-    build, or one holding no such amp, gets ``(1.0, "")``: a multiplier that
-    changes no number, and no holder to attribute it to.  That pairing is
-    deliberate, so an amp can never be reported against an item whose window
-    did not run, which is the same convention ``damage._part_amp`` states for
-    the pair engine.  Both reach the number through :func:`resolve_part_amp`,
-    each naming its own lane — one compiler, two engines asking.
+    ``armed`` is whether the amp's activation is up at all.  An unarmed build
+    gets ``(1.0, "")``, so an amp is never reported against an item whose window
+    did not run, which is ``damage._part_amp``'s convention for the pair engine.
     """
     if not armed:
         return 1.0, ""
@@ -759,14 +703,9 @@ class StaticHolderAmps:
     def factor_for(self, damage_type: str, attack_class: AttackClass) -> float:
         """What one packet of this class and this delivery is multiplied by.
 
-        The pair engine's own order, read off the two sites that apply these
-        amps: ``damage._mitigate`` multiplies magic damage by the magic amp
-        whatever delivered it, and the part amp multiplies on top of that —
-        by the ability amp for an ability-delivered part
-        (``damage._add_item_proc_damage``) and by the basic amp for a swing
-        (``damage._mitigate_basic_attack_swing``).  ``AttackClass.OTHER``
-        takes neither part amp, because neither declaration's typing claims
-        it.
+        The pair engine's own order: ``damage._mitigate`` multiplies magic damage by
+        the magic amp whatever delivered it, and the part amp multiplies on top, by
+        the ability amp or the basic amp.  ``AttackClass.OTHER`` takes neither.
         """
         factor = self.magic if damage_type == "magic" else 1.0
         if attack_class is AttackClass.ABILITY:

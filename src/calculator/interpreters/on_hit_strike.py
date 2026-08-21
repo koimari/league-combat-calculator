@@ -1,19 +1,13 @@
 """On-hit strikes, interpreted: a declared formula becomes the engine's row.
 
-Eight items add damage to every on-hit application of a basic attack, and
-until this module the shape of that damage lived as a six-branch formula
-ladder inside the number registry.  The registry now owns the numbers and the
-declaration owns the shape: :func:`per_hit_effects` reads what a build
-declares and hands the fight engine the same ``PerHitEffect`` records it has
-always consumed, built from the declaration rather than from a formula name.
-
-Two facts the engine used to infer are now read off the declaration:
-
-* whether the strike is re-priced as the target's health falls — it was
-  ``formula == "current_hp"``, a string comparison that would have kept being
-  true of one name while a second grew the same basis;
-* whether an ability that carries the on-hit application pays this number or
-  the item's ability-hit number instead.
+Eight items add damage to every on-hit application of a basic attack.  The
+number registry owns the numbers and the declaration owns the shape:
+:func:`per_hit_effects` reads what a build declares and hands the fight
+engine ``PerHitEffect`` records built from that declaration rather than from
+a formula name.  Two facts ride the declaration instead of a name
+comparison: whether the strike is re-priced as the target's health falls,
+and whether an ability carrying the on-hit application pays this number or
+the item's ability-hit number instead.
 
 Nothing here is memoized, deliberately and for the same reason the catalog is
 not: ``refresh_item_effects()`` has to move the answer, and a build projection

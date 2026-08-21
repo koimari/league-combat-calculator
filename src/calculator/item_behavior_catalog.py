@@ -465,13 +465,8 @@ _WIKI = "https://wiki.leagueoflegends.com/en-us"
 def cached_source_receipt(owner: str, stamp: str) -> SourceReceipt:
     """The cache-backed citation for an owner whose entry carries none.
 
-    Cached on its two arguments and on nothing else, which is what makes the
-    cache safe without a data version: the receipt is a URL built from the
-    owner's name and a stamp the caller supplies, and it reads no registry.
-    Every declaration in the catalog resolves one, so the percent-encoding
-    was being redone hundreds of thousands of times per optimizer request.
-    Unbounded, and bounded in practice by its callers the same way
-    :func:`_mechanic_slug` is: both arguments come from the registries.
+    Safe to cache without a data version: the receipt is a URL over the
+    owner's name and a caller-supplied stamp, and it reads no registry.
     """
     return SourceReceipt(
         url=f"{_WIKI}/{quote(owner.replace(' ', '_'))}",
@@ -509,23 +504,11 @@ class DefenseShape:
 
     @property
     def signature_keys(self) -> tuple[str, ...]:
-        """The keys that identify the mechanic — the first one unless stated.
-
-        Armored Advance is the one mechanic that needs two: it carries the
-        reactive shield *and* plates, and either key alone names a different
-        mechanic on a different item.
-        """
+        """The keys that identify the mechanic, the first one unless stated."""
         return self.signature or self.requires[:1]
 
     def claims(self, entry: Mapping[str, Any]) -> bool:
-        """Whether *entry* carries this mechanic, by its signature keys alone.
-
-        The signature rather than the whole required set, so a *partly*
-        parsed entry is a stop rather than a mechanic that quietly stops
-        matching: an entry missing one ramp end would otherwise read as "not
-        this mechanic", which is the silent absence this phase exists to
-        remove.
-        """
+        """Whether *entry* carries this mechanic, by its signature keys alone."""
         if any(key in entry for key in self.excludes):
             return False
         return all(key in entry for key in self.signature_keys)
@@ -1070,15 +1053,14 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
 }
 
 # Which defences the compiled score kernel cannot stage, with the clause that
-# refuses each.  Partial on purpose — absent means ``Compilable`` — and the
-# membership is the kernel's own capability report, read at mechanic
-# granularity rather than per item, which is D-43's whole argument: three of
-# the sixteen reasons the retired per-item hand set carried were conservatism
-# notes about a different mechanic of the same item.
+# refuses each.  Partial on purpose, since absent means ``Compilable``, and
+# the membership is the kernel's own capability report read at mechanic
+# granularity rather than per item: one item's two mechanics can differ on
+# whether the kernel can stage them.
 #
-# Four mechanics left this mapping when the compiled path grew what they
-# needed, and each removal names the clause that now serves it rather than a
-# judgement that it looks fine: ``ANNUL`` because the kernel's own
+# Four mechanics are absent because the compiled path serves them, and each
+# absence names the clause that serves it rather than a judgement that it
+# looks fine: ``ANNUL`` because the kernel's own
 # spell-shield lifecycle decides per packet off ``ability_instance``, which
 # ``WalkCompiler`` stamps on every enriched damage row;  ``REBIRTH`` because
 # ``program.compile.revive_candidate_actions`` authors the candidates with
@@ -1233,15 +1215,12 @@ DEFENSE_RECEIPTS: Mapping[DefenseMechanic, SourceReceipt] = {
 
 # ── the sustain shapes the score ledger cannot stage ──────────────────────
 
-# The retired per-item hand set withheld Catalyst of Aeons and all three
-# Doran's items with a per-*item* comment each, and D-43 calls two of those
-# comments conservatism notes rather than representability facts.  Read at the granularity the compiler actually has, they are neither
-# per-item nor conservative: each names one **sustain shape** the compiled
-# score ledger has nowhere to put, and each of those shapes has exactly one
-# owner today only because exactly one item carries it.  Keyed by the payload
-# type, so the fact stays attached to the mechanic and a second item growing
-# the same shape inherits the refusal instead of being forgotten — which is
-# the whole difference between a declaration and a name list.
+# Each entry names one **sustain shape** the compiled score ledger has
+# nowhere to put.  Each shape has exactly one owner today only because
+# exactly one item carries it.  Keyed by the payload type, so the fact stays
+# attached to the mechanic and a second item growing the same shape inherits
+# the refusal instead of being forgotten, which is the whole difference
+# between a declaration and a name list.
 LEDGER_UNSTAGEABLE_SUSTAIN: Mapping[type, ReceiptOnly] = {
     ManaSpentHealRule: ReceiptOnly(
         "the compiled score kernel cannot stage a mana-spent heal: the "
@@ -1419,9 +1398,8 @@ ALLY_DELTA_AMP_KEYS: frozenset[str] = frozenset(
 # The signature key and the tag of the one declaration that carries no number
 # of its own: which half of a resistance an item's *cached* percent
 # penetration reaches.  ``True`` is the bonus-armour channel and ``False`` the
-# ordinary total one, and both are stated — an item whose channel is the
-# ordinary one says so, because the alternative is the silence that used to
-# route every item the three-name set did not list.
+# ordinary total one, and both are stated: an item whose channel is the
+# ordinary one says so, because the alternative is silence.
 ARMOR_PENETRATION_CHANNEL_KEY = "armor_penetration_bonus_only"
 ARMOR_PENETRATION_CHANNEL_TAG = "armor_penetration_channel"
 
@@ -1903,20 +1881,10 @@ def _declares_secondary(
 
 @lru_cache(maxsize=None)
 def _mechanic_slug(owner: str) -> str:
-    """An owner's identifier spelling, matching Phase 2's mechanic ids.
+    """An owner's identifier spelling, matching the bus's mechanic ids.
 
-    Cached on the name alone — it is a pure string transform reading no
-    registry, and every rule the catalog compiles builds one.  The cache is
-    unbounded and outside ``data_version()``'s reach, so nothing clears it;
-    that is safe because the keyspace is bounded by the callers rather than
-    by the type — every argument is a registry or keystone owner name — and
-    a caller passing arbitrary strings would be growing it without limit.
-
-    Lower case, apostrophes dropped rather than transliterated, every other
-    run of non-alphanumerics collapsed to one underscore — which is how
-    ``trigger_stream`` already spells ``bloodletters_curse`` and
-    ``deaths_dance``.  One spelling rule, so a mechanic id and a capability
-    key cannot drift into two names for one mechanic.
+    Lower case, apostrophes dropped, other non-alphanumeric runs collapsed to
+    one underscore, so a mechanic id and a capability key cannot drift apart.
     """
     stripped = owner.replace("'", "").replace("’", "")
     slug = "".join(char if char.isalnum() else "_" for char in stripped.lower())
@@ -1926,11 +1894,9 @@ def _mechanic_slug(owner: str) -> str:
 
 
 def _all_damage_typing() -> Typing:
-    """Every damage class from every attack class — "from all sources", said.
+    """Every damage class from every attack class, "from all sources" said.
 
-    D-04 bans empty-means-all, so an amp that really does apply to
-    everything has to enumerate everything.  This is that enumeration, in one
-    place, so "all" cannot drift into "all the ones somebody remembered".
+    Enumerated rather than empty, so "all" cannot drift into "all remembered".
     """
     return Typing(
         damage_classes=frozenset(DamageClass),
@@ -1941,10 +1907,7 @@ def _all_damage_typing() -> Typing:
 def _part_amp_typing(attack_class: AttackClass) -> Typing:
     """Every damage class, delivered by one attack class.
 
-    A per-part amp restricts *how* the damage arrived and not what mitigates
-    it: Actualizer pays on an ability's physical, magic and true shares
-    alike.  Both axes are still enumerated, because D-04 bans the empty set
-    on either.
+    A per-part amp restricts how damage arrived, not what mitigates it.
     """
     return Typing(
         damage_classes=frozenset(DamageClass),
@@ -2217,8 +2180,7 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     which is why the subject is ``ANY_ATTACKER``: the pair engine prices the
     holder's own contribution and the coupled walk prices everyone else's,
     but the *rule* is one rule and the two halves must not be free to drift
-    into two readings of it.  The three facts that used to be an engine's
-    loop shape are now what the declaration says:
+    into two readings of it.  Three facts, all of them declared:
 
     * ``TriggerWindow(IMMOBILIZE, …)`` — the trigger is an immobilize and
       nothing wider; the bus's ``CC`` stream is where that lands (D-08).
@@ -2388,9 +2350,7 @@ def _cinderbloom_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
 def _magic_and_true_typing() -> Typing:
     """The two damage classes Cinderbloom crits, from every attack class.
 
-    Physical damage is excluded because the mechanic excludes it, and D-04
-    makes that a thing the declaration says rather than a tuple membership
-    test inside the ledger walk.
+    Physical is excluded by the mechanic, and the declaration says so.
     """
     return Typing(
         damage_classes=frozenset({DamageClass.MAGIC, DamageClass.TRUE}),
@@ -2437,9 +2397,7 @@ def _compile_ally_delta_amp(
 def _non_true_typing() -> Typing:
     """Every attack class, but only the two damage classes resistances touch.
 
-    True damage is excluded because the mechanic excludes it, and D-04 makes
-    that a thing the declaration says rather than a comparison buried in a
-    ledger filter.
+    True damage is excluded by the mechanic, and the declaration says so.
     """
     return Typing(
         damage_classes=frozenset({DamageClass.MAGIC, DamageClass.PHYSICAL}),
@@ -2725,14 +2683,7 @@ def _compile_secondary_target(
 def _schema_keys(
     owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
 ) -> frozenset[str]:
-    """Which keys *owner*'s entry is expected to carry, not which it has.
-
-    The item registry publishes a schema — the shape of the last-known-good
-    entry — and reading it rather than the live entry is what keeps a dropped
-    parse a stop instead of a declaration silently concluding the mechanic
-    does not exist.  The ally registry is hand-authored and refresh-inert
-    (D-47), so its entry *is* its schema.
-    """
+    """Which keys *owner*'s entry is expected to carry, not which it has."""
     if registry == "ITEM_EFFECTS":
         return item_effects.entry_schema_keys(owner)
     return frozenset(entry)
@@ -2743,11 +2694,8 @@ def _optional_ref(
 ) -> ValueRef | None:
     """A reference to *key*, or ``None`` where the schema does not carry it.
 
-    The declared-absence idiom: a mechanic that has no such sibling declares
-    ``None``, which is a different claim from a reference that resolves to
-    zero.  The registry's schema is the test, so no item name decides it and
-    a parse that dropped the key still raises rather than being read as an
-    absence.
+    Declared absence differs from a reference resolving to zero.  The schema
+    is the test, so a dropped parse raises rather than reading as absent.
     """
     return (
         ValueRef(registry, owner, key)
@@ -2782,10 +2730,7 @@ def _group_refs(
 ) -> tuple[ValueRef, ...] | None:
     """Every key of one sibling group, or ``None`` if the schema has none.
 
-    The same whole-or-nothing rule the spellblade siblings use: any key of the
-    group in the registry's schema makes every key required, so a parse that
-    dropped one raises naming item and key rather than compiling a mechanic
-    with a hole in it.
+    Any key present makes every key required, so a dropped parse raises.
     """
     schema = _schema_keys(owner, registry, entry)
     if not any(key in schema for key in keys):
@@ -3423,9 +3368,8 @@ def _vile_decay_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     Counted exactly rather than averaged: the rotation walks its abilities in
     order and each magic one applies a stack the ability's own damage then
     benefits from, so the model is ``EXACT`` and ``leading_stacks`` is zero.
-    "Magic ability" is the rule's ``typing`` — the damage class that applies a
-    stack and the attack class that delivers it — which is where a comparison
-    inside the rotation loop used to live.
+    "Magic ability" is the rule's ``typing``: the damage class that applies a
+    stack and the attack class that delivers it.
     """
     return BehaviorRule(
         family=RuleFamily.RESISTANCE_SHRED,
@@ -3552,10 +3496,9 @@ def _crit_damage_bonus_rule(owner: str, registry: ValueRegistry) -> BehaviorRule
 def _attack_cooldown_refund_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """Navori Flickerblade's shape: attacks refund basic ability cooldowns.
 
-    The trigger is the basic attack, declared rather than implied by the
-    accumulator the refund used to be summed into.  It changes a cooldown and
-    not a damage number, which is why it is its own payload inside the family
-    the registry files it under.
+    The trigger is the basic attack, declared rather than implied by an
+    accumulator.  It changes a cooldown and not a damage number, which is why
+    it is its own payload inside the family the registry files it under.
     """
     return BehaviorRule(
         family=RuleFamily.CRIT_PROFILE,
@@ -3985,10 +3928,9 @@ def _compile_sustain(
     """Compile every sustain mechanic one registry entry declares.
 
     A fan-out rather than a ladder: an entry may grant a stat *and* carry a
-    named mechanic, and Doran's Blade does exactly that — its retired
-    omnivamp correction and its Life Draining heal are two declarations on
-    one entry.  An entry tagged into the family carrying no signature key is
-    a stop.
+    named mechanic, and Doran's Blade does exactly that, with two
+    declarations on one entry.  An entry tagged into the family carrying no
+    signature key is a stop.
     """
     schema = _schema_keys(owner, registry, entry)
     rules = _sustain_rule_list(owner, registry, schema)
@@ -4178,8 +4120,8 @@ class AllyPacketDeclaration:
     would be the item-name literal this migration removes coming back as a
     table key.
 
-    ``ramps`` carries each level-scaled number's :class:`LevelSubject`, which
-    the cached sentence states and the emitters used to guess.
+    ``ramps`` carries each level-scaled number's :class:`LevelSubject`, read
+    from the cached sentence rather than guessed by an emitter.
     ``tests/test_coupled_ally_item_packets.py::TestDeclaredRampSubjects``
     reads the ``type=`` qualifier back out of every owner's cached branch
     text, so a patch that re-scales one of these is a red test rather than a
@@ -5149,10 +5091,8 @@ def _compile_defense(
 ) -> tuple[BehaviorRule, ...]:
     """Compile the defences of one family that a registry entry declares.
 
-    An entry that declares none compiles none, and that is an *answer* — a
-    Guardian Angel is tagged as a starting defence and its mechanic is a
-    resurrection, so the opening-defence compiler is right to hand back
-    nothing.
+    An entry declaring none compiles none, and that is an answer: Guardian
+    Angel's mechanic is a resurrection, so this compiler returns nothing.
     """
     return tuple(
         _defense_rule(mechanic, owner, registry)
@@ -5162,13 +5102,7 @@ def _compile_defense(
 
 
 def _defense_flag_holds(mechanic: DefenseMechanic, entry: Mapping[str, Any]) -> bool:
-    """Whether the entry's own flags say this mechanic is live at the opening.
-
-    One member today, and it is a real rule rather than a convenience: a
-    spell shield the registry says is not ready compiles no declaration at
-    all, which is the fail-closed reading the retired name ladder spelled as
-    ``.get("spell_shield_ready", False)``.
-    """
+    """Whether the entry's own flags say this mechanic is live at the opening."""
     if mechanic is DefenseMechanic.ANNUL:
         return bool(entry.get("spell_shield_ready", False))
     return True
@@ -5948,18 +5882,8 @@ _BEHAVIOR_RULES_MEMO: dict[
 def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
     """The three registry records *owner*'s rules compile from, read raw.
 
-    :func:`registry_entries` and :func:`keystone_entries` read exactly these
-    three mappings, in this order, and everything else they build — the
-    family lookups, the entry triples, the tuples around them — is derived.
-    The memo's re-check only ever compared the records, so it reads them
-    directly: rebuilding the derived shape on every hit was most of what the
-    memo was there to save.
-
-    ``None`` where the registry holds nothing, and where the owner declares
-    no amp-chain slot.  A record that is present but not a ``Mapping`` is
-    returned as it is: the entry builders skip it, so comparing it by
-    identity is at worst one unnecessary recompilation and never a stale
-    answer.
+    Everything :func:`registry_entries` builds is derived from these three.
+    ``None`` where the registry holds nothing or declares no amp-chain slot.
     """
     return (
         item_effects.ITEM_EFFECTS.get(owner),
@@ -5971,29 +5895,20 @@ def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
 def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     """Compile *owner*'s declarations from the live registries.
 
-    An owner with no registry entry has no rules and that is an *answer*:
-    the item declares no behaviour at all, which is the stats-only case.  An
-    owner **with** an entry whose family is not yet migrated also returns no
-    rules, and that is a *refusal* — a different thing with the same shape,
-    which is why :func:`undeclared_owners` names it and the frontier counts
-    it.
+    An owner with no registry entry has no rules, and that is an *answer*:
+    the item declares no behaviour at all.  An owner **with** an entry whose
+    family is not yet migrated also returns no rules, and that is a
+    *refusal*, which is why :func:`undeclared_owners` names it.
 
-    Memoized within one cache generation and never across one (D-49): the
-    optimizer asks this question a quarter of a million times per request and
-    the answer can only change when the registries do.  Both halves of "can
-    only change" are checked — the generation counter in the key and the
-    registry records in the value — because ``refresh_item_effects()`` rebuilds
-    the registry without writing a cache file, so the counter alone would
-    serve a shape compiled from entries that no longer exist.
+    Memoized within one cache generation and never across one: the optimizer
+    asks a quarter of a million times per request, and the answer can only
+    change when the registries do.  Both halves of that are checked, the
+    generation counter in the key and the registry records in the value,
+    because ``refresh_item_effects()`` rebuilds without writing a cache file.
 
-    The re-check is by entry **object identity**, and that is the memo's one
-    blind spot: mutating a live entry *in place*
-    (``ITEM_EFFECTS['X']['k'] = v``) leaves the same object in the registry,
-    so the memo keeps serving rules compiled from its old contents until
-    ``data_version()`` moves.  Replacing the entry — which is what a refresh
-    does, and what ``monkeypatch.setitem`` on the registry does — is seen
-    immediately.  Stated because it is a real narrowing: before the memo, an
-    in-place edit was picked up on the next call.
+    The re-check is by entry object identity, the memo's one blind spot:
+    mutating a live entry in place leaves the same object in the registry, so
+    the memo serves its old contents until ``data_version()`` moves.
     """
     key = (data_registry.data_version(), owner)
     cached = _BEHAVIOR_RULES_MEMO.get(key)
@@ -6036,21 +5951,7 @@ def keystone_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any],
 
 
 def declares_runtime_behaviour(rule: BehaviorRule) -> bool:
-    """Whether a compiled rule says its owner *does* something in a fight.
-
-    True of every rule but one shape.  A
-    :class:`~.item_behavior.PenetrationChannelRule` carries no number and
-    schedules no event: the percentage it speaks about is a cached stat the
-    build's block already held, and the declaration says only which field of
-    that block reads it.  An item whose sole declaration is a channel runs
-    exactly what it ran before — which is why the coverage ladder does not
-    count it as declared behaviour and why the reviewed
-    ``NO_RUNTIME_BEHAVIOR`` absence beside such an item stays true.
-
-    One home for that judgement rather than two: ``item_coverage`` and the
-    behaviour frontier both ask it, and two copies of "which declarations are
-    behaviour" is the drift this campaign removes.
-    """
+    """Whether a compiled rule says its owner *does* something in a fight."""
     return not isinstance(rule.payload, PenetrationChannelRule)
 
 
@@ -6067,21 +5968,10 @@ def entry_families(
 ) -> tuple[RuleFamily, ...]:
     """Every family one entry declares: its tag's, plus any a value key adds.
 
-    The primary family always comes first, so a compiler ladder's order is
-    the entry's order.  A secondary family is not a second *entry* — counter
-    3's population is unchanged — it is a second mechanic hung on one entry,
-    which is a thing the registry really does and a thing a tag alone cannot
-    express.
-
-    The signature key is looked for in the entry's **schema**, never in what
-    the parse happens to have produced, for the reason
-    ``item_effects.entry_schema_keys`` exists: read live, a parse that dropped
-    the key would silently un-declare the whole mechanic, and a mechanic that
-    stops being declared is priced as nothing by every lane at once.  Read
-    from the schema the family is still claimed, its compiler still builds
-    the references, and the missing key raises naming the item and the key —
-    which is the fail-closed contract every *other* key of these declarations
-    already had.
+    The primary family comes first, so a compiler ladder's order is the
+    entry's order.  The signature key is looked for in the entry's **schema**
+    and never in what the parse produced: read live, a dropped key would
+    silently un-declare the mechanic instead of raising with item and key.
     """
     keys = _schema_keys(owner, registry, entry)
     extra = tuple(
@@ -6093,13 +5983,11 @@ def entry_families(
 
 
 def declared_tags() -> frozenset[str]:
-    """Every ``ITEM_EFFECTS`` tag some entry now declares a rule for.
+    """Every ``ITEM_EFFECTS`` tag some entry declares a rule for.
 
-    The migration's answer to "which tags does a live handler branch on".
-    Behaviour that has moved into a declaration is no longer dispatched by
-    ``item_effects``' effect-type ladder, so a totality check reading only
-    that ladder would report a tag as *undispatched* on the very commit that
-    gave it a real home.  Derived from what actually compiles, never listed.
+    Behaviour declared here is not dispatched by ``item_effects``'
+    effect-type ladder, so a totality check reading only that ladder would
+    report a tag as undispatched.  Derived from what compiles, never listed.
     """
     return frozenset(
         str(entry.get("type"))
@@ -6123,35 +6011,12 @@ def declared_owners() -> frozenset[str]:
 
 
 def undeclared_owners() -> frozenset[str]:
-    """Registry owners whose behaviour is still engine code, not a declaration.
-
-    This is counter 3's population and it is **not** ``item_coverage``'s
-    ``review_pending`` set — an earlier version of this sentence said the two
-    read the same set, and they do not.  Every member publishes as modelled
-    today — a claim deliberately written without a count, because the
-    sentence it replaces carried one ("all nineteen members … eighteen
-    ``modeled_state``, one ``modeled_effect``") and the stat-derivation
-    migration left two members standing under it —
-    because ``item_coverage._declared_families`` counts a registry *entry* as
-    a declaration alongside a compiled rule.  That is deliberate and is the
-    difference between *unmigrated* and *uninterpreted*: an entry whose family
-    no slice has declared yet is behaviour the engines still run, and calling
-    it unmodelled would be a refusal the migration invented rather than one the
-    model earned.
-
-    So the frontier's number and the public coverage answer are two different
-    questions on purpose — "has this entry been declared?" and "does the model
-    run it?" — and the day they are the same set is the day counter 3 is zero.
-    """
+    """Registry owners whose behaviour is still engine code, not a declaration."""
     return registry_owners() - declared_owners()
 
 
 def undeclared_entry_count() -> int:
-    """Counter 3's value: undeclared **entries**, not owners.
-
-    Six owners hold an entry in both registries, and each entry is a separate
-    declaration obligation, so the count is over entries.
-    """
+    """Counter 3's value: undeclared **entries**, not owners."""
     return sum(len(registry_entries(owner)) for owner in sorted(undeclared_owners()))
 
 
@@ -6165,12 +6030,11 @@ def build_context(
 ) -> BuildContext:
     """The build-time context an interpreter reads, stamped with the data version.
 
-    ``data_registry.data_version()`` (D-49) is read here rather than by each
-    interpreter, so every memo downstream keys on one counter instead of on
-    object identity.  The three fight facts are keyword-only and required: a
-    caller that forgets one gets a ``TypeError``, never a defaulted zero
-    duration silently flattening a ramping magnitude or a defaulted range
-    class silently paying every holder the ranged rate.
+    ``data_registry.data_version()`` is read here rather than by each
+    interpreter, so every memo downstream keys on one counter.  The three
+    fight facts are keyword-only and required: a caller that forgets one gets
+    a ``TypeError``, never a defaulted zero duration flattening a ramping
+    magnitude or a defaulted range class paying every holder the ranged rate.
     """
     return BuildContext(
         level=level,
@@ -6246,9 +6110,7 @@ def _validate_defense_source_closure(
 
     The population is :class:`~.item_behavior.DefenseMechanic` itself, so a
     new defence fails *collection* until somebody decides which family models
-    it.  The same closure used to be got by scraping the resolver's source
-    for its hand-written provenance records; it is now over a closed enum
-    rather than over another module's text.
+    it.  A closed enum rather than another module's text.
     """
     declared = frozenset(DefenseMechanic) if mechanics is None else mechanics
     mapped = frozenset(DEFENSE_SOURCE_FAMILY)
@@ -6445,8 +6307,7 @@ def _validate_ally_entry_closure() -> None:
     Both directions, because both failures are real.  A record no producer
     claims is a mechanic that would silently emit nothing once the emitters
     stop naming items; a producer no record carries is a declaration against a
-    registry entry that no longer exists, which is the stale-literal failure
-    one layer up.
+    missing registry entry, which is the stale-literal failure one layer up.
     """
     unclaimed = sorted(
         owner

@@ -311,13 +311,7 @@ _CAST_SLOTS = frozenset({"Q", "W", "E", "R"})
 
 
 def is_authored_ability_event(event: Mapping[str, Any]) -> bool:
-    """Identify a champion cast without treating passive/proc rows as casts.
-
-    Champion modules use the canonical Q/W/E/R source keys for cast packets.
-    A packet may override this marker when a source-backed mechanic supplies
-    a more precise cast classification; absent that receipt, item procs and
-    passive rows remain eligible to land normally.
-    """
+    """Identify a champion cast without treating passive/proc rows as casts."""
     if "is_ability" in event:
         return bool(event["is_ability"])
     return str(event.get("source_key", "")) in _CAST_SLOTS
@@ -363,8 +357,8 @@ def declared_packet_of(
 ) -> DeclaredPacket:
     """One re-priced packet's declaration, composed for the walk to price.
 
-    The engine ledger carries a retired family's packet as the five facts of
-    an :class:`~..survival.pricing.AuthoredDeclaration` and no price: which
+    The engine ledger carries such a packet as the five facts of an
+    :class:`~..survival.pricing.AuthoredDeclaration` and no price: which
     rule authored it, the pre-mitigation magnitude that rule's own
     interpreter compiled, the attack class the rule declares — which is what
     decides *which* of the holder's amplifiers this packet earns — the
@@ -536,11 +530,10 @@ def action_from_event(
             EVENT_SLOTS.slot(str(event_id)) if event_id is not None else NO_SLOT
         ),
         sequence=get("sequence"),
-        # The bus answers "is this an immobilize?" for every consumer; the
-        # walk used to answer it again, and the fourth re-typing is what
-        # D-08 had to widen when a module started authoring ``charm``.  The
-        # bare ``crowd_control`` marker stays a disjunct because it always
-        # was one: the bus classifies it ``UNCLASSIFIED_CONTROL`` — control
+        # The bus answers "is this an immobilize?" for every consumer, so
+        # the walk does not answer it again.  The bare ``crowd_control``
+        # marker stays a disjunct: the bus classifies it
+        # ``UNCLASSIFIED_CONTROL``, control
         # nobody narrowed — and narrowing Steadfast to reject it would be a
         # semantic correction, which is Phase 0's to make and not a
         # refactor's.
@@ -555,10 +548,9 @@ def action_from_event(
         # ``None`` is "nobody declared one", which the kernel tells apart
         # from a bonus that measured zero.
         live_amp=get("_live_amp"),
-        # The declaration this packet's retired family handed the walk, if
-        # its row was stamped as a re-priced preview.  ``None`` is "the pair
-        # engine still prices this family", which is every packet whose
-        # family has not retired.
+        # The declaration this packet's family handed the walk, if its row
+        # was stamped as a re-priced preview.  ``None`` is "the pair engine
+        # prices this family".
         declared=get("_declared"),
         baseline_effective_armor=(
             float(baseline_armor) if baseline_armor is not None else None
@@ -652,17 +644,12 @@ def pair_resistance_baselines(
 ) -> tuple[float | None, float | None]:
     """One pair fight's final effective armour and magic resistance.
 
-    ``None`` for either figure the engine did not publish, or published as
-    a non-finite number.  Deliberately absent rather than zero: a resistance
-    reduction re-prices its packet as the ratio of two mitigation factors,
-    and a missing baseline is a question the fight cannot answer, which the
-    walk receipts as ``support_resistance_reduction_unavailable`` instead of
-    inventing a mitigation ratio.
-
-    One home for both representations: the compiler reads these off the
-    engine result once per fight and stamps the same figure onto the action
-    and onto the enriched event beside it, because a resistance-reducing
-    modifier must not price differently on the two.
+    ``None`` for either figure the engine did not publish, or published as a
+    non-finite number.  Absent rather than zero: a resistance reduction
+    re-prices its packet as the ratio of two mitigation factors, so a missing
+    baseline is receipted as ``support_resistance_reduction_unavailable``.
+    Read once per fight and stamped onto both the action and the enriched
+    event, so the modifier cannot price differently on the two.
     """
     baselines: list[float | None] = []
     for field in ("effective_armor", "effective_mr"):
@@ -680,26 +667,8 @@ def modifier_delivery_receipt(
 ) -> str | None:
     """Refuse an armed modifier the compiled walk cannot classify against.
 
-    An armed cross-participant modifier declares which damage classes and
-    which **attack classes** it applies to (D-04), and the kernel answers
-    the second question with :func:`~..survival.actions.attack_class_of`,
-    which reads two per-packet delivery flags.  The engine's light tuple
-    ledger carries neither: it is the score-only shape for a fight nothing
-    reads per event, and there is no ``is_ability`` on a positional row to
-    read.
-
-    Those two facts meet across compilers, which is why this is asked of
-    the assembled set rather than inside one of them: a roster ally's
-    curse is armed in the invariant panel while the packets it amplifies
-    come from the candidate's own fresh result.  Either half alone is
-    fine — a light ledger with no modifier over it, or a modifier over
-    enriched rows — and only the pair is unrepresentable.
-
-    Fail closed rather than approximate: reading the flags' ``False``
-    default as "this packet was neither an attack nor a spell" would amp
-    exactly the auto-attack rows and quietly drop every ability row, which
-    is a modifier the score path priced differently from the walk with
-    nothing saying so.
+    An armed cross-participant modifier declares which attack classes it
+    applies to, and the light tuple ledger carries no delivery flags.
     """
     if not any(compiler.staged_modifier for compiler in compilers):
         return None
@@ -885,8 +854,8 @@ class WalkCompiler:
         ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal
         copies are never the kept copy: an enemy attacker's ordered pair list
         is ``[main, *allies]``, so the walk always keeps the main-pair copy
-        and the ally-pair copies are skipped here — the engine may price them
-        differently per defender (issue #169, Dr. Mundo's Maximum Dosage).
+        and the ally-pair copies are skipped here, because the engine may
+        price them differently per defender (Dr. Mundo's Maximum Dosage).
         Trigger-linked actor-wide heals still fail closed before the skip.
 
         ``view`` selects the **receipt projection** (:class:`~.build.Projection`
@@ -983,9 +952,8 @@ class WalkCompiler:
         # are two *representations of one ledger*, so what differs between
         # them is how a field is spelled and nothing else: the block below is
         # the whole of the difference, and every line after it is one tail
-        # both shapes reach.  It used to be two loops with fifty duplicated
-        # lines each, which is how a fix applied to one of them could miss
-        # the other for a whole migration.
+        # both shapes reach.  One tail, so a fix cannot land on one shape and
+        # miss the other.
         light = bool(result.get("damage_events_tuple"))
         # A light ledger declares no self-heals, so the heal loop below is a
         # no-op for it rather than skipped by an early return -- and that is
@@ -994,10 +962,9 @@ class WalkCompiler:
         # ``damage_events_tuple``, and the comment there says the empty list
         # is the exact value ``derive_self_healing`` would have returned.
         # Reading it here rather than branching around it is what lets the
-        # linkage index, the heals and the coverage append be written once;
-        # the early return used to enforce the invariant structurally, so
-        # dropping it without a check would trade a structure for a promise
-        # kept in another file's comment.  Hence the refusal: the tuple rows
+        # linkage index, the heals and the coverage append be written once.
+        # The refusal below keeps the invariant structural rather than a
+        # promise kept in another file's comment: the tuple rows
         # below carry no ``time``/``source_key`` dict keys, so a light result
         # that did declare heals would link every one of them to nothing and
         # compile a fight whose heals silently vanished.
@@ -1130,10 +1097,10 @@ class WalkCompiler:
             )
             grievous = grievous_by_dtype.get(damage_type)
             if staging and not light:
-                # Issue #137: fail closed on damage transitions *the score
-                # kernel* cannot stage (execute thresholds, redirects,
-                # deferred batches, stack self-shields) instead of silently
-                # erasing them.  A light row cannot answer the question —
+                # Fail closed on damage transitions *the score kernel*
+                # cannot stage (execute thresholds, redirects, deferred
+                # batches, stack self-shields) instead of silently erasing
+                # them.  A light row cannot answer the question,
                 # the fields the check reads are the enrichment it omits —
                 # and it does not have to: ``ledger_projection`` selects the
                 # light shape only for a request whose adequacy conditions
@@ -1209,7 +1176,7 @@ class WalkCompiler:
                     order_append((aidx, time_value))
                 # A light ledger omits per-event metadata, so ``basic_attack``
                 # is False for it and only its explicit auto stream triggers
-                # Thorns — the same sentence the two loops used to say twice.
+                # Thorns.
                 if source_key == "auto_attacks" or basic_attack:
                     strikes_append((aidx, time_value, sequence, attacker_i))
             else:
@@ -1305,10 +1272,10 @@ class WalkCompiler:
         self.next_aidx = aidx
         for heal_index, event in enumerate(heals):
             if staging:
-                # Issue #137: fail closed on any heal transition *the score
-                # kernel* cannot stage (Severum overheal-to-shield, vamp
-                # source categories, live gates) instead of silently erasing
-                # it.  The receipt walk stages all three.
+                # Fail closed on any heal transition *the score kernel*
+                # cannot stage (Severum overheal-to-shield, vamp source
+                # categories, live gates) instead of silently erasing it.
+                # The receipt walk stages all three.
                 heal_receipt = unrepresentable_heal_receipt(event)
                 if heal_receipt is not None:
                     raise UncompilableActionError(
@@ -1370,7 +1337,7 @@ class WalkCompiler:
             if defender_index > 0 and later_amount is not None:
                 amount = max(0.0, float(later_amount))
             # ``{raw_id}:{defender_id}`` so fan-out clones can point
-            # ``_source_event_id`` at the applied self copy (issue #143).
+            # ``_source_event_id`` at the applied self copy.
             raw_heal_id = event.get("_event_id") or (f"{attacker_id}:heal:{heal_index}")
             heal_event_id = f"{raw_heal_id}:{defender_id}"
             heal_sort_key = (
@@ -1447,9 +1414,9 @@ class WalkCompiler:
             target_id = str(template["target"])
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
-            # Issue #137: fail closed on any resolved support template the
-            # score kernel cannot stage — non-heal/shield kinds (stat buffs,
-            # damage modifiers, on-hit magic, temporary health, ...), timed
+            # Fail closed on any resolved support template the score kernel
+            # cannot stage: non-heal/shield kinds (stat buffs, damage
+            # modifiers, on-hit magic, temporary health), timed
             # shields/heals (duration > 0), live gates, vamp source
             # categories, live amount formulas, and trigger links — instead
             # of mis-compiling it as a flat heal or silently dropping it.
@@ -1470,8 +1437,8 @@ class WalkCompiler:
                 # ``unrepresentable_template_receipt`` admits — whatever
                 # clears every clause it checks.  Resolving the link would
                 # need the same cross-pair id map as heals, so fail closed
-                # rather than silently drop what the legacy walk would
-                # apply (D-03).  All three facts are pinned by
+                # rather than silently drop what the receipt walk would
+                # apply.  All three facts are pinned by
                 # ``tests/test_trigger_stream.py``'s
                 # ``TestTheSupportTriggerLinkRaise`` rather than left here
                 # to go stale the way the sentence this replaced did.
@@ -1692,7 +1659,7 @@ class WalkCompiler:
         """Compile the wearer's strike-back events for a run of strikes.
 
         ``strikes`` carries ``(strike_aidx, time, sequence, striker,
-        striker_i)`` in the legacy incoming-list order.  The synthetic
+        striker_i)`` in the receipt composition's incoming order.  The synthetic
         event-id string participates only in the sort key, where every pair
         of distinct thorns events already differs at the sequence or
         participant component, so panel and fresh namespaces may number
@@ -2109,7 +2076,7 @@ class ProgramKey(NamedTuple):
     Three components rather than one hash, so a cache miss says *which* of
     the three moved.  Every component is derived from what it stands for --
     never an ``id()`` -- so a mutated roster or a patched pass misses instead
-    of serving a number computed from inputs it no longer has.
+    of serving a number computed from inputs it does not hold.
     """
 
     roster: tuple
@@ -2120,16 +2087,11 @@ class ProgramKey(NamedTuple):
 def program_key(program: Program, projection: Projection) -> ProgramKey:
     """One program's cache key, derived from the program and nothing else.
 
-    "Nothing else" cuts both ways, and the second direction is the one a
-    cache key gets wrong: **every** field of the program is in the key, not
-    the fields a reader expects to matter.  ``compile_program`` reads the
-    events, so two programs sharing a roster and a pass but holding
-    different events are two keys; the patch and the pass index are in for
-    the same reason, since a cross-pass rebuild is a different program
-    wearing the same roster.  ``caches.CACHES['compiled_actions']`` declares
-    this function's parameters as its key fields and the test file reads
-    both bodies to check that what the compiler takes off ``program`` is a
-    subset of what this takes off it.
+    **Every** field of the program is in the key, not the fields a reader
+    expects to matter: two programs sharing a roster and a pass but holding
+    different events are two keys, and a cross-pass rebuild is a different
+    program wearing the same roster.  ``caches.CACHES['compiled_actions']``
+    declares this function's parameters as its key fields.
     """
     roster = roster_fingerprint(program.participants)
     return ProgramKey(

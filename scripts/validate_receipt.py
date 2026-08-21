@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate gate-receipt JSON artifacts against the shared envelope (issue #139).
+"""Validate gate-receipt JSON artifacts against the shared envelope.
 
 CI runs this on every emitted ``artifacts/backend/*.json`` receipt before the
 evidence bundle is uploaded.  Exit 0 when every file parses AND validates

@@ -6,17 +6,13 @@ one-pair shield outcome may be skipped entirely.  Both narrowings are
 **projections** of the same fight, and both are safe only while every reader
 the fight arms can still answer its question off what the projection keeps.
 
-Until Phase 4's S5 those two questions were twelve boolean clauses conjoined
-at two call sites — ten in ``pipeline.run_fight`` and two in
-``damage.calculate_fight_damage`` — with the clause they share spelled twice.
-A conjunction is a fine way to compute an answer and a poor way to hold one:
-it names no reader, so a clause deleted by accident produces a fight that
-prices a heal at zero and says nothing, which is this campaign's own failure
-shape.  Here each clause is an :class:`AdequacyCondition` with a declared
-reader, the stat fields it is derived from, and the reason it exists; a
-projection declares which conditions it **cannot** serve; and satisfaction is
-the question "does this fight arm a reader my projection would starve".  Both
-call sites now read the answer from here and hold no clause of their own.
+Each clause is an :class:`AdequacyCondition` with a declared reader, the stat
+fields it is derived from, and the reason it exists.  A projection declares
+which conditions it **cannot** serve, and satisfaction is the question "does
+this fight arm a reader my projection would starve".  A conjunction spelled
+at the call sites would compute the same answer while naming no reader, so a
+clause deleted by accident would price a heal at zero and say nothing.  Both
+call sites read the answer from here and hold no clause of their own.
 
 Three properties are asserted at import rather than reviewed:
 
@@ -235,12 +231,11 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
 
     ``self_heal_rule`` is the champion half of the answer, supplied as a
     typed owner by ``healing.self_heal_rule_owner`` rather than as a name
-    this module checks against a set — the registry that knows which
-    champions declare a rule is the registry that should say so, and it
-    imports the champion package, which this leaf must not.  It is also the
-    only champion fact here: a bare ``champion_name`` beside it would be a
-    field with no reader, and this campaign's whole subject is declarations
-    nothing reads.
+    this module checks against a set: the registry that knows which champions
+    declare a rule is the registry that should say so, and it imports the
+    champion package, which this leaf must not.  It is also the only champion
+    fact here, so a bare ``champion_name`` beside it would be a field with no
+    reader.
     """
 
     self_heal_rule: ChampionSlotOwner | None
@@ -253,14 +248,11 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
     is_melee: bool
     target_threshold_health_heal: float
 
+    # Uncoerced: the regen condition treats an unparseable stat as a demand
+    # and the vamp conditions treat it as no demand, so a shared coercion
+    # here would silently pick one of them.
     def raw_stat(self, condition: AdequacyCondition, field: str) -> Any:
-        """One declared champion stat, uncoerced, or a refusal.
-
-        Uncoerced because each condition's own reading of a malformed value
-        is part of its declaration — the regen condition treats an
-        unparseable stat as a demand and the vamp conditions treat it as no
-        demand, and a shared coercion here would silently pick one of them.
-        """
+        """One declared champion stat, uncoerced, or a refusal."""
         if field not in DECLARATIONS[condition].requires_fields:
             raise UndeclaredStatRead(condition, field)
         return self.stats.get(field, 0.0)
@@ -422,15 +414,10 @@ DECLARATIONS: Mapping[AdequacyCondition, AdequacyDeclaration] = MappingProxyType
 )
 
 
+# The owner is asked of the declaration catalog rather than spelled here,
+# because the pair engine sees a defender's numbers and never its items.
 def _threshold_heal_owners(inputs: _ThresholdHealFacts) -> tuple[MechanicOwner, ...]:
-    """The item arming a threshold-health heal on this fight's target.
-
-    The one probe both gates call — the mirror criterion 15 names, expressed
-    as one function rather than as the same comparison written at two call
-    sites.  The owner is asked of the declaration catalog rather than spelled
-    here, because the pair engine sees a defender's numbers and never its
-    items.
-    """
+    """The item arming a threshold-health heal on this fight's target."""
     if inputs.target_threshold_health_heal <= 0:
         return ()
     return (ItemOwner(threshold_health_owner()),)
@@ -494,11 +481,9 @@ def _vamp_stat_owners(
 ) -> tuple[MechanicOwner, ...]:
     """The shared reading of a percentage vamp stat.
 
-    A non-numeric or boolean value is *not* a demand, which is the opposite
-    of the regeneration reading above and is why the coercion lives with each
-    condition instead of in :meth:`LedgerInputs.raw_stat`: vamp packets are
-    authored from a percentage the engine multiplies, so a value that is not
-    one authors nothing.
+    A non-numeric or boolean value is *not* a demand, the opposite of the
+    regeneration reading above: vamp packets are authored from a percentage
+    the engine multiplies, so a value that is not one authors nothing.
     """
     value = inputs.raw_stat(condition, field)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -588,16 +573,10 @@ def _ordered_interaction_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ..
     return ()
 
 
+# Asked of the declaration: reading resolved effects would need a level and a
+# fight window this record does not carry.
 def _self_shield_proc_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
-    """Every held cast proc that attaches a self shield to its event.
-
-    Asked of the DECLARATION, like every other item condition here: a proc
-    whose rule carries no ``self_shield`` cannot attach one whatever the
-    fight resolves its magnitudes to, and a second such item is answered
-    without a second clause.  Reading resolved effects instead would need a
-    level and a fight window this record does not carry — and would name the
-    one item that has the field today rather than the shape.
-    """
+    """Every held cast proc that attaches a self shield to its event."""
     return tuple(
         ItemOwner(owner) for owner in cast_proc.self_shield_owners(inputs.item_names)
     )
@@ -634,13 +613,7 @@ def _pair_outcome_owners(inputs: _HeldItemFacts) -> tuple[MechanicOwner, ...]:
 def _held(
     item_names: Sequence[str], projected: frozenset[str]
 ) -> tuple[MechanicOwner, ...]:
-    """The held members of one capability projection, in build order.
-
-    Build order rather than sorted order so a receipt reads in the order the
-    caller supplied the build, and every member rather than the first so a
-    two-holder build names both — the shape ``holders_in`` deliberately did
-    not have, because a boolean gate never needed to say who.
-    """
+    """The held members of one capability projection, in the caller's order."""
     return tuple(ItemOwner(name) for name in item_names if name in projected)
 
 
@@ -673,9 +646,8 @@ _SHIELD_PROBES: Mapping[
     }
 )
 
-# The clause order each legacy conjunction evaluated in, preserved so a
-# caller that stops at the first demand does the same work in the same order
-# the ``and`` chain did.
+# Declaration order is evaluation order, so a caller that stops at the first
+# demand always does the same work in the same order.
 LEDGER_CONDITIONS: tuple[AdequacyCondition, ...] = tuple(_LEDGER_PROBES)
 SHIELD_OUTCOME_CONDITIONS: tuple[AdequacyCondition, ...] = tuple(_SHIELD_PROBES)
 
@@ -782,9 +754,7 @@ def shield_outcome_demands(inputs: ShieldOutcomeInputs) -> tuple[LedgerDemand, .
 def ledger_projection(inputs: LedgerInputs) -> ResultProjection:
     """The narrowest damage-ledger shape that still serves every reader.
 
-    ``LIGHT_TUPLE_LEDGER`` when the fight arms no reader the positional rows
-    would starve, ``DICT_ROW_LEDGER`` otherwise.  Stops at the first demand:
-    the answer is which projection, and one starved reader settles it.
+    Stops at the first demand: one starved reader settles the projection.
     """
     starved = _demands(LEDGER_CONDITIONS, _LEDGER_PROBES, inputs, stop_at_first=True)
     if starved:

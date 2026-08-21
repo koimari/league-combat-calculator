@@ -1044,12 +1044,10 @@ def _record_key_span(
     named: dict[str, str], range_spec: str | None, recorder: _EffectRecorder
 ) -> None:
     """Record what a non-level table's columns are keyed by, when it says.
-
-    A ``type=`` plus a column-count span means the table is read by
-    something other than champion level — game minutes, not levels — and
-    the span is the only statement of the step between its columns. Without
-    it the values are a list nothing can index.
-    """
+    A ``type=`` plus a column-count span means the table is read by game
+    minutes rather than champion level, and the span is the only statement
+    of the step between its columns.  Without it the values are a list
+    nothing can index."""
     span = _COLUMN_SPAN.match(_drop_unbounded_column(range_spec or ""))
     if not span or not named.get("type"):
         return

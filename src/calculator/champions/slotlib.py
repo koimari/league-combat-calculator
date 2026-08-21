@@ -1,8 +1,6 @@
 """Archetype factories and the single JSON extraction core.
 
-The one home for the ``effects[].leveling[].modifiers[]`` walk (it was
-once duplicated between the legacy ``common.py`` and
-``generic_parser.py``, both retired at the end of Phase 3).
+The one home for the ``effects[].leveling[].modifiers[]`` walk.
 
 Extraction core:
     ``sum_modifiers``        — flat/scaling dispatch with unusual-unit override
@@ -13,23 +11,6 @@ Extraction core:
     ``extract_recharge``     — charge-ability recharge rate at rank
     ``pct_health_per_hit``   — %maxHP on-hit math (AP ratio/floor/stacks)
     ``build_stats_context``  — champion stats + current AP for scaling
-
-Archetype factories return slot parsers (``SlotCtx -> entry | None``)
-stamped with their engine phase. Shared factory params:
-    ``source=(slot, index)`` — which JSON ability entry to read
-                               (default: entry 0 of the parser's own slot)
-    ``cooldown_from=(slot, index)`` — read cooldown from a different entry
-                               (subspell/recast containers)
-    ``casts``                — int multiplier, or an attribute name whose
-                               leveling value at rank is the multiplier
-    ``ranks``                — "rank" (skill order / overrides) or "level"
-                               (rank pinned to champion level, for
-                               passives and no-skill-point kits)
-
-Factories remain only for genuinely shared behavior: ``simple_damage``,
-``on_hit_auto``, ``stat_buff``, ``by_option``, and callback-based
-``proc_damage``. Unique mechanics are short functions in their champion module;
-shared output shells use entry builders instead of flag-heavy factories.
 """
 
 import re
@@ -218,14 +199,7 @@ _PER_LEVEL_VALUES = 18
 
 
 def _axis_index(values: list[Any], rank: int, level: int | None) -> int:
-    """Index one modifier array by the axis its own length declares.
-
-    A single leveling row mixes both axes — Zoe Q's "Maximum Magic Damage"
-    carries an 18-entry per-level term beside 5-entry per-rank terms — so
-    the axis is a property of each array, not of the row or the caller.
-    ``level=None`` is a caller that does not know the champion's level; its
-    arrays are all read at *rank*, which is what they were before.
-    """
+    """Index one modifier array by its own length: a row can mix both axes."""
     axis = level if level is not None and len(values) >= _PER_LEVEL_VALUES else rank
     return min(axis - 1, len(values) - 1)
 
@@ -293,21 +267,9 @@ def extract_named(  # pylint: disable=too-many-arguments
     *,
     level: int | None = None,
 ) -> float:
-    """Extract damage for an exact attribute name from ability JSON.
+    """Damage for an exact attribute name, from the first matching leveling entry.
 
-    Uses the first matching leveling entry across all effects.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute: Exact attribute name (e.g. ``"Total Magic Damage"``).
-        rank: Ability rank (1-indexed).
-        stats: Champion stats for scaling resolution.
-        target: Target stats for %HP scaling.
-        level: Champion level, when the caller knows it — see
-            :func:`sum_modifiers`.
-
-    Returns:
-        Total raw damage at the given rank, or 0.0 if not found.
+    Returns 0.0 when absent; *level* is read by :func:`sum_modifiers`.
     """
     leveling = find_named_leveling(ability, attribute)
     if leveling is None:
@@ -351,22 +313,10 @@ def extract_auto(
     *,
     level: int | None = None,
 ) -> tuple[float, str]:
-    """Extract damage with classifier-driven attribute auto-detection.
+    """Damage with classifier-driven attribute auto-detection, as (raw, type).
 
-    The old generic-parser behavior: classify the damage type from the
-    ability JSON and sum the best primary-damage leveling entry.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        rank: Ability rank (1-indexed), or level for per-level entries.
-        stats: Champion stats for scaling resolution.
-        target: Target stats for %HP scaling.
-        level: Champion level, when the caller knows it — see
-            :func:`sum_modifiers`.
-
-    Returns:
-        Tuple of (total_raw_damage, damage_type). Damage is 0.0 when no
-        damage attribute is found; the type is still classified.
+    Damage is 0.0 when the ability has no damage attribute; the type is still
+    classified.
     """
     damage_type = classify_damage_type(ability)
     leveling = _find_primary_damage_leveling(ability)
@@ -430,26 +380,9 @@ def extract_value(
     level: int | None = None,
     occurrence: int = 0,
 ) -> float:
-    """Extract a raw numeric leveling value without resolving scaling.
+    """A raw numeric leveling value, with no scaling resolved.
 
-    For non-damage numbers like penetration percentages, attack-speed
-    bonuses, or flurry ratios, where the unit is descriptive rather than
-    a stat scaling to resolve.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        attribute: Exact attribute name to look for.
-        rank: Ability rank (1-indexed).
-        modifier_index: Which modifier to read (default 0 = first).
-        level: Champion level, when the caller knows it — see
-            :func:`sum_modifiers`.
-        occurrence: Which row of a repeated attribute name to read — see
-            :func:`find_named_leveling`.  Dr. Mundo's P states the same
-            regeneration twice under one name, per five seconds and per
-            half second, and only the caller knows which cadence it wants.
-
-    Returns:
-        The flat numeric value at the given rank, or 0.0 if not found.
+    *occurrence* picks among rows repeating one attribute name (Dr. Mundo's P).
     """
     leveling = find_named_leveling(ability, attribute, occurrence=occurrence)
     if leveling is None:
@@ -471,28 +404,16 @@ def pct_health_per_hit(
 ) -> float | None:
     """Per-hit on-hit damage as a percentage of the target's max health.
 
-    The shared math behind %maxHP on-hit mechanics (Kog'Maw W, Vayne W,
-    Aatrox P): modifier 0 of *attr* holds the base percentage; with
-    ``ap_ratio_per_100``, modifier 1 holds extra percentage per 100 AP
-    (Kog'Maw W). The per-PROC damage is floored at *floor_attr*'s value
-    when given (Vayne W's minimum bonus damage), then spread evenly
-    across ``stacks_required`` hits (Vayne W procs every 3rd hit).
+    The shared math behind %maxHP on-hit mechanics (Kog'Maw W, Vayne W, Aatrox
+    P): modifier 0 of *attr* holds the base percentage; with
+    ``ap_ratio_per_100``, modifier 1 holds extra percentage per 100 AP (Kog'Maw
+    W).  The per-proc damage is floored at *floor_attr*'s value when given
+    (Vayne W's minimum bonus damage), then spread evenly across
+    ``stacks_required`` hits (Vayne W procs every 3rd hit).
 
-    Args:
-        ability: Single ability dict from champion JSON.
-        attr: Exact attribute name holding the %maxHP value.
-        rank: Ability rank, or champion level for per-level passives.
-        target: Target stats (``target_max_health``); None -> 0 damage.
-        ap: Current total AP (only read with ``ap_ratio_per_100``).
-        ap_ratio_per_100: Modifier 1 is bonus % per 100 AP.
-        floor_attr: Attribute holding the minimum per-proc damage.
-        stacks_required: Hits needed per proc; divides the proc damage.
-        level: Champion level, when the caller knows it — see
-            :func:`sum_modifiers`.
-
-    Returns:
-        Damage per hit, or None when *attr* is absent from the ability
-        (not this mechanic — the caller drops the slot).
+    ``None`` means *attr* is absent from the ability, so this is not the
+    mechanic and the caller drops the slot.  A ``target`` of ``None`` is zero
+    damage.
     """
     leveling = find_named_leveling(ability, attr)
     if leveling is None:
@@ -512,17 +433,10 @@ def pct_health_per_hit(
 def extract_cooldown(
     ability: dict[str, Any], rank: int, *, level: int | None = None
 ) -> float:
-    """Extract the base cooldown for an ability at a given rank.
+    """The base cooldown at *rank*, or 0.0 when the ability declares none.
 
-    Args:
-        ability: Single ability dict from champion JSON.
-        rank: Ability rank (1-indexed).
-        level: Champion level, when the caller knows it. A per-level
-            cooldown row (Aphelios' rankless weapon cooldowns) is then read
-            at the level — see :func:`_axis_index`.
-
-    Returns:
-        Base cooldown in seconds, or 0.0 if not found.
+    A per-level cooldown row (Aphelios' rankless weapon cooldowns) is read at
+    *level* when the caller knows it; see :func:`_axis_index`.
     """
     cd_data = ability.get("cooldown")
     if not cd_data or not cd_data.get("modifiers"):
@@ -536,23 +450,13 @@ def extract_cooldown(
 
 
 def extract_resource_cost(ability: dict[str, Any], rank: int, level: int) -> float:
-    """Extract what one cast of this ability spends, from its own cost row.
+    """What one cast of this ability spends, from its own cost row.
 
     The sole home of the cached cost lookup: ``engine._stamp_resource_cost``
-    calls it for every slot that owns an ability JSON, and a synthetic slot —
-    one the wiki has no ability entry for, so the engine cannot reach a cost
-    row on its behalf — calls it with the ability it is a cast of.
-
-    An 18-or-more-value cost row is indexed by level (a per-level cost) and a
-    shorter one by rank, which is the same rule every cached cost row obeys.
-
-    Args:
-        ability: Single ability dict from champion JSON.
-        rank: Ability rank (1-indexed).
-        level: Champion level (1-indexed).
-
-    Returns:
-        Resource units one cast spends, or 0.0 when the row carries no values.
+    calls it for every slot that owns an ability JSON, and a synthetic slot,
+    one the wiki has no ability entry for, calls it with the ability it is a
+    cast of.  An 18-or-more-value cost row is indexed by level and a shorter
+    one by rank, the same rule every cached cost row obeys.
     """
     modifiers = (ability.get("cost") or {}).get("modifiers", [])
     values = modifiers[0].get("values", []) if modifiers else []
@@ -571,15 +475,11 @@ _PERCENT = re.compile(r"\d+(?:\.\d+)?\s*%")
 def extract_cast_time(ability: dict[str, Any]) -> float:
     """Seconds the champion is locked out casting this ability.
 
-    The wiki's ``castTime`` is free text: "0.25", "none",
-    "0.25 / 0.2 (based on level)", "0.25 : 0.1 (based on bonus attack
-    speed)", "0.25 • None" (cast • recast), "80% of X's windup time
-    (0.4 at base attack speed)", "Attack Windup Time". Rule: read the
-    first cast segment (before any '•' recast separator) and take its
-    first number with percentages stripped — scaled forms yield their
-    base (slowest) value, windup-percentage forms fall through to the
-    parenthesized at-base seconds, and pure text ("none", "Attack
-    Windup Time") is instant (0.0).
+    The wiki's ``castTime`` is free text: "0.25", "none", "0.25 / 0.2 (based on
+    level)", "0.25 : 0.1 (based on bonus attack speed)", "0.25 • None"
+    (cast • recast), "80% of X's windup time (0.4 at base attack speed)".  Read
+    the first cast segment and take its first number with percentages stripped,
+    so a scaled form yields its base value and pure text is instant.
     """
     raw = ability.get("castTime")
     if raw is None:
@@ -595,19 +495,7 @@ def build_stats_context(
     champion_stats: dict[str, float] | None,
     total_ability_power: float,
 ) -> dict[str, float]:
-    """Build the mutable stats context dict for scaling resolution.
-
-    Copies champion_stats (BUFF parsers mutate the context, never the
-    caller's dict) and overrides AP with the current total (stats may
-    have been computed before AP items).
-
-    Args:
-        champion_stats: Champion's calculated stats dict.
-        total_ability_power: Total AP after items and multipliers.
-
-    Returns:
-        Stats context dict usable by ``resolve_scaling()``.
-    """
+    """A copy of *champion_stats* with ``ability_power`` set to the current total."""
     ctx = dict(champion_stats) if champion_stats else {}
     ctx["ability_power"] = total_ability_power
     return ctx
@@ -676,31 +564,27 @@ def damage_entry(
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
-    Damage arithmetic goes in typed ``parts``; "mixed" splits evenly
-    between a magic part and a true part (like Ahri Q), magic first —
-    the first part is the Horizon Focus trigger. ``total_raw`` is a
-    producer-side test/golden diagnostic with per-entry semantics
-    (usually the parts sum; proc entries store per-proc × count, and
-    hp-scaled entries store a bound) — the fight engine reads ONLY
-    ``parts``.
+    Damage arithmetic goes in typed ``parts``; "mixed" splits evenly between a
+    magic part and a true part (like Ahri Q), magic first, because the first
+    part is the Horizon Focus trigger.  ``total_raw`` is a producer-side
+    test/golden diagnostic with per-entry semantics (usually the parts sum;
+    proc entries store per-proc x count, and hp-scaled entries store a bound);
+    the fight engine reads ONLY ``parts``.
 
     ``zero_policy`` says what a zero total *means*.  It defaults to
-    :data:`MODULE_FORMULA_ZERO` — the one declared default in the champion
-    tree (D-24) — and a slot whose zero is a declaration rather than a
-    computation passes its own.  It is **keyword-only**: a trailing
-    positional would let a seventh positional argument at any of the
-    hundreds of call sites bind a non-``ZeroPolicy`` value into it silently.
+    :data:`MODULE_FORMULA_ZERO`, the one declared default in the champion tree,
+    and a slot whose zero is a declaration rather than a computation passes its
+    own.  It is **keyword-only**: a trailing positional would let a seventh
+    positional argument at any of the hundreds of call sites bind a
+    non-``ZeroPolicy`` value into it silently.
 
-    ``cc_kind`` marks the cast's reviewed crowd control (e.g. "stun",
-    "immobilize") on the entry's single part.  It is a statement about the
-    kit, not about event timing: certifying that the cast's hit lands at
-    the cast boundary is a *separate* claim the caller makes with
-    ``event_order_certified="single_hit"``.  The two used to be one
-    keyword, which meant reviewing a stun silently certified an event
-    order nobody had checked; a slot that needs both now says both.  A
-    "mixed" entry is two parts, which the engine's certified single-hit
-    export cannot carry — that combination raises rather than silently
-    dropping the marker.
+    ``cc_kind`` marks the cast's reviewed crowd control ("stun", "immobilize")
+    on the entry's single part.  It is a statement about the kit and not about
+    event timing: that the cast's hit lands at the cast boundary is a separate
+    claim the caller makes with ``event_order_certified="single_hit"``.  A
+    "mixed" entry is two parts, which the engine's certified single-hit export
+    cannot carry, so that combination raises rather than silently dropping the
+    marker.
     """
     if cc_kind is not None and dmg_type == "mixed":
         raise ValueError(
@@ -968,10 +852,7 @@ def _resolve_casts(
 ) -> float:
     """Resolve a casts param to a damage multiplier.
 
-    An int is used as-is; a string names a leveling attribute (e.g.
-    Xerath R's "Number of Recasts") whose value at rank is the count.
-    A missing/zero count attribute falls back to 1 (single cast) rather
-    than silently zeroing the slot's damage.
+    An int is used as is; a string names a leveling attribute holding the count.
     """
     if isinstance(casts, str):
         count = extract_named(ability, casts, rank, level=level)
@@ -982,12 +863,9 @@ def _resolve_casts(
 def extract_recharge(
     ability: dict[str, Any], rank: int, *, level: int | None = None
 ) -> float:
-    """Cooldown for a charge ability: rechargeRate at rank.
+    """Cooldown for a charge ability: ``rechargeRate`` at rank.
 
-    The JSON ``cooldown`` field of a charge ability stores the short
-    inter-cast timer; the limiter for sustained use is how fast charges
-    come back. Falls back to the plain cooldown when the ability has no
-    rechargeRate data.
+    The JSON ``cooldown`` of a charge ability is the short inter-cast timer.
     """
     rates = ability.get("rechargeRate") or []
     if not rates:
@@ -1379,22 +1257,15 @@ def by_option(
 ) -> SlotParser:
     """Dispatch a slot to one of several parsers by a champion option.
 
-    The sweetspot/condemn_wall pattern: the option value picks which
-    configured parser runs (e.g. Aatrox Q's sweetspot triad vs normal
-    triad). All cases MUST emit the same entry keys — an option may
-    change values, never the emitted shape (the archetype guardrail) —
-    and must share one engine phase (checked at factory time).
+    The sweetspot/condemn_wall pattern: the option value picks which configured
+    parser runs (Aatrox Q's sweetspot triad vs its normal triad).  All cases
+    MUST emit the same entry keys, because an option may change values and
+    never the emitted shape, and must share one engine phase, which is checked
+    at factory time.
 
-    Args:
-        option: Champion option key holding the selector value.
-        cases: Selector value -> slot parser. Bool-keyed cases
-            normalize the option value with ``bool()`` (truthy ints
-            from the frontend select the True case).
-        default: Selector used when the option is absent.
-
-    Returns:
-        A slot parser in the cases' shared phase; an unmatched selector
-        emits nothing.
+    Bool-keyed cases normalize the option value with ``bool()``, so a truthy
+    int from the frontend selects the True case.  An unmatched selector emits
+    nothing.
     """
     phases = {getattr(parser, "phase", DAMAGE) for parser in cases.values()}
     if len(phases) != 1:

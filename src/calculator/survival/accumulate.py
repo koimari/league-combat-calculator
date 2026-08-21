@@ -1,11 +1,10 @@
-"""Accumulation — the optimizer receipt's parallel-array sums (issue #137).
+"""The optimizer receipt's parallel-array sums.
 
-Ports the legacy score assembly exactly: per-attacker float-addition order
-(pair fights in defender order, then thorns in strike order), the rounded
-death-time cutoff on each attacker's outgoing total, and the support
-value/healing-output sums over the compilers' support entries.  Nothing
-here recomputes survival numbers — it only replays the ordered ``applied``
-slots the score ledger recorded.
+Float addition is not associative, so the order here is part of the number:
+pair fights in defender order, then thorns in strike order, with a rounded
+death-time cutoff on each attacker's outgoing total.  Nothing here recomputes
+survival numbers; it sums the ordered ``applied`` slots the score ledger
+recorded.
 """
 
 from __future__ import annotations
@@ -20,12 +19,11 @@ def accumulate_support_values(
     sig_entries: Sequence[tuple[str, int, int, bool]],
     count: int,
 ) -> tuple[list[float], list[float]]:
-    """Per-attacker support value and healing output in legacy attach order.
+    """Per-attacker support value and healing output.
 
-    Legacy attach order — main (fresh), allies (base), enemies (sig) —
-    decides both target-key insertion and per-target list order; the sums
-    are order-independent, so this replays the same iteration the legacy
-    assembly used.
+    Attach order (main, then allies, then enemies) decides target-key
+    insertion and per-target list order.  The sums themselves are
+    order-independent.
     """
     support_value = [0.0] * count
     healing_output = [0.0] * count
@@ -56,16 +54,15 @@ def accumulate_damage_totals(
     base_thorns_order: Mapping[int, Sequence[tuple[int, float]]],
     count: int,
 ) -> list[float]:
-    """Per-attacker outgoing totals in the legacy float-addition order.
+    """Per-attacker outgoing totals, in the float-addition order that fixes them.
 
-    Pair fights in defender order (enemies hit the main first, then
-    allies), then thorns in strike order (fresh strikes precede the
-    roster's).  One running total over the ordered parts keeps the exact
-    same addition sequence without building a concat list.  A dead
-    attacker's total also replays the legacy cutoff against its ROUNDED
-    death time: the walk applies an attacker's own event at the exact
-    death instant, but the legacy sum excludes it whenever the true death
-    time rounds down past it.
+    Pair fights come in defender order (enemies hit the main first, then
+    allies), then thorns in strike order (fresh strikes precede the roster's).
+    One running total over the ordered parts holds that sequence without
+    building a concat list.  A dead attacker's cutoff compares against its
+    ROUNDED death time: the walk applies an attacker's own event at the exact
+    death instant, and this sum drops it whenever the true death time rounds
+    down past it.
     """
     totals: list[float] = []
     for index in range(count):

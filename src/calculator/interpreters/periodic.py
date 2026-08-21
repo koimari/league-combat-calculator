@@ -1,19 +1,16 @@
 """Damage on a clock, interpreted: three cadences of one declared family.
 
 Seven items deal damage the fight's *clock* produces rather than damage an
-event produces, and until this module they reached the engine as three
-unrelated registry tags whose only shared vocabulary was the word "formula".
-A burn is a window every ability hit re-arms; an aura pays a rate for as long
-as the fight lasts; a fixed-interval strike lands a whole packet every N
-seconds and nothing in between.  The declaration names which, and this module
-is where a cadence becomes the record the fight engine already consumes.
+event produces.  A burn is a window every ability hit re-arms; an aura pays a
+rate for as long as the fight lasts; a fixed-interval strike lands a whole
+packet every N seconds and nothing in between.  The declaration names which,
+and this module is where a cadence becomes the record the fight engine
+consumes.
 
-Two things the engine used to reach for by name are now read off the rule:
-Unending Despair's Anguish radius, which the engine spelled its item's name to
-fetch for the receipt on every one of its events, and its self-heal share.
-Both are declared absences for every other periodic strike, because "this
-mechanic publishes no radius" and "this mechanic publishes a radius of zero"
-are different claims about the item.
+Unending Despair's Anguish radius and its self-heal share are read off the
+rule.  Both are declared absences for every other periodic strike, because
+"this mechanic publishes no radius" and "this mechanic publishes a radius of
+zero" are different claims about the item.
 
 Nothing here is memoized, for the same reason the catalog is not:
 ``refresh_item_effects()`` has to move the answer.
@@ -98,17 +95,9 @@ def cadence_fields(
 def periodic_mechanic_id(owner: str) -> str:
     """*owner*'s periodic strike mechanic id, or a stop.
 
-    What the pair engine needs to stamp the rows it authors with the mechanic
-    each row previews: ``damage._add_burn_damage`` walks
-    :class:`~..item_effects.DamageSource` records, which carry an item name
-    and no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
-    A stop rather than a default: an unstamped periodic row would keep the
-    pair engine's number in every roster total *and* leave the walk pricing
-    the declaration, which is the double count this family's retirement
-    exists to make unrepresentable.
+    A stop rather than a default: an unstamped periodic row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
     """
     rules = periodic_rules([owner])
     if not rules:
@@ -177,11 +166,8 @@ def periodic_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:
-    """Whether any declared periodic strike heals its holder.
-
-    Answered from the declarations alone, with no build context: the tuple
-    ledger's adequacy question is "could this build emit a self-heal packet",
-    which is a property of what the items declare and not of the fight.
+    """Whether any declared periodic strike heals its holder, answered from the
+    declarations alone rather than from a resolved fight.
     """
     return any(
         _payload(rule).self_heal_share is not None for rule in periodic_rules(owners)

@@ -46,10 +46,7 @@ _QUOTED_LEVELS = (1, 18)
 
 def _level_span(name: str, effects: RuneValues) -> tuple[float, float]:
     """One rune's first level table at levels 1 and 18, for its receipt.
-
-    The same fail-loud door a priced table is read through; ``at_level``
-    clamps, so the last row of an eighteen-column table is the last row.
-    """
+    ``at_level`` clamps, so an eighteen-column table ends at its last row."""
     first, last = _QUOTED_LEVELS
     table = required_leveling(name, effects)
     return at_level(table, first), at_level(table, last)

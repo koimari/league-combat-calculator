@@ -27,7 +27,7 @@ from .champions.slotlib import (
 )
 
 # keyword -> (atom_id, behavior)
-# Coverage classes (issue #140): damage, heal, shield, crowd-control
+# Coverage classes: damage, heal, shield, crowd-control
 # mobility, on-hit, burn, stats — plus summon/stack/vision/economy for the
 # real corpus. Matching is a lowered substring check against each effect's
 # own fragment text; evidence receipts name the exact keyword that fired.

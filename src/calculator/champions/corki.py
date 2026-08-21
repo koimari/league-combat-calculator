@@ -94,11 +94,7 @@ def _fraction_option(ctx: SlotCtx, key: str) -> float:
 
 
 def _ticks_at_uptime(ticks: int, uptime: float) -> int:
-    """Ticks landed over *uptime* of a DoT, rounding half up.
-
-    ``round()`` is banker's rounding — it would drop the tick at exactly
-    half a duration while keeping it just above and below.
-    """
+    """Ticks landed over *uptime*, rounding half up (``round()`` is banker's)."""
     return math.floor(ticks * uptime + 0.5)
 
 

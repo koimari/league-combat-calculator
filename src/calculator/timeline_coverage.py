@@ -23,11 +23,10 @@ def applicability_exclusion_sources(
 ) -> list[str]:
     """Return coarse sources safe to exclude before optimizer ranking.
 
-    A non-empty result is returned only when every coarse source belongs to
-    the explicitly audited item-timing family.  Mixing one of those sources
-    with an unrelated coarse mechanic keeps the whole candidate partial; a
-    partial candidate must never be rescued by a narrower receipt.
-    """
+    A non-empty result comes only when every coarse source belongs to the
+    audited item-timing family.  Mixing one with an unrelated coarse
+    mechanic keeps the whole candidate partial, and a partial candidate is
+    never rescued by a narrower receipt."""
     coarse = {
         str(source) for source in coverage.get("coarse_sources", []) if str(source)
     }

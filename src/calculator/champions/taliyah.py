@@ -111,11 +111,9 @@ def _timed_cast_starts(
 ) -> list[float]:
     """Q cast start times over the fight window, from the terrain state.
 
-    The fresh cast at t=0 pays the full cooldown (it CREATES Worked Ground
-    but was not cast from it); every later cast is empowered and pays the
-    halved one. A cast counts when it starts within the window, mirroring
-    the engine scheduler, and each cast occupies its 0.25s cast time before
-    its cooldown runs.
+    The fresh cast at t=0 pays the full cooldown, since it CREATES Worked Ground
+    rather than being cast from it; later casts are empowered and pay the halved
+    one.  Each occupies its 0.25s cast time before its cooldown runs.
     """
     starts = [0.0]
     start = _Q_CAST_TIME + fresh_cd

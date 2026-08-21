@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-# Single import namespace (issue #164): the repository is imported as
+# Single import namespace: the repository is imported as
 # ``src.calculator`` everywhere (tests, scripts, gunicorn ``src.app:app``).
 # Put the repository root on the path so ``src.calculator.*`` and the
 # ``scripts.*`` scorecard import resolve; never insert ``src/`` itself,
@@ -252,7 +252,7 @@ _SCOPE_LABELS = {
     "metrics_event": "Metrics",
     "build_write": "Build sharing",
 }
-# One table for the per-operation cache/rate-limit policy (issue #138).
+# One table for the per-operation cache/rate-limit policy.
 # ``rate_limit_scope`` names the token bucket; ``cache_namespace`` names the
 # deterministic result cache.  BIS deliberately shares the calculator budget
 # (it is invoked from the same UI surface), and optimize is cached like the
@@ -424,12 +424,7 @@ def _auth_users() -> dict[str, str]:
 
 
 def _invite_codes() -> tuple[str, ...]:
-    """Return the configured invite codes (comma-separated env), deduplicated.
-
-    Codes are matched exactly (after trimming surrounding whitespace), so
-    ``BETA-2026`` and ``beta-2026`` are distinct.  An unset or empty
-    ``SCRYGLASS_INVITE_CODES`` keeps the deployment in password-only mode.
-    """
+    """The configured invite codes (comma-separated env), deduplicated and exact."""
     raw = os.environ.get("SCRYGLASS_INVITE_CODES", "")
     return tuple(dict.fromkeys(code.strip() for code in raw.split(",") if code.strip()))
 
@@ -519,13 +514,7 @@ def _enforce_authentication():
 
 
 def _result_cache_enabled() -> bool:
-    """Result caching is an explicit-backend feature, bypassed in tests.
-
-    /api/calculate and /api/bis consult the result cache only when the
-    operator configured a database (``DATABASE_URL``) or Redis
-    (``REDIS_URL``); the local SQLite fallback and the test suite keep
-    computing fresh results so a misconfigured cache can never hide a bug.
-    """
+    """Result caching needs an explicit backend, and is bypassed under TESTING."""
     return not app.config.get("TESTING") and (is_configured() or redis_configured())
 
 
@@ -565,23 +554,13 @@ def _request_too_large(_error):
 
 @app.errorhandler(UnrankableNumber)
 def _unrankable_number(error):
-    """A ranking surface refused a number it may not fold into a score.
-
-    ``UnrankableNumber`` is deliberately a ``TypeError`` so it bypasses the
-    candidate loops' ``except (KeyError, ValueError)`` instead of being
-    swallowed into a withheld row; the route clauses therefore never see it,
-    and this one handler turns it into the caller's 400 for every endpoint.
-    """
+    """Turn a ranking surface's refusal into the caller's 400."""
     return jsonify({"error": str(error)}), 400
 
 
 @app.errorhandler(500)
 def _internal_error(error):
-    """Capture unhandled exceptions and keep the API's JSON error shape.
-
-    Flask wraps non-HTTP exceptions in ``InternalServerError`` before the
-    handler runs; Sentry should see the original exception, not the wrapper.
-    """
+    """Capture the original exception, not Flask's wrapper, and keep JSON errors."""
     _capture_exception(getattr(error, "original_exception", error))
     return jsonify({"error": "Internal server error"}), 500
 
@@ -633,12 +612,7 @@ def _within_starvation_boundary(view):
 
 @app.errorhandler(429)
 def _rate_limited(_error):
-    """Rate-limit rejections are expected traffic, never Sentry noise.
-
-    The token-bucket guard returns its 429 responses directly from the
-    route, so they never pass through this handler; it exists for the
-    symmetric ``abort(429)`` path and deliberately skips capture.
-    """
+    """Rate-limit rejections are expected traffic, never Sentry noise."""
     return jsonify({"error": "Rate limit exceeded"}), 429
 
 
@@ -673,23 +647,12 @@ def _json_object() -> dict:
 
 
 def _dev_mode() -> bool:
-    """True when LOL_CALC_DEV=1 (run_web.bat sets it; deployments don't).
-
-    Gates the wiki re-scrape endpoint: patch-day data updates run locally
-    and ship to the deployed site as a git-tracked data/ cache
-    (see docs/deploy.md).
-    """
+    """True when LOL_CALC_DEV=1 outside a Render deployment; gates the re-scrape."""
     return os.environ.get("LOL_CALC_DEV") == "1" and os.environ.get("RENDER") != "true"
 
 
 def _dev_update_token() -> str:
-    """The shared secret guarding /api/update-data; empty disables it.
-
-    The cookie is minted by one worker and presented to another, so a token
-    minted per import would only ever match inside the worker that made it.
-    It comes from ``LOL_CALC_DEV_UPDATE_TOKEN`` instead, and an unset value
-    fails closed: no cookie, and the endpoint stays 404.
-    """
+    """The shared secret guarding /api/update-data; empty disables the endpoint."""
     return os.environ.get("LOL_CALC_DEV_UPDATE_TOKEN", "").strip()
 
 
@@ -999,9 +962,7 @@ def api_health_deep():
 def _cached_champion_field(champ_data: Mapping[str, Any], key: str) -> Any:
     """Read one cache-owned champion field, failing closed on the key.
 
-    ``data/champions.json`` owns every value this endpoint republishes; a
-    literal default here would serve a plausible blank for a parser that
-    stopped writing the field.
+    A literal default would serve a plausible blank for a stalled parser.
     """
     if key not in champ_data:
         name = champ_data.get("name", "unknown champion")
@@ -1431,11 +1392,11 @@ def api_optimize():
     """Find the optimal item build for a champion.
 
     Request parsing and validation run through the shared scenario boundary
-    (``parse_scenario_request``/``resolve_scenario``), so optimize rejects
-    the same malformed payloads and calc-blocked participant items as
-    /api/calculate and /api/bis (issue #138).  Optimizer-only fields
-    (objective, locked items, budgets) are parsed after the shared call, and
-    the deterministic result is cached under the ``optimize`` namespace.
+    (``parse_scenario_request``/``resolve_scenario``), so optimize rejects the
+    same malformed payloads and calc-blocked participant items as
+    /api/calculate and /api/bis.  Optimizer-only fields (objective, locked
+    items, budgets) are parsed after the shared call, and the deterministic
+    result is cached under the ``optimize`` namespace.
     """
     try:
         data = _json_object()
@@ -1912,12 +1873,12 @@ def api_metrics():
     The scorecard is computed by src/metrics.compute_scorecard so the
     dashboard endpoint and the ``scripts/beta_metrics.py`` CLI share one
     definition of the gate (see docs/beta-metrics.md).  The module ships
-    inside the runtime package (issue #144).
+    inside the runtime package.
 
     TODO(cross-group): point docs/beta-metrics.md at src/metrics.py and add
     an authenticated /api/metrics smoke to .github/workflows/tests.yml and
-    docs/deploy.md (issue #144 findings §5.5/§5.7; tests/test_deployment_package.py
-    already covers the identical deployed file set locally).
+    docs/deploy.md.  tests/test_deployment_package.py already covers the
+    identical deployed file set locally.
     """
     try:
         # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
@@ -2015,9 +1976,7 @@ def _read_staleness():
 def api_staleness():
     """Serve the patch-regression report (wiki cache vs game files).
 
-    The report is generated by scripts/patch_regression.py on patch day and
-    committed with the data cache; this endpoint is the read-only face the
-    STALE badge consumes.  Missing report -> 404, never a silent fallback.
+    The read-only face the STALE badge consumes; a missing report is a 404.
     """
     report = _read_staleness()
     if report is None:

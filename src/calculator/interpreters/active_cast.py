@@ -69,14 +69,11 @@ def active_fields(
 ) -> tuple[KernelField, ...]:
     """One active's compiled numbers, stamped with *lane*.
 
-    Registered for both the pair engine and the receipt walk: the lane is the
-    only thing that differs between them, so one body is what makes "the walk
-    reads the same declaration the pair engine reads" a property of the tree
-    rather than a claim two functions could drift out of.
-
-    Compiling the formula here is what makes a missing registry key or a
-    basis with no reading surface fail when the build is made rather than on
-    whichever event first asks for the number.
+    Registered for both the pair engine and the receipt walk, whose only
+    difference is the lane, so one body makes "the walk reads the same
+    declaration the pair engine reads" a property of the tree.  Compiling the
+    formula here fails a missing registry key when the build is made rather
+    than on whichever event first asks for the number.
     """
     payload = _payload(rule)
     damage_formula.compile_formula(payload.formula, ctx)
@@ -121,17 +118,10 @@ def active_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 def active_mechanic_id(owner: str) -> str:
     """*owner*'s active mechanic id, or a stop.
 
-    What the pair engine needs to stamp the row it authors with the mechanic
-    that row previews: ``damage._add_item_active_damage`` walks
-    :class:`~..item_effects.DamageSource` rows, which carry an item name and
-    no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
-    A stop rather than a default, for rule 5's reason one layer up: an
-    unstamped active row would keep the pair engine's number in every roster
-    total *and* leave the walk pricing the declaration, which is the double
-    count this family's retirement exists to make unrepresentable.
+    The pair engine stamps its row with the mechanic that row previews, so
+    reading the id off the declaration keeps the stamp from being a second
+    spelling of the slug.  A missing rule stops rather than defaults: an
+    unstamped row would double count, in the roster total and in the walk.
     """
     rules = active_rules([owner])
     if not rules:

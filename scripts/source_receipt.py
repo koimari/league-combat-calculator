@@ -10,7 +10,7 @@ wrote it, and reports a false "stale artifact" everywhere else.
 
 Hashing LF-normalised content makes the digest reproducible on any platform,
 which is the only way a checked-in artifact can carry one at all. The trade is
-that `source.sha256` no longer equals `sha256sum data/champions.json` on a
+that `source.sha256` does not equal `sha256sum data/champions.json` on a
 machine whose checkout uses LF; compare against `source_sha256()` instead.
 """
 

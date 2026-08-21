@@ -39,15 +39,8 @@ __all__ = ["participant_paths", "survival", "survival_leaves"]
 
 
 def participant_paths(program: Program) -> tuple[str, ...]:
-    """Where each participant's survival row lives in the combat payload.
-
-    A ``dispositions`` key is the path a reader would walk to reach the leaf
-    it describes, and a survival row lives at ``participants[i].survival``.
-    Deriving the prefixes here rather than spelling a synthetic
-    ``participants.survival.<id>`` at each call site is what makes the map's
-    key set and the payload's leaf set the *same* strings -- which is the
-    whole of criterion 5's two-way equality, and what it could not have while
-    99 entries named paths the payload does not have.
+    """Where each participant's survival row lives, so the ``dispositions`` key
+    set and the payload's leaf set are the same strings.
     """
     return tuple(
         f"participants[{index}].survival" for index in range(len(program.actors))
@@ -55,12 +48,7 @@ def participant_paths(program: Program) -> tuple[str, ...]:
 
 
 def _optional_time(field: str, value: float | None) -> float | None:
-    """A published timestamp, or ``None`` where the walk recorded none.
-
-    ``None`` is not zero and is never rounded into one: an actor who did not
-    die has no death time, which is a different published answer from dying
-    at t=0.
-    """
+    """A published timestamp, or ``None`` where the walk recorded none: not zero."""
     return None if value is None else round_field(field, value)
 
 
@@ -512,11 +500,5 @@ def survival_leaves(
 
 
 def survival(program: Program, result: WalkResult) -> dict[str, dict[str, Any]]:
-    """The published rows on their own, for a caller that wants only them.
-
-    The payload views call :func:`survival_leaves` with the payload's own
-    writer, because one payload carries one ``dispositions`` map.  This is the
-    view's front door and the shape criterion 3 checks: exactly
-    ``(Program, WalkResult)`` in, published rows out.
-    """
+    """The published rows on their own, for a caller that wants only them."""
     return survival_leaves(program, result, LeafWriter(), participant_paths(program))

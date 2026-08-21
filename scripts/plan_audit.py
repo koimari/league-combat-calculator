@@ -18,10 +18,11 @@ Three checks run over ``docs/plans/*.md``:
    divergence**, escalated to a human and never silently re-pointed.
 2. **Golden shape figures.**  No plan document may state a golden or
    coupled-golden leaf or entry count (umbrella criterion 4) — those live only
-   in ``docs/receipts/campaign-fingerprints.json``.  Two prongs, because the
-   figure that was retired had been *wrong*: a value match against the retired
-   literals and the live receipt counts catches a correct restatement, and a
-   proximity-marker prong catches a wrong one.  The exemptions are audited
+   in ``docs/receipts/campaign-fingerprints.json``.  Two prongs, because a
+   restated figure may be right or wrong: a value match against
+   :data:`RETIRED_GOLDEN_FIGURES` and the live receipt counts catches a correct
+   restatement, and a proximity-marker prong catches a wrong one.  The
+   exemptions are audited
    with the prose: a row whose value no receipt block holds any more, and
    which suppresses nothing, is a hole the next capture would fall into.
 3. **Decision inventory.**  ``docs/receipts/decision-inventory.json`` is
@@ -109,15 +110,12 @@ UNINDEXED_DIRS = frozenset(
     {".git", ".claude", "__pycache__", "node_modules", ".venv", "vendor", "data"}
 )
 
-# The retired golden figure's literal spellings.  Empty, deliberately: the
-# umbrella retired the scenario-entry figure *and its value together* —
-# criterion 4 forbids restating it even as a warning, "because a doc figure a
-# reader cannot regenerate is exactly how the retired one survived" — so no
-# spelling of it survives here to pin.  The constant is the home R-37 gives
-# such a literal, and the next retired figure lands here because there is
-# nowhere else it may be written.  The prong is not thereby vacuous: live
-# golden counts are read from the fingerprints receipt at run time and matched
-# the same way, and its red is driven on demand by tests/test_plan_audit.py.
+# Literal spellings of a golden figure that plan prose may not restate.  Empty,
+# deliberately: a figure is withdrawn together with its value, because a doc
+# figure a reader cannot regenerate is how a wrong one survives.  This constant
+# is the one home such a literal has, so the next one lands here.  The prong is
+# not thereby vacuous: live golden counts are read from the fingerprints receipt
+# at run time and matched the same way, and tests/test_plan_audit.py drives it.
 RETIRED_GOLDEN_FIGURES: tuple[str, ...] = ()
 
 # Blocks of the fingerprints receipt whose integer members are golden shape
@@ -530,14 +528,9 @@ def _definition_extents(path: Path) -> Mapping[str, tuple[tuple[int, int], ...]]
 
 
 def _fragment_segments(fragment: str) -> tuple[str, ...]:
-    """A fragment split into the names it is made of.
-
-    A document writes ``Owner.member`` so the reader knows whose member it is;
-    the source line at the citation holds only the member.  The last segment is
-    therefore the locator and the leading ones are claims the file must still
-    satisfy somewhere — a renamed owner is a divergence even when its member
-    is exactly where the citation says.
-    """
+    """A fragment split into the names it is made of: ``Owner.member`` cites a
+    line holding only the member, so the last segment is the locator and the
+    leading ones are claims the file must satisfy somewhere."""
     stripped = fragment.strip()
     if _QUALIFIED.match(stripped):
         return tuple(stripped.rstrip("()").split("."))
@@ -668,10 +661,7 @@ def live_golden_counts(fingerprints: Mapping[str, Any]) -> dict[int, tuple[str, 
 
 def _allowed(doc: str, value: int, line: str, used: set[Allowance]) -> bool:
     """Whether an allowance excuses this occurrence, recording the row that did.
-
-    Consulted only where a finding would otherwise fire, so ``used`` holds
-    exactly the rows still doing work and the rest are reported as stale.
-    """
+    Consulted only where a finding would fire, so ``used`` holds the live rows."""
     matched = [row for row in COLLISION_ALLOWLIST if row.admits(doc, value, line)]
     used.update(matched)
     return bool(matched)

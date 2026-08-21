@@ -43,11 +43,11 @@ class UncompilableActionError(ValueError):
 
     Raised by ``program.compile`` and the compile-stage capability checks
     so the caller falls back to the authoritative event walk instead of
-    silently dropping a state transition (issue #137).  ``receipt`` names
-    the transition, ``source`` names where it was authored, and
-    ``invariant`` marks failures in search-invariant compilation (roster
-    pairs, signature panels) so the caller can skip re-attempting the
-    compiled path for the rest of the search.
+    silently dropping a state transition.  ``receipt`` names the transition,
+    ``source`` names where it was authored, and ``invariant`` marks failures
+    in search-invariant compilation (roster pairs, signature panels) so the
+    caller can skip re-attempting the compiled path for the rest of the
+    search.
     """
 
     def __init__(self, *, receipt: str, source: str, invariant: bool = False) -> None:
@@ -63,13 +63,12 @@ def unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
 
     ``healing_category`` is not a rejection: every compiled heal action
     carries the field, so the kernel's vamp carve-outs (received-healing
-    multiplier exemption, ichor conversion) apply identically (issue #169).
+    multiplier exemption, ichor conversion) apply identically.
 
-    P2 Slice 4: a heal packet carrying the cleanse marker (Mikael's Purify)
-    fails closed with ``support_cleanse`` — the compiled kernel cannot
-    reproduce the action-downtime truncation, so the caller falls back to
-    the authoritative receipt walk instead of silently dropping the
-    cleanse (score/receipt parity, HANDOVER section 9).
+    A heal packet carrying the cleanse marker (Mikael's Purify) fails closed
+    with ``support_cleanse``: the compiled kernel cannot reproduce the
+    action-downtime truncation, so the caller falls back to the authoritative
+    receipt walk instead of silently dropping the cleanse.
     """
     if event.get("cleanse") or event.get("cleanse_item"):
         return "support_cleanse"
@@ -254,9 +253,8 @@ def trigger_time_key(value: float) -> float:
 def heal_trigger_key(event: Mapping[str, Any]) -> tuple[str, float, int]:
     """The trigger identity carried by an engine self-heal event.
 
-    The *reader* of the key the compiler writes, which is why it normalizes
-    its timestamp through :func:`trigger_time_key` rather than spelling a
-    digit count of its own.
+    The reader of the key the compiler writes, so it normalizes its timestamp
+    through :func:`trigger_time_key` rather than spelling its own digit count.
     """
     return (
         str(event.get("_trigger_source", "")),

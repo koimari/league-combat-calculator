@@ -1,10 +1,7 @@
 """Bolts at targets the attack was not aimed at, interpreted.
 
 Wind's Fury is the whole family: an attack fires extra bolts at nearby enemies
-for a share of the attacker's damage.  Its two numbers used to be reached
-through accessors that carried the item's name as a *default argument* and a
-``has_item(items, "Runaan's Hurricane")`` test in the fight engine — a
-mechanic reachable only by spelling the item that has it.
+for a share of the attacker's damage.
 
 The declaration says the two things the mechanic is: how many extra targets it
 may reach and what share of the attack each one takes.  Neither is a damage
@@ -95,10 +92,8 @@ class SecondaryTargetSlot:
         )
 
     def bolt_count(self, roster_target_count: int) -> int:
-        """How many *extra* targets the bolts reach in this roster.
-
-        The main target is excluded — it is hit by the attack itself — so a
-        roster of one has no bolts at all.  The declared cap bounds the rest.
+        """How many *extra* targets the bolts reach: the declared cap, less the
+        main target, which the attack itself hits.
         """
         if roster_target_count <= 1:
             return 0
@@ -125,13 +120,7 @@ class SecondaryTargetSlot:
 
     @property
     def mechanic_id(self) -> str:
-        """The rule the pair engine stamps its two rows as a preview of.
-
-        Read back off the declaration rather than spelled in the engine: the
-        stamp and the walk half's delivery reference are the same string, and
-        a second spelling of a mechanic slug inside ``damage.py`` is the join
-        failing silently.
-        """
+        """The rule the pair engine stamps its two rows as a preview of."""
         return self.rule.mechanic_id
 
 

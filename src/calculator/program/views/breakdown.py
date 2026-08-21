@@ -16,9 +16,9 @@ is missing from the second.
 
 Nothing here folds.  Every number below is either a leaf already on the
 outcome record or a leaf already on the survival row, re-rounded at its
-declared precision; the two sums that used to sit inline (``incoming_damage``
-and the per-attacker total) are folded by the composition, because a view
-that adds is a view that can disagree with the walk it claims to project.
+declared precision.  ``incoming_damage`` and the per-attacker total are
+folded by the composition, because a view that adds is a view that can
+disagree with the walk it claims to project.
 """
 
 from __future__ import annotations
@@ -98,10 +98,5 @@ def breakdown_leaves(
 
 
 def breakdown(program: Program, result: WalkResult) -> list[dict[str, Any]]:
-    """The published rows on their own, for a caller that wants only them.
-
-    The payload views call :func:`breakdown_leaves` with the payload's own
-    writer, because one payload carries one ``dispositions`` map.  This is the
-    view's front door and the shape criterion 3 checks.
-    """
+    """The published rows on their own, for a caller that wants only them."""
     return breakdown_leaves(program, result, LeafWriter())

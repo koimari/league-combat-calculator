@@ -475,13 +475,9 @@ class TearManaflow:
         return self.charges_available_at(self._last_time)
 
     def charges_available_at(self, time: float) -> int:
-        """Stored charges at ``time`` (first charge banks at t=0).
-
-        The total banked grows every ``charge_interval`` seconds from
-        purchase (``1 + int(time // interval)``); at most ``max_charges``
-        are stored at once, so a holder that spends charges keeps banking
-        new ones over a long window.  Times before 0 floor to 0 charges.
-        """
+        """Stored charges at ``time``, at most ``max_charges``.  The first
+        banks at t=0, one more every ``charge_interval`` seconds after, and
+        a time before 0 floors to 0."""
         if isinstance(time, bool) or not math.isfinite(float(time)):
             raise ValueError(f"time must be finite, got {time!r}")
         banked = 1 + int(float(time) // self._declaration.charge_interval)

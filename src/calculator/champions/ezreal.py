@@ -45,12 +45,11 @@ Q_MIN_PERIOD = 1.0  # sanity floor on Q's post-refund cast period (seconds)
 # https://wiki.leagueoflegends.com/en-us/Ezreal (revision 4041697)
 W_MARK_REFUND_FLAT = 60.0
 
-# HARDCODED rule declaration — Essence Flux's mark lifetime.  The cached
-# prose "marks ... for 4 seconds" (effects[0]) and the game binary's
-# DetonationTimeout [4.0 x7] agree; the atom ``timing.active_duration``
-# [4.0] (b32849b968950b8e) is the same 4s mark window.  The engine
-# enforces it: a detonation landing after the window is receipted
-# ``mark_expired`` and never refunds (P1 Slice 13).
+# HARDCODED rule declaration for Essence Flux's mark lifetime.  Three sources
+# agree on 4s: the cached prose "marks ... for 4 seconds" (effects[0]), the
+# game file's DetonationTimeout [4.0 x7], and atom b32849b968950b8e
+# (``timing.active_duration`` [4.0]).  A detonation landing after the window
+# is receipted ``mark_expired`` and never refunds.
 W_MARK_WINDOW_SECONDS = 4.0
 
 
@@ -60,10 +59,7 @@ W_MARK_WINDOW_SECONDS = 4.0
 
 
 def _haste_factor(ctx: SlotCtx) -> float:
-    """(100 + ability haste) / 100 — the divisor the fight engine will
-    later apply to entry cooldowns. The refund is a flat 1.5s of REAL
-    time, so the refund math runs in hasted seconds and converts back
-    through this factor when writing pre-haste entry cooldowns."""
+    """(100 + ability haste) / 100, the divisor the fight engine applies later."""
     return 1.0 + ctx.stat("ability_haste") / 100.0
 
 
@@ -86,19 +82,8 @@ def _q_hasted_period(ctx: SlotCtx) -> float | None:
 
 
 def _refund_rate_factor(ctx: SlotCtx) -> float:
-    """Cooldown speed-up W/E/R receive from the Q refund stream.
-
-    Q hits every ``q_period`` real seconds, each hit shaving
-    ``Q_REFUND_SECONDS`` off every running cooldown. Over T wall-clock
-    seconds a cooldown therefore elapses T + (T / q_period) x
-    Q_REFUND_SECONDS cooldown-seconds — it completes faster by the rate
-    factor 1 + Q_REFUND_SECONDS / q_period. Entries carry PRE-haste
-    cooldowns (the fight engine divides by the haste factor later), and
-    dividing the base cooldown by this factor commutes with that
-    division, so hasted_cd / rate_factor comes out exact. (Spear of
-    Shojin's extra basic-ability haste is applied fight-side only and
-    is not folded into the refund inversion.)
-    """
+    """Cooldown speed-up W/E/R receive from the Q refund stream.  Dividing a
+    PRE-haste cooldown by it commutes with the engine's later haste division."""
     period = _q_hasted_period(ctx)
     if period is None:
         return 1.0

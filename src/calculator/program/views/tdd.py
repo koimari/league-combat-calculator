@@ -119,17 +119,9 @@ def tdd_leaves(
 
 def tdd(program: Program, result: WalkResult) -> dict[str, Any]:
     """The objective block on its own, with its own ``dispositions`` map.
-
-    The receipt payload uses :func:`tdd_leaves` instead, because one payload
-    carries one map.  This entry point is the view's own front door and the
-    shape criterion 3 checks: exactly ``(Program, WalkResult)`` in, published
-    leaves out, no arithmetic in between.
-
-    The survival rows the objective republishes are projected through
-    ``DISCARD``: this payload publishes them only under ``focus_survival``,
-    so entries at ``participants[i].survival`` would name leaves this payload
-    does not have -- the ghost half of criterion 5's two-way equality.
-    """
+    Survival rows project through ``DISCARD``: this payload publishes them
+    only under ``focus_survival``, so a disposition entry for them would name
+    a leaf the payload does not have."""
     writer = LeafWriter()
     rows = survival_leaves(program, result, DISCARD, participant_paths(program))
     block = tdd_leaves(program, result, writer, rows)

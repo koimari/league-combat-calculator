@@ -221,7 +221,7 @@ def audit_item_names() -> list[str]:
     every item available on Summoner's Rift — including quest transforms
     (Diadem of Songs, Muramana) and non-purchasable map/system records —
     is in scope, while off-map and removed records are not.  The gate never
-    parses ``modes``/``removed`` keys itself (issue #166).
+    parses ``modes``/``removed`` keys itself.
     """
     from src.calculator.item_source import audit_scope
 
@@ -631,7 +631,7 @@ def audit(
 
     Pre-flights the query tool: a missing/broken tool raises
     :class:`InfrastructureError` before any entry is audited, so a machine
-    failure is never reported as per-entry ``review_pending`` (issue #134).
+    failure is never reported as per-entry ``review_pending``.
     """
     global QUERY_TOOL
     tool = Path(query_tool) if query_tool else (QUERY_TOOL or resolve_query_tool())
@@ -687,7 +687,7 @@ def audit(
         and len(entries) == len(targets)
         and len(module_entries) == len(champion_list)
     )
-    # Envelope (issue #139): the gate's contract units are the full expected
+    # Envelope: the gate's contract units are the full expected
     # scope — every audited target plus every champion module receipt.  A
     # --limit run that only audits part of the scope therefore cannot pass.
     total = len(targets) + len(champion_list)

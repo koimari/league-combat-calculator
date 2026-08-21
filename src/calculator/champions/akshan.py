@@ -109,15 +109,13 @@ def _extract_e_per_shot(
         if not match:
             return 0.0
         as_ratio = float(match.group(1))
-        # ESCALATED DEFECT akshan-bonus-attack-speed-percent (issue #214,
-        # docs/receipts/escalated-defects-P3-3.7.json): the stat block this
-        # reads has no ``bonus_attack_speed_percent`` key and never has —
+        # ESCALATED DEFECT akshan-bonus-attack-speed-percent
+        # (docs/receipts/escalated-defects-P3-3.7.json): the stat block this
+        # reads has no ``bonus_attack_speed_percent`` key —
         # ``calculate_total_stats`` emits ``bonus_attack_speed`` — so this
-        # term has always resolved to zero and Heroic Swing has never priced
-        # its attack-speed scaling.  Removing the fallback is what surfaced
-        # it; correcting it moves a number, which this slice may not do
-        # (criterion 17 allows a golden diff for exactly one slice, and this
-        # is not it).  The zero is therefore stated rather than defaulted.
+        # term resolves to zero and Heroic Swing does not price its
+        # attack-speed scaling.  Correcting it moves a number, so the zero
+        # is stated here rather than defaulted.
         bonus_as_pct = 0.0
         return as_ratio * (bonus_as_pct / 100.0) * value
 

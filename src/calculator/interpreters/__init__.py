@@ -181,9 +181,8 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
     # folded into the champion's own ``auto_attacks`` row, the cooldown refund
     # authors no damage at all, and the forced crit authors one row stamped
     # ``informational`` that is summed into nothing.  All-pair-local inputs =>
-    # PAIR_ONLY, so the pair engine is this family's authoritative home, no
-    # second engine prices it, and the walk lane it used to declare was a
-    # schedule category error rather than a debt.  The compiled score walk is
+    # PAIR_ONLY, so the pair engine is this family's authoritative home and no
+    # second engine prices it.  The compiled score walk is
     # NOT reclassified with it: that lane has its own blocker (H5) and its own
     # row below.  What makes this legal where D-40 forbids editing a lane table
     # from inside the counter it moves is that the emptiness is measured
@@ -436,9 +435,9 @@ _PACKET_FED = (
     "reaches them through the pair interpreter rather than through one of "
     "its own"
 )
-# What is left of ``_PACKET_FED`` once a family's receipt-walk half has
-# retired: the compiled lane alone still stages the pair engine's packets, and
-# a row that went on saying "both walks" would contradict the tree it excuses.
+# For a family whose receipt-walk half reads the declaration itself: the
+# compiled lane alone stages the pair engine's packets, so a row saying "both
+# walks" would contradict the tree it excuses.
 _COMPILED_PACKET_FED = (
     "the compiled score walk consumes this family as the pair engine's timed "
     "rows — participant_timeline._pair_run_fight prices the pair and "
@@ -447,11 +446,10 @@ _COMPILED_PACKET_FED = (
     "own; the receipt walk reads the declaration itself since this family "
     "retired"
 )
-# What is left of ``_PACKET_FED`` once a family's receipt-walk half has been
-# RECLASSIFIED rather than retired: the compiled lane still stages the pair
-# engine's packets, and the receipt walk is owed nothing at all — not because
-# it reads the declaration itself, which is the retired shape, but because the
-# family authors no pair row and its numbers never leave the holder's own.
+# For a family RECLASSIFIED pair-only: the compiled lane stages the pair
+# engine's packets, and the receipt walk is owed nothing at all, not because
+# it reads the declaration itself but because the family authors no pair row
+# and its numbers never leave the holder's own.
 _COMPILED_PACKET_FED_PAIR_ONLY = (
     "the compiled score walk consumes this family as the pair engine's timed "
     "rows — participant_timeline._pair_run_fight prices the pair and "
@@ -465,12 +463,10 @@ _RESOLVER_FED = (
     "declaration reaches them through the resolver interpreter; a walk-lane "
     "interpreter here would be a second producer of one number"
 )
-# What is left of ``_RESOLVER_FED`` once a family's receipt-walk lane has been
-# CORRECTED away: the compiled lane still stages what the resolver built, and
-# the receipt walk is not a lane this family declares at all.  It could not
-# keep the shared sentence, which opens "the walks" and would go on describing
-# a lane the table no longer holds — the same contradiction that took
-# ``delta_amp``'s and ``crit_profile``'s.
+# For a family that declares no receipt-walk lane: the compiled lane stages
+# what the resolver built, and the receipt walk is not a lane this family
+# declares at all.  It cannot keep the shared sentence, which opens "the
+# walks" and would describe a lane the table does not hold.
 _COMPILED_RESOLVER_FED = (
     "the compiled score walk stages what the defence resolver already built, "
     "so the declaration reaches it through the resolver interpreter; a "
@@ -506,12 +502,10 @@ _COMPILED_PAIR_PRICED_OR_PACKET_FED = (
 _AMP_LANE = UnservedLane(_COMPILED_PAIR_PRICED_OR_PACKET_FED, (EngineLane.PAIR_ENGINE,))
 
 UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
-    # The crit profile's receipt-walk twin is gone and it did not retire: the
-    # lane table above no longer declares that lane at all, because umbrella
-    # Amendment O, Ruling 1 reclassified this family PAIR_ONLY on its measured
-    # emptiness.  It could not keep the shared reason either, for the same
-    # kind of contradiction that took delta_amp's: the sentence opens "both
-    # walks consume this family", and one of them no longer asks.
+    # The crit profile declares no receipt-walk lane: the family is PAIR_ONLY
+    # on its measured emptiness.  It cannot keep the shared reason either,
+    # whose sentence opens "both walks consume this family" when only one
+    # asks.
     (RuleFamily.CRIT_PROFILE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _COMPILED_PACKET_FED_PAIR_ONLY, (EngineLane.PAIR_ENGINE,)
     ),
@@ -544,24 +538,20 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.SPELLBLADE,
         )
     },
-    # ``secondary_target`` has no row at all now, on either lane.  Its
-    # receipt-walk twin retired with the family — the last of umbrella
-    # Amendment F's fourteen — and it never declared a compiled-score-walk
-    # lane, because a second target only exists where there is a roster to hit
-    # and the compiled kernel prices one pair.  A family with no unserved lane
-    # is what the end of this table's growth looks like.
+    # ``secondary_target`` has no row on either lane.  It declares no
+    # compiled-score-walk lane, because a second target only exists where
+    # there is a roster to hit and the compiled kernel prices one pair.  A
+    # family with no unserved lane is what the end of this table looks like.
     #
-    # Sustain's receipt half is no longer a gap — the walk reads its two
-    # walk-paid shapes through the registered walk interpreter — so only the
-    # compiled lane has a row, packet-fed like the strikes.
+    # Sustain's receipt half is served: the walk reads its two walk-paid
+    # shapes through the registered walk interpreter, so only the compiled
+    # lane has a row, packet-fed like the strikes.
     (RuleFamily.SUSTAIN, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
         _PACKET_FED, (EngineLane.PAIR_ENGINE,)
     ),
-    # The three resolver-fed families' receipt-walk twins are gone and none of
-    # them retired: the lane table above no longer declares that lane, because
-    # umbrella Amendment Q corrected a declaration these families never owed —
-    # what the receipt walk consumes for them, it consumes from the lane they
-    # declare, so a second lane asking for the same number is the second
+    # The three resolver-fed families declare no receipt-walk lane, because
+    # what the receipt walk consumes for them it consumes from the lane they
+    # do declare, so a second lane asking for the same number is the second
     # producer criterion 8 forbids.  Only the compiled lane defers for them,
     # and it says so in a sentence of its own.
     **{
@@ -575,9 +565,9 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
             RuleFamily.COMBAT_STATE,
         )
     },
-    # Reactive's receipt half is no longer a gap — the coupled timeline
-    # compiles the strike-back declaration at its own boundary through the
-    # registered walk interpreter — so only the compiled lane has a row, and
+    # Reactive's receipt half is served: the coupled timeline compiles the
+    # strike-back declaration at its own boundary through the registered walk
+    # interpreter, so only the compiled lane has a row, and
     # its route is that boundary rather than the resolver's.  Both halves are
     # named, because the reason names both.
     (RuleFamily.REACTIVE, EngineLane.COMPILED_SCORE_WALK): UnservedLane(
@@ -648,7 +638,7 @@ def uninterpreted_pairs() -> tuple[tuple[RuleFamily, EngineLane], ...]:
 
 
 def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
-    """One owner's answer for one of the kernel's refusals, folded (D-43).
+    """One owner's answer for one of the kernel's refusals, folded.
 
     ``ReceiptOnly`` wins and its reasons concatenate in declaration order;
     ``Compilable`` only when every rule is.  An owner the registries know but
@@ -661,14 +651,9 @@ def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
     of the parameter.  The kernel refuses three unrelated things
     (:class:`~..item_behavior.ReceiptScope`), and a fold over all three
     answers a question no gate asks: the build-level gate wants the owners
-    whose *state transitions* it cannot stage, and reading it the amp
-    holders as well would fall a build back for a reason that gate does not
-    own.  A caller that genuinely wants the union asks for each scope and
-    says so.
-
-    This is the successor to the per-item hand set the compiled walk used to
-    carry — a per-item question needs a per-item answer, which is why the fold
-    lives here rather than being left to each caller.
+    whose *state transitions* it cannot stage, and reading it the amp holders
+    as well would fall a build back for a reason that gate does not own.  A
+    caller that wants the union asks for each scope and says so.
     """
     rules = behavior_rules(owner)
     if not rules:
@@ -696,17 +681,9 @@ def _threshold_regeneration_thresholds(
 ) -> dict[str, float]:
     """Each declared threshold regeneration this build brings, by owner.
 
-    The one *conditional* answer the build-level gate needs: a threshold
-    regeneration's ticks are authored inside the event walk, but only once
-    the holder's bonus health passes the declared threshold, so an inactive
-    holder is numerically identical in both walks and must not fall back.
-    Conditionality is not something ``Compilability`` can express — it is
-    ``Compilable | ReceiptOnly``, per rule and not per build — so it lives
-    here, keyed by the declared shape rather than by the one item that
-    happens to carry it today.
-
-    A declaration whose number cannot be read raises, naming the owner and
-    the key; a broken declaration never becomes "no threshold".
+    The one *conditional* answer the build-level gate needs, because
+    ``Compilability`` is per rule: an inactive holder is numerically identical
+    in both walks and must not fall back.  An unreadable declaration raises.
     """
     return {
         slot.owner: slot.value("bonus_health_threshold")
@@ -724,26 +701,21 @@ def uncompilable_item_receipt(
 ) -> str | None:
     """Return a named receipt when a build cannot ride the compiled walk.
 
-    :func:`compilability_for` asked of a whole loadout, and the successor to
-    the sixteen-item hand set ``survival/compile.py`` used to carry: those
-    hand-written per-item notes are gone, and every one of them is now the fold
-    over that owner's own rules in the scope the question is about —
-    ``SURVIVAL_LEDGER_TRANSITION``, because what this gate asks is whether the
-    score ledger can stage the state transitions a build's items author, never
-    whether an amp is representable.  It lives here rather than in
-    ``survival/`` because the answer is a declaration and the dependency runs
+    :func:`compilability_for` asked of a whole loadout, in scope
+    ``SURVIVAL_LEDGER_TRANSITION``: this gate asks whether the score ledger
+    can stage the state transitions a build's items author, never whether an
+    amp is representable.  It lives here rather than in ``survival/`` because
+    the answer is a declaration and the dependency runs
     ``interpreters -> survival`` and never back.
 
     ``loadout_stats`` is the actor's resolved stats, required for a declared
     threshold regeneration so the check mirrors the receipt walk's own gate;
     ``None`` fails closed.  ``threshold_ticks_compiled`` is the
-    search-invariant caller's claim that it authors the holder's ticks itself
-    (the roster scan; issue #169), so an active holder stops being a reason to
-    fall back.
+    search-invariant caller's claim that it authors the holder's ticks itself,
+    so an active holder stops being a reason to fall back.
 
-    Items are walked in build order and the first refusal wins, which is what
-    keeps the published receipt string identical to the one the hand set
-    produced for the same build.
+    Items are walked in build order and the first refusal wins, so the
+    published receipt string is one build's one answer.
     """
     names = [str(item.get("name", "")) for item in items]
     conditional = _threshold_regeneration_thresholds(names)
@@ -859,9 +831,7 @@ def survival_ledger_entries(owner: str) -> tuple[SurvivalLedgerEntry, ...]:
 def survival_ledger_note(owner: str) -> str | None:
     """*owner*'s certification sentence, or ``None`` when it declares none.
 
-    ``None`` is the honest answer for an item with no such declaration, and it
-    is what tells a caller to publish "no special defensive effect" instead of
-    a certification nothing backs.
+    ``None`` tells a caller to publish "no special defensive effect".
     """
     entries = survival_ledger_entries(owner)
     if not entries:
@@ -872,11 +842,8 @@ def survival_ledger_note(owner: str) -> str | None:
 def survival_ledger_certifications() -> Mapping[str, str]:
     """Every owner whose declaration is inside the effective health BIS ranks.
 
-    The successor to the hand-written certification table the BIS receipt used
-    to carry: same question, asked of the declarations instead of asserted
-    beside them, so an item that stops declaring its shield stops being
-    certified on the same commit rather than on the day somebody re-reads the
-    prose.
+    Asked of the declarations rather than asserted beside them, so an item
+    that stops declaring its shield stops being certified on that commit.
     """
     return {
         owner: note

@@ -10,12 +10,11 @@ post-Lifeline omnivamp heals); wiring that did not is an assertion, never a
 dropped heal.
 
 The kernel's applied-amount observation is the only write the score ledger
-records: ``write(action, damage=...)`` (damage actions) and
-``write(action, applied_amount=...)`` (heals/shields) mirror the legacy
-compiled walk's ``applied[aidx]`` assignment without duplicating any
-arithmetic.  The per-attacker damage-order lists and support entries live
-on the compilers; :mod:`survival.accumulate` replays them in the legacy
-float-addition order.
+records: ``write(action, damage=...)`` for damage actions and
+``write(action, applied_amount=...)`` for heals and shields, each assigning
+``applied[aidx]`` without duplicating any arithmetic.  The per-attacker
+damage-order lists and support entries live on the compilers, and
+:mod:`survival.accumulate` sums them in a fixed float-addition order.
 """
 
 from __future__ import annotations
@@ -29,12 +28,10 @@ from .actions import SurvivalAction, TransitionRank, action_key
 class ScoreLedger:
     """Parallel-array observation of the shared kernel.
 
-    ``applied[aidx]`` holds each action's applied amount (the accumulator's
-    per-attacker float-sum order replays it) and ``status[aidx]`` is the
-    write-once trigger marker.  P3 package 3T: the ledger mirrors the
-    receipt adapter's walk-authored heal insertion (Maw's post-Lifeline
-    omnivamp heals) by holding the live actions list and growing the
-    parallel arrays for each inserted action.
+    ``applied[aidx]`` holds each action's applied amount, which the
+    accumulator sums per attacker, and ``status[aidx]`` is the write-once
+    trigger marker.  Holding the live actions list lets the ledger grow both
+    arrays for a walk-authored heal, matching the receipt adapter.
     """
 
     __slots__ = (
@@ -47,9 +44,9 @@ class ScoreLedger:
         "compile_event",
     )
 
-    # Ledger capability flags (issue #171): the kernel's hot loop skips
-    # building annotate()/event-field kwargs entirely when the ledger
-    # would drop them, instead of paying for round() calls a no-op absorbs.
+    # Ledger capability flags: the kernel's hot loop skips building
+    # annotate()/event-field kwargs entirely when the ledger would drop them,
+    # instead of paying for round() calls a no-op absorbs.
     records_annotations = False
     records_event_fields = False
 
@@ -63,13 +60,10 @@ class ScoreLedger:
     ) -> None:
         """The arrays, plus the builder this adapter may not reach for itself.
 
-        ``compile_event`` is the same injection :class:`ReceiptLedger` takes
-        and for the same reason: the one ``SurvivalAction`` constructor lives
-        in ``program/compile.py`` and ``survival/`` may not import
-        ``program/``.  It is optional here and required there because a score
-        ledger that never schedules a walk-authored heal never needs one --
-        and one that does, without it, raises in :meth:`schedule_heal` rather
-        than silently dropping the recovery.
+        The one ``SurvivalAction`` constructor lives in ``program/compile.py``,
+        which ``survival/`` may not import, so ``compile_event`` is injected.
+        A ledger that schedules no walk-authored heal never needs one; one that
+        does raises in :meth:`schedule_heal` rather than dropping the recovery.
         """
         self.n_actions = n_actions
         self.applied: list[float] = [0.0] * n_actions
@@ -89,13 +83,7 @@ class ScoreLedger:
             self._record(action, fields["applied_amount"])
 
     def restore(self, action: SurvivalAction, **fields: Any) -> None:
-        """A packet input put back, observed exactly as a write is here.
-
-        The score adapter keeps one number per slot and the last writer
-        wins, so an input restore and the outcome that follows it are
-        indistinguishable by construction — which is why the channel is
-        separate at the interface rather than at this implementation.
-        """
+        """A packet input put back; one slot, last writer wins, so it is a write."""
         self.write(action, **fields)
 
     def _record(self, action: SurvivalAction, amount: float) -> None:
@@ -115,16 +103,9 @@ class ScoreLedger:
         damage_phase: bool = False,
         preserve_reason: bool = False,
     ) -> None:
-        # Skipped actions leave their applied slot at zero, exactly like the
-        # legacy compiled walk's ``continue`` before any state mutation.
-        #
-        # ``preserve_reason`` is accepted because the kernel passes it, and
-        # this adapter keeps no reason to preserve.  It was absent while the
-        # only caller passing it was the redirect-cancelled arm, which is
-        # how a keyword the shared kernel sends came to be a ``TypeError``
-        # the score walk had simply never reached: an adapter that answers a
-        # narrower protocol than the one kernel sends is a crash waiting for
-        # its first roster.
+        """A skipped action leaves its applied slot at zero, before any mutation."""
+        # ``preserve_reason`` is accepted because the shared kernel sends it,
+        # and an adapter answering a narrower protocol crashes on first use.
         return None
 
     # -- trigger linkage -----------------------------------------------------
@@ -139,9 +120,8 @@ class ScoreLedger:
 
     # pylint: disable=unused-argument  # protocol-shaped no-op
     def mark_blocked(self, action: SurvivalAction) -> None:
-        # Score mode has no blocked-state consumer (compilation rejects the
-        # mechanics that mark blocked); a blocked action never gets the
-        # applied marker, which fails the same trigger gate.
+        """Score mode has no blocked-state consumer; compilation rejects those."""
+        # A blocked action never gets the applied marker, failing the same gate.
         return None
 
     # -- walk-authored scheduling (P3 package 3T) ----------------------------

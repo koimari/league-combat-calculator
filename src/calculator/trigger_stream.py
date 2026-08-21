@@ -1,13 +1,12 @@
 """The typed trigger bus and the capability registry that projects it.
 
-Two questions used to be answered by five hand-maintained name sets in
-``item_support_effects``: "which raw event rows mean crowd control / damage
-/ a takedown?" and "which holders read which of those streams?".  A set and
-the branch it guards drift the moment one is edited without the other, and
-the campaign this module belongs to exists because exactly that drift
-priced Imperial Mandate's Command at zero without a single error.
+Two questions get one home here: which raw event rows mean crowd control,
+damage or a takedown, and which holders read which of those streams.  A hand
+name set and the branch it guards drift the moment one is edited without the
+other, and that drift priced Imperial Mandate's Command at zero without a
+single error.
 
-So both questions get one home.  :func:`event_triggers` is the only place a
+:func:`event_triggers` is the only place a
 raw row is classified, and :data:`CAPABILITIES` is the only place a mechanic
 declares which streams it consumes — every adequacy set the pipeline and the
 timeline consult is a *projection* of that declaration rather than a second
@@ -362,18 +361,16 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     ``"auto_attacks"`` and Bloodsong's Expose Weakness reads
     ``"spellblade_Bloodsong"``, so an unattributed damage row is a row those
     two would price wrong rather than skip.  Nothing dispatches on a control
-    row's source — Everlasting identifies a control row by its
-    ``ability_instance``, falling back to source-and-time — and requiring one
-    there would reject authored control the legacy scanner accepted, which a
-    refactor may not do.
+    row's source: Everlasting identifies a control row by its
+    ``ability_instance``, falling back to source-and-time, so requiring a
+    source there would reject authored control.
 
     ``damage_type`` is enforced on that same stream and for the same reason.
     Carve dispatches on ``"physical"`` and Vile Decay on ``"magic"``, so a
-    damage row typed outside the vocabulary is a row they would misprice;
-    nothing dispatches on a control row's type, and the retired control
-    scanner this classifier replaced accepted a control row carrying any
-    type at all — including the
-    ``"mixed"`` that ``damage._damage_type_fields`` really does emit.  On the
+    damage row typed outside the vocabulary is a row they would misprice.
+    Nothing dispatches on a control row's type, and a control row may carry
+    any type at all, including the ``"mixed"`` that
+    ``damage._damage_type_fields`` really does emit.  On the
     control stream the field is therefore carried verbatim as a receipt of
     what the row said, exactly as ``source_key`` is.
     """
@@ -558,8 +555,8 @@ class HolderPacket:
     of *how* it travels — stamped on an event its holder already authored.
     This one travels as an ordinary walk packet, with a ``source`` literal
     like any other, and is self-scoped because of *whose damage it modifies*:
-    a retired family's walk half prices the damage of the participant holding
-    the item, so no second participant's number moves when it resolves.
+    a ``RetiredFamilyMechanic``'s walk half prices the damage of the
+    participant holding the item, so no second participant's number moves.
 
     Declaring it as its own type inside the same field is what keeps D-07's
     semantic the thing the producer set is keyed on.  Amendment C settled
@@ -677,12 +674,7 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
 def packet_source_literal(capability: MechanicCapability) -> str | None:
     """The ``source`` literal this half's packets carry, or ``None``.
 
-    ``None`` twice over: for a half that emits nothing, and for a
-    rider-delivered one, whose number arrives stamped on an event somebody
-    else authored and is therefore findable under no packet source.  A
-    :class:`HolderPacket` half *is* packet-delivered and answers with its
-    literal, because everything that arms on a packet source has to find it
-    — self-scoped says whose damage moves, not whether a packet exists.
+    ``None`` for a half that emits nothing and for a rider-delivered one.
     """
     source = capability.packet_source
     if isinstance(source, HolderPacket):
@@ -708,27 +700,10 @@ def delivery_reference(capability: MechanicCapability) -> str | None:
 def cross_participant_packet_source(capability: MechanicCapability) -> str | None:
     """The packet through which this half modifies ANOTHER participant's damage.
 
-    D-07's semantic with one home (Amendment C, extended by Amendment M,
-    Ruling 3): the producer set is a filter over this function rather than a
-    hand list, so a seventh producer joins it on the commit that declares
-    one.  Three conditions, each of which drops a half that modifies no other
-    participant's damage — a pair half authors no walk packet; an authority
-    outside :data:`CROSS_PARTICIPANT_AUTHORITIES` says no second engine sees
-    the mechanic; and a **self-scoped delivery** modifies damage that belongs
-    to its own holder.
-
-    That third condition is the amendment, and it now reads the semantic
-    rather than the delivery shape.  Amendment C wrote it as "not a rider",
-    because a rider amplifies the event it rides and that event is its
-    holder's.  Amendment M rules the same question for a *packet*-delivered
-    half: a retired family's walk half prices its own holder's damage, so
-    :class:`HolderPacket` drops out here for the reason
-    :class:`RiderDelivery` does and not for a second reason.  Keying the set
-    on "a walk half with a cross-participant authority that carries
-    *anything* in ``packet_source``" would enrol Shadowflame's Cinderbloom —
-    whose subject is the holder — the moment its walk half is declared, and
-    would enrol every retiring family after it; either way a ruled count
-    would have moved to satisfy a validator.
+    A filter rather than a hand list, so a new producer joins on the commit
+    that declares one.  A pair half authors no walk packet, an authority
+    outside :data:`CROSS_PARTICIPANT_AUTHORITIES` means no second engine sees
+    the mechanic, and a self-scoped delivery modifies its own holder's damage.
     """
     if capability.engine is not Engine.WALK:
         return None
@@ -741,10 +716,9 @@ def cross_participant_packet_source(capability: MechanicCapability) -> str | Non
 
 _SUPPORT_IMPL = "item_support_effects.derive_item_support_effects"
 _KNIGHTS_VOW_IMPL = "item_support_effects.schedule_knights_vow"
-# Where a retired family's walk half turns its declaration into a number: one
-# pricing site for every such half, because "the family's numbers reach the
-# walk through exactly one interpreter" is the property the retirement act
-# discharges (umbrella Amendment K).
+# Where a ``RetiredFamilyMechanic``'s walk half turns its declaration into a
+# number: one pricing site for every such half, so a family's numbers reach
+# the walk through exactly one interpreter.
 _DECLARED_PRICE_IMPL = "survival.transitions.apply_declared_price"
 
 
@@ -765,28 +739,18 @@ def _walk_item(  # pylint: disable=too-many-arguments
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
 
-    A constructor, not a default: every field the umbrella assigns Phase 2
-    still has to be written for every row, and the keyword defaults here are
-    the values that are true of the *majority* of walk packets — no stream,
-    no raw field, the walk owns its own packet, no pair-side half, and a
-    number the coupled walk delivered rather than previewed.  A row that
-    differs states its difference at the call site, which is what makes the
-    table readable as a table.
+    A constructor, not a default: the keyword defaults are what is true of
+    the majority of walk packets (no stream, no raw field, the walk owns its
+    packet, no pair-side half, a delivered rather than previewed number).  A
+    row that differs states its difference at the call site.
 
-    ``packet_source`` is the half's **delivery reference**, and it is a
+    ``packet_source`` is the half's delivery reference, a
     :class:`RiderDelivery` for the one walk half that authors no packet:
-    Shadowflame's Cinderbloom arrives stamped on the damage event it
-    amplifies (Amendment C to D-07).  Same field, because a paired half
-    still has to name the delivery its pair half is paired against; a
-    different type, because only a *packet* can modify another
-    participant's damage and the producer derivation reads the difference.
+    Shadowflame's Cinderbloom rides the damage event it amplifies.  Only a
+    packet can modify another participant's damage.
 
-    ``holder_stacking`` is the one argument with no default at all, because
-    it is the one whose majority answer would be a guess.  "Does a second
-    holder arm a second modifier?" has no majority — it has a per-mechanic
-    answer, and D-66 exists because a flat key silently drops one of them —
-    so every row states it, ``None`` included, and adding this field is what
-    forced every declaration below to be revisited rather than inherit one.
+    ``holder_stacking`` has no default: whether a second holder arms a
+    second modifier has a per-mechanic answer, so every row states it.
     """
     return MechanicCapability(
         mechanic=mechanic,
@@ -840,11 +804,11 @@ def _pair_half(
     )
 
 
-#: How a retired family's pair half is named: the rule's own mechanic id with
-#: this suffix.  One spelling, so the walk half can carry the catalog's id
-#: verbatim — which is what ``damage``'s ``pair_preview_of`` stamp reads off
-#: the declaration — and the preview it pairs against is derived rather than
-#: typed twice.
+#: How a ``RetiredFamilyMechanic``'s pair half is named: the rule's own
+#: mechanic id with this suffix.  One spelling, so the walk half carries the
+#: catalog's id verbatim, which is what ``damage``'s ``pair_preview_of`` stamp
+#: reads off the declaration, and the preview it pairs against is derived
+#: rather than typed twice.
 PREVIEW_SUFFIX = "_preview"
 
 
@@ -870,30 +834,26 @@ class RetiredFamilyMechanic(NamedTuple):
 def _retired_family_halves(
     mechanics: tuple[RetiredFamilyMechanic, ...],
 ) -> tuple[MechanicCapability, ...]:
-    """Both declared halves of every mechanic of one retired family.
+    """Both declared halves of every ``RetiredFamilyMechanic`` of one family.
 
-    A retirement act is one slice carrying both halves at once (umbrella
-    Amendment L, Ruling 1): the pair engine's row becomes a
-    ``ViewTag.THEORETICAL`` preview and the coupled walk prices the family's
-    own declaration.  Either half alone is worse than neither — the walk
-    without the stamp prices the family twice into one roster total, the
-    stamp without the walk deletes the family's number from every total that
-    held it — so the two are generated from one row rather than written
-    apart, and a mechanic cannot acquire one of them by itself.
+    The pair engine's row is a ``ViewTag.THEORETICAL`` preview and the coupled
+    walk prices the family's own declaration.  Either half alone is worse than
+    neither: the walk without the stamp prices the family twice into one
+    roster total, the stamp without the walk deletes the family's number from
+    every total that held it.  So the two are generated from one row, and a
+    mechanic cannot acquire one of them by itself.
 
     The walk half is a :class:`HolderPacket`: it prices the damage of the
-    participant holding the item, so no second participant's number moves
-    when it resolves and the mechanic is **not** a cross-participant producer
-    (umbrella Amendment M, Ruling 3).  ``PER_HOLDER`` is the arming answer
-    for the same reason — two roster members holding one item each pay their
-    own packet, and an aura key would silently drop the second (D-66).
+    participant holding the item, so no second participant's number moves and
+    the mechanic is **not** a cross-participant producer.  ``PER_HOLDER`` is
+    the arming answer for the same reason, since two roster members holding
+    one item each pay their own packet and an aura key would drop the second.
 
     ``impl`` on the walk half is the one pricing site every such half shares,
-    which is the property the retirement discharges: the family's numbers
-    reach the walk through exactly one interpreter, in the lane it declares
-    (umbrella Amendment K).  Its pair half's ``impl`` is the engine function
-    that authors the previewed row, so the two ends of the join are both
-    resolvable against source.
+    so the family's numbers reach the walk through exactly one interpreter in
+    the lane it declares.  Its pair half's ``impl`` is the engine function
+    that authors the previewed row, so both ends of the join resolve against
+    source.
     """
     halves: list[MechanicCapability] = []
     for entry in mechanics:
@@ -922,7 +882,7 @@ def _retired_family_halves(
     return tuple(halves)
 
 
-# The six item actives, retired off the pair engine 2026-08-16.  One row per
+# The six item actives the coupled walk prices.  One row per
 # declared rule in ``item_behavior_catalog``'s ``active_cast`` family: the
 # walk prices each from its own declaration and the pair engine's row is the
 # honest single-attacker preview of it.
@@ -939,8 +899,8 @@ _ACTIVE_CAST_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
-# The eight cast-triggered procs, retired off the pair engine 2026-08-16.  One
-# row per declared rule in ``item_behavior_catalog``'s ``cast_proc`` family.
+# The eight cast-triggered procs the coupled walk prices.  One row per
+# declared rule in ``item_behavior_catalog``'s ``cast_proc`` family.
 # Both proc shapes author their rows in one engine function, so both name it:
 # a cooldown proc's row and an ultimate proc's differ in how their events are
 # timed and not in who writes them.
@@ -959,8 +919,8 @@ _CAST_PROC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
-# The eleven damaging charged strikes, retired off the pair engine
-# 2026-08-16.  One row per declared rule in ``item_behavior_catalog``'s
+# The eleven damaging charged strikes the coupled walk prices.
+# One row per declared rule in ``item_behavior_catalog``'s
 # ``charged_strike`` family that authors a damage row, and the engine
 # function that authors it: this family's rows come from five sites rather
 # than one, because a charge is spent by an attack, by an ability, by an
@@ -1025,7 +985,7 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
-# The eight on-hit strikes, retired off the pair engine 2026-08-16.  One row
+# The eight on-hit strikes the coupled walk prices.  One row
 # per declared rule in ``item_behavior_catalog``'s ``on_hit_strike`` family,
 # and one authoring site for all of them: ``damage._layer_on_hit_effects``
 # lays every declared strike onto the applications of the fight's swings,
@@ -1055,7 +1015,7 @@ _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
-# The seven periodic strikes, retired off the pair engine 2026-08-16.  One row
+# The seven periodic strikes the coupled walk prices.  One row
 # per declared rule in ``item_behavior_catalog``'s ``periodic`` family, and
 # one authoring site for all three of its cadences: ``damage._add_burn_damage``
 # prices a refreshed burn over the window the fight's casts stretched it to,
@@ -1063,11 +1023,10 @@ _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # per completed interval, and splits each aggregate into the ticks that carry
 # the declaration's share.
 #
-# ``damage_amp_Liandry's Torment`` is deliberately not previewed here: the
-# triage lists it because it ablates the ITEM, and the row belongs to
-# ``liandrys_torment.whole_total_amp``, family ``delta_amp``, which retired on
-# its own terms.  Liandry's Torment declares two rules in two families and
-# only the burn is this one's.
+# ``damage_amp_Liandry's Torment`` is deliberately not previewed here: that
+# row belongs to ``liandrys_torment.whole_total_amp``, family ``delta_amp``.
+# Liandry's Torment declares two rules in two families and only the burn is
+# this one's.
 _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
     RetiredFamilyMechanic(mechanic, item, "damage._add_burn_damage")
     for mechanic, item in (
@@ -1082,10 +1041,10 @@ _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
-# The seven spellblades, retired off the pair engine 2026-08-17.  One row per
+# The seven spellblades the coupled walk prices.  One row per
 # declared rule in ``item_behavior_catalog``'s ``spellblade`` family, and one
 # authoring site for all of them: ``damage._add_spellblade_damage`` prices the
-# one spellblade a build arms — the mechanics are mutually exclusive in game
+# one spellblade a build arms, since the mechanics are mutually exclusive in game
 # and the engine arms the first the build carries — and lays its procs onto
 # the weave schedule the fight's casts resolved.
 #
@@ -1113,8 +1072,8 @@ _SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
-# Wind's Fury, retired off the pair engine 2026-08-17 — the last of umbrella
-# Amendment F's fourteen.  One row, because one declared rule in
+# Wind's Fury, priced by the coupled walk.
+# One row, because one declared rule in
 # ``item_behavior_catalog``'s ``secondary_target`` family is the whole family,
 # and one authoring site: ``damage._add_single_proc_on_hits`` authors both the
 # bolt and the copied on-hit row inside one block.
@@ -1195,14 +1154,12 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pairing=Pairing.PAIRED,
         pair_of="abyssal_mask.magic_amp",
     ),
-    # Phase 4 S7's third authority move, and the one that retires the
-    # campaign's only ``DivergenceReceipt``.  The amplified pool is every
-    # attacker's damage inside a live window, which is a roster input, so the
-    # walk owns the mechanic outright and prices the holder's own packets
-    # too — there is no longer a pair-local half to skip, which is why this
-    # row carries no ``owner``.  The pair engine's row survives as a declared
-    # ``THEORETICAL`` preview: correct as a one-attacker figure, excluded from
-    # every roster total.
+    # The amplified pool is every attacker's damage inside a live window,
+    # which is a roster input, so the walk owns the mechanic outright and
+    # prices the holder's own packets too.  There is no pair-local half to
+    # skip, which is why this row carries no ``owner``.  The pair engine's row
+    # is a declared ``THEORETICAL`` preview: correct as a one-attacker figure,
+    # excluded from every roster total.
     _walk_item(
         "bloodsong.expose_weakness",
         "Bloodsong",
@@ -1447,7 +1404,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         impl=_KNIGHTS_VOW_IMPL,
     ),
-    # -- retired families: both halves of one packet ------------------------
+    # -- RetiredFamilyMechanic rows: both halves of one packet --------------
     *_retired_family_halves(_ACTIVE_CAST_RETIREMENT),
     *_retired_family_halves(_CAST_PROC_RETIREMENT),
     *_retired_family_halves(_CHARGED_STRIKE_RETIREMENT),
@@ -1455,31 +1412,23 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     *_retired_family_halves(_PERIODIC_RETIREMENT),
     *_retired_family_halves(_SECONDARY_TARGET_RETIREMENT),
     *_retired_family_halves(_SPELLBLADE_RETIREMENT),
-    # -- the retired ``damage_routing`` family: three riders, no packet -----
+    # -- the ``damage_routing`` family: three riders, no packet -------------
     #
-    # The fifth family to retire off the pair engine (2026-08-16) and the
-    # first whose walk half is not a price.  Umbrella Amendment P names its
-    # delivery as the program rider system and the kernel state paths already
-    # in the tree — a deferral moves damage in time, an execution ends a
-    # fight, and a venom resizes a barrier — so each of these three is
-    # ``RiderDelivery``-delivered, which Amendment C ruled legal for a walk
-    # half whose number rides an event somebody else authored and which
-    # carries no ``packet_source`` at all.  A rider amplifies the event it
-    # rides, so none of the three is a cross-participant producer and D-07's
-    # ruled six do not move (Amendment M, Ruling 3, from the other delivery
-    # shape).
+    # The one family whose walk half is not a price.  Delivery is the program
+    # rider system and the kernel state paths: a deferral moves damage in
+    # time, an execution ends a fight, and a venom resizes a barrier.  So each
+    # of the three is ``RiderDelivery``-delivered, carries no
+    # ``packet_source`` at all, and amplifies an event somebody else authored,
+    # which is why none of them is a cross-participant producer.
     #
     # ``SOLO`` and ``holder_stacking=None`` are measured rather than assumed:
-    # the triage found this family authoring no priced pair-engine row
-    # anywhere in its covering population, so there is no pair half for these
-    # to be ``PAIRED`` against and nothing for a preview stamp to prevent.
-    # That is the enumerated emptiness Amendment L, Ruling 1's first half is
-    # discharged by here, exactly as ``delta_amp``'s was — never a step
-    # skipped, which is why the rows are written out one by one instead of
-    # being absent.
+    # this family authors no priced pair-engine row anywhere in its covering
+    # population, so there is no pair half for these to be ``PAIRED`` against
+    # and nothing for a preview stamp to prevent.  The rows are written out
+    # one by one rather than left absent, so the emptiness is enumerated.
     #
-    # ``COUPLED_AUTHORITATIVE`` for all three, by the campaign's own authority
-    # rule: every one of them reads an input the pair engine cannot see.  The
+    # ``COUPLED_AUTHORITATIVE`` for all three, by the authority rule: every
+    # one of them reads an input the pair engine cannot see.  The
     # execution reads the target's live health under combined fire, the venom
     # reads the shields that target gains from any granter on the roster, and
     # the deferral reads the holder's incoming damage from every roster
@@ -1509,9 +1458,9 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         impl="participant_timeline._simulate_survival",
     ),
     # -- pair-engine halves -------------------------------------------------
-    # The two swing schedules of the retired ``charged_strike`` family.  They
-    # sit here rather than among the retirement's paired halves because they
-    # author no packet: a schedule decides how often the holder swings, the
+    # The two swing schedules of the ``charged_strike`` family.  They sit here
+    # rather than among that family's paired halves because they author no
+    # packet: a schedule decides how often the holder swings, the
     # pair engine applies it while building the swing stream that every later
     # site reads, and nothing about it is a preview of a number the coupled
     # walk owns.  ``APPLIED`` is that measured, and ``PAIR_ONLY`` says the
@@ -1851,12 +1800,7 @@ def _validate_registry() -> None:
 
 
 def _row_fields(reads: frozenset[Stream]) -> frozenset[Field]:
-    """Every raw-row field the declared streams can supply.
-
-    ``SUPPORT_TRIGGER`` contributes nothing: it carries authored ally
-    templates, not engine rows, so a mechanic reading only it declares no
-    ``needs``.
-    """
+    """Every raw-row field the declared streams can supply."""
     return frozenset(Field) if reads & RAW_STREAMS else frozenset()
 
 
@@ -1956,24 +1900,20 @@ _validate_registry()
 
 
 def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
-    """The only place ``cc_kind`` and the legacy control flags are read.
+    """The only place ``cc_kind`` and the raw control flags are read.
 
     Returns the classification consumers branch on, the opaque receipt token
-    and whether a human reviewed it.  A ``cc_kind`` that *narrows* the class —
-    an immobilize kind, or ``"slow"`` — is the answer; a bare
-    ``crowd_control`` flag is control that nobody narrowed, which is
-    ``UNCLASSIFIED_CONTROL`` and not ``NONE``; an unmarked row is
-    ``UNREVIEWED`` and never ``NONE``.
+    and whether a human reviewed it.  A ``cc_kind`` that *narrows* the class,
+    an immobilize kind or ``"slow"``, is the answer; a bare ``crowd_control``
+    flag is control nobody narrowed, which is ``UNCLASSIFIED_CONTROL`` and
+    not ``NONE``; an unmarked row is ``UNREVIEWED`` and never ``NONE``.
 
-    The ladder is *strongest evidence first*, and a ``cc_kind`` is evidence
+    The ladder is strongest evidence first, and a ``cc_kind`` is evidence
     rather than an override: a reviewed ``"none"`` does not veto a row's
-    legacy ``immobilized`` / ``hard_cc`` / ``slowed`` / ``slow`` booleans, it
-    simply narrows nothing.  Read that way the bus predicate is exactly the
-    ``ability_spec`` predicate this module retired — which OR'd the flags in
-    — on every row, which is what a phase that may not move a number owes the
-    consumers it repoints.  Which fact *ought* to win on a row asserting a
-    reviewed "no control" and a legacy stun at once is a semantics question,
-    and this phase rules none.
+    ``immobilized`` / ``hard_cc`` / ``slowed`` / ``slow`` booleans, it simply
+    narrows nothing.  Which fact ought to win on a row asserting a reviewed
+    "no control" and a stun at once is a semantics question this module does
+    not rule.
     """
     kind = str(row.get("cc_kind", "") or "").lower().strip()
     if kind and kind not in CC_KIND_VOCABULARY:
@@ -2004,11 +1944,10 @@ def _float(value: Any) -> float:
 def _sequence(value: Any) -> int:
     """A row's ordinal, with an absent, missing or unparsable one as -1.
 
-    ``0`` is a real sequence and the commonest one there is: both of
-    ``damage._ordered_damage_events``' builders number their rows from
-    zero, so every ledger's first row carries it.  It therefore cannot
-    share a spelling with the absent marker, which is what folding the
-    parse through ``... or -1`` did.
+    ``0`` is a real sequence and the commonest there is: both of
+    ``damage._ordered_damage_events``' builders number their rows from zero,
+    so every ledger's first row carries it.  It cannot share a spelling with
+    the absent marker.
     """
     if value is None:
         return -1
@@ -2154,64 +2093,24 @@ def authored_triggers(
 
 
 def is_immobilizing_event(row: Mapping[str, Any]) -> bool:
-    """The one immobilize predicate, for callers holding a row not a Trigger.
-
-    Same answer as classifying the row and asking whether the class is
-    ``IMMOBILIZE`` — stated as a function because four consumers hold a raw
-    row and would otherwise each re-read ``cc_kind`` for themselves, which is
-    the divergence that let a slow price Command.
-    """
+    """The one immobilize predicate, for callers holding a row not a Trigger."""
     return _classify_cc(row)[0] is CcClass.IMMOBILIZE
 
 
 def applies_control(row: Mapping[str, Any]) -> bool:
-    """Whether one raw row applies crowd control of *any* class.
-
-    The wider sibling of :func:`is_immobilizing_event`, and the same answer
-    :func:`event_triggers` gives when asked for a ``CC`` trigger — for the
-    consumers whose own vocabulary is every control the Wiki lists rather
-    than the immobilizing subset. Cheap Shot is the case: it names slows,
-    blinds, silences and grounds beside its immobilizes, so an
-    immobilize-only predicate would refuse damage the rune really does
-    empower. It is stated here for the reason its narrower sibling is: a
-    consumer comparing ``cc_kind`` against a string is re-creating the
-    divergence that let a slow price Command.
-    """
+    """Whether one raw row applies crowd control of *any* class."""
     return _classify_cc(row)[0] in _CONTROL_CLASSES
 
 
 @cache
 def tuple_incapable_items() -> frozenset[str]:
-    """Holders whose scan cannot read the light 6-tuple ledger.
-
-    Bandlepipes, Black Cleaver, Bloodletter's Curse, Bloodsong, Cryptbloom,
-    Echoes of Helia, Fimbulwinter, Imperial Mandate, Phage, Solstice Sleigh
-    (10).
-
-    A holder is here exactly when one of its mechanics declares a stream that
-    is parsed off raw rows.  This is the predicate the pipeline's score-only
-    tuple gate consults, and the same predicate the participant timeline's
-    enrichment gate is a subset of — one derivation, two gates, so they can
-    never again disagree (D-01).
-    """
+    """Holders whose scan cannot read the light 6-tuple ledger."""
     return _projected_items(lambda cap: bool(cap.reads & RAW_STREAMS))
 
 
 @cache
 def enriched_view_items() -> frozenset[str]:
-    """Holders needing the pair path's per-event target/_event_id enrichment.
-
-    Black Cleaver, Bloodletter's Curse, Bloodsong, Cryptbloom, Fimbulwinter,
-    Imperial Mandate (6).
-
-    Fimbulwinter is a member because it carries ``_trigger_event_id`` onto
-    its shield packet — spelled ``event.event_id or None`` since P2b, where
-    the plan's D-03 text still quotes the retired raw-row
-    ``event.get("_event_id")`` — and dropping the enrichment both changes a
-    serialized receipt field and strips the only trigger link any support
-    author emits, which is the link the survival compiler's fail-closed
-    ``support_trigger_link`` branch exists to refuse (D-03).
-    """
+    """Holders needing the pair path's per-event target/_event_id enrichment."""
     return _projected_items(
         lambda cap: bool(cap.reads & RAW_STREAMS) and bool(cap.needs & _ENRICHED_FIELDS)
     )
@@ -2219,15 +2118,7 @@ def enriched_view_items() -> frozenset[str]:
 
 @cache
 def pair_outcome_items() -> frozenset[str]:
-    """Holders whose stream is synthesized from the one-pair shield outcome.
-
-    Cryptbloom (1).
-
-    The takedown stream has no authored producer: the receipt composition
-    synthesizes it from the pair fight's ``target_ending_health``, so a
-    score-only fight for these holders must keep that outcome rather than
-    skip it.
-    """
+    """Holders whose stream is synthesized from the one-pair shield outcome."""
     return _projected_items(lambda cap: Stream.TAKEDOWN in cap.reads)
 
 
@@ -2246,10 +2137,9 @@ def _projected_items(
 def streams_for(names: frozenset[str]) -> frozenset[Stream]:
     """Which streams a holder's declared mechanics consume.
 
-    The lazy-build argument in one function: the bus builds exactly the
-    streams this returns, so a mechanic that forgets to declare
-    ``Stream.CC`` is handed an empty list and prices zero — which is why A9
-    feeds every declared stream a synthetic marker and empties it again.
+    The bus builds exactly the streams this returns, so a mechanic that
+    forgets to declare ``Stream.CC`` is handed an empty list and prices
+    zero.
     """
     return frozenset(
         stream

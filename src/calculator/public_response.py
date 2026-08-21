@@ -125,14 +125,10 @@ def _public_event_time(event: Mapping[str, object]) -> float | None:
 
 
 def _target_effective_health(result: Mapping[str, object]) -> float:
-    """Estimate one target's effective health from a legacy engine result.
+    """Estimate one target's effective health from a per-target result.
 
-    The event-ordered combat ledger reports the exact effective health per
-    participant; the standalone per-target engine only carries max health,
-    shield absorption, and healing received.  Summing those three reproduces
-    the ledger's effective-health definition (max health + shields +
-    healing) for the common case so the overkill receipt stays comparable
-    across both response shapes.
+    Max health, shields and healing received sum to the combat ledger's
+    effective-health definition, so overkill compares across both shapes.
     """
     return (
         float(result.get("target_effective_max_health", 0.0))
@@ -142,13 +138,8 @@ def _target_effective_health(result: Mapping[str, object]) -> float:
 
 
 def _legacy_overkill(result: Mapping[str, object]) -> float:
-    """Return raw total damage beyond the target's effective health.
-
-    The standalone engine keeps applying damage after defeat, so total
-    damage can exceed every amount the target could absorb.  Overkill is
-    that excess; the coupled combat ledger carries the exact per-event
-    value in each participant's survival receipt instead.
-    """
+    """Raw total damage beyond the target's effective health, which the
+    per-target engine can exceed because it keeps swinging after defeat."""
     return max(
         0.0, float(result.get("total_damage", 0.0)) - _target_effective_health(result)
     )
@@ -344,12 +335,10 @@ def _primary_value(result: dict, key: str) -> object:
 def _concat_damage_events(results: list[dict]) -> list[dict]:
     """Flatten per-target damage events with a 1:1 ``target_index`` stamp.
 
-    The roster response keeps the per-target table (``targets[i].result``)
-    and additionally exposes the flattened stream so consumers that only
-    read the top-level ``damage_events`` key see every target.  Each event
-    carries the index of the target it came from; single-target responses
-    keep the legacy shape (no ``target_index``) so existing consumers are
-    unchanged.
+    The roster response keeps the per-target table (``targets[i].result``) and
+    also exposes this flattened stream, so a consumer reading only the
+    top-level ``damage_events`` key sees every target.  A single-target
+    response carries no ``target_index``.
     """
     flattened: list[dict] = []
     for target_index, result in enumerate(results):

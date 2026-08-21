@@ -256,22 +256,19 @@ class CcTriggerRule:
     def denial_reason(self, event: Mapping[str, Any], *, is_melee: bool) -> str | None:
         """Name why a CC-adjacent event cannot fire, or ``None``.
 
-        ``None`` means either the event is NOT a CC candidate at all (no
-        crowd-control metadata — nothing to deny, so no receipt) or it
-        matched an eligible branch (accepted).  Denials are named so the
-        consumer can receipt them fail-closed instead of silently skipping:
+        ``None`` means the event is not a CC candidate at all (no
+        crowd-control metadata, so nothing to deny) or it matched an eligible
+        branch.  Denials are named so the consumer can receipt them fail
+        closed instead of silently skipping:
 
-        - ``"unknown_cc_kind"``: a ``cc_kind`` string outside the sourced
-          vocabulary (neither an action-blocking kind nor the slow kind);
-        - ``"untyped_cc"``: only a bare ``crowd_control`` flag, which
-          cannot distinguish the immobilize/slow branches;
-        - ``"ranged_slow"``: a slow-classified event whose holder is not
-          melee (``slow_melee_only``).
+        - ``"unknown_cc_kind"``: a ``cc_kind`` outside the sourced vocabulary;
+        - ``"untyped_cc"``: only a bare ``crowd_control`` flag, which cannot
+          tell the immobilize and slow branches apart;
+        - ``"ranged_slow"``: a slow-classified event whose holder is not melee.
 
-        The adjacency test is deliberately broader than
-        :meth:`is_candidate`: an event carrying a ``cc_kind`` string
-        OUTSIDE the sourced vocabulary is CC-adjacent (receipted as
-        ``unknown_cc_kind``) even though it can never match a branch.
+        The adjacency test is broader than :meth:`is_candidate` on purpose: an
+        event carrying an out-of-vocabulary ``cc_kind`` is CC-adjacent and
+        receipted, though it can never match a branch.
         """
         if self.match(event, is_melee=is_melee):
             return None
@@ -806,8 +803,7 @@ class TimedStackState:
         return out
 
     def materialize_expiries(self, time: float, sequence: int = 0) -> list[Transition]:
-        """Public wrapper for :meth:`_materialize_expiries` (the walk
-        consumers use it to close a stack state at the fight end)."""
+        """Close a stack state at the fight end, for the walk consumers."""
         return self._materialize_expiries(time, sequence)
 
     def note_activity(

@@ -212,13 +212,8 @@ PROBE_BUILDS = {
 
 
 def _measure_the_optimizer_not_the_cache() -> None:
-    """Put the app in the one configuration a benchmark may measure.
-
-    The shared token bucket would 429 a long run, and on a deployment with
-    ``DATABASE_URL`` or ``REDIS_URL`` set the result cache would answer every
-    repeat after the first — so the same command would report the optimizer
-    on one machine and a cache lookup on another.
-    """
+    """Put the app where a benchmark measures the optimizer: no token bucket
+    to 429 a long run, no result cache to answer every repeat after the first."""
     app.config["RATE_LIMIT_ENABLED"] = False
     app.config["TESTING"] = True
 
@@ -273,13 +268,7 @@ class WorkCounters:
 
 
 def residual(counters: WorkCounters, n_enemies: int) -> int:
-    """Pair fights minus evaluations x enemies — the cache/fallback tripwire.
-
-    A perfectly cached search runs exactly one pair fight per (evaluation,
-    enemy).  Everything above that is roster-to-roster setup, cache misses
-    and fallbacks, so the difference is a small number whose *movement* is
-    the signal (R-25).
-    """
+    """Pair fights above one per (evaluation, enemy): the cache/fallback tripwire."""
     return counters.pair_run_fight_calls - counters.public_evaluations * n_enemies
 
 
@@ -569,22 +558,8 @@ def allocation_probe(scenario: str) -> int:
 
 
 def attach_allocation_peaks(reports: MutableMapping[str, Any]) -> None:
-    """Give every fixed-work report its ``allocation_peak_bytes`` (R-28).
-
-    The peak rides the fixed-work reading so one invocation carries everything
-    Phase 0's criterion 4 names — counters, residual, rungs, wall and the
-    allocation probe — rather than leaving the last of them to a second
-    command a reader has to know about.  Emitting it is not gating it: R-28
-    gates allocation once, at Phase 4 S4, against the margin in the receipt.
-
-    Probed here, in this process and in scenario order, which is exactly how
-    ``--alloc`` captures the figures the receipt holds — and why ``--isolate``
-    does not reach it.  A peak is only comparable to the one beside it when
-    both were read on the same basis, so a probe-per-subprocess variant would
-    silently re-define the committed number rather than reproduce it.  What
-    isolation buys the counters, ``allocation_probe``'s own warm-up request
-    buys the peak.
-    """
+    """Give every fixed-work report its ``allocation_peak_bytes``, probed in
+    this process and in scenario order so it matches the committed figures."""
     for name, report in reports.items():
         report["allocation_peak_bytes"] = allocation_probe(name)
 

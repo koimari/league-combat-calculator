@@ -531,7 +531,7 @@ def parse_roster(
 
 
 # ---------------------------------------------------------------------------
-# Shared scenario request boundary (issue #138)
+# Shared scenario request boundary
 # ---------------------------------------------------------------------------
 # One parse + resolution boundary for /api/calculate, /api/optimize, and
 # /api/bis so the three endpoints validate the same fields with the same

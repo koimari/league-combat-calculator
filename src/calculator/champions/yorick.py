@@ -87,9 +87,7 @@ _MAIDEN_AD_RATIO = 0.30
 def _mist_walker_attack_damage(ctx: SlotCtx) -> float:
     """One Mist Walker basic attack at the champion's level.
 
-    The game-file interpolation (15 at level 1 -> 100 at level 18) is
-    scaled by the standard stat progression multiplier (1.0 at level
-    18), then the sourced 20% AD ratio applies.
+    Game file 15 at level 1 -> 100 at level 18, scaled by growth, then 20% AD.
     """
     span = _MIST_WALKER_DAMAGE_END - _MIST_WALKER_DAMAGE_START
     interpolated = _MIST_WALKER_DAMAGE_START + span * (ctx.level - 1) / 17.0

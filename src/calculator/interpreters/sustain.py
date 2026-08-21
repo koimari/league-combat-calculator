@@ -91,18 +91,7 @@ def walk_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
     """Every sourced number the walk reads off one sustain declaration.
-
-    A regeneration window's ticks and the below-half healing bonus are
-    scheduled and applied inside the walk, and ``survival/`` may not reach a
-    declaration — the dependency runs ``interpreters -> survival`` and never
-    back.  So they are compiled where the walk's context is built and handed
-    over as kernel data.
-
-    ``ctx`` is unread: flat references only, and a refusal rather than an
-    invention where a reference needs more, because the boundary that builds a
-    walk has no level, no target bonus health and no range class, and a
-    defaulted zero inside a recovery is a heal that silently pays nothing.
-    """
+    ``ctx`` is unread: the walk boundary has no level or range class."""
     del ctx
     return _flat_fields(rule, lane)
 
@@ -231,23 +220,8 @@ def sustain_slot(
 def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     """This build's sustain of one shape, from flat references alone.
 
-    The companion to :func:`sustain_slot`, for the two callers that author a
-    heal *before* a fight context exists: the pipeline's item-heal events are
-    built from a finished damage list, and the roster's resource ledger is
-    built from incoming packets.  Neither has a level, a target's bonus
-    health or the holder's range class to hand, and inventing them so an
-    accessor's signature is satisfied is how a defaulted zero duration gets
-    into a ramping magnitude.
-
-    So this refuses instead.  Every reference the shape declares must be a
-    plain :class:`~..value_ref.ValueRef`; a level ramp or any other
-    context-dependent reference is a stop naming the shape, which is what
-    stops this becoming a quiet second answer to the question
-    :func:`sustain_slot` asks.  ``None`` means no holder declares the shape —
-    an answer, not a zero — and two holders is the same stop as there.
-
-    :func:`walk_slot` is this same question asked for the other lane.
-    """
+    A context-dependent reference stops rather than defaulting a zero into a
+    ramping magnitude.  ``None`` means no holder declares the shape."""
     rule = _sole_rule(owners, payload_type)
     if rule is None:
         return None
@@ -257,13 +231,8 @@ def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot |
 def walk_slot(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     """This build's sustain of one shape, compiled for the receipt walk.
 
-    What the walk's boundary holds instead of an item name: the caller that
-    builds a walk context compiles the declaration here and hands the numbers
-    over as kernel data, because ``survival/`` may not reach a declaration
-    itself.  Field for field this is :func:`walk_fields` — one arithmetic
-    home, so the registered reading and the accessor cannot answer
-    differently.
-    """
+    Field for field this is :func:`walk_fields`, so the registered reading and
+    the accessor cannot answer differently."""
     rule = _sole_rule(owners, payload_type)
     if rule is None:
         return None
@@ -318,8 +287,7 @@ def stat_grants(owners: Sequence[str], stat: SustainStat) -> tuple[BehaviorRule,
     """Every declared grant of one vampirism stat, in build order.
 
     Grants sum rather than refusing a second holder, because two life-steal
-    items really do stack — which is the one place this family's fold is not
-    a single slot.
+    items stack.  This is the one place the family's fold is not a single slot.
     """
     return tuple(
         rule

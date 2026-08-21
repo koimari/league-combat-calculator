@@ -147,8 +147,8 @@ def _taric_starlights_touch(
     leveling attribute.  Returns ``(heal_amount, charges_used)`` — the
     amount at the sourced stock, capped at the "maximum of ... at 5
     charges" row, with zero when no per-charge formula or stock exists.
-    Issue #143: this is the single formula source for the Q heal; the
-    support scanner never re-prices the slot.
+    This is the single formula source for the Q heal; the support scanner
+    never re-prices the slot.
     """
     charges = extract_named(q_ability, "Maximum Charges", q_rank, champion_stats, {})
     descriptions = [
@@ -386,15 +386,9 @@ def _takedown_payments(
 ) -> list[_Payment]:
     """The first *count* hits a takedown-paid rule can honestly ride.
 
-    A heal the game pays when a nearby unit *dies* — Cho'Gath's Carnivore,
-    Trundle's King's Tribute, Alistar's seven-stack Triumph — has neither a
-    cast nor a damage row of its own, and a duel simulates neither the wave
-    nor the takedown.  So the champion module declares the count as an
-    option and the fight supplies the times: the first *count* hits that
-    dealt damage, in order.  That is the most a rule can conclude without a
-    kill to point at, and it keeps the heals inside the window the fight
-    actually covers instead of stacking them all on one instant.
-    """
+    A heal the game pays when a nearby unit dies has no cast and no damage
+    row, and a duel simulates neither, so the champion module declares the
+    count and the fight supplies the times."""
     if count <= 0:
         return []
     payments = _payments(HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events)

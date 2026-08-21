@@ -141,8 +141,8 @@ GAP_LEDGERS = ("inferred_kind_coverage", "authored_marker_reach")
 
 # The closed set of surfaces a declaration can be load-bearing on.  A
 # declaration on none of them is prose in a dataclass: deleting it changes
-# nothing anybody can observe, which is exactly how a retired hand seed
-# comes back as plausible sentences with every other check still green.
+# nothing anybody can observe, so nothing would catch it drifting into
+# plausible sentences with every other check still green.
 #
 # ``derived_order``           deleting it changes the order the derivation
 #                             returns, or makes the derivation refuse to
@@ -175,25 +175,14 @@ class AuditDerivationError(RuntimeError):
 
 
 def apply_marker_keys(source: str | None = None) -> tuple[str, ...]:
-    """The parsed-entry keys the resolver's apply-atom loop reads.
+    """The parsed-entry keys the resolver's apply-atom loop reads, sorted.
 
-    This is the marker surface ``authored_marker_reach`` is measured over,
-    and it is derived from ``detect_setup_consume_edges``'s own body: the
-    loop that fills ``apply_atoms`` is located by its assignment target,
-    and every string key it reads off a parsed entry — ``info.get("x")``,
-    ``info["x"]``, ``getattr(part, "x")`` — is a marker.  A read added to
-    that loop grows this set on the commit that adds it, which is what
-    makes "a newly read key with no negative test fails the audit"
-    enforceable instead of aspirational.
-
-    Args:
-        source: The resolver's source text; read from disk when omitted.
-
-    Returns:
-        The marker keys, sorted.
-
-    Raises:
-        AuditDerivationError: The loop or its reads could not be found.
+    This is the marker surface ``authored_marker_reach`` is measured over.
+    It is derived from ``detect_setup_consume_edges``'s own body: the loop
+    filling ``apply_atoms`` is located by its assignment target, and every
+    string key it reads off a parsed entry is a marker.  A read added to
+    that loop grows this set on the commit that adds it, which is what makes
+    "a newly read key with no negative test fails the audit" enforceable.
     """
     text = source if source is not None else RESOLVER_SOURCE.read_text(encoding="utf-8")
     loop = _apply_atom_loop(ast.parse(text))
@@ -639,10 +628,8 @@ def _record_routes(  # pylint: disable=too-many-arguments,too-many-positional-ar
     """Fold one state's load-bearing measurement into the route ledger.
 
     Every declaration is deleted in turn and the state is asked what
-    notices.  This is criterion 12 mechanised: a declaration that survives
-    its own deletion unnoticed on all three surfaces is unfalsifiable
-    prose, and it is the exact shape a retired hand seed takes when it
-    comes back.
+    notices.  A declaration that survives its own deletion unnoticed on all
+    three surfaces is unfalsifiable prose.
     """
     if not declarations:
         return

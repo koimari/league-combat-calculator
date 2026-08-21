@@ -44,11 +44,8 @@ def declare_healing_rule(
 ) -> ChampionHealingRule:
     """Declare the self-healing rule owned by a champion module.
 
-    The resolver is the declaration: there is no shared body left to fall
-    back to, so a module that declares a rule without one would import
-    clean and never heal.  ``healing._load_declarations`` derives
-    ``HEALING_RULE_CHAMPIONS`` from these declarations, so the champion
-    set has no second home to drift from.
+    The resolver is the declaration, so a module declaring one without it would
+    import clean and never heal.  ``HEALING_RULE_CHAMPIONS`` derives from these.
     """
     if resolver is None:
         raise RuntimeError(

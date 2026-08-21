@@ -143,10 +143,8 @@ RESISTS_CONTAINER = "resists"
 def static_holder_amp_fields() -> tuple[str, ...]:
     """Each static holder amp, spelled the way the pair engine's state holds it.
 
-    Read off :class:`~src.calculator.interpreters.delta_amp.StaticHolderAmps` —
-    its float members are the amps and its string members name their owners —
-    so a fourth amp arrives in this census already named, on the commit that
-    declares it, instead of being discovered by whoever next re-prices.
+    Read off :class:`~src.calculator.interpreters.delta_amp.StaticHolderAmps`,
+    whose float members are the amps, so a fourth arrives already named.
     """
     return tuple(
         f"{field.name}{AMP_FIELD_SUFFIX}"
@@ -160,9 +158,8 @@ def amps_the_walk_folds() -> tuple[str, ...]:
 
     The walk-side half of the same join: the term ``DeclaredPacket.holder_amp``
     covers an amp only if the composition that produces it reads that amp.  An
-    amp declared and never folded would be a term that exists and does not
-    reach the packet, which is the deletion Amendment M, Ruling 1 forbids
-    wearing a green gate.
+    amp declared and never folded is a term that exists without reaching the
+    packet, so it must not pass as covered.
     """
     tree = ast.parse(ast.unparse(_factor_for_source()))
     return tuple(

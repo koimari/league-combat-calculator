@@ -68,12 +68,7 @@ def item_total(item: dict[str, Any]) -> int:
 
 
 def item_sell_value(item: dict[str, Any]) -> int:
-    """Return the sourced sell refund for an item.
-
-    The real refund is 70% of total for most items (the vendored cache
-    hard-codes 40%, wrong for 185 of 209 shop items); the sourced table
-    carries per-item DDragon values with the reviewed exceptions.
-    """
+    """The sourced sell refund, from the per-item DDragon table."""
     return sourced_sell_value(item)
 
 
@@ -112,13 +107,7 @@ def recipe_demand(item: dict[str, Any]) -> dict[int, int]:
 
 
 def is_transformation_item(item: dict[str, Any]) -> bool:
-    """Return True for items that only exist by transforming another item.
-
-    Transformation items (Seraph's Embrace, Muramana, Fimbulwinter, Diadem
-    of Songs, Runic Compass, ...) cannot be bought in the shop; they appear
-    through ``specialRecipe`` transitions and must never be purchase
-    candidates.
-    """
+    """True for an item reachable only by a ``specialRecipe`` transition."""
     return bool(int(item.get("specialRecipe", 0) or 0))
 
 

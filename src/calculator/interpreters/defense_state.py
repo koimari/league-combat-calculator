@@ -113,12 +113,7 @@ class DefenseSlot:
         )
 
     def threshold(self) -> float:
-        """The health fraction that arms this defence, or a stop.
-
-        Asked only by a family whose payload carries one, so an absent
-        threshold is a programming error rather than a mechanic that arms at
-        zero health — which is why this refuses instead of returning 0.0.
-        """
+        """The health fraction that arms this defence, or a stop."""
         return self._policy_reference("threshold")
 
     def duration(self) -> float:
@@ -161,14 +156,12 @@ class DefenseSlot:
 def declared_defenses(names: frozenset[str]) -> dict[DefenseMechanic, BehaviorRule]:
     """Every defence a build declares, one rule per mechanic.
 
-    Two things are decided here and nowhere else.  **Exclusivity**: a build
-    may legally hold two Lifelines, two Annuls or both stasis items, and
-    exactly one of each group is read.  **Which one**: the owner whose entry
-    comes first in the number registry, which reproduces the tuple of item
-    names the retired resolver tested in order, without naming one.
-
-    Walking the registry rather than the build is what makes that tie-break
-    statable at all — the build is a set, and a set has no first.
+    Two things are decided here and nowhere else.  Exclusivity: a build may
+    legally hold two Lifelines, two Annuls or both stasis items, and exactly
+    one of each group is read.  Which one: the owner whose entry comes first
+    in the number registry.  Walking the registry rather than the build is
+    what makes that tie-break statable at all, because a build is a set and a
+    set has no first.
     """
     selected: dict[DefenseMechanic, BehaviorRule] = {}
     claimed: set[DefenseExclusivity] = set()

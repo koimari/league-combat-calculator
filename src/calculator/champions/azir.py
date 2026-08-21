@@ -33,18 +33,10 @@ Why each slot is non-generic:
   rows ("Width" with units of " soldiers") that must never parse as
   damage or scaling values.
 
-Roadmap session 5 slot 14 (2026-08-21): P (Shurima's Legacy) has no
-enemy-damage formula — the cached entry carries zero leveling data, and
-Sun Disc is a separate destroyed-tower entity with its own HP (see the
-SLOTS comment above). The pinned reviewed packet
-(static/reviewed-packets.json) independently declares P
-``kind: "no_damage"`` with a sourced reason, and P has never been wired
-into SLOTS (deliberate, documented above), so the fight ledger never
-invents an enemy hit for it — confirmed live: ``parse_champion_abilities``
-emits no P/passive key at all for Azir, and the fight breakdown has no
-P row. MODULE_COVERAGE was simply stale, reading "out_of_scope" for a
-slot this module already treats as non-damaging (the Vayne P precedent).
-Reclassified to "no_damage"; zero fight-computation change.
+P is wired nowhere: it carries ``kind: "no_damage"`` in MODULE_COVERAGE and
+in the pinned reviewed packet (static/reviewed-packets.json), and
+``parse_champion_abilities`` emits no passive key for Azir at all, so the
+fight ledger never invents an enemy hit for it.
 """
 
 from typing import Any
@@ -67,10 +59,7 @@ def _soldier_attack_damage(
 ) -> float:
     """One Sand Soldier attack: per-level flat + per-rank base + AP ratio.
 
-    The JSON stores all three as modifiers of the single "Magic Damage"
-    leveling entry: modifier 0 is an 18-value per-level array (0-72
-    linear over levels 1-18), modifiers 1-2 are 5-value per-rank arrays
-    (base damage and % AP ratio).
+    All three are modifiers of the single "Magic Damage" leveling entry.
     """
     flat_level = extract_value(ability, "Magic Damage", level, modifier_index=0)
     rank_base = extract_value(ability, "Magic Damage", rank, modifier_index=1)

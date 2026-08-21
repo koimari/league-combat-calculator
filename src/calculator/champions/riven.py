@@ -47,7 +47,7 @@ PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b
 # HARDCODED: verify on patch updates — the current R1 AD buff is a flat
 # 20% of bonus AD at every rank (riven.bin.json RivenFengShuiEngine
 # PercentBonusAD = 0.20; wiki patch history: "reduced to 20% bonus AD
-# from 25%").  The older 20/25/30% rank array was retired by the patch.
+# from 25%").
 _R_BONUS_AD_RATIO = 0.20
 _R_BUFF_DURATION = 15.0  # wiki prose: "empowers her blade for 15 seconds"
 

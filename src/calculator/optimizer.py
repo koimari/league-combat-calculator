@@ -58,10 +58,8 @@ from .work_counters import WorkCounterSink
 def _ordinary_sr_items() -> list[dict[str, Any]]:
     """Every cached item an ordinary Summoner's Rift build can hold.
 
-    Availability comes from the cached source data — map/mode table, champion
-    restriction, acquisition — through ``item_source``, so an ARAM starter or
-    a champion-granted item leaves the pool because the sources say so, not
-    because someone remembered to add its name to a list.
+    ``item_source`` reads availability off the cached sources, so an ARAM
+    starter leaves the pool because the data says so, not a name list.
     """
     return [
         item_data
@@ -539,13 +537,7 @@ def _combined_build_timeline_coverage(
 
 
 def _build_receipt_key(items: list[dict[str, Any]]) -> tuple[str, ...]:
-    """Identify one evaluated build in the search receipt cache.
-
-    The optimizer's score memo uses the ordered item list (boots first when
-    present), so the coverage receipt must use that same identity.  Keeping
-    this key local to the optimizer avoids exposing internal candidate state
-    in the public response.
-    """
+    """Identify one evaluated build by the ordered list the score memo keys on."""
     return tuple(str(item.get("name", "")) for item in items)
 
 
@@ -845,10 +837,9 @@ _LEGAL_LOCKED_RANKS = {"BASIC", "EPIC", "LEGENDARY", "STARTER"}
 
 
 def _legal_locked_shop_item(item: dict[str, Any]) -> bool:
-    """Return whether an item may be locked in an optimizer inventory.
-
-    Ordinary-shop availability is not enough: consumables (POTION,
-    CONSUMABLE) are buyable in the shop but are not final-build items.
+    """Whether an item may be locked in an optimizer inventory.  Shop
+    availability is not enough, since a consumable is buyable and is not a
+    final-build item.
     """
     if not is_ordinary_sr_item(item):
         return False
@@ -1761,33 +1752,7 @@ def _plan_type(plan: Any) -> str:
 
 
 def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, object]]:
-    """The optimize payload's parallel ``dispositions`` map, keyed by leaf path.
-
-    Every member of the finished payload is re-written through the one
-    writer at the path it lives at -- assigning an existing key keeps its
-    position, so each row is byte-identical and the entry is produced beside
-    the leaf by ``serialize_leaf`` rather than by a second pass over the
-    payload.
-
-    It walks the whole payload rather than four named keys on each ranked
-    row.  The version that named them left the response's own
-    ``total_damage``, ``team_fight_value`` and ``optimization_time_ms``
-    unnamed -- the three numbers a consumer reads first -- and, by writing
-    ``gold`` through ``measured``, changed it from ``7300`` to ``7300.0`` on
-    the wire.  ``publish`` classifies each member by what it is, so an int
-    stays an int and carries no entry: a build's price is a count of gold,
-    not a quantity a rule measured, and the payload-schema check reads ints
-    the same way.
-
-    The writer is a :class:`~.program.views.RankingWriter`, because this
-    payload *is* the ranking: a block some view opened ``THEORETICAL`` holds
-    what one attacker-versus-one-defender fight would have produced, and
-    publishing it in the row that names a winner is ranking by a fight that
-    never happened.  The candidate payloads one layer down are refused the
-    same way -- they go through ``DISCARD``, which is a ranking writer for
-    the same reason and is the only check available there, since a candidate
-    payload carries no map to consult afterwards.
-    """
+    """Name every number in the whole optimize payload, as the ranking it is."""
     return name_every_number(payload, RankingWriter())
 
 
@@ -1894,10 +1859,9 @@ def optimize_build(
     legal_legendaries = get_eligible_legendaries()
     legal_boots = get_eligible_boots(tier=boots_tier)
     base_params = fight_params[0] if isinstance(fight_params, tuple) else fight_params
-    # The main champion uses the same sourced role-shop boundary already used
-    # by roster BIS.  Previously only /api/bis applied this filter, allowing a
-    # top-lane main search to rank support-only items such as Shurelya's
-    # Battlesong.  No archetype or stat heuristic is added here.
+    # The main champion uses the same sourced role-shop boundary as roster BIS,
+    # so a top-lane main search cannot rank a support-only item such as
+    # Shurelya's Battlesong.  No archetype or stat heuristic is added here.
     all_legendaries = role_quest_legal_items(
         role_scoped_shop_items(
             optimizer_supported_items(legal_legendaries), base_params.role
