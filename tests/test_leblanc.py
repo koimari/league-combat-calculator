@@ -8,6 +8,7 @@ says makes the whole timed fight fall back to coarse ordering.
 import pytest
 
 from src.calculator.champions import leblanc, parse_champion_abilities
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review, row_review
 
@@ -28,7 +29,7 @@ class TestReviewedCrowdControl:
     """Mimic answers as the ability it copies, so its kind rides the part."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert leblanc.MODULE_CC == {"W": "none"}
+        assert leblanc.MODULE_CC == {"W": "none", "E": CC_PER_PART, "R": CC_PER_PART}
         assert leblanc.parse_abilities.cc_kinds == leblanc.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -55,7 +56,7 @@ class TestReviewedCrowdControl:
             "fractures to deal magic damage to the target and root them "
             "for 1.5 seconds" in e_text
         )
-        assert "E" not in leblanc.MODULE_CC
+        assert leblanc.MODULE_CC["E"] == CC_PER_PART
         chain, fracture = row_review.parts("LeBlanc", "E")
         assert (chain.time_offset, chain.cc_kind) == (0.0, "none")
         assert (fracture.time_offset, fracture.cc_kind) == (1.5, "root")

@@ -29,7 +29,7 @@ hardcoded.
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
@@ -152,7 +152,7 @@ SLOTS = {
 # dealt the same damage and are slowed for 3 seconds", while the pull and
 # stun reach only "enemies in a smaller radius", which the duel model does
 # not place.  Q's answer is charge-dependent and is authored on its part.
-MODULE_CC = {"W": "none", "E": "slow", "R": "slow"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "slow"}
 
 MODULE_COVERAGE = {
     "P": "no_damage",

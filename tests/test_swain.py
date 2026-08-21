@@ -9,6 +9,7 @@ import pytest
 
 from src.calculator.champions import swain
 from tests import cc_review, row_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _r_parts(variant: int):
@@ -25,7 +26,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Swain")
-        assert swain.MODULE_CC == {"Q": "none", "W": "slow", "E": "root"}
+        assert swain.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "root",
+            "R": CC_PER_PART,
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "slowing them by 50% for 1.5 seconds" in cc_review.slot_text(data, "W")
         # E's pull and knock-back ride the recast; the detonation that this
@@ -36,7 +42,7 @@ class TestReviewedCrowdControl:
         """Demonic Ascension drains without control; Demonflare slows, so R
         authors its kind on the selected variant's part."""
         assert "slows them by 50%" in cc_review.slot_text(cc_review.kit("Swain"), "R")
-        assert "R" not in swain.MODULE_CC
+        assert swain.MODULE_CC["R"] == CC_PER_PART
         assert _r_parts(0)[0].cc_kind == "none"
         assert _r_parts(1)[0].cc_kind == "slow"
 

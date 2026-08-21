@@ -27,7 +27,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
     damage_entry,
@@ -368,4 +368,13 @@ SOURCES = load_champion_sources("Taliyah")
 
 SLOTS = {"E": _unraveled_earth, "W": _seismic_shove, "Q": _threaded_volley}
 
-parse_abilities = build_parser(SLOTS, "Taliyah")
+# Reviewed crowd control, read from the cached kit.  Q and E each land two
+# different answers from one cast, so the parts carry them: Q's fresh-ground
+# shards only "deal[] magic damage ... and reveal[]" while the Worked Ground
+# boulder is "slowing all targets hit for 1.5 seconds"; E's eruption
+# "slow[s] enemies within the area by 20%" while a detonated stone leaves
+# them "stunned for 0.75 seconds".  W's ledge "knocks enemies hit 400 units
+# in the target direction" and prices no damage of its own.
+MODULE_CC = {"Q": CC_PER_PART, "W": "knockback", "E": CC_PER_PART}
+
+parse_abilities = build_parser(SLOTS, "Taliyah", cc_kinds=MODULE_CC)

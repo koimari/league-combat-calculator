@@ -12,6 +12,7 @@ import pytest
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import morgana
 from src.calculator.data_fetcher import get_champion
+from src.calculator.champions.engine import CC_PER_PART
 
 # Every control word the Wiki uses for the classes an item passive keys on.
 CONTROL_WORDS = (
@@ -60,7 +61,7 @@ def slot_text(cached, slot):
 
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
-        assert morgana.MODULE_CC == {"Q": "root", "W": "none"}
+        assert morgana.MODULE_CC == {"Q": "root", "W": "none", "R": CC_PER_PART}
         for slot, phrase in QUOTED.items():
             assert phrase in slot_text(cached, slot), slot
 
@@ -78,6 +79,10 @@ class TestReviewedCrowdControl:
         for slot, kind in morgana.MODULE_CC.items():
             parts = parsed[slot]["parts"]
             assert parts, slot
+            if kind == CC_PER_PART:
+                # R's two answers are the parts' own; see the test below.
+                assert all(part.cc_kind is not None for part in parts), slot
+                continue
             assert {part.cc_kind for part in parts} == {kind}, slot
 
     def test_r_declares_its_two_controls_per_part(self, cached):

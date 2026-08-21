@@ -217,7 +217,7 @@ SLOTS = {
     "E": _umbral_dash,
 }
 
-# No MODULE_CC, and for neither row is the reason a missing cadence — both
+# MODULE_CC is empty, and for neither row is the reason a missing cadence — both
 # cadences are cached, and both are refused by a committed receipt rather
 # than by the source.
 #
@@ -254,7 +254,9 @@ SLOTS = {
 #
 # R fears "nearby enemy minions and monsters" only and authors no damage
 # part; P is the on-hit stance row.
-parse_abilities = build_parser(SLOTS, "Aatrox")
+MODULE_CC: dict[str, str] = {}
+
+parse_abilities = build_parser(SLOTS, "Aatrox", cc_kinds=MODULE_CC)
 
 
 # pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,too-many-locals

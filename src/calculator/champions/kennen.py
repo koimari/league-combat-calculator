@@ -103,7 +103,7 @@ OPTIONS = [
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kennen")
 
-# No MODULE_CC: Mark of the Storm puts the stun on the target's stack
+# MODULE_CC is empty: Mark of the Storm puts the stun on the target's stack
 # count, not on any ability — "Kennen's abilities apply a stack of Mark of
 # the Storm to enemies hit ... stacking up to 3 times" and "the third
 # stack against a target consumes them all to stun them for 1.25 seconds".
@@ -117,7 +117,9 @@ SOURCES = load_champion_sources("Kennen")
 # himself for 3 seconds", striking "every 0.5 seconds" — the six bolts
 # ``_slicing_maelstrom`` authors), so R's hits reach the event ledger and
 # still have nothing true to carry.
-parse_abilities = build_parser(SLOTS, "Kennen")
+MODULE_CC: dict[str, str] = {}
+
+parse_abilities = build_parser(SLOTS, "Kennen", cc_kinds=MODULE_CC)
 
 MODULE_COVERAGE = {
     slot: ("modeled" if slot != "P" else "no_damage") for slot in "PQWER"

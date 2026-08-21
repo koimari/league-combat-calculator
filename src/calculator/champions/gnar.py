@@ -245,7 +245,6 @@ _wallop = simple_damage(
     attr="Physical Damage",
     dmg_type="physical",
     source=("W", 1),
-    cc_kind="stun",
     event_order_certified="single_hit",
 )
 
@@ -455,7 +454,7 @@ SLOTS = {
 # authors on top of it (see ``_r``).  W's kind rides Wallop itself (above)
 # because Mini's W is an on-hit shell; P is the Mega stat-buff row and
 # applies nothing.
-MODULE_CC = {"Q": "slow", "E": "slow", "R": "knockback"}
+MODULE_CC = {"Q": "slow", "W": "stun", "E": "slow", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Gnar", cc_kinds=MODULE_CC)
 

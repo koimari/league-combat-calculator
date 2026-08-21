@@ -811,7 +811,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Bel'Veth")
-        assert belveth.MODULE_CC == {"W": "knockup", "R": "slow"}
+        assert belveth.MODULE_CC == {"W": "knockup", "E": "none", "R": "slow"}
         w_text = cc_review.slot_text(data, "W")
         assert "knocks them up for a duration" in w_text
         assert "slows them by 30% for 2 seconds" in w_text

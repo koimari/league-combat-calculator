@@ -41,7 +41,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..healing_helpers import HealAnchor, _payments, _ability, _trigger_fields
 from .inputs import champion_stat
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import declare_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
@@ -256,7 +256,7 @@ SLOTS = {
 # for 0.75 seconds": each cast applies two immobilize kinds at once, which
 # is what the un-narrowed "immobilize" kind states.  E is absent because
 # its two parts disagree (see _trample); R and P deal no damage.
-MODULE_CC = {"Q": "immobilize", "W": "immobilize"}
+MODULE_CC = {"Q": "immobilize", "W": "immobilize", "E": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 

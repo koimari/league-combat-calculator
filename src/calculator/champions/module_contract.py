@@ -18,6 +18,7 @@ from ..cast_dependency import (
     validate_cast_dependencies,
     validate_cast_order_declaration,
 )
+from .engine import CC_PER_PART
 
 REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
 VALID_COVERAGE = frozenset({"modeled", "no_damage", "out_of_scope"})
@@ -300,7 +301,12 @@ def _module_cc(
     )
     declared = getattr(module, "MODULE_CC", None)
     if declared is None:
-        declared = {}
+        raise ChampionModuleContractError(
+            f"{module.__name__} declares no MODULE_CC — every module states "
+            "its reviewed crowd control at that one name, and a kit with "
+            "nothing slot-level to say states it as an empty dict with the "
+            "reason above it"
+        )
     if not isinstance(declared, dict):
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_CC must be a dict of slot -> cc kind"
@@ -311,15 +317,17 @@ def _module_cc(
             f"{module.__name__} MODULE_CC declares slot(s) {unknown_slots} "
             f"the module does not emit (its slots are {sorted(slots)})"
         )
+    allowed = CC_KIND_VOCABULARY | {CC_PER_PART}
     invalid = sorted(
         f"{slot}={kind!r}"
         for slot, kind in declared.items()
-        if not isinstance(kind, str) or kind not in CC_KIND_VOCABULARY
+        if not isinstance(kind, str) or kind not in allowed
     )
     if invalid:
         raise ChampionModuleContractError(
             f"{module.__name__} MODULE_CC has invalid cc kind(s) {invalid} "
-            "(known kinds are defined by ability_spec.CC_KIND_VOCABULARY)"
+            "(known kinds are defined by ability_spec.CC_KIND_VOCABULARY, "
+            f"plus engine.CC_PER_PART for a slot whose kind varies)"
         )
     wired = getattr(parser, "cc_kinds", None)
     if declared and wired is None:

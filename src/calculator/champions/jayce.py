@@ -76,7 +76,7 @@ from typing import Any
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..stats import ATTACK_SPEED_CAP
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     by_option,
@@ -225,8 +225,6 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
             count=ticks,
             time_offset=1.0,
             hit_interval=1.0,
-            # The field only "deals magic damage every second".
-            cc_kind="none",
         ),
     )
     # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
@@ -294,11 +292,6 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
                 crit_effectiveness=1.0,
                 basic_damage=True,
                 bonus_ad_ratio=delta_ratio,
-                # Hyper Charge only "empowers his next 3 basic attacks
-                # ... to deal modified physical damage and gain 360%
-                # bonus attack speed" — no control on the swings it
-                # forces, which is what this row's events are.
-                cc_kind="none",
             ),
         ),
         "empowers_next_auto": {
@@ -367,9 +360,6 @@ _e_hammer = simple_damage(
     attr="Magic Damage",
     dmg_type="magic",
     source=("E", _HAMMER),
-    # The root lands over the cast time; what arrives with the damage
-    # is the "knock them back 600 units".
-    cc_kind="knockback",
     event_order_certified="single_hit",
 )
 
@@ -414,9 +404,6 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
         "magic",
-        # The transform empowers one attack with bonus magic damage and
-        # buffs Jayce; nothing lands on the target but damage.
-        cc_kind="none",
         event_order_certified="single_hit",
     )
     # Self-defensive only — shown in the stats panel, no effect on
@@ -595,7 +582,22 @@ SLOTS = {
     "R": _transform,
 }
 
-parse_abilities = build_parser(SLOTS, "Jayce")
+# Reviewed crowd control, read from the cached kit.  Q is the one slot
+# whose two stances disagree — hammer "slow[s] them for 2 seconds", cannon's
+# Shock Blast only "grant[s] sight" — so it answers per part.  W is a
+# damage field and three empowered swings, R a stat transform plus one
+# empowered attack, and P is ghosting and movement speed on the swap:
+# none of them touches an enemy with anything but damage.  E hammer
+# "knock[s] them back 600 units" (its root lands over the cast time, before
+# the damage); cannon's gate emits no row at all.
+#
+# R is read (neither transform touches an enemy with anything but the one
+# attack it empowers) and left undeclared: the cannon branch is an untimed
+# zero row that empowers no swing of its own, so the ledger cannot carry a
+# kind for it.
+MODULE_CC = {"P": "none", "Q": CC_PER_PART, "W": "none", "E": "knockback"}
+
+parse_abilities = build_parser(SLOTS, "Jayce", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Jayce")

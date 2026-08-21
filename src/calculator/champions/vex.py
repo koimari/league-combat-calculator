@@ -108,6 +108,20 @@ def _gloom_detonation(ctx: SlotCtx) -> dict[str, Any] | None:
 _gloom_detonation.phase = ONHIT
 
 
+# Reviewed crowd control, read from the cached kit.  E's shadow explodes
+# "dealing magic damage to enemies hit and slowing them for 2 seconds".
+# Nothing else controls: Q's wave "deals magic damage to enemies hit", W
+# "deal[s] magic damage to nearby enemies and grant[s] herself a shield",
+# R marks and reveals its target before the recast damage, and P's priced
+# row is the Gloom detonation's "bonus magic damage".  Doom's fear and
+# knock-down empower a basic ability on its own cooldown — fight state this
+# module does not price (see ASSUMPTIONS), so it is not any slot's answer.
+#
+# Q, E and R are read and left undeclared: their packet rows carry neither a
+# sourced hit time nor a single-landing certification, so the ledger cannot
+# carry a kind for them and refuses one rather than accept a no-op.
+MODULE_CC = {"P": "none", "W": "none"}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vex",
     PACKET_SHA256,
@@ -117,6 +131,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "W": _personal_space,
     },
+    cc_kinds=MODULE_CC,
 )
 
 OPTIONS = list(OPTIONS) + [

@@ -226,7 +226,6 @@ SLOTS = {
 }
 SLOTS["R"] = with_control(
     SLOTS["R"],
-    kind="stun",
     duration_attr="Stun Duration",
 )
 

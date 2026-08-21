@@ -7,6 +7,7 @@ says makes the whole timed fight fall back to coarse ordering.
 
 from src.calculator.champions import sion
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _q_parts(charge: float):
@@ -23,7 +24,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Sion")
-        assert sion.MODULE_CC == {"W": "none", "E": "slow", "R": "slow"}
+        assert sion.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "none",
+            "E": "slow",
+            "R": "slow",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         # E's stun and knock-back reach only "a minion or non-epic monster";
         # R's pull and stun reach only "enemies in a smaller radius".  The
@@ -39,7 +45,7 @@ class TestReviewedCrowdControl:
         assert "slowing them by 50%" in text
         assert "charged for at least 1 second" in text
         assert "knocking them up" in text
-        assert "Q" not in sion.MODULE_CC
+        assert sion.MODULE_CC["Q"] == CC_PER_PART
         assert _q_parts(0.0)[0].cc_kind == "slow"
         assert _q_parts(1.0)[0].cc_kind == "immobilize"
 

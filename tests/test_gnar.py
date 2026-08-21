@@ -567,7 +567,12 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import gnar
 
-        assert gnar.MODULE_CC == {"Q": "slow", "E": "slow", "R": "knockback"}
+        assert gnar.MODULE_CC == {
+            "Q": "slow",
+            "W": "stun",
+            "E": "slow",
+            "R": "knockback",
+        }
         assert gnar.parse_abilities.cc_kinds == gnar.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

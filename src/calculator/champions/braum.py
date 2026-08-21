@@ -412,7 +412,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="knockup",
         duration_attr="Maximum Knock up Duration",
     ),
     "P": _concussive_blows,

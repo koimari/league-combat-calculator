@@ -642,6 +642,10 @@ def _champion_module(**attributes) -> ModuleType:
     """The smallest module ``contract_from_module`` accepts, plus overrides."""
     module = ModuleType(attributes.pop("__name__", "synthetic_champion"))
     module.parse_abilities = lambda *args, **kwargs: {}
+    # Every module states its reviewed crowd control at MODULE_CC, wired
+    # into the parser; a synthetic kit reviews nothing and says so.
+    module.MODULE_CC = {}
+    module.parse_abilities.cc_kinds = {}
     module.SLOTS = {
         slot: (lambda ctx: None) for slot in ("P", "Q", "Q2", "W", "E", "R")
     }

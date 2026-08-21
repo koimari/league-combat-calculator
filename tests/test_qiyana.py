@@ -3,6 +3,7 @@
 from src.calculator.champions import parse_champion_abilities, qiyana
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _q_part(variant):
@@ -29,7 +30,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Qiyana")
-        assert qiyana.MODULE_CC == {"E": "none", "R": "stun"}
+        assert qiyana.MODULE_CC == {"Q": CC_PER_PART, "E": "none", "R": "stun"}
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # R's windblast knocks back but damages nobody; the priced row is
         # the shockwave, which damages and stuns.
@@ -43,7 +44,7 @@ class TestReviewedCrowdControl:
     def test_q_answers_per_element_and_leaves_the_grouped_index_unreviewed(self):
         q_text = cc_review.slot_text(cc_review.kit("Qiyana"), "Q")
         assert "river: the blast roots enemies hit for 0.5 seconds" in q_text
-        assert "Q" not in qiyana.MODULE_CC
+        assert qiyana.MODULE_CC["Q"] == CC_PER_PART
         # Index 1 is the option's grouped "brush/river" element, and the
         # two disagree, so it carries no kind rather than one only half of
         # it applies.

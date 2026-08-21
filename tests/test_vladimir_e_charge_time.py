@@ -1160,6 +1160,9 @@ class TestRegressionSurface:
             "test_heal_ledger_phase2.py",
             "test_issue_143.py",
             "test_mechanics_packets.py",
+            # cites Vladimir's E as a part-rebuild that copies cc_kind
+            # rather than authoring one
+            "test_module_cc_census.py",
             "test_p1_review_3.py",
             "test_packet_module.py",
             "test_participant_timeline.py",

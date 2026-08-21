@@ -394,7 +394,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="root",
         duration_attr="Root Duration",
     ),
     "P": _living_vengeance,

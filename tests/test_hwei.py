@@ -92,8 +92,14 @@ class TestReviewedCrowdControl:
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import hwei
+        from src.calculator.champions.engine import CC_PER_PART
 
-        assert hwei.MODULE_CC == {"P": "none"}
+        assert hwei.MODULE_CC == {
+            "P": "none",
+            "Q": CC_PER_PART,
+            "E": CC_PER_PART,
+            "R": CC_PER_PART,
+        }
         assert hwei.parse_abilities.cc_kinds == hwei.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

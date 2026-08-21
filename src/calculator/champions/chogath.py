@@ -255,7 +255,6 @@ SLOTS = {
         simple_damage(
             attr="Magic damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="silence",
         duration_attr="Silence Duration",
     ),
     "E": _vorpal_spikes,

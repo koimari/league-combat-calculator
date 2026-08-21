@@ -887,7 +887,15 @@ class TestReviewedCrowdControl:
         """
         from src.calculator.champions import jayce
 
-        assert not hasattr(jayce, "MODULE_CC")
+        from src.calculator.champions.engine import CC_PER_PART
+
+        assert jayce.MODULE_CC == {
+            "P": "none",
+            "Q": CC_PER_PART,
+            "W": "none",
+            "E": "knockback",
+        }
+        assert jayce.parse_abilities.cc_kinds == jayce.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["Q", "slow"], ["E", "knock"]]:
@@ -915,7 +923,6 @@ class TestReviewedCrowdControl:
             "Q": ["slow"],
             "W": ["none"],
             "E": ["knockback"],
-            "R": ["none"],
         }
 
     def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):

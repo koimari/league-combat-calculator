@@ -155,9 +155,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
     # Tangle-Barbs carries its sourced root duration onto the spiral's hit.
     slot_wrappers={
-        "E": lambda parser: with_control(
-            parser, kind="root", duration_attr="Root Duration"
-        ),
+        "E": lambda parser: with_control(parser, duration_attr="Root Duration"),
     },
     cc_kinds=MODULE_CC,
 )

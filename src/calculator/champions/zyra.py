@@ -181,7 +181,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "E": lambda compiled: with_control(
             compiled,
-            kind="root",
             duration_attr="Root Duration",
         ),
     },

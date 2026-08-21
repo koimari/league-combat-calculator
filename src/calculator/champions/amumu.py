@@ -166,7 +166,6 @@ SLOTS = {
             cooldown="recharge",
             event_order_certified="single_hit",
         ),
-        kind="stun",
         duration_attr="Stun Duration",
     ),
     "W": _despair,
@@ -177,7 +176,6 @@ SLOTS = {
         simple_damage(
             attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
         ),
-        kind="stun",
         duration_attr="Stun Duration",
     ),
     "curse": _cursed_touch_amp,

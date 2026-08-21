@@ -7,6 +7,7 @@ says makes the whole timed fight fall back to coarse ordering.
 
 from src.calculator.champions import tahm_kench
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 
 def _q_parts(stacks: int):
@@ -23,7 +24,11 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Tahm Kench")
-        assert tahm_kench.MODULE_CC == {"W": "immobilize", "R": "suppression"}
+        assert tahm_kench.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "immobilize",
+            "R": "suppression",
+        }
         # Abyssal Dive lands two immobilize kinds at once, so the reviewed
         # kind is the un-narrowed one.
         assert "knocking them up and stunning them for 1 second" in (
@@ -37,7 +42,7 @@ class TestReviewedCrowdControl:
         text = cc_review.slot_text(cc_review.kit("Tahm Kench"), "Q")
         assert "slows them by 50% for 2 seconds" in text
         assert "the target is stunned for 1.5 seconds" in text
-        assert "Q" not in tahm_kench.MODULE_CC
+        assert tahm_kench.MODULE_CC["Q"] == CC_PER_PART
         assert _q_parts(0)[0].cc_kind == "slow"
         assert _q_parts(3)[0].cc_kind == "stun"
 

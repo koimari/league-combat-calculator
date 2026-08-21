@@ -6,6 +6,7 @@ displaces on its opening bounce only — so R's kinds are authored per part.
 
 from src.calculator.champions import parse_champion_abilities, zac
 from tests import cc_review
+from src.calculator.champions.engine import CC_PER_PART
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -22,7 +23,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Zac")
-        assert zac.MODULE_CC == {"Q": "slow", "W": "none", "E": "knockup"}
+        assert zac.MODULE_CC == {
+            "Q": "slow",
+            "W": "none",
+            "E": "knockup",
+            "R": CC_PER_PART,
+        }
         assert zac.parse_abilities.cc_kinds == zac.MODULE_CC
         q_text = cc_review.slot_text(data, "Q")
         assert "slowing them by 40% for 0.5 seconds" in q_text
@@ -35,7 +41,7 @@ class TestReviewedCrowdControl:
 
     def test_lets_bounce_displaces_only_on_its_opening_bounce(self):
         data = cc_review.kit("Zac")
-        assert "R" not in zac.MODULE_CC
+        assert zac.MODULE_CC["R"] == CC_PER_PART
         r_text = cc_review.slot_text(data, "R")
         assert "knocks them back over 1 second, and slows them by 20%" in r_text
         assert "do not apply the knock back" in r_text

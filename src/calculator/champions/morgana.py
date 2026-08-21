@@ -38,7 +38,7 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import declare_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -173,7 +173,7 @@ PACKET_SHA256 = "5cc8fcb312de2d1d31c8b63157dac32a85424fa0decca7a8f1ac4ac94d689a9
 # them for a duration"; W's desecrated soil only damages.  R applies two
 # controls, one per part, and declares them on its parts
 # (``_soul_shackles``).  E shields an ally and P heals Morgana.
-MODULE_CC = {"Q": "root", "W": "none"}
+MODULE_CC = {"Q": "root", "W": "none", "R": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Morgana",
@@ -190,7 +190,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # The sphere's sourced Root Duration row carries MODULE_CC's reviewed
     # kind and its control atom onto the packet's Q entry.
     slot_wrappers={
-        "Q": partial(with_control, kind="root", duration_attr="Root Duration"),
+        "Q": partial(with_control, duration_attr="Root Duration"),
     },
     cc_kinds=MODULE_CC,
 )

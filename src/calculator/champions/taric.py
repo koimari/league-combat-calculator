@@ -191,7 +191,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # The stun's duration and its source atom come off the cached E entry,
     # so MODULE_CC's reviewed kind and the priced interval are one fact.
     slot_wrappers={
-        "E": partial(with_control, kind="stun", duration_attr="Stun Duration"),
+        "E": partial(with_control, duration_attr="Stun Duration"),
     },
     cc_kinds=MODULE_CC,
 )
