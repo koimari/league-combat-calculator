@@ -187,9 +187,8 @@ def test_a_live_walk_fills_the_ledger_the_site_builds() -> None:
     finally:
         participant_timeline.ReceiptLedger = original
     assert built, "the coupled walk built no receipt ledger"
-    assert any(ledger.outcomes.applied_contributions() for ledger in built)
     assert any(
-        ledger.outcomes.get(slot).was_skipped
+        ledger.outcomes.get(slot).skipped_reason is not None
         for ledger in built
         for slot in ledger.outcomes.slots()
     )

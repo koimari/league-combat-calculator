@@ -427,14 +427,6 @@ class LeafWriter:
         """Every leaf path this writer has an entry for."""
         return frozenset(self._entries)
 
-    def withheld_paths(self) -> frozenset[str]:
-        """The paths whose leaves are absent by refusal rather than by shape."""
-        return frozenset(
-            path
-            for path, entry in self._entries.items()
-            if entry["disposition"] == Disposition.WITHHELD.value
-        )
-
 
 class RankingWriter(LeafWriter):
     """The writer for a payload whose numbers choose a build.

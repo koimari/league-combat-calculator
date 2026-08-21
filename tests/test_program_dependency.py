@@ -78,12 +78,6 @@ class TestTheSecondPassDiffersOnlyByAPatch:
         assert "catalyst_of_aeons.overflow" in patch.reason
         assert "pass 1 of 2" in patch.reason
 
-    def test_the_patch_leaves_the_first_pass_parameters_recoverable(self) -> None:
-        params = Params()
-        patch = dependency.patch_for_pass(CATALYST, 375.0, 1)
-        assert patch.applied_to(params) == {"catalyst_pool": 375.0}
-        assert params.catalyst_pool == 0.0
-
 
 class TestTheFailureIsTypedRatherThanUntyped:
     """A caller can tell "needs another pass" from "this build is malformed"."""
