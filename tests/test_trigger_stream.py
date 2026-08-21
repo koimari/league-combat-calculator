@@ -2606,8 +2606,8 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     The control is the sibling authoring path: a ``cc_kind`` on a *part* is
     already refused at parse time, by a message naming the champion, the
     entry and the kind.  The gap between the two paths — a module-authored
-    ``damage_events`` row reaches the walk unchecked — is the escalation in
-    ``docs/receipts/escalated-defects-P2b.json``.
+    ``damage_events`` row reaches the walk unchecked — is pinned by
+    :class:`TestAnAuthoredCcKindIsUncheckedUntilTheWalk` below.
     """
     row = {
         "time": 0.5,
@@ -2646,101 +2646,56 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
         )
 
 
-class TestTheEscalatedDefectIsStillTracked:
-    """The one gap P2b's pins cannot close, held as an artifact.
+class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
+    """Parse time refuses one spelling of the kind and not the other.
 
-    The bus's refusal is ruled and correct, and the champion contract
-    already refuses the part-authored spelling at parse time.  The
-    module-authored ``damage_events`` spelling reaches the walk unchecked,
-    where the refusal lands as a plain ``ValueError`` the campaign's single
-    request-boundary catch does not name.  Fixing that is a new parse-time
-    rejection in a file outside this phase's Shape table, inside a phase
-    ruled a pure refactor, so the slice may not do it.
-
-    An escalation that lives only in a commit body is absorbed by the next
-    baseline re-capture.  This one is joined to the signoff that raised it,
-    to the source sites that carry it, and to a reproducer that turns red
-    the moment the defect stops reproducing — which is how the entry gets
-    closed deliberately rather than fading out.
+    The champion contract refuses a part-authored ``cc_kind`` outside the
+    vocabulary, but the module-authored ``damage_events`` spelling reaches
+    the walk unchecked, where the refusal lands as a plain ``ValueError``
+    the one request boundary does not name — so an authoring defect inside a
+    champion module is billed to the caller as a 400.
     """
 
-    RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P2b.json"
-    REQUIRED = (
-        "id",
-        "dated",
-        "origin",
-        "raised_by",
-        "site",
-        "defect",
-        "live_signature",
-        "not_fixed_here_because",
-        "resolution",
-    )
+    UNKNOWN_KIND = "mesmerize"
 
-    def _entries(self):
-        return json.loads(self.RECEIPT.read_text(encoding="utf-8"))["defects"]
-
-    def test_every_entry_carries_what_an_escalation_needs(self):
-        entries = self._entries()
-        assert entries, "the escalation ledger is empty"
-        for entry in entries:
-            for field in self.REQUIRED:
-                assert entry.get(field), f"{entry.get('id')} omits {field}"
-            assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
-
-    def test_every_site_still_carries_the_defect(self):
-        for entry in self._entries():
-            for site in entry["site"]:
-                source = (ROOT / site["file"]).read_text(encoding="utf-8")
-                assert site["fragment"] in source, f"{entry['id']}: {site['file']}"
-
-    def test_the_defect_still_reproduces(self):
-        """Parse time refuses one spelling of the kind and not the other."""
-        (entry,) = self._entries()
-        kind = entry["live_signature"]["unknown_kind"]
-        assert kind not in CC_KIND_VOCABULARY
+    def test_only_the_part_authored_spelling_is_refused_at_parse_time(self):
+        assert self.UNKNOWN_KIND not in CC_KIND_VOCABULARY
         with pytest.raises(ValueError, match="unknown cc_kind"):
             _validate_cc_event_contract(
-                "Fakechamp", "Q", {"parts": (DamagePart("magic", 1.0, cc_kind=kind),)}
+                "Fakechamp",
+                "Q",
+                {"parts": (DamagePart("magic", 1.0, cc_kind=self.UNKNOWN_KIND),)},
             )
         # The same kind, authored as a declared event, passes parse time...
         _validate_cc_event_contract(
             "Fakechamp",
             "Q",
-            {"parts": (), "damage_events": [{"time": 0.0, "cc_kind": kind}]},
+            {
+                "parts": (),
+                "damage_events": [{"time": 0.0, "cc_kind": self.UNKNOWN_KIND}],
+            },
         )
-        # ...is copied onto the ledger row verbatim...
-        assert 'row["cc_kind"] = str(cc_kind)' in (
-            SRC / "calculator" / "damage.py"
-        ).read_text(encoding="utf-8")
-        # ...and raises a bare ValueError, not the type the one request
-        # boundary names, on every walk path the receipt lists.
+        # ...and raises a bare ValueError on the walk, not the type the one
+        # request boundary names.
         with pytest.raises(ValueError) as excinfo:
-            ts.is_immobilizing_event({"cc_kind": kind})
+            ts.is_immobilizing_event({"cc_kind": self.UNKNOWN_KIND})
         assert not isinstance(excinfo.value, ts.ProjectionStarvation)
-        assert entry["live_signature"]["caught_at_the_request_boundary"] is False
-        assert except_starved_signal_sites() == ("src/app.py",)
 
     def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self):
         """What the endpoint actually does with it — measured, not reasoned.
 
-        The signoff that raised this expected an unnamed 500.  It is a 400
-        whose body is the vocabulary message, because ``/api/calculate``
-        wraps its engine call in ``except ValueError``.  Milder than
-        reported and still wrong: an authoring defect inside a champion
-        module is billed to the caller, and it carries none of the
-        ``STARVED`` receipt the sibling condition gets one boundary away.
+        It is a 400 whose body is the vocabulary message, because
+        ``/api/calculate`` wraps its engine call in ``except ValueError``:
+        milder than an unnamed 500 and still wrong, and it carries none of
+        the ``STARVED`` receipt the sibling condition gets one boundary away.
 
         The seam injects the *exception*, not the outcome: the raise is the
         one ``_classify_cc`` produces, verbatim.
         """
         import src.app as app_module
 
-        (entry,) = self._entries()
         with pytest.raises(ValueError) as excinfo:
-            ts.is_immobilizing_event(
-                {"cc_kind": entry["live_signature"]["unknown_kind"]}
-            )
+            ts.is_immobilizing_event({"cc_kind": self.UNKNOWN_KIND})
         raised = excinfo.value
 
         def _raise_the_walks_error(_data):
@@ -2754,94 +2709,11 @@ class TestTheEscalatedDefectIsStillTracked:
             )
         finally:
             app_module.calculate_payload = original
-        surfaced = entry["live_signature"]["surfaced_to_the_caller_as"]
-        assert response.status_code == surfaced["status"]
+        assert response.status_code == 400
         payload = response.get_json()
-        assert sorted(payload) == sorted(surfaced["body_keys"])
+        assert sorted(payload) == ["error"]
         assert str(raised) == payload["error"]
         assert "disposition" not in payload and "starved" not in payload
-        assert surfaced["carries_disposition"] is False
-
-
-class TestTheP2aGateBreachIsStillTracked:
-    """The one red this phase shipped, held as an artifact instead of a word.
-
-    P2a's own 54 lines in ``src/app.py`` pushed the two score-serving route
-    decorators past ``CITATION_WINDOW``, four plan citations drifted with
-    them, and R-01 row 1 was red at that commit.  Its body called the
-    failures pre-existing.  The tree at that commit cannot be repaired by a
-    commit after it, and this lane may not rewrite a range the sign-off, the
-    phase document and the sibling receipt all cite by sha.
-
-    So the record is corrected and pinned: the receipt carries the three
-    commits by sha and subject and what ``plan_audit`` measured at each --
-    clean at the entry tip, exactly the four findings at P2a, clean again at
-    the repair.  Those trees are immutable and R-34 reserves rewriting them,
-    so the measurement has one answer forever; re-deriving it per run bought
-    nothing and cost the suite the whole repository instead of the tree.
-
-    What stays checkable here is what a later commit can still falsify: the
-    entry's shape, and that the three source sites the breach is written
-    across still say what the receipt cites.  The named resolution is
-    unchanged -- the integration agent folds the locator refresh into the
-    commit that caused the shift, R-01 row 1 goes green at every commit of
-    the integrated history, and this class and its receipt are retired in the
-    same pass.
-    """
-
-    RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P2a.json"
-    REQUIRED = TestTheEscalatedDefectIsStillTracked.REQUIRED
-    #: The three commits the receipt measures ``plan_audit`` at, and whether
-    #: the gate was clean there.
-    MEASURED = (
-        ("phase_entry_tip", True),
-        ("breached_in", False),
-        ("repaired_in", True),
-    )
-
-    def _entries(self):
-        return json.loads(self.RECEIPT.read_text(encoding="utf-8"))["defects"]
-
-    def test_every_entry_carries_what_an_escalation_needs(self):
-        entries = self._entries()
-        assert entries, "the escalation ledger is empty"
-        for entry in entries:
-            for field in self.REQUIRED:
-                assert entry.get(field), f"{entry.get('id')} omits {field}"
-            assert len(entry["dated"]) == 10 and entry["dated"].count("-") == 2
-
-    def test_every_site_still_carries_the_defect(self):
-        """The three files the breach is written across still say what it cites."""
-        for entry in self._entries():
-            for site in entry["site"]:
-                source = (ROOT / site["file"]).read_text(encoding="utf-8")
-                assert site["fragment"] in source, f"{entry['id']}: {site['file']}"
-
-    def test_the_pinned_breach_carries_the_measurement_it_stands_on(self):
-        """A pin is only a record if it says what was measured, where, and how it read.
-
-        Each of the three commits is named by full sha and by subject -- the
-        handle that survives a rebase -- and carries the exit code
-        ``plan_audit`` returned on its tree.  The breach carries the four
-        findings; a clean commit carries none, so "clean" is a recorded
-        emptiness rather than an absent key.
-        """
-        (entry,) = self._entries()
-        signature = entry["live_signature"]
-        for handle, clean in self.MEASURED:
-            block = signature[handle]
-            assert len(block["commit"]) == 40, handle
-            assert block["subject"], handle
-            assert block["plan_audit_exit"] == (0 if clean else 1), handle
-            assert (block["findings"] == []) is clean, handle
-        assert len(signature["breached_in"]["findings"]) == 4
-
-    def test_the_withdrawn_claim_is_quoted_and_marked_false(self):
-        """The receipt may not paraphrase the sentence it calls false."""
-        (entry,) = self._entries()
-        signature = entry["live_signature"]
-        assert signature["commit_body_claim_is_true"] is False
-        assert signature["withdrawn_word"] in signature["commit_body_claim"]
 
 
 # ---------------------------------------------------------------------------

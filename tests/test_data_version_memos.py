@@ -213,11 +213,16 @@ D49_SURVIVORS: frozenset[str] = frozenset(
 )
 
 
-def test_the_phase_keys_seven_and_phase_five_keys_the_two_rotation_memos() -> None:
-    """The split D-49 rules, as the two populations rather than as prose."""
+def test_the_phase_keys_its_survivors_and_the_rotation_lane_keys_its_own() -> None:
+    """The split D-49 rules, as the two populations rather than as prose.
+
+    Membership and not size: both tables are meant to grow — a later memo
+    over item-derived values is *required* to join the keyed one — so a
+    length here would turn obeying the decision into a failure.
+    """
     assert D49_SURVIVORS <= set(data_registry.DATA_VERSION_KEYED_MEMOS)
-    assert len(D49_SURVIVORS) == 7
-    assert len(data_registry.ROTATION_MEMOS) == 2
+    assert D49_SURVIVORS.isdisjoint(data_registry.ROTATION_MEMOS)
+    assert data_registry.ROTATION_MEMOS
 
 
 def test_every_declared_memo_carries_a_reason() -> None:

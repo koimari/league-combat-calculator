@@ -5,7 +5,10 @@ Three times now a test that references a gitignored local cache path
 (``data/bin/characters/*.bin.json``, ``data/bin/items.bin.json``,
 ``data/gamefiles/ddragon/*.json`` -- see ``data/bin/README.md`` and
 ``data/README.md``) passed on a machine that happened to have the local
-cache and errored with ``FileNotFoundError`` on CI, which does not. Each
+cache and errored with ``FileNotFoundError`` on CI, which does not.  The
+locally-built receipt trees ``docs/receipts/champions/`` and
+``docs/receipts/items/`` (``scripts/build_receipts.py``) are the same class
+and are watched too; :data:`WATCHED_PREFIXES` is the one list. Each
 occurrence was fixed one-off by force-tracking the missing evidence file
 (commits ``58ce29e``, ``5784e68``, ``712184b``). This module is the
 systemic guard so the next occurrence is caught here instead of in CI.
@@ -27,16 +30,16 @@ scanner:
    ``data/bin/items.bin.json`` only in docstrings and are correctly
    excluded (see ``test_scanner_excludes_pure_docstring_citations``).
 2. Scans the remaining (non-docstring) text line by line for:
-   - single quoted string literals containing ``data/bin/`` or
-     ``data/gamefiles/`` (``_LITERAL_RE``), and
+   - single quoted string literals containing one of
+     :data:`WATCHED_PREFIXES` (``_LITERAL_RE``), and
    - chains of 2+ string literals joined with the ``pathlib`` ``/``
      operator, e.g. ``ROOT / "data" / "bin" / "characters" /
      "gnar.bin.json"`` or ``Path(__file__).resolve().parent.parent /
      "data" / "bin" / "items.bin.json"`` (``_JOIN_CHAIN_RE``), which are
      joined back into one candidate string.
 3. Keeps only candidates that resolve to a *concrete file* -- the joined
-   text must start at ``data/bin/`` or ``data/gamefiles/`` and end in a
-   dotted extension (``_CONCRETE_RE``). This drops bare directory
+   text must start at a watched prefix and end in a dotted extension
+   (``_CONCRETE_RE``). This drops bare directory
    references (``data/gamefiles``, ``data/bin/characters`` -- used in
    ``test_weekly_ingest.py`` for tree-wide stat fingerprinting, not to
    open one named file) and receipt-tag fragments that merely *mention*
@@ -53,7 +56,7 @@ Remedy check (for every surviving concrete path)
 -------------------------------------------------
 A reference passes if EITHER:
 
-  (a) the path is git-tracked (``git ls-files data/bin data/gamefiles``,
+  (a) the path is git-tracked (``git ls-files`` over the watched trees,
       subprocess run once and cached at module scope), OR
   (b) the *referencing file* contains one of the two absence-guard
       idioms this codebase already uses across its 20+ evidence tests
@@ -131,6 +134,20 @@ ROOT = Path(__file__).resolve().parents[1]
 TESTS_DIR = Path(__file__).resolve().parent
 _SELF = Path(__file__).resolve()
 
+# Every tree whose contents are gitignored, locally-built evidence.  One home:
+# the extraction regexes and the tracked-path query below both read it, so a
+# new locally-built tree is watched by adding it here and nowhere else.
+WATCHED_PREFIXES = (
+    "data/bin/",
+    "data/gamefiles/",
+    "docs/receipts/champions/",
+    "docs/receipts/items/",
+)
+_PREFIX_ALTERNATION = "|".join(re.escape(prefix) for prefix in WATCHED_PREFIXES)
+# The cheap substring gate the per-line scan opens with, derived from the same
+# list so a new watched tree is not silently skipped by a stale literal.
+_PREFIX_HINTS = tuple(sorted({prefix.split("/", 1)[0] for prefix in WATCHED_PREFIXES}))
+
 # ---------------------------------------------------------------------------
 # Reference extraction
 # ---------------------------------------------------------------------------
@@ -139,7 +156,9 @@ _SELF = Path(__file__).resolve()
 # one of the watched prefixes anywhere inside it.
 _LITERAL_RE = re.compile(
     r"""(?P<quote>["'])"""
-    r"""(?P<body>(?:(?!(?P=quote)).)*?(?:data/bin/|data/gamefiles/)(?:(?!(?P=quote)).)*?)"""
+    r"""(?P<body>(?:(?!(?P=quote)).)*?(?:"""
+    + _PREFIX_ALTERNATION
+    + r""")(?:(?!(?P=quote)).)*?)"""
     r"""(?P=quote)"""
 )
 
@@ -152,7 +171,9 @@ _SEGMENT_RE = re.compile(r"""["']([^"']*)["']""")
 # extension to count as a concrete FILE (excludes bare directory refs like
 # "data/gamefiles" or "data/bin/characters", and truncated receipt-tag
 # fragments like "data/bin/characters" that name no file).
-_CONCRETE_RE = re.compile(r"(data/(?:bin|gamefiles)/[A-Za-z0-9_.\-/]*\.[A-Za-z0-9]+)")
+_CONCRETE_RE = re.compile(
+    r"((?:" + _PREFIX_ALTERNATION + r")[A-Za-z0-9_.\-/]*\.[A-Za-z0-9]+)"
+)
 
 # The two established absence-guard idioms (plus os.path.exists and
 # pytest.mark.skipif, named in the task brief for forward-compatibility).
@@ -230,11 +251,11 @@ def _raw_candidates(source: str) -> dict[str, int]:
     Cheap and run on every file; ``ast.parse`` is only paid for by files
     this finds at least one candidate in (see ``_scan_text``), since the
     parse itself -- not the traversal -- dominates cost on this suite's
-    largest files and most files never mention "data" at all.
+    largest files and most lines mention no watched tree at all.
     """
     found: dict[str, int] = {}
     for lineno, line in enumerate(source.splitlines(), start=1):
-        if "data" not in line:
+        if not any(hint in line for hint in _PREFIX_HINTS):
             continue
         for match in _LITERAL_RE.finditer(line):
             body = match.group("body")
@@ -288,7 +309,7 @@ def _discover() -> tuple[list[Reference], dict[str, str]]:
 
 def _tracked_evidence_paths() -> frozenset[str]:
     result = subprocess.run(
-        ["git", "ls-files", "data/bin", "data/gamefiles"],
+        ["git", "ls-files", *(prefix.rstrip("/") for prefix in WATCHED_PREFIXES)],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -456,7 +477,7 @@ def test_concrete_path_extraction_requires_a_file_extension() -> None:
 def test_tracked_paths_lookup_matches_git_ls_files() -> None:
     """The cached TRACKED_PATHS set agrees with a fresh `git ls-files` run."""
     result = subprocess.run(
-        ["git", "ls-files", "data/bin", "data/gamefiles"],
+        ["git", "ls-files", *(prefix.rstrip("/") for prefix in WATCHED_PREFIXES)],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -469,3 +490,29 @@ def test_tracked_paths_lookup_matches_git_ls_files() -> None:
     assert "data/bin/characters/gnar.bin.json" in TRACKED_PATHS
     assert "data/gamefiles/ddragon/Milio.json" in TRACKED_PATHS
     assert "data/bin/characters/ashe.bin.json" not in TRACKED_PATHS
+
+
+def test_the_locally_built_receipt_trees_are_watched() -> None:
+    """``build_receipts.py``'s output is gitignored, so it is the same class.
+
+    Driven over fabricated source text rather than over the corpus: the
+    trees are rebuilt locally and a tree that happens to be empty here would
+    otherwise let the widening pass by finding nothing.
+    """
+    assert "docs/receipts/champions/" in WATCHED_PREFIXES
+    assert "docs/receipts/items/" in WATCHED_PREFIXES
+    fabricated = "\n".join(
+        (
+            '_R = Path("docs/receipts/champions/vladimir.json")',
+            'ITEM = ROOT / "docs" / "receipts" / "items" / "1001.json"',
+        )
+    )
+    found = _scan_text("tests/fabricated.py", fabricated, is_python=True)
+    assert {ref.path for ref in found} == {
+        "docs/receipts/champions/vladimir.json",
+        "docs/receipts/items/1001.json",
+    }
+    # The tree itself names no file, so it is not a reference.
+    assert not _scan_text(
+        "tests/fabricated.py", '_D = Path("docs/receipts")', is_python=True
+    )

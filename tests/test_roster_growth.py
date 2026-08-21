@@ -1,10 +1,11 @@
 """Roster-growth regression for issue #136.
 
-Adding champion #174 must require NO literal-count edits anywhere: the
+Adding one champion must require NO literal-count edits anywhere: the
 builders derive their counts from the cache, the registry derives from
 ``_CHAMPION_MODULES`` (the single explicit manifest), and the audits
-derive from the cache.  A literal ``173`` guard anywhere would fail these
-tests when the roster grows.
+derive from the cache.  A literal count guard anywhere would fail these
+tests when the roster grows — including one written here, so the expected
+size is :func:`_grown_size`, derived from the same cache the fixture is.
 """
 
 import copy
@@ -16,8 +17,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def _grown_size() -> int:
+    """The cached roster plus the one synthetic champion the fixture adds."""
+    return len(_cache_with_synthetic_champion())
+
+
 def _cache_with_synthetic_champion() -> dict:
-    """The 173 cached champions plus one synthetic champion (174 total)."""
+    """Every cached champion plus one synthetic champion."""
     with open(ROOT / "data" / "champions.json", encoding="utf-8") as handle:
         champions = json.load(handle)
     base = next(value for value in champions.values() if value.get("name") == "Ahri")
@@ -37,8 +43,8 @@ def test_catalog_builder_accepts_a_larger_cached_roster(tmp_path):
     source.write_text(json.dumps(_cache_with_synthetic_champion()), encoding="utf-8")
 
     catalog = build_catalog(source, "26.15")
-    assert catalog["champion_count"] == 174
-    assert len(catalog["champions"]) == 174
+    assert catalog["champion_count"] == _grown_size()
+    assert len(catalog["champions"]) == _grown_size()
 
 
 def test_bis_profiles_builder_accepts_a_larger_cached_roster(tmp_path):
@@ -49,12 +55,12 @@ def test_bis_profiles_builder_accepts_a_larger_cached_roster(tmp_path):
     source.write_text(json.dumps(_cache_with_synthetic_champion()), encoding="utf-8")
 
     profiles = build_profiles(source, "26.15", None)
-    assert profiles["champion_count"] == 174
-    assert len(profiles["champions"]) == 174
+    assert profiles["champion_count"] == _grown_size()
+    assert len(profiles["champions"]) == _grown_size()
 
 
 def test_builder_cli_mains_succeed_with_a_larger_cached_roster(tmp_path):
-    """The CLI entry points exit 0 on a 174-champion cache (were SystemExit 1)."""
+    """The CLI entry points exit 0 on a grown cache (were SystemExit 1)."""
     source = tmp_path / "champions.json"
     source.write_text(json.dumps(_cache_with_synthetic_champion()), encoding="utf-8")
 
@@ -136,5 +142,5 @@ def test_full_entry_audit_derives_from_the_cache(monkeypatch, tmp_path):
     monkeypatch.setattr(audit, "CHAMPIONS_PATH", source)
 
     names = audit.champion_names()
-    assert len(names) == 174
+    assert len(names) == _grown_size()
     assert "Synthetic 174" in names

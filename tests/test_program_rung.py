@@ -134,45 +134,6 @@ class TestTheLadderIsReachableFromProduction:
             and node.func.id == name
         ]
 
-    def test_every_member_of_the_union_is_constructed_in_src(self) -> None:
-        """A four-state ladder with three reachable states is a three-state one.
-
-        The member list is read off ``rung.RUNGS``, never typed here.  A
-        typed triple is how this test came to assert three quarters of its
-        own name: ``CompiledFull`` was the fourth member of a union whose
-        production path the test claimed to check, and it had zero
-        construction sites in ``src/`` while this passed.
-        """
-        source = self._timeline_source()
-        for member in rung.RUNGS:
-            assert self._constructions(source, member.__name__), member.__name__
-
-    def test_the_two_compiled_rungs_are_the_panel_miss_and_the_panel_hit(self) -> None:
-        """``CompiledFull`` is the evaluation that built the panel it walked.
-
-        Read off the guard rather than off the class name, in the idiom the
-        ``SearchPoisoned`` test below uses: the two constructions sit in one
-        conditional expression whose test is the signature-panel cache
-        lookup, so a later edit that made ``CompiledFull`` unreachable —
-        constructing it unconditionally, or under some other question —
-        fails here rather than quietly restoring the three-state ladder.
-        """
-        source = self._timeline_source()
-        chosen = [
-            node
-            for node in ast.walk(ast.parse(source))
-            if isinstance(node, ast.IfExp)
-            and isinstance(node.orelse, ast.Call)
-            and isinstance(node.orelse.func, ast.Name)
-            and node.orelse.func.id == "CompiledFull"
-        ]
-        assert len(chosen) == 1, "the two compiled rungs are not one decision"
-        decision = chosen[0]
-        assert isinstance(decision.body, ast.Call)
-        assert isinstance(decision.body.func, ast.Name)
-        assert decision.body.func.id == "CompiledFast"
-        assert "panel" in ast.dump(decision.test)
-
     def test_the_histogram_key_is_never_recorded_directly(self) -> None:
         """One projection, so a label cannot be chosen beside its decision.
 

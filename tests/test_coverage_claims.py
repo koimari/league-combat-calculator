@@ -1506,8 +1506,9 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     # lands against it plus an allowlist rather than re-capturing inside a
     # semantic commit (R-32, R-36, D-97).  Every moved leaf must be in the
     # allowlist and the allowlist must hold no leaf that did not move: an
-    # entry for a key that stopped moving is a stale permission.
-    assert EXPECTED_COVERAGE_DIFFS
+    # entry for a key that stopped moving is a stale permission, so the
+    # spent ones are retired and the set is legitimately empty between
+    # slices — which makes the assertion below an equality, not a subset.
     allowlists = [
         json.loads(path.read_text(encoding="utf-8")) for path in EXPECTED_COVERAGE_DIFFS
     ]

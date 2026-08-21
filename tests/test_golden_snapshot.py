@@ -1642,3 +1642,73 @@ class TestFingerprintsReceipt:
         assert gs.receipt_numeric_leaves(gs.COUPLED_SNAPSHOT_KIND) == (
             receipt["coupled_golden"]["numeric_leaves"]
         )
+
+
+class TestOrdinalAddressingSubstitutesEvents:
+    """A list whose members carry no identity re-labels on an insertion.
+
+    ``leaf_report`` pairs ``events[n]`` with ``events[n]``, so inserting an
+    earlier member reports every later one as a value change rather than as
+    an insertion — two values that describe two different events. The
+    identity-bearing case is remedied by :data:`gs.IDENTITY_FIELD`; this is
+    the residual for lists that carry no identity.
+    """
+
+    def test_one_inserted_member_reports_every_later_member_as_a_change(self):
+        old = {
+            "combat": {
+                "events": [{"damage_type": "physical"}, {"damage_type": "magic"}]
+            }
+        }
+        new = {
+            "combat": {
+                "events": [
+                    {"damage_type": "true"},
+                    {"damage_type": "physical"},
+                    {"damage_type": "magic"},
+                ]
+            }
+        }
+        diffs = {diff.path: (diff.old, diff.new) for diff in gs.leaf_report(old, new)}
+        assert diffs["/combat/events[0]/damage_type"] == ("physical", "true")
+        assert diffs["/combat/events[1]/damage_type"] == ("magic", "physical")
+
+
+class TestTheExactBaselineHoldsTheDerivedScenarioSet:
+    """R-12's set, read off the committed file rather than described.
+
+    The exact capture is R-12's coupled set plus the four bench rosters, and
+    nothing else — stated as two containments rather than one equality,
+    because a covering scenario declared but not yet captured is the one
+    legal gap between them (R-17: the capture is its own commit).
+    """
+
+    @staticmethod
+    def _exact():
+        return _load(COUPLED_EXACT)
+
+    def test_every_covering_scenario_is_held_or_declared(self):
+        from scripts.golden_snapshot import COUPLED_SCENARIOS
+
+        held = set(self._exact()["coupled_scenarios"])
+        assert {scenario.name for scenario in COUPLED_SCENARIOS} <= (
+            held | declared_exact_new_scenarios()
+        )
+
+    def test_the_file_holds_nothing_the_harness_does_not_derive(self):
+        from scripts.bench_coupled_optimizer import SCENARIOS
+        from scripts.golden_snapshot import COUPLED_SCENARIOS
+
+        held = set(self._exact()["coupled_scenarios"])
+        derived = {scenario.name for scenario in COUPLED_SCENARIOS} | set(SCENARIOS)
+        assert set(SCENARIOS) <= held
+        assert len(SCENARIOS) == 4
+        assert held <= derived
+        assert derived - held <= declared_exact_new_scenarios()
+
+    def test_the_rounded_baseline_did_not_gain_the_bench_rosters(self):
+        """R-01 row 3 compares the *rounded* baseline; only the exact one moved."""
+        from scripts.bench_coupled_optimizer import SCENARIOS
+
+        rounded = _load(COUPLED_BASELINE)
+        assert not set(rounded["coupled_scenarios"]) & set(SCENARIOS)

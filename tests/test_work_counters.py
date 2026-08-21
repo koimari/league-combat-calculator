@@ -222,3 +222,49 @@ class TestRungLadder:
         context = CoupledSearchContext(work_counters=sink)
         assert context.work_counters is sink
         assert context.compiled_walk_enabled is True
+
+
+def test_the_counter_sink_declares_the_field_a_reason_goes_in() -> None:
+    """The sink has somewhere to put the cause of a fallback.
+
+    ``rungs`` is keyed by one of four published labels and cannot hold a
+    sentence; ``rung_receipts`` is that somewhere, asserted as an exact field
+    set so a seventh member is a decision somebody makes rather than one that
+    arrives.
+    """
+    from src.calculator.work_counters import WorkCounterSink
+
+    assert set(WorkCounterSink.__annotations__) == {
+        "measured_proposals",
+        "score_memo_misses",
+        "pair_run_fight_calls",
+        "walk_invocations",
+        "rungs",
+        "rung_receipts",
+    }
+
+
+def test_the_published_report_carries_the_causes_beside_the_histogram() -> None:
+    """And it reaches a reader: the bench harness publishes the counter.
+
+    A field on a protocol nothing serialized would be the same defect one
+    layer further out, so the receipts are asserted riding beside the
+    histogram in the shape ``as_dict`` publishes.
+    """
+    import importlib.util
+    import sys
+
+    spec = importlib.util.spec_from_file_location(
+        "bench_coupled_optimizer", REPO_ROOT / "scripts" / "bench_coupled_optimizer.py"
+    )
+    bench = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("bench_coupled_optimizer", bench)
+    spec.loader.exec_module(bench)
+
+    from src.calculator.program.rung import ReceiptWalk, counter_entry
+
+    counters = bench.WorkCounters()
+    record_rung(counters, *counter_entry(ReceiptWalk("Imperial Mandate - Command")))
+    published = counters.as_dict()
+    assert published["rungs"] == {"receipt_walk_candidate": 1}
+    assert published["rung_receipts"] == {"Imperial Mandate - Command": 1}
