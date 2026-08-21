@@ -114,9 +114,10 @@ class TestPageValidation:
         with pytest.raises(ValueError, match="Unknown rune 'Fake Rune'"):
             rune_effects.validate_rune_page("", ["Fake Rune"])
 
-    def test_an_unmodeled_rune_is_refused_not_priced_at_zero(self):
+    def test_an_unmodeled_rune_is_refused_not_priced_at_zero(self, monkeypatch):
+        name = _uncompiled(monkeypatch)
         with pytest.raises(ValueError, match="not modeled yet"):
-            rune_effects.validate_rune_page("", ["Triumph"])
+            rune_effects.validate_rune_page("", [name])
 
     def test_a_repeated_rune_is_refused(self):
         """The shared public-list policy owns this one, not the page rules."""
@@ -218,6 +219,24 @@ class TestPageValidation:
             {"Absolute Focus": {"above_health_threshold": 0}},
         )
         assert page.options == {"Absolute Focus": {"above_health_threshold": 0.0}}
+
+
+def _uncompiled(monkeypatch, name="Scorch"):
+    """Take one rune out of the compiler table, and return its name.
+
+    "An unmodeled rune is refused rather than priced at zero" is a rule about
+    the request boundary, not about which runes happen to lack a compiler
+    this week — and the roster is being compiled out from under it. So the
+    fixture *removes* one instead of naming one, and the rule stays testable
+    on the day every rune has a compiler.
+    """
+    stub = {
+        rune: compiler
+        for rune, compiler in rune_effects._compilers().items()
+        if rune != name
+    }
+    monkeypatch.setattr(rune_effects, "_compilers", lambda: stub)
+    return name
 
 
 def _compile_every_minor(monkeypatch):
@@ -445,7 +464,6 @@ class TestTheRunePageOverHttp:
         [
             ({"minor_runes": ["Scorch", "Waterwalking"]}, "one rune per row"),
             ({"minor_runes": ["Fake Rune"]}, "Unknown rune"),
-            ({"minor_runes": ["Triumph"]}, "not modeled yet"),
             ({"minor_runes": ["Scorch", "Scorch"]}, "must not contain duplicates"),
             ({"keystone": "Scorch"}, "is a minor rune, not a keystone"),
             ({"stat_shards": ["Health"]}, "names shard row 1"),
@@ -456,6 +474,13 @@ class TestTheRunePageOverHttp:
         response = client.post("/api/calculate", json=_request(**payload))
         assert response.status_code == 400
         assert rule in response.get_json()["error"]
+
+    def test_an_unmodeled_rune_returns_400_over_the_wire_too(self, monkeypatch):
+        name = _uncompiled(monkeypatch)
+        client = app_module.app.test_client()
+        response = client.post("/api/calculate", json=_request(minor_runes=[name]))
+        assert response.status_code == 400
+        assert "not modeled yet" in response.get_json()["error"]
 
 
 # ---------------------------------------------------------------------------
