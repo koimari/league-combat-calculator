@@ -1143,7 +1143,11 @@ def input_option_float_value(
     return parsed
 
 
-_READY_FIRST_AUTO_ITEMS = frozenset({"Umbral Glaive"})
+# The option an item declares when its first auto is armed by scenario state
+# rather than by holding the item (Umbral Glaive's Nightstalker).  The
+# declaration in ``ITEM_INPUT_OPTIONS`` is the one home: an item gated this
+# way is one that offers the control, never a second name list beside it.
+_FIRST_AUTO_READY_OPTION = "nightstalker_ready"
 
 
 def first_auto_state_ready(
@@ -1152,9 +1156,12 @@ def first_auto_state_ready(
     item_name: str,
 ) -> bool:
     """Return whether a first-auto item's explicit ready gate is armed."""
-    if item_name not in _READY_FIRST_AUTO_ITEMS:
+    config = ITEM_INPUT_OPTIONS.get(item_name)
+    if config is None or _FIRST_AUTO_READY_OPTION not in _item_option_schemas(config):
         return True
-    return input_option_value(items, item_options, item_name, "nightstalker_ready") > 0
+    return (
+        input_option_value(items, item_options, item_name, _FIRST_AUTO_READY_OPTION) > 0
+    )
 
 
 def hubris_input_bonus_ad(
@@ -2319,6 +2326,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Guinsoo's Rageblade": {
         "type": "on_hit",
+        "counter_trigger": "on_attack",
         "formula": "flat",
         "damage_type": "magic",
         "base": 30.0,
@@ -2645,6 +2653,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Runaan's Hurricane": {
         "type": "secondary_target",
+        "counter_trigger": "on_attack",
         "secondary_ad_ratio": 0.65,
         "max_secondary_targets": 2,
         "applies_on_hit": True,
@@ -2907,6 +2916,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Navori Flickerblade": {
         "type": "crit_modifier",
+        "counter_trigger": "on_attack",
         # Basic attacks reduce basic ability remaining CDs by 15%
         "cd_refund_percent": 0.15,
     },
@@ -2921,6 +2931,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Energized ──────────────────────────────────────────────────────────
     "Rapid Firecannon": {
         "type": "on_hit_once",
+        "counter_trigger": "on_attack",
         "formula": "flat",
         "breakdown_key": "on_hit_once_Rapid Firecannon",
         "display_name": "Rapid Firecannon (Sharpshooter)",
@@ -3424,6 +3435,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Voltaic Cyclosword (energized first-auto) ───────────────────────────
     "Voltaic Cyclosword": {
         "type": "on_hit_once",
+        "counter_trigger": "on_attack",
         "formula": "current_hp",
         "breakdown_key": "on_hit_once_Voltaic Cyclosword",
         "display_name": "Voltaic Cyclosword (Firmament)",
@@ -3459,6 +3471,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Yun Tal Wildarrows (conditional AS on attack) ───────────────────────
     "Yun Tal Wildarrows": {
         "type": "conditional_attack_speed",
+        "counter_trigger": "on_attack",
         # Flurry: 30% bonus AS for 6 seconds after attacking a champion
         "bonus_attack_speed_percent": 30.0,
         "duration": 6.0,
@@ -3484,6 +3497,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "breakdown_key",
         "display_name",
         "damage_type",
+        "counter_trigger",
         "phantom_hit",
         "uses_empowered_auto_count",
         "repeat_on_cooldown",
@@ -4790,35 +4804,33 @@ def eclipse_shield_amount(
 DamageType = Literal["physical", "magic", "true"]
 RawDamageFormula = Callable[["DamageInputs"], float]
 
-# The wiki's canonical "On-Attacking" item list (a short, CLOSED set):
-# effects triggered by COMPLETING a basic attack's windup rather than by
-# a hit landing. Everything not listed here counts on-hit (Nashor's,
-# Wit's End, BotRK, Kraken's counter, Hullbreaker's counter, ...).
-# Ability sources that merely APPLY on-hit effects (Bel'Veth Q) never
-# advance on-attack mechanics; sources that count as attacks (autos,
-# Bel'Veth E slashes) advance both.
-# https://wiki.leagueoflegends.com/en-us/Basic_attack (On-attacking)
-ON_ATTACK_TRIGGER_ITEMS = frozenset(
-    {
-        "Guinsoo's Rageblade",
-        "Navori Flickerblade",
-        "Rapid Firecannon",
-        "Runaan's Hurricane",
-        "Voltaic Cyclosword",
-        "Yun Tal Wildarrows",
-    }
-)
-
 
 def counter_trigger(item_name: str) -> str:
     """Trigger class of an item's counter/cadence mechanic.
 
-    ``"on_attack"`` for the canonical wiki On-Attacking items (Guinsoo's
-    phantom-hit cadence, energized stacking, ...), ``"on_hit"`` for
-    everything else (Kraken/Hullbreaker counters). The fight engine uses
-    this to decide which ability-carried applications advance a counter.
+    ``"on_attack"`` for the wiki's On-Attacking items — effects triggered by
+    COMPLETING a basic attack's windup (Guinsoo's phantom-hit cadence,
+    energized stacking, ...) — and ``"on_hit"`` for everything else, which a
+    hit landing advances (Nashor's, Wit's End, BotRK, Kraken's and
+    Hullbreaker's counters).  The fight engine uses this to decide which
+    ability-carried applications advance a counter: a source that merely
+    APPLIES on-hit effects (Bel'Veth Q) never advances an on-attack
+    mechanic, while one that counts as an attack (autos, Bel'Veth E slashes)
+    advances both.
+
+    On-Attacking is a short closed taxonomy the wiki publishes
+    (https://wiki.leagueoflegends.com/en-us/Basic_attack), and each member
+    declares it as ``counter_trigger`` in its own registry entry — the same
+    place its other code-owned facts live.  An item declaring nothing is
+    on-hit, which is what the taxonomy's "everything else" means.
     """
-    return "on_attack" if item_name in ON_ATTACK_TRIGGER_ITEMS else "on_hit"
+    declared = ITEM_EFFECTS.get(item_name, {}).get("counter_trigger", "on_hit")
+    if declared not in ("on_attack", "on_hit"):
+        raise ValueError(
+            f"ITEM_EFFECTS[{item_name!r}]['counter_trigger'] is {declared!r}; "
+            "the taxonomy admits 'on_attack' and 'on_hit' only"
+        )
+    return str(declared)
 
 
 @dataclass(frozen=True, slots=True)

@@ -1515,3 +1515,55 @@ class TestCachedSustainStatFailsClosed:
         for stat_key in item_effects._SUSTAIN_STAT_CACHE_KEYS:
             for item in cached:
                 item_effects._cached_sustain_stat(item, stat_key)
+
+
+class TestItemSetsAreDerivedNotHandKept:
+    """No item→trigger answer comes from a name set beside its declaration."""
+
+    def test_on_attacking_taxonomy_lives_in_the_registry_entry(self) -> None:
+        declared = {
+            name
+            for name, effect in ITEM_EFFECTS.items()
+            if effect.get("counter_trigger") == "on_attack"
+        }
+        assert declared == {
+            "Guinsoo's Rageblade",
+            "Navori Flickerblade",
+            "Rapid Firecannon",
+            "Runaan's Hurricane",
+            "Voltaic Cyclosword",
+            "Yun Tal Wildarrows",
+        }
+        for name in ITEM_EFFECTS:
+            expected = "on_attack" if name in declared else "on_hit"
+            assert item_effects.counter_trigger(name) == expected
+        assert item_effects.counter_trigger("Long Sword") == "on_hit"
+
+    def test_counter_trigger_refuses_a_kind_outside_the_taxonomy(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        entry = dict(ITEM_EFFECTS["Kraken Slayer"]) | {"counter_trigger": "on_cast"}
+        monkeypatch.setitem(ITEM_EFFECTS, "Kraken Slayer", entry)
+        with pytest.raises(ValueError, match="on_cast"):
+            item_effects.counter_trigger("Kraken Slayer")
+
+    def test_first_auto_ready_gate_follows_the_declared_option(self) -> None:
+        gated = {
+            name
+            for name, config in item_effects.ITEM_INPUT_OPTIONS.items()
+            if item_effects._FIRST_AUTO_READY_OPTION
+            in item_effects._item_option_schemas(config)
+        }
+        assert gated == {"Umbral Glaive"}
+        # An item declaring no ready control is never gated by one.
+        assert item_effects.first_auto_state_ready(
+            [{"name": "Kraken Slayer"}], {}, "Kraken Slayer"
+        )
+        assert not item_effects.first_auto_state_ready(
+            [{"name": "Umbral Glaive"}], {}, "Umbral Glaive"
+        )
+        assert item_effects.first_auto_state_ready(
+            [{"name": "Umbral Glaive"}],
+            {"Umbral Glaive": {"nightstalker_ready": 1}},
+            "Umbral Glaive",
+        )
