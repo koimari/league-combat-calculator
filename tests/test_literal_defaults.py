@@ -120,20 +120,6 @@ ROW_READS = frozenset(
     }
 )
 
-#: `item.get("name", "")` on a row from data/items.json.  `item_effects` has
-#: no public typed name accessor yet; these move the day it grows one.
-ITEM_NAME_READS = frozenset(
-    {
-        ("_amp_slot", "dict.get", '"name"'),
-        ("_apply_resource_limits_legacy", "dict.get", '"name"'),
-        ("_apply_shield_reaver_venom", "dict.get", '"name"'),
-        ("_control_armed_holder_shields", "dict.get", '"name"'),
-        ("_resolve_combat_state", "dict.get", '"name"'),
-        ("_shred_slot", "dict.get", '"name"'),
-        ("shield_outcome_inputs", "dict.get", '"name"'),
-    }
-)
-
 #: Spelled with getattr against rule 5 on purpose, and only here: as plain
 #: attributes these two become visible to `scripts/term_census.py`, whose
 #: Amendment R gates then require a coupled scenario arming Guardian's Horn
@@ -154,7 +140,7 @@ CENSUS_GETATTR = frozenset(
     }
 )
 
-ALLOWED = ROW_READS | ITEM_NAME_READS | CENSUS_GETATTR
+ALLOWED = ROW_READS | CENSUS_GETATTR
 
 #: Receivers that carry a champion-module-authored ability payload.  A literal
 #: default on one of these is what `ability_atoms.ABILITY_PAYLOAD_SCHEMA`

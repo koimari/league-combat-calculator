@@ -1006,7 +1006,7 @@ mechanics that are not dual-sided, structurally validated at import the way `pai
    > pools and then recomputes `state.total_damage` from the rewritten rows. That is a **third**
    > re-pricing site the prose does not name, which is what Ruling 2's *anything else the scan
    > finds* was written for. And the amp fold appears in that scan **not at all**:
-   > `_apply_command_amp` (`damage.py:16823`) and `_apply_general_amplifiers` (`damage.py:17075`)
+   > `_apply_command_amp` (`damage.py:16823`) and `_apply_general_amplifiers` (`damage.py:16730`)
    > mutate no packet in place — they read the ordered ledger and author a derived bonus row beside
    > it — so a census keyed only on in-place packet writes would enumerate this amendment's term and
    > silently miss Amendment M's. The census owes both shapes.

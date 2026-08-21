@@ -4634,14 +4634,26 @@ def grouped_sustain_stat_percent(items: list[dict[str, Any]], stat_key: str) -> 
     return total
 
 
+def resolved_item_name(item: Mapping[str, Any]) -> str:
+    """The canonical name of one resolved build row, as `data/items.json` spells it."""
+    name = item.get("name")
+    if not isinstance(name, str) or not name:
+        raise KeyError(
+            f"cached item row id={item.get('id')!r} carries no string "
+            f"'name' (got {name!r}) — a resolved build row is keyed by "
+            "the name its cached entry declares"
+        )
+    return name
+
+
 def _item_names(items: list[dict[str, Any]]) -> set[str]:
     """Return the set of item names in a build."""
-    return {item.get("name", "") for item in items}
+    return {resolved_item_name(item) for item in items}
 
 
 def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
     """Return whether a resolved build contains one canonical item name."""
-    return any(item.get("name", "") == item_name for item in items)
+    return any(resolved_item_name(item) == item_name for item in items)
 
 
 # Reviewed provenance for Eclipse's stack-gated trigger.  The values
