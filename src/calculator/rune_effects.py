@@ -1266,10 +1266,25 @@ def _shard_option(row: int, name: str) -> Mapping[str, Any]:
 
 def _shard_row_options(row: int) -> list[Mapping[str, Any]]:
     """The cached options of one shard row, in the page's order."""
+    return list(_shard_row(row).get("options", ()))
+
+
+def shard_row_name(row: int) -> str:
+    """The Rune page's own name for one shard row — Offense, Flex, Defense.
+
+    Public because a shard names itself by row *and* option: the same
+    option appears in two rows and a compiled shard has to say which one it
+    is, in the page's words rather than a second set invented here.
+    """
+    return str(RuneValues(f"stat shard row {row}", _shard_row(row)).value("name"))
+
+
+def _shard_row(row: int) -> Mapping[str, Any]:
+    """The cached slot for one shard row, or an empty one if uncached."""
     for slot in RUNE_SHARDS.get("slots", ()):
         if int(slot.get("row", 0)) == row:
-            return list(slot.get("options", ()))
-    return []
+            return slot
+    return {}
 
 
 # The Rune page states the page's own shape: "The primary path has one

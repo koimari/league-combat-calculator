@@ -2486,6 +2486,12 @@ function renderPracticeDummyCard(root, index, loadout, label) {
   return `<article class="roster-card roster-card--dummy"><div class="roster-pick roster-pick--dummy"><img src="${PRACTICE_DUMMY_IMAGE}" alt="Practice Dummy" /></div><div class="roster-card-copy"><strong>${PRACTICE_DUMMY_NAME}</strong><span>League Practice Tool · no abilities</span><div class="roster-meta">Passive target · exact stats</div></div><button class="remove-roster" type="button" data-remove-${label === "enemy" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="practice-dummy-note"><strong>No skills or outgoing actions</strong><span>Items can add target effects. Each edited field is the final value sent to the engine.</span></div><div class="practice-dummy-stat-grid" aria-label="Practice Dummy exact stats">${statControls}</div><button class="practice-dummy-reset" type="button" data-reset-dummy-stats="${root}.${index}">Use item totals for every stat</button><p class="roster-strip-label">Items · target effects only</p><div class="roster-item-strip">${itemSlots}</div></div></article>`;
 }
 
+/**
+ * What the stat card asks the server for. The rune page rides along because
+ * runes grant stats: without it the card would show pre-rune numbers under a
+ * page the fight prices with them. `loadoutStatsKey` is this payload, so
+ * editing a rune or a shard refreshes the card like editing an item does.
+ */
 function loadoutStatsPayload() {
   const build = engineFightPayload("A");
   return {
@@ -2496,6 +2502,10 @@ function loadoutStatsPayload() {
     item_options: build.item_options,
     role: build.role || "",
     role_quest_complete: Boolean(build.role_quest_complete),
+    keystone: build.keystone,
+    minor_runes: build.minor_runes,
+    stat_shards: build.stat_shards,
+    rune_options: build.rune_options,
   };
 }
 

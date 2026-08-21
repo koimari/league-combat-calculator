@@ -788,8 +788,8 @@ class TestRuneCatalog:
         assert [row["name"] for row in catalog] == ["Offense", "Flex", "Defense"]
         assert all(len(row["options"]) == 3 for row in catalog)
         assert catalog[0]["options"][0]["name"] == "Adaptive Force"
-        # No shard compiles yet, and every one of them therefore refuses.
-        assert not any(
+        # Every shard compiles; tests/test_rune_shards.py prices each one.
+        assert all(
             option["implemented"] for row in catalog for option in row["options"]
         )
 

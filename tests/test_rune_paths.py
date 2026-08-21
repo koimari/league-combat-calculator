@@ -58,9 +58,20 @@ class TestTheRegistrationContract:
         with pytest.raises(ValueError, match="compiled by both"):
             rune_paths.path_compilers()
 
-    def test_no_shard_compiles_yet_and_the_key_is_row_and_name(self):
-        assert shards.COMPILERS == {}
-        assert rune_paths.shard_compilers() == {}
+    def test_a_shard_registers_under_its_row_and_name(self):
+        """Nine options over three rows; the row is half of the key."""
+        assert rune_paths.shard_compilers() == dict(shards.COMPILERS)
+        assert sorted(shards.COMPILERS) == [
+            (1, "Adaptive Force"),
+            (1, "Attack Speed"),
+            (1, "Cooldown Reduction"),
+            (2, "Adaptive Force"),
+            (2, "Health Scaling"),
+            (2, "Movement Speed"),
+            (3, "Health"),
+            (3, "Health Scaling"),
+            (3, "Tenacity and Slow Resist"),
+        ]
 
 
 class TestCoupDeGrace:

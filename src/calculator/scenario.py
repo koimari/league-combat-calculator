@@ -31,6 +31,7 @@ from .practice_dummy import (
     practice_dummy_data,
 )
 from .role_quests import require_level_within_cap, validate_role
+from .rune_effects import RunePage, validate_rune_page
 from .request_parsing import (
     request_int as _request_int,
     request_string as _request_string,
@@ -116,6 +117,28 @@ def _validate_champion_options(
     return parsed
 
 
+def _requested_rune_page(
+    value: Mapping[str, Any], *, field: str, is_practice_dummy: bool
+) -> RunePage | None:
+    """Validate one loadout's rune page, or ``None`` when it selects nothing.
+
+    The same four request fields the fight boundary reads, validated by the
+    same rules — a loadout's stat card and the fight it feeds must not
+    disagree about what the page is. A page that names nothing resolves to
+    ``None``: the stat matrix then takes the no-rune path exactly as it did
+    before the page existed.
+    """
+    keys = ("keystone", "minor_runes", "stat_shards", "rune_options")
+    if is_practice_dummy:
+        if any(value.get(key) for key in keys):
+            raise ValueError(f"{field} practice dummies have no runes")
+        return None
+    page = validate_rune_page(*(value.get(key) for key in keys))
+    if not page.keystone and not page.minor_runes and not any(page.stat_shards):
+        return None
+    return page
+
+
 @dataclass(frozen=True, slots=True)
 class ChampionLoadout:
     """One champion, their level, and the items that contribute stats."""
@@ -133,6 +156,10 @@ class ChampionLoadout:
     champion_options: dict[str, Any] = dataclass_field(default_factory=dict)
     cast_order: list[str] | None = None
     target_stats: dict[str, float] = dataclass_field(default_factory=dict)
+    # A page that selects nothing stays ``None`` rather than an empty
+    # ``RunePage``, so a loadout with no runes takes the same code path
+    # through ``calculate_total_stats`` it took before runes existed.
+    rune_page: RunePage | None = None
 
     @property
     def is_practice_dummy(self) -> bool:
@@ -258,6 +285,10 @@ class ChampionLoadout:
         if len(set(equipped_names)) != len(equipped_names):
             raise ValueError(f"{field} must not contain duplicate items")
 
+        rune_page = _requested_rune_page(
+            value, field=field, is_practice_dummy=is_practice_dummy
+        )
+
         return cls(
             champion=champion,
             level=level,
@@ -272,6 +303,7 @@ class ChampionLoadout:
             champion_options=champion_options,
             cast_order=list(cast_order) if cast_order is not None else None,
             target_stats=target_stats,
+            rune_page=rune_page,
         )
 
     def resolve(self) -> "ResolvedLoadout":
@@ -304,6 +336,7 @@ class ChampionLoadout:
             item_options=self.item_options,
             role=self.role,
             role_quest_complete=self.role_quest_complete,
+            rune_page=self.rune_page,
         )
         if self.is_practice_dummy:
             stats = apply_stat_overrides(stats, self.target_stats)
