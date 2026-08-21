@@ -1155,8 +1155,7 @@ class SpellbladeRule:  # pylint: disable=too-many-instance-attributes
     Which siblings an entry carries is now decided by
     ``item_behavior_catalog``'s sibling groups: a group is declared whole or
     not at all, so a parse that dropped half of Essence Reaver's mana refund
-    is a stop rather than a quietly weaker item — the fail-closed contract the
-    name comparison used to carry, without the names.
+    is a stop rather than a quietly weaker item, and no item name is compared.
 
     ``double_on_hit`` is a structural flag rather than a reference: it says
     whether the empowered attack applies on-hit effects twice, which is a
@@ -1281,8 +1280,8 @@ class ResistanceShredRule:
     before penetration is applied and may take it negative, which is why the
     subject is the target and why this is its own family rather than a
     magnitude on somebody's damage.  ``typing`` says which damage applies a
-    stack — Vile Decay reads magic damage only — and is the declaration's
-    answer to a comparison that used to live inside the rotation loop.
+    stack: Vile Decay reads magic damage only, declared here rather than
+    compared inside the rotation loop.
     """
 
     resistance: Resistance
@@ -1795,10 +1794,8 @@ class PenetrationChannelRule:
     The only stat derivation that carries no number of its own, and it is a
     declaration for exactly that reason: the percentage is a cached stat the
     block already reads, and what the cache does not say is whether it cuts
-    total armour or bonus armour alone.  That answer used to be a set of
-    three item names in ``stats.py``, consulted while the block was being
-    built — a build holding a fourth such item was routed to the ordinary
-    channel by silence.
+    total armour or bonus armour alone.  Declaring it means a new such item
+    states its channel instead of being routed to the ordinary one by silence.
 
     ``granted`` names the stat-block field the cached percentage lands in, so
     the two channels are two members of the same closed enum rather than a
@@ -2166,8 +2163,7 @@ class DefenseExclusivity(Enum):
     The game's own unique-passive rule, declared.  A build can legally hold
     two Lifelines, two Annuls or both stasis items in this model, and exactly
     one of them is read: the one whose owner comes **first in the number
-    registry**, which is the tie-break the retired name ladder spelled as a
-    tuple of item names and this states without naming one.
+    registry**, a tie-break that names no item.
     """
 
     NONE = "none"
@@ -2335,11 +2331,10 @@ class AllyProducer(Enum):
 class PacketKind(Enum):
     """The kinds a cross-participant packet may be built with.
 
-    Closed over ``item_support_effects``' ``kind=`` arguments, which is what
-    makes D-50 checkable: Moonstone Renewer used to compute its kind at
-    runtime from the trigger it chained off, and a kind computed at runtime
-    can be resolved by no static reader — not Phase 1's ``PacketSource``, not
-    a family assignment, not this union.  It declares both instead.
+    Closed over ``item_support_effects``' ``kind=`` arguments, so a static
+    reader can resolve every kind.  Moonstone Renewer chains off two triggers
+    and declares both kinds rather than computing one at runtime, which no
+    static reader could follow.
     """
 
     HEAL = "heal"
@@ -3518,15 +3513,7 @@ def _walk_policy(
 def policy_walk(rule: BehaviorRule) -> PolicyWalk:
     """Every policy value of *rule*, with the identifier fields it skipped.
 
-    Criterion 6 is asserted over this: no policy field may be a callable, a
-    ``dict``, ``Any`` or an open string.  It starts at the rule itself, so it
-    reaches *every* field of the rule rather than its surface — including
-    ``owner`` and ``mechanic_id``, which are skipped by name and therefore
-    make :data:`POLICY_IDENTIFIER_FIELDS`' membership real rather than
-    aspirational.  That constant is what "named in the assertion" means: the
-    exception is a list somebody can read, not a waiver somebody makes when
-    the criterion first bites.
-    """
+    Starts at the rule itself, so it reaches every field, not the surface."""
     sites: list[tuple[str, object]] = []
     identifiers: list[tuple[str, str]] = []
     _walk_policy(rule, "", sites, identifiers)
@@ -3539,14 +3526,11 @@ def policy_values(rule: BehaviorRule) -> tuple[object, ...]:
 
 
 def _validate_policy_types(rule: BehaviorRule) -> None:
-    """Criterion 6 as a load-tier refusal, run on every rule that compiles.
+    """Refuse a rule whose policy field holds a callable, dict or open string.
 
-    Structural in D-20's sense — it reads the declaration's own shape and
-    nothing else — and it is here rather than only in a test because a
-    property asserted over today's declarations is not a mechanism: the
-    families this phase has yet to migrate would each be a new chance to put
-    a ``dict`` on a policy axis, and the compiler that built it is where that
-    has to stop.
+    Structural: it reads the declaration's own shape and nothing else.  It runs
+    at load rather than only in a test, so a new family that puts a ``dict`` on
+    a policy axis stops at the compiler that built it.
     """
     for site, value in policy_walk(rule).sites:
         if callable(value) or isinstance(value, (dict, str)):
@@ -3629,22 +3613,11 @@ class DefenseSubject:
     option_value: Callable[[str, str], float] | None = None
 
     def stat(self, name: str) -> float:
-        """One of the subject's resolved stats, absent meaning zero.
-
-        Absent-means-zero is correct here and only here: the stat block is
-        built by the stat resolver for every champion, so a missing key means
-        the champion has none of that stat (no mana, no bonus armour) rather
-        than that a rule failed to run.
-        """
+        """One resolved stat; absent means the champion has none of it, so zero."""
         return float(self.stats.get(name, 0.0))
 
     def max_health(self) -> float:
-        """The subject's maximum health, which every subject has.
-
-        Deliberately not :meth:`stat`: a champion with no maximum health is a
-        stat block that failed to build, so this raises rather than defaulting
-        — the one reading whose absence could not mean "none of that stat".
-        """
+        """Maximum health, which every subject has, so absence raises."""
         return float(self.stats["health"])
 
     @property
