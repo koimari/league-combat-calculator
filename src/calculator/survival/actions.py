@@ -1,4 +1,4 @@
-"""Typed survival actions — the single state-transition interface (issue #137).
+"""Typed survival actions: the single state-transition interface.
 
 Every mechanic the coupled survival walks apply is expressed as one
 :class:`SurvivalAction` carrying an :class:`ActionKind` and all typed fields
@@ -75,45 +75,29 @@ class TransitionRank(IntEnum):
     TERMINAL = 9
 
 
-# One pair of ranks resolves as one, and this is the last of what the
-# deleted float ladder meant that the ordinals do not.  That ladder gave
-# ``LATE_BARRIER`` and ``REACTIVE`` one number (0.5), so the pair folds onto
-# its first member wherever the walk *orders* by rank.  ``LATE_BARRIER`` is
-# a barrier an authored packet places *after* damage (Eclipse's self-shield,
+# ``REACTIVE`` folds onto ``LATE_BARRIER`` wherever the walk *orders* by
+# rank, so the two resolve as one.  ``LATE_BARRIER`` is a barrier an
+# authored packet places *after* damage (Eclipse's self-shield,
 # Fimbulwinter's Everlasting), which is why it is not ``BARRIER_GRANT``.
 #
-# It is a preserved defect and is named as one: a barrier resolving after
-# the damage at its own timestamp absorbs nothing at that timestamp.  The
-# row lives on ``docs/migration-frontier.json`` under ``preserved_defects``,
-# declined by S6 because correcting it is a different reordering from the
-# one this stage predicted and bounded.
+# The fold is a preserved defect and is named as one: a barrier resolving
+# after the damage at its own timestamp absorbs nothing at that timestamp.
+# The row lives on ``docs/migration-frontier.json`` under
+# ``preserved_defects``, because correcting it reorders the walk and owes
+# its own measurement.
 #
-# The ladder's other number (1.0) was shared by ``DEBUFF_ARM``, ``RECOVERY``
-# and ``UTILITY_ARM``.  **Phase 4 S6 split them**, so they resolve in
-# declaration order at a shared timestamp and appear here no longer.  What
-# the split does *not* touch is which ranks the receipt adapter classifies
-# as a recovery: that set was spelled as this fold's output and is now
-# spelled as itself, in ``_RECOVERY_CLASSIFIED_RANKS`` below.
-#
-# Every other read of a rank is fold-invariant by construction: the kernel's
-# comparisons are thresholds at a group boundary, and the surviving pair
-# does not straddle one.
+# Which ranks the receipt adapter classifies as a recovery is spelled as
+# itself, in ``_RECOVERY_CLASSIFIED_RANKS`` below, rather than as this
+# fold's output.  Every other read of a rank is fold-invariant by
+# construction: the kernel's comparisons are thresholds at a group
+# boundary, and the surviving pair does not straddle one.
 _ORDERING_SLOTS: dict[TransitionRank, TransitionRank] = {
     TransitionRank.REACTIVE: TransitionRank.LATE_BARRIER,
 }
 
 
 def ordering_slot(rank: TransitionRank) -> TransitionRank:
-    """The rank a transition sorts *as*.
-
-    Ordering only, since Phase 4 S6: classification asks a separate
-    question and reads :data:`_RECOVERY_CLASSIFIED_RANKS` for its answer.
-
-    Identity for every rank that resolves alone, and the pair's first member
-    for the two that do not.  The fold cannot develop a hole the way a total
-    table could: a rank absent from :data:`_ORDERING_SLOTS` resolves as
-    itself, which is what a rank sharing its slot with nothing means.
-    """
+    """The rank a transition sorts *as*; identity for a rank that sorts alone."""
     return _ORDERING_SLOTS.get(rank, rank)
 
 
@@ -148,12 +132,9 @@ _PUBLIC_PHASES: dict[TransitionRank, str] = {
 def public_phase(rank: TransitionRank) -> str:
     """The published phase name one rank belongs to.
 
-    ``capabilities`` derives ``PARTICIPANT_LEDGER_CONTRACT["phases"]`` from
-    this by walking the enum in declaration order and keeping each name's
-    first appearance, so the published list is a vocabulary in ledger order
-    rather than six hand-written strings no contract could notice going
-    stale.  A rank with no published name raises rather than silently
-    dropping one the API already publishes.
+    ``capabilities`` derives ``PARTICIPANT_LEDGER_CONTRACT["phases"]`` from this
+    by walking the enum in declaration order and keeping each name's first
+    appearance, rather than from six hand-written strings.
     """
     try:
         return _PUBLIC_PHASES[rank]
@@ -288,32 +269,30 @@ NO_SLOT = -1
 class EventSlots:
     """The one text-to-integer registry for the walk's event references.
 
-    Four kernel fields used to be event-id *strings*: the packet's own id,
-    its trigger's, its deferral batch's and its Defy trigger's.  Every use of
-    them is an identity question -- is this the packet that trigger applied?
-    is this batch cleared? -- answered by string comparison inside the hot
-    loop, and answered on strings the walk also has to rebuild by hand when
-    it authors a derived id.
+    Four kernel fields carry event references: the packet's own id, its trigger's,
+    its deferral batch's and its Defy trigger's.  Every use of them is an identity
+    question, is this the packet that trigger applied? is this batch cleared?, and
+    a slot answers it with an int compare rather than a string comparison inside
+    the hot loop.
 
-    A slot is a dense integer standing for exactly one id string.  Identity
-    becomes an int compare, the sets and dicts the walk keys by a reference
-    become int-keyed, and :meth:`text` gives the string back at the one place
-    that still authors a derived id.
+    A slot is a dense integer standing for exactly one id string.  The sets and
+    dicts the walk keys by a reference become int-keyed, and :meth:`text` gives the
+    string back at the one place that still authors a derived id.
 
-    **The registry is process-wide, deliberately.**  Actions outlive the call
-    that built them: a pair packet's typed actions ride the packet cache, a
-    signature panel's compiled actions ride the search context, and both are
-    replayed inside walks built later.  A per-call registry would give two
-    such actions slots from two different numberings inside one walk -- two
-    different events answering to one integer, with no symptom.  One
-    numbering for the process makes that unrepresentable.
+    **The registry is process-wide, deliberately.**  Actions outlive the call that
+    built them: a pair packet's typed actions ride the packet cache, a signature
+    panel's compiled actions ride the search context, and both are replayed inside
+    walks built later.  A per-call registry would give two such actions slots from
+    two different numberings inside one walk, two different events answering to one
+    integer, with no symptom.  One numbering for the process makes that
+    unrepresentable.
 
-    Growth is bounded rather than merely slow: every id is assembled from a
-    closed vocabulary (roster slots ``main``/``ally:n``/``enemy:n``, mechanic
-    labels, item names, source keys) and a small ordinal, so the distinct set
-    converges instead of scaling with traffic.  Nothing is ever evicted,
-    because a slot handed to a cached action must keep meaning the same event
-    for as long as that action can be walked.
+    Growth is bounded rather than merely slow: every id is assembled from a closed
+    vocabulary (roster slots ``main``/``ally:n``/``enemy:n``, mechanic labels, item
+    names, source keys) and a small ordinal, so the distinct set converges instead
+    of scaling with traffic.  Nothing is ever evicted, because a slot handed to a
+    cached action must keep meaning the same event for as long as that action can
+    be walked.
     """
 
     __slots__ = ("_by_text", "_texts", "_lock")
@@ -342,13 +321,7 @@ class EventSlots:
             return known
 
     def text(self, slot: int) -> str:
-        """The id string one slot stands for; ``""`` for :data:`NO_SLOT`.
-
-        The empty string is what every caller of this already wrote for a
-        missing reference (``action.event_id or ""``), so the sentinel maps
-        to it rather than to ``None``.  Any other unknown slot is a
-        numbering bug and raises through the list index.
-        """
+        """The id string one slot stands for; ``""`` for :data:`NO_SLOT`."""
         if slot == NO_SLOT:
             return ""
         return self._texts[slot]
@@ -435,11 +408,10 @@ class SurvivalAction(NamedTuple):
     source: str = ""
     event_slot: int = NO_SLOT
     sequence: Any = None
-    # The packet applied immobilizing crowd control — the trigger bus's
-    # answer over the shared ``ability_spec.IMMOBILIZING_CC_KINDS``
-    # vocabulary, or a legacy marker flag, never a set this module decides
-    # for itself (D-08).  Force of Nature's Steadfast reads it for its
-    # two-stack branch.
+    # The packet applied immobilizing crowd control: the trigger bus's answer
+    # over the shared ``ability_spec.IMMOBILIZING_CC_KINDS`` vocabulary, or a
+    # marker flag, never a set this module decides for itself.  Force of
+    # Nature's Steadfast reads it for its two-stack branch.
     immobilized: bool = False
     cc_kind: str = ""
     cc_duration: float = 0.0
@@ -541,15 +513,7 @@ class SurvivalAction(NamedTuple):
 
     @property
     def event_id(self) -> str:
-        """This packet's id as text; ``""`` when it names none.
-
-        Derived, never stored: :data:`event_slot` is the identity the kernel
-        compares, and this is its rendering.  It exists because a module the
-        kernel *imports* -- ``delivery_eligibility``, which cannot import
-        back -- selects packets by the public id a request names, and a
-        reader on the far side of a one-way boundary cannot reach
-        :data:`EVENT_SLOTS` to resolve a slot for itself.
-        """
+        """This packet's id as text; ``""`` when it names none."""
         return EVENT_SLOTS.text(self.event_slot)
 
     # Cleanse-activation fields (item actives that remove crowd control).
@@ -577,22 +541,15 @@ _DAMAGE_CLASS_BY_TYPE = {member.value: member for member in DamageClass}
 
 
 def damage_class_of(action: SurvivalAction) -> DamageClass | None:
-    """Which resistance mitigates this packet, or ``None`` if it names none.
-
-    ``None`` is the honest answer for an action carrying no ``damage_type``
-    (an arming or recovery transition), and it is not a member of any
-    declared set, so such an action matches no restriction.
-    """
+    """Which resistance mitigates this packet, or ``None`` if it names none."""
     return _DAMAGE_CLASS_BY_TYPE.get(action.damage_type)
 
 
 def attack_class_of(action: SurvivalAction) -> AttackClass:
     """How this packet was delivered, independent of what mitigates it.
 
-    Basic attacks are read first because ``source_key == "auto_attacks"``
-    marks the engine's own auto-attack rows, which also carry an ability
-    flag when an ability empowered them; everything that is neither an
-    attack nor a spell — item procs, burns, thorns returns — is ``OTHER``.
+    Basic attacks are read first: ``source_key == "auto_attacks"`` marks the
+    engine's auto-attack rows, which carry an ability flag when one empowered it.
     """
     if action.basic_attack or action.source_key == "auto_attacks":
         return AttackClass.BASIC_ATTACK
@@ -677,7 +634,7 @@ def participant_order(participant_id: Any) -> tuple[int, str]:
     return (3, text)
 
 
-# --- Fast compiled-damage construction (issue #171) ------------------------
+# --- Fast compiled-damage construction -------------------------------------
 # The optimizer compiles tens of thousands of damage actions per request;
 # the generated NamedTuple ``__new__`` costs ~1.5 us parsing 60+ keyword
 # defaults per call.  Copying a default row and assigning the compiler's
@@ -751,50 +708,33 @@ def compiled_damage_action(
     """Build a compiler damage action without keyword-default parsing.
 
     Exactly ``SurvivalAction(**those twenty-eight fields)``: every other field
-    keeps its class default, ``reactive=False`` and the phase included.
-    The phase is the load-bearing one — this function has no ``_I_PHASE``
-    because the class default *is* ``TransitionRank.DAMAGE``, which is what the
-    compiler would pass for a damage packet anyway.  Read the rank at
-    :class:`SurvivalAction`, not here.
+    keeps its class default, ``reactive=False`` and the phase included.  There is
+    no ``_I_PHASE`` because the class default *is* ``TransitionRank.DAMAGE``; read
+    the rank at :class:`SurvivalAction`, not here.
 
-    ``live_amp`` has no default, and that is deliberate for the one field
-    here whose neutral value is indistinguishable from an unasked question:
-    a compiler that forgot to pass it would score a build whose
-    amplification it silently dropped, which is the incident.  Every call
-    site states it, ``None`` included.
+    Six parameters have no default, because each has a neutral value
+    indistinguishable from an unasked question, and a compiler that forgot one
+    would score a build silently missing a term:
 
-    ``declared`` carries the same warning and joined for the same reason.
-    It is the declaration a retired family handed the walk to price, and a
-    compiler that omitted it would score that family at the pair engine's
-    number *after* the pair engine's row had already left the total -- the
-    packet priced twice on one path and not at all on the other.
+    * ``live_amp`` is the amplification the packet earned.  Every call site
+      states it, ``None`` included.
+    * ``declared`` is the declaration the walk prices.  A compiler that omitted
+      it would score the family at the pair engine's number after that row had
+      left the total: priced twice on one path and not at all on the other.
+    * ``is_ability`` and ``basic_attack`` are how a packet says it was delivered
+      (:func:`attack_class_of`).  At their ``False`` default every compiled
+      packet classifies as ``OTHER``, and a modifier declaring all three attack
+      classes reaches only rows whose ``source_key`` is ``auto_attacks``.
+    * The two resistance baselines are the pair fight's own final effective
+      armour and magic resistance, which a resistance-reducing modifier re-prices
+      its packet against.  ``None`` is the honest "this fight published no such
+      figure", receipted as ``support_resistance_reduction_unavailable`` rather
+      than as a made-up mitigation ratio.
 
-    ``is_ability`` and ``basic_attack`` have no defaults for the same
-    reason, and they joined at the H5 stage.  They are how a packet says
-    *how it was delivered* (:func:`attack_class_of`), and until an armed
-    damage modifier could compile nothing on the score path read them, so
-    both sat at their ``False`` class default and every compiled packet
-    classified as ``OTHER``.  A modifier declaring all three attack classes
-    then reached only the rows whose ``source_key`` happened to be
-    ``auto_attacks``.  Defaulting them here would put that silence back
-    behind a keyword nobody has to type.
-
-    The two resistance baselines joined at the same stage and carry the
-    same warning.  They are the pair fight's own final effective armour and
-    magic resistance, and a resistance-reducing modifier re-prices its
-    packet against them; ``None`` is the honest "this fight published no
-    such figure", which the kernel receipts as
-    ``support_resistance_reduction_unavailable`` rather than inventing a
-    mitigation ratio.  A default of ``None`` here would spell the same
-    refusal for a compiler that simply forgot to pass the number it had.
-
-    The delivery facts a certified packet carries — ``immobilized``,
-    ``cc_kind``, ``cc_duration``, ``skillshot``, ``damage_over_time``,
-    ``area_damage`` and ``ability_instance`` — keep their neutral defaults
-    instead, because they are the *absence* of a declaration rather than a
-    number a compiler could forget: a packet that armed no control, was not
-    a skillshot and delivered no area component says so by not saying
-    anything, and every one of them is inert at its default.
+    The delivery facts a certified packet carries (``immobilized``, ``cc_kind``,
+    ``cc_duration``, ``skillshot``, ``damage_over_time``, ``area_damage``,
+    ``ability_instance``) keep neutral defaults instead: they are the *absence* of
+    a declaration rather than a number a compiler could forget, and each is inert.
     """
     row = _ACTION_DEFAULT_ROW.copy()
     row[_I_SORT_KEY] = sort_key
@@ -837,30 +777,25 @@ def action_key(
 ) -> tuple[Any, ...]:
     """Order event phases without ever comparing payload dictionaries.
 
-    This is the survival walk's total order.  Pair packets precompute it per
-    event (``_sk``) because the walk re-sorts the same roster events for
-    every optimizer candidate.
+    The survival walk's total order.  Pair packets precompute it per event
+    (``_sk``) because the walk re-sorts the same roster events for every
+    optimizer candidate.
 
     Element 1 is the rank's :func:`ordering_slot`, not the rank: one pair of
-    ranks still resolves together, and folding it here is what keeps the
-    inline sort tuples in ``compile.py`` comparable with this one.  Since
-    Phase 4 S6 the fold is the identity for every other rank, so a debuff,
-    a recovery and a utility arming authored at one timestamp now order
-    ``6 < 7 < 8`` instead of tying and falling through to ``sequence``.
+    ranks resolves together, and folding it here keeps the inline sort tuples in
+    ``compile.py`` comparable with this one.
 
-    The ``_event_id`` component is a dead tie-break for engine damage
-    events: ``sequence`` is unique per pair fight, and events from
-    different pairs already differ at the source/participant components.
-    The compiler's pair-local event numbering depends on that — if an
-    engine event ever arrives without its sequence, it is rejected instead
-    of letting numbering become order-relevant.
+    The ``_event_id`` component is a dead tie-break for engine damage events:
+    ``sequence`` is unique per pair fight, and events from different pairs
+    already differ at the source/participant components.  The compiler's
+    pair-local event numbering depends on that, so an engine event arriving
+    without its sequence is rejected rather than letting numbering become
+    order-relevant.
 
-    The timestamp is required to be **finite** here rather than at the one
-    constructor, and that is where the check belongs: ``float()`` already
-    rejects a malformed time, and NaN/inf is the one value it accepts that
-    no total order can place.  Every action reaches this function -- the
-    composition through ``_sk``, the compiler and ``action_from_event``
-    directly -- so one guard covers every author.
+    The timestamp must be **finite** here rather than at the one constructor:
+    ``float()`` already rejects a malformed time, and NaN/inf is the one value
+    it accepts that no total order can place.  Every action reaches this
+    function, so one guard covers every author.
     """
     # Element 1 must be a rank on every key or the keys are not
     # comparable in one order: a caller holding a number would put its
@@ -922,8 +857,7 @@ _STATE_GRANT_KINDS = frozenset(
         # subject, and it must resolve after the barrier that can block it
         # (Morgana's Black Shield grants its immunity at ``BARRIER_GRANT``).
         # It classifies from its kind like every other packet, which lands
-        # it at ``UTILITY_ARM`` -- the rank the retired float ladder's
-        # ``else 1.0`` fall-through meant.
+        # it at ``UTILITY_ARM``, where an unrecognised kind falls through.
         "crowd_control_resist",
     }
 )
@@ -957,21 +891,14 @@ def support_transition_rank(event: Mapping[str, Any]) -> TransitionRank:
 
     A packet may declare its own rank when its kind does not decide it:
     Eclipse's self-shield and Fimbulwinter's Everlasting are barriers placed
-    *after* the damage that triggered them, not before it, so they declare
-    ``LATE_BARRIER`` where the kind alone would say ``BARRIER_GRANT``; and
-    Abyssal Mask's Unmake is a persistent aura rather than a triggered
-    debuff, so it declares ``AURA_ARM`` where the kind alone would say
-    ``DEBUFF_ARM``.  The declaration is a member of :class:`TransitionRank`
-    and nothing else, so an author can choose a rank but cannot invent an
-    ordering.
+    *after* the damage that triggered them, so they declare ``LATE_BARRIER``
+    where the kind alone would say ``BARRIER_GRANT``; Abyssal Mask's Unmake is
+    a persistent aura, so it declares ``AURA_ARM`` where the kind alone would
+    say ``DEBUFF_ARM``.  The declaration must be a member of
+    :class:`TransitionRank`, so an author picks a rank but cannot invent one.
 
-    Every other packet is classified from its kind.  The classification is
-    **not total**: an unrecognised kind — a typo, a kind a later phase adds
-    — falls through to ``UTILITY_ARM`` rather than raising.  That is the
-    old ``else 1.0`` preserved deliberately, because 0A changes no
-    behaviour; what closed here is the open *float*, not the open *kind*.
-    Making the fall-through fail closed is a behaviour change and belongs
-    to a correction slice that can price it.
+    Every other packet classifies from its kind, and the classification is
+    **not total**: an unrecognised kind falls through to ``UTILITY_ARM``.
     """
     declared = event.get(SUPPORT_RANK_KEY)
     if declared is not None:
@@ -1107,12 +1034,11 @@ def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> Acti
     )
 
 
-# The two helpers above are public because the one constructor is no longer
-# in this module: ``program.compile.action_from_event`` classifies over
-# prefetched hot fields and resolves a packet's declared class sets, and a
-# leading underscore on a name another layer must call is a boundary nobody
-# can see.  The conversion itself moved with the constructor (Phase 4 S4);
-# what stays here is the vocabulary it converts *into*.
+# The two helpers above are public because the one constructor lives in
+# ``program.compile.action_from_event``, which classifies over prefetched
+# hot fields and resolves a packet's declared class sets: a leading
+# underscore on a name another layer must call is a boundary nobody can
+# see.  What stays here is the vocabulary that constructor converts *into*.
 __all__ = [
     "ActionKind",
     "EVENT_SLOTS",

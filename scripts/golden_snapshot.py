@@ -635,15 +635,7 @@ def _identity(member):
 
 
 def _value_identity(member):
-    """A bare string's identity, which is the string — or ``None``.
-
-    A list of bare strings holds members with no fields to be identified by,
-    so the member *is* its address; the rotation record's ``setup``,
-    ``consume`` and ``sources`` lists are the live case.  Numbers are
-    deliberately excluded: a float's identity being its value would re-spell
-    every numeric move as a removal plus an addition and throw away the
-    ``percent`` and ``abs_delta`` that R-15 grades a value change by.
-    """
+    """A bare string's identity, which is the string itself, or ``None``."""
     return member if isinstance(member, str) and member else None
 
 
@@ -672,29 +664,26 @@ def _identity_index(members):
 def _identity_keyed_diffs(path, old, new, out):
     """Diff two identity-bearing lists by identity, never by list position.
 
-    A member both sides hold is compared field by field under the
-    *baseline's* index, so a leaf keeps the address every committed
-    allowlist, receipt and oracle brief already spells.  A member only one
-    side holds is **one membership transition** at the record —
-    ``value_to_absent`` for a removal, ``absent_to_value`` for an addition,
-    both already in R-15's closed transition set — instead of a run of
-    manufactured value changes against whichever record the shift slid into
-    its place.
+    A member both sides hold is compared field by field under the *baseline's*
+    index, so a leaf keeps the address every committed allowlist, receipt and
+    oracle brief already spells.  A member only one side holds is **one
+    membership transition** at the record, ``value_to_absent`` for a removal and
+    ``absent_to_value`` for an addition, instead of a run of manufactured value
+    changes against whichever record the shift slid into its place.
 
     Two index attempts, in that order, and the second is guarded:
 
-    * by **record identity**, which is never the member's value, so it is
-      always the honest pairing where it succeeds;
+    * by **record identity**, which is never the member's value, so it is always
+      the honest pairing where it succeeds;
     * failing that, and **only when the two lists differ in length**, by the
-      members' own string values.  The guard is what keeps this from
-      relaxing anything: equal-length string lists cannot have gained or
-      lost a member, so positional pairing is already the right reading and
-      a substitution there stays the single ``text_change`` it is.  Unequal
-      lengths mean a member arrived or left, and positional pairing is then
-      *guaranteed* to compare strings that were never each other.
+      members' own string values.  Equal-length string lists cannot have gained
+      or lost a member, so positional pairing is already the right reading and a
+      substitution there stays the single ``text_change`` it is.  Unequal lengths
+      mean a member arrived or left, and positional pairing is then *guaranteed*
+      to compare strings that were never each other.
 
-    Returns False when neither indexing applies, leaving the caller to fall
-    back to positional pairing.
+    Numbers carry no such identity: a float's identity being its value would
+    re-spell every numeric move as a removal plus an addition, losing ``percent``.
     """
     old_index = _identity_index(old)
     new_index = _identity_index(new)
@@ -778,14 +767,10 @@ def _reportable(value):
 def leaf_report(old, new):
     """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|.
 
-    List members that carry a record identity — an ``event_id``, or a
-    ``slot`` beside that slot's ``ordinal`` — are paired by it and never by
-    position, so a removal or an insertion is one membership transition
-    rather than a run of value changes against the record the shift slid
-    into its place (R-15).  A list of bare strings whose length changed is
-    paired by the strings themselves, for the same reason and under the
-    length guard in ``_identity_keyed_diffs``: such a member has no fields to
-    be identified by, so its value is the only address it has.
+    List members carrying a record identity, an ``event_id`` or a ``slot`` beside
+    that slot's ``ordinal``, are paired by it and never by position, so a removal
+    is one membership transition rather than a run of value changes.  Bare-string
+    lists pair by the strings themselves, under ``_identity_keyed_diffs``' guard.
     """
     diffs = []
     _leaf_diffs("", old, new, diffs)
@@ -1163,14 +1148,11 @@ COUPLED_SCENARIOS = (
         ),
     ),
     # The two windows in which the pair engine re-prices a packet it already
-    # authored (umbrella Amendment N, Ruling 3).  The walk's
-    # from-declaration price knows only the one effective resistance a fight
-    # publishes, so a family retired while no scenario arms a window would
-    # price every packet at that baseline and delete the window — the
-    # measurement that stopped the active_cast retirement, which only the
-    # bench could see because no committed scenario armed one.  Armed means
-    # *fired*: a holder whose window opens on no packet is the same emptiness
-    # with a scenario name on it.
+    # authored.  The walk's from-declaration price knows only the one
+    # effective resistance a fight publishes, so a window no scenario arms
+    # would price every packet at that baseline and delete the window.  Armed
+    # means *fired*: a holder whose window opens on no packet is the same
+    # emptiness with a scenario name on it.
     #
     # An assassin, arming the lethality window: Voltaic Cyclosword's
     # Firmament grants its flat lethality *after* its own energized packet,
@@ -1291,30 +1273,11 @@ COUPLED_SCENARIOS = (
 
 
 def bench_roster_scenarios():
-    """The four bench rosters, as coupled scenarios — read, never typed.
+    """The four bench rosters, as coupled scenarios: read, never typed.
 
-    Phase 4's criterion 14 ends *"per-attacker totals are asserted bit-exact
-    on the four bench scenarios against ``scripts/golden_coupled_exact.json``"*.
-    The assertion existed and was gated, over :data:`COUPLED_SCENARIOS`'
-    thirteen — and the intersection with the four the sentence names was
-    empty, so the clause named one instrument and cited another and was never
-    dischargeable as written.
-
-    The two sets answer two different questions and both are kept.
-    :data:`COUPLED_SCENARIOS` is R-12's, derived from the ``damage_modifier``
-    producer set so a seventh producer with no covering scenario fails; these
-    four are R-07's and R-27's, chosen to move the optimizer's work counters.
-    The bench requests are *rosters* — the searched champion carries no items,
-    the enemies and allies do — so one coupled fight over each is well defined
-    and deterministic, which an optimizer *search* over one would not be.
-
-    Read from ``bench_coupled_optimizer.SCENARIOS`` rather than restated, for
-    the same reason ``producers`` is read: a fifth bench scenario must arrive
-    here on the commit that adds it, not on the commit somebody notices.
-
-    **The rounded coupled baseline does not gain them.**  Only the exact
-    capture does, so R-01 row 3's jurisdiction is exactly what it was and this
-    adds a bit-exactness assertion rather than a new golden surface.
+    They move the optimizer's work counters, where :data:`COUPLED_SCENARIOS` is
+    derived from the ``damage_modifier`` producer set.  Read from
+    ``bench_coupled_optimizer.SCENARIOS`` so a fifth arrives with its own commit.
     """
     # Local and unresolvable to a static checker on purpose: the two scripts
     # sit in one directory that neither puts on ``sys.path`` at import time,
@@ -1339,26 +1302,8 @@ def _uncovered_producers(scenarios, producers):
 def receipt_walk_families():
     """Every receipt-walk deferral family, mapped to the items that declare it.
 
-    R-12's coverage is derived and never typed, and this is its second
-    reading.  :func:`cross_participant_producers` answers *can the baseline
-    see every cross-participant packet source*; this answers *can it see
-    every family whose numbers the walk still defers to the pair engine*.
-    The umbrella's Amendment L, Ruling 2 makes that a covering scenario's
-    job: against a family the baseline holds no roster for, a retirement
-    slice's ``Expected qualifying occurrences`` line reads zero, no
-    investigator is ever owed, and the re-pricing ships unseen.
-
-    The mapping is **read** from
-    ``docs/receipts/receipt-walk-retirement-schedule.json``, which is the
-    committed home of the family-to-owner join and is itself derived — from
-    the behaviour frontier's ``(family, receipt_walk)`` deferral rows and
-    ``item_behavior_catalog``'s declarations — and gated against the tree by
-    ``receipt_walk_schedule.py --check``.  So a fifteenth family, or an item
-    that changes hands between families, reaches this guard on the commit
-    that declares it: the schedule goes red until it is regenerated, and the
-    regenerated schedule fails the capture until a scenario covers the
-    family.  A hand list here would be the third copy of a mapping the tree
-    already derives twice.
+    Read from ``docs/receipts/receipt-walk-retirement-schedule.json``, the derived
+    home of the family-to-owner join, so a new family reaches this guard by commit.
     """
     schedule = json.loads(SCHEDULE_RECEIPT_PATH.read_text(encoding="utf-8"))
     return {
@@ -1396,35 +1341,13 @@ def _uncovered_families(scenarios, families):
 def holder_amp_declarations():
     """Each static holder amp, mapped to the items whose declaration produces it.
 
-    R-12's coverage is derived and never typed, and this is its third
-    reading.  :func:`cross_participant_producers` answers *can the baseline
-    see every cross-participant packet source*, :func:`receipt_walk_families`
-    *can it see every family whose numbers the walk still defers*; this
-    answers *can it see every amplifier the holder's own build brings to
-    those numbers*.  The umbrella's Amendment M, Ruling 2 makes that a
-    covering scenario's job: a family re-priced out of the pair engine's rows
-    while no scenario arms an amp would drop the holder's own amplifier from
-    every total that holds it, and a baseline in which every amp is ``1.0``
-    observes only the case that cannot fail.
+    A family re-priced out of the pair engine's rows while no scenario arms an amp
+    drops the holder's amplifier from every total that holds it, and a baseline in
+    which every amp is ``1.0`` observes only the case that cannot fail.
 
-    Two readings, because the tree declares the holder's static amps two ways
-    and neither of them is an item name.  A **per-part** amp is a
-    :class:`PartAmpRule` in the behaviour catalog, and the part it prices is
-    its own ``typing.attack_classes`` — the question
-    ``delta_amp.part_amp_rules`` asks when the engine prices an ability or a
-    basic attack — so the kind is the declaration's own mechanic suffix and a
-    part amp for a third attack class arrives here already named.  The
-    **magic** amp is the one holder amp that occupies no chain slot, which
-    the catalog says in its own words: ``DELTA_AMP_UNMIGRATED_TAGS`` records
-    it as applied by ``_mitigate`` on the defender's side, so it is read as
-    the registry tag it is declared under rather than as a compiled rule it
-    deliberately has none of.
-
-    Read live from the catalog over every owner in ``rule_owners()``, the way
-    :func:`cross_participant_producers` reads the capability registry, so a
-    fourth amp kind reaches this guard on the commit that declares it and
-    fails the capture until a scenario arms it — rather than being discovered
-    by whoever next re-prices a family.
+    The tree declares these two ways, neither an item name: a per-part amp is a
+    :class:`PartAmpRule` keyed by its mechanic suffix, and the magic amp occupies
+    no chain slot, read as the ``DELTA_AMP_UNMIGRATED_TAGS`` tag it declares.
     """
     kinds: dict[str, set[str]] = {}
     for owner in sorted(rule_owners()):
@@ -1439,12 +1362,7 @@ def holder_amp_declarations():
 
 
 def _unarmed_amp_kinds(scenarios, amps):
-    """Static holder amps no scenario equips a declaring item of (R-12).
-
-    The same predicate as :func:`_uncovered_families` over a different
-    declaration join, which is why both read :func:`covering_scenarios`
-    rather than spelling "covering" a second time.
-    """
+    """Static holder amps no scenario equips a declaring item of."""
     covering = covering_scenarios(scenarios, amps)
     return tuple(sorted(kind for kind, names in covering.items() if not names))
 
@@ -1500,44 +1418,12 @@ def _threshold_health_raisers():
 def repricing_window_declarations():
     """Each re-pricing window, mapped to the declaration sides a scenario must equip.
 
-    R-12's coverage is derived and never typed, and this is its fourth
-    reading.  :func:`cross_participant_producers` answers *can the baseline
-    see every cross-participant packet source*, :func:`receipt_walk_families`
-    *can it see every family whose numbers the walk still defers*,
-    :func:`holder_amp_declarations` *can it see every amplifier the holder's
-    own build brings to those numbers*; this answers *can it see every
-    window in which the pair engine re-prices a packet it already authored*.
-
-    The umbrella's Amendment N, Ruling 3 makes that a covering scenario's
-    job.  ``survival.pricing.price_declared_packet`` prices a declaration at
-    the one effective resistance a fight publishes, while the pair engine
-    re-prices already-authored packets once the complete ledger exists — so a
-    family retired while no scenario arms a window would price every packet
-    at the fight's baseline, delete the temporal windows, and do it behind a
-    green zero-occurrence line, which is exactly how the ``active_cast``
-    retirement was stopped (``expected-golden-diff-campaign-close-active-cast-retirement.json``).
-
-    **Two joins, not one**, because the tree declares the two windows from
-    opposite ends of a fight.  The lethality window is one *holder*
-    declaration: an ``EmpoweredHitRule`` carrying a
-    :class:`~.item_behavior.TemporaryLethality`, which
-    ``damage._apply_temporary_lethality_windows`` reads back off the authored
-    row to rescale later physical packets.  The max-health window is an
-    *attacker* declaration joined to a *defender's*: a periodic burn priced
-    off :attr:`~.item_behavior.Basis.TARGET_MAX_HEALTH`, and a lifeline that
-    writes :attr:`~.item_behavior.DefenseField.THRESHOLD_HEALTH_BONUS` and so
-    raises that maximum mid-fight, which is the pair the
-    ``damage._apply_liandry_reprice`` walk needs before it can move a number
-    at all.  A mapping keyed only on the holder's own items would report the
-    magic half covered by an empty set.
-
-    Each value is therefore a tuple of *sides*, and a covering scenario is
-    one that equips a declaring item of **every** side — which is what makes
-    the returned mapping usable by the one :func:`covering_scenarios`
-    predicate rather than by a second spelling of "covering".  Read live from
-    the catalog over every owner in ``rule_owners()``, so a third re-pricing
-    window that no scenario arms reaches this guard on the commit that
-    declares it.
+    A window no scenario arms prices every packet at the fight's baseline and
+    deletes the temporal windows behind a green zero-occurrence line.  Two joins,
+    because the tree declares the two windows from opposite ends of a fight: the
+    lethality window is one holder declaration, and the max-health window pairs an
+    attacker's max-health burn with a defender's threshold-health lifeline.  Each
+    value is a tuple of *sides*, and a covering scenario equips one item of each.
     """
     windows = {}
     holders = _temporary_lethality_holders()
@@ -1617,12 +1503,10 @@ def swing_target_terms():
 
     The pair engine holds a target's resolved defence as ``target_``-prefixed
     fight state, so the join back to the declaration vocabulary is the
-    :class:`~.item_behavior.DefenseField` whose value is the rest of the
-    attribute name.  Reading it that way is what makes the set *the terms a
-    swing meets* rather than *the terms somebody remembered*: a fifth
-    target-side field read by the swing pricing is a new member the moment
-    the read is written, and a fight-state attribute that is not a declared
-    defensive field is not a term any item can arm.
+    :class:`~.item_behavior.DefenseField` whose value is the rest of the attribute
+    name.  Reading it that way makes the set *the terms a swing meets* rather than
+    *the terms somebody remembered*: a fifth target-side field is a new member the
+    moment the read is written.
     """
     values = {field.value: field for field in DefenseField}
     return frozenset(
@@ -1638,41 +1522,11 @@ def swing_target_terms():
 def swing_term_declarations():
     """Each target-side swing term, mapped to the items that declare it.
 
-    R-12's coverage is derived and never typed, and this is its fifth
-    reading.  :func:`cross_participant_producers` answers *can the baseline
-    see every cross-participant packet source*, :func:`receipt_walk_families`
-    *can it see every family whose numbers the walk still defers*,
-    :func:`holder_amp_declarations` *can it see every amplifier the holder's
-    own build brings to those numbers*, :func:`repricing_window_declarations`
-    *can it see every window in which the pair engine re-prices a packet it
-    already authored*; this answers *can it see every term the defender
-    brings to a packet delivered as a basic-attack swing*.
-
-    The umbrella's Amendment R, Ruling 4 makes that a covering scenario's
-    job.  ``survival.pricing.price_declared_packet`` carries what ``_mitigate``
-    carries — a resistance and the holder's own amps — while a swing is
-    priced by ``damage._mitigate_basic_attack_swing``, which meets three
-    further terms on the target's side.  Two of them fold into a declared
-    magnitude because a pure factor on a linear mitigation prices to the same
-    real number; Warden's Mail's Rock Solid never does, because
-    ``min(flat, per_hit × cap)`` is a capped flat *subtraction* applied to the
-    crit and non-crit branches separately, and no magnitude a declaration
-    could state reproduces one.
-
-    Keyed per field rather than per mechanic, because the field is the
-    tree's own vocabulary and the mechanic's name is not: Rock Solid's flat
-    and its cap are two fields of one subtraction and are declared by one
-    owner, so keying per field costs nothing and keeps a renamed or added
-    field arriving as a renamed or added term.
-
-    Read live from the catalog over every owner in ``rule_owners()`` and over
-    **every** defence shape that declares a ``writes``, which is the
-    amendment's own load-bearing correction: the three terms are declared by
-    four owners across two rule shapes — ``OpeningDefenseRule`` for the
-    plating multiplier, the crit-damage reduction and Rock Solid, and
-    ``ReactiveRule`` for a second declaration of the same plating multiplier —
-    so a mapping keyed on the opening-defence shape alone would report the
-    plating term covered by an incomplete set.
+    Keyed per field rather than per mechanic, because the field is the tree's own
+    vocabulary: Rock Solid's flat and its cap are two fields of one subtraction.
+    Read over every owner and **every** defence shape that declares a ``writes``,
+    since ``OpeningDefenseRule`` and ``ReactiveRule`` both declare the plating
+    multiplier and a mapping keyed on one shape would report it half-covered.
     """
     terms: dict[str, set[str]] = {}
     swing_fields = swing_target_terms()
@@ -1687,12 +1541,11 @@ def swing_term_declarations():
 def swing_delivering_scenarios(scenarios):
     """Which scenarios deliver a basic-attack swing at all.
 
-    Read through ``FightParams.from_request``, which is the tree's own answer
-    to the question and not the request's literal: ``include_auto_attacks``,
-    ``auto_attacks_only`` and the uptime mode together decide whether a
-    request's uptime survives into the fight, and a scenario that names an
-    uptime the fight mode discards swings exactly as often as one that names
-    none.
+    Read through ``FightParams.from_request``, which is the tree's own answer and
+    not the request's literal: ``include_auto_attacks``, ``auto_attacks_only`` and
+    the uptime mode together decide whether a request's uptime survives into the
+    fight, and a scenario naming an uptime the fight mode discards swings exactly
+    as often as one naming none.
     """
     return frozenset(
         scenario.name
@@ -1707,13 +1560,8 @@ def swing_delivering_scenarios(scenarios):
 def swing_term_covering_scenarios(scenarios, terms):
     """Which scenarios arm a swing term *and* swing at the card that holds it.
 
-    Ruling 4's *armed means met*: a defender holding the item in a fight
-    nobody swings at is the same emptiness with a scenario name on it.  So
-    this is a two-sided join like a re-pricing window's — but its second side
-    is a *delivery* rather than a second declaring item, which is why it
-    composes :func:`covering_scenarios` with a scenario predicate instead of
-    reusing :func:`window_covering_scenarios`.  The declaration side stays the
-    one "covering" predicate the four readings before it share.
+    Armed means met: a defender holding the item in a fight nobody swings at is the
+    same emptiness with a scenario name on it.
     """
     delivering = swing_delivering_scenarios(scenarios)
     return {
@@ -1852,14 +1700,8 @@ def _exact_totals(entry):
 def cross_participant_producers():
     """Every packet source that modifies another participant's damage.
 
-    Read from ``trigger_stream.CAPABILITIES`` (R-12), never typed, and read
-    through the registry's own ``cross_participant_packet_source`` so that
-    "modifies another participant's damage" is decided in one place (D-07,
-    Amendment C) rather than re-spelled here as a pair of conditions this
-    instrument would then own a second copy of.  Each member is the literal a
-    scenario has to equip the owner of, so a seventh producer joins this set
-    on the commit that declares it and fails capture until a scenario covers
-    it.
+    Read from ``trigger_stream.CAPABILITIES`` through its own
+    ``cross_participant_packet_source``, so the question is decided in one place.
     """
     return frozenset(
         source
@@ -2025,13 +1867,7 @@ def capture(outfile):
 
 
 def coupled_scenarios_for(*, exact):
-    """Which scenario set a capture covers — one answer, two readers.
-
-    The exact capture additionally holds the four bench rosters, because
-    Phase 4's criterion 14 names them by name; the rounded one does not,
-    because adding them would move R-01 row 3's jurisdiction rather than the
-    bit-exactness assertion the criterion is about.
-    """
+    """Which scenario set a capture covers; the exact one adds the bench rosters."""
     if not exact:
         return COUPLED_SCENARIOS
     return (*COUPLED_SCENARIOS, *bench_roster_scenarios())

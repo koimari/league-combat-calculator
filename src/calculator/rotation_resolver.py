@@ -387,7 +387,7 @@ _validate_override_reasons()
 # ``slot_options`` and edge detection, self_state/irrelevant options are
 # acknowledged in the receipt without inventing edges, and an unclassified
 # option fails the exhaustiveness contract.  There is deliberately no
-# hand-maintained second table in this module anymore (issue #145).
+# hand-maintained second table in this module.
 
 # Default direct-edge kind for consume/execute declarations that carry a
 # ``setup_slot`` but no explicit ``kind`` (the declaration is authoritative;
@@ -498,12 +498,7 @@ class _Edge:
     origin: Literal["declared", "inferred"] = "inferred"
 
     def sentence(self) -> str:
-        """A rationale sentence naming the atoms that drove the edge.
-
-        Edge citations are authored as full sentences ("E applies cc_kind
-        crowd control — setup before Q", "Q is a missing-health execute —
-        after E's damage"); recast edges get an explicit parent clause.
-        """
+        """A rationale sentence naming the atoms that drove the edge."""
         if self.kind == "recast":
             return f"{self.consume} is the recast of {self.setup} — {self.cite}"
         return self.cite
@@ -525,9 +520,8 @@ def _slot_corpus(
     A recast slot (Syndra's ``Q2``) has no wiki row of its own — the
     parent ability's rows describe both casts — so it reads the parent's
     corpus.  ``recast_of`` comes from the parsed ability entry and from
-    nowhere else: the hand table that used to answer this by slot name
-    also claimed a parent for three synthetic non-recast slots, which is
-    exactly the guess D-11 retires.
+    nowhere else, because a slot name is only a guess: three synthetic
+    non-recast slots read as recasts by name alone.
     """
     abilities = champion_data.get("abilities", {})
     rows = abilities.get(slot, []) or (
@@ -576,9 +570,7 @@ def _corpus_attrs(corpus: Mapping[str, list[str]]) -> str:
 def _recast_parent(entry: Any) -> str | None:
     """The slot a parsed ability entry is a recast of, or ``None``.
 
-    ``recast_of`` on the parsed entry is the single authority for recast
-    parentage (D-11); a slot that carries no stamp has no parent, however
-    its name reads.
+    ``recast_of`` is the single authority; a slot with no stamp has no parent.
     """
     if not isinstance(entry, Mapping):
         return None
@@ -601,12 +593,20 @@ def _castable(info: Mapping[str, Any], slot: str) -> bool:
     return float(info.get("cooldown", 0.0) or 0.0) > 0
 
 
-# Slots whose crowd control ordered the rotation before champion modules
-# reviewed their kits' control.  A module's ``cc_kind`` is a statement about
-# what a cast APPLIES and never an ordering constraint (see
-# :func:`_cc_orders_the_burst`); these three markers are the ones whose
-# published orders predate that rule, so pinning them keeps it from
-# re-deriving a rotation the coverage campaign never set out to touch.
+# Slots whose crowd control orders the rotation, pinned because their
+# published orders predate the rule below.  A module's ``cc_kind`` states
+# what a cast APPLIES and is never an ordering constraint, so it must not
+# fan ``cc_setup`` edges across the kit: a coverage pass that records a slow
+# honestly would otherwise reorder the rotation and move published damage,
+# which is the pressure that makes an author withhold a true fact.
+#
+# That holds however the module said it.  Reading a per-part marker as an
+# ordering claim and a ``MODULE_CC`` slot declaration as a kit fact would
+# make "does recording this move my damage?" turn on which authoring site a
+# module happened to use, and Morgana's R cannot even choose: its parts
+# carry different kinds and ``MODULE_CC`` admits one per slot.  Every other
+# reader of the ``cc_kind=`` atom sees every kind unchanged; only the
+# ``cc_setup`` fan-out asks where the marker came from.
 #
 # The table is closed and shrinks only through the module: declare the
 # ordering in ``CAST_DEPENDENCIES``, the home architecture.md gives it, and
@@ -638,27 +638,7 @@ def _has_champion_module(champion_name: str) -> bool:
 
 
 def _cc_orders_the_burst(champion_name: str, slot: str) -> bool:
-    """Whether this slot's crowd control is an ORDERING claim.
-
-    A module's ``cc_kind`` says what a cast applies — a reviewed kit fact,
-    the same class of statement as "this ability deals magic damage".  It
-    says nothing about when to cast it, so it must not fan ``cc_setup``
-    edges across the kit: a coverage pass that records a slow honestly
-    would otherwise reorder the rotation and move published damage, which
-    is precisely the pressure that made a batch withhold true facts.
-
-    That holds however the module said it.  Reading a per-part marker as
-    an ordering claim and a ``MODULE_CC`` slot declaration as a kit fact
-    would make "does recording this move my damage?" turn on which
-    authoring site a module happened to use — and Morgana's R cannot even
-    choose, since its parts carry different kinds and ``MODULE_CC`` admits
-    one per slot.  A kit that genuinely needs cc-driven ordering declares
-    it in ``CAST_DEPENDENCIES``.
-
-    Every other reader of the ``cc_kind=`` atom — the enhanced-vs-condition
-    pairing, ``applies_condition``, the edge citations — sees every kind
-    unchanged; only this fan-out asks where the marker came from.
-    """
+    """Whether this slot's crowd control is an ORDERING claim, not a kit fact."""
     if slot in _PRE_CAMPAIGN_CC_ORDERING.get(champion_name, frozenset()):
         return True
     return not _has_champion_module(champion_name)
@@ -1355,22 +1335,14 @@ def resolved_edges(  # pylint: disable=import-outside-toplevel
 ) -> tuple[tuple[_Edge, ...], DependencyReceipt]:
     """The one public detect→merge surface.
 
-    Production and the test suites both enter here, so the ordering
-    constraints a champion actually runs under cannot drift from the ones
-    a test inspects.
+    Production and the test suites both enter here, so the ordering constraints a
+    champion actually runs under cannot drift from the ones a test inspects.
 
-    Args:
-        champion_name: Public champion display name.
-        ability_damages: The parsed ability package for this fight.
-        champion_data: The cached champion object (raw wiki rows).
-        option_keys: ``slot -> option keys`` from the module's rotation
-            declarations, as :func:`detect_setup_consume_edges` reads it.
-        declarations: The module's ``CAST_DEPENDENCIES``; looked up from
-            the validated contract when omitted.
-
-    Returns:
-        ``(edges, receipt)`` — every edge with its ``origin``, and what
-        the merge did.
+    *option_keys* is ``slot -> option keys`` from the module's rotation
+    declarations, as :func:`detect_setup_consume_edges` reads it, and
+    *declarations* is the module's ``CAST_DEPENDENCIES``, looked up from the
+    validated contract when omitted.  Returns every edge with its ``origin``,
+    and a receipt of what the merge did.
     """
     if declarations is None:
 
@@ -1464,8 +1436,7 @@ _MATRIX_DPS_CACHE: dict[tuple[str, int], list[list[tuple[str, float]]]] = {}
 # per-(champion, option-signature, data version) cache: the FULL-KIT derived
 # rule (order is matrix-invariant by construction; the fight's own level/build
 # only narrows which slots exist, and the option signature keeps option-gated
-# slots and option-sensitive edges deterministic across cache warmth —
-# issue #145 §6).
+# slots and option-sensitive edges deterministic across cache warmth).
 _DERIVED_RULE_CACHE: dict[
     tuple[str, frozenset[tuple[str, Any]] | None, int], ComboRule
 ] = {}
@@ -1528,7 +1499,7 @@ def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel,unused-argu
     narrow which slots exist.  The request's OPTION state is part of the
     derivation: option-gated slots (Kalista's Soul-Marked W) and
     option-sensitive edges are derived per option state, so a cold cache
-    cannot drop a slot the fight actually casts (issue #145 §6).
+    cannot drop a slot the fight actually casts.
     """
 
     from .champions import (
@@ -1607,8 +1578,7 @@ def _fit_rule_to_fight(
     available slots, preserving relative positions.  Option-gated slots
     absent from the canonical kit (Kalista's Soul-Marked W, Gnar's Mega R)
     fall back to their base-order position.  Applied on BOTH the warm-cache
-    and cold-cache paths so the result is deterministic across cache warmth
-    (issue #145 §6).
+    and cold-cache paths so the result is deterministic across cache warmth.
     """
     available = [s for s in cached.order if s in fight_slots]
     base = [
@@ -1688,15 +1658,11 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         return _fit_rule_to_fight(cached, champion_name, fight_slots, certified_order)
 
     def remember(rule: ComboRule) -> ComboRule:
-        """Memoise the FULL-KIT rule, then return this fight's fit.
-
-        The order of these two statements is the whole of the memo
-        contract: ``_fit_rule_to_fight`` narrows the order to the slots
-        one parse holds, so caching the *fitted* rule would let whichever
-        request arrived first decide what every later one is served.
-        Every exit from this function goes through here so the order
-        cannot drift apart again.
-        """
+        """Memoise the FULL-KIT rule, then return this fight's fit."""
+        # Cache the FULL-KIT rule and never the fitted one:
+        # ``_fit_rule_to_fight`` narrows the order to the slots one parse
+        # holds, so caching the fit would let whichever request arrived
+        # first decide what every later one is served.
         if memoised:
             _DERIVED_RULE_CACHE[cache_key] = rule
         return _fit_rule_to_fight(rule, champion_name, fight_slots, certified_order)
@@ -1778,7 +1744,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
         if unclassified:
             # A rotation receipt cannot claim "no detectable setup/consume
             # signal" while an enabled semantic option is unclassified or
-            # unsupported (issue #145 acceptance).
+            # unsupported.
             rationale = (
                 f"{champion_name} has option(s) not yet classified for "
                 "rotation semantics: "
@@ -1938,33 +1904,20 @@ def resolve_cast_order(
     certified_order: list[str] | None = None,
     champion_options: Mapping[str, Any] | None = None,
 ) -> tuple[list[str], ComboRule | None]:
-    """Resolve the fight's ``cast_order``: override → algorithmic derive.
+    """Resolve the fight's ``cast_order``: override, then algorithmic derive.
 
-    The hand-verified :data:`CAST_ORDER_OVERRIDES` seeds win (documented
-    overrides).  Every other champion with atomized data is derived
-    algorithmically by :func:`derive_champion_rule`; a champion with no
-    detectable setup/consume signal keeps its certified module order or
-    the engine default with an honest data-driven rationale.  Unknown
-    names (synthetic fixtures with no cached data) return ``None`` for the
-    rule, preserving the F2 fallback contract.
+    The hand-verified :data:`CAST_ORDER_OVERRIDES` seeds win.  Every other
+    champion with atomized data is derived by :func:`derive_champion_rule`; one
+    with no detectable setup/consume signal keeps its certified module order or
+    the engine default with an honest data-driven rationale.  Unknown names
+    (synthetic fixtures with no cached data) return ``None`` for the rule,
+    preserving the F2 fallback contract.
 
-    Args:
-        champion_name: Public champion display name.
-        ability_damages: The parsed ability package (atoms + per-rank
-            ``total_raw`` / ``cooldown`` at the fight's stats) — already
-            baked with the fight's options.
-        champion_data: The cached champion object (raw wiki rows).  When
-            omitted and the name is unknown, the default order applies.
-        certified_order: The champion module's reviewed ``CAST_ORDER``, if
-            any; looked up when omitted.
-        champion_options: The fight's champion options, when available.
-            They become part of the derivation cache signature so
-            option-gated slots and option-sensitive edges derive per option
-            state (issue #145 §6).
-
-    Returns:
-        ``(cast_order, rule)`` — ``rule`` is ``None`` only for unknown
-        names without atomized data.
+    *ability_damages* is the parsed ability package, atoms plus per-rank
+    ``total_raw`` and ``cooldown`` at the fight's stats, already baked with the
+    fight's options.  *champion_options* become part of the derivation cache
+    signature, so option-gated slots and option-sensitive edges derive per
+    option state.
     """
     rule = CAST_ORDER_OVERRIDES.get(champion_name)
     if rule is not None:
@@ -1997,21 +1950,17 @@ def rank_ability_dps(
 ) -> list[tuple[str, float, float, float]]:
     """Rank damaging abilities by per-rank DPS at the fight's stats.
 
-    Signal (b) of the scoring model: ``total_raw`` divided by the
-    effective per-rank cooldown read from the atomized ability rows.
-    Zero- or missing-cooldown rows (on-hits, procs, passives) are
-    excluded — they are not rotation casts.  Used by the derivation, the
-    design doc, and the F2 tests.
+    Signal (b) of the scoring model: ``total_raw`` divided by the effective
+    per-rank cooldown read from the atomized ability rows.  Zero- or
+    missing-cooldown rows (on-hits, procs, passives) are excluded, because they
+    are not rotation casts.
 
-    AoE weighting: a slot listed in ``aoe`` hits up to ``aoe[slot]``
-    enemy champions, so its effective DPS is multiplied by
-    ``min(target_count, cap)`` — an ability that hits every enemy in a
-    five-man roster outranks a single-target nuke of the same raw
-    damage.  This is how the optimal order stays optimal when an AoE
-    skill hits more than one champion.
+    A slot listed in ``aoe`` hits up to ``aoe[slot]`` enemy champions, so its
+    effective DPS is multiplied by ``min(target_count, cap)``: an ability that
+    hits every enemy in a five-man roster outranks a single-target nuke of the
+    same raw damage, which is how the optimal order stays optimal.
 
-    Returns:
-        ``[(slot, dps, total_raw, cooldown)]`` sorted by DPS descending.
+    Returns ``[(slot, dps, total_raw, cooldown)]`` sorted by DPS descending.
     """
     aoe = aoe or {}
     target_count = max(1, int(target_count))
