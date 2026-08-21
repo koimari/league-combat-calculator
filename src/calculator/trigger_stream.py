@@ -84,6 +84,7 @@ __all__ = [
     "Trigger",
     "TriggerKind",
     "TriggerRegistryError",
+    "applies_control",
     "authored_triggers",
     "cross_participant_packet_source",
     "delivery_reference",
@@ -2149,6 +2150,22 @@ def is_immobilizing_event(row: Mapping[str, Any]) -> bool:
     the divergence that let a slow price Command.
     """
     return _classify_cc(row)[0] is CcClass.IMMOBILIZE
+
+
+def applies_control(row: Mapping[str, Any]) -> bool:
+    """Whether one raw row applies crowd control of *any* class.
+
+    The wider sibling of :func:`is_immobilizing_event`, and the same answer
+    :func:`event_triggers` gives when asked for a ``CC`` trigger — for the
+    consumers whose own vocabulary is every control the Wiki lists rather
+    than the immobilizing subset. Cheap Shot is the case: it names slows,
+    blinds, silences and grounds beside its immobilizes, so an
+    immobilize-only predicate would refuse damage the rune really does
+    empower. It is stated here for the reason its narrower sibling is: a
+    consumer comparing ``cc_kind`` against a string is re-creating the
+    divergence that let a slow price Command.
+    """
+    return _classify_cc(row)[0] in _CONTROL_CLASSES
 
 
 @cache

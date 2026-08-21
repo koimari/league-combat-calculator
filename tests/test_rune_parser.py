@@ -547,3 +547,51 @@ class TestNestedApWithNamedParamsStaysUnresolved:
         )
         assert effects["bonus_ad_ratio"] == pytest.approx(0.035)
         assert effects["ap_ratio"] == pytest.approx(0.0125)
+
+
+class TestPiecewiseProgressions:
+    """Module:Ability progression's ``start; then +f(x) for N; …`` form.
+
+    Two runes state a per-level payout this way, and both used to arrive as
+    a parse warning. Each run continues from the previous run's last value,
+    which is what makes ``1; then +0.25*x for 4`` a ramp rather than four
+    independent values.
+    """
+
+    def test_absorb_life_s_progression_matches_the_wiki_s_own_prose(self):
+        """The template states the rule twice; both readings must agree.
+
+        The machine formula is ``1; then +0.25*x for 4; then +1*x for 5;
+        then +2*x`` and the ``formula=`` prose beside it reads "1, +0.25 per
+        level until level 5, then +1 per level until level 10, then +2 per
+        level". The page's own span is "1 – 27 (based on level)".
+        """
+        values = evaluate_pp(
+            "1; then +0.25*x for 4;then +1*x for 5; then +2*x", "1 to 20 by 1"
+        )
+        assert len(values) == 20
+        assert values[:5] == pytest.approx([1.0, 1.25, 1.5, 1.75, 2.0])
+        assert values[5:10] == pytest.approx([3.0, 4.0, 5.0, 6.0, 7.0])
+        assert values[10] == pytest.approx(9.0)
+        assert (values[17], values[19]) == (pytest.approx(23.0), pytest.approx(27.0))
+
+    def test_a_run_states_its_length_and_the_last_one_takes_the_rest(self):
+        assert evaluate_pp("10; then +5*x for 2; then +1*x", "1 to 5 by 1") == (
+            pytest.approx([10.0, 15.0, 20.0, 21.0, 22.0])
+        )
+
+    def test_a_run_with_neither_a_length_nor_a_place_at_the_end_takes_one(self):
+        assert evaluate_pp("1; then +2; then +3*x", "1 to 4 by 1") == pytest.approx(
+            [1.0, 3.0, 6.0, 9.0]
+        )
+
+    def test_runs_that_do_not_fill_the_table_are_refused_not_truncated(self):
+        """A silently short level table is the degradation to catch."""
+        with pytest.raises(ValueError, match="renders 3 columns and its table has 5"):
+            evaluate_pp("1; then +1*x for 2", "1 to 5 by 1")
+        with pytest.raises(ValueError, match="overruns its 2-column table"):
+            evaluate_pp("1; then +1*x for 4; then +2*x", "1 to 2 by 1")
+
+    def test_a_semicolon_value_list_is_still_a_value_list(self):
+        """``then`` is the marker, so nothing else changes shape."""
+        assert evaluate_pp("10;20;30", None) == [10, 20, 30]

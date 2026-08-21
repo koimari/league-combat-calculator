@@ -28,11 +28,13 @@ from ..rune_effects import (
     at_level,
     breakdown_key,
     display_name,
+    keyed_columns,
     no_damage_compiler,
     required_level_table,
     required_leveling,
     required_pair,
     stated_type,
+    threshold_gates,
 )
 
 #: Absolute Focus's gate is the holder's own health share, and the pair
@@ -128,44 +130,6 @@ def _cached_effects(name: str) -> RuneValues:
     return RuneValues(name, RUNE_EFFECTS.get(name, {}).get("effects", {}))
 
 
-def _keyed_columns(
-    name: str, effects: RuneValues, key: str, index: int
-) -> tuple[float, ...]:
-    """Read one table whose columns are not champion levels.
-
-    ``required_leveling`` requires all 20 of them, which is the right door
-    for a level table and the wrong one for a table keyed by game minutes:
-    Gathering Storm states eight columns and would fail a level check that
-    is not its rule.
-    """
-    tables = effects.value(key)
-    if index >= len(tables):
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} holds {len(tables)} tables and "
-            f"table {index} was required — wiki parse degraded"
-        )
-    columns = tuple(float(value) for value in tables[index])
-    if len(columns) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} table {index} holds {len(columns)} "
-            "columns; a keyed table needs at least two to state its step — "
-            "wiki parse degraded"
-        )
-    return columns
-
-
-def _level_gates(
-    name: str, effects: RuneValues, key: str
-) -> tuple[tuple[int, float], ...]:
-    """Read a rune's ``level, bonus`` gates, requiring at least one."""
-    gates = tuple((int(level), float(bonus)) for level, bonus in effects.value(key))
-    if not gates:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} states no gates — wiki parse degraded"
-        )
-    return gates
-
-
 def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """Compile Transcendence: ability haste at the levels the rune names.
 
@@ -175,7 +139,7 @@ def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """
     name = "Transcendence"
     effects = RuneValues(name, entry.get("effects", {}))
-    gates = _level_gates(name, effects, "ability_haste_level_gates")
+    gates = threshold_gates(name, effects, "ability_haste_level_gates")
     granted = ", ".join(f"{bonus:g} at level {level}" for level, bonus in gates)
 
     def amount(context: RuneStatContext) -> float:
@@ -319,7 +283,7 @@ def _certify_adaptive_rendering(
     it without pinning either table, so a patch may move both freely and a
     reworded description still fails loudly.
     """
-    rendered = _keyed_columns(name, effects, "leveling", 0)
+    rendered = keyed_columns(name, effects, "leveling", 0)
     ratio = adaptive_force_attack_damage_ratio()
     if len(rendered) != len(force_by_mark) or any(
         abs(attack_damage - ratio * force) > 1e-6
@@ -358,7 +322,7 @@ def _compile_gathering_storm(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """
     name = "Gathering Storm"
     effects = RuneValues(name, entry.get("effects", {}))
-    force_by_mark = _keyed_columns(name, effects, "leveling", 1)
+    force_by_mark = keyed_columns(name, effects, "leveling", 1)
     _certify_adaptive_rendering(name, effects, force_by_mark)
     first_minute, last_minute = _minute_span(name, effects)
     minutes_per_mark = (last_minute - first_minute) / (len(force_by_mark) - 1)

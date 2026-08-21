@@ -45,13 +45,25 @@ numbers appear in a small set of template forms:
 - ``* Level 5: + 5 [[ability haste]].`` — a stat a rune grants only on
   reaching one champion level, recorded with the level that gates it
 - ``After reaching 15 stacks`` — the stack count a rune names as its threshold
+- ``within 4 seconds of using a {{tip|dash}}`` — how long a movement event
+  leaves a rune armed
 - flat stat grants: ``{{as|10% '''bonus''' attack speed}}``,
   ``{{as|65 '''bonus''' health}}``, ``8 ability haste``,
   ``{{as|2.5% '''bonus''' movement speed}}``
+- ratios reading a quantity other than AD or AP:
+  ``{{as|(+ 2.5% '''bonus''' health)}}``, ``{{as|(+ 15% shield amount)}}``
+- ``Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31
+  at 5 stacks`` — a base, a step, a ceiling and the total they make
+- ``For each ''Jack'' stack, gain {{as|1 ability haste}}`` plus
+  ``At 5 ''Jack'' stacks, gain {{adaptive|8}}`` — a per-stack step and the
+  stack gates a second grant arrives at
 
 "up to ... at maximum stacks/range" clauses restate per-stack (or minimum)
 values times a maximum — derived numbers, masked before scalar parsing so
-they never conflict with their sources.
+they never conflict with their sources.  Two sentences restate a *sum*
+rather than a product the same way ("up to 31 at 5 stacks", "for a total of
+20 at 10 stacks"); both are read to certify the parts they restate, and the
+parts are dropped with a warning when they stop adding up.
 
 This module is pure parsing: no network, no file writes. ``data_updater``
 fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
@@ -78,6 +90,39 @@ _AS_RATIO_PAIR = re.compile(
     r"\{\{as\|\(\+\s*\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}\s*"
     r"(?:('''bonus'''|bonus)\s*)?(AD|AP)\)"
 )
+#: The scaling ratios that read something other than the holder's attack
+#: damage or ability power.  One key per quantity and each pattern spelled
+#: for exactly the sentence that states it: Aftershock's and Guardian's
+#: "of your '''bonus''' health" is a different quantity from Shield Bash's
+#: "'''bonus''' health" and must not read as it.
+_AS_QUANTITY_RATIO_RULES: tuple[tuple[str, re.Pattern], ...] = (
+    (
+        "bonus_health_ratio",
+        re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*'''bonus'''\s*health\)"),
+    ),
+    (
+        "shield_amount_ratio",
+        re.compile(r"\{\{as\|\(\+\s*([\d.]+)%\s*shield amount\)"),
+    ),
+    (
+        # The heal verb is part of the pattern: "70% of your maximum health"
+        # is Absolute Focus's health *gate*, and a share of maximum health
+        # is only a heal where the sentence says it heals.
+        "max_health_heal_ratio",
+        re.compile(
+            r"\{\{tip\|heals\}\} you for "
+            r"\{\{as\|([\d.]+)% of your '''maximum''' health\}\}"
+        ),
+    ),
+    (
+        "missing_health_heal_ratio",
+        re.compile(r"\{\{as\|\(\+\s*([\d.]+)% of your '''missing''' health\)"),
+    ),
+)
+# "both after a 1-second delay" — how long after its trigger a rune's payout
+# lands.  Its own rule rather than a branch of the damage delays: those read
+# a projectile's flight or a burn's tick, and this reads a payout's wait.
+_PAYOUT_DELAY = re.compile(r"after a ([\d.]+)-second delay")
 _STACK_RULE = re.compile(r"Applying (\d+) stacks? to a target within a ([\d.]+) second")
 _STACK_DURATION = re.compile(r"apply a \{\{tip\|stacks?\}\} for ([\d.]+) seconds")
 _MAX_STACKS = re.compile(r"stacking up to (\d+) times")
@@ -125,6 +170,16 @@ _PER_STACK_RULES: tuple[tuple[str, re.Pattern], ...] = (
         re.compile(r"\{\{fd\|([\d.]+)% life steal\}\}+" + _PER_STACK_TAIL),
     ),
 )
+#: "Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31
+#: at 5 stacks." — Ultimate Hunter states its base, its step, its ceiling and
+#: the total they make in one sentence, so one rule reads all four and
+#: :func:`_parse_per_stack_grants` certifies the total against the other
+#: three.  Splitting them would let a reworded page keep one and drop the
+#: rest without any of them looking wrong.
+_ULTIMATE_HASTE_PER_STACK = re.compile(
+    r"Gain ([\d.]+) \(\+ ([\d.]+) per ''\w[^']*'' \[\[stack\]\]\) "
+    r"\[\[ultimate haste\]\], up to ([\d.]+) at (\d+) stacks"
+)
 #: "Gain ''Legend'' stacks for every 100 points earned, up to 10:" — the
 #: ceiling that bounds a per-stack grant's option.
 _STACK_CEILING = re.compile(r"stacks for every \d+ points earned, up to (\d+):")
@@ -160,6 +215,11 @@ _SELF_HEALTH_GATE = re.compile(
 _LEVEL_GATED_HASTE = re.compile(r"Level (\d+): \+ ([\d.]+) \[\[ability haste\]\]")
 # "After reaching 15 stacks" — the count a rune names as its own threshold.
 _STACK_THRESHOLD = re.compile(r"After reaching (\d+) stacks")
+# "within 4 seconds of using a {{tip|dash}}" — how long a movement event
+# leaves a rune armed.  The window is a fact about the rune and not about
+# the fight, so it is parsed rather than assumed, and a compiler that
+# cannot enforce it quotes it in its disclosure instead of implying none.
+_ARMING_WINDOW = re.compile(r"within ([\d.]+) seconds of using a \{\{tip\|dash\}\}")
 # "Your ultimate has 12% increased damage (reduced to 8% for area of effect
 # abilities)" — an amplifier that reaches one ability slot rather than the
 # holder's whole output.  Both ends are matched in one pattern because the
@@ -179,6 +239,13 @@ _AMP_RAMP_ENDS: tuple[tuple[str, re.Pattern], ...] = (
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
 _FOR_SUFFIX = re.compile(r"^(.+?)\s+for\s+(\d+)$")
+# "1; then +0.25*x for 4; then +1*x for 5; then +2*x" — Module:Ability
+# progression's piecewise form: a starting value and then runs of columns,
+# each continuing from the previous run's last value.  ``then`` is what
+# marks it, so a plain semicolon value list is unaffected; the ``+`` is part
+# of the grammar because every run adds to what came before.
+_PIECEWISE_MARK = "then"
+_PIECEWISE_SEGMENT = re.compile(r"^then\s*\+\s*(.+?)(?:\s+for\s+(\d+))?$")
 # "0 to 70 for 8" — eight columns keyed 0, 10, … 70.  The keys are not the
 # numbers the formula takes: ``x`` is the column's ordinal, exactly as the
 # ``for N`` suffix reads it, and the span is what the columns are keyed by.
@@ -215,6 +282,24 @@ _VARDEFINEECHO = re.compile(r"\{\{#vardefineecho:[^{}|]+\|([^{}|]*)\}\}")
 _MAXIMUM_RESTATEMENT = re.compile(
     r"up to (?:(?!up to).)*? at maximum (?:stacks|range)",
     re.IGNORECASE | re.DOTALL,
+)
+
+# Jack Of All Trades states its whole rule in three sentences, and all three
+# have to be claimed together: the per-stack step, the two stack gates, and
+# the total the gates add up to.  Left to the general rules the two gates
+# would arrive as two values of one adaptive-force key and be dropped as a
+# conflict — which is exactly what the cache showed before these existed.
+_ABILITY_HASTE_PER_STACK = re.compile(
+    r"For each ''\w[^']*'' stack, gain \{\{as\|([\d.]+) ability haste\}\}"
+)
+_ADAPTIVE_STACK_GATE = re.compile(
+    r"At (\d+) ''\w[^']*'' stacks, gain (?:an additional )?\{\{adaptive\|([\d.]+)\}\}"
+)
+#: ", for a total of {{adaptive|20}} at 10 ''Jack'' stacks" — the gates
+#: restated as their sum, exactly like "up to N at maximum stacks", and read
+#: to certify them rather than recorded as a third value.
+_STACK_GATE_TOTAL = re.compile(
+    r",? for a total of \{\{adaptive\|([\d.]+)\}\} at \d+ ''\w[^']*'' stacks"
 )
 
 # One key, one quantity: every {{rd|X%|Y%}} scalar split is claimed by the
@@ -294,7 +379,9 @@ _UNCLAIMED_RD = re.compile(r"\{\{rd\|(?:[^{}]|\{\{(?:[^{}]|\{\{[^{}]*\}\})*\}\})
 
 #: Module:Ability progression's ``defaultSize``: a stepless ``A to B`` with
 #: no explicit range renders 18 columns, endpoints anchored at levels 1/18.
-_DEFAULT_LEVEL_COUNT = 18
+#: Public because it is the width of a legitimately short level table, and
+#: ``rune_effects`` must admit one rather than call it a degraded parse.
+DEFAULT_LEVEL_COUNT = 18
 
 _ALLOWED_PP_NODES = (
     ast.Expression,
@@ -347,12 +434,15 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     enumeration of the values themselves (the second param then carries
     the keys, e.g. a distance span), a stepless ``N to M`` span
     (linear-filled with endpoints anchored — over the explicit range when
-    one is given, else the wiki's default 18 columns), and an arithmetic
-    formula in ``x``.  A ``for N`` suffix on the formula supplies the
-    range ``1..N`` when no second param does.
+    one is given, else the wiki's default 18 columns), an arithmetic
+    formula in ``x``, and a ``start; then +<formula> for N; …`` piecewise
+    progression.  A ``for N`` suffix on the formula supplies the range
+    ``1..N`` when no second param does.
     """
     formula = _drop_unbounded_column(formula)
     range_spec = _drop_unbounded_column(range_spec) if range_spec else range_spec
+    if _PIECEWISE_MARK in formula:
+        return _evaluate_piecewise(formula, _column_count(formula, range_spec))
     for_suffix = _FOR_SUFFIX.match(formula)
     if for_suffix:
         formula = for_suffix.group(1).strip()
@@ -381,6 +471,65 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     return [
         _evaluate_pp_node(expression.body, x) for x in _enumerate_range(range_match)
     ]
+
+
+def _column_count(formula: str, range_spec: str | None) -> int:
+    """How many columns a table renders, from its range or the wiki default."""
+    if not range_spec:
+        return DEFAULT_LEVEL_COUNT
+    columns = _COLUMN_SPAN.match(range_spec.strip())
+    if columns:
+        return int(columns.group(3))
+    range_match = _RANGE_SPEC.match(range_spec.strip())
+    if not range_match:
+        raise ValueError(f"Unsupported pp range spec {range_spec!r} for {formula!r}")
+    return len(_enumerate_range(range_match))
+
+
+def _evaluate_piecewise(formula: str, columns: int) -> list[float]:
+    """Evaluate a ``start; then +<formula> for N; …`` progression.
+
+    Module:Ability progression's piecewise form, and the two runes that
+    state a heal or a restore this way (Absorb Life, Presence of Mind) are
+    why it is read at all.  A run continues from the previous run's last
+    value and evaluates its own formula in the run's own index, so
+    ``1; then +0.25*x for 4`` is 1, 1.25, 1.5, 1.75, 2 and not four
+    independent values.
+
+    A run states its length or takes one column; the last run takes
+    whatever is left, which is what makes ``then +2*x`` mean "and so on to
+    the end of the table".  A description whose runs do not add up to the
+    table's own width is refused rather than truncated — a silently short
+    level table is the parse degradation the accessors exist to catch.
+    """
+    parts = [part.strip() for part in formula.split(";") if part.strip()]
+    values = [float(parts[0])]
+    for index, part in enumerate(parts[1:], start=1):
+        segment = _PIECEWISE_SEGMENT.match(part)
+        if not segment:
+            raise ValueError(f"Unparseable pp progression run {part!r} in {formula!r}")
+        last = index == len(parts) - 1
+        span = (
+            int(segment.group(2))
+            if segment.group(2)
+            else (columns - len(values) if last else 1)
+        )
+        if span < 1:
+            raise ValueError(
+                f"pp progression {formula!r} overruns its {columns}-column table"
+            )
+        expression = _safe_pp_expression(segment.group(1))
+        base = values[-1]
+        values.extend(
+            base + _evaluate_pp_node(expression.body, float(step))
+            for step in range(1, span + 1)
+        )
+    if len(values) != columns:
+        raise ValueError(
+            f"pp progression {formula!r} renders {len(values)} columns and its "
+            f"table has {columns}"
+        )
+    return values
 
 
 def _drop_unbounded_column(spec: str) -> str:
@@ -425,7 +574,7 @@ def _interpolate_endpoints(match: re.Match, range_spec: str | None) -> list[floa
             raise ValueError(f"Unsupported pp range spec {range_spec!r}")
         count = len(_enumerate_range(spec))
     else:
-        count = _DEFAULT_LEVEL_COUNT
+        count = DEFAULT_LEVEL_COUNT
     if count < 2:
         raise ValueError(f"pp span {match.group(0)!r} needs at least two levels")
     step = (finish_value - start_value) / (count - 1)
@@ -707,6 +856,46 @@ def _claim_split_pairs(text: str, recorder: _EffectRecorder) -> str:
     return _AS_RATIO_PAIR.sub(claim_ratio_pair, text)
 
 
+def _claim_stack_gated_grants(text: str, recorder: _EffectRecorder) -> str:
+    """Record a rune's per-stack and stack-gated grants, blanking their text.
+
+    Blanking is what makes them claimable at all: left in place, the general
+    flat rules would read the per-stack ability haste as a flat grant and
+    the two adaptive gates as two values of one key — dropping both as a
+    conflict, which is what the cache showed before this existed.
+
+    The trailing "for a total of X at N stacks" sentence is the gates
+    restated as their sum, so it certifies them rather than being recorded:
+    a page whose parts stop adding up is a rewording nothing should price
+    through, and the gates are dropped with a warning instead.
+    """
+    text = _ABILITY_HASTE_PER_STACK.sub(
+        lambda match: recorder.record("ability_haste_per_stack", float(match.group(1)))
+        or " ",
+        text,
+    )
+    gates = [
+        [int(stacks), float(force)]
+        for stacks, force in _ADAPTIVE_STACK_GATE.findall(text)
+    ]
+    text = _ADAPTIVE_STACK_GATE.sub(" ", text)
+    total_match = _STACK_GATE_TOTAL.search(text)
+    text = _STACK_GATE_TOTAL.sub(" ", text)
+    if not gates:
+        return text
+    if (
+        total_match
+        and abs(sum(force for _, force in gates) - float(total_match.group(1))) > 1e-9
+    ):
+        recorder.warn(
+            f"stack-gated adaptive force {gates!r} does not add up to the "
+            f"stated total {total_match.group(1)}; dropped"
+        )
+        return text
+    recorder.record("adaptive_force_stack_gates", gates)
+    return text
+
+
 def _parse_per_stack_grants(text: str, recorder: _EffectRecorder) -> None:
     """Read the stat grants a rune states per stack of a named counter.
 
@@ -719,9 +908,34 @@ def _parse_per_stack_grants(text: str, recorder: _EffectRecorder) -> None:
     if base_and_step:
         recorder.record("attack_speed_percent", float(base_and_step.group(1)))
         recorder.record("attack_speed_percent_per_stack", float(base_and_step.group(2)))
+    _parse_ultimate_haste_stacks(text, recorder)
     for key, pattern in _PER_STACK_RULES:
         for amount in pattern.findall(text):
             recorder.record(key, float(amount))
+
+
+def _parse_ultimate_haste_stacks(text: str, recorder: _EffectRecorder) -> None:
+    """Read a base ultimate-haste grant, its per-stack step and its ceiling.
+
+    The sentence states the total as well, and it is read to *certify* the
+    other three rather than recorded: base + step × ceiling is the total, so
+    a page whose four numbers stop agreeing is a rewording the compiler must
+    not price through.  Nothing is recorded in that case — absence, never a
+    plausible-looking wrong number.
+    """
+    match = _ULTIMATE_HASTE_PER_STACK.search(text)
+    if not match:
+        return
+    base, step, total, ceiling = (float(value) for value in match.groups())
+    if abs(base + step * ceiling - total) > 1e-9:
+        recorder.warn(
+            f"ultimate haste states {base:g} + {step:g} per stack up to "
+            f"{total:g} at {ceiling:g} stacks, which do not agree; dropped"
+        )
+        return
+    recorder.record("ultimate_haste", base)
+    recorder.record("ultimate_haste_per_stack", step)
+    recorder.record("max_stacks", int(ceiling))
 
 
 def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None:
@@ -733,6 +947,7 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     """
     text = _MAXIMUM_RESTATEMENT.sub(" ", _resolve_display_templates(description))
     text = _claim_split_pairs(text, recorder)
+    text = _claim_stack_gated_grants(text, recorder)
 
     for percent, bonus_marker, stat in _AS_RATIO.findall(text):
         if stat == "AP":
@@ -742,6 +957,10 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
         else:
             key = "ad_ratio"
         recorder.record(key, float(percent) / 100.0)
+
+    for key, pattern in _AS_QUANTITY_RATIO_RULES:
+        for percent in pattern.findall(text):
+            recorder.record(key, float(percent) / 100.0)
 
     for percent in _BONUS_TRUE_DAMAGE.findall(text):
         recorder.record("bonus_true_damage_ratio", float(percent) / 100.0)
@@ -802,6 +1021,10 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     if threshold_match:
         recorder.record("stack_threshold", int(threshold_match.group(1)))
 
+    arming_match = _ARMING_WINDOW.search(description)
+    if arming_match:
+        recorder.record("arming_window_seconds", float(arming_match.group(1)))
+
     level_gates = [
         [int(level), float(bonus)]
         for level, bonus in _LEVEL_GATED_HASTE.findall(description)
@@ -816,6 +1039,7 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
         or _POUNCE_DELAY.search(description)
         or _LANDING_DELAY.search(description)
         or _AFTER_DELAY.search(description)
+        or _PAYOUT_DELAY.search(description)
     )
     if delay_match:
         recorder.record("proc_delay_seconds", float(delay_match.group(1)))

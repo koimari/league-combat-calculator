@@ -16,12 +16,16 @@ a declared option.
 from typing import Any, Callable, Mapping, NamedTuple
 
 from ..ability_spec import Disposition, ZeroPolicy
+from ..item_effects import DamageInputs
 from ..rune_effects import (
     AmpCondition,
     RuneAmpContext,
     RuneConditionalAmpEffect,
     RuneEffect,
     RuneFlatAmpEffect,
+    RuneHealEffect,
+    RuneHealTrigger,
+    RuneMultiStatGrantEffect,
     RuneNoDamageEffect,
     RuneOption,
     RuneOptionKind,
@@ -29,9 +33,11 @@ from ..rune_effects import (
     RuneStatContext,
     RuneStatGrantEffect,
     RuneValues,
+    at_level,
     breakdown_key,
     display_name,
     no_damage_compiler,
+    required_leveling,
     rune_effect_value,
 )
 
@@ -93,14 +99,14 @@ def _compile_legend_alacrity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
-def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
-    """Compile Legend: Bloodline: the bonus health its maximum stacks grant.
+def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
+    """Compile Legend: Bloodline: life steal per stack, bonus health at the last.
 
-    Life steal is this rune's main half and the engine sums life steal from
-    the build's items alone, so it is disclosed rather than estimated. The
-    bonus health that arrives with the last stack *is* a channel the engine
-    reads, and it is what this grant prices — all of it or none, exactly as
-    the rune states it.
+    Both halves off one stack count, in one declaration, because that count
+    is what could otherwise drift between them. The life steal lands in the
+    channel the fight's own life-steal walk reads, so it becomes timed heal
+    packets off the holder's physical attacks exactly as an item's does; the
+    bonus health arrives whole or not at all, as the rune states it.
     """
     name = "Legend: Bloodline"
     effects = RuneValues(name, entry.get("effects", {}))
@@ -108,50 +114,58 @@ def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     per_stack = effects.number("life_steal_percent_per_stack")
     ceiling = effects.number("max_stacks")
 
-    def amount(context: RuneStatContext) -> float:
+    def amounts(context: RuneStatContext) -> Mapping[RuneStat, float]:
         stacks = context.option(name, _LEGEND_STACKS, 0.0)
-        return health if stacks >= ceiling else 0.0
+        return {
+            RuneStat.LIFESTEAL_PERCENT: per_stack * stacks,
+            RuneStat.BONUS_HEALTH: health if stacks >= ceiling else 0.0,
+        }
 
-    return RuneStatGrantEffect(
+    return RuneMultiStatGrantEffect(
         rune_name=name,
-        stat=RuneStat.BONUS_HEALTH,
-        amount=amount,
+        stats=(RuneStat.LIFESTEAL_PERCENT, RuneStat.BONUS_HEALTH),
+        amounts=amounts,
         disclosures=(
+            f"{name} grants {per_stack:g}% life steal per Legend stack "
+            f"({per_stack * ceiling:g}% at its {ceiling:g}-stack maximum), "
+            "which the fight's life-steal walk turns into heal packets off "
+            "the holder's own physical attack events.",
             f"{name} grants its {health:g} bonus health only at the "
             f"{ceiling:g}-stack maximum; the fight reads the "
-            f"{_LEGEND_STACKS!r} option, whose default is no stacks.",
-            f"{name}'s life steal ({per_stack:g}% per stack, "
-            f"{per_stack * ceiling:g}% at maximum) is withheld: life steal is "
-            "summed from the build's items and no rune grants into it.",
+            f"{_LEGEND_STACKS!r} option for both halves, and its default is "
+            "no stacks.",
         ),
     )
 
 
-def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
-    """Compile Legend: Haste: basic ability haste with no rune channel to land in.
+def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Legend: Haste: basic ability haste, one step per Legend stack.
 
-    The haste is real and the engine does read a ``basic_ability_haste`` stat
-    for the Q/W/E cooldowns it walks — but that stat is fed by items, and the
-    rune stat channels carry general ability haste, which the ultimate reads
-    too. Granting it there would shorten a cooldown this rune does not touch,
-    so the number is refused rather than misplaced.
+    Its own channel, not the general one: the engine reads a
+    ``basic_ability_haste`` stat for the Q/W/E cooldowns it walks and a
+    separate ultimate haste for R, and granting this rune's haste into the
+    general channel would shorten a cooldown it does not touch.
     """
     name = "Legend: Haste"
     effects = RuneValues(name, entry.get("effects", {}))
     per_stack = effects.number("basic_ability_haste_per_stack")
     ceiling = effects.number("max_stacks")
-    return RuneNoDamageEffect(
+
+    def amount(context: RuneStatContext) -> float:
+        return per_stack * context.option(name, _LEGEND_STACKS, 0.0)
+
+    return RuneStatGrantEffect(
         rune_name=name,
-        zero_policy=ZeroPolicy(
-            Disposition.WITHHELD,
-            f"it grants {per_stack:g} basic ability haste per Legend stack "
-            f"({per_stack * ceiling:g} at its {ceiling:g}-stack maximum), and "
-            "the rune stat channels carry only general ability haste, which "
-            "the ultimate reads as well",
-        ),
+        stat=RuneStat.BASIC_ABILITY_HASTE,
+        amount=amount,
         disclosures=(
-            f"{name} shortens basic-ability cooldowns alone, so a timed "
-            "rotation without it is a floor rather than a wrong total.",
+            f"{name} grants {per_stack:g} basic ability haste per Legend "
+            f"stack, {per_stack * ceiling:g} at its {ceiling:g}-stack "
+            f"maximum; the fight reads the {_LEGEND_STACKS!r} option, whose "
+            "default is no stacks.",
+            f"{name} shortens the basic abilities' cooldowns and nothing "
+            "else, so it moves a number only in a fight long enough to "
+            "recast one: a single rotation casts each ability once.",
         ),
     )
 
@@ -200,27 +214,6 @@ def _target_health_amp(
 #: event one simulated fight between two champions never produces, and two of
 #: them pay in health there is no rune channel to receive.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
-    "Absorb Life": (
-        Disposition.WITHHELD,
-        "it heals on killing a minion or a monster, and the pair engine "
-        "prices one champion against one champion — there is nothing to kill, "
-        "and no rune healing channel to receive the heal if there were",
-        (
-            "Absorb Life's heal is missing from the cache as well: its wiki "
-            "formula is a piecewise per-level rule the rune parser cannot "
-            "read, so the amount is unknown on top of being unpriced.",
-        ),
-    ),
-    "Triumph": (
-        Disposition.WITHHELD,
-        "its heal and its gold both need a champion takedown, and the "
-        "simulated fight scores none",
-        (
-            "Triumph's heal reads the holder's maximum and missing health, "
-            "neither of which the pair engine tracks; its gold is not damage "
-            "and would never join a total.",
-        ),
-    ),
     "Presence of Mind": (
         Disposition.WITHHELD,
         "it restores mana or energy, and the fight's rotation is not gated by "
@@ -231,6 +224,80 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         ),
     ),
 }
+
+
+def _compile_absorb_life(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
+    """Compile Absorb Life: a heal on a kill the pair engine has nothing to make.
+
+    Its amount is known — the wiki's piecewise progression parses — and its
+    destination now exists, so what is left is the event: the fight is one
+    champion against one champion, and a minion kill has neither an actor to
+    kill nor a timestamp to place the heal at. A kill count would be a
+    number with no moment, and a heal packet without a moment is the guessed
+    timestamp the ledger refuses everywhere else.
+    """
+    name = "Absorb Life"
+    effects = RuneValues(name, entry.get("effects", {}))
+    by_level = required_leveling(name, effects)
+    return RuneNoDamageEffect(
+        rune_name=name,
+        zero_policy=ZeroPolicy(
+            Disposition.WITHHELD,
+            "it heals on killing a minion or a monster, and the pair engine "
+            "prices one champion against one champion — there is nothing to "
+            "kill",
+        ),
+        disclosures=(
+            f"{name} would heal {at_level(by_level, 1):g} at level 1 rising "
+            f"to {at_level(by_level, 18):g} at level 18 and "
+            f"{at_level(by_level, 20):g} at level 20, per kill; the amount is "
+            "cached and only the kill is missing.",
+            f"{name}'s heal has nowhere to land in time even as a count: a "
+            "kill carries no timestamp, and the self-healing ledger takes "
+            "packets with moments rather than totals.",
+        ),
+    )
+
+
+def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
+    """Compile Triumph: a share of maximum health on a champion takedown.
+
+    Its takedown is not an option and not an invention: the fight scores one
+    exactly when the target ends at or below zero health, and a fight the
+    target survives pays nothing. What the pair engine still cannot supply
+    is the *holder's* missing health, so that half of the heal is disclosed
+    rather than estimated — and the gold is not damage and never joins a
+    total.
+    """
+    name = "Triumph"
+    effects = RuneValues(name, entry.get("effects", {}))
+    max_health_ratio = effects.number("max_health_heal_ratio")
+    missing_health_ratio = effects.number("missing_health_heal_ratio")
+    gold = effects.number("flat_gold")
+
+    def amount(inputs: DamageInputs) -> float:
+        return max_health_ratio * inputs.champion_stats.get("health", 0.0)
+
+    return RuneHealEffect(
+        rune_name=name,
+        trigger=RuneHealTrigger.TAKEDOWNS,
+        # Every takedown pays; nothing gates a second one but a second kill.
+        cooldown_seconds=0.0,
+        delay_seconds=effects.number("proc_delay_seconds"),
+        amount=amount,
+        disclosures=(
+            f"{name} heals {max_health_ratio * 100:g}% of the holder's "
+            "maximum health on a takedown the fight actually scored — the "
+            "target ending at or below zero health — and nothing on a fight "
+            "the target survives. The takedown is dated at the window's last "
+            "damage instance, which is at or after the one that crossed "
+            "zero, so the heal arrives no earlier than it should.",
+            f"{name}'s other half ({missing_health_ratio * 100:g}% of the "
+            "holder's *missing* health) is withheld: the pair engine prices "
+            f"outgoing damage and carries no holder health. Its {gold:g} gold "
+            "is not damage and never joins a total.",
+        ),
+    )
 
 
 def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
@@ -333,6 +400,8 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()
     },
+    "Absorb Life": _compile_absorb_life,
+    "Triumph": _compile_triumph,
     "Legend: Alacrity": _compile_legend_alacrity,
     "Legend: Haste": _compile_legend_haste,
     "Legend: Bloodline": _compile_legend_bloodline,
@@ -344,7 +413,7 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
     **{
         name: (_legend_stack_option(name),)
-        for name in ("Legend: Alacrity", "Legend: Bloodline")
+        for name in ("Legend: Alacrity", "Legend: Bloodline", "Legend: Haste")
     },
     "Last Stand": (
         RuneOption(

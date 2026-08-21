@@ -1,16 +1,18 @@
-"""Resolve's minor runes: one stat grant and eight receipted refusals.
+"""Resolve's minor runes: three priced runes and six receipted refusals.
 
 Resolve is the durability path and the pair engine prices outgoing damage,
-so eight of its nine runes compile to a refusal that says which half this
-engine holds no channel for. Overgrowth is the exception: its stacks buy
-maximum health, which the fight's stat block does read and health-scaling
-damage does spend.
+so six of its nine runes compile to a refusal that says which half this
+engine holds no channel for. Three are not refusals: Overgrowth's stacks buy
+maximum health, which the fight's stat block does read; Shield Bash prices
+the swing a self-shield armed; and Font of Life heals on the casts that
+impair, which is the impaired stream read from the impairing side.
 """
 
 import pytest
 
 from src.calculator import rune_effects, rune_parser
 from src.calculator.calculate import calculate_payload
+from src.calculator.item_effects import DamageInputs
 from src.calculator.rune_paths import resolve
 
 #: Every Resolve rune that books no damage, with the words its receipt must
@@ -18,12 +20,10 @@ from src.calculator.rune_paths import resolve
 #: asserted as "some string".
 REFUSALS = {
     "Demolish": "damages turrets",
-    "Font of Life": "no rune healing channel",
-    "Shield Bash": "self-shield events",
     "Conditioning": "outgoing damage",
-    "Second Wind": "no rune healing channel",
+    "Second Wind": "carries neither the holder's health",
     "Bone Plating": "damage the holder receives",
-    "Revitalize": "no rune healing channel",
+    "Revitalize": "reaches the stat card and no heal packet",
     "Unflinching": "while the holder is crowd controlled",
 }
 
@@ -111,7 +111,7 @@ class TestOvergrowth:
 
 
 class TestResolveRefusals:
-    """Eight runes the pair engine holds no channel for, each saying which."""
+    """Six runes the pair engine holds no channel for, each saying which."""
 
     @pytest.mark.parametrize("name,reason", sorted(REFUSALS.items()))
     def test_each_refusal_is_withheld_and_names_the_half_it_refuses(self, name, reason):
@@ -120,12 +120,6 @@ class TestResolveRefusals:
         assert effect.zero_policy.disposition.name == "WITHHELD", name
         assert reason in effect.zero_policy.reason, name
         assert effect.receipts[0].startswith(f"{name} is not priced:")
-
-    def test_shield_bash_names_both_what_stops_it_and_what_is_unparsed(self):
-        """Its trigger has no rune stream, and two of its three terms are gone."""
-        effect = rune_effects.resolve_rune("Shield Bash")
-        assert "armed by the holder gaining a shield" in effect.zero_policy.reason
-        assert any("share of the shield's own amount" in r for r in effect.receipts)
 
     def test_a_selected_refusal_publishes_its_receipt_and_moves_nothing(self):
         bare = calculate_payload(_request())
@@ -160,3 +154,179 @@ class TestTheParseOvergrowthNeeded:
         )
         assert effects["stack_threshold"] == 15
         assert warnings == []
+
+
+#: A twenty-second window with the auto stream on, so a self-shield has a
+#: swing to arm. Malphite's passive shield rides his first damage event.
+_SHIELD_PROBE = {
+    "level": 18,
+    "items": ["Sunfire Aegis"],
+    "fight_mode": "time_based",
+    "fight_duration": 20.0,
+    "auto_attack_uptime_mode": "calculated",
+    "target_health": 10000.0,
+    "target_armor": 100.0,
+    "target_mr": 100.0,
+}
+
+
+class TestShieldBash:
+    """The swing a self-shield armed, on the stream that watches for one."""
+
+    def test_it_prices_its_level_table_and_its_bonus_health_share(self):
+        """30 at level 18, plus 2.5% of the holder's bonus health."""
+        effect = rune_effects.resolve_rune("Shield Bash")
+        assert isinstance(effect, rune_effects.RuneProcEffect)
+        assert effect.trigger is rune_effects.RuneTrigger.SELF_SHIELD_EVENTS
+        assert effect.raw_damage(_shield_inputs(level=18)) == pytest.approx(30.0)
+        assert effect.raw_damage(
+            _shield_inputs(level=18, health=2500.0, base_health=2000.0)
+        ) == pytest.approx(30.0 + 0.025 * 500.0)
+        assert effect.raw_damage(_shield_inputs(level=1)) == pytest.approx(5.0)
+
+    def test_both_ratios_come_out_of_the_cache_not_the_compiler(self):
+        cached = rune_effects.RUNE_EFFECTS["Shield Bash"]["effects"]
+        assert cached["bonus_health_ratio"] == 0.025
+        assert cached["shield_amount_ratio"] == 0.15
+
+    def test_the_shield_share_is_withheld_because_a_row_prices_one_number(self):
+        effect = rune_effects.resolve_rune("Shield Bash")
+        assert "15% of the shield's own amount — is withheld" in effect.disclosures[1]
+
+    def test_a_shielded_kit_empowers_one_swing_and_an_unshielded_one_none(self):
+        """Malphite's passive shield arms his first swing; Ashe has none.
+
+        350 bonus health from Sunfire Aegis, so the raw is 30 + 8.75 =
+        38.75, halved by 100 magic resistance to 19.4 — and the fight total
+        moves by exactly that.
+        """
+        bare = calculate_payload({**_SHIELD_PROBE, "champion": "Malphite"})
+        shielded = calculate_payload(
+            {**_SHIELD_PROBE, "champion": "Malphite", "minor_runes": ["Shield Bash"]}
+        )
+        bonus_health = (
+            bare["champion_stats"]["health"] - bare["champion_stats"]["base_health"]
+        )
+        assert bonus_health == pytest.approx(350.0)
+        row = shielded["breakdown"]["rune_Shield Bash"]
+        assert row["count"] == 1
+        assert row["total_damage"] == pytest.approx(19.4, abs=0.05)
+        assert shielded["total_damage"] - bare["total_damage"] == pytest.approx(
+            19.4, abs=0.05
+        )
+
+    def test_a_kit_with_no_self_shield_books_nothing_and_says_so(self):
+        result = calculate_payload(
+            {**_SHIELD_PROBE, "champion": "Ashe", "minor_runes": ["Shield Bash"]}
+        )
+        assert "rune_Shield Bash" not in result["breakdown"]
+        assert any(
+            "Shield Bash never procced: the simulated fight produced no basic "
+            "attacks following a self-shield" in note
+            for note in result["notes"]
+        )
+
+    def test_a_shield_with_no_swing_after_it_empowers_nothing(self):
+        """Camille shields herself and this fight gives her no swing at all.
+
+        The stream counts swings rather than shields for exactly this case:
+        pricing the shield's own timestamp would book damage no attack
+        delivered.
+        """
+        result = calculate_payload(
+            {**_SHIELD_PROBE, "champion": "Camille", "minor_runes": ["Shield Bash"]}
+        )
+        assert "rune_Shield Bash" not in result["breakdown"]
+        assert any("Shield Bash never procced" in note for note in result["notes"])
+
+
+def _shield_inputs(*, level, health=0.0, base_health=0.0):
+    return DamageInputs(
+        champion_stats={"health": health, "base_health": base_health},
+        level=level,
+        is_melee=True,
+        target_max_health=10000.0,
+        target_current_health=10000.0,
+    )
+
+
+class TestFontOfLife:
+    """A heal on the casts that impair — both channels meeting on one rune."""
+
+    def test_it_heals_its_cached_melee_and_ranged_tables(self):
+        """10 to 50 melee, 7 to 35 ranged, once per 20s."""
+        effect = rune_effects.resolve_rune("Font of Life")
+        assert isinstance(effect, rune_effects.RuneHealEffect)
+        assert effect.trigger is rune_effects.RuneHealTrigger.IMPAIRING_INSTANCES
+        assert effect.cooldown_seconds == 20.0
+        assert effect.amount(_heal_inputs(level=1, is_melee=True)) == pytest.approx(
+            10.0
+        )
+        assert effect.amount(_heal_inputs(level=18, is_melee=True)) == (
+            pytest.approx(50.0)
+        )
+        assert effect.amount(_heal_inputs(level=1, is_melee=False)) == pytest.approx(
+            7.0
+        )
+        assert effect.amount(_heal_inputs(level=18, is_melee=False)) == (
+            pytest.approx(35.0)
+        )
+
+    def test_the_ally_half_is_still_withheld_and_says_why_twice(self):
+        effect = rune_effects.resolve_rune("Font of Life")
+        assert "ally half is withheld twice over" in effect.disclosures[1]
+
+    @pytest.mark.parametrize(
+        "champion,amount",
+        [("Malphite", 50.0), ("Ashe", 35.0)],
+    )
+    def test_an_impairing_kit_heals_at_its_range_class(self, champion, amount):
+        """Malphite's melee 50 and Ashe's ranged 35, at the impairing cast."""
+        request = {**_IMPAIR_PROBE, "champion": champion}
+        bare = calculate_payload(
+            {key: value for key, value in request.items() if key != "minor_runes"}
+        )
+        healed = calculate_payload(dict(request))
+        packets = [
+            event
+            for event in healed["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+        assert [(packet["source"], packet["amount"]) for packet in packets] == [
+            ("Font of Life (rune)", pytest.approx(amount))
+        ]
+        assert healed["self_healing"] - bare["self_healing"] == pytest.approx(amount)
+        assert healed["total_damage"] == pytest.approx(bare["total_damage"])
+
+    def test_a_kit_that_reviews_no_control_heals_nothing(self):
+        """Annie declares no ``MODULE_CC``, so nothing impairs and nothing pays."""
+        healed = calculate_payload({**_IMPAIR_PROBE, "champion": "Annie"})
+        assert not [
+            event
+            for event in healed["self_healing_events"]
+            if event["kind"] == "rune_proc"
+        ]
+
+
+#: A twenty-second window with Font of Life on the page — long enough for
+#: the impairing casts a kit makes, and one rune cooldown wide.
+_IMPAIR_PROBE = {
+    "level": 18,
+    "items": [],
+    "fight_mode": "time_based",
+    "fight_duration": 20.0,
+    "target_health": 10000.0,
+    "target_armor": 100.0,
+    "target_mr": 100.0,
+    "minor_runes": ["Font of Life"],
+}
+
+
+def _heal_inputs(*, level, is_melee):
+    return DamageInputs(
+        champion_stats={},
+        level=level,
+        is_melee=is_melee,
+        target_max_health=10000.0,
+        target_current_health=10000.0,
+    )

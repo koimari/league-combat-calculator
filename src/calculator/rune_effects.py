@@ -34,7 +34,12 @@ from .ability_spec import Disposition, ZeroPolicy
 from .data_fetcher import fetch_rune_data
 from .item_effects import DamageInputs
 from .request_parsing import request_positional_string_list, request_string_list
-from .rune_parser import ADAPTIVE_FORCE_KEY, RESERVED_CACHE_KEYS, SHARDS_KEY
+from .rune_parser import (
+    ADAPTIVE_FORCE_KEY,
+    DEFAULT_LEVEL_COUNT,
+    RESERVED_CACHE_KEYS,
+    SHARDS_KEY,
+)
 
 
 def _load_rune_cache() -> dict[str, Any]:
@@ -160,6 +165,23 @@ class RuneTrigger(Enum):
     BASIC_ATTACKS = "basic_attacks"
     #: Accepted damaging ability casts alone — autos never trigger these.
     DAMAGING_CASTS = "damaging_casts"
+    #: Damaging casts whose own authored parts apply crowd control, so the
+    #: target is under it when the damage lands. A floor by construction:
+    #: the engine carries no control *duration*, so damage landing later
+    #: inside the same control is not in this stream.
+    IMPAIRED_INSTANCES = "impaired_instances"
+    #: The swings a self-shield armed: the first basic attack at or after
+    #: each ``self_shield_events`` entry the fight publishes. Named for the
+    #: arming event because that is what a rune watching it declares; what
+    #: it *counts* is swings, because a shield with no attack after it
+    #: empowers nothing and must book nothing.
+    SELF_SHIELD_EVENTS = "self_shield_events"
+
+
+def _always_armed(options: "Mapping[str, Mapping[str, float]]") -> bool:
+    """The default arming rule: nothing the page declares gates this proc."""
+    del options
+    return True
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,6 +199,13 @@ class RuneProcEffect:
     than spending them (Electrocute). ``disclosures`` are the rune's own
     receipts — assumed cadences and withheld halves — which the engine
     publishes verbatim; the words belong with the rune.
+
+    ``armed`` is how a proc reads the page's declared options — the one
+    thing the raw-damage inputs cannot carry, because those are the item
+    vocabulary and a rune option is not an item's. A rune whose whole
+    trigger is an input the fight has no event for (Sudden Impact's dash)
+    declares the option and answers here; every other rune keeps the
+    default and is armed by its stream alone.
     """
 
     rune_name: str
@@ -191,6 +220,59 @@ class RuneProcEffect:
     trigger: RuneTrigger = RuneTrigger.DAMAGE_INSTANCES
     consumes_stacks: bool = True
     disclosures: tuple[str, ...] = ()
+    armed: "Callable[[Mapping[str, Mapping[str, float]]], bool]" = _always_armed
+
+
+class RuneHealTrigger(Enum):
+    """Which of the fight's streams a rune heal is paid on.
+
+    The heal side's :class:`RuneTrigger`: the rune names the stream and the
+    engine owns what is in it, so a healing rune is walked by the same kind
+    of declaration a damaging one is.
+    """
+
+    #: Every damage instance the holder lands on the target, gated by the
+    #: rune's own cooldown (Taste of Blood).
+    DAMAGE_DEALT = "damage_dealt"
+    #: The instances that put the target under crowd control (Font of Life)
+    #: — :attr:`RuneTrigger.IMPAIRED_INSTANCES` read from the other side:
+    #: one rune is paid for landing damage on an impaired target and the
+    #: other for doing the impairing, and both are the same reviewed marker.
+    IMPAIRING_INSTANCES = "impairing_instances"
+    #: The takedowns the fight actually scored — the target reaching zero
+    #: health, at the instance that took it there (Triumph). None are
+    #: invented: a fight the target survives pays nothing.
+    TAKEDOWNS = "takedowns"
+
+
+@dataclass(frozen=True, slots=True)
+class RuneHealEffect:
+    """A rune that heals its holder, priced into the self-healing ledger.
+
+    The heal-side sibling of :class:`RuneProcEffect`, and deliberately the
+    same shape: a declared stream, a cooldown the engine gates on, a delay
+    the heal lands after, and one formula priced against the build. The
+    packets it produces are the ones item sustain produces — a rune heal is
+    not a different kind of heal, only a different owner.
+
+    ``amount`` reads :class:`~.item_effects.DamageInputs` because that is
+    already the shape every compiled rune formula is handed: the holder's
+    stat block, level and range class, and the target's health. Nothing in
+    it is damage-specific, and a second near-identical record for heals
+    would be one more thing to keep in step.
+    """
+
+    rune_name: str
+    trigger: RuneHealTrigger
+    cooldown_seconds: float
+    delay_seconds: float
+    amount: Callable[[DamageInputs], float]
+    disclosures: tuple[str, ...] = ()
+
+    @property
+    def source(self) -> str:
+        """The ledger label for this rune's heal packets."""
+        return display_name(self.rune_name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -335,6 +417,19 @@ class RuneStat(Enum):
     ADAPTIVE_FORCE = "adaptive_force"
     ATTACK_SPEED_PERCENT = "attack_speed_percent"
     ABILITY_HASTE = "ability_haste"
+    #: Haste on the basic abilities alone (Q/W/E), the channel Spear of
+    #: Shojin feeds. Separate from ``ABILITY_HASTE`` because the ultimate
+    #: reads that one: granting Legend: Haste there would shorten a cooldown
+    #: the rune does not touch.
+    BASIC_ABILITY_HASTE = "basic_ability_haste"
+    #: Haste on the ultimate alone, the channel Malignance and its siblings
+    #: feed, and the mirror of the one above.
+    ULTIMATE_HASTE = "ultimate_haste"
+    #: Life steal, which the fight's own life-steal walk turns into timed
+    #: heal packets off the holder's physical attack events — so a rune
+    #: granting here reaches the heal ledger through the same door an item's
+    #: life steal does, and needs no rune-shaped heal of its own.
+    LIFESTEAL_PERCENT = "lifesteal_percent"
     MOVE_SPEED_PERCENT = "move_speed_percent"
     BONUS_HEALTH = "bonus_health"
     LETHALITY = "lethality"
@@ -409,11 +504,30 @@ def _option_value(
 ) -> float:
     """One declared option of one rune, or its disclosed default.
 
-    Shared by the two contexts a rune formula reads, so "what this option is
-    worth" has one implementation whether a stat grant or an amplifier asks.
+    Shared by everything a rune formula reads an option through — the two
+    contexts and the proc arming rule — so "what this option is worth" has
+    one implementation whether a stat grant, an amplifier or a proc asks.
     """
     value = options.get(rune_name, {}).get(key)
     return default if value is None else float(value)
+
+
+def armed_by_option(
+    rune_name: str, key: str, default: float = 0.0
+) -> Callable[[Mapping[str, Mapping[str, float]]], bool]:
+    """A proc arming rule reading one declared switch off the page.
+
+    The proc-side counterpart of ``RuneStatContext.option``: a rune whose
+    trigger is an input the fight has no event for declares the switch and
+    hands this to :class:`RuneProcEffect`, so the option is read in one
+    place rather than by a walker branch per rune. The default is the
+    un-triggered state, so a page that sets nothing prices nothing.
+    """
+
+    def armed(options: Mapping[str, Mapping[str, float]]) -> bool:
+        return bool(_option_value(options, rune_name, key, default))
+
+    return armed
 
 
 @dataclass(frozen=True, slots=True)
@@ -424,6 +538,11 @@ class RuneStatContext:
     adaptive force asks which of them is larger; ``options`` carries the
     explicit inputs the request has no other home for (a stack count, a game
     minute), each with a default the rune discloses.
+
+    ``item_stat_types`` is how many distinct stat types the build's items
+    grant — a fact about the build rather than an option, because the build
+    is in the request and nothing has to be assumed to count it. Jack Of All
+    Trades is the one rune whose stacks *are* that count.
     """
 
     level: int
@@ -431,6 +550,7 @@ class RuneStatContext:
     bonus_attack_damage: float
     ability_power: float
     options: Mapping[str, Mapping[str, float]]
+    item_stat_types: int = 0
 
     def option(self, rune_name: str, key: str, default: float) -> float:
         """One declared option of one rune, or its disclosed default."""
@@ -439,7 +559,7 @@ class RuneStatContext:
 
 @dataclass(frozen=True, slots=True)
 class RuneStatGrantEffect:
-    """A rune that grants a stat, applied where item stats are applied.
+    """A rune that grants one stat, applied where item stats are applied.
 
     ``amount`` prices the grant for one build and level; ``stat`` names the
     channel it lands in. A grant that is conditional on something the request
@@ -452,6 +572,56 @@ class RuneStatGrantEffect:
     stat: RuneStat
     amount: Callable[[RuneStatContext], float]
     disclosures: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class RuneMultiStatGrantEffect:
+    """A rune granting several channels at once, off one shared count.
+
+    Its own kind rather than two of the sibling above, because these runes'
+    channels are computed *together*: Jack Of All Trades pays ability haste
+    per stack and adaptive force at two stack gates, and Legend: Bloodline
+    pays life steal per stack and bonus health at its last one. Split into
+    two single-channel effects, the halves could read different counts —
+    which is exactly the drift one declaration prevents.
+
+    ``stats`` is declared rather than derived from what ``amounts`` returns,
+    for the reason the closed :class:`RuneStat` set exists at all: whether a
+    rune grants into a channel the engine reads has to be checkable without
+    running a fight. A channel ``amounts`` returns that ``stats`` does not
+    declare is refused rather than applied.
+    """
+
+    rune_name: str
+    stats: tuple[RuneStat, ...]
+    amounts: Callable[[RuneStatContext], Mapping[RuneStat, float]]
+    disclosures: tuple[str, ...] = ()
+
+    def declared_amounts(self, context: RuneStatContext) -> Mapping[RuneStat, float]:
+        """The grant, certified against the channels this rune declares."""
+        amounts = self.amounts(context)
+        undeclared = sorted(
+            stat.value for stat in amounts if stat not in set(self.stats)
+        )
+        if undeclared:
+            raise KeyError(
+                f"rune {self.rune_name!r} granted into undeclared channels "
+                f"{undeclared} — a stat rune's channels are declared, not "
+                "discovered at apply time"
+            )
+        return amounts
+
+
+#: The kinds the damage walk carries for their *words* alone. Each applies
+#: its number somewhere else — a stat grant in ``stats.py`` before the fight,
+#: a heal in the pipeline's self-healing ledger after it — so none writes a
+#: damage row, and what the fight owes the reader is the assumption behind
+#: the number rather than the number.
+RUNE_RECEIPT_ONLY_KINDS = (
+    RuneStatGrantEffect,
+    RuneMultiStatGrantEffect,
+    RuneHealEffect,
+)
 
 
 class AmpCondition(Enum):
@@ -555,7 +725,9 @@ RuneEffect = (
     | RuneProcAmpEffect
     | RuneAbilityProcEffect
     | RuneNoDamageEffect
+    | RuneHealEffect
     | RuneStatGrantEffect
+    | RuneMultiStatGrantEffect
     | RuneConditionalAmpEffect
     | RuneFlatAmpEffect
 )
@@ -582,13 +754,39 @@ class RuneValues:
         return float(self.value(key))
 
 
+#: The column count of a level table stating every level of the game's cap.
+_FULL_LEVEL_COUNT = 20
+
+#: The two widths the wiki's own rendering gives a level table. A formula
+#: with an explicit ``1 to 20 by 1`` range states all twenty; a stepless
+#: ``A to B`` (Sudden Impact's "20 to 80") renders Module:Ability
+#: progression's ``defaultSize`` of eighteen with its endpoints anchored at
+#: levels 1 and 18. Both are complete statements of what the wiki says, and
+#: a table of any *other* width is a degraded parse — which is the check
+#: this pair keeps: admitting the short rendering must not admit a
+#: twenty-level table that lost two of its columns.
+LEVEL_TABLE_SIZES = (DEFAULT_LEVEL_COUNT, _FULL_LEVEL_COUNT)
+
+
+def _certified_level_table(name: str, key: str, values: Sequence[Any]) -> list[float]:
+    """One per-level table, certified as a width the wiki renders."""
+    by_level = [float(value) for value in values]
+    if len(by_level) not in LEVEL_TABLE_SIZES:
+        widths = " or ".join(str(size) for size in LEVEL_TABLE_SIZES)
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} covers {len(by_level)} "
+            f"levels; the wiki renders {widths} — wiki parse degraded"
+        )
+    return by_level
+
+
 def required_leveling(
     name: str,
     effects: RuneValues,
     key: str = "leveling",
     index: int = 0,
 ) -> list[float]:
-    """Read one of a rune's per-level tables, requiring all 20 levels.
+    """Read one of a rune's per-level tables, at a width the wiki renders.
 
     ``key`` and ``index`` because a rune record states several tables under
     several names — a melee and a ranged one, a base and an escalated one —
@@ -600,28 +798,54 @@ def required_leveling(
             f"RUNE_EFFECTS[{name!r}] {key} holds {len(tables)} tables and "
             f"table {index} was required — wiki parse degraded"
         )
-    by_level = [float(value) for value in tables[index]]
-    if len(by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} covers {len(by_level)} "
-            "levels; expected 20 — wiki parse degraded"
-        )
-    return by_level
+    return _certified_level_table(name, key, tables[index])
 
 
 def required_level_table(name: str, effects: RuneValues, key: str) -> list[float]:
-    """Read one flat per-level table, requiring all 20 levels.
+    """Read one flat per-level table, at a width the wiki renders.
 
     The sibling of :func:`required_leveling` for the keys the parser records
     as a single table rather than a list of them (``adaptive_force_leveling``).
     """
-    by_level = [float(value) for value in effects.value(key)]
-    if len(by_level) < 20:
+    return _certified_level_table(name, key, effects.value(key))
+
+
+def keyed_columns(
+    name: str, effects: RuneValues, key: str, index: int
+) -> tuple[float, ...]:
+    """Read one table whose columns are not champion levels.
+
+    :func:`required_leveling` certifies a width the wiki renders *levels*
+    at, which is the right door for a level table and the wrong one for a
+    table keyed by game minutes: Gathering Storm states eight columns and
+    would fail a level check that is not its rule.
+    """
+    tables = effects.value(key)
+    if index >= len(tables):
         raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] {key} covers {len(by_level)} "
-            "levels; expected 20 — wiki parse degraded"
+            f"RUNE_EFFECTS[{name!r}] {key} holds {len(tables)} tables and "
+            f"table {index} was required — wiki parse degraded"
         )
-    return by_level
+    columns = tuple(float(value) for value in tables[index])
+    if len(columns) < 2:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} table {index} holds {len(columns)} "
+            "columns; a keyed table needs at least two to state its step — "
+            "wiki parse degraded"
+        )
+    return columns
+
+
+def threshold_gates(
+    name: str, effects: RuneValues, key: str
+) -> tuple[tuple[int, float], ...]:
+    """Read a rune's ``level, bonus`` gates, requiring at least one."""
+    gates = tuple((int(level), float(bonus)) for level, bonus in effects.value(key))
+    if not gates:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} states no gates — wiki parse degraded"
+        )
+    return gates
 
 
 def required_pair(name: str, effects: RuneValues, key: str) -> tuple[float, float]:
@@ -1034,9 +1258,10 @@ def _compile_grasp_of_the_undying(entry: Mapping[str, Any]) -> RuneProcEffect:
             "withheld and the count is a floor of one.",
             f"{name}'s heal ({melee_heal * 100:g}% / {ranged_heal * 100:g}% "
             f"maximum health) and permanent bonus health ({melee_health:g} / "
-            f"{ranged_health:g}) are withheld: the engine has no rune healing "
-            "channel, and the health is earned proc by proc over a game this "
-            "one fight does not simulate.",
+            f"{ranged_health:g}) are withheld: a rune resolves to one effect "
+            "and this one is its damage proc, so its heal has no packet to "
+            "ride; the health is earned proc by proc over a game this one "
+            "fight does not simulate.",
         ),
     )
 
@@ -1175,17 +1400,20 @@ _NO_DAMAGE_KEYSTONES: Mapping[str, tuple[Disposition, str, tuple[str, ...]]] = {
         "stat block is resolved once from the fight's opening state, so the "
         "engine has no channel to price a growing grant through",
         (
-            "Conqueror's heal at maximum stacks is withheld too: the engine "
-            "has no rune healing channel.",
+            "Conqueror's heal at maximum stacks is withheld too: a rune "
+            "resolves to one effect and this one is its stat grant, so the "
+            "heal has no packet to ride.",
         ),
     ),
     "Fleet Footwork": (
         Disposition.WITHHELD,
-        "its empowered attack heals and grants movement speed, and the "
-        "engine has no rune healing channel to price the heal through",
+        "its empowered attack heals on an Energized charge cycle no rune "
+        "trigger stream builds — the engine counts Energized charges from "
+        "item declarations, and a rune has no way to declare one",
         (
             "Fleet Footwork deals no damage of its own, so nothing is "
-            "understated in the damage total by withholding it.",
+            "understated in the damage total by withholding it; the heal "
+            "itself and its ratios are cached, so only the cycle is missing.",
         ),
     ),
     "Aftershock": (
@@ -1660,6 +1888,17 @@ class RuneStatGrants:
     ability_power: float = 0.0
     attack_speed_percent: float = 0.0
     ability_haste: float = 0.0
+    basic_ability_haste: float = 0.0
+    #: Neutral as ``int`` zero, not ``0.0``, and that is load-bearing: the
+    #: item side of this one stat sums *terms* (``item_effects``'s declared
+    #: sibling read), so a build holding no registry item totals to ``int``
+    #: 0 and ``views.publish`` gives an int leaf no disposition entry where
+    #: it gives a float one. A neutral ``0.0`` here would publish a leaf
+    #: that was not there, moving the coupled golden with no number
+    #: changing. A rune that actually grants contributes a float, as an
+    #: item's declared read does.
+    ultimate_haste: float = 0
+    lifesteal_percent: float = 0.0
     move_speed_percent: float = 0.0
     bonus_health: float = 0.0
     lethality: float = 0.0
@@ -1671,6 +1910,9 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
     {
         RuneStat.ATTACK_SPEED_PERCENT: "attack_speed_percent",
         RuneStat.ABILITY_HASTE: "ability_haste",
+        RuneStat.BASIC_ABILITY_HASTE: "basic_ability_haste",
+        RuneStat.ULTIMATE_HASTE: "ultimate_haste",
+        RuneStat.LIFESTEAL_PERCENT: "lifesteal_percent",
         RuneStat.MOVE_SPEED_PERCENT: "move_speed_percent",
         RuneStat.BONUS_HEALTH: "bonus_health",
         RuneStat.LETHALITY: "lethality",
@@ -1682,24 +1924,35 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
 def resolve_stat_grants(
     effects: Sequence[RuneEffect], context: RuneStatContext
 ) -> RuneStatGrants:
-    """Sum every rune stat grant on the page into one typed total."""
+    """Sum every rune stat grant on the page into one typed total.
+
+    Both grant kinds land here through one channel-by-channel adder, so a
+    rune granting one stat and a rune granting three reach the fight's stat
+    block by exactly the same route — including adaptive force, whose split
+    into attack damage or ability power belongs to the channel and not to
+    the kind that named it.
+    """
     totals: dict[str, float] = {}
 
     def add(field: str, amount: float) -> None:
         totals[field] = totals.get(field, 0.0) + amount
 
-    for effect in effects:
-        if not isinstance(effect, RuneStatGrantEffect):
-            continue
-        amount = effect.amount(context)
-        if effect.stat is RuneStat.ADAPTIVE_FORCE:
+    def grant(stat: RuneStat, amount: float) -> None:
+        if stat is RuneStat.ADAPTIVE_FORCE:
             bonus_ad, ability_power = adaptive_force_split(
                 amount, context.bonus_attack_damage, context.ability_power
             )
             add("bonus_attack_damage", bonus_ad)
             add("ability_power", ability_power)
-            continue
-        add(_STAT_FIELDS[effect.stat], amount)
+            return
+        add(_STAT_FIELDS[stat], amount)
+
+    for effect in effects:
+        if isinstance(effect, RuneStatGrantEffect):
+            grant(effect.stat, effect.amount(context))
+        elif isinstance(effect, RuneMultiStatGrantEffect):
+            for stat, amount in effect.declared_amounts(context).items():
+                grant(stat, amount)
     return RuneStatGrants(**totals)
 
 
@@ -1710,12 +1963,14 @@ def rune_page_stat_grants(
     is_melee: bool,
     bonus_attack_damage: float,
     ability_power: float,
+    item_stat_types: int = 0,
 ) -> RuneStatGrants:
     """Compile one page and total the stats it grants, in one call.
 
     The door ``stats.py`` uses: it holds the build's bonus attack damage and
-    ability power (which decide every adaptive grant) and nothing else about
-    runes.
+    ability power (which decide every adaptive grant), the count of stat
+    types the build's items grant (which is Jack Of All Trades' whole stack
+    rule), and nothing else about runes.
     """
     return resolve_stat_grants(
         resolve_rune_page(page),
@@ -1725,6 +1980,7 @@ def rune_page_stat_grants(
             bonus_attack_damage=bonus_attack_damage,
             ability_power=ability_power,
             options=page.options,
+            item_stat_types=item_stat_types,
         ),
     )
 

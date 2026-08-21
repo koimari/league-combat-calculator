@@ -177,6 +177,7 @@ from .ledger_projection import (
 )
 from .trigger_stream import (
     Stream,
+    applies_control,
     authored_triggers,
     is_immobilizing_event,
 )
@@ -8521,19 +8522,90 @@ def _record_rune_proc_row(
     state.total_damage += total
 
 
+def _impaired_instance_times(
+    state: FightState, rotation: RotationResult
+) -> list[float]:
+    """Damaging cast times whose own parts put the target under crowd control.
+
+    The marker is the reviewed ``cc_kind`` a champion module authors on the
+    part that applies it, and whether that marker *is* control is asked of
+    the bus rather than answered here — comparing a kind against a string is
+    the divergence ``trigger_stream`` exists to prevent, and this rune's
+    vocabulary is every control class rather than the immobilizing subset.
+
+    A cast whose slot nobody reviewed contributes nothing, and the engine
+    carries no control duration, so damage landing *inside* a control the
+    previous cast applied is not in this stream: the count is a floor.
+    """
+    impairing = {
+        slot
+        for slot, entry in state.ability_damages.items()
+        if float(entry.get("total_raw", 0.0)) > 0
+        and applies_control(_declared_cc_marker(entry))
+    }
+    return sorted(
+        float(event["time"])
+        for event in rotation.cast_events
+        if event.get("slot") in impairing
+    )
+
+
+def _self_shield_times(state: FightState) -> list[float]:
+    """When a self-shield lands on the holder, from the fight's own rows.
+
+    Champion modules and the Eclipse item family publish the same shape: a
+    ``self_shield_events`` list on a breakdown row, aligned by ordinal with
+    that row's own damage events, which ``_ordered_damage_events`` later
+    copies onto each event as ``self_shield``. It is read here rather than
+    off the reconstructed ledger because every rune stream is read before
+    reconstruction — and a shield entry with no damage event to align with
+    has no timestamp, so it contributes nothing rather than a guessed one.
+    """
+    times: list[float] = []
+    for entry in state.breakdown.values():
+        shields = entry.get("self_shield_events")
+        events = entry.get("damage_events")
+        if not isinstance(shields, list) or not isinstance(events, list):
+            continue
+        for index, shield in enumerate(shields):
+            if index < len(events) and isinstance(shield, Mapping):
+                times.append(float(events[index].get("time", 0.0)))
+    return sorted(times)
+
+
+def _shield_armed_attack_times(state: FightState) -> list[float]:
+    """The first swing at or after each self-shield the fight publishes.
+
+    A shield empowers the *next* attack, so the instance the rune counts is
+    that swing and not the shield: a shield the fight never follows with an
+    attack empowers nothing, and pricing it at the shield's own timestamp
+    would book damage no swing delivered. Two shields inside one swing gap
+    empower that one swing once.
+    """
+    swings = sorted(_auto_attack_timestamps(state))
+    armed = {
+        next((swing for swing in swings if swing >= shield_time), None)
+        for shield_time in _self_shield_times(state)
+    }
+    return sorted(time for time in armed if time is not None)
+
+
 def _rune_trigger_times(
     state: FightState, rotation: RotationResult, trigger: "rune_effects.RuneTrigger"
 ) -> list[float]:
-    """The fight event stream one keystone declares it watches.
+    """The fight event stream one rune declares it watches.
 
-    The keystone names the stream; the engine owns what is in it. Nothing
-    here interprets a rune — the three members are the three streams the
-    fight already publishes.
+    The rune names the stream; the engine owns what is in it. Nothing here
+    interprets a rune — each member is a stream the fight already publishes.
     """
     if trigger is rune_effects.RuneTrigger.BASIC_ATTACKS:
         return sorted(_auto_attack_timestamps(state))
     if trigger is rune_effects.RuneTrigger.DAMAGING_CASTS:
         return _damaging_cast_times(state, rotation)
+    if trigger is rune_effects.RuneTrigger.IMPAIRED_INSTANCES:
+        return _impaired_instance_times(state, rotation)
+    if trigger is rune_effects.RuneTrigger.SELF_SHIELD_EVENTS:
+        return _shield_armed_attack_times(state)
     return _rune_instance_times(state, rotation)
 
 
@@ -8541,7 +8613,8 @@ _RuneEffectT = TypeVar("_RuneEffectT")
 
 
 def _page_effects(
-    state: FightState, kind: "type[_RuneEffectT]"
+    state: FightState,
+    kind: "type[_RuneEffectT] | tuple[type[_RuneEffectT], ...]",
 ) -> "list[_RuneEffectT]":
     """The selected runes of one effect kind, in page order (keystone first).
 
@@ -8568,12 +8641,20 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
     consumers, and the rune's own disclosures reach the notes whether
     it procced or not — a withheld half that goes quiet at zero is the
     silent zero this campaign removes.
+
+    A rune whose trigger is an input the fight has no event for reads it
+    off the page's declared options through its own ``armed`` rule, and an
+    un-armed rune walks no stream at all rather than being priced on one
+    that does not stand for its trigger.
     """
     for effect in _page_effects(state, rune_effects.RuneProcEffect):
+        armed = effect.armed(state.rune_options)
         proc_times: list[float] = []
         live_stacks: list[float] = []
         ready_at = 0.0
-        for instance_time in _rune_trigger_times(state, rotation, effect.trigger):
+        for instance_time in (
+            _rune_trigger_times(state, rotation, effect.trigger) if armed else ()
+        ):
             if instance_time < ready_at:
                 continue
             if effect.stack_window_seconds is not None:
@@ -8590,7 +8671,7 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
                     live_stacks = []
         state.notes.extend(effect.disclosures)
         if not proc_times:
-            _note_rune_never_procced(state, effect)
+            _note_rune_never_procced(state, effect, armed=armed)
             continue
         _record_rune_proc_row(state, effect, proc_times)
 
@@ -8602,19 +8683,34 @@ _RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = MappingProx
         rune_effects.RuneTrigger.DAMAGE_INSTANCES: (
             "damage instances (damaging ability casts and basic attacks)"
         ),
+        rune_effects.RuneTrigger.IMPAIRED_INSTANCES: (
+            "damaging ability casts whose own parts apply crowd control"
+        ),
+        rune_effects.RuneTrigger.SELF_SHIELD_EVENTS: (
+            "basic attacks following a self-shield"
+        ),
     }
 )
 
 
 def _note_rune_never_procced(
-    state: FightState, effect: "rune_effects.RuneProcEffect"
+    state: FightState, effect: "rune_effects.RuneProcEffect", *, armed: bool = True
 ) -> None:
-    """Disclose a selected keystone whose trigger stream never armed it.
+    """Disclose a selected rune whose trigger never armed it.
 
     Electrocute has always been able to end a fight without proccing; what
-    it did not do was say so. Every proc-class keystone says it here, in
-    the words of the stream it declared.
+    it did not do was say so. Every proc-class rune says it here, in the
+    words of the stream it declared — or, for a rune whose trigger is a
+    declared option, in the words of the option that stayed off, because
+    "the fight produced no damage instances" would be a false reason for a
+    fight full of them.
     """
+    if not armed:
+        state.notes.append(
+            f"{effect.rune_name} never procced: the rune page's options do "
+            "not arm it, and their defaults are the un-triggered state."
+        )
+        return
     stream = _RUNE_TRIGGER_SHORTFALLS[effect.trigger]
     shortfall = (
         f"produced no {stream}"
@@ -8639,15 +8735,17 @@ def _add_rune_no_damage_receipts(state: FightState) -> None:
         state.notes.extend(effect.receipts)
 
 
-def _add_rune_stat_grant_receipts(state: FightState) -> None:
-    """Publish what every selected stat rune assumed to grant what it granted.
+def _add_rune_receipts_applied_elsewhere(state: FightState) -> None:
+    """Publish what every rune applied outside the damage walk assumed.
 
-    The grant itself is applied in ``stats.py``, before the fight; what the
-    fight owes the reader is the assumption behind it — the health share a
-    gate was priced at, the stack count a default supplied. A grant that
-    resolved silently is a number the reader cannot audit.
+    A stat grant lands in ``stats.py`` before the fight and a heal lands in
+    the pipeline's self-healing ledger after it; neither writes a damage
+    row, so what the fight owes the reader is the assumption behind the
+    number — the health share a gate was priced at, the stack count a
+    default supplied, the cooldown a heal was paid on. A number that
+    resolved silently is one the reader cannot audit.
     """
-    for effect in _page_effects(state, rune_effects.RuneStatGrantEffect):
+    for effect in _page_effects(state, rune_effects.RUNE_RECEIPT_ONLY_KINDS):
         state.notes.extend(effect.disclosures)
 
 
@@ -12177,7 +12275,7 @@ def calculate_fight_damage(
 
     # ── Runes that book no damage, and their receipts ───────────────────
     _add_rune_no_damage_receipts(state)
-    _add_rune_stat_grant_receipts(state)
+    _add_rune_receipts_applied_elsewhere(state)
 
     # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state, rotation)

@@ -348,10 +348,32 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/AbsorbLife/AbsorbLife.png",
     "description": "{{sbc|Passive:}} Killing an enemy {{tip|heals}} you for {{pp|1; then +0.25*x for 4;then +1*x for 5; then +2*x|1 to 20 by 1|formula=1, +0.25 per level until level 5, then +1 per level until level 10, then +2 per level|color=heal}}.",
-    "effects": {},
-    "parse_warnings": [
-      "Unparseable pp formula '1; then +0.25*x for 4;then +1*x for 5; then +2*x'"
-    ]
+    "effects": {
+      "leveling": [
+        [
+          1.0,
+          1.25,
+          1.5,
+          1.75,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          9.0,
+          11.0,
+          13.0,
+          15.0,
+          17.0,
+          19.0,
+          21.0,
+          23.0,
+          25.0,
+          27.0
+        ]
+      ]
+    }
   },
   "Triumph": {
     "name": "Triumph",
@@ -361,7 +383,10 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Triumph.png",
     "description": "{{sbc|Passive:}} Scoring a {{tip|takedown}} against an enemy champion {{tip|heals}} you for {{as|{{fd|2.5}}% of your '''maximum''' health}} {{as|(+ 5% of your '''missing''' health)}} and grants you an additional {{g|20}}, both after a 1-second delay.",
     "effects": {
-      "flat_gold": 20.0
+      "max_health_heal_ratio": 0.025,
+      "missing_health_heal_ratio": 0.05,
+      "flat_gold": 20.0,
+      "proc_delay_seconds": 1.0
     }
   },
   "Presence of Mind": {
@@ -371,9 +396,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PresenceOfMind/PresenceOfMind.png",
     "description": "{{sbc|Passive:}} Scoring a {{tip|takedown}} against an enemy champion restores {{as|15% of your '''maximum''' mana}} or {{as|15% of your '''maximum''' energy}} after a 1-second delay.\nDamaging an enemy champion restores {{as|{{rd|6; then +0.8*x for 5; then +2*x for 5; then +3.2*x for 5; then +4*x for 2; then +8; then +4|6*0.8; then +0.8*0.8*x for 5; then +2*0.8*x for 5; then +3.2*0.8*x for 5; then +4*0.8*x for 2; then +8*0.8; then +4*0.8|pp=true}} mana}} or {{as|6 energy}} (8 second cooldown).",
-    "effects": {},
+    "effects": {
+      "proc_delay_seconds": 1.0
+    },
     "parse_warnings": [
-      "pp formula '6; then +0.8*x for 5; then +2*x for 5; then +3.2*x for 5; then +4*x for 2; then +8; then +4' has no level range"
+      "pp progression '6; then +0.8*x for 5; then +2*x for 5; then +3.2*x for 5; then +4*x for 2; then +8; then +4' overruns its 18-column table"
     ]
   },
   "Legend: Alacrity": {
@@ -649,7 +676,8 @@
           76.47058823529412,
           80.0
         ]
-      ]
+      ],
+      "arming_window_seconds": 4.0
     }
   },
   "Sixth Sense": {
@@ -757,7 +785,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/UltimateHunter/UltimateHunter.png",
     "description": "Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31 at 5 stacks.\nEarn a ''Bounty Hunter'' stack whenever scoring a {{tip|takedown}} against an enemy {{tip|champion}}, up to one per unique champion.",
-    "effects": {}
+    "effects": {
+      "ultimate_haste": 6.0,
+      "ultimate_haste_per_stack": 5.0,
+      "max_stacks": 5
+    }
   },
   "Summon Aery": {
     "name": "Summon Aery",
@@ -1481,7 +1513,9 @@
           31.47058823529412,
           32.94117647058824
         ]
-      ]
+      ],
+      "bonus_health_ratio": 0.025,
+      "shield_amount_ratio": 0.15
     }
   },
   "Conditioning": {
@@ -1702,12 +1736,18 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png",
     "description": "{{sbc|Passive:}} Earn 1 ''Jack'' stack for each unique [[champion statistic|stat type]] currently gained from [[item]]s.\n{{sbc|Jack:}} For each ''Jack'' stack, gain {{as|1 ability haste}}. At 5 ''Jack'' stacks, gain {{adaptive|8}}. At 10 ''Jack'' stacks, gain an additional {{adaptive|12}}, for a total of {{adaptive|20}} at 10 ''Jack'' stacks.",
     "effects": {
-      "ability_haste": 1.0
-    },
-    "parse_warnings": [
-      "adaptive_force matched conflicting values, dropped: 8.0, 12.0",
-      "adaptive_force matched again after a conflict: 20.0"
-    ]
+      "ability_haste_per_stack": 1.0,
+      "adaptive_force_stack_gates": [
+        [
+          5,
+          8.0
+        ],
+        [
+          10,
+          12.0
+        ]
+      ]
+    }
   },
   "adaptive_force": {
     "attack_damage_ratio": 0.6,
