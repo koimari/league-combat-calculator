@@ -106,11 +106,10 @@ class TestLegendBloodline:
         )
         assert "life-steal walk turns into heal packets" in effect.disclosures[0]
 
-    def test_a_channel_the_rune_did_not_declare_is_refused(self, monkeypatch):
+    def test_a_channel_the_rune_did_not_declare_is_refused(self):
         """``stats`` is the declaration; ``amounts`` may not exceed it."""
-        effect = rune_effects.resolve_rune("Legend: Bloodline")
         rogue = rune_effects.RuneMultiStatGrantEffect(
-            rune_name=effect.rune_name,
+            rune_name="Legend: Bloodline",
             stats=(rune_effects.RuneStat.BONUS_HEALTH,),
             amounts=lambda context: {rune_effects.RuneStat.LETHALITY: 10.0},
         )
