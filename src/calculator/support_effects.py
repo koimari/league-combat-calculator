@@ -31,9 +31,25 @@ def _first_attribute(ability: dict[str, Any], names: tuple[str, ...]) -> str | N
 # below are read from every sentence of the ability joined together.  That
 # blob can only ever be over-broad about a single row — it sees an ally some
 # other sentence grants to, and a heal some other sentence performs — so the
-# declaring sentence is consulted to narrow it, never to widen it.
-_ALLY_PROSE = re.compile(r"\ball(?:y|ies|ied)\b|\bteammates?\b")
-_REFLEXIVE_PROSE = re.compile(r"\b(?:herself|himself|themselves|itself)\b")
+# row's own declaring sentence decides its recipient (``_row_target``) and
+# whether it is a heal at all (``_declares_a_heal``); the blob only supplies
+# the breadth of an ally scope the sentence already established.
+#
+# An ally the row can grant to.  "Allied" alone only qualifies the noun after
+# it, and not every allied noun receives anything: Bel'Veth R's True Form
+# sentence ends "...spawn from allied and enemy minions that die nearby",
+# which named a teammate for a heal that is hers.
+_ALLY_PROSE = re.compile(
+    r"\ball(?:y|ies)\b|\bteammates?\b|\ballied\s+(?:champion|unit|turret|target)"
+)
+# The caster, named or pronounced.  Reflexives and the singular third
+# person are bound to the sentence's subject, which is the caster; "they",
+# "them" and "their" are not — every wiki sentence that uses them is
+# speaking about the ability's target (Zilean R's "they revive while being
+# healed", Lulu E's "they are granted a shield").
+_CASTER_PROSE = re.compile(
+    r"\b(?:he|him|his|she|her|hers|himself|herself|themselves|itself)\b"
+)
 _HEAL_PROSE = re.compile(r"\bheal(?:s|ed|ing)?\b|\brestor(?:e|es|ing)\b|\bregenerat")
 
 
@@ -52,21 +68,29 @@ def _row_prose(ability: dict[str, Any]) -> dict[str, str]:
 
 
 def _row_target(
-    prose: str, *, scope: str, target_self: bool, override: str | None
-) -> tuple[str, bool]:
-    """Resolve one row's target scope from its own declaring sentence.
+    prose: str, *, champion: str, scope: str, target_self: bool, override: str | None
+) -> tuple[str, bool] | None:
+    """Who one row grants to, read from its own declaring sentence.
 
-    A row whose sentence names the caster and no ally is a self grant, in
-    whatever verb form the wiki wrote it — Rumble W's "Rumble generates 20
-    Heat to **grant himself** a shield" used to miss the inflected marker
-    list and publish 145 shielding to a teammate.  An explicit per-champion
-    override still wins (Yuumi E's attached anchor).
+    The sentence names an ally, so the row leaves the caster at the scope
+    the whole ability resolved; or it names only the caster, so the row is
+    a self grant; or it names neither recipient, and the row is refused —
+    a recipient nobody sourced is not a teammate by default.
+
+    That is what "Ekko W shields himself" and "Ekko W heals an ally" turn
+    on: Parallel Convergence says "it detonates to grant *him* a shield" —
+    Ekko named, no ally anywhere in the ability — so the shield is his and
+    nothing leaves him.  Defaulting sent it to a teammate instead.  An
+    explicit per-champion override still wins (Yuumi E's attached anchor,
+    Kindred R's "all targetable units").
     """
     if override is not None:
         return override, target_self
-    if _REFLEXIVE_PROSE.search(prose) and not _ALLY_PROSE.search(prose):
+    if _ALLY_PROSE.search(prose):
+        return scope, target_self
+    if champion.lower() in prose or _CASTER_PROSE.search(prose):
         return "self", True
-    return scope, target_self
+    return None
 
 
 def _declares_a_heal(prose: str) -> bool:
@@ -168,14 +192,18 @@ _SCOPE_OVERRIDES: dict[tuple[str, str], str] = {
     # packet targets ALLIES ONLY.  In a 1v1 (no selected teammate) the
     # packet resolves to nothing and the self heal pays exactly once.
     ("Rakan", "Q"): "all_teammates",
-    # The magic-shield rows the shield lookup reaches (below) belong to two
-    # self-shields whose sentences name the caster by an ordinary pronoun,
-    # which the caster-only narrowing cannot see: Kassadin Q ("He also gains
-    # a shield that absorbs magic damage for 1.5 seconds") and Galio W
-    # ("Galio gains Anti-Magic Bulwark ... Gain a shield that absorbs magic
-    # damage").  Neither grants anything to an ally.
-    ("Kassadin", "Q"): "self",
-    ("Galio", "W"): "self",
+    # Lamb's Respite (R) is one of the two ally grants whose declaring
+    # sentence names no ally, so ``_row_target`` would refuse it: "All
+    # targetable units within the zone are healed when the blessing ends."
+    # Every unit in the zone is healed, not one, and the self copy is the
+    # healing rule's ("Lamb's Respite", actor-wide) — so the scanner's
+    # packet is the allied half and it reaches all of them.
+    ("Kindred", "R"): "all_teammates",
+    # Kassadin Q ("He also gains a shield...") and Galio W ("Galio gains
+    # Anti-Magic Bulwark...") were pinned here while only reflexive verb
+    # forms counted as the caster; ``_row_target`` reads the ordinary
+    # pronoun and the champion's own name now, so both resolve to ``self``
+    # from their sentences and need no entry.
 }
 
 # E8c: slots whose shield the champion module authors itself (via the
@@ -268,6 +296,25 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
         # gets Rejuvenation through Astral Infusion, whose own heal is a
         # separate row.
         ("Soraka", "Q"),
+        # Phase 3 (the W3 scan): three more self-heal double-grants the
+        # recipient rule alone would have kept, each already paid by the
+        # ledger's own owner.
+        # - Vladimir R: "heal Vladimir for each infected champion" is the
+        #   healing rule's Hemoplague receipt (full amount, reduced copy
+        #   attached for later roster targets).
+        # - Locke W: Soul Ignition stores grey health and the recast
+        #   "consumes his grey health to heal for the same amount" — the
+        #   participant timeline authors that payback off the INCOMING
+        #   ledger (``GREY_HEALTH_RULE_CHAMPIONS``); the cached "Heal" rows
+        #   are the pool's per-level cap and its missing-health ceiling,
+        #   read at rank by a scan that cannot see damage taken.
+        # - Zilean R: "they revive while being healed" is the Chronoshift
+        #   revive, already priced as sourced revive state through
+        #   ``zilean.starting_revive_defense`` /
+        #   ``defensive_effects.resolve_starting_defenses``.
+        ("Vladimir", "R"),
+        ("Locke", "W"),
+        ("Zilean", "R"),
     }
 )
 
@@ -485,12 +532,17 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
     for attribute, kind in ((shield_attr, "shield"), (heal_attr, "heal")):
         if attribute is None:
             continue
-        scope, resolved_self = _row_target(
+        resolved = _row_target(
             row_prose.get(attribute, ""),
+            champion=champion,
             scope=target_scope,
             target_self=target_self,
             override=override,
         )
+        if resolved is None:
+            # The declaring sentence names no recipient; see ``_row_target``.
+            continue
+        scope, resolved_self = resolved
         # Issue #142: fail closed at the emitter.  A typo or novel scope must
         # name the champion+slot at the source instead of silently redirecting
         # the packet to teammate zero in the coupled resolver.
