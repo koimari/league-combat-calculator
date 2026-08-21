@@ -36,6 +36,8 @@ black --check src/ tests/ scripts/  # Formatting gate (CI runs this)
 pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, ~10 min)
+python scripts/prose_lint.py                                            # Docstrings/comments: current state only, none longer than its body
+python scripts/literal_defaults.py src/calculator/damage.py             # Rule-5 lint: literal fallbacks on cached data (tests/test_literal_defaults.py pins it)
 python scripts/patch_update.py run    # Patch day: re-pull wiki data + economics, audit, gates (see /patch-update skill)
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency gate; benchmarks.md is the one home for perf numbers
 ```
@@ -62,6 +64,8 @@ baseline with every diff explained in the commit.
 - **Compiled slot order is Q,W,E,R,P while `REQUIRED_CHAMPION_SLOTS` is P,Q,W,E,R;** the ledger replays insertion order for float sums, so any reorder is a numeric change.
 - **`interpreters._threshold_regeneration_thresholds` stops the whole `uncompilable_item_receipt` call on one broken declaration** (request-level, not per-item) — intended since 5055dc5.
 - **`sed -i` in Git-Bash strips CRLF;** use byte-preserving scripts for bulk edits on this tree.
+- **`scripts/plan_audit.py`'s golden-figures check matches digit coincidences:** any integer in a plan doc that equals a `campaign-fingerprints.json` shape count (entries, leaves) is a finding unless `COLLISION_ALLOWLIST` in the script names the doc, value and a context literal on that line. Every golden capture that changes a count kills the old allowances (reported as "dead") and surfaces new coincidences; retarget the allowlist rows in the same commit as the capture, never by rewording the plan docs.
+- **Agent worktrees live under `.claude/worktrees/`:** anything that `rglob`s the checkout (plan_audit's citation index did, `behavior_frontier.scan()` over `src/` does not) will see every worker's copy; index from `src/`, `tests/`, `scripts/`, `docs/` roots, never the repo root.
 - **Parallel sessions share one `.git`:** `git checkout -- <dir>` in one worktree discards another session's uncommitted edits in the same worktree (use one worktree per session), `git stash` is one stack across all worktrees (never stash as a base-state check — use a detached checkout of the base commit), and on this case-insensitive filesystem `git rm skill.md` also removes `SKILL.md` from disk.
 - **Crit rolls are random unless `deterministic` is set:** `damage.py` rolls `random.random() < crit_chance` per swing, so two identical `calculate_payload` requests on a crit build return different auto totals (Kai'Sa: 623 / 739 / 854 / …). Every probe, test, and golden capture on a crit-capable build passes `deterministic=True`.
 - **Derived receipts are regenerated, never hand-merged:** `docs/cast-dependency-audit.json` (`scripts/cast_dependency_audit.py --output`), `docs/behavior-frontier.json` (`scripts/behavior_frontier.py --write`), plan-doc locators (`scripts/plan_audit.py --refresh-drift`) and `data/runes.json` effects (`data_updater.reparse_cached_rune_effects()`) conflict on every parallel merge; take either side, regenerate over the merged tree, and grep for conflict markers before committing — a marker left in a JSON receipt makes its own regenerator fail.
