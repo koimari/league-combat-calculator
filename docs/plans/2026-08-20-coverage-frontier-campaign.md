@@ -120,8 +120,16 @@ in this table are each unit's runtime probe.
 Frontier moved: champion slots 693 / 23 / 150 → 762 / 38 / 65 (modeled / no_damage /
 out_of_scope); runes 17 of 17 keystones → 62 of 62 compiled; items: no unpriced damage
 packet remains. Decisions overturned by probe: 7 (Mandate/Helia) and the GW row; decision 6
-gained the channel vocabulary. Left on the table: `docs/surface-area-backlog.md` CF1–CF17
+gained the channel vocabulary. Left on the table: `docs/surface-area-backlog.md` CF1–CF23
 and the rune refusals by axis on `docs/coverage-frontier.md`.
+
+Blind audit (`elegant-design:code-reviewer`, range `5af69843..4d8eedf5`): *changes
+requested* — one critical (a stat buff paid whether or not its ability was cast; fixed in
+`5594ca38`, the default rotations cast every buff slot so no golden moved, the auto-only
+question is CF23), the census rune axis widened to every roster rune, two duplicated
+helpers folded. Its "48 unclaimed coupled leaves" did not reproduce against the repo's own
+allowlist predicate (none of 1,009 unclaimed); its "modeled is unverified" is the declared-channel
+test plus CF7.
 
 ## Banned shortcuts
 
