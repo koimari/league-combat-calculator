@@ -126,9 +126,11 @@ jayce_data = _champion_fixture("Jayce")
 # Data key differs from the display/dispatcher name "Kai'Sa".
 kaisa_data = _champion_fixture("Kaisa")
 karthus_data = _champion_fixture("Karthus")
+kindred_data = _champion_fixture("Kindred")
 # Data key differs from the display/dispatcher name "Kog'Maw".
 kogmaw_data = _champion_fixture("KogMaw")
 lissandra_data = _champion_fixture("Lissandra")
+lulu_data = _champion_fixture("Lulu")
 orianna_data = _champion_fixture("Orianna")
 rakan_data = _champion_fixture("Rakan")
 shen_data = _champion_fixture("Shen")

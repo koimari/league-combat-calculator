@@ -20,6 +20,28 @@ per-Mark current-health term (+1% per Mark, resolved via the same
 modifier override Mounting Dread uses), over ``w_attacks`` attacks
 (Wolf attacks at 25% of Kindred's bonus attack speed; the count is the
 player-controlled option, default 3 attacks in the window).
+
+Roadmap session 4 (2026-08-20): closes both of Kindred's out_of_scope
+slots (Q, R). Both were already fully wired above (``_dance_of_arrows``
+prices real physical damage off the sourced "Physical Damage" leveling;
+``_BASE_SLOTS["R"]`` emits Lamb's Respite as an explicit no_damage row)
+-- ``MODULE_COVERAGE`` was simply stale, still reading "out_of_scope" for
+slots the CP10.3 packet review had already closed, the identical
+stale-label pattern Alistar-P/Anivia-P were corrected under in the prior
+roadmap session. Reclassified Q -> modeled, R -> no_damage; no behavior
+change.
+
+  - Q (Dance of Arrows): the atoms capture (data/atoms/kindred.atoms.json,
+    behavior KindredQ) and the cached leveling both carry a real
+    "Physical Damage" row; ``_dance_of_arrows`` already prices it via
+    ``typed_damage``. Simple mislabel fix.
+  - R (Lamb's Respite): the atoms capture's KindredR rows are
+    ``damage.aoe`` with ``damage_type: null`` (a structural AoE-zone tag,
+    not a priced formula -- the "minimum-health, can't die" zone), plus a
+    self-only ``heal-shield.heal`` (already paid by
+    ``derive_self_healing`` below) and a self buff. No enemy-damage
+    number exists to price; the no-death zone stays state, matching the
+    Kai'Sa-R precedent for a sourced-but-structurally-non-damage rider.
 """
 
 from __future__ import annotations
@@ -308,12 +330,22 @@ ASSUMPTIONS = [
     "default 100) the next basic attack heals Kindred for the "
     "missing-health share of the sourced 47 : 81 (based on level) heal "
     "(healing.py; the heal is not triggered at full health)",
-    "R (Lamb's Respite) is the reviewed no-damage packet",
+    "R (Lamb's Respite) is the reviewed no-damage packet: the minimum-"
+    "health zone and end heal are defensive/utility state, not enemy "
+    "damage (roadmap session 4: reclassified from out_of_scope to "
+    "no_damage, no behavior change)",
+    "Q (Dance of Arrows) is the reviewed physical-damage packet (roadmap "
+    "session 4: reclassified from out_of_scope to modeled, no behavior "
+    "change -- the slot always priced real damage)",
 ]
 
 SOURCES = load_champion_sources("Kindred")
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "W", "E"} else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "no_damage",
 }
 REVIEW_STATUS = "reviewed_module"
 
