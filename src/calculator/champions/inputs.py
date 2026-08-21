@@ -25,11 +25,10 @@ So the exception ships with this module, and the guard has two halves:
   champion-side readers, instead of silently pricing zero in 143 modules.
 
 An accessor raises :class:`ChampionInputError` for a name outside its
-vocabulary — the unwired read D-24 requires to fail loud — and otherwise
-returns the wired value, or the default this module declares for it when
-the input block does not carry the key.  The declared default is the
-number's one home: identical to what the call sites used to hold, but
-stated once and with a reason.
+vocabulary, so an unwired read fails loud instead of pricing a literal.  A
+name inside it returns the wired value, or the default this module declares
+when the input block does not carry the key.  That declared default is the
+number's one home, stated once and with a reason.
 """
 
 from __future__ import annotations
@@ -52,11 +51,7 @@ __all__ = [
 
 
 class ChampionInputError(KeyError):
-    """A champion formula read an input outside its declared vocabulary.
-
-    ``KeyError`` because that is what the read used to be; the point is
-    that it is now raised instead of answered with a literal.
-    """
+    """A champion formula read an input outside its declared vocabulary."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -266,14 +261,10 @@ def scaling_input(block: Mapping[str, Any], name: str, *, champion: str = "") ->
 def declared_option_defaults(champion: str) -> dict[str, Any]:
     """A champion's option keys mapped to the defaults its module declares.
 
-    The module's own ``OPTIONS`` list is the declaration — the same rows the
-    frontend renders — so the default a formula falls back to and the
+    The module's own ``OPTIONS`` list is the declaration, and the same rows
+    the frontend renders, so the default a formula falls back to and the
     default the user sees are one value.  The pipeline-owned reserved keys
     join it because no module declares them and every module may read them.
-
-    Resolved through the module contract, which is already memoized per
-    champion, and imported inside the function because
-    ``champions/__init__`` imports the modules that reach this one.
     """
     # pylint: disable-next=import-outside-toplevel,cyclic-import
     from . import get_champion_options_meta

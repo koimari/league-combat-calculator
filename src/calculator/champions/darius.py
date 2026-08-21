@@ -126,26 +126,13 @@ def _ad_ratio(
     rank: int,
     modifier_index: int = 1,
 ) -> float:
-    """An attribute's AD-scaling modifier at *rank*, as a 0..n fraction.
-
-    The engine needs each part's derivative in bonus AD so Noxian Might
-    can re-price it mid-fight. Reading the ratio from the SAME JSON
-    modifier that produced the damage keeps the two in step on patch
-    updates (a total-AD scaling has the same derivative in bonus AD).
-    Modifier 1 is the AD term wherever a flat base precedes it; W's only
-    modifier IS the AD term, so it passes ``modifier_index=0``.
-    """
+    """An attribute's AD-scaling modifier at *rank*, as a 0..n fraction."""
     return extract_value(ability, attribute, rank, modifier_index) / 100.0
 
 
 def _starting_stacks(ctx: SlotCtx) -> int:
-    """Hemorrhage stacks already on the target when the fight opens.
-
-    One number for the whole fight state. Because reaching 5 stacks IS
-    what grants Noxian Might, seeding the timeline is the only way R's
-    stack count, the bleed's rate and the steroid can agree: asking for
-    5 stacks without the buff describes a state the game cannot reach.
-    """
+    """Hemorrhage stacks already on the target when the fight opens; seeding
+    them is what lets R's count, the bleed rate and Noxian Might agree."""
     stacks = int(ctx.option("starting_hemorrhage_stacks"))
     return min(max(stacks, 0), P_BLEED_MAX_STACKS)
 
@@ -293,10 +280,8 @@ _armor_pen_buff = stat_buff("Armor Penetration", "armor_penetration_percent")
 
 def _apprehend(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: a zero-damage pull whose armor-pen passive is always on.
-
-    Deliberately carries NO ``applies_dot_stack``: Apprehend deals no
-    damage, so in-game it applies no Hemorrhage stack.
-    """
+    Carries no ``applies_dot_stack``: dealing no damage applies no
+    Hemorrhage stack."""
     entry = _armor_pen_buff(ctx)
     if entry is not None:
         entry["cast_time"] = E_CAST_TIME
@@ -525,15 +510,13 @@ SLOTS["E"] = with_control_event(
 # the Hemorrhage bleed.
 #
 # R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# Noxian Guillotine is control-free against the champion it damages — it
+# Noxian Guillotine is control-free against the champion it damages: it
 # "attempts to execute the target enemy champion ... to deal true damage",
-# and fears only on a kill and only "nearby minions and monsters".  Its
-# row being two parts is no longer the obstacle (a shared instant is
-# certifiable since the engine's wave-6 rule); the per-Hemorrhage-stack
-# term is, because it hits once per stack and a repeated part is a
-# schedule, which ``single_hit`` refuses and which has no cadence to
-# author — the stacks land together, not in sequence.  Stating that would
-# take a "scale the amount by stacks" part the spec does not have.
+# and fears only on a kill and only "nearby minions and monsters".  The
+# obstacle is the per-Hemorrhage-stack term, which hits once per stack.  A
+# repeated part is a schedule, which ``single_hit`` refuses and which has no
+# cadence to author, since the stacks land together rather than in sequence.
+# Stating it would take a "scale the amount by stacks" part the spec lacks.
 MODULE_CC = {"Q": "none", "W": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
