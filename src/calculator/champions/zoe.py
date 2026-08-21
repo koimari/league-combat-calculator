@@ -10,6 +10,19 @@ Smite) are modeled as an explicit ``w_summoner`` option: none of them
 deals damage to enemy champions in this calculator's scope (Heal heals
 the caster, Barrier shields, Smite damages monsters), so each variant
 is a documented no-damage row instead of being collapsed into a bolt.
+
+Roadmap session 5 slot 14 (2026-08-21): R (Portal Jump) has no
+enemy-damage formula: the cached effects are a blink/reposition with a
+static movement-speed lock and an attack-reset, with no enemy-damage
+leveling row (confirmed by the pinned reviewed packet's kind="no_damage"
+declaration for R, and live: parse_champion_abilities emits R with
+total_raw=0.0, and the fight breakdown carries an R row that totals
+zero damage). This module never reassigns R away from
+build_packet_module's default no-damage branch (only W is overridden
+above). MODULE_COVERAGE was simply stale, still reading "out_of_scope"
+for a slot this module already treats as non-damaging (the
+Rek'Sai/Renekton precedent). Reclassified to "no_damage"; zero
+fight-computation change.
 """
 
 from ..ability_spec import DamagePart
@@ -110,9 +123,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "summoner-spell values (90 : 345 based on level) are not part of "
     "data/champions.json, so no heal atom is authored — the option "
     "stays a no-damage receipt until a summoner-spell atom exists.",
+    "R (Portal Jump) has no enemy-damage formula: it is a blink "
+    "reposition with a static movement-speed lock and a basic-attack "
+    "reset, no term dealt to an enemy (confirmed by the pinned reviewed "
+    "packet's kind='no_damage' declaration for R). R is a cast slot in "
+    "this module (never reassigned away from build_packet_module's "
+    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
+    "no-damage classification rather than an unmodeled gap (no_damage, "
+    "not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

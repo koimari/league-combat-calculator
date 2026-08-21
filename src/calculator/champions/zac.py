@@ -12,6 +12,26 @@ self-movement rework, not a summoned unit (the "Champion summoned
 units" page lists only Zac's Cell Division Bloblets, which are a death
 passive with no outgoing damage).  No summon slot is added; the
 reviewed bounce packet pricing is unchanged.
+
+Roadmap session 5 slot 14 (2026-08-21): P (Cell Division) is a
+correction, not a plain stale-label fix.  P IS wired in SLOTS — the
+default build_packet_module packet parser (base 0.0 across all levels;
+ratio 4% : 8.47% of ``targetMaxHp``, data/champions.json P) — but that
+"targetMaxHp" ratio is a packet-generation mislabel: the cached prose is
+"Zac will consume it to heal for 4% : 8.47% (based on level) of HIS
+maximum health" — a Zac-self heal on chunk pickup, not an enemy-scaled
+damage term, and it shares the exact "Max Health Damage" attribute name
+``derive_self_healing`` below already reads directly from the ability
+data for the self-heal ledger.  Verified live: parse_champion_abilities
+emits P (surfaced as the "passive" key) with total_raw=0.0, and P/passive
+never appears in the fight breakdown — Zac's DEFAULT_CAST_ORDER
+(Q, Q2, W, E, R) never casts P, so the packet's target-scaled part is
+never evaluated for enemy damage. Correct semantic: "no_damage" (a
+self/state effect, not an unresolved enemy formula), matching the
+Cho'Gath P precedent (kill/self effect only). MODULE_COVERAGE was stale,
+reading "out_of_scope"; reclassified to "no_damage". Zero
+fight-computation change — the packet row already computed zero enemy
+damage and was already excluded from the cast order before this pass.
 """
 
 from ..ability_spec import DamagePart
@@ -112,7 +132,7 @@ SLOTS["Q"] = _stretching_strikes
 parse_abilities = build_parser(SLOTS, "Zac")
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -125,6 +145,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "health restored after the level-bracketed resurrection window "
     "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "
     "(cached passive prose; all four bloblets assumed to survive).",
+    "P's cast-slot packet entry (build_packet_module's default parser: "
+    "base 0.0, 4% : 8.47% of targetMaxHp) has no enemy-damage formula: "
+    "the packet's 'targetMaxHp' ratio is a mislabeled self-heal-on-chunk "
+    "term ('heal for 4% : 8.47% of HIS maximum health', not the "
+    "target's); P is never cast (absent from DEFAULT_CAST_ORDER), so "
+    "the fight ledger never invents an enemy hit from it (MODULE_COVERAGE: "
+    "no_damage, not out_of_scope). The real revive mechanic above is "
+    "modeled separately via starting_revive_defense/StartingDefenses, "
+    "not through this packet row.",
 ]
 REVIEW_STATUS = "reviewed_module"
 

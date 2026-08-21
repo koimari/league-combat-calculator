@@ -3,6 +3,19 @@
 Wiki-sourced item on-hit application is attached as a post-process on the
 batch parser output (the batch parser builds its slot map at build time, so
 declarations cannot be injected into the slot dict after the fact).
+
+Roadmap session 5 slot 14 (2026-08-21): P (Cultivation of War) has no
+enemy-damage formula: both cached effects are self-only — stacking bonus
+attack damage (1.5% : 2.95% AD per stack, doubled at maximum stacks) and
+a lethal-damage resurrection with a self-heal, with no term dealt to an
+enemy (confirmed by the pinned reviewed packet's kind="no_damage"
+declaration for P, and live: parse_champion_abilities emits P as a zero
+total_raw row absent from the fight breakdown). P is not one of the
+slots this module reassigns (only Q is overridden above), so it falls
+to build_packet_module's default no-damage branch. MODULE_COVERAGE was
+simply stale, still reading "out_of_scope" for an already-covered slot
+(the Rek'Sai/Renekton precedent). Reclassified to "no_damage"; zero
+fight-computation change.
 """
 
 from typing import Any
@@ -62,6 +75,14 @@ _base_parse, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     assumption_overrides=(
         "The Darkin Glaive prices both strikes (Physical Damage per Hit x 2 "
         "== Total Physical Damage).",
+        "P (Cultivation of War) has no enemy-damage formula: both cached "
+        "effects are self-only (stacking bonus AD, and a lethal-damage "
+        "resurrection with a self-heal) — confirmed by the pinned "
+        "reviewed packet's kind='no_damage' declaration for P. P is a "
+        "cast slot in this module (never reassigned away from "
+        "build_packet_module's no_damage branch), so MODULE_COVERAGE "
+        "reflects a sourced no-damage classification rather than an "
+        "unmodeled gap (no_damage, not out_of_scope).",
     ),
     slot_parsers={
         "Q": _darkin_glaive,
@@ -98,7 +119,7 @@ def parse_abilities(*args, **kwargs):
 
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

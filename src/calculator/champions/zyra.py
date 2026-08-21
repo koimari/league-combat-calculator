@@ -17,6 +17,18 @@ whole window (8s duration, well beyond the 5-second one-rotation
 window).  The player controls the plant count (seeds via W, sprouting
 via Q/E).  Stranglethorns enrage (flurry, 2 shots per attack at 150%)
 and the 50% multi-plant falloff are not modeled.
+
+Roadmap session 5 slot 14 (2026-08-21): P (Garden of Thorns) has no
+enemy-damage formula: it periodically spawns Seeds (vision wards that
+enemies can walk over to destroy), with no enemy-damage leveling row
+(confirmed by the pinned reviewed packet's kind="no_damage" declaration
+for P, and live: parse_champion_abilities emits P with total_raw=0.0,
+and the fight breakdown carries no P/passive row at all). This module
+keeps P at build_packet_module's default no-damage branch (``SLOTS["P"]
+= _BATCH_SLOTS["P"]``, never reassigned). MODULE_COVERAGE was simply
+stale, still reading "out_of_scope" for a slot this module already
+treats as non-damaging (the Rek'Sai/Renekton precedent). Reclassified
+to "no_damage"; zero fight-computation change.
 """
 
 from __future__ import annotations
@@ -151,6 +163,14 @@ ASSUMPTIONS = [
     "attack at 150%) are state, not modeled",
     "The 50% damage falloff for plants that are not the first to attack their ",
     "target and the Monster Hunter bonus vs non-epic monsters are not modeled",
+    "P (Garden of Thorns) has no enemy-damage formula: it periodically "
+    "spawns Seeds (vision wards enemies can walk over to destroy), no "
+    "term dealt to an enemy (confirmed by the pinned reviewed packet's "
+    "kind='no_damage' declaration for P). P is a cast slot in this "
+    "module (never reassigned away from build_packet_module's no_damage "
+    "branch), so MODULE_COVERAGE reflects a sourced no-damage "
+    "classification rather than an unmodeled gap (no_damage, not "
+    "out_of_scope).",
 ]
 SLOTS = {
     "P": _BATCH_SLOTS["P"],
@@ -167,7 +187,7 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Zyra")
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

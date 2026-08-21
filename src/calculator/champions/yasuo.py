@@ -15,6 +15,20 @@ Stack mechanics modeled (E3):
 
 W (Wind Wall) and R (Last Breath) keep the reviewed CP10.10 packet
 pricing. All numeric values are read from the champion JSON data.
+
+Roadmap session 5 slot 14 (2026-08-21): R (Last Breath) is fully
+modeled, not a gap. R has been wired into SLOTS below (``SLOTS["R"] =
+_BATCH_SLOTS["R"]``) via the reviewed CP10.10 packet since before this
+pass, pricing real damage (200/350/500 base + 150% bonus AD) — verified
+live: parse_champion_abilities emits R with a nonzero total_raw, and it
+appears in the fight breakdown with real damage every run. Git history
+(6f31e02 and later) shows MODULE_COVERAGE's hardcoded modeled-slot set
+drifted from {"Q", "E", "R"} -> {"P", "Q", "E"} (R silently dropped when
+P was added) -> {"P", "Q", "W", "E"} (W added, R still missing), while R
+itself was never removed from SLOTS — the exact Samira precedent
+(session 2): a coverage dict comprehension rewrite silently dropped a
+slot whose SLOTS entry was untouched. MODULE_COVERAGE was simply stale;
+reclassified R to "modeled". Zero fight-computation change.
 """
 
 from __future__ import annotations
@@ -315,11 +329,12 @@ ASSUMPTIONS = [
     "renumber them, and any selected id that never matches an incoming "
     "event is reported on the survival receipt as "
     "blocked_event_ids_unmatched.",
+    "R (Last Breath) is priced via the reviewed CP10.10 packet "
+    "(_BATCH_SLOTS['R']): 200/350/500 base + 150% bonus AD, unaffected "
+    "by this pass; MODULE_COVERAGE was the only stale artifact "
+    "(modeled, not out_of_scope).",
 ]
 
 SOURCES = load_champion_sources("Yasuo")
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "out_of_scope")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
 REVIEW_STATUS = "reviewed_module"

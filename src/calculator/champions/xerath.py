@@ -128,9 +128,19 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Total row.",
     "Every barrage is assumed to hit the single duel target (a champion "
     "duel); the 0.5s-first-recast window and the 10s channel are state.",
+    "P (Mana Surge) has no enemy-damage formula: its cached effects are "
+    "a self mana-restore-on-next-auto-attack proc and a kill-triggered "
+    "cooldown reduction, with no enemy-damage leveling row (confirmed by "
+    "the pinned reviewed packet's kind='no_damage' declaration for P, "
+    "and live: parse_champion_abilities emits P as a zero total_raw row "
+    "absent from the fight breakdown). P is a cast slot in this module "
+    "(never reassigned away from build_packet_module's no_damage "
+    "branch — only R is overridden above), so MODULE_COVERAGE reflects "
+    "a sourced no-damage classification rather than an unmodeled gap "
+    "(no_damage, not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

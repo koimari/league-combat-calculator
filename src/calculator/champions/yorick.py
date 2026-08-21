@@ -21,6 +21,19 @@ ranges, or AI; the walkers and the Maiden are assumed to reach and keep
 attacking the target for the whole window.  The attack counts are
 player-controlled options whose defaults follow the sourced attack
 pattern over the 5-second one-rotation window.
+
+Roadmap session 5 slot 14 (2026-08-21): W (Dark Procession) has no
+enemy-damage formula: its cached effects are a knockback/pull wall with
+a "Wall Health" leveling row (the wall's own destructible HP, not an
+enemy-damage term) — confirmed by the pinned reviewed packet's
+kind="no_damage" declaration for W, and live: parse_champion_abilities
+emits W with total_raw=0.0, and the fight breakdown carries a W row that
+totals zero damage. This module never reassigns W away from
+build_packet_module's default no-damage branch (only P and R are
+overridden below). MODULE_COVERAGE was simply stale, still reading
+"out_of_scope" for a slot this module already treats as non-damaging
+(the Rek'Sai/Renekton precedent). Reclassified to "no_damage"; zero
+fight-computation change.
 """
 
 from __future__ import annotations
@@ -215,6 +228,14 @@ ASSUMPTIONS = [
     "modeled",
     "The 30% bonus damage Mist Walkers deal against Mourning Mist-marked ",
     "enemies for 8 attacks is not modeled (mark state)",
+    "W (Dark Procession) has no enemy-damage formula: the cached "
+    "'Wall Health' leveling row is the wall's own destructible HP, not "
+    "a term dealt to an enemy (confirmed by the pinned reviewed "
+    "packet's kind='no_damage' declaration for W). W is a cast slot in "
+    "this module (never reassigned away from build_packet_module's "
+    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
+    "no-damage classification rather than an unmodeled gap (no_damage, "
+    "not out_of_scope).",
 ]
 SLOTS = {
     "P": _mist_walkers,
@@ -227,7 +248,7 @@ SLOTS = {
 parse_abilities = build_parser(SLOTS, "Yorick")
 SOURCES = _BATCH_SOURCES
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
