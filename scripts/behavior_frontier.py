@@ -1781,8 +1781,16 @@ def _no_runtime_behavior_failures(
     return failures
 
 
-def build_receipt(report: FrontierReport) -> dict[str, Any]:
-    """The committed frontier artifact."""
+def build_receipt(
+    report: FrontierReport, champions_root: Path = CHAMPIONS_ROOT
+) -> dict[str, Any]:
+    """The committed frontier artifact.
+
+    ``champions_root`` is the tree the zero-policy populations are measured
+    over.  It is a parameter for the same reason ``scan`` takes one: the
+    gate's own negative wants a champion tree it may write a module into,
+    and writing into the repo's is a race against anything else reading it.
+    """
     return {
         "schema_version": SCHEMA_VERSION,
         "slice": "3.9",
@@ -1860,7 +1868,7 @@ def build_receipt(report: FrontierReport) -> dict[str, Any]:
         "targets": target_block(report),
         "compiled_walk_refusals": compiled_walk_refusals(),
         "no_runtime_behavior": no_runtime_behavior_block(),
-        "zero_policy_frontier": zero_policy_block(zero_policy_frontier()),
+        "zero_policy_frontier": zero_policy_block(zero_policy_frontier(champions_root)),
         "h4_tags": {
             "dead": sorted(catalog.H4_DEAD_TAGS),
             "self_referential": sorted(catalog.H4_SELF_REFERENTIAL_TAGS),
@@ -1884,7 +1892,9 @@ def load_receipt() -> dict[str, Any]:
 
 
 def check(
-    report: FrontierReport, committed: Mapping[str, Any] | None = None
+    report: FrontierReport,
+    committed: Mapping[str, Any] | None = None,
+    champions_root: Path = CHAMPIONS_ROOT,
 ) -> tuple[str, ...]:
     """Differences between the committed receipt and this tree — the gate.
 
@@ -1895,7 +1905,7 @@ def check(
     if not committed:
         return (f"{RECEIPT_PATH.name} is missing; run --write",)
     failures: list[str] = []
-    fresh = build_receipt(report)
+    fresh = build_receipt(report, champions_root)
     for key, value in fresh["counters"].items():
         recorded = committed.get("counters", {}).get(key, {}).get("value")
         if recorded != value["value"]:
@@ -1923,7 +1933,11 @@ def check(
     return tuple(failures)
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    champions_root: Path = CHAMPIONS_ROOT,
+) -> int:
     """Run the scan, and write or gate the receipt."""
     parser = argparse.ArgumentParser(description="Phase 3 behaviour frontier")
     parser.add_argument("--json", action="store_true", help="print the receipt")
@@ -1931,7 +1945,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="gate against the receipt")
     args = parser.parse_args(argv)
     report = scan()
-    receipt = build_receipt(report)
+    receipt = build_receipt(report, champions_root)
     if args.write:
         RECEIPT_PATH.write_text(
             json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -1939,7 +1953,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))
     if args.check:
-        failures = check(report)
+        failures = check(report, champions_root=champions_root)
         for failure in failures:
             print(f"behavior frontier: {failure}", file=sys.stderr)
         if failures:

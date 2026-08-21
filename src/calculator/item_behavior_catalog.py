@@ -5942,8 +5942,31 @@ def registry_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any],
 # ones is also what makes an identity check safe from a recycled ``id()``.
 _BEHAVIOR_RULES_MEMO: dict[
     tuple[int, str],
-    tuple[tuple[Any, ...], tuple[BehaviorRule, ...]],
+    tuple[Any, Any, Any, tuple[BehaviorRule, ...]],
 ] = {}
+
+
+def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
+    """The three registry records *owner*'s rules compile from, read raw.
+
+    :func:`registry_entries` and :func:`keystone_entries` read exactly these
+    three mappings, in this order, and everything else they build — the
+    family lookups, the entry triples, the tuples around them — is derived.
+    The memo's re-check only ever compared the records, so it reads them
+    directly: rebuilding the derived shape on every hit was most of what the
+    memo was there to save.
+
+    ``None`` where the registry holds nothing, and where the owner declares
+    no amp-chain slot.  A record that is present but not a ``Mapping`` is
+    returned as it is: the entry builders skip it, so comparing it by
+    identity is at worst one unnecessary recompilation and never a stale
+    answer.
+    """
+    return (
+        item_effects.ITEM_EFFECTS.get(owner),
+        item_effects.ALLY_ITEM_EFFECTS.get(owner),
+        rune_effects.RUNE_EFFECTS.get(owner) if owner in KEYSTONE_AMPS else None,
+    )
 
 
 def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
@@ -5960,7 +5983,7 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     optimizer asks this question a quarter of a million times per request and
     the answer can only change when the registries do.  Both halves of "can
     only change" are checked — the generation counter in the key and the
-    entry objects in the value — because ``refresh_item_effects()`` rebuilds
+    registry records in the value — because ``refresh_item_effects()`` rebuilds
     the registry without writing a cache file, so the counter alone would
     serve a shape compiled from entries that no longer exist.
 
@@ -5973,19 +5996,22 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     immediately.  Stated because it is a real narrowing: before the memo, an
     in-place edit was picked up on the next call.
     """
-    entries = registry_entries(owner) + keystone_entries(owner)
-    sources = tuple(entry for _registry, _family, entry in entries)
     key = (data_registry.data_version(), owner)
     cached = _BEHAVIOR_RULES_MEMO.get(key)
-    if cached is not None and len(cached[0]) == len(sources):
-        if all(before is now for before, now in zip(cached[0], sources)):
-            return cached[1]
+    if cached is not None:
+        records = _live_registry_records(owner)
+        if cached[0] is records[0] and cached[1] is records[1]:
+            if cached[2] is records[2]:
+                return cached[3]
+    entries = registry_entries(owner) + keystone_entries(owner)
     rules: list[BehaviorRule] = []
     for registry, family, entry in entries:
         for claimed in entry_families(registry, family, entry, owner):
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     compiled = tuple(rules)
-    data_registry.store_for_generation(_BEHAVIOR_RULES_MEMO, key, (sources, compiled))
+    data_registry.store_for_generation(
+        _BEHAVIOR_RULES_MEMO, key, _live_registry_records(owner) + (compiled,)
+    )
     return compiled
 
 

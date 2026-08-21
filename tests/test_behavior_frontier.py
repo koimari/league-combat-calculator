@@ -11,6 +11,7 @@ dischargeable by creating a fourteenth.
 """
 
 import ast
+import shutil
 import json
 import subprocess
 from dataclasses import fields
@@ -343,17 +344,24 @@ def test_the_forbidden_population_is_empty_and_the_gate_says_so() -> None:
 
 
 def test_a_planted_input_fallback_fails_the_gate_end_to_end(tmp_path) -> None:
-    """The red is driven by real source under the real tree, not by a seam.
+    """The red is driven by real source, not by a seam.
 
     Every other negative here decrements a committed number through
     ``check``'s ``committed`` argument, which exercises the comparison and
-    not the measurement.  This one writes a module into
-    ``src/calculator/champions/`` and runs ``main(["--check"])`` against the
-    committed receipt, so the scan, the classification and the gate are all
-    on the path.  The file is removed in ``finally`` and the check is asserted
-    green again afterwards.
+    not the measurement.  This one writes a module into a champion tree and
+    runs ``main(["--check"])`` against the committed receipt, so the scan,
+    the classification and the gate are all on the path.
+
+    The tree is a copy of the repo's under ``tmp_path`` rather than the
+    repo's itself.  ``zero_policy_frontier`` names every module by its path
+    *relative to the root*, so a copy measures identically -- which is what
+    the green assertion before the plant proves -- and planting into the
+    repo raced every sibling test that scans it under ``pytest -n``.
     """
-    planted = behavior_frontier.CHAMPIONS_ROOT / "_frontier_negative_fixture.py"
+    champions = tmp_path / "champions"
+    shutil.copytree(behavior_frontier.CHAMPIONS_ROOT, champions)
+    assert behavior_frontier.main(["--check"], champions_root=champions) == 0
+    planted = champions / "_frontier_negative_fixture.py"
     planted.write_text(
         "def parse(ctx):\n"
         '    """A stack count nothing wired, defaulted to a literal."""\n'
@@ -361,10 +369,10 @@ def test_a_planted_input_fallback_fails_the_gate_end_to_end(tmp_path) -> None:
         encoding="utf-8",
     )
     try:
-        assert behavior_frontier.main(["--check"]) == 1
+        assert behavior_frontier.main(["--check"], champions_root=champions) == 1
     finally:
         planted.unlink()
-    assert behavior_frontier.main(["--check"]) == 0
+    assert behavior_frontier.main(["--check"], champions_root=champions) == 0
 
 
 def test_a_new_produced_fallback_fails_the_gate() -> None:
