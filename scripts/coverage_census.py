@@ -10,12 +10,12 @@ withhold, coarse source, or crash the sweep can reach is a frontier entry.
 The campaign closes when the frontier is empty. Until then the receipt pins
 the shrinking frontier.
 
-A frontier entry the campaign cannot close without inventing data is
-acknowledged in ``docs/coverage-residue.json`` instead — one row per
-(champion, source), carrying the cached sentence that describes the hits and
-what that sentence fails to say. The gate then fails two ways: on an entry no
-row acknowledges, and on a row whose entry no longer reproduces, so the list
-can neither grow in silence nor outlive its cause.
+A frontier entry that cannot be closed without inventing data is acknowledged
+in ``docs/coverage-residue.json`` instead: one row per (champion, source),
+carrying the cached sentence that describes the hits and what that sentence
+fails to say. The gate then fails two ways, on an entry no row acknowledges
+and on a row whose entry has stopped reproducing, so the list can neither grow
+in silence nor outlive its cause.
 
 Usage:
     python scripts/coverage_census.py run                     # sweep + summary
@@ -372,9 +372,9 @@ def reconcile_residue(receipt):
     """Split the frontier into acknowledged rows and unacknowledged entries.
 
     Two failures, not one. An entry nothing acknowledges is the frontier
-    proper — the campaign's own work, unfinished. A row whose entry no longer
-    reproduces is an acknowledgement that outlived its cause, which is how a
-    list of known gaps quietly becomes a list of forgotten ones.
+    proper, work still open. A row whose entry has stopped reproducing is an
+    acknowledgement that outlived its cause, which is how a list of known gaps
+    quietly becomes a list of forgotten ones.
     """
     rows = _residue_rows()
     acknowledged = {(row["champion"], row["source"]) for row in rows}

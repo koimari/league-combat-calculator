@@ -480,9 +480,7 @@ def build_keyword_index(
 def strip_champ_prefix(name: str, champ_norm: str) -> str:
     """Remove the champion-name prefix from a script name (ASCII-safe).
 
-    Every script name starts with the champion name ("GnarW", "VladimirQ").
-    The prefix is boilerplate: keeping it makes champion-specific vocab
-    keywords (e.g. "Mega Gnar") match every spell of that champion.
+    Keeping it makes "Mega Gnar" match every spell of that champion.
     """
     n = norm(name)
     if champ_norm and n.startswith(champ_norm) and len(n) > len(champ_norm):

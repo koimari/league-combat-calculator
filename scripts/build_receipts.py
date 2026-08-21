@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""E9 — per-champion and per-item receipts consolidating atoms + module coverage
-+ audit verdict + heal rules into one verifiable receipt per entity.
+"""Per-champion and per-item receipts: atoms, module coverage, audit verdict
+and heal rules folded into one verifiable receipt per entity.
 
 Output: docs/receipts/champions/<name>.json and docs/receipts/items/<id>.json,
 both gitignored and rebuilt from the local corpus.  The run's counts are
 printed and returned; nothing tracked is written, so a partial local atom
 corpus cannot commit itself.
 
-Item atoms are read from the unified Atomizer domain file
-``data/atoms/items.json`` (issue #163): the retired ``data/item-atoms/`` tree
-is gone, and the unified file is the only authoritative item-atom source.  The
-receipt tree is built in a temporary directory and published only after every
-entity succeeds, so a failure can never leave a partially refreshed tree.
+Item atoms come from ``data/atoms/items.json``, the only authoritative
+item-atom source.  The receipt tree is built in a temporary directory and
+published only after every entity succeeds, so a failure can never leave a
+partially refreshed tree.
 """
 
 from __future__ import annotations
@@ -89,13 +88,7 @@ def load_item_atoms(path: Path | None = None) -> dict[str, list[dict]]:
 
 
 def _family_of(atom: dict) -> str:
-    """Family of an item atom = its ``atom_id`` namespace prefix.
-
-    The unified item rows carry no explicit ``family`` field; the stable
-    classification is the first dot-segment of the atom id (``stat.*``,
-    ``damage.*``, ``heal.*``, ``shield.*``, ``economy.*``, ...), which is
-    exactly the behavior taxonomy ``atomizer_domains._ITEM_KEYWORDS`` emits.
-    """
+    """Family of an item atom: the ``atom_id`` prefix, no ``family`` field."""
     return atom["atom_id"].split(".", 1)[0]
 
 
@@ -131,7 +124,7 @@ def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
 
 
 def item_receipt(item_id: str, item: dict, atoms: list[dict] | None = None) -> dict:
-    """One item receipt from the unified Atomizer item domain (issue #163).
+    """One item receipt from the Atomizer item domain.
 
     ``atoms`` may be injected for tests; the default loads and validates the
     authoritative ``data/atoms/items.json``.  An id absent from the mapping

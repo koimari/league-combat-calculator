@@ -1,12 +1,12 @@
-"""Run a bounded all-champion optimizer smoke matrix for issue #38.
+"""Run a bounded all-champion optimizer smoke matrix.
 
 Each registered champion is sent through the real local Flask
 ``/api/optimize`` path with one locked item so the sweep stays bounded.  The
 report records elapsed time, status/error text, event-order coverage, and the
-item-candidate scope.  Issue #38 certifies champion event packages; incomplete
-item coverage is owned by issue #40 and is recorded as a separate scope gap.
-A partial event timeline or an unexpected HTTP result still fails the matrix;
-an in-scope champion result is never promoted to a global BIS claim.
+item-candidate scope.  What this certifies is the champion event package, so
+incomplete item coverage is recorded as a separate scope gap rather than a
+failure.  A partial event timeline or an unexpected HTTP result fails the
+matrix; an in-scope champion result is never promoted to a global BIS claim.
 
 Usage::
 
@@ -133,8 +133,8 @@ def run_matrix(
         "outcome_counts": dict(sorted(counts.items())),
         # A matrix that contains a partial event timeline OR an expected
         # withholding has not certified that champion.  Item-scope gaps are
-        # reported separately because they are the issue #40 track, not
-        # evidence that the champion module itself is partial.
+        # reported separately: they are not evidence that the champion module
+        # itself is partial.
         "passed": (
             integrity_ok
             and counts.get("unexpected_failure", 0) == 0
@@ -205,7 +205,7 @@ def main() -> int:
             names,
         )
     # Self-consistency check only: the expected size is DERIVED from the
-    # registry, so a roster expansion never trips the CI gate (issue #136).
+    # registry, so a roster expansion never trips the CI gate.
     report["registry_size_expected"] = len(names)
     report["registry_size_ok"] = len(names) == report["registry_size_expected"]
     report["passed"] = bool(report["passed"] and report["registry_size_ok"])

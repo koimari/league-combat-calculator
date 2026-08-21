@@ -47,7 +47,7 @@ SLOTS = BASE_CAST_SLOTS
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Source supply contract (issue #134): every external dependency resolves
+# Source supply contract: every external dependency resolves
 # repo-relative by default and is overridable per-run via CLI flag or
 # environment variable.  No developer-home paths are hardcoded anywhere, so
 # the generator behaves identically on any machine that supplies the files.
@@ -126,10 +126,9 @@ def _axword_by_name(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
 def _wiki_revisions(wiki_db: str | Path | None = None) -> dict[str, dict[str, Any]]:
     """Read revision receipts from the local read-only Wiki index.
 
-    Fail closed (issue #134): a missing or unreadable cache raises one
-    actionable error instead of silently returning ``{}`` — an empty receipt
-    set used to let ``build()`` label every champion ``reviewed_packet``
-    against no evidence at all.
+    Fail closed: a missing or unreadable cache raises one actionable error
+    rather than returning ``{}``, which would let ``build()`` label every
+    champion ``reviewed_packet`` against no evidence at all.
     """
     db = Path(wiki_db).expanduser() if wiki_db else resolve_wiki_db()
     if not db.is_file():
@@ -175,12 +174,8 @@ def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
 def _wiki_cooldown(ability: dict[str, Any]) -> float:
     """The rank-1 cooldown, recorded as evidence of the row's shape.
 
-    A packet's ``cooldown`` is a scalar and a cooldown is a rank array, so
-    this field can only ever be the array's first entry.  It is no longer
-    served: ``packet_module._packet_cooldown`` reads the cached row at the
-    rank being cast, which is the cooldown's one home.  The field stays for
-    the receipt (and pins the packet digests already accepted by named
-    modules); a regeneration is free to drop it.
+    Evidence only.  ``packet_module._packet_cooldown`` serves the cooldown
+    at the rank being cast, and that is its one home.
     """
     raw = ability.get("cooldown")
     if not isinstance(raw, dict):
@@ -434,7 +429,7 @@ def build(
 ) -> dict[str, Any]:
     """Generate the reviewed-packet evidence asset.
 
-    Fail closed (issue #134): every source is pre-flighted before any output
+    Fail closed: every source is pre-flighted before any output
     is written, and a champion is only ever labeled ``reviewed_packet`` when
     the current Wiki index carries a revision receipt for its page.  A run
     without any receipts aborts entirely.
