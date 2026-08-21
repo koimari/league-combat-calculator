@@ -3661,8 +3661,8 @@ def _make_shred_ramp(
     if threshold_hits > 0:
         if debuff.get("stacks"):
             raise ValueError(
-                f"{ability_field(ability_info, "name")!r}: target_debuff cannot declare "
-                "both threshold_hits and stacks"
+                f"{ability_field(ability_info, 'name')!r}: target_debuff cannot "
+                "declare both threshold_hits and stacks"
             )
         return _ThresholdShred(
             resists=resists,
@@ -3674,7 +3674,7 @@ def _make_shred_ramp(
         return None
     if debuff.get("armor_reduction_percent") or debuff.get("mr_reduction_percent"):
         raise ValueError(
-            f"{ability_field(ability_info, "name")!r}: a ramped target_debuff must "
+            f"{ability_field(ability_info, 'name')!r}: a ramped target_debuff must "
             "reduce resistances by a FLAT amount — percent stages compound "
             "multiplicatively and cannot be split into equal shares"
         )
@@ -6186,8 +6186,9 @@ def _build_stack_timeline(state: FightState, plan: CastPlan) -> StackTimeline | 
             # The buff is triggered BY stacks; with no stacking DoT to
             # count them it could never fire, and would silently grant
             # nothing rather than failing loudly.
+            buff_name = ability_field(buff, "name", form="stack_triggered_buff")
             raise ValueError(
-                f"stack_triggered_buff {ability_field(buff, "name", form="stack_triggered_buff")!r} declared "
+                f"stack_triggered_buff {buff_name!r} declared "
                 "without a stacking_dot to trigger it — the buff has no "
                 "stack source"
             )
