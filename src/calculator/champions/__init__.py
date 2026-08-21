@@ -506,6 +506,7 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "mist_walkers": {"role": "self_state", "slot": "R"},
     "mundo_missing_health_percent": {"role": "self_state", "slot": "E"},
     "near_flag": {"role": "self_state", "slot": "E"},
+    "p_backstab": {"role": "self_state", "slot": "P"},
     "p_critical_pellets": {"role": "irrelevant", "slot": "P"},
     "p_daggers": {"role": "self_state", "slot": "P"},
     "p_essence_fragments": {"role": "self_state", "slot": "P"},

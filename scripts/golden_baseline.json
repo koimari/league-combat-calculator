@@ -24660,14 +24660,15 @@
           "total_raw": 550.0
         },
         "passive": {
-          "cooldown": 0.0,
-          "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "damage_type": "physical",
+          "detail": "p_backstab is False: attacks are not landing from behind (no bonus priced)",
           "name": "Backstab",
+          "on_hit": {
+            "damage_per_hit": 0.0,
+            "damage_type": "physical",
+            "name": "Backstab (on-hit)"
+          },
           "parts": [],
-          "rank": 0,
-          "resource_cost": 0.0,
-          "resource_type": "MANA",
           "total_raw": 0.0
         }
       },
@@ -43084,7 +43085,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1787268652.393148,
-    "git_head": "f353196cb291d47f1067c124c747e399da6a7fef",
+    "git_head": "dd2e9521606eed74a98ae92f071cb38b2240ce7d",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,

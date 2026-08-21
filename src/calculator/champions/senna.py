@@ -19,6 +19,20 @@ E3 additions over the CP10.7 packet module:
      with the target's current health, the model uses max health.
 - The remaining slots keep their reviewed packet reads; Q/W/R scale off
   the Mist-buffed AD because P runs first in the BUFF phase.
+
+Roadmap session 4 batch G (2026-08-21): E (Curse of the Black Mist) is a
+camouflage/movement-speed aura, not enemy damage: all five cached effects
+(data/champions.json E) are self/ally utility prose — the mist's
+camouflage duration, allied Wraith Form, obscured-vision rules, the
+20%-plus-5%-per-100-AP bonus movement speed, and the free-cast-during-cast
+note — with zero enemy-damage leveling anywhere in the entry. The pinned
+reviewed packet (static/reviewed-packets.json) independently declares E
+``kind: "no_damage"`` with a sourced reason, and E is not one of the four
+slots this module reassigns (only P, P2, R, W, Q are overridden below), so
+it already emits the packet's sourced zero-damage row today — MODULE_COVERAGE
+was simply stale, still reading "out_of_scope" for an already-covered slot
+(the Malzahar/Nasus precedent, roadmap session 4 batch D). Reclassified to
+"no_damage"; zero fight-computation change.
 """
 
 from typing import Any
@@ -333,11 +347,18 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "150% of the selected Mist stacks for 3s at the cast; the ally "
     "half of the light wave is emitted by the ally-support scanner "
     "without the Mist term (documented boundary)",
+    "E (Curse of the Black Mist) has no enemy-damage formula: all five "
+    "cached effects are self/ally camouflage and movement-speed utility "
+    "(confirmed by the pinned reviewed packet's kind='no_damage' "
+    "declaration for E). E is a cast slot in this module (never "
+    "reassigned away from build_packet_module's no_damage branch), so "
+    "MODULE_COVERAGE reflects a sourced no-damage classification "
+    "rather than an unmodeled gap (no_damage, not out_of_scope).",
 ]
 
 SOURCES = list(_packet_sources)
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
     for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

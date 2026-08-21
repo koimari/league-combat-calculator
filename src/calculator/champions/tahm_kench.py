@@ -1,4 +1,28 @@
-"""Tahm Kench's acquired-taste and defensive-state packets."""
+"""Tahm Kench's acquired-taste and defensive-state packets.
+
+Roadmap session 4 batch G (2026-08-21): E (Thick Skin) is grey-health
+resource state, not enemy damage — confirmed independently of the
+existing SLOTS omission below. All three cached E effects
+(data/champions.json, ``affects: "Self"``) are self-directed: the grey-
+health store (15/23/31/39/47% of post-mitigation damage TAKEN, boosted
+to 42-50% with 2+ visible enemies), the out-of-combat consume-to-heal
+(60% : 100% based on level of the stored pool), and the grey-to-shield
+active conversion. The generic wiki parser's "Max Health Damage" leveling
+attribute on the second effect is its generic name for that self
+percent-of-max-health heal-restore term, not damage dealt to an enemy —
+the exact same misparse pattern as Rek'Sai P's "Max Health Damage" row
+(roadmap session 4 batch F precedent). The pinned reviewed packet
+(static/reviewed-packets.json) independently carries a ``kind: "packet"``
+declaration for E with ``base`` all zero and a ``targetMaxHp`` ratio that
+is the same misparsed self-heal term, not a corroborating enemy-damage
+formula — the module's own SLOTS dict below has never wired E (deliberate,
+documented since before this pass), so MODULE_COVERAGE was simply stale,
+reading "out_of_scope" for a slot this module already treats as
+non-damaging. Reclassified to "no_damage"; zero fight-computation change
+(E remains absent from ``parse_abilities``' output, matching
+``tests/test_champion_withholdings.py``'s ``"E" not in tahm_abilities``
+invariant).
+"""
 
 from typing import Any
 
@@ -112,6 +136,16 @@ ASSUMPTIONS = [
     "primitive authors it from the incoming ledger. The E active "
     "converts grey into a 2.5 s shield and is defensive state, not a heal.",
     "R defaults to the enemy Regurgitate branch; ally Devour is a separate support/shield scenario.",
+    "E (Thick Skin) has no enemy-damage formula: all three cached "
+    "effects are self-directed grey-health resource state (store %, "
+    "out-of-combat consume-heal, shield conversion) — the 'Max Health "
+    "Damage' leveling attribute is the wiki parser's generic name for "
+    "the self heal-restore percentage, not a term dealt to an enemy "
+    "(the Rek'Sai P precedent, roadmap session 4 batch F). E is "
+    "deliberately absent from SLOTS so the fight ledger never invents "
+    "an enemy hit; MODULE_COVERAGE reflects a sourced no-damage "
+    "classification rather than an unmodeled gap (no_damage, not "
+    "out_of_scope).",
 ]
 
 SOURCES = [
@@ -126,7 +160,10 @@ SOURCES = [
 
 # Authoritative review metadata (issue #161).
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    slot: (
+        "modeled" if slot in SLOTS else "no_damage" if slot == "E" else "out_of_scope"
+    )
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"
 
