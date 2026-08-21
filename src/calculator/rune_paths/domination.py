@@ -1,32 +1,40 @@
 """Domination's minor runes.
 
-Nine runes, and not one of them books damage here. Rows 2 and 3 buy vision,
-trinket haste, gold and out-of-combat movement — none of which is damage in
-any source. Row 3's three combat runes each need an event this engine's
-timeline does not carry: a target already under crowd control (Cheap Shot),
-a dash, blink or exit from stealth (Sudden Impact), or a healing channel no
-rune reaches (Taste of Blood).
+Nine runes across three rows. Row 1 is the combat row: Cheap Shot prices
+bonus true damage on the impaired trigger stream, and its two row-mates
+still wait on a channel — a heal with no rune entry point (Taste of Blood)
+and a dash the fight's timeline never records (Sudden Impact). Row 2 buys
+vision, trinket haste and gold, none of which is damage in any source. Row 3
+pays on takedowns: two of the three buy nothing the fight reads, and
+Ultimate Hunter grants ultimate haste.
 
-Three of those refusals name a number, so they are compiled rather than
-declared: a reader who picks Cheap Shot should be told what the rune would
-have dealt, not merely that it dealt nothing.
+The refusals that name a number are compiled rather than declared: a reader
+who picks Taste of Blood should be told what the rune would have healed, not
+merely that it dealt nothing.
 """
 
 from typing import Any, Callable, Mapping
 
 from ..ability_spec import Disposition, ZeroPolicy
+from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneEffect,
     RuneNoDamageEffect,
     RuneOption,
     RuneOptionKind,
+    RuneProcEffect,
     RuneStat,
     RuneStatContext,
     RuneStatGrantEffect,
+    RuneTrigger,
     RuneValues,
     at_level,
+    breakdown_key,
+    display_name,
     no_damage_compiler,
+    required_leveling,
     rune_effect_value,
+    stated_type,
 )
 
 #: The two levels a withheld damage table is quoted at: the fight's floor and
@@ -34,46 +42,56 @@ from ..rune_effects import (
 _QUOTED_LEVELS = (1, 18)
 
 
-def _level_span(effects: RuneValues) -> tuple[float, float]:
+def _level_span(name: str, effects: RuneValues) -> tuple[float, float]:
     """One rune's first level table at levels 1 and 18, for its receipt.
 
-    ``required_leveling`` is the door for a table a compiler *prices*, and it
-    demands all twenty levels. These tables are quoted inside a refusal, and
-    two of them are the wiki's 18-column default rather than twenty rows —
-    rejecting them would cost the receipt its numbers to buy a strictness
-    that guards no arithmetic. ``at_level`` clamps, so the last row is the
-    last row.
+    The same fail-loud door a priced table is read through; ``at_level``
+    clamps, so the last row of an eighteen-column table is the last row.
     """
-    table = [float(value) for value in effects.value("leveling")[0]]
     first, last = _QUOTED_LEVELS
+    table = required_leveling(name, effects)
     return at_level(table, first), at_level(table, last)
 
 
-def _compile_cheap_shot(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
-    """Compile Cheap Shot: true damage to an impaired target, with no such stream.
+def _compile_cheap_shot(entry: Mapping[str, Any]) -> RuneProcEffect:
+    """Compile Cheap Shot: bonus true damage to a target under crowd control.
 
-    The engine does know crowd control — a champion module authors a
-    reviewed ``cc_kind`` on the parts that apply it — but a rune reaches the
-    fight through :class:`~..rune_effects.RuneTrigger`, whose three streams
-    count damage instances, basic attacks and damaging casts and none of
-    which reads that marker. Pricing this on any of them would book true
-    damage against a target nothing had impaired.
+    Its trigger stream is the impaired one: a damaging cast whose own
+    reviewed parts apply control, so the target is under it when the damage
+    lands. The rune names eight control kinds and the stream's predicate is
+    every class the bus calls control, which is that list — slows and blinds
+    included, not the immobilizing subset.
     """
     name = "Cheap Shot"
     effects = RuneValues(name, entry.get("effects", {}))
-    first, last = _level_span(effects)
-    return RuneNoDamageEffect(
+    base_by_level = required_leveling(name, effects)
+    top = RuneValues(name, entry)
+
+    def raw(inputs: DamageInputs) -> float:
+        return at_level(base_by_level, inputs.level)
+
+    return RuneProcEffect(
         rune_name=name,
-        zero_policy=ZeroPolicy(
-            Disposition.WITHHELD,
-            "its bonus true damage lands only on a target already under one "
-            "of the crowd-control kinds it names, and no rune trigger stream "
-            "reads the crowd-control marker the fight's damage events carry",
-        ),
+        breakdown_key=breakdown_key(name),
+        display_name=display_name(name),
+        stacks_required=1,
+        stack_window_seconds=None,
+        cooldown_seconds=top.number("cooldown"),
+        # The bonus rides the damage that finds the target impaired; the
+        # rune states no delay of its own.
+        proc_delay_seconds=0.0,
+        raw_damage=raw,
+        damage_type=stated_type("true"),
+        trigger=RuneTrigger.IMPAIRED_INSTANCES,
         disclosures=(
-            f"{name} would deal {first:g} bonus true damage at level 1 rising "
-            f"to {last:g} at level 18, once per cooldown; the damage is "
-            "cached and only the trigger is missing.",
+            f"{name} prices the casts whose own reviewed parts apply crowd "
+            "control, one per cooldown. The engine carries no control "
+            "*duration*, so the damage that lands inside a control an "
+            "earlier cast applied is not counted and the proc count is a "
+            "floor.",
+            f"{name} reads the reviewed control marker a champion module "
+            "authors, so a kit whose slots nobody reviewed procs nothing "
+            "rather than being assumed to impair.",
         ),
     )
 
@@ -88,7 +106,7 @@ def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
     """
     name = "Taste of Blood"
     effects = RuneValues(name, entry.get("effects", {}))
-    first, last = _level_span(effects)
+    first, last = _level_span(name, effects)
     bonus_ad_ratio = effects.number("bonus_ad_ratio")
     ap_ratio = effects.number("ap_ratio")
     return RuneNoDamageEffect(
@@ -118,7 +136,7 @@ def _compile_sudden_impact(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
     """
     name = "Sudden Impact"
     effects = RuneValues(name, entry.get("effects", {}))
-    first, last = _level_span(effects)
+    first, last = _level_span(name, effects)
     return RuneNoDamageEffect(
         rune_name=name,
         zero_policy=ZeroPolicy(

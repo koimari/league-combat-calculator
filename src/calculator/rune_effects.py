@@ -165,6 +165,11 @@ class RuneTrigger(Enum):
     BASIC_ATTACKS = "basic_attacks"
     #: Accepted damaging ability casts alone — autos never trigger these.
     DAMAGING_CASTS = "damaging_casts"
+    #: Damaging casts whose own authored parts apply crowd control, so the
+    #: target is under it when the damage lands. A floor by construction:
+    #: the engine carries no control *duration*, so damage landing later
+    #: inside the same control is not in this stream.
+    IMPAIRED_INSTANCES = "impaired_instances"
 
 
 @dataclass(frozen=True, slots=True)

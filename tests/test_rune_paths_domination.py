@@ -1,11 +1,11 @@
-"""Domination's minor runes: nine compiled refusals, and why each one is one.
+"""Domination's minor runes: what each one prices, and what each one declines.
 
-Domination is the path this engine covers by declining, so the test that
-matters is not "does it price" but "does it decline for the right reason,
-with the number it declined to price named". Three of the nine carry a cached
-damage or heal table and are missing only a trigger or a destination; six buy
-things — vision, trinket haste, gold, out-of-combat movement — that are not
-damage in any source.
+Two of the nine reach the fight — Cheap Shot's bonus true damage on the
+impaired trigger stream and Ultimate Hunter's ultimate haste — and both are
+pinned here against the cache and through the real pipeline. The other seven
+are compiled refusals, so the test that matters for them is not "does it
+price" but "does it decline for the right reason, with the number it declined
+to price named".
 
 The distinction is the disposition: ``WITHHELD`` is a real number this engine
 holds no channel for, ``STRUCTURAL_ZERO`` is a rune whose answer is zero.
@@ -15,7 +15,9 @@ import pytest
 
 from src.calculator import rune_effects
 from src.calculator.calculate import calculate_payload
+from src.calculator.item_effects import DamageInputs
 from src.calculator.rune_paths import domination
+from src.calculator.trigger_stream import applies_control
 
 _PROBE = {
     "champion": "Ashe",
@@ -26,23 +28,91 @@ _PROBE = {
     "target_armor": 100.0,
     "target_mr": 100.0,
 }
+#: A twenty-second window with Cheap Shot on the page, long enough for a
+#: kit's control casts to come off the rune's four-second cooldown.
+_TIMED = {
+    "level": 18,
+    "items": [],
+    "fight_mode": "time_based",
+    "fight_duration": 20.0,
+    "target_health": 10000.0,
+    "target_armor": 100.0,
+    "target_mr": 100.0,
+    "minor_runes": ["Cheap Shot"],
+}
 
 
-class TestTheThreeCombatRunes:
-    """Row 1: damage and healing the cache holds and the fight cannot reach."""
+def _inputs(*, level):
+    return DamageInputs(
+        champion_stats={},
+        level=level,
+        is_melee=False,
+        target_max_health=1000.0,
+        target_current_health=1000.0,
+    )
 
-    def test_cheap_shot_names_the_true_damage_and_the_missing_trigger(self):
+
+class TestCheapShot:
+    """Row 1: bonus true damage on the impaired trigger stream."""
+
+    def test_it_prices_its_cached_table_as_true_damage_on_a_4s_cooldown(self):
         """10 true damage at level 1 rising to 45 at 18, on a 4s cooldown."""
         effect = rune_effects.resolve_rune("Cheap Shot")
-        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert "no rune trigger stream reads the crowd-control marker" in (
-            effect.zero_policy.reason
-        )
-        assert "10 bonus true damage at level 1 rising to 45 at level 18" in (
-            effect.disclosures[0]
-        )
+        assert isinstance(effect, rune_effects.RuneProcEffect)
+        assert effect.trigger is rune_effects.RuneTrigger.IMPAIRED_INSTANCES
+        assert effect.cooldown_seconds == 4.0
+        assert effect.damage_type({}) == "true"
+        assert effect.raw_damage(_inputs(level=1)) == pytest.approx(10.0)
+        assert effect.raw_damage(_inputs(level=18)) == pytest.approx(45.0)
         assert rune_effects.RUNE_EFFECTS["Cheap Shot"]["cooldown"] == 4.0
+
+    def test_the_stream_is_every_control_class_not_the_immobilizing_subset(self):
+        """The rune names slows and blinds beside its immobilizes.
+
+        Which is why the stream's predicate is the bus's wider one: an
+        immobilize-only reader would refuse damage the rune really empowers.
+        """
+        assert applies_control({"cc_kind": "slow"})
+        assert applies_control({"cc_kind": "charm"})
+        assert not applies_control({"cc_kind": "none"})
+        assert not applies_control({})
+
+    def test_a_charming_kit_procs_and_an_unreviewed_kit_does_not(self):
+        """Ahri's charm and Ashe's slow proc it; Annie's kit reviews nothing.
+
+        Ahri's E is ``immobilize`` and Ashe's W a ``slow``, both reviewed in
+        their modules' ``MODULE_CC``; Annie declares none, so her fight books
+        no proc and says so rather than assuming she impairs.
+        """
+        charmer = calculate_payload({**_TIMED, "champion": "Ahri"})
+        slower = calculate_payload({**_TIMED, "champion": "Ashe"})
+        unreviewed = calculate_payload({**_TIMED, "champion": "Annie"})
+        rows = [
+            result["breakdown"].get("rune_Cheap Shot") for result in (charmer, slower)
+        ]
+        assert [(row["count"], row["total_damage"]) for row in rows] == [
+            (2, pytest.approx(90.0)),
+            (5, pytest.approx(225.0)),
+        ]
+        assert "rune_Cheap Shot" not in unreviewed["breakdown"]
+        assert any("Cheap Shot never procced" in note for note in unreviewed["notes"])
+
+    def test_the_procs_are_the_fight_s_own_control_casts(self):
+        """45 true damage each, and the total moves by exactly that."""
+        bare = calculate_payload(
+            {key: value for key, value in _TIMED.items() if key != "minor_runes"}
+            | {"champion": "Ashe"}
+        )
+        procced = calculate_payload({**_TIMED, "champion": "Ashe"})
+        assert bare["total_damage"] == pytest.approx(800.0, abs=0.05)
+        assert procced["total_damage"] == pytest.approx(1025.0, abs=0.05)
+        assert procced["damage_by_type"]["true"] - bare["damage_by_type"]["true"] == (
+            pytest.approx(225.0)
+        )
+
+
+class TestTheTwoCombatRunesStillWaiting:
+    """Row 1's other two: a heal with no channel, a dash with no event."""
 
     def test_taste_of_blood_names_the_heal_and_the_missing_destination(self):
         """16 rising to 40, plus 10% bonus AD and 5% AP."""
@@ -64,7 +134,6 @@ class TestTheThreeCombatRunes:
     @pytest.mark.parametrize(
         "name,levels",
         [
-            ("Cheap Shot", (10.0, 45.0)),
             ("Taste of Blood", (16.0, 40.0)),
             ("Sudden Impact", (20.0, 80.0)),
         ],
@@ -184,7 +253,7 @@ class TestUltimateHunter:
 
 class TestThePathThroughTheRealPipeline:
     def test_a_full_domination_row_prices_nothing_and_receipts_everything(self):
-        names = ["Cheap Shot", "Grisly Mementos", "Treasure Hunter"]
+        names = ["Taste of Blood", "Grisly Mementos", "Treasure Hunter"]
         bare = calculate_payload(dict(_PROBE))
         with_runes = calculate_payload({**_PROBE, "minor_runes": names})
         assert with_runes["total_damage"] == pytest.approx(bare["total_damage"])

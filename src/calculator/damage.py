@@ -177,6 +177,7 @@ from .ledger_projection import (
 )
 from .trigger_stream import (
     Stream,
+    applies_control,
     authored_triggers,
     is_immobilizing_event,
 )
@@ -8521,19 +8522,48 @@ def _record_rune_proc_row(
     state.total_damage += total
 
 
+def _impaired_instance_times(
+    state: FightState, rotation: RotationResult
+) -> list[float]:
+    """Damaging cast times whose own parts put the target under crowd control.
+
+    The marker is the reviewed ``cc_kind`` a champion module authors on the
+    part that applies it, and whether that marker *is* control is asked of
+    the bus rather than answered here — comparing a kind against a string is
+    the divergence ``trigger_stream`` exists to prevent, and this rune's
+    vocabulary is every control class rather than the immobilizing subset.
+
+    A cast whose slot nobody reviewed contributes nothing, and the engine
+    carries no control duration, so damage landing *inside* a control the
+    previous cast applied is not in this stream: the count is a floor.
+    """
+    impairing = {
+        slot
+        for slot, entry in state.ability_damages.items()
+        if float(entry.get("total_raw", 0.0)) > 0
+        and applies_control(_declared_cc_marker(entry))
+    }
+    return sorted(
+        float(event["time"])
+        for event in rotation.cast_events
+        if event.get("slot") in impairing
+    )
+
+
 def _rune_trigger_times(
     state: FightState, rotation: RotationResult, trigger: "rune_effects.RuneTrigger"
 ) -> list[float]:
-    """The fight event stream one keystone declares it watches.
+    """The fight event stream one rune declares it watches.
 
-    The keystone names the stream; the engine owns what is in it. Nothing
-    here interprets a rune — the three members are the three streams the
-    fight already publishes.
+    The rune names the stream; the engine owns what is in it. Nothing here
+    interprets a rune — each member is a stream the fight already publishes.
     """
     if trigger is rune_effects.RuneTrigger.BASIC_ATTACKS:
         return sorted(_auto_attack_timestamps(state))
     if trigger is rune_effects.RuneTrigger.DAMAGING_CASTS:
         return _damaging_cast_times(state, rotation)
+    if trigger is rune_effects.RuneTrigger.IMPAIRED_INSTANCES:
+        return _impaired_instance_times(state, rotation)
     return _rune_instance_times(state, rotation)
 
 
@@ -8601,6 +8631,9 @@ _RUNE_TRIGGER_SHORTFALLS: Mapping["rune_effects.RuneTrigger", str] = MappingProx
         rune_effects.RuneTrigger.DAMAGING_CASTS: "damaging ability casts",
         rune_effects.RuneTrigger.DAMAGE_INSTANCES: (
             "damage instances (damaging ability casts and basic attacks)"
+        ),
+        rune_effects.RuneTrigger.IMPAIRED_INSTANCES: (
+            "damaging ability casts whose own parts apply crowd control"
         ),
     }
 )
