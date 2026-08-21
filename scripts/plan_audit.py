@@ -106,7 +106,7 @@ CITATION_WINDOW = 5
 # (repo rule 1), build scratch, and the data cache — whose thousands of JSON
 # files are addressed by path, not by basename.
 UNINDEXED_DIRS = frozenset(
-    {".git", "__pycache__", "node_modules", ".venv", "vendor", "data"}
+    {".git", ".claude", "__pycache__", "node_modules", ".venv", "vendor", "data"}
 )
 
 # The retired golden figure's literal spellings.  Empty, deliberately: the
