@@ -196,7 +196,7 @@ def get_item_by_name(
     name: str, data_directory: Path = DEFAULT_DATA_DIR
 ) -> dict[str, Any]:
     """Cached data for one item, matched on name case-insensitively."""
-    fetch_item_data(data_directory=data_directory)
+    fetch_item_data(data_directory=data_directory)  # missing/invalid cache raises here
     found = _item_name_index(*_cache_version(data_directory, "items.json")).get(
         name.lower()
     )

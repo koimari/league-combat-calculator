@@ -399,6 +399,7 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
         "magic",
+        cc_kind="none",
         event_order_certified="single_hit",
     )
     # Self-defensive only — shown in the stats panel, no effect on
@@ -590,7 +591,15 @@ SLOTS = {
 # attack it empowers) and left undeclared: the cannon branch is an untimed
 # zero row that empowers no swing of its own, so the ledger cannot carry a
 # kind for it.
-MODULE_CC = {"P": "none", "Q": CC_PER_PART, "W": "none", "E": "knockback"}
+MODULE_CC = {
+    "P": "none",
+    "Q": CC_PER_PART,
+    "W": "none",
+    "E": "knockback",
+    # Hammer's empowered swing is reviewed ("none"); Cannon's R row has no hit
+    # time, so the ledger refuses a kind there and the part carries it.
+    "R": CC_PER_PART,
+}
 
 parse_abilities = build_parser(SLOTS, "Jayce", cc_kinds=MODULE_CC)
 

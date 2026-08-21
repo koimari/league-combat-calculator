@@ -120,6 +120,8 @@ def _per_level(
     return sum_modifiers(leveling[leveling_index], level)
 
 
+# Modifier 1 is the AD term on every row but W, whose only modifier IS the AD
+# term, so W passes ``modifier_index=0``.
 def _ad_ratio(
     ability: dict[str, Any],
     attribute: str,

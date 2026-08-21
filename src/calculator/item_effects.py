@@ -4653,6 +4653,7 @@ def _item_names(items: list[dict[str, Any]]) -> set[str]:
 
 def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
     """Return whether a resolved build contains one canonical item name."""
+    # Allocation-free on purpose: asked dozens of times per optimizer evaluation.
     return any(resolved_item_name(item) == item_name for item in items)
 
 
@@ -4716,6 +4717,7 @@ def counter_trigger(item_name: str) -> str:
     by a hit landing
     (https://wiki.leagueoflegends.com/en-us/Basic_attack).
     """
+    # "on_hit" is the taxonomy's default moment, not a cached value.
     declared = ITEM_EFFECTS.get(item_name, {}).get("counter_trigger", "on_hit")
     if declared not in ("on_attack", "on_hit"):
         raise ValueError(

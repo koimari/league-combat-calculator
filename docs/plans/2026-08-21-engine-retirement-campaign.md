@@ -31,7 +31,7 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 | D4 | `trigger_stream.CAPABILITIES` is the only item→stream declaration; hand-kept item name sets become projections of it or are deleted. | `architecture.md:30` already claims this; the tree has two survivors. |
 | D5 | `MODULE_CC` is the one CC declaration; parts-level `cc_kind` stamps in modules are moved into it and the contract refuses the parts-level form. | 164/177 declare; 6 stamp parts directly; 3 declare nothing. |
 | D6 | A test survives if it would catch a behavior or numeric regression. A test that pins source line numbers, counts, AST shape, or receipt tree shape without a behavior behind it is deleted with its receipt, unless it is a declared growth gate. | ~790 tests go red on pure refactors; that is cost, not safety. |
-| D7 | Docstrings and comments carry current state only. Campaign IDs (Amendment/Ruling/D-NN), and any docstring longer than its body, are rewritten or cut; a lint pins both at zero. | `~/.claude/CLAUDE.md` "Minimal prose"; 539 citations, 101 over-long docstrings. |
+| D7 | Docstrings and comments carry current state only. History citations (what something used to be, Amendment/Ruling/D-NN as history) and any docstring longer than its body are cut; a lint pins both at zero. A decision *pointer* (a D-NN cited for a non-obvious why) is reported, not gated — it is a why, not a history. | `~/.claude/CLAUDE.md` "Minimal prose"; 539 citations, 101 over-long docstrings. |
 | D8 | Latency gets a home: `benchmarks.md` + a pinned script, captured **before** any deletion lands and re-captured at close. | No `benchmarks.md` exists; the 2.1× regression is untracked. |
 | D9 | The "18-family union" finding is dropped: `RULE_FAMILY_COUNT = 18` is families, the 34 `RulePayload` members map onto them via `PAYLOAD_FAMILY`. | Verified at `item_behavior.py:108,2542`. |
 
@@ -82,7 +82,7 @@ reconciled against its diff before merging, and every number below was re-run on
 | U01 | `c4bdee33` | `benchmarks.md` + `scripts/bench_request.py --compare` (25% tolerance, ~15% run spread). |
 | U02 | `9bc9e24a` | One packet compiler: `add_engine_result` + a `PairView` receipt arm; `_pair_packet`, `add_packet`, `_without_pair_previews` gone. Control rows on the score panels had compiled as plain damage (N1); fixed with 0 of 36,802 probe leaves moving. A CC-carrying coupled scenario now covers that surface (`b4140869`). |
 | U03 | `18a3ca39` | 33 interpreter classes → `INTERPRETERS` (18 functions) + `RESOLVERS`; `reachability_report` byte-identical; −725 lines. |
-| U04 | `9cf71964` | `damage.py` literal fallbacks 449 → 107 (ability-payload reads 134 → 0 through `ability_atoms.ABILITY_PAYLOAD_SCHEMA`; option defaults read from the OPTIONS spec; 155 unreachable defaults deleted); `tests/test_literal_defaults.py` pins it. 101 partial test fixtures completed by codemod. |
+| U04 | `9cf71964` | `damage.py` literal fallbacks 449 → 105 (ability-payload reads 134 → 0 through `ability_atoms.ABILITY_PAYLOAD_SCHEMA`; option defaults read from the OPTIONS spec; 155 unreachable defaults deleted); `tests/test_literal_defaults.py` pins it. 101 partial test fixtures completed by codemod. |
 | U05 | `4351b44c` | `_cached_sustain_stat` fails closed naming item+key; both hand-kept item name sets gone (`counter_trigger` lives on the registry entry; `ON_ATTACK_TRIGGER_ITEMS` was never a `CAPABILITIES` projection). |
 | U06 | `f91d3b2d` `21399bd6` | `MODULE_CC` defined by all 173 modules; `CC_PER_PART` sentinel for option/part-dependent kinds; the engine refuses a part restating a constant declaration. Pair golden re-captured: only `cc_reviewed` flags moved, no numeric leaf. Real numbers were 42 stampers and 5 undeclared, not 6 and 3. |
 | U07 | `5dd703fb` | ~269 shape-pinning tests and 200 of 360 receipts gone; twenty-six files re-pinned on behavior; `test_gate_receipt` 39 s → 1 s; `scripts/rename_evidence.py` keeps E12's string evidence refactor-safe. Rename probe: two private helpers renamed, zero red. One spent receipt was also wrong (A2: 3933.8 vs baseline 3921.0). |
@@ -105,8 +105,8 @@ Orchestrator commits: plan_audit stops indexing `.claude/worktrees` (`c549935c`)
 | `plan_audit.py` | 16 plan documents clean |
 | `bench_request.py --compare benchmarks.md` | exit 0 — 7.52 / 29.18 / 26.75 ms vs 8.43 / 32.39 / 32.85 pinned (−11% / −10% / −19%) |
 | `prose_lint.py` | long_docstring 0, long_comment 0, history 0 |
-| `literal_defaults.py damage.py` | 92 listed sites, every one on the frozen allowlist (internal breakdown-row reads + 2 census `getattr`s); cached-data, option and typed-default buckets all empty |
-| Blind audit | AUDIT_ROW |
+| `literal_defaults.py damage.py` | LITERAL_ROW |
+| Blind audit | *changes requested* → remediated in `REMEDIATION_SHA`: Jayce R reviewed-CC marker restored (hammer stance was the only unreviewed slot; no golden cell holds hammer); the N1 neutrality claim re-proven by a committed probe (`scripts/probe_control_parity.py`, receipt `docs/receipts/control-parity-7bb9701e.json`); `max_procs` given one absence meaning; four sourced-evidence comments restored; `scripts/term_census.py` (orphaned by U07) deleted and the two census `getattr`s it justified converted, closing `ER4`. |
 
 ### Success criteria
 
@@ -115,7 +115,7 @@ Orchestrator commits: plan_audit stops indexing `.claude/worktrees` (`c549935c`)
 | `src` down ≥5k lines, gate 4 identical | 167,853 → 163,429 (**−4,424**); tests 238,154 → 236,287; scripts 21,888 → 21,247; receipts 360 → 160. Short of 5k: the line count was never the point, and U08's −3.4k is prose — the engine deletions (U02 −191, U03 −725, U09 −787) were bounded by what was actually dead (S5 found 829 lines in 168k). |
 | `_pair_packet` / `add_packet` in `src` | 0 |
 | No `*PairInterpreter` / `*WalkInterpreter` pairs | 0 classes remain |
-| Lints at zero | history citations 0; over-long docstrings 0; cached-data fallbacks in `damage.py` 0 with a frozen 105-row allowlist of internal breakdown-row reads (`ER5` widens it) |
+| Lints at zero | history citations 0; over-long docstrings 0; decision pointers in `src` 666 → 420, reported not gated (D7 as amended at close — the criterion as first written said "campaign-ID citations", which conflated history with pointers); cached-data fallbacks in `damage.py` 0 with a frozen 96-row allowlist of internal breakdown-row reads (`ER5` widens it) |
 | `benchmarks.md` start and close from one script | yes; close is faster than start on every scenario |
 
 ### Findings the campaign overturned

@@ -262,7 +262,8 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 # magic on the flat one — so no payload may leave it out.
                 "damage_type": REQUIRED,
                 "hits": 1,
-                "max_procs": 0.0,
+                # ``None`` is "no cap"; a module caps by authoring a count.
+                "max_procs": None,
                 "min_damage": 0.0,
                 "stacks_required": 0,
                 "triggers": ("on_hit",),

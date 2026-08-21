@@ -882,12 +882,11 @@ def _apply_target_champion_damage_reduction(
     """Apply a sourced flat reduction to champion attack or spell packets."""
     if hits <= 0 or post_mitigation_damage <= 0.0:
         return post_mitigation_damage
-    # Spelled through getattr against rule 5, and only here: as attributes
-    # these two become visible to `term_census`, which then requires a
-    # coupled scenario arming Guardian's Horn and a re-captured golden
-    # baseline (umbrella Amendment R, Ruling 4).  Both fields are declared on
-    # FightState, so neither default is reachable — the shape is the census
-    # gate's, not a data fallback's, and it retires with that scenario.
+    # Spelled through getattr, and only here: as attributes these two join
+    # ``golden_snapshot.swing_term_declarations()``, whose capture then refuses
+    # every coupled baseline until a scenario arms Guardian's Horn against a
+    # basic attack (backlog ER4).  Both fields are declared on FightState, so
+    # neither default is reachable; the shape retires with that scenario.
     reduction = (
         getattr(state, "target_champion_dot_damage_flat_reduction", 0.0)
         if damage_over_time
@@ -9223,7 +9222,7 @@ def _layer_on_hit_effects(
 
         # Availability-limited on-hits (Bard meeps: stock + recharge)
         # apply at most max_procs times; autos beyond the cap are plain.
-        max_procs = on_hit_data.get("max_procs")
+        max_procs = ability_field(on_hit_data, "max_procs", form="on_hit")
         if max_procs is not None:
             hits = min(hits, int(max_procs))
 
@@ -13371,14 +13370,11 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     on_hit = ability_sub_payload(
         ability_payload(state.ability_damages, "passive"), "on_hit"
     )
-    if (
-        on_hit.get("name") != "Traveler's Call (Meep)"
-        or not isinstance(on_hit.get("max_procs"), (int, float))
-        or float(ability_field(on_hit, "max_procs", form="on_hit")) <= 0
-    ):
+    max_procs = ability_field(on_hit, "max_procs", form="on_hit")
+    if on_hit.get("name") != "Traveler's Call (Meep)" or not max_procs:
         opening = 0
     else:
-        opening = int(on_hit["max_procs"])
+        opening = int(max_procs)
 
     stock = _tier_value(_MEEP_STOCK_TIERS, seeded)
     recharge = _tier_value(_MEEP_RECHARGE_TIERS, seeded)

@@ -951,6 +951,7 @@ class TestReviewedCrowdControl:
             "Q": CC_PER_PART,
             "W": "none",
             "E": "knockback",
+            "R": CC_PER_PART,
         }
         assert jayce.parse_abilities.cc_kinds == jayce.MODULE_CC
 
@@ -980,6 +981,7 @@ class TestReviewedCrowdControl:
             "Q": ["slow"],
             "W": ["none"],
             "E": ["knockback"],
+            "R": ["none"],
         }
 
     def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):

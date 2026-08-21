@@ -58,6 +58,9 @@ W_MARK_WINDOW_SECONDS = 4.0
 # ---------------------------------------------------------------------------
 
 
+# The refund is a flat 1.5 s of real time, so refund math runs in hasted
+# seconds and converts back through this factor when writing pre-haste entry
+# cooldowns.
 def _haste_factor(ctx: SlotCtx) -> float:
     """(100 + ability haste) / 100, the divisor the fight engine applies later."""
     return 1.0 + ctx.stat("ability_haste") / 100.0
@@ -83,7 +86,9 @@ def _q_hasted_period(ctx: SlotCtx) -> float | None:
 
 def _refund_rate_factor(ctx: SlotCtx) -> float:
     """Cooldown speed-up W/E/R receive from the Q refund stream.  Dividing a
-    PRE-haste cooldown by it commutes with the engine's later haste division."""
+    PRE-haste cooldown by it commutes with the engine's later haste division.
+    Spear of Shojin's extra basic-ability haste is applied fight-side only
+    and is not folded into this inversion."""
     period = _q_hasted_period(ctx)
     if period is None:
         return 1.0
