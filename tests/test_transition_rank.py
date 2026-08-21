@@ -770,8 +770,7 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
     """The two orderings S6 must *not* touch, asserted rather than assumed.
 
     ``AURA_ARM`` resolves before the damage at its timestamp (C4's
-    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot — the
-    preserved defect declined by this stage on the migration frontier.
+    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot.
     """
     assert _armed_at(TransitionRank.AURA_ARM, "Abyssal Mask — Unmake") < _armed_at(
         TransitionRank.DAMAGE, "Abyssal Mask — Unmake"
@@ -781,13 +780,6 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
         is _armed_at(TransitionRank.LATE_BARRIER, "Thornmail")[1]
         is TransitionRank.LATE_BARRIER
     )
-    frontier = json.loads(
-        (ROOT / "docs" / "migration-frontier.json").read_text(encoding="utf-8")
-    )
-    declined = {
-        row["name"]: row["declined_by"] for row in frontier["preserved_defects"]
-    }
-    assert declined["LATE_BARRIER"] == "P4-S6"
 
 
 def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:

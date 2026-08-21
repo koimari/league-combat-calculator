@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts import acceptance_matrix, champion_optimizer_matrix
 from scripts.gate_receipt import (
     SCHEMA_VERSION,
     build_receipt,
@@ -15,6 +16,46 @@ from scripts.gate_receipt import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# ── canned endpoint responses ────────────────────────────────────────────────
+# The two matrices take their ``post`` as a parameter, so an envelope test
+# needs no server: one certified answer and one withheld answer exercise both
+# branches of every count the envelope carries.
+
+_CERTIFIED_OPTIMIZE = {
+    "items": ["Kraken Slayer"],
+    "boots": None,
+    "is_certified_best": True,
+    "search_timeline_coverage": {"complete": True},
+}
+_WITHHELD_OPTIMIZE = {
+    "items": None,
+    "boots": None,
+    "is_certified_best": False,
+    "error": "no certified build",
+    "search_timeline_coverage": {"complete": True, "note": "withheld"},
+}
+_CALCULATE_OK = {"timeline_coverage": {"complete": True}, "participants": []}
+
+
+def _canned_acceptance_results(post, *, origin="local:test_client"):
+    """One certified and one withheld scenario, through the real summarizer."""
+    scenarios = list(acceptance_matrix.SCENARIOS.items())[:2]
+    optimize_bodies = (_CERTIFIED_OPTIMIZE, _WITHHELD_OPTIMIZE)
+    return [
+        acceptance_matrix._summarize(  # noqa: SLF001
+            name,
+            payload,
+            (200, _CALCULATE_OK),
+            (200, body),
+            origin=origin,
+        )
+        for (name, payload), body in zip(scenarios, optimize_bodies)
+    ]
+
+
+def _canned_optimize_post(_path, _payload):
+    return 200, dict(_CERTIFIED_OPTIMIZE, search_timeline_coverage={"complete": True})
 
 
 def test_build_receipt_requires_real_bool():
@@ -41,21 +82,27 @@ def test_build_receipt_enforces_count_invariants():
         )
 
 
-def test_acceptance_matrix_emits_boolean_passed():
-    """The concrete bug: acceptance_matrix serialized the count (int) as passed."""
-    import sys
+def test_acceptance_matrix_emits_boolean_passed(capsys, monkeypatch):
+    """The concrete bug: acceptance_matrix serialized the count (int) as passed.
 
-    result = subprocess.run(
-        [sys.executable, "scripts/acceptance_matrix.py", "--json"],
-        capture_output=True,
-        text=True,
-        cwd=ROOT,
-    )
-    # exit code may be nonzero for withheld scenarios; the envelope must still validate
-    receipt = json.loads(result.stdout)
+    Driven over canned endpoint responses rather than the live matrix: the
+    envelope is built by the same ``main()`` code either way, and running the
+    real scenarios cost 31 s of the suite's parallel wall to re-measure what
+    the endpoint suites already cover.
+    """
+    # ``main()`` imports ``gate_receipt`` the way a script run resolves it.
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    monkeypatch.setattr(acceptance_matrix, "run_matrix", _canned_acceptance_results)
+    monkeypatch.setattr(sys, "argv", ["acceptance_matrix.py", "--json"])
+    acceptance_matrix.main()
+    receipt = json.loads(capsys.readouterr().out)
     assert receipt["schema_version"] == SCHEMA_VERSION
     validate_receipt(receipt)
     assert type(receipt["passed"]) is bool
+    # One certified and one withheld scenario: the counts are the matrix's
+    # own arithmetic over them, not a restatement of the envelope.
+    assert receipt["passed"] is True
+    assert receipt["counts"] == {"passed": 2, "failed": 0, "total": 2, "withheld": 1}
 
 
 def test_validate_rejects_int_passed():
@@ -169,18 +216,18 @@ def test_validate_receipt_cli(tmp_path):
 
 
 def test_champion_optimizer_matrix_emits_boolean_envelope():
-    """The optimizer matrix's envelope must validate like its siblings."""
-    result = subprocess.run(
-        [sys.executable, "scripts/champion_optimizer_matrix.py", "--json"],
-        capture_output=True,
-        text=True,
-        cwd=ROOT,
-        check=False,
-    )
-    receipt = json.loads(result.stdout)
+    """The optimizer matrix's envelope must validate like its siblings.
+
+    Over a canned ``post`` rather than the live all-champion smoke run,
+    which is the optimizer suite's job and cost 7.5 s here to repeat.
+    """
+    names = ["Ahri", "Aatrox"]
+    report = champion_optimizer_matrix.run_matrix(_canned_optimize_post, names)
+    receipt = champion_optimizer_matrix.build_gate_report(report, names)
     assert receipt["schema_version"] == SCHEMA_VERSION
     validate_receipt(receipt)
     assert type(receipt["passed"]) is bool
+    assert receipt["counts"]["total"] == len(names)
 
 
 def test_ci_validates_every_receipt_it_emits():
