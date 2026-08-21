@@ -11915,14 +11915,14 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         proc_time = float(next_proc["time"]) if next_proc is not None else math.inf
 
         if next_source is not None and source_time <= proc_time:
-            event = next_source
+            source = base_events[source_index]
             source_index += 1
             if target_health <= 0.0:
                 continue
-            damage = max(0.0, float(event["damage"]))
+            damage = max(0.0, float(source["damage"]))
             if (
                 damage > 0.0
-                and _dark_harvest_trigger_event(event)
+                and _dark_harvest_trigger_event(source)
                 and target_health < threshold
                 and source_time + 1e-9 >= ready_at
             ):
