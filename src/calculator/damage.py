@@ -974,7 +974,7 @@ def _add_lifesteal_events(
             )
     else:
         event_rows = [
-            (str(event.get("source_key", "")), event)
+            (str(event["source_key"]), event)
             for event in ordered_events
             if isinstance(event, Mapping)
         ]
@@ -1064,7 +1064,7 @@ def _add_omnivamp_events(
                 {
                     "time": event_time,
                     "amount": amount,
-                    "trigger_source": str(event.get("source_key", "")),
+                    "trigger_source": str(event["source_key"]),
                     # Omnivamp is likewise a direct stat conversion rather
                     # than a received-healing packet for Spirit Visage.
                     "healing_category": "vamp",
@@ -1581,7 +1581,7 @@ def _ledger_total(events: Sequence[Mapping[str, Any]]) -> float:
     ``_event_timeline_coverage`` counts as an active source using coarse
     ordering.
     """
-    return sum(float(event.get("damage", 0.0)) for event in events)
+    return sum(float(event["damage"]) for event in events)
 
 
 def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
@@ -1884,8 +1884,8 @@ def _ordered_damage_events(
         for ordinal, event in enumerate(declared_events, start=1):
             if not isinstance(event, dict):
                 continue
-            damage = float(event.get("damage", 0.0))
-            damage_type = str(event.get("damage_type", ""))
+            damage = float(event["damage"])
+            damage_type = str(event["damage_type"])
             if damage <= 0 or damage_type not in {"physical", "magic", "true"}:
                 continue
             order = event.get("timeline_order")
@@ -1897,7 +1897,7 @@ def _ordered_damage_events(
                     source_key,
                     damage_type,
                     damage,
-                    float(event.get("time", 0.0)),
+                    float(event["time"]),
                     sequence,
                     float(sequence) if order is None else float(order),
                     phase,
@@ -2122,7 +2122,7 @@ def _event_timeline_coverage(
         if isinstance(damage_events, list) and damage_events:
             event_total = 0.0
             for event in damage_events:
-                event_total += float(event.get("damage", 0.0))
+                event_total += float(event["damage"])
                 if (
                     not has_boundary
                     and isinstance(event, dict)
@@ -2492,7 +2492,7 @@ def _simulate_ordered_damage(
         dtype = event["damage_type"]
         event_time = float(event["time"])
         heal_drip.advance_to(pools, event_time)
-        source_key = str(event.get("source_key", ""))
+        source_key = str(event["source_key"])
         damage, reprice_delta = _liandry_max_health_reprice(
             source_key,
             damage,
@@ -2527,7 +2527,7 @@ def _simulate_ordered_damage(
                     "damage": bonus,
                     "damage_type": dtype,
                     "source_key": f"shadowflame_{cinderbloom.owner}",
-                    "trigger_source": event.get("source_key", ""),
+                    "trigger_source": event["source_key"],
                 }
             )
             event_damage += bonus
@@ -3032,7 +3032,7 @@ def _resolve_combat_state(
         level=level,
         enforce_resource_limits=config.enforce_resource_limits,
         resource_restore_events=tuple(config.resource_restore_events),
-        resource_ledger_owner=str(config.resource_ledger_owner or "main"),
+        resource_ledger_owner=str(config.resource_ledger_owner),
         target_basic_damage_multiplier=config.target_basic_damage_multiplier,
         target_basic_damage_flat_reduction=(config.target_basic_damage_flat_reduction),
         target_basic_damage_flat_reduction_cap=(
@@ -5132,7 +5132,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     """
     base_maximum = float(state.champion_stats["max_mana"])
     regen = float(state.champion_stats["resource_regen_per_second"])
-    owner = str(state.resource_ledger_owner or "main")
+    owner = str(state.resource_ledger_owner)
     ledger = resource_ledger.ResourceLedger(
         owner,
         maximum=base_maximum,
@@ -6546,15 +6546,13 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # that boundary instead of treating the whole rotation as active.
         ability_amp = state.ability_amp
         active_event_damage = 0.0
-        event_base_damage = sum(
-            float(event.get("damage", 0.0) or 0.0) for event in ability_events
-        )
+        event_base_damage = sum(float(event["damage"]) for event in ability_events)
         if state.actualizer_active_until > 0.0:
             if ability_events:
                 active_event_damage = sum(
-                    float(event.get("damage", 0.0) or 0.0)
+                    float(event["damage"])
                     for event in ability_events
-                    if float(event.get("time", 0.0) or 0.0)
+                    if float(event["time"])
                     < state.actualizer_active_until - _CAST_SCHEDULE_EPS
                 )
                 if event_base_damage > 0.0:
@@ -6637,7 +6635,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                     * (
                         ability_amp
                         if state.actualizer_active_until <= 0.0
-                        or float(event.get("time", 0.0) or 0.0)
+                        or float(event["time"])
                         < state.actualizer_active_until - _CAST_SCHEDULE_EPS
                         else 1.0
                     ),
@@ -6689,8 +6687,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             for event in ability_events:
                 landed_ledger.append(
                     (
-                        float(event.get("time", 0.0) or 0.0),
-                        float(event.get("damage", 0.0) or 0.0) * ability_amp,
+                        float(event["time"]),
+                        float(event["damage"]) * ability_amp,
                     )
                 )
         elif ability_total:
@@ -6723,7 +6721,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             applied_total = 0.0
             applied_by_type: dict[str, float] = {}
             application_times = [
-                float(event.get("time", 0.0))
+                float(event["time"])
                 for event in ability_events
                 if isinstance(event, dict)
             ]
@@ -7052,7 +7050,7 @@ def _add_precomputed_proc_damage(
             declared_events, list
         ):
             raw_event_total = sum(
-                float(event.get("damage", 0.0))
+                float(event["damage"])
                 for event in declared_events
                 if isinstance(event, dict)
             )
@@ -7062,7 +7060,7 @@ def _add_precomputed_proc_damage(
                     {
                         **event,
                         "damage_type": dtype,
-                        "damage": float(event.get("damage", 0.0)) * scale,
+                        "damage": float(event["damage"]) * scale,
                         "event_precision": "exact",
                     }
                     for event in declared_events
@@ -7241,7 +7239,7 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
     times_by_slot: dict[str, list[float]] = {}
     for event in rotation.cast_events:
         slot = str(event.get("slot", ""))
-        times_by_slot.setdefault(slot, []).append(float(event.get("time", 0.0)))
+        times_by_slot.setdefault(slot, []).append(float(event["time"]))
     for key in state.cast_order:
         entry = state.breakdown.get(key)
         info = state.ability_damages.get(key, {})
@@ -8588,7 +8586,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     # Add basic damage amp breakdown entry (informational — already applied)
     if basic_amp > 1.0:
-        amp_name = state.basic_amp_owner or "Basic Damage"
+        amp_name = state.basic_amp_owner
         basic_amp_bonus = (
             (auto_total + fiendhunter_true_total + passive_true_total)
             * (basic_amp - 1.0)
@@ -10345,7 +10343,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             # authored cast is the engine's sourced combat-start boundary; a
             # no-cast fight starts at zero rather than inventing a delay.
             combat_start = min(
-                (float(event.get("time", 0.0)) for event in rotation.cast_events),
+                (float(event["time"]) for event in rotation.cast_events),
                 default=0.0,
             )
             damage_per_proc = periodic_mitigated / procs if procs else 0.0
@@ -11542,16 +11540,16 @@ def _aery_trigger_times(state: FightState, rotation: RotationResult) -> list[flo
         state.cast_order,
         cast_events=rotation.cast_events,
     ):
-        if float(event.get("damage", 0.0) or 0.0) <= 0.0:
+        if float(event["damage"]) <= 0.0:
             continue
         if event.get("is_ability") or event.get("basic_attack"):
             continue
-        source_key = str(event.get("source_key", ""))
+        source_key = str(event["source_key"])
         if _is_auto_stream_key(source_key) or source_key.startswith(
             ("keystone_", "damage_amp_")
         ):
             continue
-        times.append(float(event.get("time", 0.0)))
+        times.append(float(event["time"]))
     return sorted(times)
 
 
@@ -11614,24 +11612,24 @@ def _aftershock_trigger_events(
             # control this row could republish.
             return
         try:
-            time = float(event.get("time", 0.0) or 0.0)
+            time = float(event["time"])
         except (TypeError, ValueError):
             return
-        key = (str(event.get("source_key", "")), round(time, 9), kind)
+        key = (str(event["source_key"]), round(time, 9), kind)
         if key in seen:
             return
         seen.add(key)
         triggers.append(
             {
                 "time": time,
-                "source_key": str(event.get("source_key", "")),
-                "source": str(event.get("source", event.get("source_key", ""))),
+                "source_key": str(event["source_key"]),
+                "source": str(event.get("source", event["source_key"])),
                 # The immobilize that CAUSED this shockwave, not one the
                 # shockwave applies: a bare ``cc_kind`` on the damage packet
                 # would certify the proc itself as a reviewed control event.
                 "trigger_cc_kind": kind,
                 "cc_duration": duration,
-                "sequence": int(event.get("sequence", 0) or 0),
+                "sequence": int(event["sequence"]),
             }
         )
 
@@ -11779,7 +11777,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
             source_index += 1
             if target_health <= 0.0:
                 continue
-            damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
+            damage = max(0.0, float(event["damage"]))
             if (
                 damage > 0.0
                 and _dark_harvest_trigger_event(event)
@@ -12158,9 +12156,9 @@ def _forced_basic_attack_times(
         for event in authored:
             if not isinstance(event, Mapping) or not event.get("basic_attack"):
                 continue
-            damage = float(event.get("damage", 0.0) or 0.0)
+            damage = float(event["damage"])
             if damage > 0.0:
-                times.append(float(event.get("time", 0.0) or 0.0))
+                times.append(float(event["time"]))
     return sorted(times)
 
 
@@ -12495,7 +12493,7 @@ def _conqueror_trigger_events(
     ability_events = [
         event
         for event in detailed
-        if event.get("is_ability") and float(event.get("damage", 0.0) or 0.0) > 0.0
+        if event.get("is_ability") and float(event["damage"]) > 0.0
     ]
     cast_times: dict[str, list[float]] = {}
     for cast in rotation.cast_events:
@@ -12513,24 +12511,18 @@ def _conqueror_trigger_events(
             cast_events = [
                 event
                 for event in slot_events
-                if cast_time - 1e-9 <= float(event.get("time", 0.0)) < next_cast - 1e-9
+                if cast_time - 1e-9 <= float(event["time"]) < next_cast - 1e-9
             ]
             if not cast_events:
                 continue
-            trigger_time = min(
-                float(event.get("time", cast_time)) for event in cast_events
-            )
+            trigger_time = min(float(event["time"]) for event in cast_events)
             triggers.append(
                 {
                     "time": trigger_time,
-                    "sequence": min(
-                        int(event.get("sequence", 0)) for event in cast_events
-                    ),
+                    "sequence": min(int(event["sequence"]) for event in cast_events),
                     "source_key": slot,
                     "source": slot,
-                    "damage": sum(
-                        float(event.get("damage", 0.0) or 0.0) for event in cast_events
-                    ),
+                    "damage": sum(float(event["damage"]) for event in cast_events),
                     "packet": "ability_cast",
                 }
             )
@@ -12538,23 +12530,20 @@ def _conqueror_trigger_events(
     auto_events = [
         event
         for event in detailed
-        if str(event.get("phase", "")) == "auto"
-        and float(event.get("damage", 0.0) or 0.0) > 0.0
+        if str(event.get("phase", "")) == "auto" and float(event["damage"]) > 0.0
     ]
     auto_groups: dict[float, list[Mapping[str, Any]]] = {}
     for event in auto_events:
-        time = round(float(event.get("time", 0.0)), 9)
+        time = round(float(event["time"]), 9)
         auto_groups.setdefault(time, []).append(event)
     for time, events in auto_groups.items():
         triggers.append(
             {
                 "time": time,
-                "sequence": min(int(event.get("sequence", 0)) for event in events),
+                "sequence": min(int(event["sequence"]) for event in events),
                 "source_key": "auto_attacks",
                 "source": "auto_attacks",
-                "damage": sum(
-                    float(event.get("damage", 0.0) or 0.0) for event in events
-                ),
+                "damage": sum(float(event["damage"]) for event in events),
                 "packet": "basic_attack",
             }
         )
@@ -12778,7 +12767,7 @@ def _add_senna_souls(
     target_health = float(raw_ending if raw_ending is not None else 1.0)
     if target_health <= 0.0:
         kill_time = max(
-            (float(event.get("time", 0.0) or 0.0) for event in damage_events),
+            (float(event["time"]) for event in damage_events),
             default=0.0,
         )
         _add_receipt(
@@ -13060,8 +13049,8 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
         stack,
         swings,
         q_casts,
-        float(state.fight_duration_seconds or 0.0),
-        q_window_end=float(state.q_window_end or 0.0),
+        float(state.fight_duration_seconds),
+        q_window_end=float(state.q_window_end),
     )
     closing = stack.stacks
 
@@ -13404,7 +13393,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                 events = [event for event in raw if isinstance(event, dict)]
         if events:
             for index, event in enumerate(events, start=1):
-                event_time = float(event.get("time", 0.0))
+                event_time = float(event["time"])
                 _add_receipt(
                     "hit",
                     float(event.get("raw_damage", 0.0)),
@@ -13616,7 +13605,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
             events = [event for event in raw if isinstance(event, dict)]
     if opening > 0 and events:
         for index, event in enumerate(events, start=1):
-            event_time = float(event.get("time", 0.0))
+            event_time = float(event["time"])
             _add_receipt(
                 "spend",
                 1.0,
@@ -13691,7 +13680,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         "recharge": recharge,
         "max_procs": opening,
         "recharges": recharges,
-        "window_seconds": float(state.fight_duration_seconds or 0.0),
+        "window_seconds": float(state.fight_duration_seconds),
     }
 
     ledger_section = rotation.resource_ledger
@@ -14022,7 +14011,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
         "combat_extension_seconds": rule.combat_extension_seconds,
         "stack_events": [
             {
-                "time": round(float(event.get("time", 0.0)), 3),
+                "time": round(float(event["time"]), 3),
                 "slot": event.get("slot"),
                 "ordinal": event.get("ordinal"),
                 "empowered": timeline.cast_empowered(
@@ -14090,7 +14079,7 @@ def _deathfire_trigger_events(
         for event in ordered
         if isinstance(event, Mapping)
         and event.get("is_ability")
-        and float(event.get("damage", 0.0) or 0.0) > 0.0
+        and float(event["damage"]) > 0.0
     ]
     cast_times: dict[str, list[float]] = {}
     for cast in rotation.cast_events:
@@ -14110,9 +14099,7 @@ def _deathfire_trigger_events(
             cast_events = [
                 event
                 for event in slot_events
-                if cast_time - 1e-9
-                <= float(event.get("time", cast_time))
-                < next_cast - 1e-9
+                if cast_time - 1e-9 <= float(event["time"]) < next_cast - 1e-9
             ]
             if not cast_events:
                 continue
@@ -14122,22 +14109,17 @@ def _deathfire_trigger_events(
                 # instances cannot create duplicate refreshes.
                 by_time: dict[float, list[Mapping[str, Any]]] = {}
                 for event in cast_events:
-                    event_time = round(float(event.get("time", cast_time)), 9)
+                    event_time = round(float(event["time"]), 9)
                     by_time.setdefault(event_time, []).append(event)
                 for event_time, events in by_time.items():
                     triggers.append(
                         {
                             "time": event_time,
-                            "sequence": min(
-                                int(event.get("sequence", 0)) for event in events
-                            ),
+                            "sequence": min(int(event["sequence"]) for event in events),
                             "source_key": slot,
                             "source": slot,
                             "category": category,
-                            "damage": sum(
-                                float(event.get("damage", 0.0) or 0.0)
-                                for event in events
-                            ),
+                            "damage": sum(float(event["damage"]) for event in events),
                             "event_precision": min(
                                 (
                                     str(event.get("event_precision", "cast_boundary"))
@@ -14150,18 +14132,12 @@ def _deathfire_trigger_events(
                 continue
             triggers.append(
                 {
-                    "time": min(
-                        float(event.get("time", cast_time)) for event in cast_events
-                    ),
-                    "sequence": min(
-                        int(event.get("sequence", 0)) for event in cast_events
-                    ),
+                    "time": min(float(event["time"]) for event in cast_events),
+                    "sequence": min(int(event["sequence"]) for event in cast_events),
                     "source_key": slot,
                     "source": slot,
                     "category": category,
-                    "damage": sum(
-                        float(event.get("damage", 0.0) or 0.0) for event in cast_events
-                    ),
+                    "damage": sum(float(event["damage"]) for event in cast_events),
                     "event_precision": min(
                         (
                             str(event.get("event_precision", "cast_boundary"))
@@ -14914,7 +14890,7 @@ def _first_damaging_ability_event(
                 if positive:
                     first = min(
                         positive,
-                        key=lambda event: float(event.get("time", 0.0)),
+                        key=lambda event: float(event["time"]),
                     )
                     event_time = _finite_numeric_receipt(first.get("time"))
                     if event_time is not None:
@@ -16336,7 +16312,7 @@ def _add_single_proc_on_hits(
                             # The shield arms on the SAME proc event it
                             # rides: its time and event precision are the
                             # completed pair's (P3 package 3C).
-                            "time": float(event.get("time", 0.0)),
+                            "time": float(event["time"]),
                             "event_precision": str(
                                 event.get("event_precision", "exact")
                             ),
@@ -16888,7 +16864,7 @@ def _hypershot_delta_events(
         # trigger is a PART of its cast (the non-triggering part IS
         # amped), so it must resolve above or stay coarse.
         slot_cast_times = sorted(
-            float(event.get("time", 0.0))
+            float(event["time"])
             for event in rotation.cast_events
             if isinstance(event, Mapping) and event.get("slot") == trigger_key
         )
@@ -17051,7 +17027,7 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
         # The amplified damage = base * amp, so the amp contribution is
         # base * (amp - 1) / amp  (since base already includes the amp).
         actualizer_bonus = amped_base * (state.ability_amp - 1.0) / state.ability_amp
-        amp_name = state.ability_amp_owner or "Ability Damage"
+        amp_name = state.ability_amp_owner
         breakdown[f"ability_amp_{amp_name}"] = {
             "name": f"Damage Amplification ({amp_name})",
             "multiplier": state.ability_amp,
@@ -17299,7 +17275,7 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
     if slot is None:
         return
     cc_times = sorted(
-        float(event.get("time", 0.0) or 0.0)
+        float(event["time"])
         for entry in state.breakdown.values()
         if isinstance(entry, dict)
         for event in entry.get("damage_events") or ()
@@ -17532,16 +17508,16 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
             for event in source_events:
                 if not isinstance(event, Mapping):
                     continue
-                damage_type = str(event.get("damage_type", ""))
+                damage_type = str(event["damage_type"])
                 if damage_type not in {"physical", "magic"}:
                     continue
-                source_key = str(event.get("source_key", ""))
+                source_key = str(event["source_key"])
                 is_auto = source_key == "auto_attacks"
                 if source_key not in source_slots and not (
                     is_auto and include_auto_attacks
                 ):
                     continue
-                event_time = float(event.get("time", 0.0) or 0.0)
+                event_time = float(event["time"])
                 if event_time < start_time - _CAST_SCHEDULE_EPS:
                     continue
                 if event_time > end_time + _CAST_SCHEDULE_EPS:
@@ -17553,7 +17529,7 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
                     and cast_positions[source_key] <= cast_positions.get(slot, -1)
                 ):
                     continue
-                source_damage += float(event.get("damage", 0.0) or 0.0)
+                source_damage += float(event["damage"])
 
             stored = source_damage * ratio
             if stored > 0.0:
@@ -17710,7 +17686,7 @@ def _empowered_swing_consumers(
             continue
         declared = burst.by_ability.get(ability_key, ()) if burst is not None else ()
         times = declared or tuple(
-            float(event.get("time", 0.0))
+            float(event["time"])
             for event in cast_events
             if str(event.get("slot", "")) == ability_key
             for _ in range(hits)
@@ -18185,7 +18161,7 @@ def calculate_fight_damage(
         for event in damage_events:
             if not isinstance(event, dict):
                 continue
-            source_key = str(event.get("source_key", ""))
+            source_key = str(event["source_key"])
             ability = state.ability_damages.get(source_key, {})
             # P4: the on-hit passive row's events carry source_key
             # "on_hit_ability_passive" — resolve the passive entry's own
@@ -18323,10 +18299,10 @@ def _walk_end_time(config: FightConfig, damage_events: list[dict[str, Any]]) -> 
     only clock there is.
     """
     latest = max(
-        (float(event.get("time", 0.0) or 0.0) for event in damage_events),
+        (float(event["time"]) for event in damage_events),
         default=0.0,
     )
-    return max(float(config.fight_duration_seconds or 0.0), latest)
+    return max(float(config.fight_duration_seconds), latest)
 
 
 def _resolve_starting_shield_outcome(
@@ -18429,8 +18405,8 @@ def _resolve_starting_shield_outcome(
         # packet only by riding back with the number beside it.
         repriced_by_source: dict[str, list[tuple[float, Any]]] = {}
         for event in damage_events:
-            repriced_by_source.setdefault(str(event.get("source_key", "")), []).append(
-                (float(event.get("damage", 0.0)), event.get("declared"))
+            repriced_by_source.setdefault(str(event["source_key"]), []).append(
+                (float(event["damage"]), event.get("declared"))
             )
         for source_key, entry in state.breakdown.items():
             values = repriced_by_source.get(source_key)
