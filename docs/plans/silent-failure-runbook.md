@@ -44,7 +44,7 @@ Every commit in the campaign is judged by one named gate set whose baselines wer
 
 | Counter family | Prior (`cassiopeia_3champ` / `cassiopeia_5champ` / `mundo_3champ`) | Producer today | Class |
 |---|---|---|---|
-| public evaluations | 1324 / 1033 / 706 | `bench_coupled_optimizer.py:341` (`body["evaluations"]`) | VERIFIED (3champ), CARRIED (others) |
+| public evaluations | 1324 / 1033 / 706 | `bench_coupled_optimizer.py:332` (`body["evaluations"]`) | VERIFIED (3champ), CARRIED (others) |
 | measured proposals | 1306 / 1015 / 688 | none | PRIOR |
 | score-memo misses | 1249 / 967 / 577 | none (`_PurchaseSearch._score_memo`, `optimizer.py:915`, is unobserved) | PRIOR |
 | pair `run_fight` calls | 2735 / 3127 / 1446 | none | PRIOR |
@@ -55,7 +55,7 @@ The 0A capture records the measurement and the prior side by side; a divergence 
 
 **R-08 — A counter becomes an equality gate only after a determinism probe.** Five isolated repeats must agree exactly; a counter that does not is demoted to a ratchet with the tolerance recorded in the receipt. Why: `_STATE_PROTO_MEMO` and `_CAST_ORDER_PARAMS_MEMO` clear wholesale at 512 entries, so hit rate is roster-size dependent, and an unexplainable ±2 destroys a gate's authority faster than having no gate.
 
-**R-09 — `--fixed-work` means machine-independent work.** The harness sends `time_budget_ms` at the app's clamp ceiling (60 000; `app.py:1321`, default 12 000) and voids any run whose response reports `truncated: true`. **If every repeat of a scenario voids**, that scenario is written to `campaign-fingerprints.json` as `unmeasurable` with `provenance=PRIOR` and removed from R-01 row 8's gate set **by name** — never left as an absent-but-assumed-green counter. Why verified and load-bearing: `_PurchaseSearch.expired()` (`optimizer.py:950-952`) truncates scoring on a wall-clock deadline, so counters measured at the default budget are a property of the machine, and no PRIOR above can be reproduced without this.
+**R-09 — `--fixed-work` means machine-independent work.** The harness sends `time_budget_ms` at the app's clamp ceiling (60 000; `app.py:1321`, default 12 000) and voids any run whose response reports `truncated: true`. **If every repeat of a scenario voids**, that scenario is written to `campaign-fingerprints.json` as `unmeasurable` with `provenance=PRIOR` and removed from R-01 row 8's gate set **by name** — never left as an absent-but-assumed-green counter. Why verified and load-bearing: `_PurchaseSearch.expired()` (`optimizer.py:940-942`) truncates scoring on a wall-clock deadline, so counters measured at the default budget are a property of the machine, and no PRIOR above can be reproduced without this.
 
 **R-10 — Baselines are captured before a phase's first edit and re-captured only at phase boundaries.** A mid-phase re-capture makes the previous slice's diff unattributable (D-97).
 
