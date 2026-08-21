@@ -65,10 +65,11 @@ def _compile_overgrowth(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
         stat=RuneStat.BONUS_HEALTH,
         amount=amount,
         disclosures=(
-            f"{name} is priced un-stacked, its default: its stacks are "
-            "minions and monsters that died near the holder over a game this "
-            f"one fight does not simulate, so the count is the {_STACKS!r} "
-            f"option, worth {per_stack:g} maximum health each.",
+            f"{name} is priced at the count its {_STACKS!r} option names, "
+            f"un-stacked by default and worth {per_stack:g} maximum health "
+            "each: its stacks are minions and monsters that died near the "
+            "holder over a game this one fight does not simulate, so the "
+            "count is asked for rather than inferred.",
             f"{name}'s share of base and bonus health at {threshold} stacks "
             "is withheld: the grant is a percentage of the holder's own "
             "health and a rune stat grant is resolved without it. The rune "

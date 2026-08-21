@@ -238,9 +238,10 @@ def _compile_waterwalking(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
         stat=RuneStat.ADAPTIVE_FORCE,
         amount=amount,
         disclosures=(
-            f"{name} is priced out of the river, its default: the fight "
-            f"model carries no terrain, so the river is the {_IN_RIVER!r} "
-            "option and the grant is nothing until it is set.",
+            f"{name} is priced wherever its {_IN_RIVER!r} option says the "
+            "holder is, out of the river by default: the fight model carries "
+            "no terrain, so the river is asked for rather than inferred, and "
+            "the grant is nothing until it is set.",
             f"{name}'s river movement speed is withheld: it is a flat grant "
             "and the rune stat channels carry movement speed as a percent.",
         ),
@@ -312,10 +313,10 @@ def _compile_gathering_storm(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
         stat=RuneStat.ADAPTIVE_FORCE,
         amount=amount,
         disclosures=(
-            f"{name} is priced at game minute {first_minute:g}, its default, "
-            f"where it grants nothing: the fight model carries no clock, so "
-            f"the minute is the {_GAME_MINUTE!r} option rather than an "
-            "inference.",
+            f"{name} is priced at the game minute its {_GAME_MINUTE!r} "
+            f"option names, minute {first_minute:g} by default — where it "
+            "grants nothing: the fight model carries no clock, so the minute "
+            "is asked for rather than inferred.",
             f"{name} grows every {minutes_per_mark:g} minutes and its table "
             f"ends at minute {last_minute:g}; the rune keeps growing past it "
             "in game, and minutes beyond the table are refused by the option "

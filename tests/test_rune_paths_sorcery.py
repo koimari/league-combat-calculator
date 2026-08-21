@@ -128,7 +128,7 @@ class TestWaterwalking:
         assert option.default == 0.0
         assert option.bounds == (0.0, 1.0)
         effect = rune_effects.resolve_rune("Waterwalking")
-        assert "'in_river' option" in effect.disclosures[0]
+        assert "'in_river' option says the holder is" in effect.disclosures[0]
         assert "movement speed as a percent" in effect.disclosures[1]
 
     def test_the_river_force_reaches_ability_power_through_rabadon_s(self):
@@ -165,8 +165,8 @@ class TestGatheringStorm:
     def test_its_default_is_the_first_column_where_it_grants_nothing(self):
         effect = rune_effects.resolve_rune("Gathering Storm")
         assert effect.amount(_context()) == 0.0
-        assert "game minute 0" in effect.disclosures[0]
-        assert "'game_minute' option" in effect.disclosures[0]
+        assert "minute 0 by default" in effect.disclosures[0]
+        assert "'game_minute' option names" in effect.disclosures[0]
         assert "grows every 10 minutes" in effect.disclosures[1]
 
     def test_the_option_is_bounded_by_the_rune_s_own_table(self):
@@ -208,6 +208,18 @@ class TestGatheringStorm:
         assert late["champion_stats"]["ability_power"] == 231
         assert early["total_damage"] == pytest.approx(1886.1, abs=0.1)
         assert late["total_damage"] == pytest.approx(2177.9, abs=0.1)
+
+    def test_the_note_names_the_option_and_never_asserts_the_priced_minute(self):
+        """A disclosure is compiled once; a set option must not make it a lie."""
+        late = calculate_payload(
+            _request(
+                minor_runes=["Gathering Storm"],
+                rune_options={"Gathering Storm": {"game_minute": 30}},
+            )
+        )
+        note = next(note for note in late["notes"] if "Gathering Storm" in note)
+        assert "'game_minute' option names" in note
+        assert "is priced at game minute 0" not in note
 
 
 class TestSorceryRefusals:

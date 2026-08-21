@@ -74,7 +74,8 @@ class TestOvergrowth:
 
     def test_the_percentage_half_is_disclosed_as_withheld(self):
         effect = rune_effects.resolve_rune("Overgrowth")
-        assert "'stacks' option, worth 3 maximum health each" in effect.disclosures[0]
+        assert "'stacks' option names" in effect.disclosures[0]
+        assert "worth 3 maximum health" in effect.disclosures[0]
         assert "at 15 stacks" in effect.disclosures[1]
         assert "stacks indefinitely in game" in effect.disclosures[1]
 
