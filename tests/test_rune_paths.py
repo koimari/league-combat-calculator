@@ -50,7 +50,9 @@ class TestTheRegistrationContract:
         merged = set(rune_effects._compilers())
         paths = set(rune_paths.path_compilers())
         assert merged == set(rune_effects._KEYSTONE_COMPILERS) | paths
-        assert len(merged) == 21
+        # How much of the 62-rune roster compiles today. Bump it as a path
+        # lands runes; the number is the coverage claim, not an invariant.
+        assert len(merged) == 44
 
     def test_two_paths_claiming_one_rune_fails_loud(self, monkeypatch):
         """A rune belongs to one path; two compilers is a declaration bug."""
