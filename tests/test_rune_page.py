@@ -22,6 +22,7 @@ from src.calculator import rune_effects
 from src.calculator.ability_spec import DamagePart
 from src.calculator.calculate import calculate_payload
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.rune_paths import precision
 import src.app as app_module
 
 # ---------------------------------------------------------------------------
@@ -96,6 +97,23 @@ class TestTheCachedRoster:
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(name="uncompiled_rune")
+def fixture_uncompiled_rune(monkeypatch):
+    """One roster rune with its compiler taken away, and its name.
+
+    Every rune the roster offers compiles now, so the refusal an *unmodeled*
+    rune is owed can no longer be proved by naming one — it is proved by
+    removing a compiler. The merged vocabulary is cached, so the cache is
+    cleared on the way in and again on the way out, once monkeypatch has put
+    the compiler back.
+    """
+    name = "Triumph"
+    monkeypatch.delitem(precision.COMPILERS, name)
+    rune_effects._compilers.cache_clear()
+    yield name
+    rune_effects._compilers.cache_clear()
+
+
 class TestPageValidation:
     def test_a_legal_page_passes_through(self):
         page = rune_effects.validate_rune_page(
@@ -114,9 +132,9 @@ class TestPageValidation:
         with pytest.raises(ValueError, match="Unknown rune 'Fake Rune'"):
             rune_effects.validate_rune_page("", ["Fake Rune"])
 
-    def test_an_unmodeled_rune_is_refused_not_priced_at_zero(self):
+    def test_an_unmodeled_rune_is_refused_not_priced_at_zero(self, uncompiled_rune):
         with pytest.raises(ValueError, match="not modeled yet"):
-            rune_effects.validate_rune_page("", ["Triumph"])
+            rune_effects.validate_rune_page("", [uncompiled_rune])
 
     def test_a_repeated_rune_is_refused(self):
         """The shared public-list policy owns this one, not the page rules."""
@@ -445,7 +463,6 @@ class TestTheRunePageOverHttp:
         [
             ({"minor_runes": ["Scorch", "Waterwalking"]}, "one rune per row"),
             ({"minor_runes": ["Fake Rune"]}, "Unknown rune"),
-            ({"minor_runes": ["Triumph"]}, "not modeled yet"),
             ({"minor_runes": ["Scorch", "Scorch"]}, "must not contain duplicates"),
             ({"keystone": "Scorch"}, "is a minor rune, not a keystone"),
             ({"stat_shards": ["Health"]}, "names shard row 1"),
@@ -456,6 +473,14 @@ class TestTheRunePageOverHttp:
         response = client.post("/api/calculate", json=_request(**payload))
         assert response.status_code == 400
         assert rule in response.get_json()["error"]
+
+    def test_an_unmodeled_rune_returns_400_over_http_too(self, uncompiled_rune):
+        client = app_module.app.test_client()
+        response = client.post(
+            "/api/calculate", json=_request(minor_runes=[uncompiled_rune])
+        )
+        assert response.status_code == 400
+        assert "not modeled yet" in response.get_json()["error"]
 
 
 # ---------------------------------------------------------------------------
