@@ -144,13 +144,19 @@ def _described_leaf(entry_path: str) -> str:
     """The payload leaf a claimed ``dispositions`` entry describes.
 
     ``/…/combat/dispositions/events[57].damage/disposition`` describes
-    ``/…/combat/events[57].damage`` — the map is keyed by the path a reader
-    walks to reach the leaf, which is what makes this derivable rather than
-    declared.
+    ``/…/combat/events[57]/damage`` — the map is keyed by the dotted path a
+    reader walks to reach the leaf, while ``compare`` spells the same leaf
+    with slashes, so the dots are translated here and the two can meet.
     """
     scenario, _, rest = entry_path.partition("/combat/dispositions/")
     leaf = rest.rsplit("/", 1)[0]
-    return f"{scenario}/combat/{leaf}"
+    return _slash_leaf(f"{scenario}/combat/{leaf}")
+
+
+def _slash_leaf(path: str) -> str:
+    """``compare``'s spelling of a leaf path: slashes between keys, ``[N]`` kept."""
+    scenario, sep, leaf = path.partition("/combat/")
+    return f"{scenario}{sep}{leaf.replace('.', '/')}"
 
 
 def test_a_claimed_disposition_transition_names_the_leaf_it_describes():
@@ -167,11 +173,14 @@ def test_a_claimed_disposition_transition_names_the_leaf_it_describes():
         block = json.loads((RECEIPTS / receipt_name).read_text(encoding="utf-8"))
         described = block.get("described_leaves", {}).get("leaves", {})
         assert path in described, f"{receipt_name} claims {path} and describes no leaf"
-        assert described[path]["describes"] == _described_leaf(path)
+        # Receipts may spell the leaf in either the dotted entry form or
+        # ``compare``'s slash form; both name the same leaf.
+        assert _slash_leaf(described[path]["describes"]) == _described_leaf(path)
 
 
 def test_a_claimed_disposition_transition_moves_no_number():
-    """Amendment E's third guard, half two: and the leaf did not move.
+    """Amendment E's third guard, half two: and the leaf did not move — or,
+    if it did, the number itself is claimed under its own snapshot path.
 
     This is the guard that separates the ruling from a loophole.  Citation
     adjudication is available *because* nothing an oracle could price
@@ -181,10 +190,18 @@ def test_a_claimed_disposition_transition_moves_no_number():
     difference set rather than against the receipt's word for it.
     """
     moved = {diff.path for diff in standing_coupled_diffs()}
+    claimed = allowlisted_coupled_paths()
     for path in _disposition_entry_claims():
         if not path.endswith("/disposition"):
             continue
-        assert _described_leaf(path) not in moved, (
+        leaf = _described_leaf(path)
+        if leaf not in moved:
+            continue
+        # The leaf moved: the disposition change is a consequence of a value
+        # change, so the value itself must be claimed under its own snapshot
+        # path — a citation alone cannot carry it.
+        assert leaf in claimed, (
             f"{path} is claimed as a disposition transition, but the leaf it "
-            f"describes moved — that is a value question and owes an oracle"
+            f"describes moved and {leaf} is claimed by no receipt — that is a "
+            "value question and owes an oracle"
         )

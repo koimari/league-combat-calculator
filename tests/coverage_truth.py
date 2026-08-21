@@ -47,7 +47,12 @@ def emitted(champion, **options):
         entry = parsed.get("passive" if slot == "P" else slot)
         if entry is None:
             answers[slot] = ABSENT
-        elif float(entry.get("total_raw") or 0.0) > 0.0 or entry.get("on_hit"):
+        elif (
+            float(entry.get("total_raw") or 0.0) > 0.0
+            or entry.get("on_hit")
+            or entry.get("stat_buff")
+            or entry.get("target_debuff")
+        ):
             answers[slot] = PRICED
         else:
             answers[slot] = ZERO
