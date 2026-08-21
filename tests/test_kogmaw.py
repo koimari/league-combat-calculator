@@ -329,21 +329,26 @@ class TestRLivingArtillery:
 
 
 # ---------------------------------------------------------------------------
-# Passive: Icathian Surprise (not modeled)
+# Passive: Icathian Surprise (zero-damage boundary receipt)
 # ---------------------------------------------------------------------------
 
 
 class TestPassive:
-    """Passive should not be present in results."""
+    """Passive emits a zero-damage row documenting the death-only trigger."""
 
-    def test_passive_not_in_results(self, kogmaw_data, parse_at) -> None:
+    def test_passive_emits_zero_damage_row(self, kogmaw_data, parse_at) -> None:
         _, abilities = parse_at(
             kogmaw_data,
             9,
             ability_ranks=STANDARD_RANKS,
         )
-        assert "passive" not in abilities
-        assert "P" not in abilities
+        assert abilities["passive"]["name"] == "Icathian Surprise"
+        assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
+        assert abilities["passive"]["parts"] == ()
+        assert abilities["passive"]["damage_type"] == "true"
+        # Sourced would-be explosion magnitude at level 9 ("Bonus True
+        # Damage" cached leveling row), reported for traceability only.
+        assert "380" in abilities["passive"]["detail"]
 
 
 # ---------------------------------------------------------------------------

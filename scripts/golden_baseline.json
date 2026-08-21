@@ -10421,6 +10421,17 @@
           "resource_type": "MANA",
           "total_raw": 325.0
         },
+        "W": {
+          "cooldown": 9.0,
+          "damage_type": "magic",
+          "detail": "Slows nearby enemies 15-35% for 2s and grants Jarvan IV a self-shield (cached Shield Strength: 60/80/100/120/140 + 70% bonus AD) for 4s. No direct enemy damage \u2014 the shield is granted by the ally-support scanner (self-targeted) from this cast row",
+          "name": "Golden Aegis",
+          "parts": [],
+          "rank": 1,
+          "resource_cost": 30.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
+        },
         "passive": {
           "name": "Martial Cadence",
           "on_hit": {
@@ -10829,6 +10840,17 @@
           },
           "resource_type": "MANA",
           "total_raw": 270.72
+        },
+        "passive": {
+          "cooldown": 0.0,
+          "damage_type": "magic",
+          "detail": "Innate: gains ghosting and 30 bonus movement speed for 0.75s whenever Jayce switches stances. Pure utility state \u2014 no leveling row and no combat-damage interaction",
+          "name": "Hextech Capacitor",
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -14053,6 +14075,18 @@
           "resource_cost": 40.0,
           "resource_type": "MANA",
           "total_raw": 0.0
+        },
+        "passive": {
+          "area_damage": true,
+          "cooldown": 0.0,
+          "damage_type": "true",
+          "detail": "Death-only trigger: after taking fatal damage, Kog'Maw enters a 4-second zombie state then explodes for the sourced 440 true damage (cached 'Bonus True Damage' at champion level 11) to nearby enemies. The deterministic alive-state fight cannot enter (the main never dies in the model); priced at zero damage as a documented boundary.",
+          "name": "Icathian Surprise",
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -15055,6 +15089,18 @@
           "resource_cost": 40.0,
           "resource_type": "MANA",
           "total_raw": 140.0
+        },
+        "passive": {
+          "area_damage": true,
+          "cooldown": 0.0,
+          "damage_type": "magic",
+          "detail": "Kill-only trigger: whenever a nearby enemy champion dies, Lissandra spawns a Frozen Thrall that chases for 4 seconds then shatters for the sourced 320 magic damage (cached 'Per-Level Scaling' at champion level 11) + 50% AP (prose-only, not modeled) to nearby enemies. The deterministic 1v1 fight's target never dies in the model; priced at zero damage as a documented boundary.",
+          "name": "Iceborn Subjugation",
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
+          "resource_type": "MANA",
+          "total_raw": 0.0
         }
       },
       "stats": {
@@ -15398,9 +15444,9 @@
     "Lucian": {
       "abilities_level_11": {
         "E": {
-          "cooldown": 0.0,
+          "cooldown": 16.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Active: Lucian dashes in the target direction, resetting his basic attack timer. Passive: Relentless Pursuit's current cooldown is reduced by 1s per Lightslinger shot hit (2s against champions). Pure movement/cooldown-refund state -- no leveling row and no combat-damage interaction; corroborated by the game binary's LucianE spell record, which carries no mSpellCalculations table.",
           "name": "Relentless Pursuit",
           "parts": [],
           "rank": 1,
@@ -43038,7 +43084,7 @@
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1787268652.393148,
-    "git_head": "27d1c51b37a0b92afd544399b260c9b490a30d50",
+    "git_head": "50b92c5d043788aefd774dd75fad78c020d8f0be",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
@@ -52427,6 +52473,7 @@
             "E": 410.88,
             "Q": 166.67,
             "R": 237.23,
+            "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
@@ -52437,6 +52484,7 @@
             "E": 114.29,
             "Q": 166.67,
             "R": 237.23,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 518.18
@@ -52446,6 +52494,7 @@
             "E": 114.29,
             "Q": 316.5,
             "R": 440.88,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 871.66
@@ -52455,6 +52504,7 @@
             "E": 114.29,
             "Q": 273.97,
             "R": 383.07,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 771.32
@@ -52465,6 +52515,7 @@
               "E": 410.88,
               "Q": 166.67,
               "R": 228.55,
+              "W": 0.0,
               "auto_attacks": 316.46,
               "on_hit_ability_passive": 112.52,
               "proc_Luden's Echo": 155.36
@@ -52476,6 +52527,7 @@
               "E": 114.29,
               "Q": 166.67,
               "R": 228.55,
+              "W": 0.0,
               "auto_attacks": 316.46,
               "on_hit_ability_passive": 112.52
             },
@@ -52486,6 +52538,7 @@
               "E": 114.29,
               "Q": 316.5,
               "R": 424.75,
+              "W": 0.0,
               "auto_attacks": 1705.7,
               "on_hit_Kraken Slayer": 324.78,
               "on_hit_ability_passive": 112.52
@@ -52497,6 +52550,7 @@
               "E": 114.29,
               "Q": 273.97,
               "R": 369.06,
+              "W": 0.0,
               "auto_attacks": 1311.02,
               "on_hit_ability_passive": 112.52,
               "spellblade_Trinity Force": 253.16
@@ -52511,6 +52565,7 @@
             "E": 474.88,
             "Q": 166.67,
             "R": 328.47,
+            "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
@@ -52521,6 +52576,7 @@
             "E": 171.43,
             "Q": 166.67,
             "R": 328.47,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 666.56
@@ -52530,6 +52586,7 @@
             "E": 171.43,
             "Q": 316.5,
             "R": 532.12,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 1020.05
@@ -52539,6 +52596,7 @@
             "E": 171.43,
             "Q": 273.97,
             "R": 474.31,
+            "W": 0.0,
             "auto_attacks": 0.0
           },
           "total_damage": 919.7
@@ -52549,6 +52607,7 @@
               "E": 474.88,
               "Q": 166.67,
               "R": 316.46,
+              "W": 0.0,
               "auto_attacks": 485.23,
               "on_hit_ability_passive": 200.51,
               "proc_Luden's Echo": 155.36
@@ -52560,6 +52619,7 @@
               "E": 171.43,
               "Q": 166.67,
               "R": 316.46,
+              "W": 0.0,
               "auto_attacks": 485.23,
               "on_hit_ability_passive": 200.51
             },
@@ -52570,6 +52630,7 @@
               "E": 171.43,
               "Q": 316.5,
               "R": 512.66,
+              "W": 0.0,
               "auto_attacks": 2193.04,
               "on_hit_Kraken Slayer": 406.12,
               "on_hit_ability_passive": 130.58
@@ -52581,6 +52642,7 @@
               "E": 171.43,
               "Q": 273.97,
               "R": 456.96,
+              "W": 0.0,
               "auto_attacks": 1684.67,
               "on_hit_ability_passive": 147.62,
               "spellblade_Trinity Force": 323.49

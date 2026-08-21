@@ -493,10 +493,11 @@ class TestRCannon:
 class TestPassive:
     """The passive is a movement-speed/ghosting buff, duplicated in JSON."""
 
-    def test_passive_absent(self, jayce_data) -> None:
+    def test_passive_emits_zero_damage_row(self, jayce_data) -> None:
         abilities = _parse(jayce_data)
-        assert "passive" not in abilities
-        assert "P" not in abilities
+        assert abilities["passive"]["name"] == "Hextech Capacitor"
+        assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
+        assert abilities["passive"]["parts"] == ()
 
     def test_json_has_two_identical_passive_entries(self, jayce_data) -> None:
         """P[0]/P[1] are a parser artifact, not two effects."""

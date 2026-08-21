@@ -178,6 +178,21 @@ class TestLucian:
         row = data["breakdown"]["double_shot"]
         assert row["total_damage"] == pytest.approx(ratio * ad * autos, abs=0.6)
 
+    def test_e_relentless_pursuit_emits_zero_damage_row(self):
+        """Roadmap session 4 batch C: E is no_damage, not silently absent.
+
+        All three cached effect rows (cooldown refund, dash, attack-timer
+        reset) carry empty leveling; the game binary's LucianE spell record
+        has no mSpellCalculations table. E prices nothing but still emits a
+        named, user-visible zero-damage row.
+        """
+        assert lucian.MODULE_COVERAGE["E"] == "no_damage"
+        data = _fight("Lucian", enemies=False)
+        row = data["breakdown"]["E"]
+        assert row["name"] == "Relentless Pursuit"
+        assert row["total_damage"] == pytest.approx(0.0)
+        assert "no leveling row" in row["detail"]
+
 
 # ---------------------------------------------------------------------------
 # Miss Fortune — Bullet Time full channel (per-wave x Total Waves)

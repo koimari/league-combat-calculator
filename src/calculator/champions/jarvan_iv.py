@@ -13,7 +13,16 @@ Why each slot is non-generic:
   % armor reduction ``target_debuff`` (``q_armor_shred`` option, default
   True). damage.py applies the shred AFTER Q's own damage, so autos,
   passive procs, and R benefit but Q does not — matching in-game.
-- W (Golden Aegis) is shield/slow only — zero enemy damage, absent.
+- W (Golden Aegis) deals no direct enemy damage (slow only); its self
+  shield is emitted by the ally-support scanner (self-targeted) from
+  the cached "Shield Strength" row, which needs a cast row to hang the
+  event on. Roadmap session 4 batch C (2026-08-21): closes the single
+  out_of_scope slot by giving W an explicit zero-damage cast row (the
+  Olaf W / ``tests/test_e8_shields.py`` precedent) — MODULE_COVERAGE
+  was stale, reading "out_of_scope" for a shield the scanner is
+  already pre-wired to grant once a W cast exists (see
+  ``support_effects._SHIELD_DURATION_ATOM_QUERIES[("Jarvan IV", "W")]``,
+  which predates this change).
 - E (Demacian Standard) is a BUFF-phase custom fn: magic active damage
   plus a bonus-attack-speed ``stat_buff``. The ``near_flag`` option
   (default True) doubles the AS bonus — Jarvan near his planted flag
@@ -26,6 +35,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from .engine import BUFF, DEBUFF, ONHIT, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -74,6 +84,28 @@ def _martial_cadence(ctx: SlotCtx) -> dict[str, Any]:
 
 
 _martial_cadence.phase = ONHIT
+
+
+def _golden_aegis(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: zero-damage cast row carrying Golden Aegis's self-shield.
+
+    The slow is utility-only. The shield (cached "Shield Strength":
+    60/80/100/120/140 flat + 70% bonus AD) is not authored here — this
+    row's only job is to give the ally-support scanner a W cast to
+    attach the self-targeted shield event to (the Olaf W pattern); the
+    scanner reads the flat + bonus-AD terms straight from the JSON.
+    """
+    return no_damage(
+        ctx,
+        name="Golden Aegis",
+        reason=(
+            "Slows nearby enemies 15-35% for 2s and grants Jarvan IV a "
+            "self-shield (cached Shield Strength: 60/80/100/120/140 + "
+            "70% bonus AD) for 4s. No direct enemy damage — the shield "
+            "is granted by the ally-support scanner (self-targeted) "
+            "from this cast row"
+        ),
+    )
 
 
 def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -161,7 +193,15 @@ ASSUMPTIONS = [
     "8% of the target's decaying current health (min 20) as physical",
     "Q's armor shred applies to damage dealt after Q (autos, passive "
     "procs, R), not to Q itself",
-    "W (Golden Aegis) deals no damage (shield/slow only) — skipped",
+    "W (Golden Aegis) deals no direct damage; the slow (15-35% for 2s) "
+    "is utility-only and not modeled. Its self-shield (60/80/100/120/"
+    "140 + 70% bonus AD, 4s) is granted by the ally-support scanner "
+    "(self-targeted) from the cached Shield Strength row at the W cast "
+    "(MODULE_COVERAGE: modeled, not out_of_scope). The 'increased by "
+    "1.3% of Jarvan's maximum health for each enemy champion hit' "
+    "rider is prose-only (not a modifier row) and not modeled — a "
+    "documented boundary that is exact in a 1v1 fight, which can hit "
+    "at most one enemy champion",
     "E flag assumed planted with Jarvan in its aura by default "
     "(doubled attack speed bonus, toggleable)",
     "E ally aura not modeled (single-champion calculator)",
@@ -170,6 +210,7 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _martial_cadence,
     "Q": _dragon_strike,
+    "W": _golden_aegis,
     "E": _demacian_standard,
     "R": simple_damage(attr="Physical Damage", dmg_type="physical"),
 }

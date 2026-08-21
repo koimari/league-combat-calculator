@@ -7,7 +7,8 @@ Every shield is authored through the existing ledger interface:
   shared ledger grants a timed self-shield at that timestamp;
 - JSON-scanner packets from ``derive_ally_effects`` emit the cached
   Shield Strength rows at the cast for the remaining actives (Annie E,
-  Azir E, Olaf W) and the ally-targeted halves (Senna R, Thresh W);
+  Azir E, Jarvan IV W, Olaf W) and the ally-targeted halves (Senna R,
+  Thresh W);
 - Braum E, Leona W, and Nilah P are documented mitigation/conversion
   state with sourced constants (the ledger's shield events cannot
   price projectile blocks, per-instance pre-mitigation reduction, or
@@ -471,6 +472,30 @@ def test_olaf_api_tough_it_out_absorbs_sourced_amount():
     survival = _main_survival(combat)
     assert survival["support_shield_received"] == pytest.approx(130.0)
     assert survival["shield_absorbed"] == pytest.approx(130.0)
+
+
+# ---------------------------------------------------------------------------
+# Jarvan IV W — Golden Aegis (scanner-emitted flat + bonus-AD, zero-dmg cast)
+# ---------------------------------------------------------------------------
+
+
+def test_jarvan_golden_aegis_shield_amount_is_sourced():
+    data, _ = _parse("Jarvan IV")
+    ability = data["abilities"]["W"][0]
+    # No bonus AD: only the flat rank-5 term (70% bonus AD term is 0).
+    assert extract_named(ability, "Shield Strength", 5, {}, {}) == pytest.approx(140.0)
+
+
+def test_jarvan_api_golden_aegis_absorbs_flat_plus_bonus_ad():
+    combat = _run_api_fight("Jarvan IV")
+    rows = _shield_rows(combat, source_startswith="Golden Aegis")
+    assert len(rows) == 1
+    # DEFAULT_RANKS carries no items, so bonus AD is 0: flat rank-5 term only.
+    assert rows[0]["amount"] == pytest.approx(140.0)
+    assert rows[0]["duration"] == pytest.approx(4.0)
+    survival = _main_survival(combat)
+    assert survival["support_shield_received"] == pytest.approx(140.0)
+    assert survival["shield_absorbed"] == pytest.approx(140.0)
 
 
 # ---------------------------------------------------------------------------

@@ -2,19 +2,77 @@
 
 Q, W, E, and R each deal one sourced magic-damage instance. E's recast only
 moves Lissandra, while R's ice field deals the same damage whether she targets
-herself or an enemy. Iceborn Subjugation is excluded because it requires a
-champion death; the selected fight does not invent one.
+herself or an enemy.
+
+P (Iceborn Subjugation) spawns a Frozen Thrall from a NEARBY ENEMY
+CHAMPION'S corpse when it dies; the thrall chases for 4 seconds, then
+shatters for the cached "Per-Level Scaling" magic damage (120-1180 by
+champion level) + 50% AP (prose-only rider, not a structured modifier).
+Roadmap session 4 batch C (2026-08-21): closes the single out_of_scope
+slot with an explicit zero-damage boundary receipt (the Karthus P
+"Death Defied" / Kog'Maw P "Icathian Surprise" pattern) rather than
+leaving MODULE_COVERAGE reading "out_of_scope" for a kill-triggered
+effect this calculator's deterministic 1v1 fight cannot enter (the
+target never dies in the model). The sourced would-be magnitude is
+computed and reported in the row's detail text for traceability, but
+priced at zero damage since the trigger never fires here.
 """
 
 from typing import Any
 
-from .engine import build_parser
-from .slotlib import simple_damage, with_control
+from .engine import SlotCtx, build_parser
+from .slotlib import damage_entry, extract_named, simple_damage, with_control
 
 OPTIONS: list[dict[str, Any]] = []
 
+
+def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: zero-damage receipt — a kill-only trigger outside the fight.
+
+    Iceborn Subjugation spawns a Frozen Thrall whenever a nearby ENEMY
+    CHAMPION dies; the thrall chases for 4 seconds then shatters for
+    the cached "Per-Level Scaling" magic damage (120-1180 by champion
+    level) plus a prose-only "+50% AP" rider (not a structured
+    modifier, so not read here). The deterministic single-target fight
+    never kills its target, so the passive contributes zero damage
+    here; this receipt documents the boundary — with the sourced
+    would-be magnitude — so the alive-state package is complete.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    entry = damage_entry(
+        ability.get("name", "Iceborn Subjugation"),
+        ctx.level,
+        0.0,
+        0.0,
+        "magic",
+    )
+    entry["parts"] = ()
+    would_be = extract_named(
+        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
+    )
+    entry["detail"] = (
+        "Kill-only trigger: whenever a nearby enemy champion dies, "
+        "Lissandra spawns a Frozen Thrall that chases for 4 seconds "
+        "then shatters for the sourced "
+        f"{would_be:g} magic damage (cached 'Per-Level Scaling' at "
+        f"champion level {ctx.level}) + 50% AP (prose-only, not "
+        "modeled) to nearby enemies. The deterministic 1v1 fight's "
+        "target never dies in the model; priced at zero damage as a "
+        "documented boundary."
+    )
+    return entry
+
+
 ASSUMPTIONS = [
-    "Iceborn Subjugation is excluded because no champion death is assumed.",
+    "Iceborn Subjugation (P) is a kill-only trigger: it fires when a "
+    "nearby ENEMY CHAMPION dies, spawning a Frozen Thrall that shatters "
+    "for the sourced 120-1180 (by champion level) magic damage + 50% AP "
+    "(prose-only rider, not modeled). The deterministic 1v1 fight's "
+    "target never dies, so this boundary is priced at zero damage "
+    "(MODULE_COVERAGE: modeled, not out_of_scope) — the would-be "
+    "magnitude is reported in the row's detail text",
     "Glacial Path counts its outward hit; the recast is movement only.",
     "Frozen Tomb counts one ice-field hit, whether cast on Lissandra or an enemy.",
 ]
@@ -47,6 +105,7 @@ SOURCES = [
 ]
 
 SLOTS = {
+    "P": _iceborn_subjugation,
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": with_control(
         simple_damage(attr="Magic Damage", dmg_type="magic"),

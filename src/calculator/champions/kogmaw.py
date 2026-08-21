@@ -18,8 +18,17 @@ Why each slot is non-generic:
   carries the wiki missing-HP curve as a ``hp_scaled_damage`` closure
   (+50% linearly to 60% missing, then +100%) — the engine re-evaluates
   it per shot against the target's falling HP.
-- P (Icathian Surprise) is a death passive — not modeled, absent from
-  the slot map.
+- P (Icathian Surprise) is a self-death trigger: after Kog'Maw takes
+  FATAL damage he rides out a 4-second zombie state, then explodes for
+  the cached "Bonus True Damage" (140-1310 by champion level). Roadmap
+  session 4 batch C (2026-08-21): closes the single out_of_scope slot
+  with an explicit zero-damage boundary receipt (the Karthus P "Death
+  Defied" pattern) rather than leaving MODULE_COVERAGE reading
+  "out_of_scope" for a death-only trigger this calculator's
+  deterministic alive-state 1v1 fight cannot enter (the main never
+  dies in the model). The sourced explosion magnitude is computed and
+  reported in the row's detail text for traceability, but priced at
+  zero damage since the trigger never fires here.
 
 All numeric values are read from the champion JSON data; nothing is
 hardcoded.
@@ -30,6 +39,7 @@ from typing import Any, Callable
 from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
 from .slotlib import (
+    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -119,6 +129,41 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
+def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: zero-damage receipt — a death-only trigger outside the fight.
+
+    Icathian Surprise's explosion (cached "Bonus True Damage": 140-1310
+    by champion level) only fires after Kog'Maw takes FATAL damage and
+    rides out a 4-second zombie state. The deterministic single-target
+    fight has no death event for the main, so the passive contributes
+    zero damage here; this receipt documents the boundary — with the
+    sourced would-be magnitude — so the alive-state package is complete.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    entry = damage_entry(
+        ability.get("name", "Icathian Surprise"),
+        ctx.level,
+        0.0,
+        0.0,
+        "true",
+    )
+    entry["parts"] = ()
+    would_be = extract_named(
+        ability, "Bonus True Damage", ctx.level, ctx.stats, ctx.target
+    )
+    entry["detail"] = (
+        "Death-only trigger: after taking fatal damage, Kog'Maw enters a "
+        "4-second zombie state then explodes for the sourced "
+        f"{would_be:g} true damage (cached 'Bonus True Damage' at champion "
+        f"level {ctx.level}) to nearby enemies. The deterministic "
+        "alive-state fight cannot enter (the main never dies in the "
+        "model); priced at zero damage as a documented boundary."
+    )
+    return entry
+
+
 _living_artillery_base = simple_damage(attr="Minimum Magic Damage", dmg_type="magic")
 
 
@@ -167,10 +212,16 @@ ASSUMPTIONS = [
     "R Living Artillery stacks (cap 9, +40 mana cost per stack) only "
     "raise the spell's mana cost — no damage impact, so the stack count "
     "is not modeled",
-    "Passive (Icathian Surprise) is not modeled",
+    "Passive (Icathian Surprise) is a self-death trigger: after taking "
+    "fatal damage Kog'Maw explodes for the sourced 140-1310 (by "
+    "champion level) true damage. The deterministic alive-state fight "
+    "never kills the main, so this boundary is priced at zero damage "
+    "(MODULE_COVERAGE: modeled, not out_of_scope) — the would-be "
+    "magnitude is reported in the row's detail text",
 ]
 
 SLOTS = {
+    "P": _icathian_surprise,
     "Q": _caustic_spittle,
     "W": _bio_arcane_barrage,
     "E": simple_damage(attr="Magic Damage", dmg_type="magic"),

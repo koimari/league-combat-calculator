@@ -540,14 +540,16 @@ class TestP4JDefaultBehavior:
         """The registered option surface is exactly hammer_stance +
         accelerated_q (NO transition input declared today); the central
         rotation classifications are irrelevant (slot R / slot Q); the
-        declared cast order is R,Q,Q2,W,E."""
+        declared cast order is R,Q,Q2,W,E,P (roadmap session 4 batch C
+        appended the zero-damage P row, per the Aatrox/Aphelios
+        batch-A precedent)."""
         meta = get_champion_options_meta(CHAMPION)
         assert [o["key"] for o in meta["options"]] == ["hammer_stance", "accelerated_q"]
         assert get_champion_option_rotation(CHAMPION) == {
             "hammer_stance": {"role": "irrelevant", "slot": "R"},
             "accelerated_q": {"role": "irrelevant", "slot": "Q"},
         }
-        assert get_champion_cast_order(CHAMPION) == ["R", "Q", "Q2", "W", "E"]
+        assert get_champion_cast_order(CHAMPION) == ["R", "Q", "Q2", "W", "E", "P"]
 
     def test_p4j_no_other_champion_declares_a_transition_option(self):
         """The form-transition input is Jayce-scoped: no other registered

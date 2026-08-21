@@ -18,13 +18,32 @@ E9-1 closes the two remaining audit gaps over the CP10.4 packet:
   mechanic.  The second shot applies on-hit effects and can crit,
   exactly the engine's double_shot path.
 
-Q/W packets are correct single-instance reads; E (Relentless Pursuit)
-remains a documented no-damage dash.
+Q/W packets are correct single-instance reads.
+
+Roadmap session 4 batch C (2026-08-21): E (Relentless Pursuit) is
+reclassified from out_of_scope to no_damage. The pinned packet spec
+already carried E as ``kind: "no_damage"`` and the compiler's
+``_no_formula_parser`` was already emitting a proper, user-visible
+zero-damage row at runtime -- MODULE_COVERAGE was the only place still
+reading "out_of_scope" for a slot that was never silently absent. The
+cached ability JSON's three effect entries (cooldown refund on
+Lightslinger hit, the dash itself, the attack-timer reset / free-cast
+window) all carry empty ``leveling`` arrays. Corroborated by the game
+binary (``data/bin/characters/lucian.bin.json``,
+``Characters/Lucian/Spells/LucianEAbility/LucianE``): ``mSpell`` has no
+``mSpellCalculations`` table, and its ``DataValues`` are all
+non-damage parameters (``CDRefundBase`` 1.0s, ``CDRefundChampion`` 2.0s,
+``MaxDistance``/``MinDistance`` 425/200, ``DashSpeed`` 1350) -- no
+damage node exists for E to price. E now rides an explicit,
+champion-authored no-damage row via ``module_helpers.no_damage``
+(Kalista P/R, Jayce P precedent) instead of the compiler's generic
+fallback text.
 """
 
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .packet_module import build_packet_module
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
@@ -65,6 +84,30 @@ def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
+def _relentless_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: the cooldown-refunding dash — documented zero-damage row.
+
+    All three cached effect rows carry empty leveling (cooldown refund
+    on Lightslinger hit, the dash, the attack-timer reset); the game
+    binary's ``LucianE`` spell record carries no ``mSpellCalculations``
+    table, only non-damage DataValues (cooldown-refund seconds, dash
+    range/speed). E prices nothing.
+    """
+    return no_damage(
+        ctx,
+        name="Relentless Pursuit",
+        reason=(
+            "Active: Lucian dashes in the target direction, resetting his "
+            "basic attack timer. Passive: Relentless Pursuit's current "
+            "cooldown is reduced by 1s per Lightslinger shot hit (2s "
+            "against champions). Pure movement/cooldown-refund state -- "
+            "no leveling row and no combat-damage interaction; "
+            "corroborated by the game binary's LucianE spell record, "
+            "which carries no mSpellCalculations table."
+        ),
+    )
+
+
 PACKET_SHA256 = "3fe0c536a453a203c13c7bb713274cbc217785ea29e4723c090c474b7607b9e6"
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -81,6 +124,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 PACKET_SPEC = SLOTS.packet_spec
 SLOTS["P"] = _lightslinger
+SLOTS["E"] = _relentless_pursuit
 parse_abilities = build_parser(SLOTS, "Lucian")
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -97,9 +141,20 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(the standard weave attacks after every ability cast); the second "
     "shot applies on-hit effects and can crit (engine double_shot "
     "path).",
+    "E (Relentless Pursuit) carries no sourced damage row: all three "
+    "cached effect entries (cooldown refund on Lightslinger hit, the "
+    "dash, the attack-timer reset) have empty leveling, and the game "
+    "binary's LucianE spell record has no mSpellCalculations table -- "
+    "only non-damage DataValues (cooldown-refund seconds, dash "
+    "range/speed). E is no_damage, not out_of_scope, and emits an "
+    "explicit zero-damage state row rather than staying silently "
+    "absent.",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
-    for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "modeled",
 }
 REVIEW_STATUS = "reviewed_module"
