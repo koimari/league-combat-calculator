@@ -25,14 +25,7 @@ def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
 
 @lru_cache(maxsize=8)
 def _resolved(data_directory: Path, filename: str) -> Path:
-    """The canonical path of one cache file.
-
-    Canonicalization is what lets two spellings of the same directory share a
-    parse, and it is a filesystem call that answers the same for the life of
-    the process — the file's *contents* move, its true path does not.  The
-    freshness check is the ``stat`` in :func:`_cache_version`, which is not
-    memoized.
-    """
+    """Canonical path of one cache file; memoized because only its contents ever change (freshness is ``_cache_version``'s un-memoized stat)."""
     return (data_directory / filename).resolve()
 
 
@@ -192,13 +185,7 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
 
 @lru_cache(maxsize=8)
 def _item_name_index(data_path: Path, _modified_ns: int) -> dict[str, dict[str, Any]]:
-    """``{lowered display name: record}`` for one on-disk items version.
-
-    Earliest spelling wins, which is the answer the linear scan this replaces
-    gave: it returned the first record whose name matched.  Keyed on the same
-    path-and-mtime version as the parse, so a replaced cache file is a
-    different key rather than a stale index.
-    """
+    """``{lowered display name: record}`` for one items version; the first record with a name wins, keyed on the parse's path-and-mtime so a replaced file is a new key."""
     index: dict[str, dict[str, Any]] = {}
     for item_data in _read_json_version(data_path, _modified_ns).values():
         index.setdefault(item_data.get("name", "").lower(), item_data)
