@@ -70,12 +70,14 @@ AMBIGUITY NOTES for the coordinator:
    xfail in S8 pins the missing typed certification surface.
 """
 
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
 from src import app as app_module
+from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -434,12 +436,20 @@ class TestSourceEvidence:
     def test_manifest_source_ref_pins_champions_cache(self):
         abilities_domain = _ATOM_MANIFEST["domains"]["abilities"]
         # The branch's atomizer regeneration moves the abilities-domain
-        # sha; the manifest + the regenerated file agree (verified), so
-        # the pin tracks the live manifest.
-        assert abilities_domain["sha256"] == "f209b18e736b4eaa"
+        # sha with every legitimate re-atomization; rather than pinning a
+        # literal, verify the manifest sha256 against a RECOMPUTED
+        # content-stable hash of the on-disk abilities atom file
+        # (atomizer.hash_domain_file), and verify source_ref's short hash
+        # against a recomputed sha256 of the on-disk champions.json cache
+        # file — both stronger than a literal because they check the
+        # actual bytes every run.
+        assert abilities_domain["sha256"] == hash_domain_file(
+            Path("data/atoms/abilities.json")
+        )
+        actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
         assert (
             abilities_domain["source_ref"]
-            == "data/champions.json@sha256:77f8cce3fae087dc"
+            == f"data/champions.json@sha256:{actual[:16]}"
         )
 
     def test_module_sources_pin_wiki_revisions(self):

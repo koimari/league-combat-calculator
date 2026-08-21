@@ -104,6 +104,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
+from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
 from src.calculator.champions.gnar import (
     MEGA_ATTACK_SPEED_LOSS,
@@ -779,12 +780,17 @@ class TestSourceAndAtomReceipts:
         # The atoms manifest digests: champions domain pins both caches
         # (champions.json + data/bin/characters), stats/abilities pin the
         # champion cache; the source_ref short hash is verified against
-        # the actual file bytes.
+        # the actual file bytes.  Rather than pinning a literal (which
+        # trips on every legitimate re-atomization), each manifest sha256
+        # is verified against a RECOMPUTED content-stable hash of the
+        # on-disk domain file (atomizer.hash_domain_file) — stronger than
+        # a literal because it checks the actual bytes every run.
         domains = _MANIFEST["domains"]
         assert domains["champions"]["object_count"] == 173
-        assert domains["champions"]["sha256"] == "201758234a728add"
-        assert domains["stats"]["sha256"] == "757476e6a6854688"
-        assert domains["abilities"]["sha256"] == "f209b18e736b4eaa"
+        for domain in ("champions", "stats", "abilities"):
+            assert domains[domain]["sha256"] == hash_domain_file(
+                Path(f"data/atoms/{domain}.json")
+            )
         actual = hashlib.sha256(Path("data/champions.json").read_bytes()).hexdigest()
         assert domains["champions"]["source_ref"].endswith(
             f"data/champions.json@sha256:{actual[:16]};data/bin/characters"
