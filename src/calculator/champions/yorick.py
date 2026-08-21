@@ -80,10 +80,8 @@ _MIST_WALKER_DAMAGE_END = 100.0  # level 18
 # Maiden at 30% bonus AD; the Maiden rank base is 50/75/100 (13.21 change).
 _MIST_WALKER_AD_RATIO = 0.20
 _MIST_WALKER_MAX = 4
-_MIST_WALKER_AS_AT_18 = 1.18
 _MAIDEN_BASE_BY_RANK = (50.0, 75.0, 100.0)
 _MAIDEN_AD_RATIO = 0.30
-_MAIDEN_AS = 1.0
 
 
 def _mist_walker_attack_damage(ctx: SlotCtx) -> float:

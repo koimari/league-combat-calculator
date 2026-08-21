@@ -137,9 +137,6 @@ parse_abilities = build_parser(SLOTS, "Leona", cc_kinds=MODULE_CC)
 _ECLIPSE_FLAT_REDUCTION_RANKED = (8.0, 12.0, 16.0, 20.0, 24.0)
 _ECLIPSE_REDUCTION_CAP = 0.50  # capped at 50% of the damage instance
 _ECLIPSE_BONUS_RESIST_RANKED = (20.0, 27.5, 35.0, 42.5, 50.0)
-_ECLIPSE_BONUS_RESIST_RATIO = 0.20  # +20% of bonus resist
-_ECLIPSE_DURATION_SECONDS = 3.0
-_ECLIPSE_EXTENSION_SECONDS = 3.0
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "W (Eclipse) is documented as mitigation state, not a shield: "

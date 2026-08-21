@@ -40,7 +40,6 @@ from .ability_spec import (
     AttackClass,
     Authority,
     DamageClass,
-    Disposition,
     ZeroPolicy,
 )
 from .value_ref import AnyValueRef, LevelValueRef, SourceReceipt, VALUE_REF_TYPES

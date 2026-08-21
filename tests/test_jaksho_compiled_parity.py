@@ -19,9 +19,8 @@ Contract under test (current runtime facts, verified before pinning):
   carries the three voidborn keys, read through required_effect_value:
   voidborn_stack_interval 1.0, voidborn_max_stacks 5, and
   voidborn_bonus_resistance_multiplier 0.30.  resolve_starting_defenses
-  is the declaration consumer the coordinator uses (there is no
-  StackRule accessor for Jak'Sho today — force_of_nature_steadfast_rule
-  is FoN-specific); its ChampionDefenses fields are the kernel-facing
+  is the declaration consumer the coordinator uses; its
+  ChampionDefenses fields are the kernel-facing
   jaksho_* names (jaksho_stack_interval / jaksho_max_stacks /
   jaksho_bonus_resistance_multiplier).  A missing key raises KeyError
   naming "Jak'Sho, The Protean" AND the key (AGENTS.md rule 5 — no

@@ -1335,11 +1335,6 @@ _NAMI_BOUNCE_AP_RELIEF_PER_100 = 0.15
 # roster model treats the selected teammate as the anchor and Best Friend
 # (the same teammate Yuumi E already targets), so the bonus rides the
 # base heal packet of the same cast.
-_YUUMI_R_TOTAL_HEAL_QUERY = AbilityAtomQuery(
-    source="Yuumi.R[0].effects[1].leveling[1].modifiers[0]",
-    behavior="ability",
-    evidence_prefix="Total Heal@",
-)
 _YUUMI_R_BEST_FRIEND_QUERY = AbilityAtomQuery(
     source="Yuumi.R[0].effects[4].leveling[0].modifiers[0]",
     behavior="ability",

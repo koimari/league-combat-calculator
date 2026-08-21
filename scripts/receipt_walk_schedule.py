@@ -265,13 +265,6 @@ _COUNT_WORDS: tuple[str, ...] = (
 )
 
 
-#: The lanes a caller has to need for the withheld negative to be about the
-#: producer this correction rests on.  Read from ``item_coverage`` rather than
-#: spelled here: the question "what happens to these items when the defence
-#: resolver stops answering" is asked in the vocabulary the coverage ladder
-#: already uses, and a lane set typed here would be a second copy of it.
-RESOLVER_NEEDING_LANES = item_coverage.TARGET_LANES
-
 #: The subject the resolver is run against to derive what each declaration
 #: writes.  It is a probe and not a population: the FIELD NAMES a declaration
 #: writes are what the consumption check joins on, and a subject that armed no

@@ -64,11 +64,6 @@ _OPERATIONS = frozenset(
 TIER_RESTORE = 0.0
 TIER_CAST = 1.0
 
-# One explicit level-up event per fight: the Lost Chapter item option
-# carries a single timing choice, so multiple level-ups are not
-# representable in this slice.
-MAX_ENLIGHTEN_TRIGGERS_PER_FIGHT = 1
-
 
 @dataclass(frozen=True, slots=True)
 class ResourceEvent:

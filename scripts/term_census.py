@@ -139,9 +139,6 @@ TARGET_FIELD_PREFIX = "target_"
 #: that object ever grows.
 RESISTS_CONTAINER = "resists"
 
-#: How an authoring-time term reaches the number being priced.
-APPLICATIONS = ("factor", "transported")
-
 
 def static_holder_amp_fields() -> tuple[str, ...]:
     """Each static holder amp, spelled the way the pair engine's state holds it.

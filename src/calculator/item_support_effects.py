@@ -804,15 +804,6 @@ def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
     )
 
 
-def _cleanse_movement_declaration(item: str) -> dict[str, Any]:
-    """The atom-backed movement entry of a cleanse active item (ONE kernel
-    builder — the walk consumes the same shape)."""
-    movement = _cleanse_movement_entry(item)
-    if movement is None:
-        raise KeyError(f"cleanse declaration for {item!r} has no movement entry")
-    return movement
-
-
 def derive_item_support_effects(
     attacker: Any,
     result: Mapping[str, Any],

@@ -513,30 +513,12 @@ class TestFimbulwinterConsumer:
 
 
 class TestForceOfNatureConsumer:
-    def test_steadfast_rule_declaration(self):
+    def test_steadfast_source_revision_is_the_reviewed_receipt(self):
         from src.calculator.defensive_effects import defense_source
         from src.calculator.item_behavior import DefenseMechanic
 
-        _FORCE_OF_NATURE_SOURCE = defense_source(
-            "Force of Nature", DefenseMechanic.STEADFAST
-        )
-
-        rule = item_effects.force_of_nature_steadfast_rule(
-            source=sl.SourceReceipt(
-                label=_FORCE_OF_NATURE_SOURCE.label,
-                url=_FORCE_OF_NATURE_SOURCE.source_url,
-                revision_id=_FORCE_OF_NATURE_SOURCE.revision_id,
-                revision_timestamp=_FORCE_OF_NATURE_SOURCE.revision_timestamp,
-            )
-        )
-        receipt = rule.public_receipt()
-        assert receipt["max_stacks"] == 8
-        assert receipt["duration_seconds"] == 7.0
-        assert receipt["interval_seconds"] == 1.0
-        assert receipt["gain_by_kind"] == {"immobilize": 2}
-        assert receipt["payload"]["bonus_magic_resistance"] == 70.0
-        assert receipt["payload"]["bonus_move_speed_percent"] == 6.0
-        assert receipt["source"]["revision_id"] == 4016272
+        source = defense_source("Force of Nature", DefenseMechanic.STEADFAST)
+        assert source.revision_id == 4016272
 
     def test_starting_defenses_still_resolve_the_same_fields(self):
         stats = {

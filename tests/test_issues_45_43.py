@@ -4,7 +4,7 @@ Spellblade, Energized, Hydra families).
 Every item sibling the issues call out is verified twice here:
 
 * **Parse-level sourced pins** — the typed registry value and the wiki
-  revision it was sourced from (``sustain_stat_receipt`` /
+  revision it was sourced from (``sustain_effect_value`` /
   ``required_effect_value`` / family accessors).  Missing keys raise,
   naming the item and key; there are no literal fallbacks.
 * **``/api/calculate`` fights** — the sourced value reaches the public
@@ -27,7 +27,6 @@ from src.calculator.item_effects import (
     hydra_secondary_target_damage,
     required_effect_value,
     sustain_effect_value,
-    sustain_stat_receipt,
 )
 from src.calculator.interpreters import charged_strike
 from src.calculator.pipeline import FightParams, run_fight
@@ -94,10 +93,11 @@ LIFESTEAL_PINS = {
 )
 def test_lifesteal_typed_receipts_pin_wiki_values(item_name, percent, revision):
     """Every lifesteal item has a typed registry entry with its source."""
-    receipt = sustain_stat_receipt(item_name, "lifesteal_percent")
-    assert receipt["value"] == pytest.approx(percent)
-    assert receipt["source_revision_id"] == revision
-    assert receipt["source_url"] == (
+    assert sustain_effect_value(item_name, "lifesteal_percent") == pytest.approx(
+        percent
+    )
+    assert required_effect_value(item_name, "source_revision_id") == revision
+    assert required_effect_value(item_name, "source_url") == (
         "https://wiki.leagueoflegends.com/en-us/" + item_name.replace(" ", "_")
     )
     # The typed value agrees with the cached item JSON (same wiki source).
@@ -110,7 +110,7 @@ def test_missing_lifesteal_key_raises_naming_item_and_key(monkeypatch):
     """A missing typed key fails loudly instead of borrowing a literal."""
     monkeypatch.setitem(ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain"})
     with pytest.raises(KeyError, match="Vampiric Scepter.*lifesteal_percent"):
-        sustain_stat_receipt("Vampiric Scepter", "lifesteal_percent")
+        sustain_effect_value("Vampiric Scepter", "lifesteal_percent")
     with pytest.raises(KeyError, match="Vampiric Scepter.*lifesteal_percent"):
         grouped_sustain_stat_percent(_items("Vampiric Scepter"), "lifesteal_percent")
 
@@ -121,7 +121,7 @@ def test_missing_lifesteal_source_raises_naming_item_and_key(monkeypatch):
         ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain", "lifesteal_percent": 7.0}
     )
     with pytest.raises(KeyError, match="Vampiric Scepter.*source_url"):
-        sustain_stat_receipt("Vampiric Scepter", "lifesteal_percent")
+        required_effect_value("Vampiric Scepter", "source_url")
 
 
 def test_grouped_sustain_stat_sums_lifesteal_across_a_build():

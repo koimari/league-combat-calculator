@@ -591,19 +591,3 @@ class ControlEvent:
         if self.skillshot:
             extras += ", skillshot=yes"
         return f"ControlEvent({self.kind!r}, duration={self.duration}" f"{extras})"
-
-
-def parts_raw_total(
-    parts: tuple[DamagePart, ...],
-    damage_type: str | None = None,
-) -> float:
-    """Sum the raw per-cast damage of *parts*, optionally for one type.
-
-    HP-scaled parts contribute their static ``amount`` (0.0 unless set) —
-    their live value exists only at evaluation time.
-    """
-    return sum(
-        part.amount * part.count
-        for part in parts
-        if damage_type is None or part.damage_type == damage_type
-    )

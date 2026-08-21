@@ -219,10 +219,6 @@ BLACK_SHIELD_IMMUNITY_RULE = (
     "resist self nor allied crowd control, and it will not resist "
     "nearsight.  Spell shields take priority over Black Shield."
 )
-_BLACK_SHIELD_WIKI = SourceReceipt(
-    label="Local League Wiki cache — Morgana E Black Shield",
-    url="https://wiki.leagueoflegends.com",
-)
 
 
 @dataclass(frozen=True, slots=True)
