@@ -8613,7 +8613,8 @@ _RuneEffectT = TypeVar("_RuneEffectT")
 
 
 def _page_effects(
-    state: FightState, kind: "type[_RuneEffectT]"
+    state: FightState,
+    kind: "type[_RuneEffectT] | tuple[type[_RuneEffectT], ...]",
 ) -> "list[_RuneEffectT]":
     """The selected runes of one effect kind, in page order (keystone first).
 
@@ -8741,8 +8742,11 @@ def _add_rune_stat_grant_receipts(state: FightState) -> None:
     fight owes the reader is the assumption behind it — the health share a
     gate was priced at, the stack count a default supplied. A grant that
     resolved silently is a number the reader cannot audit.
+
+    Both grant kinds are read here — a rune granting three channels owes the
+    same receipt a rune granting one does.
     """
-    for effect in _page_effects(state, rune_effects.RuneStatGrantEffect):
+    for effect in _page_effects(state, rune_effects.RUNE_STAT_GRANT_KINDS):
         state.notes.extend(effect.disclosures)
 
 

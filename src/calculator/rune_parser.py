@@ -45,13 +45,25 @@ numbers appear in a small set of template forms:
 - ``* Level 5: + 5 [[ability haste]].`` — a stat a rune grants only on
   reaching one champion level, recorded with the level that gates it
 - ``After reaching 15 stacks`` — the stack count a rune names as its threshold
+- ``within 4 seconds of using a {{tip|dash}}`` — how long a movement event
+  leaves a rune armed
 - flat stat grants: ``{{as|10% '''bonus''' attack speed}}``,
   ``{{as|65 '''bonus''' health}}``, ``8 ability haste``,
   ``{{as|2.5% '''bonus''' movement speed}}``
+- ratios reading a quantity other than AD or AP:
+  ``{{as|(+ 2.5% '''bonus''' health)}}``, ``{{as|(+ 15% shield amount)}}``
+- ``Gain 6 (+ 5 per ''Bounty Hunter'' [[stack]]) [[ultimate haste]], up to 31
+  at 5 stacks`` — a base, a step, a ceiling and the total they make
+- ``For each ''Jack'' stack, gain {{as|1 ability haste}}`` plus
+  ``At 5 ''Jack'' stacks, gain {{adaptive|8}}`` — a per-stack step and the
+  stack gates a second grant arrives at
 
 "up to ... at maximum stacks/range" clauses restate per-stack (or minimum)
 values times a maximum — derived numbers, masked before scalar parsing so
-they never conflict with their sources.
+they never conflict with their sources.  Two sentences restate a *sum*
+rather than a product the same way ("up to 31 at 5 stacks", "for a total of
+20 at 10 stacks"); both are read to certify the parts they restate, and the
+parts are dropped with a warning when they stop adding up.
 
 This module is pure parsing: no network, no file writes. ``data_updater``
 fetches the wikitext and writes the resulting payloads to ``data/runes.json``;
@@ -245,6 +257,24 @@ _VARDEFINEECHO = re.compile(r"\{\{#vardefineecho:[^{}|]+\|([^{}|]*)\}\}")
 _MAXIMUM_RESTATEMENT = re.compile(
     r"up to (?:(?!up to).)*? at maximum (?:stacks|range)",
     re.IGNORECASE | re.DOTALL,
+)
+
+# Jack Of All Trades states its whole rule in three sentences, and all three
+# have to be claimed together: the per-stack step, the two stack gates, and
+# the total the gates add up to.  Left to the general rules the two gates
+# would arrive as two values of one adaptive-force key and be dropped as a
+# conflict — which is exactly what the cache showed before these existed.
+_ABILITY_HASTE_PER_STACK = re.compile(
+    r"For each ''\w[^']*'' stack, gain \{\{as\|([\d.]+) ability haste\}\}"
+)
+_ADAPTIVE_STACK_GATE = re.compile(
+    r"At (\d+) ''\w[^']*'' stacks, gain (?:an additional )?\{\{adaptive\|([\d.]+)\}\}"
+)
+#: ", for a total of {{adaptive|20}} at 10 ''Jack'' stacks" — the gates
+#: restated as their sum, exactly like "up to N at maximum stacks", and read
+#: to certify them rather than recorded as a third value.
+_STACK_GATE_TOTAL = re.compile(
+    r",? for a total of \{\{adaptive\|([\d.]+)\}\} at \d+ ''\w[^']*'' stacks"
 )
 
 # One key, one quantity: every {{rd|X%|Y%}} scalar split is claimed by the
@@ -739,6 +769,46 @@ def _claim_split_pairs(text: str, recorder: _EffectRecorder) -> str:
     return _AS_RATIO_PAIR.sub(claim_ratio_pair, text)
 
 
+def _claim_stack_gated_grants(text: str, recorder: _EffectRecorder) -> str:
+    """Record a rune's per-stack and stack-gated grants, blanking their text.
+
+    Blanking is what makes them claimable at all: left in place, the general
+    flat rules would read the per-stack ability haste as a flat grant and
+    the two adaptive gates as two values of one key — dropping both as a
+    conflict, which is what the cache showed before this existed.
+
+    The trailing "for a total of X at N stacks" sentence is the gates
+    restated as their sum, so it certifies them rather than being recorded:
+    a page whose parts stop adding up is a rewording nothing should price
+    through, and the gates are dropped with a warning instead.
+    """
+    text = _ABILITY_HASTE_PER_STACK.sub(
+        lambda match: recorder.record("ability_haste_per_stack", float(match.group(1)))
+        or " ",
+        text,
+    )
+    gates = [
+        [int(stacks), float(force)]
+        for stacks, force in _ADAPTIVE_STACK_GATE.findall(text)
+    ]
+    text = _ADAPTIVE_STACK_GATE.sub(" ", text)
+    total_match = _STACK_GATE_TOTAL.search(text)
+    text = _STACK_GATE_TOTAL.sub(" ", text)
+    if not gates:
+        return text
+    if (
+        total_match
+        and abs(sum(force for _, force in gates) - float(total_match.group(1))) > 1e-9
+    ):
+        recorder.warn(
+            f"stack-gated adaptive force {gates!r} does not add up to the "
+            f"stated total {total_match.group(1)}; dropped"
+        )
+        return text
+    recorder.record("adaptive_force_stack_gates", gates)
+    return text
+
+
 def _parse_per_stack_grants(text: str, recorder: _EffectRecorder) -> None:
     """Read the stat grants a rune states per stack of a named counter.
 
@@ -790,6 +860,7 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     """
     text = _MAXIMUM_RESTATEMENT.sub(" ", _resolve_display_templates(description))
     text = _claim_split_pairs(text, recorder)
+    text = _claim_stack_gated_grants(text, recorder)
 
     for percent, bonus_marker, stat in _AS_RATIO.findall(text):
         if stat == "AP":

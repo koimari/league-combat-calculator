@@ -847,7 +847,7 @@ class TestTheSharedTableAccessors:
     Three of them, and the difference between them is what a table's columns
     *are*: ``required_leveling`` and ``required_level_table`` read champion
     levels, ``keyed_columns`` reads a table keyed by something else, and
-    ``level_gates`` reads a list of (level, bonus) pairs. They live in
+    ``threshold_gates`` reads a list of (threshold, bonus) pairs. They live in
     ``rune_effects`` rather than in one path module because runes from three
     paths read them.
     """
@@ -890,13 +890,13 @@ class TestTheSharedTableAccessors:
         with pytest.raises(KeyError, match="needs at least two"):
             rune_effects.keyed_columns("Synthetic", values, "leveling", 0)
 
-    def test_level_gates_read_both_halves_of_each_pair(self):
+    def test_threshold_gates_read_both_halves_of_each_pair(self):
         name = "Transcendence"
         values = rune_effects.RuneValues(name, _cached(name))
-        gates = rune_effects.level_gates(name, values, "ability_haste_level_gates")
+        gates = rune_effects.threshold_gates(name, values, "ability_haste_level_gates")
         assert gates == ((5, 5.0), (8, 5.0))
 
     def test_an_empty_gate_list_is_a_degraded_parse(self):
         values = rune_effects.RuneValues("Synthetic", {"gates": []})
         with pytest.raises(KeyError, match="states no gates"):
-            rune_effects.level_gates("Synthetic", values, "gates")
+            rune_effects.threshold_gates("Synthetic", values, "gates")

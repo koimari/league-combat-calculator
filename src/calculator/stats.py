@@ -53,6 +53,39 @@ def growth_stat(base: float, growth: float, level: int) -> float:
     return base + growth * (level - 1) * growth_multiplier(level)
 
 
+# Where two of the engine's item-stat keys name ONE stat in game.  What
+# "a unique stat type gained from items" counts is the game's stat types
+# (Jack Of All Trades' whole stack rule), and the engine splits three of
+# them for its own arithmetic — so a build wearing boots earns one stack for
+# movement speed rather than two.  Every other key is its own type.
+_ONE_ITEM_STAT_TYPE: dict[str, str] = {
+    "move_speed_flat": "move_speed",
+    "move_speed_percent": "move_speed",
+    "health_regen_flat": "health_regen",
+    "health_regen_percent": "health_regen",
+    "armor_penetration_percent": "armor_penetration",
+    "armor_penetration_bonus_percent": "armor_penetration",
+}
+
+
+def item_stat_type_count(total_item_stats: Mapping[str, float]) -> int:
+    """How many distinct stat types this build's items grant.
+
+    Counted off the build's own item stat totals rather than from a list of
+    stat names, so an item that stops granting a stat stops being counted
+    without anything here being edited.  Only the stat *blocks* are in
+    those totals: a stat an item passive grants conditionally is not a stat
+    "currently gained from items" for a build the fight has not started.
+    """
+    return len(
+        {
+            _ONE_ITEM_STAT_TYPE.get(key, key)
+            for key, value in total_item_stats.items()
+            if value
+        }
+    )
+
+
 # The game clamps a unit's TOTAL attack speed to 3.003 (one basic attack
 # per 0.333s); the floor is 0.2. See
 # https://wiki.leagueoflegends.com/en-us/Attack_speed
@@ -512,6 +545,7 @@ def calculate_total_stats(
                 + bonuses.bonus_ap
             )
             * (bonuses.ap_multiplier + quest_ap_multiplier),
+            item_stat_types=item_stat_type_count(total_item_stats),
         )
         if rune_page is not None
         else RuneStatGrants()
@@ -662,7 +696,8 @@ def calculate_total_stats(
         "base_health_regen_per_five": base_health_regen_per_five,
         "health_regen_per_five": health_regen_per_five,
         "health_regen_per_second": health_regen_per_second,
-        "lifesteal_percent": grouped_sustain_stat_percent(items, "lifesteal_percent"),
+        "lifesteal_percent": grouped_sustain_stat_percent(items, "lifesteal_percent")
+        + runes.lifesteal_percent,
         "omnivamp_percent": total_item_stats["omnivamp_percent"]
         + bonuses.bonus_omnivamp,
         "heal_and_shield_power_percent": total_item_stats[

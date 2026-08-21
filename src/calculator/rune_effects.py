@@ -373,6 +373,11 @@ class RuneStat(Enum):
     #: Haste on the ultimate alone, the channel Malignance and its siblings
     #: feed, and the mirror of the one above.
     ULTIMATE_HASTE = "ultimate_haste"
+    #: Life steal, which the fight's own life-steal walk turns into timed
+    #: heal packets off the holder's physical attack events — so a rune
+    #: granting here reaches the heal ledger through the same door an item's
+    #: life steal does, and needs no rune-shaped heal of its own.
+    LIFESTEAL_PERCENT = "lifesteal_percent"
     MOVE_SPEED_PERCENT = "move_speed_percent"
     BONUS_HEALTH = "bonus_health"
     LETHALITY = "lethality"
@@ -481,6 +486,11 @@ class RuneStatContext:
     adaptive force asks which of them is larger; ``options`` carries the
     explicit inputs the request has no other home for (a stack count, a game
     minute), each with a default the rune discloses.
+
+    ``item_stat_types`` is how many distinct stat types the build's items
+    grant — a fact about the build rather than an option, because the build
+    is in the request and nothing has to be assumed to count it. Jack Of All
+    Trades is the one rune whose stacks *are* that count.
     """
 
     level: int
@@ -488,6 +498,7 @@ class RuneStatContext:
     bonus_attack_damage: float
     ability_power: float
     options: Mapping[str, Mapping[str, float]]
+    item_stat_types: int = 0
 
     def option(self, rune_name: str, key: str, default: float) -> float:
         """One declared option of one rune, or its disclosed default."""
@@ -496,7 +507,7 @@ class RuneStatContext:
 
 @dataclass(frozen=True, slots=True)
 class RuneStatGrantEffect:
-    """A rune that grants a stat, applied where item stats are applied.
+    """A rune that grants one stat, applied where item stats are applied.
 
     ``amount`` prices the grant for one build and level; ``stat`` names the
     channel it lands in. A grant that is conditional on something the request
@@ -509,6 +520,48 @@ class RuneStatGrantEffect:
     stat: RuneStat
     amount: Callable[[RuneStatContext], float]
     disclosures: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class RuneMultiStatGrantEffect:
+    """A rune granting several channels at once, off one shared count.
+
+    Its own kind rather than two of the sibling above, because these runes'
+    channels are computed *together*: Jack Of All Trades pays ability haste
+    per stack and adaptive force at two stack gates, and Legend: Bloodline
+    pays life steal per stack and bonus health at its last one. Split into
+    two single-channel effects, the halves could read different counts —
+    which is exactly the drift one declaration prevents.
+
+    ``stats`` is declared rather than derived from what ``amounts`` returns,
+    for the reason the closed :class:`RuneStat` set exists at all: whether a
+    rune grants into a channel the engine reads has to be checkable without
+    running a fight. A channel ``amounts`` returns that ``stats`` does not
+    declare is refused rather than applied.
+    """
+
+    rune_name: str
+    stats: tuple[RuneStat, ...]
+    amounts: Callable[[RuneStatContext], Mapping[RuneStat, float]]
+    disclosures: tuple[str, ...] = ()
+
+    def declared_amounts(self, context: RuneStatContext) -> Mapping[RuneStat, float]:
+        """The grant, certified against the channels this rune declares."""
+        amounts = self.amounts(context)
+        undeclared = sorted(
+            stat.value for stat in amounts if stat not in set(self.stats)
+        )
+        if undeclared:
+            raise KeyError(
+                f"rune {self.rune_name!r} granted into undeclared channels "
+                f"{undeclared} — a stat rune's channels are declared, not "
+                "discovered at apply time"
+            )
+        return amounts
+
+
+#: The two kinds that grant stats, for the walkers that treat them alike.
+RUNE_STAT_GRANT_KINDS = (RuneStatGrantEffect, RuneMultiStatGrantEffect)
 
 
 class AmpCondition(Enum):
@@ -613,6 +666,7 @@ RuneEffect = (
     | RuneAbilityProcEffect
     | RuneNoDamageEffect
     | RuneStatGrantEffect
+    | RuneMultiStatGrantEffect
     | RuneConditionalAmpEffect
     | RuneFlatAmpEffect
 )
@@ -721,7 +775,7 @@ def keyed_columns(
     return columns
 
 
-def level_gates(
+def threshold_gates(
     name: str, effects: RuneValues, key: str
 ) -> tuple[tuple[int, float], ...]:
     """Read a rune's ``level, bonus`` gates, requiring at least one."""
@@ -1779,6 +1833,7 @@ class RuneStatGrants:
     #: changing. A rune that actually grants contributes a float, as an
     #: item's declared read does.
     ultimate_haste: float = 0
+    lifesteal_percent: float = 0.0
     move_speed_percent: float = 0.0
     bonus_health: float = 0.0
     lethality: float = 0.0
@@ -1792,6 +1847,7 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
         RuneStat.ABILITY_HASTE: "ability_haste",
         RuneStat.BASIC_ABILITY_HASTE: "basic_ability_haste",
         RuneStat.ULTIMATE_HASTE: "ultimate_haste",
+        RuneStat.LIFESTEAL_PERCENT: "lifesteal_percent",
         RuneStat.MOVE_SPEED_PERCENT: "move_speed_percent",
         RuneStat.BONUS_HEALTH: "bonus_health",
         RuneStat.LETHALITY: "lethality",
@@ -1803,24 +1859,35 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
 def resolve_stat_grants(
     effects: Sequence[RuneEffect], context: RuneStatContext
 ) -> RuneStatGrants:
-    """Sum every rune stat grant on the page into one typed total."""
+    """Sum every rune stat grant on the page into one typed total.
+
+    Both grant kinds land here through one channel-by-channel adder, so a
+    rune granting one stat and a rune granting three reach the fight's stat
+    block by exactly the same route — including adaptive force, whose split
+    into attack damage or ability power belongs to the channel and not to
+    the kind that named it.
+    """
     totals: dict[str, float] = {}
 
     def add(field: str, amount: float) -> None:
         totals[field] = totals.get(field, 0.0) + amount
 
-    for effect in effects:
-        if not isinstance(effect, RuneStatGrantEffect):
-            continue
-        amount = effect.amount(context)
-        if effect.stat is RuneStat.ADAPTIVE_FORCE:
+    def grant(stat: RuneStat, amount: float) -> None:
+        if stat is RuneStat.ADAPTIVE_FORCE:
             bonus_ad, ability_power = adaptive_force_split(
                 amount, context.bonus_attack_damage, context.ability_power
             )
             add("bonus_attack_damage", bonus_ad)
             add("ability_power", ability_power)
-            continue
-        add(_STAT_FIELDS[effect.stat], amount)
+            return
+        add(_STAT_FIELDS[stat], amount)
+
+    for effect in effects:
+        if isinstance(effect, RuneStatGrantEffect):
+            grant(effect.stat, effect.amount(context))
+        elif isinstance(effect, RuneMultiStatGrantEffect):
+            for stat, amount in effect.declared_amounts(context).items():
+                grant(stat, amount)
     return RuneStatGrants(**totals)
 
 
@@ -1831,12 +1898,14 @@ def rune_page_stat_grants(
     is_melee: bool,
     bonus_attack_damage: float,
     ability_power: float,
+    item_stat_types: int = 0,
 ) -> RuneStatGrants:
     """Compile one page and total the stats it grants, in one call.
 
     The door ``stats.py`` uses: it holds the build's bonus attack damage and
-    ability power (which decide every adaptive grant) and nothing else about
-    runes.
+    ability power (which decide every adaptive grant), the count of stat
+    types the build's items grant (which is Jack Of All Trades' whole stack
+    rule), and nothing else about runes.
     """
     return resolve_stat_grants(
         resolve_rune_page(page),
@@ -1846,6 +1915,7 @@ def rune_page_stat_grants(
             bonus_attack_damage=bonus_attack_damage,
             ability_power=ability_power,
             options=page.options,
+            item_stat_types=item_stat_types,
         ),
     )
 

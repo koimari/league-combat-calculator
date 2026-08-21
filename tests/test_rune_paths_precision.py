@@ -73,22 +73,46 @@ class TestLegendAlacrity:
 
 
 class TestLegendBloodline:
-    """Row 2: the bonus health its last stack grants, and the life steal it cannot."""
+    """Row 2: two channels off one stack count, in one declaration."""
 
-    def test_the_bonus_health_arrives_only_at_the_cached_maximum(self):
-        """85 bonus health at fifteen stacks; nothing at fourteen."""
+    def test_both_halves_read_the_same_stack_count(self):
+        """0.45% life steal per stack; 85 bonus health only at fifteen."""
         effect = rune_effects.resolve_rune("Legend: Bloodline")
-        assert isinstance(effect, rune_effects.RuneStatGrantEffect)
-        assert effect.stat is rune_effects.RuneStat.BONUS_HEALTH
-        assert effect.amount(_context()) == 0.0
-        assert effect.amount(_context(stacks=14)) == 0.0
-        assert effect.amount(_context(stacks=15)) == pytest.approx(85.0)
+        assert isinstance(effect, rune_effects.RuneMultiStatGrantEffect)
+        assert effect.stats == (
+            rune_effects.RuneStat.LIFESTEAL_PERCENT,
+            rune_effects.RuneStat.BONUS_HEALTH,
+        )
+        steal = rune_effects.RuneStat.LIFESTEAL_PERCENT
+        health = rune_effects.RuneStat.BONUS_HEALTH
+        assert effect.declared_amounts(_context()) == {steal: 0.0, health: 0.0}
+        assert effect.declared_amounts(_context(stacks=14)) == {
+            steal: pytest.approx(6.3),
+            health: 0.0,
+        }
+        assert effect.declared_amounts(_context(stacks=15)) == {
+            steal: pytest.approx(6.75),
+            health: pytest.approx(85.0),
+        }
 
-    def test_the_life_steal_is_withheld_with_its_numbers_quoted(self):
-        """0.45% per stack, 6.75% at fifteen — refused, never estimated."""
+    def test_the_life_steal_reaches_the_channel_the_heal_walk_reads(self):
+        """6.75% at fifteen stacks, and the fight turns it into heal packets."""
         effect = rune_effects.resolve_rune("Legend: Bloodline")
-        assert "0.45% per stack, 6.75% at maximum" in effect.disclosures[1]
-        assert "no rune grants into it" in effect.disclosures[1]
+        assert "0.45% life steal per Legend stack (6.75% at its 15-stack" in (
+            effect.disclosures[0]
+        )
+        assert "life-steal walk turns into heal packets" in effect.disclosures[0]
+
+    def test_a_channel_the_rune_did_not_declare_is_refused(self, monkeypatch):
+        """``stats`` is the declaration; ``amounts`` may not exceed it."""
+        effect = rune_effects.resolve_rune("Legend: Bloodline")
+        rogue = rune_effects.RuneMultiStatGrantEffect(
+            rune_name=effect.rune_name,
+            stats=(rune_effects.RuneStat.BONUS_HEALTH,),
+            amounts=lambda context: {rune_effects.RuneStat.LETHALITY: 10.0},
+        )
+        with pytest.raises(KeyError, match="undeclared channels"):
+            rogue.declared_amounts(_context())
 
     def test_its_option_ceiling_is_fifteen_not_ten(self):
         """Bloodline banks five more stacks than its row siblings."""
@@ -254,6 +278,28 @@ class TestTheGrantsReachTheRealPipeline:
         assert unstacked["champion_stats"]["health"] == 2327
         assert short["champion_stats"]["health"] == 2327
         assert full["champion_stats"]["health"] == 2412
+
+    def test_bloodline_s_life_steal_becomes_heal_packets_on_the_ledger(self):
+        """6.75% at fifteen stacks: 43.9 self-healing becomes 146.2.
+
+        The rune grants into the life-steal channel and the fight's own
+        life-steal walk turns it into timed packets off Jinx's physical
+        attack events — the same door an item's life steal goes through, so
+        the rune needed no heal shape of its own.
+        """
+        request = {**_ATTACK_SPEED_PROBE, "minor_runes": ["Legend: Bloodline"]}
+        bare = calculate_payload(dict(_ATTACK_SPEED_PROBE))
+        unstacked = calculate_payload(dict(request))
+        stacked = calculate_payload(
+            {**request, "rune_options": {"Legend: Bloodline": {"legend_stacks": 15}}}
+        )
+        assert bare["champion_stats"]["lifesteal_percent"] == 0.0
+        assert stacked["champion_stats"]["lifesteal_percent"] == pytest.approx(6.75)
+        assert unstacked["self_healing"] == pytest.approx(bare["self_healing"])
+        assert bare["self_healing"] == pytest.approx(43.9, abs=0.05)
+        assert stacked["self_healing"] == pytest.approx(146.2, abs=0.05)
+        assert len(bare["self_healing_events"]) == 35
+        assert len(stacked["self_healing_events"]) == 65
 
     def test_a_withheld_rune_publishes_its_receipt_and_moves_no_number(self):
         bare = calculate_payload(dict(_HEALTH_PROBE))

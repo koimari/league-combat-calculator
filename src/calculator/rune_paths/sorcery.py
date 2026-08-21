@@ -29,12 +29,12 @@ from ..rune_effects import (
     breakdown_key,
     display_name,
     keyed_columns,
-    level_gates,
     no_damage_compiler,
     required_level_table,
     required_leveling,
     required_pair,
     stated_type,
+    threshold_gates,
 )
 
 #: Absolute Focus's gate is the holder's own health share, and the pair
@@ -139,7 +139,7 @@ def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """
     name = "Transcendence"
     effects = RuneValues(name, entry.get("effects", {}))
-    gates = level_gates(name, effects, "ability_haste_level_gates")
+    gates = threshold_gates(name, effects, "ability_haste_level_gates")
     granted = ", ".join(f"{bonus:g} at level {level}" for level, bonus in gates)
 
     def amount(context: RuneStatContext) -> float:

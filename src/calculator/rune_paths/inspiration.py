@@ -1,18 +1,26 @@
 """Inspiration's minor runes.
 
 Inspiration is the path whose runes buy things the fight model has no axis
-for — biscuits, boots, elixirs, summoner-spell swaps, gold back. All nine
-compile to the same shape Cosmic Insight showed: selectable, and receipted
-as a refusal rather than a silent zero. Two of them are refused for what
-the engine cannot reach rather than for what the rune does not do, and say
-which: Jack Of All Trades grants two stats at once off a count of the
-build's own item stats, and Biscuit Delivery's health is earned over a game.
+for — biscuits, boots, elixirs, summoner-spell swaps, gold back. Eight of
+the nine compile to the same shape Cosmic Insight showed: selectable, and
+receipted as a refusal rather than a silent zero. The ninth is Jack Of All
+Trades, whose stacks are the build's own item stat types and whose two
+channels are granted together.
 """
 
 from typing import Any, Callable, Mapping
 
 from ..ability_spec import Disposition
-from ..rune_effects import RuneEffect, RuneOption, no_damage_compiler
+from ..rune_effects import (
+    RuneEffect,
+    RuneMultiStatGrantEffect,
+    RuneOption,
+    RuneStat,
+    RuneStatContext,
+    RuneValues,
+    no_damage_compiler,
+    threshold_gates,
+)
 
 #: The Inspiration runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
@@ -90,28 +98,55 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         "no damage row reads movement speed",
         (),
     ),
-    # Two things stop this one, and both are engine reach rather than a
-    # missing number. Its stacks are the distinct stat types the build's
-    # own items grant, which the rune stat context does not carry; and it
-    # grants ability haste *and* adaptive force, where a rune grants one
-    # channel. Its adaptive halves do not survive the parse either.
-    "Jack Of All Trades": (
-        Disposition.WITHHELD,
-        "its stacks count the distinct stat types the build's items grant "
-        "and the rune stat context carries no item stats, and it grants two "
-        "stat channels where a rune stat grant names one",
-        (
-            "Jack Of All Trades' ability haste per stack is cached and its "
-            "adaptive force at five and ten stacks is not: the three "
-            "adaptive figures its description states conflict in the parse "
-            "and are dropped, so even the reachable half would be a floor.",
-        ),
-    ),
 }
 
+
+def _compile_jack_of_all_trades(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
+    """Compile Jack Of All Trades: ability haste per stack, adaptive at gates.
+
+    Its stacks are a fact about the build rather than an option: the count
+    of distinct stat types the build's items grant, which the stat context
+    carries because the request already holds the build. Both channels are
+    computed from that one count in one declaration, so the haste and the
+    adaptive force can never read different stack totals.
+    """
+    name = "Jack Of All Trades"
+    effects = RuneValues(name, entry.get("effects", {}))
+    haste_per_stack = effects.number("ability_haste_per_stack")
+    gates = threshold_gates(name, effects, "adaptive_force_stack_gates")
+    granted = ", ".join(f"{force:g} at {stacks} stacks" for stacks, force in gates)
+
+    def amounts(context: RuneStatContext) -> Mapping[RuneStat, float]:
+        stacks = context.item_stat_types
+        return {
+            RuneStat.ABILITY_HASTE: haste_per_stack * stacks,
+            RuneStat.ADAPTIVE_FORCE: float(
+                sum(force for gate, force in gates if stacks >= gate)
+            ),
+        }
+
+    return RuneMultiStatGrantEffect(
+        rune_name=name,
+        stats=(RuneStat.ABILITY_HASTE, RuneStat.ADAPTIVE_FORCE),
+        amounts=amounts,
+        disclosures=(
+            f"{name} grants {haste_per_stack:g} ability haste per stack plus "
+            f"adaptive force {granted}, and its stacks are counted off the "
+            "build: one per distinct stat type the equipped items' stat "
+            "blocks grant.",
+            f"{name} counts the stat blocks alone: a stat an item passive "
+            "grants conditionally is not one the build holds when the fight "
+            "opens, so the stack count is a floor.",
+        ),
+    )
+
+
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
-    name: no_damage_compiler(name, *declaration)
-    for name, declaration in _NO_DAMAGE.items()
+    "Jack Of All Trades": _compile_jack_of_all_trades,
+    **{
+        name: no_damage_compiler(name, *declaration)
+        for name, declaration in _NO_DAMAGE.items()
+    },
 }
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {}

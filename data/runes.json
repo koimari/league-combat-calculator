@@ -1709,12 +1709,18 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/JackOfAllTrades/JackofAllTrades2.png",
     "description": "{{sbc|Passive:}} Earn 1 ''Jack'' stack for each unique [[champion statistic|stat type]] currently gained from [[item]]s.\n{{sbc|Jack:}} For each ''Jack'' stack, gain {{as|1 ability haste}}. At 5 ''Jack'' stacks, gain {{adaptive|8}}. At 10 ''Jack'' stacks, gain an additional {{adaptive|12}}, for a total of {{adaptive|20}} at 10 ''Jack'' stacks.",
     "effects": {
-      "ability_haste": 1.0
-    },
-    "parse_warnings": [
-      "adaptive_force matched conflicting values, dropped: 8.0, 12.0",
-      "adaptive_force matched again after a conflict: 20.0"
-    ]
+      "ability_haste_per_stack": 1.0,
+      "adaptive_force_stack_gates": [
+        [
+          5,
+          8.0
+        ],
+        [
+          10,
+          12.0
+        ]
+      ]
+    }
   },
   "adaptive_force": {
     "attack_damage_ratio": 0.6,

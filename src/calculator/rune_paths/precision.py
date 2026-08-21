@@ -22,6 +22,7 @@ from ..rune_effects import (
     RuneConditionalAmpEffect,
     RuneEffect,
     RuneFlatAmpEffect,
+    RuneMultiStatGrantEffect,
     RuneNoDamageEffect,
     RuneOption,
     RuneOptionKind,
@@ -93,14 +94,14 @@ def _compile_legend_alacrity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
-def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
-    """Compile Legend: Bloodline: the bonus health its maximum stacks grant.
+def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
+    """Compile Legend: Bloodline: life steal per stack, bonus health at the last.
 
-    Life steal is this rune's main half and the engine sums life steal from
-    the build's items alone, so it is disclosed rather than estimated. The
-    bonus health that arrives with the last stack *is* a channel the engine
-    reads, and it is what this grant prices — all of it or none, exactly as
-    the rune states it.
+    Both halves off one stack count, in one declaration, because that count
+    is what could otherwise drift between them. The life steal lands in the
+    channel the fight's own life-steal walk reads, so it becomes timed heal
+    packets off the holder's physical attacks exactly as an item's does; the
+    bonus health arrives whole or not at all, as the rune states it.
     """
     name = "Legend: Bloodline"
     effects = RuneValues(name, entry.get("effects", {}))
@@ -108,21 +109,26 @@ def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     per_stack = effects.number("life_steal_percent_per_stack")
     ceiling = effects.number("max_stacks")
 
-    def amount(context: RuneStatContext) -> float:
+    def amounts(context: RuneStatContext) -> Mapping[RuneStat, float]:
         stacks = context.option(name, _LEGEND_STACKS, 0.0)
-        return health if stacks >= ceiling else 0.0
+        return {
+            RuneStat.LIFESTEAL_PERCENT: per_stack * stacks,
+            RuneStat.BONUS_HEALTH: health if stacks >= ceiling else 0.0,
+        }
 
-    return RuneStatGrantEffect(
+    return RuneMultiStatGrantEffect(
         rune_name=name,
-        stat=RuneStat.BONUS_HEALTH,
-        amount=amount,
+        stats=(RuneStat.LIFESTEAL_PERCENT, RuneStat.BONUS_HEALTH),
+        amounts=amounts,
         disclosures=(
+            f"{name} grants {per_stack:g}% life steal per Legend stack "
+            f"({per_stack * ceiling:g}% at its {ceiling:g}-stack maximum), "
+            "which the fight's life-steal walk turns into heal packets off "
+            "the holder's own physical attack events.",
             f"{name} grants its {health:g} bonus health only at the "
             f"{ceiling:g}-stack maximum; the fight reads the "
-            f"{_LEGEND_STACKS!r} option, whose default is no stacks.",
-            f"{name}'s life steal ({per_stack:g}% per stack, "
-            f"{per_stack * ceiling:g}% at maximum) is withheld: life steal is "
-            "summed from the build's items and no rune grants into it.",
+            f"{_LEGEND_STACKS!r} option for both halves, and its default is "
+            "no stacks.",
         ),
     )
 
