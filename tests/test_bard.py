@@ -190,16 +190,37 @@ class TestQCosmicBinding:
 
 
 # ---------------------------------------------------------------------------
-# W / E / R: no damage, absent from the map
+# W / E / R: zero-damage state rows (roadmap session 2, 2026-08-20)
 # ---------------------------------------------------------------------------
 
 
 class TestNonDamageSlots:
-    """W (ally heal), E (portal), R (stasis) must not emit rows."""
+    """W (ally heal), E (portal), R (stasis) deal no enemy damage but each
+    emits an explicit, user-visible zero-damage row (module_helpers.no_damage)
+    instead of staying silently absent — same pattern used across dozens of
+    other champion modules (e.g. janna.py, milio.py) for utility slots."""
 
     @pytest.mark.parametrize("slot", ["W", "E", "R"])
-    def test_slot_absent(self, bard_data, slot) -> None:
-        assert slot not in _parse(bard_data)
+    def test_slot_present_zero_damage(self, bard_data, slot) -> None:
+        entry = _parse(bard_data)[slot]
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+
+    def test_w_reason_cites_heal_not_damage(self, bard_data) -> None:
+        entry = _parse(bard_data)["W"]
+        assert entry["name"] == "Caretaker's Shrine"
+        assert "heal" in entry["detail"].lower()
+
+    def test_e_reason_cites_zero_leveling(self, bard_data) -> None:
+        entry = _parse(bard_data)["E"]
+        assert entry["name"] == "Magical Journey"
+        assert "leveling" in entry["detail"].lower()
+
+    def test_r_reason_cites_zero_proc_true_damage(self, bard_data) -> None:
+        entry = _parse(bard_data)["R"]
+        assert entry["name"] == "Tempered Fate"
+        assert "0" in entry["detail"] and "true damage" in entry["detail"]
 
 
 # ---------------------------------------------------------------------------

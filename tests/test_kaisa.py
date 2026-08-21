@@ -6,6 +6,7 @@ from src import app as app_module
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions import (
     get_champion_cast_order,
+    get_champion_module_meta,
     get_champion_options_meta,
     parse_champion_abilities,
 )
@@ -279,6 +280,47 @@ def test_timed_and_auto_only_requests_fail_closed():
     )
     assert reordered.status_code == 400
     assert "certified W -> Q sequence" in reordered.get_json()["error"]
+
+
+# ---------------------------------------------------------------------------
+# P/E/R disposition (roadmap session 2, 2026-08-20)
+# ---------------------------------------------------------------------------
+
+
+def test_e_supercharge_is_explicit_zero_damage_row(kaisa_data):
+    """E carries no damage/heal/shield attribute; it is a documented
+    zero-damage state row (module_helpers.no_damage), not a silent absence."""
+    _, abilities = _abilities(kaisa_data)
+    entry = abilities["E"]
+
+    assert entry["name"] == "Supercharge"
+    assert entry["total_raw"] == 0.0
+    assert entry["parts"] == ()
+    assert "no damage" in entry["detail"].lower()
+    assert "attack speed" in entry["detail"].lower()
+
+
+def test_module_coverage_reflects_p_e_r_dispositions():
+    """P (Plasma rides W/basic attacks) and Q/W are modeled; E is an
+    atoms-confirmed zero-damage state row; R's sourced shield is not yet
+    wired into CAST_ORDER/the resource ledger and stays out_of_scope."""
+    coverage = get_champion_module_meta("Kai'Sa")["coverage"]
+
+    assert coverage == {
+        "P": "modeled",
+        "Q": "modeled",
+        "W": "modeled",
+        "E": "no_damage",
+        "R": "out_of_scope",
+    }
+
+
+def test_r_killer_instinct_remains_absent_from_parsed_abilities(kaisa_data):
+    """R stays unwired: no top-level SLOTS entry, so no parsed row."""
+    _, abilities = _abilities(kaisa_data)
+
+    assert "R" not in abilities
+    assert "R" not in get_champion_module_meta("Kai'Sa")["slots"]
 
 
 def test_sources_options_and_mode_are_public_revision_receipts():

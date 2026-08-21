@@ -627,20 +627,35 @@ class TestPermanentCounter:
 
 class TestLedgerReceipts:
     def test_mana_account_coexists_today(self):
-        # The mana account is real and unchanged — spend receipts for the
-        # accepted Q casts (60 each, 2 casts over 10s), resource_spent /
-        # resource_remaining visible — and the additive chime/meep
-        # sub-section coexists beside it once wired.
+        # The mana account is real and unchanged — spend receipts visible,
+        # resource_spent / resource_remaining computed — and the additive
+        # chime/meep sub-section coexists beside it once wired.
+        #
+        # Roadmap session 2 (2026-08-20): W and R are now modeled (they
+        # carry a real cached cooldown/cost, per module_helpers.no_damage),
+        # so this fixture's cast_order=["Q", "W", "R"] puts all three on
+        # the shared timed-cast timeline — one Q (60), one W (70), one R
+        # (100) at the front of the fight, then a second Q (60) once its
+        # cooldown is back up: 290 total spent of the 300 starting pool.
         result = _fight({"chimes": 35, "fight_duration_seconds": 10.0})
         ledger = result["resource_ledger"]
         assert ledger["kind"] == "mana"
         assert ledger["opening_current"] == pytest.approx(300.0)
         spends = [r for r in ledger["receipts"] if r["operation"] == "spend"]
-        assert len(spends) == 2
+        assert len(spends) == 4
         assert all(r["accepted"] for r in spends)
-        assert all(r["amount"] == pytest.approx(60.0) for r in spends)
-        assert result["resource_spent"] == pytest.approx(120.0)
-        assert result["resource_remaining"] == pytest.approx(180.0)
+        by_slot = {r["detail"]["slot"]: r["amount"] for r in spends}
+        assert [r["detail"]["slot"] for r in spends] == ["Q", "W", "R", "Q"]
+        assert by_slot["W"] == pytest.approx(70.0)
+        assert by_slot["R"] == pytest.approx(100.0)
+        assert sum(1 for s in spends if s["detail"]["slot"] == "Q") == 2
+        assert all(
+            r["amount"] == pytest.approx(60.0)
+            for r in spends
+            if r["detail"]["slot"] == "Q"
+        )
+        assert result["resource_spent"] == pytest.approx(290.0)
+        assert result["resource_remaining"] == pytest.approx(10.0)
 
     def test_mana_receipts_are_resource_receipt_shaped(self):
         # The mana account's rows are ResourceReceipt-shaped — the shape
@@ -903,23 +918,32 @@ class TestUnchangedBoundaries:
         )
         assert abilities["Q"]["total_raw"] == pytest.approx(320.0)
 
-    def test_w_e_r_excluded_unchanged(self):
-        # W (ally heal), E (portal), R (stasis) deal no damage and are
-        # absent from the parse and the fight breakdown; the meep slow
-        # and splash are named unmodeled assumptions.
+    def test_w_e_r_zero_damage_rows_unchanged(self):
+        # W (ally heal), E (portal), R (stasis) deal no ENEMY damage.
+        # Roadmap session 2 (2026-08-20): all three now emit an explicit
+        # zero-damage state row (module_helpers.no_damage) rather than
+        # staying absent — the meep slow and splash remain named unmodeled
+        # assumptions regardless.
         _, abilities = _parse({"chimes": 35})
         for slot in ("W", "E", "R"):
-            assert slot not in abilities
+            assert slot in abilities
+            assert abilities[slot]["total_raw"] == 0.0
         result = _fight({"chimes": 35, "fight_duration_seconds": 10.0})
-        # The P3-3Y walk adds ONE informational chimes row (documentary,
-        # zero total_damage) beside the engine rows; no other slot
-        # surface appears.
+        # This fixture's cast_order is ["Q", "W", "R"] (E excluded from
+        # the shared cast timeline by this file's _fight default), so W
+        # and R now surface as zero-damage rows in the breakdown beside
+        # the P3-3Y informational chimes row; E does not cast here and so
+        # has no breakdown row of its own.
         assert set(result["breakdown"]) == {
             "Q",
+            "W",
+            "R",
             "auto_attacks",
             "on_hit_ability_passive",
             "chimes",
         }
+        assert result["breakdown"]["W"]["total_damage"] == 0.0
+        assert result["breakdown"]["R"]["total_damage"] == 0.0
         meta = get_champion_options_meta("Bard")
         assert any("Meep slow" in text for text in meta["assumptions"])
         assert any("splash" in text for text in meta["assumptions"])

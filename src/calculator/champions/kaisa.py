@@ -4,12 +4,71 @@ The certified sequence deliberately waits for Void Seeker and its Plasma
 applications to resolve before casting Icathian Rain. This keeps every damage
 event in one unambiguous order without pretending the current engine models
 Supercharge's timed attack-speed window or Killer Instinct's attack reset.
+
+Roadmap session 2 (2026-08-20): closes 2 of Kai'Sa's 3 out_of_scope slots
+(P, E); R stays open with a named receipt.
+
+  - P (Second Skin): the Caustic Wounds sub-effect (the third of P's three
+    cached effect rows, `data/champions.json` Kai'Sa P effects[2]) is
+    already fully computed — base 4:30 (based on level) (+12% AP), plus
+    1:8 (based on level) (+3% AP) per prior stack, plus a 5th-stack rupture
+    at 15% (+6% per 100 AP) of the target's missing health — by
+    `_plasma_values`/`_plasma_proc` below, riding Void Seeker's
+    `post_hit_proc` and reported under the `passive_plasma` breakdown key
+    (pinned by `tests/test_kaisa.py::test_w_applies_successive_plasma_after_spell_damage`
+    and its evolution/build-driven siblings). MODULE_COVERAGE read
+    out_of_scope only because Plasma has no standalone top-level "P" SLOTS
+    entry — Plasma applications ride Void Seeker and basic attacks, never
+    an independent P cast — so the label was stale, not the calculation.
+    Reclassified to modeled.
+  - E (Supercharge): the cached ability carries exactly four effect rows
+    (`data/champions.json` Kai'Sa E) — a ghosted/Minimum-Maximum-Movement-
+    Speed charge-up, a post-charge Bonus Attack Speed buff (40:80% by
+    rank for 4s), an on-attack cooldown-reduction sentence, and an
+    evolution unlocking stealth/missile-speed prose — no damage, heal, or
+    shield attribute anywhere. Cross-checked against the game binary
+    (`data/gamefiles/characters/kaisa.bin.json` /
+    `data/bin/characters/kaisa.bin.json`, `KaisaEAbility`'s child spells
+    `KaisaEAttackSpeed`/`KaisaE`): no damage-calculation node exists for
+    E at all. Even if the attack-speed buff were wired in, the certified
+    rotation is a spell-only W -> Q sequence with no basic-attack
+    timeline — `UNSUPPORTED_FIGHT_MODE_REASON` already withholds
+    time-based mode precisely because Supercharge's AS window, its
+    on-attack cooldown refund, and Killer Instinct's attack reset are not
+    yet modeled on one shared attack clock — so an attack-speed steroid
+    has no attack stream to buff here. Reclassified to no_damage (an
+    atoms-confirmed zero-HP-number effect), not out_of_scope.
+  - R (Killer Instinct): the shield IS sourced (Shield Strength
+    100/150/200 + 90/135/180% total AD + 120% AP, 2s duration, refreshed
+    by a later Killer Instinct) — `data/champions.json` Kai'Sa R
+    effects[0]. Independently corroborated by the game binary's
+    `KaisaR` spell object: `RBaseValue` [.., 100, 150, 200, ..],
+    `RTotalADRatio` [.., 0.9, 1.35, 1.8, ..], `RAPRatio` 1.2 flat, and
+    `RShieldDuration` 2.0s flat reproduce the wiki numbers exactly (also
+    yielding Killer Instinct's mana cost, 100 flat, and its per-rank
+    cooldown, none of which are cached in the wiki JSON).
+    `support_effects.py` already carries a shield-duration atom query for
+    `("Kai'Sa", "R")`, but the generic ally-support shield scanner only
+    emits a packet for a slot present in the fight's cast_timeline, which
+    is built strictly from a champion module's own declared CAST_ORDER —
+    and Killer Instinct is deliberately absent from Kai'Sa's certified
+    CAST_ORDER (`("W", "Q")`). Wiring R in would require (a) a new SLOTS
+    entry, which adds a top-level "R" key to `parse_champion_abilities()`'s
+    output — captured verbatim by `scripts/golden_snapshot.py`'s
+    per-champion ability-baseline section — and (b) threading Killer
+    Instinct's sourced 100-mana cost into the resource ledger, which would
+    change this fight's resource_spent/resource_remaining. Both are
+    legitimate, but this session's gate is "golden compare identical, STOP
+    on diff" (scripts/ is out of scope this session too), so R stays
+    out_of_scope with this receipt for whichever session next owns a real
+    golden re-capture.
 """
 
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -234,6 +293,27 @@ def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: attack-speed steroid — documented zero-damage row (no_damage)."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Supercharge"),
+        reason=(
+            "Supercharge charges Kai'Sa up (ghosted, 55-150% bonus movement "
+            "speed by rank), then grants 40-80% bonus attack speed for 4 "
+            "seconds and refunds 0.5s of its own cooldown on-attack; the "
+            "cached entry carries no damage/heal/shield attribute at all "
+            "(data/champions.json Kai'Sa E), corroborated by the game "
+            "binary's KaisaEAbility child spells. The certified W -> Q "
+            "rotation has no basic-attack timeline for an attack-speed "
+            "steroid to buff, so this row is state, not a priced effect."
+        ),
+    )
+
+
 CAST_ORDER = ("W", "Q")
 SUPPORTED_FIGHT_MODES = ("one_rotation",)
 UNSUPPORTED_FIGHT_MODE_REASON = (
@@ -304,8 +384,15 @@ ASSUMPTIONS = [
     "Q/W evolutions follow permanent item stats and level growth automatically; "
     "the selector can reproduce a not-yet-evolved or forced test state",
     "W applies each Plasma stack successively; a fifth-stack rupture uses "
-    "health remaining after W and the preceding Caustic Wounds hit",
-    "E and R deal no enemy damage and are excluded; timed attacks are withheld",
+    "health remaining after W and the preceding Caustic Wounds hit "
+    "(Second Skin/Plasma is P; it rides Void Seeker and basic attacks and "
+    "has no standalone cast)",
+    "E (Supercharge) is an attack-speed steroid with no damage/heal/shield "
+    "attribute at all; it emits an explicit zero-damage state row "
+    "(no_damage) rather than staying silently absent",
+    "R (Killer Instinct)'s shield is sourced (100/150/200 + 90/135/180% "
+    "total AD + 120% AP) but not yet wired into CAST_ORDER or the resource "
+    "ledger, so it stays out_of_scope; timed attacks are withheld",
 ]
 
 SOURCES = [
@@ -341,13 +428,17 @@ SOURCES = [
     },
 ]
 
-SLOTS = {"W": _void_seeker, "Q": _icathian_rain}
+SLOTS = {"W": _void_seeker, "Q": _icathian_rain, "E": _supercharge}
 
 parse_abilities = build_parser(SLOTS, "Kai'Sa")
 
 
 # Authoritative review metadata (issue #161).
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "no_damage",
+    "R": "out_of_scope",
 }
 REVIEW_STATUS = "reviewed_module"

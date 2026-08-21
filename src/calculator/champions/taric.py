@@ -27,27 +27,136 @@ session — the label was simply stale:
     (support_effects.py; pinned in tests/test_e8_support.py's
     ``test_taric_cosmic_radiance_targets_the_caster_and_selected_ally``
     and tests/test_survival_kernel.py's delayed-ally-state cases).
-P (Bravado) stays out_of_scope and is NOT closed this session: the
-passive is a real, sourced number ("deal 25 : 101 (based on level) (+ 15%
-bonus armor) bonus magic damage on-attack" on Taric's next two basic
-attacks within 5 seconds of an ability cast, refreshing the window and
-regranting an attack on a further cast), but correctly attributing it
-needs the same live event-ordering/dedup decision as Milio P (Fired
-Up!): which of Taric's own casts consumes/refreshes the window, and
-whether back-to-back Q/W/E/R casts double/triple-count under the
-engine's existing ``empowers_next_auto`` mechanism (flat multiply by
-num_casts, no concept of a proc window being refreshed rather than
-stacked). That decision belongs to the rotation/cast-scheduling engine
-(damage.py), out of this session's ownership boundary; a static per-slot
-approximation here risked an overcounted number rather than a sourced
-one.
+Roadmap session 2 (2026-08-20): P (Bravado) is CLOSED — reclassified
+from out_of_scope to modeled.  Session 1 left it open on a named
+dependency ("needs proc-window dedup logic in damage.py"), because the
+engine's ``empowers_next_auto`` mechanism multiplies flatly by cast
+count and has no concept of a window being REFRESHED rather than
+stacked — four back-to-back Q/W/E/R casts would have booked eight
+empowered attacks instead of the sourced maximum of two.  That
+dependency now exists: ``damage.py``'s ``_empower_window_procs`` walks
+the accepted cast timeline against the fight's consuming actions and
+returns one timestamp per charge actually spent.  P declares the window
+below; every number in it is read from the cached wiki entry.
 """
 
-from .engine import build_parser
+import re
+from typing import Any
+
+from .engine import ONHIT, SlotCtx, build_parser
 from .packet_module import build_packet_module
-from .slotlib import with_control
+from .slotlib import find_named_leveling, on_hit_entry, sum_modifiers, with_control
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
+
+# Bravado's damage MAGNITUDE is structured data: the cached P entry's
+# "Per-Level Scaling" leveling row (25 : 101 across levels 1-20).  The
+# window's SHAPE — how many attacks one cast empowers, how long the
+# window lives, and the bonus-armor ratio — lives only in that entry's
+# description prose, so it is regex-read from the same cached string.
+# Every read below fails closed: a wiki rewrite that moves or renames a
+# term raises here naming the champion and the missing term, rather than
+# silently falling back to a stale literal.
+_BRAVADO_SCALING_ATTRIBUTE = "Per-Level Scaling"
+_BRAVADO_WINDOW_RE = re.compile(
+    r"empowers his next (?P<attacks>[a-z]+) basic attacks within "
+    r"(?P<seconds>\d+(?:\.\d+)?) seconds"
+)
+_BRAVADO_BONUS_ARMOR_RE = re.compile(r"\+\s*(?P<percent>\d+(?:\.\d+)?)%\s*bonus armor")
+# The description spells the empowered-attack count as an English word.
+_BRAVADO_ATTACK_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+# Every one of Taric's casts arms Bravado ("After casting an ability").
+# The ability-haste cooldown refund is limited to his BASIC abilities,
+# but the empowerment itself is not — R arms the window too.
+_BRAVADO_ARMED_BY = ("Q", "W", "E", "R")
+# Cached P note: "The first attack refreshes Bravado's duration."  Only
+# the charges the window actually holds can be spent, so refreshing on
+# every consume (rather than on the first alone) cannot add a proc.
+_BRAVADO_REFRESH_ON_CONSUME = True
+
+
+def _bravado_window_terms(ability: dict[str, Any]) -> tuple[int, float, float]:
+    """Read (empowered attacks, window seconds, bonus-armor ratio) from cache.
+
+    Raises:
+        ValueError: when the cached P description no longer declares the
+            window shape or the bonus-armor ratio.
+    """
+    for effect in ability.get("effects", []):
+        description = effect.get("description", "")
+        window = _BRAVADO_WINDOW_RE.search(description)
+        if window is None:
+            continue
+        word = window.group("attacks")
+        if word not in _BRAVADO_ATTACK_WORDS:
+            raise ValueError(
+                "Taric P (Bravado): the cached description empowers "
+                f"'{word}' basic attacks, which is not a known count"
+            )
+        armor = _BRAVADO_BONUS_ARMOR_RE.search(description)
+        if armor is None:
+            raise ValueError(
+                "Taric P (Bravado): the cached description carries no "
+                "'+ N% bonus armor' ratio for the on-attack damage"
+            )
+        return (
+            _BRAVADO_ATTACK_WORDS[word],
+            float(window.group("seconds")),
+            float(armor.group("percent")) / 100.0,
+        )
+    raise ValueError(
+        "Taric P (Bravado): no cached description declares the 'empowers "
+        "his next <N> basic attacks within <T> seconds' window"
+    )
+
+
+def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the sourced on-attack packet of a cast-armed, refreshing window.
+
+    ``empowers_next_auto`` cannot carry this passive — it multiplies
+    flatly by cast count, so a four-cast rotation would book eight
+    empowered attacks against a sourced maximum of two.  The entry
+    instead declares an ``empower_window``, which ``damage.py`` walks
+    against the accepted cast timeline and the fight's swings to spend
+    at most ``max_charges`` charges per live window.
+    """
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+    leveling = find_named_leveling(ability, _BRAVADO_SCALING_ATTRIBUTE)
+    if leveling is None:
+        raise ValueError(
+            "Taric P (Bravado): the cached P entry has no "
+            f"'{_BRAVADO_SCALING_ATTRIBUTE}' leveling row for its "
+            "on-attack bonus magic damage"
+        )
+    charges, duration, armor_ratio = _bravado_window_terms(ability)
+    base = sum_modifiers(leveling, ctx.level, ctx.stats, ctx.target)
+    # Bonus armor is a real build stat: 0.0 here means "this build holds
+    # no bonus armor", not "the source is missing" (the magnitude term
+    # above is the one that fails closed).  W's own 6-10% of Taric's
+    # armor grant is not applied to ``ctx.stats``, so this reads the
+    # build's item/rune bonus armor only — see ASSUMPTIONS.
+    per_hit = base + armor_ratio * ctx.stats.get("bonus_armor", 0.0)
+    entry = on_hit_entry(ability.get("name", "Bravado"), per_hit, "magic")
+    entry["on_hit"]["empower_window"] = {
+        "armed_by": _BRAVADO_ARMED_BY,
+        "duration": duration,
+        "charges_per_arm": charges,
+        "max_charges": charges,
+        "consumed_by": ("auto",),
+        "refresh_on_consume": _BRAVADO_REFRESH_ON_CONSUME,
+    }
+    entry["detail"] = (
+        f"Bravado: {base:g} (level {ctx.level}) + {armor_ratio * 100:g}% bonus "
+        f"armor per empowered attack; a cast arms up to {charges} charges for "
+        f"{duration:g}s and re-arming refreshes rather than stacks"
+    )
+    return entry
+
+
+_bravado.phase = ONHIT
+
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Taric", PACKET_SHA256
@@ -57,6 +166,7 @@ SLOTS["E"] = with_control(
     kind="stun",
     duration_attr="Stun Duration",
 )
+SLOTS["P"] = _bravado
 parse_abilities = build_parser(SLOTS, "Taric")
 PACKET_SPEC = SLOTS.packet_spec
 ASSUMPTIONS.append("E's sourced 1.5-second stun counts as target action downtime")
@@ -74,10 +184,32 @@ ASSUMPTIONS.extend(
         "R (Cosmic Radiance) grants the caster and every selected "
         "teammate invulnerability after the sourced 2.5s descent for the "
         "sourced 2.5s window (state packet).",
+        "P (Bravado) prices the sourced on-attack bonus magic damage "
+        "(25 : 101 based on level, the cached 'Per-Level Scaling' row, "
+        "+ 15% bonus armor read from the same description) once per "
+        "empowered attack the window actually grants.  A cast arms up to "
+        "two charges for 5 seconds and re-arming REFRESHES rather than "
+        "stacks, so a four-cast rotation still books at most two "
+        "empowered attacks; damage.py's empower-window walk spends the "
+        "charges against the accepted cast timeline and the fight's own "
+        "swings.  An attack that lands at the same instant as its arming "
+        "cast does not consume a charge (the named conservative "
+        "tie-break), so one-rotation fights, whose casts all collapse to "
+        "t=0, price the passive at or below its live value.",
+        "P (Bravado)'s two NON-damage effects are not modeled: the 100% "
+        "total attack speed on each empowered attack (it would change "
+        "the fight's swing count, which the auto-attack schedule owns) "
+        "and the 1 : 2 (based on ability haste) cooldown refund on "
+        "Taric's basic abilities.  Both are omissions, so the modeled "
+        "damage is a floor, never an overstatement.",
+        "P (Bravado)'s '+ 15% bonus armor' term reads the BUILD's bonus "
+        "armor.  W (Bastion)'s sourced 6-10% of Taric's armor passive "
+        "grant is not applied to ctx.stats by this module, so it does "
+        "not feed the passive; adding it belongs to W, not P.",
     ]
 )
 MODULE_COVERAGE = {
-    "P": "out_of_scope",
+    "P": "modeled",
     "Q": "modeled",
     "W": "modeled",
     "E": "modeled",

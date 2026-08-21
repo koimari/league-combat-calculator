@@ -13,6 +13,29 @@ Stack mechanics modeled (E3):
 
 Q (Flair), W (Blade Whirl) and E (Wild Rush) keep the reviewed CP10.7
 packet pricing. All numeric values are read from the champion JSON data.
+
+Roadmap session 2 (2026-08-20): Q, W, and E are reclassified from
+out_of_scope to modeled. This was a stale MODULE_COVERAGE label, not a
+missing mechanic — the E3-2 commit (b03bbad) that added the P Style
+system rewrote the coverage dict comprehension from
+``modeled if slot in {"Q","W","E","R"}`` to ``modeled if slot in
+{"P","R"}``, silently dropping Q/W/E out of the modeled set even though
+their SLOTS entries (``_BATCH_SLOTS["Q"]``/``["W"]``/``["E"]``) were
+untouched and still price real, sourced leveling rows:
+  - Q (Flair): "Physical Damage" 0/5/10/15/20 (+110% AD) — cached
+    champions.json leveling, unchanged since CP10.7 review.
+  - W (Blade Whirl): "Physical Damage per Hit" 20/35/50/65/80 (+50%
+    bonus AD) x2 slashes == "Total Physical Damage" 40/70/100/130/160
+    (+100% bonus AD); pinned by
+    tests/test_e2_dot_2.py::test_samira_blade_whirl_prices_two_slashes.
+  - E (Wild Rush): "Magic Damage" 50/60/70/80/90 (+20% bonus AD) plus
+    the sourced attack-speed buff — cached champions.json leveling,
+    already computed through the reviewed packet and untouched by this
+    session.
+No formula, SLOTS entry, or numeric value changed; this is a coverage-
+registry correction confirmed against data/champions.json and the
+existing E2/E3 test suite (tests/test_e2_dot_2.py,
+tests/test_e3_stacks_2.py).
 """
 
 from __future__ import annotations
@@ -171,6 +194,7 @@ ASSUMPTIONS = [
 
 SOURCES = load_champion_sources("Samira")
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "R"} else "out_of_scope") for slot in "PQWER"
+    slot: ("modeled" if slot in {"P", "Q", "W", "E", "R"} else "out_of_scope")
+    for slot in "PQWER"
 }
 REVIEW_STATUS = "reviewed_module"

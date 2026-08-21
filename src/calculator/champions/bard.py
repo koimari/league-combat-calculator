@@ -12,19 +12,31 @@ Why each slot is non-generic:
   right); pinned to the explicit attr so a JSON reshuffle can't move
   it. The slow/stun is CC with no damage component.
 - W (Caretaker's Shrine) is an ally-only heal/MS buff — its "Minimum
-  Heal"/"Maximum Heal" attributes are NOT damage; absent from the map.
-  E8d: the engine's ally-support scanner looks up ("Total Heal", "Heal",
-  "Heal Per Tick") only, so Bard's "Minimum Heal"/"Maximum Heal" rows are
-  not readable by the support path — the W ally heal is a documented missing
-  engine hook (support_effects heal-attribute lookup), not an emitted packet.
-- E (Magical Journey) is a one-way terrain portal, zero damage — absent.
-- R (Tempered Fate) is 2.5s stasis, zero damage (stasis prevents damage
-  during it) — absent; no zero-damage display row wanted.
+  Heal"/"Maximum Heal" attributes are NOT damage.  E8d: the engine's
+  ally-support scanner looks up ("Total Heal", "Heal", "Heal Per Tick")
+  only, so Bard's "Minimum Heal"/"Maximum Heal" rows are not readable by
+  the support path — the ally heal itself is a documented missing engine
+  hook (support_effects heal-attribute lookup); the slot emits an
+  explicit zero-damage state row instead of staying silently absent.
+- E (Magical Journey) is a one-way terrain portal: every effect row in
+  the cached JSON carries an empty ``leveling`` list and the ability has
+  no ``damageType`` — zero damage, confirmed against data/champions.json.
+- R (Tempered Fate) is 2.5s stasis; the cached notes are explicit —
+  "Tempered Fate deals 0 proc true damage" — atoms-confirmed zero
+  numeric combat effect, not merely an assumption.
+
+Roadmap session 2 (2026-08-20): W, E, and R are reclassified from
+out_of_scope to no_damage. All three carry zero sourced damage/heal-to-
+enemy numbers (confirmed against data/champions.json leveling arrays and
+the R ability's own wiki notes), so each now emits an explicit,
+user-visible zero-damage row via ``module_helpers.no_damage`` instead of
+staying silently absent from the parse output.
 """
 
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import ability_on_hit_entry, simple_damage, with_control
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
@@ -150,6 +162,62 @@ def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
 _travelers_call.phase = ONHIT
 
 
+def _caretakers_shrine(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: ally-only heal/MS buff — documented zero-damage row."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Caretaker's Shrine"),
+        reason=(
+            "Caretaker's Shrine heals Bard and the target ally (Minimum "
+            "Heal 25-125 + 40% AP scaling up to Maximum Heal 50-200 + 70% "
+            "AP over the healing window) and grants bonus movement speed; "
+            "no enemy-target damage row exists (data/champions.json Bard "
+            "W leveling carries only Minimum Heal / Maximum Heal / Bonus "
+            "Movement Speed). The ally heal itself is a documented missing "
+            "engine hook — the support scanner's heal-attribute lookup "
+            "does not read 'Minimum Heal'/'Maximum Heal'."
+        ),
+    )
+
+
+def _magical_journey(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: one-way terrain portal — documented zero-damage row."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Magical Journey"),
+        reason=(
+            "Magical Journey opens a one-way terrain portal; every effect "
+            "row in the cached entry carries empty leveling and the "
+            "ability has no damage type (data/champions.json Bard E). "
+            "Confirmed zero numeric combat effect."
+        ),
+    )
+
+
+def _tempered_fate(ctx: SlotCtx) -> dict[str, Any] | None:
+    """R: 2.5s stasis/stun — documented zero-damage row."""
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Tempered Fate"),
+        reason=(
+            "Tempered Fate puts struck units into 2.5s stasis and stuns "
+            "enemy champions/minions/turrets for the same duration; the "
+            "cached entry's own notes state Tempered Fate deals 0 proc "
+            "true damage (data/champions.json Bard R notes). "
+            "Atoms-confirmed zero numeric combat effect."
+        ),
+    )
+
+
 OPTIONS: list[dict[str, Any]] = [
     {
         "key": "chimes",
@@ -172,8 +240,9 @@ ASSUMPTIONS = [
     "single-target calculator; the splash never hits the primary target",
     "Q counted as a single hit on the primary target; the slow/stun is "
     "CC with no damage component",
-    "W (heal), E (portal), and R (stasis) deal no damage and are "
-    "excluded from the breakdown",
+    "W (heal), E (portal), and R (stasis) deal no enemy damage; each "
+    "emits an explicit zero-damage state row (no_damage) rather than "
+    "staying absent from the breakdown",
 ]
 
 SLOTS = {
@@ -183,6 +252,9 @@ SLOTS = {
         kind="stun",
         duration_attr="Disable Duration",
     ),
+    "W": _caretakers_shrine,
+    "E": _magical_journey,
+    "R": _tempered_fate,
 }
 
 parse_abilities = build_parser(SLOTS, "Bard")
@@ -198,6 +270,10 @@ SOURCES = [
     }
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "out_of_scope") for slot in "PQWER"
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "no_damage",
+    "R": "no_damage",
 }
 REVIEW_STATUS = "reviewed_module"

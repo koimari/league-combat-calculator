@@ -31,23 +31,58 @@ stale relative to the engine's ally-support/self-heal side channels:
   - R (Breath of Life): self_and_all_teammates heal authored below via
     ``derive_self_healing`` (Milio is in support_effects.py's
     ``_MODULE_AUTHORED_HEAL_SLOTS`` so the scanner correctly defers).
-P (Fired Up!) stays out_of_scope and is NOT closed this session: the
-enchant it grants ("Milio's ability hits on himself and allied champions
-grant an enchantment for 4 seconds, which causes the NEXT basic attack OR
-ability hit against enemies to deal bonus magic damage") is a real,
-sourced number (7/11/15% of the enchanted target's bonus AD + a 10-101
-per-level burn), but correctly attributing it needs to know, at the
-moment each of Milio's W/E/R casts lands on himself, which action (an
-auto attack or one of his OWN next ability casts) consumes the window —
-and whether overlapping windows from back-to-back W/E/R casts refresh a
-single consumable proc or would double/triple-count under the engine's
-existing ``empowers_next_auto`` mechanism (which multiplies flatly by
-num_casts and has no concept of one proc window being refreshed rather
-than stacked by a second trigger inside the same fight). That live
-event-ordering/dedup decision belongs to the rotation/cast-scheduling
-engine (damage.py), which is out of this session's ownership boundary;
-attempting a static per-slot approximation here risked inventing an
-overcounted number rather than sourcing a correct one.
+Roadmap session 2 (2026-08-20): P (Fired Up!) stays out_of_scope, but
+the reason has CHANGED and the old one must not be reused.
+
+Session 1 blocked P on a named ENGINE dependency: ``empowers_next_auto``
+multiplies flatly by cast count and has no concept of a proc window
+being refreshed rather than stacked, so back-to-back W/E/R casts would
+have double/triple-counted a buff the cached notes say is only
+refreshed.  **That dependency is now satisfied** — session 2 built
+``damage.py``'s ``_empower_window_procs``, which walks the accepted cast
+timeline against the fight's consuming actions and returns one timestamp
+per charge actually spent (``consumed_by`` already accepts both ``auto``
+and ``ability_hit``, which is exactly Fired Up!'s "next basic attack OR
+ability hit").  Taric P rides it this session.  A future session must
+therefore NOT re-open P expecting the dedup to be the blocker.
+
+P is blocked instead on the SOURCE DATA, on three independent counts
+(each verified against every cached artifact — the wiki entry's
+description and ``leveling`` rows in data/champions.json, the game-file
+atoms in data/atoms/v2/milio.atoms.v2.json, and data/gamefiles/ddragon/
+Milio.json):
+
+1. **The burst has no priceable magnitude.**  The burst is "7% / 11% /
+   15% (based on level) of enchanted target's AD".  Those three values
+   exist ONLY as prose: the cached P entry carries no ``leveling`` row
+   for them, the atoms' ``ratios`` map is empty and their
+   ``effect_amounts`` hold only the burn's BaseDamageStart/End (10/50),
+   and ddragon's passive text is a numberless blurb.  Critically, no
+   cached source states WHICH levels map to 7 / 11 / 15 — a three-value
+   "(based on level)" bracket with no breakpoints cannot be evaluated at
+   a level without inventing the schedule.  Contrast the burn, whose
+   "(based on level)" DID parse into a per-level array, and Taric P,
+   whose "25 : 101" parsed into a 20-entry ramp.
+2. **The burst's scaling stat belongs to another champion.**  It reads
+   the *enchanted target's* AD, and the cached notes tag it as proc
+   damage "when the damage is triggered by allies".  The engine models a
+   single attacker, so the ally-carried case — which is the entire point
+   of an enchanter passive — has no attacker whose AD could source it.
+3. **W's arming cadence is not the cast timeline.**  ``_empower_window_
+   procs`` resolves ``armed_by`` slots to their CAST times.  W (Cozy
+   Campfire) does not arm once at the cast: the hearth "applies Fired
+   Up! every 3 seconds" over its 6s duration (ddragon tooltip's
+   ``healfrequencyseconds``, atom ``HealFrequencySeconds`` = 3.0), and
+   the W atom's ``reset_on`` reads "Fired Up! at most once every 3s".
+   The primitive has no term for a repeating in-duration arm, so an
+   ``armed_by=("W", ...)`` declaration would silently UNDERCOUNT W's
+   arms.
+
+So a "closed" P would have to invent the level breakpoints (1), stand in
+someone else's AD (2), and mis-time W's arms (3).  All three fail closed
+here rather than shipping a number; the blocker is pinned by
+tests/test_milio_fired_up_blocker.py, which fails the moment any cached
+source starts publishing the missing terms.
 """
 
 from .packet_module import _rank_gated_no_damage, build_packet_module
@@ -80,6 +115,27 @@ ASSUMPTIONS = [
     "Milio and every selected teammate the sourced Heal (150-350 + 50% "
     "AP) via the E1-rule fan-out; the 65% tenacity and cleanse are "
     "utility state.",
+    "P (Fired Up!) is documented-only and stays out_of_scope: its burst "
+    "(7% / 11% / 15% (based on level) of the enchanted target's AD) has "
+    "no priceable magnitude in ANY cached source -- no leveling row in "
+    "data/champions.json, an empty ratios map in the game-file atoms, a "
+    "numberless ddragon blurb -- and no source states which levels map "
+    "to 7 / 11 / 15, so the three-value bracket cannot be evaluated at a "
+    "level without inventing the breakpoints. It fails closed instead.",
+    "P (Fired Up!)'s burst scales with the ENCHANTED TARGET's AD and is "
+    "tagged proc damage when an ally triggers it (cached P notes). This "
+    "engine models a single attacker, so the ally-carried case has no "
+    "attacker whose AD could source the term; only Milio's own "
+    "self-enchant would ever be expressible, which is a fraction of the "
+    "sourced effect and is withheld rather than reported as the whole.",
+    "P (Fired Up!)'s window is NOT blocked on proc-window dedup any "
+    "more -- damage.py's _empower_window_procs (built for Taric P) "
+    "already expresses 'refresh, do not stack' and already accepts both "
+    "auto and ability_hit consumers. It is blocked on W's arming "
+    "CADENCE: the hearth applies Fired Up! every 3 seconds over its 6s "
+    "duration (ddragon healfrequencyseconds, atom HealFrequencySeconds "
+    "= 3.0), while the primitive resolves armed_by slots to cast times "
+    "only, so declaring W as an arming slot would undercount its arms.",
 ]
 PACKET_SPEC = SLOTS.packet_spec
 MODULE_COVERAGE = {
