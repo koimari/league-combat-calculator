@@ -45,25 +45,26 @@ class TestReviewedCrowdControl:
 
 
 class TestCoverageMap:
-    """Stone Skin damages nobody; the clone's damage needs an axis we lack.
+    """Stone Skin is a stat grant the survival side reads; the clone needs an axis.
 
-    Derivation alone called P ``modeled`` because it emits a row — a
-    ``stat_buff`` of bonus armor with a zero damage part.  W is the real
-    gap and the missing axis is a pet timeline: the cached "Clone Outgoing
+    P emits a ``stat_buff`` of bonus armor with a zero damage part — a
+    priced row under the campaign's vocabulary (a state row the engine
+    consumes), so the derivation from ``SLOTS`` is the map and no map is
+    declared.  W is the real gap and the missing axis is a pet timeline: the cached "Clone Outgoing
     Damage" row (40/45/50/55/60%) scales a *second attacker's* autos and
     copied casts, and the engine prices one attacker's timeline.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
         assert get_champion_module_contract("Wukong").coverage == {
-            "P": "no_damage",
+            "P": "modeled",
             "Q": "modeled",
             "W": "out_of_scope",
             "E": "modeled",
             "R": "modeled",
         }
         assert coverage_truth.emitted("Wukong") == {
-            "P": coverage_truth.ZERO,
+            "P": coverage_truth.PRICED,
             "Q": coverage_truth.PRICED,
             "W": coverage_truth.ABSENT,
             "E": coverage_truth.PRICED,

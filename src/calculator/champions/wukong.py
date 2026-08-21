@@ -13,8 +13,8 @@ Why the Q slot is non-generic:
   armor scalar like every other post-Q hit.
 
 Coverage:
-- P (Stone Skin) is ``no_damage``: bonus armor and health regeneration,
-  emitted as a ``stat_buff`` row so the rest of the fight reads it.
+- P (Stone Skin) is ``modeled``: the bonus armor is a ``stat_buff`` row the
+  holder's survival side reads; the health regeneration is not priced.
 - W (Warrior Trickster) is ``out_of_scope``, and the missing axis is a
   pet timeline.  The clone's damage is not a W row at all: it basic
   attacks autonomously for 4 seconds, takes Crushing Blow and Nimbus
@@ -154,13 +154,6 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "knockup"}
 
 parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "out_of_scope",
-    "E": "modeled",
-    "R": "modeled",
-}
 
 OPTIONS = [
     {
