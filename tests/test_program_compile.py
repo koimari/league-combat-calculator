@@ -27,7 +27,9 @@ from src.calculator.program.build import (
     Program,
     Projection,
     build_program,
+    pair_preview_mechanics,
     pair_program,
+    walk_repriced_mechanics,
 )
 from src.calculator.program.identity import EventId, PairOrigin, event_id_text
 from src.calculator.survival import compile as survival_compile
@@ -546,6 +548,126 @@ class TestTheCompilerStagesAControlRow:
         del row["sequence"]
         with pytest.raises(ValueError, match="has no sequence"):
             compile_result(engine_result(control_events=[row]))
+
+
+class TestTheReceiptProjection:
+    """``pair_view`` — the same compile, one representation over.
+
+    Every field on an enriched event is a value the compiler decided for the
+    action beside it.  What the receipt projection does *not* owe is the
+    score walk's own bookkeeping: it stages no actions, it refuses no
+    transition the receipt walk can stage, and it deduplicates no actor-wide
+    heal (the composition owns that, over the copies published here).
+    """
+
+    def test_an_enriched_event_names_both_ends_of_the_pair(self) -> None:
+        view = program_compile.pair_view(engine_result(), "enemy:Veigar", "main")
+        assert [
+            (event["attacker"], event["target"], event["_event_id"])
+            for event in view.events
+        ] == [
+            ("enemy:Veigar", "main", "enemy:Veigar:main:0"),
+            ("enemy:Veigar", "main", "enemy:Veigar:main:1"),
+        ]
+
+    def test_the_enriched_event_carries_the_compilers_own_facts(self) -> None:
+        view = program_compile.pair_view(engine_result(), "enemy:Veigar", "main")
+        actions = compile_result(engine_result())
+        for event, action in zip(view.events, actions):
+            assert event["is_ability"] is action.is_ability
+            assert event["ability_instance"] == action.ability_instance
+            assert event["_sk"] == action.sort_key
+
+    def test_a_field_the_fight_did_not_produce_stays_absent(self) -> None:
+        """Absent is "nobody declared one"; present-and-zero is a measurement."""
+        view = program_compile.pair_view(engine_result(), "enemy:Veigar", "main")
+        cast = view.events[0]
+        assert "basic_attack" not in cast
+        assert "_live_amp" not in cast
+        assert "_declared" not in cast
+        assert "grievous_duration" not in cast
+
+    def test_it_publishes_every_actor_wide_copy(self) -> None:
+        """The composition dedups; the projection reports."""
+        result = engine_result(
+            self_healing_events=[
+                {
+                    "time": 3.0,
+                    "sequence": 5,
+                    "amount": 120.0,
+                    "actor_wide": True,
+                    "source": "Maximum Dosage",
+                    "source_key": "P",
+                }
+            ]
+        )
+        for defender in ("main", "ally:Pantheon"):
+            view = program_compile.pair_view(result, "enemy:Mundo", defender)
+            assert len(view.heals) == 1
+
+    def test_it_stages_a_transition_the_score_kernel_refuses(self) -> None:
+        """The receipt walk is the fallback; it may not refuse what it stages."""
+        result = engine_result(
+            damage_events=[
+                {
+                    "time": 1.0,
+                    "sequence": 0,
+                    "source_key": "Q",
+                    "damage_type": "magic",
+                    "damage": 50.0,
+                    "execute_threshold_ratio": 0.2,
+                    "execute_source": "Chemtech Putrifier",
+                }
+            ]
+        )
+        with pytest.raises(survival_compile.UncompilableActionError):
+            compile_result(result)
+        view = program_compile.pair_view(result, "enemy:Veigar", "main")
+        assert len(view.events) == 1
+
+    def test_the_composed_result_has_the_previews_removed(self) -> None:
+        """A ``THEORETICAL`` row is a preview of a number the walk owns.
+
+        It stays on the engine's own result, where it is the honest
+        single-attacker answer; it leaves the one the roster composes, or the
+        walk's number and a preview of it would be in one total.
+        """
+        dropped = sorted(pair_preview_mechanics() - walk_repriced_mechanics())
+        assert dropped, "the registry declares no dropped pair preview"
+        result = engine_result(
+            total_damage=140.0,
+            breakdown={
+                "Q": {"total_damage": 100.0},
+                "preview_row": {"total_damage": 40.0, "pair_preview_of": dropped[0]},
+            },
+            damage_events=[
+                {
+                    "time": 1.0,
+                    "sequence": 0,
+                    "source_key": "Q",
+                    "damage_type": "magic",
+                    "damage": 100.0,
+                },
+                {
+                    "time": 2.0,
+                    "sequence": 1,
+                    "source_key": "preview_row",
+                    "damage_type": "magic",
+                    "damage": 40.0,
+                },
+            ],
+        )
+        view = program_compile.pair_view(result, "enemy:Veigar", "main")
+        assert view.result["total_damage"] == 100.0
+        assert set(view.result["breakdown"]) == {"Q"}
+        assert set(view.source_names) == {"Q"}
+        assert [event["source_key"] for event in view.events] == ["Q"]
+        assert result["total_damage"] == 140.0
+
+    def test_a_light_ledger_has_no_receipt_projection(self) -> None:
+        result = engine_result(damage_events_tuple=True, damage_events=[])
+        with pytest.raises(ValueError, match="receipt projection"):
+            program_compile.pair_view(result, "enemy:Veigar", "main")
 
 
 class TestTheActorWideHealSkip:

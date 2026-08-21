@@ -121,6 +121,174 @@ _DAMAGE_ACTION_KINDS = frozenset(
 )
 
 
+class PairView:
+    """One pair fight as the roster composition reads it.
+
+    The receipt projection of the same compile the score panels take: every
+    field on an enriched event is a value :meth:`WalkCompiler.add_engine_result`
+    already decided for the action beside it, so the two representations of
+    one fight cannot drift.
+
+    ``result`` is the fight as the roster composes it — pair previews
+    removed, because a row the registry declares ``THEORETICAL`` is a preview
+    of a number the coupled walk owns and the two must never be in one total.
+    The engine's own result stays untouched: that is what the per-pair
+    ``fights`` receipt publishes, and there the preview *is* the answer.
+
+    ``support`` and ``support_denials`` are the attacker's resolved support
+    templates, memoized by the composition on first use; a cached fight
+    serves them to every later evaluation.
+    """
+
+    __slots__ = (
+        "result",
+        "events",
+        "heals",
+        "source_names",
+        "support",
+        "support_denials",
+        # The event-id string of each compiled damage action, so a self-heal
+        # can publish the id of the hit that caused it.  The compiler already
+        # resolved that link by action index; this is the same link one
+        # representation over.
+        "event_id_by_aidx",
+    )
+
+    def __init__(self, result: Mapping[str, Any]) -> None:
+        self.result: Mapping[str, Any] = result
+        self.events: list[dict[str, Any]] = []
+        self.heals: list[dict[str, Any]] = []
+        self.source_names: dict[str, dict[str, Any]] = {}
+        self.support: Any = None
+        self.support_denials: Any = None
+        self.event_id_by_aidx: dict[int, str] = {}
+
+
+def _enriched_damage_event(  # pylint: disable=too-many-arguments
+    row: Mapping[str, Any],
+    attacker_id: str,
+    defender_id: str,
+    event_id: str,
+    is_ability: bool,
+    ability_instance: Any,
+    basic_attack: bool,
+    wound: tuple[float, str] | None,
+    time_value: float,
+    source_row: Any,
+    baseline_fields: Mapping[str, float],
+    live_amp: Any,
+    declared: Any,
+    sort_key: tuple[Any, ...],
+) -> dict[str, Any]:
+    """One compiled damage row, as the receipt composition reads it.
+
+    Every argument past the row is a value the compiler already decided for
+    the action beside this dict; nothing here re-derives one.  A field the
+    fight did not produce stays *absent* rather than present-and-neutral —
+    the walk tells "nobody declared one" from "one measured zero".
+    """
+    enriched = {
+        **row,
+        "attacker": attacker_id,
+        "target": defender_id,
+        "_event_id": event_id,
+        "is_ability": is_ability,
+        "ability_instance": ability_instance,
+    }
+    if basic_attack:
+        enriched["basic_attack"] = True
+    if wound is not None:
+        # When the window closes is the annotator's answer, not the receipt
+        # view's: the two other sites that arm a wound already write it here,
+        # and the view computing it for the third was the one place a
+        # published timestamp had two producers.
+        enriched["grievous_duration"] = wound[0]
+        enriched["_wound_source"] = wound[1]
+        enriched["_wound_until"] = time_value + wound[0]
+    # Multi-target rows are authored on the engine breakdown.  Carry the same
+    # target-allocation receipt onto each ordered packet so the coupled
+    # timeline can prove which roster slot received it instead of displaying
+    # an unexplained aggregate secondary hit.
+    if isinstance(source_row, Mapping) and isinstance(
+        source_row.get("targeting"), Mapping
+    ):
+        enriched["targeting"] = dict(source_row["targeting"])
+    enriched.update(baseline_fields)
+    if live_amp is not None:
+        enriched["_live_amp"] = live_amp
+    if declared is not None:
+        enriched["_declared"] = declared
+    enriched["_sk"] = sort_key
+    return enriched
+
+
+def _without_pair_previews(
+    result: Mapping[str, Any],
+    result_breakdown: Mapping[str, Any],
+    previewed: frozenset[str],
+) -> Mapping[str, Any]:
+    """The pair result as the roster composes it — previews removed.
+
+    A shallow copy, and only when there is something to remove: the original
+    object is what the per-pair ``fights`` receipt publishes, and that is the
+    one surface where the preview *is* the answer.  Returning a modified copy
+    rather than mutating is what keeps those two readings from becoming one.
+    """
+    if not previewed:
+        return result
+    removed = sum(
+        float(result_breakdown[source].get("total_damage", 0.0) or 0.0)
+        for source in previewed
+    )
+    return {
+        **result,
+        "total_damage": float(result.get("total_damage", 0.0)) - removed,
+        "breakdown": {
+            source: entry
+            for source, entry in result_breakdown.items()
+            if source not in previewed
+        },
+    }
+
+
+def pair_view(
+    result: Mapping[str, Any],
+    attacker_id: str,
+    defender_id: str,
+    defender_index: int = 0,
+    *,
+    champion_wounds: Mapping[str, Any] | None = None,
+    live_amps: Sequence[LiveAmpRider] = (),
+    holder_amps: Any = None,
+) -> PairView:
+    """One pair fight's receipt view, through the one packet compiler.
+
+    The walk's own bookkeeping arguments are neutral here and named in one
+    place for that reason: the receipt projection stages no actions, so it
+    has no roster slots to file them under, no fight window to bound them by
+    and no cross-fight heal dedup to replay.  The composition owns that
+    dedup itself, over the copies this view publishes.
+    """
+    view = PairView(result)
+    WalkCompiler(0).add_engine_result(
+        result,
+        attacker_id,
+        -1,
+        defender_id,
+        -1,
+        {},
+        0.0,
+        {},
+        [],
+        defender_index,
+        champion_wounds=champion_wounds,
+        live_amps=live_amps,
+        holder_amps=holder_amps,
+        view=view,
+    )
+    return view
+
+
 _CAST_SLOTS = frozenset({"Q", "W", "E", "R"})
 
 
@@ -664,6 +832,7 @@ class WalkCompiler:
         live_amps: Sequence[LiveAmpRider] = (),
         holder_amps: Any = None,
         suppress_actor_wide_heals: bool = False,
+        view: "PairView | None" = None,
     ) -> None:
         """Compile one pair fight from the engine's own rows.
 
@@ -703,6 +872,17 @@ class WalkCompiler:
         and the ally-pair copies are skipped here — the engine may price them
         differently per defender (issue #169, Dr. Mundo's Maximum Dosage).
         Trigger-linked actor-wide heals still fail closed before the skip.
+
+        ``view`` selects the **receipt projection** (:class:`~.build.Projection`
+        ``RECEIPT``): the per-event dict enrichment the roster composition
+        reads, built from the same locals the action beside it is built from.
+        Three things the score walk owes are not the receipt's: the
+        fail-closed refusal of a transition *the score kernel* cannot stage
+        (the receipt walk stages every one of them, which is what the
+        fallback is), the cross-fight actor-wide heal dedup (the composition
+        owns its own, over the copies published here), and the actions
+        themselves — nobody reads them, and building them would make the
+        receipt path pay for the score path's representation.
         """
         result_breakdown = result.get("breakdown") or {}
         previewed = pair_preview_sources(result_breakdown)
@@ -719,6 +899,25 @@ class WalkCompiler:
                 "without the holder's own amplifiers would silently drop a "
                 "term the pair engine applied"
             )
+        staging = view is None
+        if not staging:
+            view.result = _without_pair_previews(result, result_breakdown, previewed)
+            # Display-name rows for the attacker breakdown; never mutated (the
+            # post-survival pass rebuilds source rows wholesale), so a cached
+            # fight shares them across evaluations as-is.
+            view.source_names = {
+                source: {
+                    "name": entry.get("name", source),
+                    "total_damage": 0.0,
+                    **(
+                        {"targeting": dict(entry["targeting"])}
+                        if isinstance(entry.get("targeting"), Mapping)
+                        else {}
+                    ),
+                }
+                for source, entry in result_breakdown.items()
+                if isinstance(entry, Mapping) and source not in dropped
+            }
         order_a, order_b = participant_order(attacker_id)
         # The event-id *string* stays in the sort key (position 6) and the
         # action carries only its slot, so the loop below interns once per
@@ -798,6 +997,15 @@ class WalkCompiler:
                 f"{len(heals)} self-heal(s); the light row shape carries no "
                 "field the heal linkage reads, so those heals would compile "
                 "to nothing"
+            )
+        if light and not staging:
+            # The light shape exists because a score-only request proved
+            # nothing reads the per-event view.  Enriching one would publish
+            # a receipt of fields the rows do not carry.
+            raise ValueError(
+                f"{attacker_id} published a tuple damage ledger and was asked "
+                "for the receipt projection; the light row shape carries none "
+                "of the fields an enriched event publishes"
             )
         # The trigger-linkage index costs a key tuple per damage event, so
         # a fight with no self-heals (most candidates, and every light
@@ -910,9 +1118,9 @@ class WalkCompiler:
                 raw_formula if callable(raw_formula) and raw_damage > 0 else None
             )
             grievous = grievous_by_dtype.get(damage_type)
-            if not light:
-                # Issue #137: fail closed on damage transitions the score
-                # kernel cannot stage (execute thresholds, redirects,
+            if staging and not light:
+                # Issue #137: fail closed on damage transitions *the score
+                # kernel* cannot stage (execute thresholds, redirects,
                 # deferred batches, stack self-shields) instead of silently
                 # erasing them.  A light row cannot answer the question —
                 # the fields the check reads are the enrichment it omits —
@@ -930,69 +1138,93 @@ class WalkCompiler:
                 if champion_wounds
                 else None
             )
-            actions_append(
-                compiled_damage_action(
-                    (
+            live_amp = live_amp_for(live_amps, damage_type)
+            declared = (
+                declared_packet_of(declaration, damage_type, source_key, holder_amps)
+                if source_key in repriced
+                else None
+            )
+            sort_key = (
+                time_value,
+                damage_phase,
+                sequence,
+                order_a,
+                order_b,
+                defender_id,
+                event_id,
+                source,
+            )
+            if staging:
+                actions_append(
+                    compiled_damage_action(
+                        sort_key,
                         time_value,
-                        damage_phase,
+                        (
+                            ActionKind.PLAIN_DAMAGE
+                            if live_formula is None
+                            and grievous is None
+                            and wound is None
+                            else ActionKind.DAMAGE
+                        ),
+                        defender_i,
+                        attacker_i,
+                        aidx,
+                        damage,
+                        damage_type,
+                        live_formula,
+                        raw_damage,
+                        grievous,
+                        wound,
+                        source_key,
+                        source,
+                        slot_of(event_id),
                         sequence,
-                        order_a,
-                        order_b,
+                        live_amp,
+                        declared,
+                        is_ability,
+                        basic_attack,
+                        baseline_armor,
+                        baseline_mr,
+                        immobilized,
+                        cc_kind,
+                        cc_duration,
+                        skillshot,
+                        damage_over_time,
+                        area_damage,
+                        ability_instance,
+                    )
+                )
+                if time_value <= duration:
+                    order_append((aidx, time_value))
+                # A light ledger omits per-event metadata, so ``basic_attack``
+                # is False for it and only its explicit auto stream triggers
+                # Thorns — the same sentence the two loops used to say twice.
+                if source_key == "auto_attacks" or basic_attack:
+                    strikes_append((aidx, time_value, sequence, attacker_i))
+            else:
+                view.events.append(
+                    _enriched_damage_event(
+                        row,
+                        attacker_id,
                         defender_id,
                         event_id,
-                        source,
-                    ),
-                    time_value,
-                    (
-                        ActionKind.PLAIN_DAMAGE
-                        if live_formula is None and grievous is None and wound is None
-                        else ActionKind.DAMAGE
-                    ),
-                    defender_i,
-                    attacker_i,
-                    aidx,
-                    damage,
-                    damage_type,
-                    live_formula,
-                    raw_damage,
-                    grievous,
-                    wound,
-                    source_key,
-                    source,
-                    slot_of(event_id),
-                    sequence,
-                    live_amp_for(live_amps, damage_type),
-                    (
-                        declared_packet_of(
-                            declaration, damage_type, source_key, holder_amps
-                        )
-                        if source_key in repriced
-                        else None
-                    ),
-                    is_ability,
-                    basic_attack,
-                    baseline_armor,
-                    baseline_mr,
-                    immobilized,
-                    cc_kind,
-                    cc_duration,
-                    skillshot,
-                    damage_over_time,
-                    area_damage,
-                    ability_instance,
+                        is_ability,
+                        ability_instance,
+                        basic_attack,
+                        wound,
+                        time_value,
+                        result_breakdown.get(source_key),
+                        baseline_fields,
+                        live_amp,
+                        declared,
+                        sort_key,
+                    )
                 )
-            )
-            if time_value <= duration:
-                order_append((aidx, time_value))
+                view.event_id_by_aidx[aidx] = event_id
             if aidx_by_key is not None:
                 time_key = trigger_time_key(time_value)
                 aidx_by_key[(source_key, time_key, sequence)] = aidx
                 aidx_by_source_time[(source_key, time_key)].append(aidx)
-            # A light ledger omits per-event metadata, so ``basic_attack`` is
-            # False for it and only its explicit auto stream triggers Thorns
-            # — the same sentence the two loops used to say twice.
-            if source_key == "auto_attacks" or basic_attack:
-                strikes_append((aidx, time_value, sequence, attacker_i))
             aidx += 1
         # Standalone crowd-control intervals.  The engine publishes each
         # control application as its own row, and the receipt adapter stages
@@ -1013,15 +1245,6 @@ class WalkCompiler:
                     f"{raw_event.get('source_key', '')!r} has no sequence; the "
                     "walk's tie-break order would depend on event-id numbering"
                 )
-            event = {
-                **raw_event,
-                "attacker": attacker_id,
-                "target": defender_id,
-                "_event_id": f"{attacker_id}:{defender_id}:control:{control_index}",
-                # A control packet is a cast landing, whatever the row says.
-                "is_ability": True,
-                **baseline_fields,
-            }
             # Cast grouping: the cast id IS ``slot:ordinal``, which is exactly
             # what :func:`ability_instance_for_event` derives from the cast
             # timeline, so one blocked cast costs one spell-shield use however
@@ -1029,10 +1252,18 @@ class WalkCompiler:
             instance = (
                 raw_event.get("application_id")
                 or raw_event.get("cast_id")
-                or ability_instance_for_event(event, cast_timeline)
+                or ability_instance_for_event(raw_event, cast_timeline)
             )
-            if instance is not None:
-                event["ability_instance"] = instance
+            event = {
+                **raw_event,
+                "attacker": attacker_id,
+                "target": defender_id,
+                "_event_id": f"{attacker_id}:{defender_id}:control:{control_index}",
+                # A control packet is a cast landing, whatever the row says.
+                "is_ability": True,
+                "ability_instance": instance,
+                **baseline_fields,
+            }
             time_value = float(event.get("time", 0.0))
             event["_sk"] = (
                 time_value,
@@ -1044,31 +1275,41 @@ class WalkCompiler:
                 event["_event_id"],
                 str(event.get("source", event.get("source_key", ""))),
             )
-            actions_append(
-                action_from_event(
-                    event,
-                    TransitionRank.DEBUFF_ARM,
-                    defender_i,
-                    {attacker_id: attacker_i},
-                    subject_id=defender_id,
-                    aidx=aidx,
+            if staging:
+                actions_append(
+                    action_from_event(
+                        event,
+                        TransitionRank.DEBUFF_ARM,
+                        defender_i,
+                        {attacker_id: attacker_i},
+                        subject_id=defender_id,
+                        aidx=aidx,
+                    )
                 )
-            )
-            if time_value <= duration:
-                order_append((aidx, time_value))
+                if time_value <= duration:
+                    order_append((aidx, time_value))
+            else:
+                # The dict the action would have been built from *is* the
+                # receipt's enriched control event; there is nothing to
+                # project because the two representations start as one.
+                view.events.append(event)
             aidx += 1
         self.unclassified_delivery = self.unclassified_delivery or light
         self.next_aidx = aidx
         for heal_index, event in enumerate(heals):
-            # Issue #137: fail closed on any heal transition the score
-            # kernel cannot stage (Severum overheal-to-shield, vamp source
-            # categories, live gates) instead of silently erasing it.
-            heal_receipt = unrepresentable_heal_receipt(event)
-            if heal_receipt is not None:
-                raise UncompilableActionError(
-                    receipt=heal_receipt,
-                    source=str(event.get("source", event.get("source_key", "heal"))),
-                )
+            if staging:
+                # Issue #137: fail closed on any heal transition *the score
+                # kernel* cannot stage (Severum overheal-to-shield, vamp
+                # source categories, live gates) instead of silently erasing
+                # it.  The receipt walk stages all three.
+                heal_receipt = unrepresentable_heal_receipt(event)
+                if heal_receipt is not None:
+                    raise UncompilableActionError(
+                        receipt=heal_receipt,
+                        source=str(
+                            event.get("source", event.get("source_key", "heal"))
+                        ),
+                    )
             trigger = aidx_by_key.get(heal_trigger_key(event), -1)
             if trigger < 0:
                 candidates = aidx_by_source_time.get(
@@ -1080,7 +1321,10 @@ class WalkCompiler:
                 )
                 if len(candidates) == 1:
                     trigger = candidates[0]
-            if event.get("actor_wide"):
+            if staging and event.get("actor_wide"):
+                # The cross-fight dedup is the *score walk's* replay of the
+                # composition's keep-first rule.  The receipt projection
+                # publishes every copy and the composition dedups its own.
                 if "_trigger_source" in event:
                     # The dedup below keeps the copy that compiled first; a
                     # trigger link would make the copies pair-dependent, so
@@ -1124,18 +1368,40 @@ class WalkCompiler:
             # ``_source_event_id`` at the applied self copy (issue #143).
             raw_heal_id = event.get("_event_id") or (f"{attacker_id}:heal:{heal_index}")
             heal_event_id = f"{raw_heal_id}:{defender_id}"
+            heal_sort_key = (
+                time_value,
+                ordering_slot(TransitionRank.RECOVERY),
+                event_sequence(event),
+                order_a,
+                order_b,
+                attacker_id,
+                heal_event_id,
+                str(event.get("source", event.get("source_key", ""))),
+            )
+            if not staging:
+                enriched_heal = {
+                    **event,
+                    "attacker": attacker_id,
+                    "_event_id": heal_event_id,
+                }
+                if defender_index > 0 and later_amount is not None:
+                    enriched_heal["amount"] = amount
+                trigger_id = view.event_id_by_aidx.get(trigger)
+                if trigger_id is not None:
+                    enriched_heal["_trigger_event_id"] = trigger_id
+                # A triggered self-heal is authored by this attacker/defender
+                # pair.  The heal's ``attacker`` is its recipient, so name the
+                # target that generated the life-steal/on-hit packet
+                # explicitly.  Actor-wide regeneration carries no trigger and
+                # gets none: its copies are deduplicated across pair fights.
+                if "_trigger_source" in event:
+                    enriched_heal["trigger_target"] = defender_id
+                enriched_heal["_sk"] = heal_sort_key
+                view.heals.append(enriched_heal)
+                continue
             actions_append(
                 SurvivalAction(
-                    sort_key=(
-                        time_value,
-                        ordering_slot(TransitionRank.RECOVERY),
-                        event_sequence(event),
-                        order_a,
-                        order_b,
-                        attacker_id,
-                        heal_event_id,
-                        str(event.get("source", event.get("source_key", ""))),
-                    ),
+                    sort_key=heal_sort_key,
                     time=time_value,
                     phase=TransitionRank.RECOVERY,
                     kind=ActionKind.HEAL,
@@ -2039,13 +2305,17 @@ def compile_program(
 
 
 __all__ = [
+    "PairView",
     "ProgramKey",
     "WalkCompiler",
+    "ability_instance_for_event",
     "action_from_event",
     "compile_program",
     "grey_health_heal_action",
+    "is_authored_ability_event",
     "modifier_delivery_receipt",
     "pair_resistance_baselines",
+    "pair_view",
     "program_key",
     "revive_candidate_actions",
 ]
