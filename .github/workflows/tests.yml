@@ -110,9 +110,13 @@ jobs:
   coverage-census:
     # Every champion x fight mode, legally slotted item, keystone, and
     # certified-item x enemy cell through the real payload boundaries; the
-    # committed receipt must reproduce.  Its own job because the sweep is as
-    # long as the suite.
+    # committed receipt must reproduce.  ~180k cells, one champion per core,
+    # spread over four runners so the job finishes inside the test job.
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -121,12 +125,14 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Verify the coverage census receipt
-        run: python scripts/coverage_census.py check docs/coverage-census.json
+      - name: Verify the coverage census receipt (shard ${{ matrix.shard }}/4)
+        run: python scripts/coverage_census.py check docs/coverage-census.json --shard ${{ matrix.shard }}/4
 
   container:
     runs-on: ubuntu-latest

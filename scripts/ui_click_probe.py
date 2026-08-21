@@ -1,7 +1,6 @@
 """Drive the running page through the setup workflows and count the clicks.
 
-The evidence behind docs/plans/2026-08-20-ui-audit-and-click-pass.md: each
-workflow is performed on the real page (Playwright, headless Chromium) and
+Each workflow is performed on the real page (Playwright, headless Chromium) and
 the click count, the numbers the verdict shows, and any page error are
 printed. Run against a local server::
 

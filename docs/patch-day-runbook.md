@@ -123,7 +123,7 @@ What `run` does:
    (`python scripts/build_bis_profiles.py`) if its wiki inputs moved.
 5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, the
    staleness gate (`patch_regression check`), and the coverage census
-   (`coverage_census.py run --output docs/coverage-census.json`, ~10 min; it
+   (`coverage_census.py run --output docs/coverage-census.json`, ~1 min on 16 cores; it
    refreshes its receipt and fails on a frontier entry no
    `docs/coverage-residue.json` row acknowledges or a row that no longer
    reproduces) — each fails closed and aborts the run — then pytest, golden

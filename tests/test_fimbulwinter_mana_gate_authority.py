@@ -1,8 +1,6 @@
 """Fimbulwinter Everlasting mana-gate authority certification.
 
-The gate is SOURCED.  The surface-area campaign ruled it from Fimbulwinter
-revision 3984419 (``docs/plans/2026-08-20-surface-area-campaign.md`` U11a):
-a melee holder's slow arms Everlasting above the 20%-maximum-mana gate, and
+The gate is SOURCED, from Fimbulwinter revision 3984419: a melee holder's slow arms Everlasting above the 20%-maximum-mana gate, and
 the whole champion x Fimbulwinter coverage fan-out prices through it.  The
 registry states that authority in ``everlasting_mana_gate_status``, and the
 runtime reads the contract rather than a literal.

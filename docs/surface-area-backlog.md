@@ -1,8 +1,7 @@
 # Surface-area backlog
 
-What the surface-area campaign (`docs/plans/2026-08-20-surface-area-campaign.md`) and the
-coverage-frontier campaign (`docs/plans/2026-08-20-coverage-frontier-campaign.md`, rows `CF*`) and the engine-retirement campaign (`docs/plans/2026-08-21-engine-retirement-campaign.md`, rows `ER*`)
-surfaced and did not close. Delete a row when its fix lands; this file is the one
+What the surface-area, coverage-frontier (rows `CF*`) and engine-retirement (rows `ER*`)
+campaigns surfaced and did not close. Delete a row when its fix lands; this file is the one
 home for the list. Traps live in `CLAUDE.md` Known Quirks.
 
 | # | Where | What | Action |

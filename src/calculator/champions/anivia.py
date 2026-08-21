@@ -111,8 +111,8 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     # first ``enhanced_consume`` producer, R's chill feeding E's "Enhanced
     # Damage".  That empties the cast-dependency audit's dated
     # acknowledged-gap list, which answers recorded ruling H6 / D-88 —
-    # reserved by docs/plans/phase-5-cast-dependency.md for its own slice
-    # with its own investigator receipt, not a side effect of this review.
+    # reserved for its own slice with its own investigator receipt, not a
+    # side effect of this review.
     parts = [
         DamagePart(
             "magic",

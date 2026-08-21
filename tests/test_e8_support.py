@@ -648,7 +648,7 @@ def test_revive_module_sourcing_matches_cached_rows():
 
 # ---------------------------------------------------------------------------
 # Census slice 2 — every support slot the map calls ``modeled`` publishes a
-# row in the COUPLED walk (docs/plans/utility-axis-census.md §2 slice 2).
+# row in the COUPLED walk.
 # Reaching ``derive_ally_effects`` is not the claim; reaching the ledger is.
 # ---------------------------------------------------------------------------
 

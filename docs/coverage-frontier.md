@@ -20,8 +20,7 @@ before acting on a number here.
 heal, a revive) — a slot with no row of its own says which engine channel pays it
 (`COVERAGE_CHANNELS`: `self_healing_rule`, `self_shield_events`, `starting_revive_defense`,
 `post_hit_proc`). `no_damage` means the slot is emitted and nothing is left to price.
-`out_of_scope` means the engine has no axis, and the module docstring names it. The 65 by
-axis (`docs/plans/utility-axis-census.md` is the measured table):
+`out_of_scope` means the engine has no axis, and the module docstring names it. The 65 by axis:
 
 | Axis | Slots | Which |
 |---|---|---|
