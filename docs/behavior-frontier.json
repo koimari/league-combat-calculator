@@ -13,7 +13,7 @@
       "counter_1": 20
     },
     "calculator/damage.py": {
-      "counter_1": 22
+      "counter_1": 20
     },
     "calculator/interaction_effects.py": {
       "counter_1": 3
@@ -23,7 +23,7 @@
       "counter_2": 18
     },
     "calculator/item_effects.py": {
-      "class_c": 546
+      "class_c": 527
     },
     "calculator/item_outcomes.py": {
       "class_c": 44
@@ -103,7 +103,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 63
+      "value": 61
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -319,7 +319,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 831
+      "sites": 812
     },
     "class_d_non_behavioural": {
       "modules": {
@@ -453,8 +453,8 @@
       "counter_1": {
         "bound": 0,
         "criterion": "criterion 1: runtime item-name dispatch reaches zero",
-        "gap": 63,
-        "measured": 63,
+        "gap": 61,
+        "measured": 61,
         "met": false,
         "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
       },

@@ -59,7 +59,12 @@ def _simulate_bork_damage(
         num_auto_attacks,
         auto_damage_per_hit,
         other_on_hit_per_hit,
-        SimpleNamespace(effective_armor=effective_armor, effective_mr=0.0),
+        SimpleNamespace(
+            effective_armor=effective_armor,
+            effective_mr=0.0,
+            physical_damage_flat_reduction=0.0,
+            physical_damage_flat_reduction_cap=0.0,
+        ),
         1.0,
         phantom_hit_autos,
         double_hit_all,
@@ -86,7 +91,12 @@ class TestMitigate:
 
     @pytest.fixture
     def resists(self):
-        return SimpleNamespace(effective_armor=100.0, effective_mr=50.0)
+        return SimpleNamespace(
+            effective_armor=100.0,
+            effective_mr=50.0,
+            physical_damage_flat_reduction=0.0,
+            physical_damage_flat_reduction_cap=0.0,
+        )
 
     def test_physical_uses_effective_armor(self, resists) -> None:
         assert _mitigate(300.0, "physical", resists, 1.2) == 150.0

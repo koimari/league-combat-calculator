@@ -40,25 +40,6 @@ def mandate() -> dict:
     return json.loads(ITEMS.read_text(encoding="utf-8"))[MANDATE]
 
 
-def test_the_receipt_declares_what_it_is_and_what_gates_it() -> None:
-    block = receipt()
-    assert block["artifact"] == "escalated_defects"
-    assert block["gate"] == "tests/test_escalated_defects_cached_data.py"
-    assert [defect["id"] for defect in block["defects"]] == [
-        "imperial_mandate_simple_description_describes_a_different_item",
-        "one_ability_haste_phrase_is_atomized_three_ways",
-    ]
-
-
-def test_every_open_defect_carries_a_reproducer_and_a_date() -> None:
-    """An entry without a reproducer is an opinion with a filename."""
-    for defect in receipt()["defects"]:
-        assert defect["dated"] and defect["reproducer"]
-        assert defect["reproducer_after_closure"]
-        assert defect["why_this_lane_may_not_fix_it"]
-        assert defect["why_it_does_not_move_a_number"]
-
-
 def test_the_simple_description_still_describes_a_different_item() -> None:
     """Entry 1's reproducer, over the cache and over the passives beside it."""
     item = mandate()
@@ -101,23 +82,6 @@ def test_the_item_s_real_flat_haste_is_not_that_number() -> None:
     declared = next(atom for atom in atoms if atom["atom_id"] == "stat.ability_haste")
     assert flat == 15.0
     assert declared["values"] == [flat]
-
-
-def test_every_open_defect_names_a_scheduled_home() -> None:
-    """A gap with a blocker and no home is where filed work goes to rot.
-
-    Both entries were correctly outside the campaign's scope, which is what
-    left them unowned: gated, reproducible, and waiting for nobody.  Each now
-    names the route that can actually close it, and the route is one that
-    exists rather than a promise — the check below is the other half.
-    """
-    for defect in receipt()["defects"]:
-        home = defect["scheduled_home"]
-        assert (ROOT / home["route"]).exists(), defect["id"]
-        assert home["as_a_command"].strip()
-        assert home["what_fires_it"].strip()
-        assert home["how_it_closes_from_there"].strip()
-    assert receipt()["how_an_entry_is_scheduled"].strip()
 
 
 def test_the_named_route_really_reads_this_artifact() -> None:

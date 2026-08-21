@@ -494,3 +494,35 @@ class TestTheReceiptWalkRunsIt:
         ledger.write(packet, overkill=1.0)
         with pytest.raises(outcome_state.OutcomeRewritten):
             ledger.write(packet, overkill=2.0)
+
+
+@pytest.mark.parametrize(
+    "raised",
+    [
+        outcome_state.OutcomeRewritten(0, "applied", 1.0, 2.0),
+        outcome_state.DuplicateApplied(("Imperial Mandate - Command", 1, 3), 0, 1),
+    ],
+    ids=["OutcomeRewritten", "DuplicateApplied"],
+)
+def test_the_request_boundary_names_these_raises(raised) -> None:
+    """A contested outcome reaches the user as a ``STARVED`` receipt.
+
+    The write-once ledger is built and driven on every serving request, so
+    its refusals are live exceptions there. The one boundary converts them
+    into a 500 naming the contested field, the producer that contested it,
+    and why there is no number to publish.
+    """
+    import src.app as app_module
+
+    def _view():
+        raise raised
+
+    guarded = app_module._within_starvation_boundary(_view)  # noqa: SLF001
+    with app_module.app.test_request_context("/api/calculate", method="POST"):
+        response, status = guarded()
+    body = response.get_json()
+    assert status == 500
+    assert body["disposition"] == "STARVED"
+    assert body["starved"]["field"] == raised.field
+    assert body["starved"]["producer"] == raised.producer
+    assert body["starved"]["reason"] == raised.reason

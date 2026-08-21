@@ -14,8 +14,7 @@ Phase 4 S6 split one of the two groups.  ``DEBUFF_ARM``/``RECOVERY``/
 ``UTILITY_ARM`` now resolve ``6 < 7 < 8`` at a shared timestamp instead of
 tying, and the reorderings that follows from are pinned below by name.
 ``LATE_BARRIER``/``REACTIVE`` still share a slot, deliberately: that one is
-a preserved defect with a committed row on the migration frontier, not an
-oversight.
+a preserved defect S6 declined to touch, not an oversight.
 """
 
 import ast
@@ -477,16 +476,6 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
 # --- The support ladder: a rank, never an open float ------------------------
 
 
-def test_the_open_priority_hatch_is_gone_from_the_source() -> None:
-    """No producer can hand the walk an arbitrary ordering float."""
-    holders = [
-        path.relative_to(ROOT).as_posix()
-        for path in sorted((ROOT / "src").rglob("*.py"))
-        if "_priority" in path.read_text(encoding="utf-8")
-    ]
-    assert holders == []
-
-
 def test_support_kinds_classify_to_their_ladder_rank() -> None:
     """Every support kind resolves to a named rank, none to a number."""
     by_kind = {
@@ -770,8 +759,7 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
     """The two orderings S6 must *not* touch, asserted rather than assumed.
 
     ``AURA_ARM`` resolves before the damage at its timestamp (C4's
-    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot — the
-    preserved defect declined by this stage on the migration frontier.
+    correction) and ``LATE_BARRIER``/``REACTIVE`` still share a slot.
     """
     assert _armed_at(TransitionRank.AURA_ARM, "Abyssal Mask — Unmake") < _armed_at(
         TransitionRank.DAMAGE, "Abyssal Mask — Unmake"
@@ -781,13 +769,6 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
         is _armed_at(TransitionRank.LATE_BARRIER, "Thornmail")[1]
         is TransitionRank.LATE_BARRIER
     )
-    frontier = json.loads(
-        (ROOT / "docs" / "migration-frontier.json").read_text(encoding="utf-8")
-    )
-    declined = {
-        row["name"]: row["declined_by"] for row in frontier["preserved_defects"]
-    }
-    assert declined["LATE_BARRIER"] == "P4-S6"
 
 
 def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:

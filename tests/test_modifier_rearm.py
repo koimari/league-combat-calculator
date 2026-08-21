@@ -37,6 +37,7 @@ ALL_ATTACK = frozenset(AttackClass)
 
 EXPOSE = "Bloodsong — Expose Weakness"
 CARVE = "Black Cleaver — Carve"
+UNMAKE = "Abyssal Mask — Unmake"
 
 _HOLDER = 0
 _SECOND_HOLDER = 1
@@ -213,3 +214,43 @@ class TestTheStackLedgerReducesOnce:
         amount = _apply_cross_participant_modifiers(ctx, packet, state, 100.0)
         # 100 armour mitigates to 1/2; 30% reduced armour mitigates to 1/1.7.
         assert amount == pytest.approx(100.0 * (1.0 / 1.7) / (1.0 / 2.0))
+
+
+class TestThePublishedFactorIsNotTheAppliedProduct:
+    """Two live modifiers apply two factors; the receipt publishes one.
+
+    The re-arm rule above folds one holder's repeats into one debuff, so the
+    remaining shape is two *different* arms on one packet — two holders of
+    one mechanic, or two mechanics. ``_apply_cross_participant_modifiers``
+    writes ``support_damage_multiplier`` once per applying modifier, so the
+    published factor is the last one and the applied amount is the product.
+    """
+
+    def test_two_holders_apply_two_factors_and_the_receipt_names_one(self):
+        state, ctx = {"active_damage_modifiers": []}, _Ctx()
+        for holder in (_HOLDER, _SECOND_HOLDER):
+            _arm(state, ctx, source=EXPOSE, at=1.0, duration=4.0, holder=holder)
+        packet = _packet(at=2.0, damage_type="physical")
+        amount = _apply_cross_participant_modifiers(ctx, packet, state, 100.0)
+        published = packet.event["support_damage_multiplier"]["multiplier"]
+        assert amount == pytest.approx(100.0 * 1.08 * 1.08)
+        assert published == pytest.approx(1.08)
+        assert amount != pytest.approx(100.0 * published)
+
+    def test_two_mechanics_on_one_packet_publish_one_of_them(self):
+        state, ctx = {"active_damage_modifiers": []}, _Ctx()
+        for source, multiplier in ((EXPOSE, 1.08), (UNMAKE, 1.12)):
+            _arm(
+                state,
+                ctx,
+                source=source,
+                at=0.0,
+                duration=4.0,
+                holder=_HOLDER,
+                multiplier=multiplier,
+            )
+        packet = _packet(at=1.0, damage_type="magic")
+        amount = _apply_cross_participant_modifiers(ctx, packet, state, 100.0)
+        published = packet.event["support_damage_multiplier"]["multiplier"]
+        assert amount == pytest.approx(100.0 * 1.08 * 1.12)
+        assert amount != pytest.approx(100.0 * published)

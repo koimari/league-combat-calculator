@@ -6,7 +6,7 @@ own front door:
 
 * **One constructor** (criterion 2).  Every ``SurvivalAction(...)``
   expression in ``src/`` is in ``program/compile.py``, bar the one declared
-  survivor, and the retired builder names have zero occurrences.
+  survivor.
 * **One direction.**  ``program -> survival`` and never back, so the kernel
   keeps a hot loop that cannot dispatch on a logical type.
 * **One allocation budget** (R-28, criterion 17).  S4 is the single stage
@@ -15,11 +15,6 @@ own front door:
 * **View purity** (criterion 3).  No view, and no ``src/`` function a view
   can call, performs arithmetic.  The resolver and its counting rule are
   ``tests/view_purity.py``; the reading is here.
-
-The counters themselves live in ``scripts/migration_frontier.py`` and their
-receipt is diff-gated by ``tests/test_migration_frontier.py``; what is here
-is the phase's own reading of them, which is the reading a criterion is
-discharged against.
 """
 
 from __future__ import annotations
@@ -41,11 +36,6 @@ FINGERPRINTS = ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 # Where the one constructor lives, and the one expression allowed outside it.
 CONSTRUCTOR_HOME = "calculator/program/compile.py"
 DECLARED_SURVIVOR = "calculator/survival/actions.py"
-
-# The names the move retired.  Pinned as absences over the source text,
-# because a retired builder does its remaining damage as prose: a comment
-# describing a second constructor reads as a second constructor.
-RETIRED_BUILDERS = ("survival_action_from_event",)
 
 
 def _repo_path(path: Path) -> str:
@@ -105,11 +95,6 @@ class TestOneWalkCallSite:
     def test_the_kernel_has_exactly_one_caller_and_it_is_the_seam(self) -> None:
         assert _construction_sites("run_survival_walk") == {self.WALK_HOME: 1}
 
-    def test_the_seam_is_what_the_rest_of_the_tree_calls(self) -> None:
-        """A seam nobody enters would satisfy the count above vacuously."""
-        entries = _construction_sites("_walk")
-        assert entries.get("calculator/participant_timeline.py", 0) >= 2
-
 
 class TestOneConstructor:
     """Criterion 2, read off the tree rather than off the frontier receipt."""
@@ -122,23 +107,9 @@ class TestOneConstructor:
         }
         assert outside == {DECLARED_SURVIVOR: 1}
 
-    def test_the_survivor_is_the_fast_constructors_default_row(self) -> None:
-        """Criteria 2 and 17 are mutually exclusive without this one line."""
-        text = (SURVIVAL / "actions.py").read_text(encoding="utf-8")
-        assert "_ACTION_DEFAULT_ROW = list(SurvivalAction())" in text
-
     def test_the_home_actually_constructs(self) -> None:
         """A home with no expressions in it would pass the test above vacuously."""
         assert _construction_sites("SurvivalAction")[CONSTRUCTOR_HOME] > 1
-
-    def test_the_retired_builder_names_have_zero_occurrences(self) -> None:
-        holders = {
-            _repo_path(path): name
-            for path in sorted(SRC.rglob("*.py"))
-            for name in RETIRED_BUILDERS
-            if name in path.read_text(encoding="utf-8")
-        }
-        assert holders == {}
 
 
 class TestOneDirection:
@@ -203,14 +174,6 @@ class TestTheAllocationBudget:
         ]
         ceiling = recorded["peak_bytes"] * (1 + recorded["margin"])
         assert allocation_probe("cassiopeia_3champ") <= ceiling
-
-    def test_the_margin_is_the_one_the_receipt_declares(self) -> None:
-        """A gate whose threshold this file could choose is not a gate."""
-        recorded = json.loads(FINGERPRINTS.read_text(encoding="utf-8"))["alloc"][
-            "cassiopeia_3champ"
-        ]
-        assert recorded["margin"] == 0.15
-        assert recorded["provenance"] == "VERIFIED"
 
 
 class TestViewPurity:

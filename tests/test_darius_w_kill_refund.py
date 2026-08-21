@@ -151,6 +151,15 @@ _BASE_AD = 162.325
 def _stats(max_mana: float = 1404.0, regen: float = 8.0) -> dict:
     """The test_darius.py reference build (level 20, +100 bonus AD)."""
     return {
+        "ability_power": 0.0,
+        "armor_penetration_bonus_percent": 0.0,
+        "bonus_health": 0.0,
+        "bonus_mana": 0.0,
+        "health": 0.0,
+        "lethality": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "ultimate_haste": 0.0,
         "level": float(_LEVEL),
         "base_attack_damage": _BASE_AD,
         "bonus_attack_damage": _BONUS_AD,

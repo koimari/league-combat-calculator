@@ -209,6 +209,11 @@ _ONE_ROT_ON_TOTAL = 2077.7057714285716
 def _stats() -> dict:
     """The reference build's explicit stat packet (direct engine)."""
     return {
+        "armor_penetration_bonus_percent": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "level": float(_LEVEL),
         "health": _MAX_HEALTH,
         "bonus_health": _BONUS_HEALTH,

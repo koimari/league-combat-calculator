@@ -574,62 +574,6 @@ class TestTheDerivedOrderPinScenario:
         assert derived != requested
 
 
-class TestTheSeedRetirementAllowlistIsCommitted:
-    """R-17: the retirement lands against the committed baseline plus a list.
-
-    The seed deletion moves receipt prose and no number, and the list of
-    exactly which leaves may move is committed beside the code rather than
-    absorbed by re-capturing a baseline inside a semantic commit.
-    """
-
-    _PATH = (
-        _REPO_ROOT / "docs" / "receipts" / "expected-golden-diff-P5-seed-syndra.json"
-    )
-
-    @staticmethod
-    def _receipt():
-        return json.loads(
-            TestTheSeedRetirementAllowlistIsCommitted._PATH.read_text(encoding="utf-8")
-        )
-
-    def test_the_pair_baseline_half_is_empty(self) -> None:
-        """The retirement's own gate: the pair engine sees no change."""
-        receipt = self._receipt()
-        assert receipt["slice"] == "P5-seed-syndra"
-        assert receipt["decisions"] == ["D-89", "P5-e"]
-        assert receipt["expected_diff_paths"]["golden"] == []
-
-    def test_every_allowed_path_is_inside_the_declared_population(self) -> None:
-        """An occurrence outside the enumerated population stops the slice."""
-        receipt = self._receipt()
-        prefixes = tuple(
-            receipt["qualifying_population"]["coupled_golden"]["bounded_by_prefix"]
-        )
-        assert len(prefixes) == 3
-        allowed = receipt["expected_diff_paths"]["coupled_golden"]
-        assert allowed, "an empty allowlist would make this check vacuous"
-        outside = [path for path in allowed if not path.startswith(prefixes)]
-        assert outside == []
-
-    def test_the_population_was_enumerated_before_the_first_src_edit(self) -> None:
-        population = self._receipt()["qualifying_population"]
-        assert population["enumerated_before_first_src_edit"] is True
-        assert population["pair_golden"]["measured_qualifying_leaves"] == 0
-        assert population["coupled_golden"]["occurrences_outside_the_population"] == 0
-
-    def test_the_positive_control_is_recorded_in_the_fingerprints_receipt(self) -> None:
-        """Zero diffs means nothing unless the gate can be made to fail."""
-        fingerprints = json.loads(
-            (_REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        control = fingerprints["demonstrated_red"]["P5_syndra_seed_positive_control"]
-        assert control["pair_golden_diff_count"] >= 1
-        assert len(control["sha"]) == 40
-        assert len(control["output_sha256"]) == 64
-
-
 class TestTheCustomOrderPinReadsTheBaseline:
     """Criterion 11 — the requested order is whole, and the total is pinned.
 

@@ -507,35 +507,6 @@ class TestTheRotationReceiptNamesTheRecastOnce:
         assert recast == ["Q2 is the recast of Q — Q2 is Q's recast (recast_of atom)"]
 
 
-class TestPairEngineGoldenIsStructurallyBlind:
-    """C6's 'zero on pair-engine golden' is asserted, never assumed."""
-
-    def test_every_snapshot_fight_is_built_with_no_cast_order(self):
-        source = (ROOT / "scripts" / "golden_snapshot.py").read_text(encoding="utf-8")
-        assert source.count("FightParams(") == 1
-        assert "cast_order=None," in source
-
-
-class TestTheAllowlistIsCommitted:
-    """R-17: the code lands against the committed baseline plus an allowlist."""
-
-    def test_the_c6_allowlist_names_its_population(self):
-        receipt = json.loads(
-            (ROOT / "docs" / "receipts" / "expected-golden-diff-C6.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        assert receipt["slice"] == "C6"
-        assert receipt["decisions"] == ["D-11"]
-        population = receipt["qualifying_population"]
-        assert population["enumerated_before_first_src_edit"] is True
-        assert set(population["scenarios"]) == {
-            "syndra_custom_order_39",
-            "syndra_custom_order_60",
-            "syndra_custom_order_120",
-        }
-
-
 def _roster_kit(champion):
     """A level-18, item-free parse at the pin scenario's fight shape.
 

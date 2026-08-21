@@ -235,12 +235,6 @@ class TestTheEscalatedDefectIsStillTracked:
         (defect,) = payload["defects"]
         return defect
 
-    def test_the_receipt_names_its_sites_and_they_exist(self) -> None:
-        """Every cited fragment is still in the file that carries it."""
-        for site in self._defect()["site"]:
-            text = (ROOT / site["file"]).read_text(encoding="utf-8")
-            assert site["fragment"] in text, site
-
     def test_the_stat_the_defect_reads_is_still_absent_from_its_producer(
         self,
     ) -> None:

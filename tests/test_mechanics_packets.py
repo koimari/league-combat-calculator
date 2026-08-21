@@ -32,6 +32,15 @@ def _stats(
     crit=0.0,
 ):
     return {
+        "armor_penetration_bonus_percent": 0.0,
+        "bonus_mana": 0.0,
+        "lethality": 0.0,
+        "level": 1,
+        "max_mana": 0.0,
+        "move_speed": 0.0,
+        "omnivamp_percent": 0.0,
+        "resource_regen_per_second": 0.0,
+        "ultimate_haste": 0.0,
         "attack_damage": ad,
         "base_attack_damage": ad - bonus_ad,
         "bonus_attack_damage": bonus_ad,

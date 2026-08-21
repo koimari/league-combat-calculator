@@ -25,6 +25,12 @@ from src.calculator.resistance import apply_resistance
 
 # Round stats so wiki arithmetic is checkable by eye.
 _STATS = {
+    "armor_penetration_bonus_percent": 0.0,
+    "lethality": 0.0,
+    "move_speed": 0.0,
+    "omnivamp_percent": 0.0,
+    "resource_regen_per_second": 0.0,
+    "ultimate_haste": 0.0,
     "attack_damage": 200.0,
     "base_attack_damage": 100.0,
     "bonus_attack_damage": 100.0,
