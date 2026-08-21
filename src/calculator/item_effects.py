@@ -4700,6 +4700,35 @@ def basic_ability_haste(items: list[dict[str, Any]]) -> float:
     return required_effect_value("Spear of Shojin", "basic_ability_haste")
 
 
+#: The ally-registry key for haste an ability earns by immobilizing —
+#: Imperial Mandate's Control.  Named here because the membership filter
+#: below is the key, never an item name: a second item stating the same
+#: mechanic joins by declaring the key, not by being spelled in the engine.
+CONTROL_ABILITY_HASTE_KEY = "control_ability_haste"
+
+
+def immobilize_ability_haste(items: list[dict[str, Any]]) -> float:
+    """Extra ability haste this build's *immobilizing* abilities are cast at.
+
+    Imperial Mandate's Control: "abilities with immobilizing effects have
+    their cooldown reduced equivalent to 20 ability haste".  It is not a
+    stat of the build — it reaches only the slots whose reviewed control
+    marker says they immobilize — so it is read here and applied at the
+    cooldown, beside the ultimate haste an ultimate alone reads.
+
+    Args:
+        items: List of item data dicts.
+
+    Returns:
+        Total immobilizing-ability haste this build carries.
+    """
+    return sum(
+        ally_item_effect_value(name, CONTROL_ABILITY_HASTE_KEY)
+        for name in _item_names(items)
+        if CONTROL_ABILITY_HASTE_KEY in ALLY_ITEM_EFFECTS.get(name, {})
+    )
+
+
 @dataclass(frozen=True)
 class StatBonuses:
     """Every stat-granting item passive for one build, compiled.

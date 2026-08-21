@@ -450,7 +450,10 @@
     "effects": {
       "damage_amp_ratio": 0.05,
       "damage_amp_health_ratio": 0.6,
-      "damage_amp_health_gate": "self_below"
+      "damage_amp_health_gate": "self_below",
+      "escalated_damage_amp_ratio": 0.11,
+      "escalated_damage_amp_health_ratio": 0.3,
+      "escalated_damage_amp_health_gate": "self_below"
     }
   },
   "Electrocute": {
@@ -1025,7 +1028,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/NullifyingOrb/Axiom_Arcanist.png",
     "description": "{{sbc|Passive:}} Your ultimate has 12% increased damage (reduced to 8% for [[area of effect]] abilities), {{tip|heal|healing}} and {{tip|shield|shielding}}.\nScoring an enemy champion {{tip|takedown}} reduces your ultimate ability's '''current''' cooldown by 7%.",
-    "effects": {}
+    "effects": {
+      "ultimate_damage_amp_ratio": 0.12,
+      "ultimate_aoe_damage_amp_ratio": 0.08
+    }
   },
   "Manaflow Band": {
     "name": "Manaflow Band",

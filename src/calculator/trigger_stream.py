@@ -1672,7 +1672,10 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             ("treasure_hunter", "Treasure Hunter"),
             ("relentless_hunter", "Relentless Hunter"),
             ("ultimate_hunter", "Ultimate Hunter"),
+            ("cut_down", "Cut Down"),
+            ("last_stand", "Last Stand"),
             ("absolute_focus", "Absolute Focus"),
+            ("axiom_arcanist", "Axiom Arcanist"),
             ("scorch", "Scorch"),
             ("cosmic_insight", "Cosmic Insight"),
             # Sorcery

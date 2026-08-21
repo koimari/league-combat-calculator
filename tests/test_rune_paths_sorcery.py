@@ -243,8 +243,8 @@ class TestSorceryRefusals:
 
 
 class TestSorceryCoverage:
-    def test_every_sorcery_minor_but_the_ultimate_amplifier_compiles(self):
-        """Axiom Arcanist needs a slot-filtered flat amp, which is unit A2's."""
+    def test_every_sorcery_minor_compiles(self):
+        """All nine Sorcery minors compile; Axiom Arcanist rides the flat-amp kind."""
         catalog = {entry["name"]: entry for entry in rune_effects.rune_catalog()}
         minors = [
             entry
@@ -252,8 +252,7 @@ class TestSorceryCoverage:
             if entry["path"] == "Sorcery" and entry["row"]
         ]
         assert len(minors) == 9
-        unimplemented = [entry["name"] for entry in minors if not entry["implemented"]]
-        assert unimplemented == ["Axiom Arcanist"]
+        assert [entry["name"] for entry in minors if not entry["implemented"]] == []
 
     def test_the_declared_options_reach_the_catalog(self):
         catalog = {entry["name"]: entry for entry in rune_effects.rune_catalog()}

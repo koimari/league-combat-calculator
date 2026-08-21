@@ -626,6 +626,11 @@ class FightState:
     spellblade_attack_speed_percent: float = 0.0
     # ── The compiled rune page, keystone first (empty when none selected) ──
     runes: "tuple[rune_effects.RuneEffect, ...]" = ()
+    # The page's declared options, by rune. A rune formula reads them when it
+    # resolves — the same values ``stats.py`` hands a stat grant — so a fight
+    # priced with an option set and one priced without differ by the option
+    # alone.
+    rune_options: "Mapping[str, Mapping[str, float]]" = MappingProxyType({})
     # ── Fight timeline (built by the rotation, read by later steps) ───────
     # When stacking-DoT stacks land and which mid-fight buff windows they
     # open — the ONE home every stack-aware step reads (Case 4 and 5).
@@ -2734,6 +2739,7 @@ def _resolve_combat_state(
         num_auto_attacks=num_auto_attacks,
         empowered_autos=empowered_autos,
         runes=rune_effects.resolve_rune_page(config.rune_page),
+        rune_options=config.rune_page.options,
     )
 
 
@@ -3502,6 +3508,22 @@ def _apply_post_hit_proc(
     return total
 
 
+def _immobilize_ability_haste(
+    state: "FightState", ability_info: Mapping[str, Any]
+) -> float:
+    """The haste one slot earns by immobilizing (Imperial Mandate's Control).
+
+    Gated on the slot's *reviewed* control marker — the declaration Command
+    already gates on, read through the one immobilize predicate — so a slot
+    nobody reviewed pays nothing rather than being assumed to immobilize.
+    The item is found by the value key it declares, never by name: a second
+    item stating the mechanic joins by declaring the key.
+    """
+    if not is_immobilizing_event(_declared_cc_marker(ability_info)):
+        return 0.0
+    return item_effects.immobilize_ability_haste(state.items)
+
+
 def _effective_timed_cooldown(
     state: "FightState",
     result: "RotationResult",
@@ -3510,7 +3532,8 @@ def _effective_timed_cooldown(
     basic_ability_haste: float,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
-    Shojin basic-ability haste (Q/W/E), ultimate haste (R), and Navori
+    Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
+    immobilizing slot earns (Imperial Mandate's Control), and Navori
     auto-attack refunds."""
     base_cd = ability_info.get("cooldown", 0.0)
     total_haste = state.ability_haste
@@ -3518,6 +3541,7 @@ def _effective_timed_cooldown(
         total_haste += basic_ability_haste
     elif ability_key == "R":
         total_haste += float(state.champion_stats.get("ultimate_haste", 0.0) or 0.0)
+    total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
@@ -11119,9 +11143,15 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
     delta back onto the events it amplified, at their times, so shield
     and threshold accounting sees the amp when the damage landed; a row
     whose amplified pool cannot be event-isolated stays coarse and rides
-    the ledger's explicit untyped fail-soft instead.
+    the ledger's explicit untyped fail-soft instead. The rune amps bracket
+    the item ones: a flat rune amp prices the fight's own damage and so runs
+    first, while a health-gated one wants the whole ledger behind it and so
+    runs last.
     """
     breakdown = state.breakdown
+    # Flat rune amps first: they price the ledger as the fight left it, and
+    # every amplifier below compounds on the bonus they book.
+    _add_rune_flat_amp_damage(state, rotation)
     _apply_general_amplifiers(state, rotation)
 
     # Actualizer ability damage amp — show as separate breakdown entry.
@@ -11263,6 +11293,86 @@ def _add_rune_conditional_amp_damage(
             "ledger with the target at full health when it starts and its "
             "shields not yet subtracted; a shielded target would cross a "
             "falling gate later than this."
+        )
+
+
+def _rune_amp_context(state: FightState, slot: str) -> "rune_effects.RuneAmpContext":
+    """What a flat rune amplifier reads when it prices one slot's instances."""
+    return rune_effects.RuneAmpContext(
+        level=state.level,
+        is_melee=state.is_melee,
+        champion_stats=state.champion_stats,
+        target_max_health=max(0.0, state.target_health),
+        options=state.rune_options,
+        slot=slot,
+    )
+
+
+def _flat_amp_pool(
+    state: FightState, effect: "rune_effects.RuneFlatAmpEffect", events: list
+) -> tuple[list, float]:
+    """The ledger rows one flat rune amp amplifies, and the ratio it pays.
+
+    The rune is asked once per slot the ledger holds, not once per row: its
+    kind promises a constant ratio over the set it filters to, so a row's
+    answer cannot depend on anything but its slot. Two different ratios back
+    would make the breakdown row's single multiplier a fiction, so the walk
+    refuses them instead of picking one.
+    """
+    ability_slots = set(state.cast_order)
+    ratios: dict[str, float] = {}
+    amped: list = []
+    for row in events:
+        slot = row[3] if row[3] in ability_slots else ""
+        if slot not in ratios:
+            ratios[slot] = effect.amp_ratio(_rune_amp_context(state, slot))
+        if ratios[slot] > 0.0:
+            amped.append(row)
+    paid = {ratio for ratio in ratios.values() if ratio > 0.0}
+    if len(paid) > 1:
+        raise ValueError(
+            f"{effect.rune_name} pays {sorted(paid)} to different instances of "
+            "one fight; a flat rune amplifier is one ratio over the set it "
+            "filters to, and one breakdown row publishes one multiplier"
+        )
+    return amped, paid.pop() if paid else 0.0
+
+
+def _add_rune_flat_amp_damage(state: FightState, rotation: RotationResult) -> None:
+    """Apply every selected flat rune amplifier (Last Stand-class).
+
+    First among the amplifiers, and deliberately: these price the fight's own
+    damage rather than a condition the ledger has to be walked for, so every
+    amplifier after them multiplies a total that already carries the rune's
+    bonus — which is how the game composes two amplifiers over one hit.
+    """
+    effects = _page_effects(state, rune_effects.RuneFlatAmpEffect)
+    if not effects:
+        return
+    events = _ordered_damage_events(
+        state.breakdown,
+        state.ability_damages,
+        state.cast_order,
+        cast_events=rotation.cast_events,
+        light=True,
+    )
+    for effect in effects:
+        state.notes.extend(effect.disclosures)
+        amped, ratio = _flat_amp_pool(state, effect, events)
+        bonus = sum(row[1] for row in amped) * ratio
+        if bonus <= 0.0:
+            state.notes.append(
+                f"{effect.rune_name} amplified nothing: none of the fight's "
+                "timestamped damage was of the kind it amplifies."
+            )
+            continue
+        _record_amp_row(
+            state,
+            effect.breakdown_key,
+            effect.rune_name,
+            1.0 + ratio,
+            amped,
+            bonus,
         )
 
 

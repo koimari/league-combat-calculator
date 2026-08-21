@@ -2,9 +2,9 @@
 
 Every shape a minor rune takes is here: Absolute Focus, Waterwalking and
 Gathering Storm grant adaptive force behind an explicit option, Transcendence
-and Celerity grant a stat outright, Scorch prices a proc, and the two runes
-whose halves this engine holds no channel for compile to a refusal with the
-reason. Axiom Arcanist is the ninth and needs a slot-filtered amplifier.
+and Celerity grant a stat outright, Scorch prices a proc, Axiom Arcanist
+amplifies one slot's damage on the flat-amp kind, and the two runes whose
+halves this engine holds no channel for compile to a refusal with the reason.
 """
 
 from typing import Any, Callable, Mapping
@@ -13,6 +13,9 @@ from ..ability_spec import Disposition
 from ..rune_effects import (
     RUNE_EFFECTS,
     RuneEffect,
+    ULTIMATE_SLOT,
+    RuneAmpContext,
+    RuneFlatAmpEffect,
     RuneOption,
     RuneOptionKind,
     RuneProcEffect,
@@ -248,6 +251,63 @@ def _compile_waterwalking(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
+#: Which of Axiom Arcanist's two rates an ultimate is paid. The rune states
+#: one for an area-of-effect ultimate and a higher one for the rest, and no
+#: champion contract carries an area-of-effect marker to read it from — so
+#: it is an option (decision 5), defaulted to the area-of-effect rate. That
+#: default is the lower of the two the rune states: the engine understates
+#: this rune rather than inventing damage a single-target reading would.
+_AREA_OF_EFFECT_ULTIMATE = "area_of_effect_ultimate"
+
+
+def _compile_axiom_arcanist(entry: Mapping[str, Any]) -> RuneFlatAmpEffect:
+    """Compile Axiom Arcanist: the holder's ultimate hits harder.
+
+    The one rune whose filter is a slot rather than a health share, which is
+    why it is the flat kind: the ratio is constant over the fight and the
+    condition is which ability dealt the damage. Only the ultimate's own
+    ledger rows are amplified — an item proc an ultimate triggered is that
+    item's damage, not the ability's.
+    """
+    name = "Axiom Arcanist"
+    effects = RuneValues(name, entry.get("effects", {}))
+    single_target = effects.number("ultimate_damage_amp_ratio")
+    area = effects.number("ultimate_aoe_damage_amp_ratio")
+    if area >= single_target:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states {area:g} as the area-of-effect "
+            f"reduction of {single_target:g}, which is no reduction — wiki "
+            "description reordered"
+        )
+
+    def amp_ratio(context: RuneAmpContext) -> float:
+        if context.slot != ULTIMATE_SLOT:
+            return 0.0
+        if context.option(name, _AREA_OF_EFFECT_ULTIMATE, 1.0):
+            return area
+        return single_target
+
+    return RuneFlatAmpEffect(
+        rune_name=name,
+        breakdown_key=breakdown_key(name),
+        display_name=display_name(name),
+        amp_ratio=amp_ratio,
+        disclosures=(
+            f"{name} amplifies the {ULTIMATE_SLOT} slot's own damage rows and "
+            "nothing else; damage an ultimate triggered from an item or "
+            "another rune belongs to that source and is not amplified.",
+            f"{name} is priced at {area * 100:g}%, its area-of-effect rate: "
+            "no champion contract states whether an ultimate is area of "
+            f"effect, so the {_AREA_OF_EFFECT_ULTIMATE!r} option carries it "
+            f"and its default takes the lower of the rune's two rates "
+            f"({single_target * 100:g}% for a single-target ultimate).",
+            f"{name}'s ultimate cooldown refund on takedown, and its "
+            "amplified healing and shielding, are withheld: the fight has no "
+            "takedown and the pair engine prices outgoing damage.",
+        ),
+    )
+
+
 def _certify_adaptive_rendering(
     name: str, effects: RuneValues, force_by_mark: tuple[float, ...]
 ) -> None:
@@ -360,6 +420,7 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Absolute Focus": _compile_absolute_focus,
+    "Axiom Arcanist": _compile_axiom_arcanist,
     "Celerity": _compile_celerity,
     "Gathering Storm": _compile_gathering_storm,
     "Scorch": _compile_scorch,
@@ -397,6 +458,21 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
                 "1 prices Waterwalking with the holder in the river, where "
                 "its adaptive force is live; 0, its default, is the rest of "
                 "the map."
+            ),
+        ),
+    ),
+    "Axiom Arcanist": (
+        RuneOption(
+            key=_AREA_OF_EFFECT_ULTIMATE,
+            label="Ultimate is area of effect",
+            kind=RuneOptionKind.SWITCH,
+            default=1.0,
+            bounds=(0.0, 1.0),
+            disclosure=(
+                "1 prices Axiom Arcanist at the reduced rate its description "
+                "gives area-of-effect ultimates, and is the default because "
+                "no champion contract states which an ultimate is; 0 prices "
+                "the single-target rate."
             ),
         ),
     ),

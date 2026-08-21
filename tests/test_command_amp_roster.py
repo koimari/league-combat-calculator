@@ -72,7 +72,7 @@ ROUNDING = 0.1
 
 
 @lru_cache(maxsize=4)
-def _roster(items, holder=HOLDER, ally=ALLY):
+def _roster(items, holder=HOLDER, ally=ALLY, duration=8):
     """One roster response through the public request path."""
     app_module.app.config["TESTING"] = True
     payload = {
@@ -80,7 +80,7 @@ def _roster(items, holder=HOLDER, ally=ALLY):
         "level": 18,
         "items": list(items),
         "fight_mode": "time_based",
-        "fight_duration": 8,
+        "fight_duration": duration,
         "include_auto_attacks": False,
         "enemies": [{"champion": ENEMY, "level": 18, "items": []}],
         "allies": [
@@ -294,7 +294,14 @@ class TestDroppingTheCoupledPricerFailsOnANumber:
 # Maokai authors two immobilizes a quarter-second apart: W (Twisted Advance)
 # roots at 0.3 and R (Nature's Grasp) roots at 0.55, so the second lands with
 # 3.75 s left on the first one's mark.  Everything else about the roster is the
-# fixture above's: level 18, eight seconds, no ambient autos, one enemy.
+# fixture above's: level 18, no ambient autos, one enemy.
+#
+# Six seconds rather than the fixture above's eight, and the two are not
+# interchangeable: Mandate's own Control haste returns W at 7.707 s, and a
+# third root that far after the second opens a *second* window rather than
+# refreshing the first.  This class is about what a second immobilize does to
+# a live mark, so the fight ends before the instrument gains a third one.
+MERGE_SECONDS = 6
 MERGE_HOLDER = "Maokai"
 # The ally is chosen for having no immobilize of his own and real damage inside
 # the merged window — his delta is the walk half's clean instrument, and a
@@ -304,9 +311,9 @@ MERGE_ALLY = "Ezreal"
 # Measured on this roster.  The holder's figure carries Mandate's stats as well
 # as its amp; the ally's carries the amp alone.
 MERGE_HOLDER_TOTAL = 1008.0
-MERGE_ALLY_TOTAL = 1411.6
+MERGE_ALLY_TOTAL = 1283.8
 NO_MERGE_HOLDER_TOTAL = 884.5
-NO_MERGE_ALLY_TOTAL = 1359.5
+NO_MERGE_ALLY_TOTAL = 1231.7
 
 # The two triggers, and the one window they leave behind.  ``REFRESH`` moves
 # the mark's expiry to the *last* immobilize plus one duration; the additive
@@ -320,12 +327,12 @@ ADDITIVE_EXPIRY = FIRST_EXPIRY + 4.0
 
 def merged():
     """The merge roster holding Imperial Mandate."""
-    return _roster((COMMAND_ITEM,), MERGE_HOLDER, MERGE_ALLY)
+    return _roster((COMMAND_ITEM,), MERGE_HOLDER, MERGE_ALLY, MERGE_SECONDS)
 
 
 def no_merge():
     """The same roster with nothing held — the control."""
-    return _roster((), MERGE_HOLDER, MERGE_ALLY)
+    return _roster((), MERGE_HOLDER, MERGE_ALLY, MERGE_SECONDS)
 
 
 def _command_packets(response):
