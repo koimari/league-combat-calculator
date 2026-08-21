@@ -158,6 +158,7 @@ import random
 from collections.abc import Iterable, Mapping, Sequence
 from collections import Counter
 from dataclasses import dataclass, field, replace
+from functools import lru_cache
 from operator import itemgetter
 from types import MappingProxyType
 from typing import Any, Callable, NamedTuple, TypeVar
@@ -223,6 +224,7 @@ from .trigger_stream import (
     is_immobilizing_event,
 )
 from .state_lifecycle import InstanceCadence, TimedStackState
+from .champions import get_champion_options_meta
 from .champions.ashe import ASHE_FOCUS_STACK_RULE
 from .resistance import (
     apply_resistance,
@@ -246,6 +248,57 @@ BASE_CRIT_MULTIPLIER = 2.0
 # skipped harmlessly for champions without a second Q cast. A tuple so a
 # fight can never mutate the shared default; use sites materialize a list.
 DEFAULT_CAST_ORDER = ("Q", "Q2", "W", "E", "R")
+
+# Where each family of user options declares its own spec.  The engine never
+# restates an option's default: it reads the one the spec declares.
+_OPTION_SPECS: dict[str, Callable[[str], Mapping[str, Any]]] = {
+    "champion": lambda owner: {
+        str(option["key"]): option
+        for option in get_champion_options_meta(owner)["options"]
+    },
+    "item": lambda owner: item_effects.item_input_options_meta()
+    .get(owner, {})
+    .get("options", {}),
+    "keystone": lambda owner: rune_effects.keystone_input_options_meta()
+    .get(owner, {})
+    .get("options", {}),
+}
+
+
+@lru_cache(maxsize=None)
+def declared_option_spec(family: str, owner: str, key: str) -> Mapping[str, Any]:
+    """One OPTIONS spec entry — the home of its default and its bounds.
+
+    An option the spec does not declare is a data error, not a zero: the
+    engine would otherwise price a state nobody can select.
+    """
+    spec = _OPTION_SPECS[family](owner).get(key)
+    if not isinstance(spec, Mapping) or "default" not in spec:
+        raise KeyError(f"{family} option {owner}.{key} declares no default")
+    return spec
+
+
+def declared_option_default(family: str, owner: str, key: str) -> Any:
+    """The value an unset option prices at, as its own spec declares it."""
+    return declared_option_spec(family, owner, key)["default"]
+
+
+def _seeded_option_stacks(
+    options: Mapping[str, Any], family: str, owner: str, key: str
+) -> int:
+    """One integer stack option, defaulted and bounded by its own spec.
+
+    A blank or unparsable selection is the unset one.  The bounds are the
+    spec's own ``min``/``max``, so the cap lives beside the control the user
+    turns rather than beside each walk that seeds from it.
+    """
+    spec = declared_option_spec(family, owner, key)
+    default = spec["default"]
+    try:
+        seeded = int(options.get(key, default) or default)
+    except (TypeError, ValueError):
+        seeded = int(default)
+    return max(int(spec["min"]), min(seeded, int(spec["max"])))
 
 
 def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
@@ -4684,12 +4737,13 @@ def _tear_manaflow_for(
     Tear's stat.mana (data/atoms/items.json, evidence
     ``passive:Manaflow@kw:mana`` + ``stats.mana.flat``).
     """
-    if not item_effects.has_item(state.items, "Tear of the Goddess"):
+    holder = "Tear of the Goddess"
+    if not item_effects.has_item(state.items, holder):
         return None
     options = state.item_options or {}
+    unset = declared_option_default("item", holder, "manaflow_bonus_mana")
     authored = float(
-        (options.get("Tear of the Goddess") or {}).get("manaflow_bonus_mana", 0.0)
-        or 0.0
+        (options.get(holder) or {}).get("manaflow_bonus_mana", unset) or unset
     )
     declaration = resource_ledger.TearDeclaration(
         charge_interval=float(
@@ -5236,17 +5290,21 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     # smallest public option choice) authors ONE marker event.  On pop it
     # schedules the deterministic 20%-over-3s ticks against the account's
     # LIVE maximum; a missing choice creates no trigger.
+    enlighten_holder = "Lost Chapter"
     enlighten_level_up = 0.0
     if enlighten_decl is not None:
+        unset = declared_option_default(
+            "item", enlighten_holder, "enlighten_level_up_seconds"
+        )
         enlighten_level_up = float(
-            ((state.item_options or {}).get("Lost Chapter") or {}).get(
-                "enlighten_level_up_seconds", 0.0
+            ((state.item_options or {}).get(enlighten_holder) or {}).get(
+                "enlighten_level_up_seconds", unset
             )
-            or 0.0
+            or unset
         )
     if enlighten_decl is not None and enlighten_level_up > 0.0:
         timeline.append(
-            (enlighten_level_up, 0, -2, 0, "enlighten", "Lost Chapter", 0.0),
+            (enlighten_level_up, 0, -2, 0, "enlighten", enlighten_holder, 0.0),
         )
     # (Enlighten tick events ride kind "enlighten_tick" so popping a tick
     # can never re-enter the level-up marker handler and re-schedule.)
@@ -12394,12 +12452,8 @@ def _build_ferocity_timeline(
     from .champions.rengar import RENGAR_FEROCITY_STACK_RULE
 
     rule = RENGAR_FEROCITY_STACK_RULE
-    options = state.champion_options or {}
-    try:
-        seeded = int(options.get("p_ferocity", 0) or 0)
-    except (TypeError, ValueError):
-        seeded = 0
-    seeded = max(0, min(seeded, 4))
+    options = state.champion_options
+    seeded = _seeded_option_stacks(options, "champion", "Rengar", "p_ferocity")
     stack = TimedStackState(RENGAR_FEROCITY_STACK_RULE, starting_stacks=seeded)
     empowered: dict[tuple[str, int], bool] = {}
     receipts: list[dict[str, Any]] = []
@@ -12571,8 +12625,9 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
     if not isinstance(effect, rune_effects.KeystoneConquerorEffect):
         return
 
-    options = state.keystone_options or {}
-    starting_stacks = int(options.get("starting_stacks", 0) or 0)
+    options = state.keystone_options
+    unset = declared_option_default("keystone", "Conqueror", "starting_stacks")
+    starting_stacks = int(options.get("starting_stacks", unset) or unset)
     triggers = _conqueror_trigger_events(state, rotation)
     stack_state = rune_effects.conqueror_stack_state(
         effect, starting_stacks=starting_stacks
@@ -12709,18 +12764,13 @@ def _add_senna_souls(
     ``resource_ledger["mist"]`` (kind "souls") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
-    if "senna_mist_stacks" not in (state.champion_options or {}):
+    if "senna_mist_stacks" not in (state.champion_options):
         # Not a Senna-configured fight: no souls surface at all.
         return
     from .champions.senna import SENNA_MIST_RULE
 
-    option = state.champion_options or {}
-    try:
-        seeded = int(option.get("senna_mist_stacks", 40) or 40)
-    except (TypeError, ValueError):
-        seeded = 40
-    if not (0 <= seeded <= 300):
-        seeded = max(0, min(seeded, 300))
+    option = state.champion_options
+    seeded = _seeded_option_stacks(option, "champion", "Senna", "senna_mist_stacks")
     receipts: list[dict[str, Any]] = []
     thresholds: list[dict[str, Any]] = []
     current = seeded
@@ -13020,9 +13070,11 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     never replaced — and never re-prices the parse-time Q (the gate +
     the flurry/AS pricing stay exactly as the module prices them).
     """
-    option = state.champion_options or {}
+    option = state.champion_options
     q_entry = state.ability_damages.get("Q") or {}
-    q_active = bool(option.get("q_active", True))
+    q_active = bool(
+        option.get("q_active", declared_option_default("champion", "Ashe", "q_active"))
+    )
     is_ashe = str(q_entry.get("name", "")) == "Ranger's Focus"
     # The Ashe identity: the module's Q entry name, OR the explicitly
     # passed q_active False override (the Q entry is absent when the
@@ -13034,12 +13086,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     if q_active and not q_entry:
         # Q rank 0 (unlearned) -> no Focus system at all.
         return
-    try:
-        seeded = int(option.get("q_focus_stacks", 4) or 4)
-    except (TypeError, ValueError):
-        seeded = 4
-    if not (0 <= seeded <= 4):
-        seeded = max(0, min(seeded, 4))
+    seeded = _seeded_option_stacks(option, "champion", "Ashe", "q_focus_stacks")
     stack = TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=seeded)
     swings = (state.breakdown.get("auto_attacks") or {}).get("damage_events") or []
     q_casts = [
@@ -13171,8 +13218,8 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
     sub-section — the mana account is never replaced — and never
     re-prices any damage.
     """
-    if "w_charge" not in (state.champion_options or {}) and "all_out" not in (
-        state.champion_options or {}
+    if "w_charge" not in (state.champion_options) and "all_out" not in (
+        state.champion_options
     ):
         return
     from .champions.ksante import KSANTE_PATH_MAKER_RULE
@@ -13341,8 +13388,8 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
     ``resource_ledger["w_e"]`` (kind "w_e") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
-    if "w_rockets" not in (state.champion_options or {}) and "e_upgrade" not in (
-        state.champion_options or {}
+    if "w_rockets" not in (state.champion_options) and "e_upgrade" not in (
+        state.champion_options
     ):
         return
     from .champions.heimerdinger import (
@@ -13514,7 +13561,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     (kind "chimes") sub-section — the mana account is never replaced —
     and never re-prices any damage.
     """
-    if "chimes" not in (state.champion_options or {}):
+    if "chimes" not in (state.champion_options):
         return
     from .champions.bard import (
         BARD_TRAVELERS_CALL_RULE,
@@ -13528,7 +13575,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         _tier_value,
     )
 
-    option = state.champion_options or {}
+    option = state.champion_options
     try:
         seeded = int(option.get("chimes", _DEFAULT_CHIMES) or _DEFAULT_CHIMES)
     except (TypeError, ValueError):
@@ -13752,7 +13799,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     ``resource_ledger["stardust"]`` (kind "stardust") sub-section — the
     mana account is never replaced — and never re-prices any damage.
     """
-    if "stardust_stacks" not in (state.champion_options or {}):
+    if "stardust_stacks" not in (state.champion_options):
         return
     from .champions.aurelion_sol import (
         AURELION_SOL_STARDUST_RULE,
@@ -13760,13 +13807,10 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
         _STARDUST_PER_Q_BURST,
     )
 
-    option = state.champion_options or {}
-    try:
-        seeded = int(option.get("stardust_stacks", 0) or 0)
-    except (TypeError, ValueError):
-        seeded = 0
-    if not (0 <= seeded <= 999):
-        seeded = max(0, min(seeded, 999))
+    option = state.champion_options
+    seeded = _seeded_option_stacks(
+        option, "champion", "Aurelion Sol", "stardust_stacks"
+    )
     receipts: list[dict[str, Any]] = []
     milestones: list[dict[str, Any]] = []
     current = seeded
@@ -14271,8 +14315,9 @@ def _add_keystone_fleet_footwork(state: FightState, rotation: RotationResult) ->
     if not isinstance(effect, rune_effects.KeystoneFleetEffect):
         return
 
-    options = state.keystone_options or {}
-    starting_charges = int(options.get("starting_charges", 0) or 0)
+    options = state.keystone_options
+    unset = declared_option_default("keystone", "Fleet Footwork", "starting_charges")
+    starting_charges = int(options.get("starting_charges", unset) or unset)
     movement_events: list[dict[str, Any]] = []
     heal_events: list[dict[str, Any]] = []
     base_row: dict[str, Any] = {

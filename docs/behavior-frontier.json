@@ -13,7 +13,7 @@
       "counter_1": 20
     },
     "calculator/damage.py": {
-      "counter_1": 22
+      "counter_1": 20
     },
     "calculator/interaction_effects.py": {
       "counter_1": 3
@@ -103,7 +103,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 63
+      "value": 61
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -453,8 +453,8 @@
       "counter_1": {
         "bound": 0,
         "criterion": "criterion 1: runtime item-name dispatch reaches zero",
-        "gap": 63,
-        "measured": 63,
+        "gap": 61,
+        "measured": 61,
         "met": false,
         "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
       },
