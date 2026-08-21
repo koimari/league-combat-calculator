@@ -34,10 +34,11 @@ def _first_attribute(ability: dict[str, Any], names: tuple[str, ...]) -> str | N
 # row's own declaring sentence decides its recipient (``_row_target``) and
 # whether it is a heal at all (``_declares_a_heal``); the blob only supplies
 # the breadth of an ally scope the sentence already established.
-# An ally the row can grant to.  "Allied" on its own only qualifies the noun
-# after it, and not every allied noun receives anything: Bel'Veth R's True
-# Form sentence ends "...spawn from allied and enemy minions that die
-# nearby", which named a teammate for a heal that is hers.
+#
+# An ally the row can grant to.  "Allied" alone only qualifies the noun after
+# it, and not every allied noun receives anything: Bel'Veth R's True Form
+# sentence ends "...spawn from allied and enemy minions that die nearby",
+# which named a teammate for a heal that is hers.
 _ALLY_PROSE = re.compile(
     r"\ball(?:y|ies)\b|\bteammates?\b|\ballied\s+(?:champion|unit|turret|target)"
 )
@@ -76,13 +77,12 @@ def _row_target(
     a self grant; or it names neither recipient, and the row is refused —
     a recipient nobody sourced is not a teammate by default.
 
-    That last branch is what "Ekko W shields himself" and "Ekko W heals an
-    ally" turn on.  Parallel Convergence says "it detonates to **grant him
-    a shield**": one sentence, naming Ekko and no ally, so the shield is
-    his and nothing leaves him.  Defaulting instead put 330 shielding on a
-    teammate the game never shields.  An explicit per-champion override
-    still wins (Yuumi E's attached anchor, Kindred R's "all targetable
-    units").
+    That is what "Ekko W shields himself" and "Ekko W heals an ally" turn
+    on: Parallel Convergence says "it detonates to grant *him* a shield" —
+    Ekko named, no ally anywhere in the ability — so the shield is his and
+    nothing leaves him.  Defaulting sent it to a teammate instead.  An
+    explicit per-champion override still wins (Yuumi E's attached anchor,
+    Kindred R's "all targetable units").
     """
     if override is not None:
         return override, target_self
