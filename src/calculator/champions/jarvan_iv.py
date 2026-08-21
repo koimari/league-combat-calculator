@@ -16,9 +16,11 @@ Why each slot is non-generic:
 - W (Golden Aegis) is shield/slow only: a zero-damage cast that exists so
   the rotation casts it and the ally-support scanner prices the sourced
   self shield (140.0 at rank 5 with no bonus AD, the cached "Shield
-  Strength" row).  The prose-only "+1.3% of his maximum health for each
-  enemy champion hit" has no leveling row and is not priced; the slow is
-  crowd control the model does not price.
+  Strength" row; see ``support_effects._SHIELD_DURATION_ATOM_QUERIES[
+  ("Jarvan IV", "W")]``, which the scanner was pre-wired with).  The
+  prose-only "+1.3% of his maximum health for each enemy champion hit"
+  has no leveling row and is not priced; the slow is crowd control the
+  model does not price.
 - E (Demacian Standard) is a BUFF-phase custom fn: magic active damage
   plus a bonus-attack-speed ``stat_buff``. The ``near_flag`` option
   (default True) doubles the AS bonus — Jarvan near his planted flag
@@ -170,7 +172,15 @@ ASSUMPTIONS = [
     "8% of the target's decaying current health (min 20) as physical",
     "Q's armor shred applies to damage dealt after Q (autos, passive "
     "procs, R), not to Q itself",
-    "W (Golden Aegis) deals no damage (shield/slow only) — skipped",
+    "W (Golden Aegis) deals no direct damage; the slow (15-35% for 2s) "
+    "is utility-only and not modeled. Its self-shield (60/80/100/120/"
+    "140 + 70% bonus AD, 4s) is granted by the ally-support scanner "
+    "(self-targeted) from the cached Shield Strength row at the W cast. "
+    "The 'increased by 1.3% of Jarvan's maximum health for each enemy "
+    "champion hit' "
+    "rider is prose-only (not a modifier row) and not modeled — a "
+    "documented boundary that is exact in a 1v1 fight, which can hit "
+    "at most one enemy champion",
     "E flag assumed planted with Jarvan in its aura by default "
     "(doubled attack speed bonus, toggleable)",
     "E ally aura not modeled (single-champion calculator)",
@@ -201,7 +211,8 @@ SLOTS = {
 # connect with a deployed Demacian Standard, a flag-plus-lance combo this
 # module does not model, so the reviewed kind is the unconditional none.
 # E's flag only damages on landing.  R's impact "knocks aside enemies
-# within the perimeter".  P is the on-hit row and W is skipped (no damage).
+# within the perimeter".  P is the on-hit row; W's own row deals no
+# damage, and its slow is control this model does not price.
 MODULE_CC = {"Q": "none", "E": "none", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Jarvan IV", cc_kinds=MODULE_CC)

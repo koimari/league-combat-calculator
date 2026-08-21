@@ -348,17 +348,32 @@ class TestRFeast:
 
 
 # ---------------------------------------------------------------------------
-# Passive: Carnivore (skip — heal/mana sustain only)
+# Passive: Carnivore (kill-triggered heal/mana — no combat-damage interaction)
 # ---------------------------------------------------------------------------
 
 
-class TestPassiveCarnivore:
-    """Passive heals on kill — deals no damage, absent from results."""
+class TestPPassiveCarnivore:
+    """P (Carnivore) heals ONLY on an enemy kill, which a duel does not
+    simulate: the row exists exactly when the user declares the kills."""
 
-    def test_passive_not_in_results(self, chogath_data, parse_at) -> None:
+    def test_no_receipt_without_declared_kills(self, chogath_data, parse_at) -> None:
         _, abilities = parse_at(chogath_data, 9)
         assert "passive" not in abilities
         assert "P" not in abilities
+
+    def test_declared_kills_emit_a_sourced_zero_damage_receipt(
+        self, chogath_data, parse_at
+    ) -> None:
+        _, abilities = parse_at(
+            chogath_data, 9, champion_options={"p_carnivore_kills": 2}
+        )
+        entry = abilities["passive"]
+        assert entry["name"] == "Carnivore"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+        # The level row the heal rule spends: 18 : 52 by level, level 9.
+        assert entry["self_heal_state"] == {"kills": 2, "amount": 34.0}
 
 
 class TestReviewedCrowdControl:
@@ -372,6 +387,7 @@ class TestReviewedCrowdControl:
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Cho'Gath")
         assert chogath.MODULE_CC == {
+            "P": "none",
             "Q": "knockup",
             "W": "silence",
             "E": "slow",
@@ -404,3 +420,20 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Cho'Gath")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestModuleCoverage:
+    """Every slot is covered, and P is ``modeled`` rather than no_damage:
+    its receipt carries the Carnivore heal the self-heal rule places."""
+
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions import get_champion_module_contract
+
+        contract = get_champion_module_contract("Cho'Gath")
+        assert contract.coverage == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }

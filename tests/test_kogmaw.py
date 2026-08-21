@@ -334,21 +334,26 @@ class TestRLivingArtillery:
 
 
 # ---------------------------------------------------------------------------
-# Passive: Icathian Surprise (not modeled)
+# Passive: Icathian Surprise (zero-damage boundary receipt)
 # ---------------------------------------------------------------------------
 
 
 class TestPassive:
-    """Passive should not be present in results."""
+    """Passive emits a zero-damage row documenting the death-only trigger."""
 
-    def test_passive_not_in_results(self, kogmaw_data, parse_at) -> None:
+    def test_passive_emits_zero_damage_row(self, kogmaw_data, parse_at) -> None:
         _, abilities = parse_at(
             kogmaw_data,
             9,
             ability_ranks=STANDARD_RANKS,
         )
-        assert "passive" not in abilities
-        assert "P" not in abilities
+        assert abilities["passive"]["name"] == "Icathian Surprise"
+        assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
+        assert abilities["passive"]["parts"] == ()
+        assert abilities["passive"]["damage_type"] == "true"
+        # Sourced would-be explosion magnitude at level 9 ("Bonus True
+        # Damage" cached leveling row), reported for traceability only.
+        assert "380" in abilities["passive"]["detail"]
 
 
 # ---------------------------------------------------------------------------
@@ -592,23 +597,25 @@ class TestReviewedCrowdControl:
 class TestCoverageMap:
     """Icathian Surprise damages, and the engine has no death to hang it on.
 
-    The cache does carry a damage row (140 : 650 true damage by level), so
-    P is ``out_of_scope`` and not ``no_damage``.  The missing axis is the
-    attacker's own death: the explosion is paid four seconds after Kog'Maw
-    takes fatal damage, and the fight engine runs one attacker who never
-    dies.
+    The cache does carry a damage row (140 : 650 true damage by level), and
+    the module emits it as an explicit zero-damage boundary receipt: the
+    explosion is paid four seconds after Kog'Maw takes fatal damage, and the
+    fight engine runs one attacker who never dies, so the row prices zero and
+    reports the would-be magnitude in its detail text.  The slot is emitted,
+    so the contract derives ``modeled`` for it.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
         assert get_champion_module_contract("Kog'Maw").coverage == {
-            "P": "out_of_scope",
+            "P": "modeled",
             "Q": "modeled",
             "W": "modeled",
             "E": "modeled",
             "R": "modeled",
         }
         assert coverage_truth.emitted("Kog'Maw") == {
-            "P": coverage_truth.ABSENT,
+            # The death-boundary receipt is emitted and prices zero.
+            "P": coverage_truth.ZERO,
             "Q": coverage_truth.PRICED,
             # W prices nothing directly: its damage rides the auto stream.
             "W": coverage_truth.PRICED,

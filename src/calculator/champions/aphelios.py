@@ -6,9 +6,15 @@ the Wiki's ``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q
 forms use the pinned packet variants.  R's initial blast and the basic-attack
 follow-up are kept separate so resistance and event ordering remain visible.
 
-E (Weapon Queue System) is the one slot with no row: it is a text prompt
-that reorders the next weapons and has no gameplay effect, so it is a
-``no_damage`` slot rather than a missing axis.
+E (Weapon Queue System) is the one slot with no damage row, and it emits
+that zero rather than staying absent: ``data/champions.json`` Aphelios E
+carries ``damageType: None`` and both effect rows carry an empty
+``leveling`` list — a pure UI affordance ("The icon of this ability
+reflects the next weapon that is in reserve" / "Active: Aphelios receives
+a text prompt of the weapon Alune will create next"), with no cast, no
+cooldown and no HP number anywhere.  The pinned packet already compiles it
+as a ``no_damage`` slot, so ``slot_order`` carries it instead of the module
+re-authoring the same zero.
 
 Reviewed crowd control rides the parts rather than a ``MODULE_CC`` map:
 both Q and R are one slot per weapon, and the weapons do not control alike
@@ -339,6 +345,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "prose); with aphelios_overheal_shield (default True) the healing rule stamps each Severum "
         "heal with the sourced cap and duration, and the participant timeline converts "
         "heal-in-excess-of-maximum-health into a timed shield at the heal's timestamp.",
+        "E (Weapon Queue System) carries no enemy-damage attribute (data/champions.json "
+        "Aphelios E has damageType: None and an empty leveling list on both effect rows); "
+        "the pinned packet's no_damage slot is the row it emits.",
     ),
     slot_parsers={
         "P": _weapon_master,
@@ -348,7 +357,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "Q": _q,
     },
-    slot_order=("P", "W", "Q", "R"),
+    slot_order=("P", "W", "Q", "R", "E"),
 )
 
 OPTIONS = [
@@ -405,10 +414,10 @@ OPTIONS = [
     },
 ]
 
-# E has no packet and no slot because the Weapon Queue System has nothing
-# to price — it is the prompt that reorders the next weapons, with no
-# gameplay effect of its own — so it is no_damage rather than an axis the
-# engine is missing.
+# The Weapon Queue System has nothing to price — it is the prompt that
+# reorders the next weapons, with no gameplay effect of its own — so the
+# packet's own no_damage row is what E emits, and the slot is no_damage
+# rather than an axis the engine is missing.
 MODULE_COVERAGE = {
     "P": "modeled",
     "Q": "modeled",

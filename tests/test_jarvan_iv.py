@@ -104,7 +104,7 @@ class TestQDragonStrike:
 
 
 # ---------------------------------------------------------------------------
-# W: Golden Aegis (shield/slow only — absent)
+# W: Golden Aegis (zero-damage cast row; the shield rides the scanner)
 # ---------------------------------------------------------------------------
 
 
@@ -118,8 +118,19 @@ class TestWIsAZeroDamageSupportCast:
 
     def test_w_emits_no_damage(self, jarvan_iv_data, parse_at) -> None:
         _, abilities = parse_at(jarvan_iv_data, 18)
-        assert abilities["W"]["total_raw"] == 0.0
+        assert abilities["W"]["name"] == "Golden Aegis"
+        assert abilities["W"]["total_raw"] == pytest.approx(0.0)
         assert abilities["W"]["parts"] == ()
+
+    def test_w_absent_at_rank_zero(self, jarvan_iv_data) -> None:
+        abilities = parse_abilities(
+            jarvan_iv_data,
+            5,
+            0.0,
+            ability_ranks={"Q": 0, "W": 0, "E": 0, "R": 0},
+            champion_stats=dict(NO_AD),
+        )
+        assert "W" not in abilities
 
 
 # ---------------------------------------------------------------------------

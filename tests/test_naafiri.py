@@ -13,7 +13,15 @@ class TestReviewedCrowdControl:
     """Only Hounds' Pursuit controls, and it slows."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert naafiri.MODULE_CC == {"Q": "none", "E": "none", "R": "slow"}
+        # P (We Are More) prices the pack's share of Hounds' Pursuit, so
+        # it authors damage parts and declares its kind like any other
+        # damaging slot.
+        assert naafiri.MODULE_CC == {
+            "P": "none",
+            "Q": "none",
+            "E": "none",
+            "R": "slow",
+        }
         assert naafiri.parse_abilities.cc_kinds == naafiri.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

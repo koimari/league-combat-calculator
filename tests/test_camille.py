@@ -438,7 +438,10 @@ class TestRHextechUltimatum:
 
 
 class TestPassiveAndMeta:
-    """P (Adaptive Defenses) is a shield — absent; options declared."""
+    """P (Adaptive Defenses) is a shield; no standalone row in
+    ``abilities`` — it rides W's ``self_shield_events`` payload (see
+    tests/test_e8_shields.py) — but MODULE_COVERAGE reports it modeled,
+    not out_of_scope (roadmap session 4 batch B); options declared."""
 
     def test_passive_not_in_results(self, camille_data, parse_at) -> None:
         _, abilities = parse_at(camille_data, 9)
@@ -519,3 +522,16 @@ def test_p_is_modeled_through_the_466_6_adaptive_defenses_shield() -> None:
     assert payload["source"] == "Adaptive Defenses"
     assert payload["amount"] == pytest.approx(466.6, abs=0.01)
     assert payload["duration"] == pytest.approx(2.0)
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.camille import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }

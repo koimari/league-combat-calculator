@@ -170,16 +170,22 @@ class TestQTwofoldHex:
 
 
 # ---------------------------------------------------------------------------
-# W: Across the Veil (skipped — utility dash/invisibility)
+# W: Across the Veil
 # ---------------------------------------------------------------------------
 
 
 class TestWAcrossTheVeil:
-    """W deals no damage and must be absent from results."""
+    """W (Across the Veil) carries no enemy-damage attribute (damageType:
+    None, dash/invisibility/MS leveling rows only) — it emits a sourced
+    zero-damage row rather than staying silently absent."""
 
-    def test_w_absent(self, aurora_data) -> None:
+    def test_w_present_zero_damage(self, aurora_data) -> None:
         abilities = _parse_100ap(aurora_data)
-        assert "W" not in abilities
+        entry = abilities["W"]
+        assert entry["name"] == "Across the Veil"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
 
 
 # ---------------------------------------------------------------------------
@@ -345,7 +351,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Aurora")
-        assert aurora.MODULE_CC == {"Q": "none", "E": "slow", "R": "slow"}
+        assert aurora.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "E": "slow",
+            "R": "slow",
+        }
         assert "slows them by 80%" in " ".join(cc_review.slot_text(data, "E").split())
         assert "slow them by 30%" in " ".join(cc_review.slot_text(data, "R").split())
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
@@ -357,3 +368,16 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Aurora")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.aurora import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }

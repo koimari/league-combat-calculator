@@ -14,7 +14,17 @@ Why each slot is non-generic:
   represent levels 19-20; the components are summed here instead.
 - R (Petrifying Gaze) pins "Magic Damage" (the classifier happens to
   agree, but the module replaces the whole slot map).
-- P (Serpentine Grace) is movement-speed only — deliberately absent.
+- P (Serpentine Grace) increases movement-speed-bonus effectiveness by a
+  percentage — pure stat-effectiveness state with no combat-damage
+  interaction anywhere in this calculator (no positioning/MS-to-damage
+  kernel). Roadmap session 4 batch B (2026-08-21): closes the single
+  out_of_scope slot with an explicit ``no_damage`` row via
+  ``module_helpers.no_damage`` (same pattern as Kled's P, Skaarl the
+  Cowardly Lizard) rather than leaving MODULE_COVERAGE reading
+  "out_of_scope" for an intentionally-unmodeled state passive.
+  Cassiopeia is in ``rotation_resolver.COMBO_TABLE``, but its
+  ``_CAST_SLOTS = (Q, Q2, W, E, R)`` structurally excludes P from cast
+  order — no combo table edit needed.
 
 Both of E's leveling entries are named "Bonus Magic Damage", so
 ``extract_named`` (first match wins) cannot reach the poisoned bonus —
@@ -31,6 +41,7 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -251,7 +262,9 @@ ASSUMPTIONS = [
     "W (Miasma) assumes the target remains in the zone for its full "
     "5-second duration",
     "E's healing against poisoned targets is not modeled (damage calculator)",
-    "Passive (Serpentine Grace) is movement-speed only and not modeled",
+    "P (Serpentine Grace) increases movement-speed-bonus effectiveness by "
+    "6-40% (based on level); it is stat-effectiveness state with no "
+    "combat-damage interaction, so it emits a sourced zero-damage row",
     "R's facing condition does not change damage either way; for crowd "
     "control it selects the branch — R applies the sourced stun when the "
     "target faces Cassiopeia ('Enemies with their facing direction "
@@ -262,6 +275,15 @@ ASSUMPTIONS = [
 ]
 
 SLOTS = {
+    "P": lambda ctx: no_damage(
+        ctx,
+        name="Serpentine Grace",
+        reason=(
+            "Movement-speed-bonus effectiveness (6-40% by level) is "
+            "stat-effectiveness state; no positioning/MS-to-damage kernel "
+            "exists in this calculator."
+        ),
+    ),
     # Q/W poison ticks are ability damage past the cast, so item burns
     # (Liandry's, Blackfire) stay refreshed for the DoT tail
     # (dot_duration, like Brand's Blaze): Q poisons 3s, W ticks 5s.
@@ -274,13 +296,23 @@ SLOTS = {
 # Cached kit review.  Q's blast only poisons ("taking magic damage every
 # 0.429 seconds"), W's clouds leave enemies "grounded and slowed" — a
 # ground is not an immobilizing effect, the slow is the control — and E's
-# fangs apply nothing at all.  R is absent because its kind is a property
-# of the cast rather than of the slot: the facing branch selects stun or
+# fangs apply nothing at all; P is Cassiopeia's own movement speed.  R is
+# absent because its kind is a property of the cast rather than of the
+# slot: the facing branch selects stun or
 # slow, so ``_petrifying_gaze`` authors the kind (and its sourced
 # duration) on the part itself.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none"}
+MODULE_CC = {"P": "none", "Q": "none", "W": "slow", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Cassiopeia")
+
+# P is emitted, but its row is a sourced zero — not a fact SLOTS derives.
+MODULE_COVERAGE = {
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
+}

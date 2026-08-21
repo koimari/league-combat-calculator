@@ -112,6 +112,7 @@ ambessa_data = _champion_fixture("Ambessa")
 amumu_data = _champion_fixture("Amumu")
 anivia_data = _champion_fixture("Anivia")
 annie_data = _champion_fixture("Annie")
+aphelios_data = _champion_fixture("Aphelios")
 ashe_data = _champion_fixture("Ashe")
 # Data key differs from the display/dispatcher name "Aurelion Sol".
 aurelion_sol_data = _champion_fixture("AurelionSol")

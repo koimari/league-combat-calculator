@@ -27,9 +27,18 @@ wiki's Malzahar pets entry and the ability JSON:
   Voidling 0.5s later (the ability description); voidlings attack the
   target from their summon time.
 
-Coverage: P (Void Shift) is a 90% damage reduction with crowd-control
-immunity until it breaks — damage taken is an axis the engine does not
-have, so the slot is out of scope.
+P (Void Shift) is a periodic 90% damage reduction with crowd-control
+immunity until it breaks — pure defensive self-state, no enemy damage.
+The pinned packet already declares it ``kind: "no_damage"`` (a sourced
+zero-damage row), so it was never a gap in enemy-damage coverage;
+MODULE_COVERAGE was simply stale, still reading "out_of_scope" for a
+slot that already emits its state row. Roadmap session 4 batch D
+(2026-08-21) reclassifies P to "no_damage" (the Cassiopeia/Cho'Gath/
+Jarvan precedent) rather than leaving an already-covered passive
+misreported as a gap. P is not a cast slot (``rotation_resolver`` only
+schedules Q/Q2/W/E/R), so this is a documentation-only fix with zero
+fight-computation change.  (Damage *taken* remains an axis the engine
+does not have.)
 """
 
 from __future__ import annotations
@@ -335,9 +344,13 @@ ASSUMPTIONS = [
     "sources the Zz'Rot stacks to 'when he casts another ability' and the "
     "Voidlings to 'Active: Malzahar consumes all Zz'Rot Swarm stacks "
     "and... summons a Voidling', so a basic attack produces neither",
+    "P (Void Shift) is periodic defensive self-state (damage reduction "
+    "with crowd-control immunity) with no enemy damage, so it emits the "
+    "packet's sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
+    "out_of_scope). P is not a cast slot in this engine's rotation.",
 ]
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }

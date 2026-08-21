@@ -111,9 +111,9 @@ def test_jayce_audit_receipt_comes_from_his_named_module_contract():
 
     assert receipt["status"] == "ready"
     assert receipt["registration"] == "reviewed_module"
-    assert receipt["runtime_slots"] == ["Q", "W", "E", "R"]
+    assert receipt["runtime_slots"] == ["P", "Q", "W", "E", "R"]
     assert {row["slot"]: row["status"] for row in receipt["slot_coverage"]} == {
-        "P": "out_of_scope",
+        "P": "no_damage",
         "Q": "modeled",
         "W": "modeled",
         "E": "modeled",

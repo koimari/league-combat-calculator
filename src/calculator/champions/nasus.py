@@ -19,9 +19,18 @@ Why each slot is non-generic:
   is not modeled.
 - P (Soul Eater) and W (Wither) both emit rows that deal no enemy
   damage, but they are not the same claim. P is modeled: the Soul Eater
-  heal rule prices its lifesteal off every physical hit. W is out of
-  scope — its ramping slow and attack-speed cripple are CC magnitude,
-  an axis the engine does not have.
+  heal rule prices its lifesteal off every physical hit (declared
+  through ``COVERAGE_CHANNELS``). W is a no_damage row.
+
+W (Wither) is already a cast slot in this module (SLOTS["W"] =
+_wither) emitting the pinned packet's sourced zero-damage row; the
+pinned packet (reviewed-packets.json) declares W in no_damage_slots
+alongside P. MODULE_COVERAGE was simply stale, still reading
+"out_of_scope" for an already-covered slot. Roadmap session 4 batch D
+(2026-08-21) reclassifies W to "no_damage" (the Cassiopeia/Cho'Gath/
+Jarvan precedent) — a documentation-only fix with zero
+fight-computation change.  Wither's slow/cripple magnitude is still
+unpriced; its kind rides ``MODULE_CC``.
 """
 
 from typing import Any
@@ -256,6 +265,10 @@ ASSUMPTIONS = [
     "12% / 18% / 24% (based on level; game-file breakpoints at 7/13) of the "
     "post-mitigation physical basic-attack/on-hit damage dealt; W (Wither) "
     "slow/cripple is a zero-damage row",
+    "W (Wither) is CC-only (slow + attack-speed cripple) with no enemy "
+    "damage formula in the pinned packet; it emits the sourced "
+    "zero-damage row (MODULE_COVERAGE: no_damage, not out_of_scope). W "
+    'is already a cast slot in this module (SLOTS["W"] = _wither).',
 ]
 
 SLOTS = {
@@ -280,15 +293,12 @@ parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
 
 # P emits a row that prices no enemy damage; what the engine prices for
 # the slot is Soul Eater's lifesteal, authored by the healing rule below
-# (48.6 over a level-18 itemless timed fight with autos).  W stays out of
-# scope: Wither is a ramping slow and attack-speed cripple, and CC
-# magnitude is an axis the engine does not have.
+# (48.6 over a level-18 itemless timed fight with autos).  W is a cast
+# slot emitting the pinned packet's sourced zero-damage row: no_damage,
+# not a gap — only its slow/cripple magnitude stays unpriced.
 MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "out_of_scope",
-    "E": "modeled",
-    "R": "modeled",
+    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
+    for slot in "PQWER"
 }
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 

@@ -47,9 +47,10 @@ def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
     ``auto_attacks`` row misses — Q rides a basic attack rather than
     replacing one, so the engine attributes that swing to the Q row —
     which is why ``derive_self_healing`` reads both rows, and why this
-    receipt is larger than the auto-row-only 48.6 it replaces.  W stays
-    out of scope: Wither is CC magnitude, an axis the engine does not
-    have.
+    receipt is larger than the auto-row-only 48.6 it replaces.  W is a
+    cast slot emitting the pinned packet's sourced zero-damage row, so it
+    is ``no_damage`` rather than a gap; only its slow/cripple magnitude
+    stays unpriced.
     """
     import pytest
 
@@ -58,7 +59,7 @@ def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
 
     contract = get_champion_module_contract("Nasus")
     assert contract.coverage["P"] == "modeled"
-    assert contract.coverage["W"] == "out_of_scope"
+    assert contract.coverage["W"] == "no_damage"
     assert contract.coverage_channels["P"] == ("self_healing_rule",)
 
     payload = calculate_payload(

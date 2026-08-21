@@ -94,12 +94,14 @@ _EXPECTED_DERIVED_ORDERS = {
     "Ahri": ["E", "Q", "W", "R"],  # charm cc setup opens the burst
     # Retired seed (D-89): R's bonus-AD stat_buff is a detected edge to Q
     # and W, so the derivation puts World Ender first on its own.
-    "Aatrox": ["R", "Q", "W"],
+    # Session-4 no_damage slots ride the derived order last (Umbral Dash,
+    # Aphelios' weapon swap): the derivation orders only damage edges.
+    "Aatrox": ["R", "Q", "W", "E"],
     # Retired seed (D-89): no edge is detected at all, so the certified
     # order survives untouched — the flat-kit path, honestly labelled.
     "Jhin": ["Q", "W", "E", "R"],
     # Retired seed (D-89): same flat-kit path as Jhin's.
-    "Aphelios": ["Q", "W", "R"],
+    "Aphelios": ["Q", "W", "E", "R"],
     # Syndra's retired seed (D-89): E requires Q and E requires Q2, declared
     # by her module, derive the order the hand seed used to pin.
     "Syndra": ["Q", "Q2", "E", "W", "R"],

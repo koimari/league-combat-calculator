@@ -334,17 +334,28 @@ class TestPoisonBurnInteraction:
 # ---------------------------------------------------------------------------
 
 
-class TestPassiveAndMeta:
-    """P (Serpentine Grace) is movement-speed only — absent from results."""
+class TestPPassiveSerpentineGrace:
+    """P (Serpentine Grace) carries no enemy-damage attribute — it is a
+    movement-speed-bonus-effectiveness percentage (6-40% by level) with no
+    positioning/MS-to-damage kernel in this calculator. It emits a sourced
+    zero-damage row (MODULE_COVERAGE: no_damage) rather than staying
+    silently absent."""
 
-    def test_passive_not_in_results(self, cassiopeia_data, parse_at) -> None:
+    def test_p_present_zero_damage(self, cassiopeia_data, parse_at) -> None:
         _, abilities = parse_at(cassiopeia_data, 9)
-        assert "passive" not in abilities
-        assert "P" not in abilities
+        entry = abilities["passive"]
+        assert entry["name"] == "Serpentine Grace"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+
+
+class TestPassiveAndMeta:
+    """Skill order / options metadata."""
 
     def test_slot_keys(self, cassiopeia_data) -> None:
         abilities = _parse(cassiopeia_data, ALL_MAXED)
-        assert set(abilities) == {"Q", "W", "E", "R"}
+        assert set(abilities) == {"passive", "Q", "W", "E", "R"}
 
     def test_skill_order_maxes_e_first(self) -> None:
         """Cassiopeia maxes E > Q > W: E rank 5 by level 9, W last."""
@@ -382,7 +393,12 @@ class TestReviewedCrowdControl:
         # the kind and its sourced duration on the part per branch (the
         # ``r_target_facing`` option picks it) rather than declaring one
         # answer for both.
-        assert cassiopeia.MODULE_CC == {"Q": "none", "W": "slow", "E": "none"}
+        assert cassiopeia.MODULE_CC == {
+            "P": "none",
+            "Q": "none",
+            "W": "slow",
+            "E": "none",
+        }
         assert _r_part(facing=True).cc_kind == "stun"
         assert _r_part(facing=False).cc_kind == "slow"
         assert "grounded and slowed" in " ".join(cc_review.slot_text(data, "W").split())
@@ -399,3 +415,16 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Cassiopeia")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.cassiopeia import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }

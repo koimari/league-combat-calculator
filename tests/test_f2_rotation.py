@@ -463,10 +463,10 @@ class TestDerivedPathRotations:
             ),
             (
                 "Aatrox",
-                ["R", "Q", "W"],
+                ["R", "Q", "W", "E"],
                 ["R"],
                 ["Q", "W"],
-                {"Q": 5, "W": 1, "R": 1, "passive": 1},
+                {"Q": 5, "W": 1, "E": 5, "R": 1, "passive": 1},
                 ("stat_buff(bonus_attack_damage)", "amplifies ability damage"),
             ),
             # Jhin's seed named a mechanic the atomized data does not carry:
@@ -490,10 +490,10 @@ class TestDerivedPathRotations:
             # — and publishes empty setup/consume for the same reason.
             (
                 "Aphelios",
-                ["Q", "W", "R"],
+                ["Q", "W", "E", "R"],
                 [],
                 [],
-                {"Q": 5, "W": 1, "R": 5, "passive": 1},
+                {"Q": 5, "W": 1, "E": 1, "R": 5, "passive": 1},
                 ("no detectable setup/consume signal", "aphelios_main_weapon"),
             ),
         ],

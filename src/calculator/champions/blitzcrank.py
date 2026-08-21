@@ -23,10 +23,14 @@ Why each slot is non-generic:
   modifier (robust to effect reordering on data re-pulls).
 - Q (Rocket Grab) is a clean generic read, kept explicit here.
 - P (Mana Barrier) is a defensive shield with no cast of its own, so it
-  is absent from the slot map; ``_rocket_grab`` hangs its
-  ``self_shield_events`` payload on Q's damage event instead, which is
-  why the coverage map calls P ``modeled`` through the
-  ``self_shield_events`` channel.
+  is absent from the slot map; ``_rocket_grab`` (Q) hangs the sourced
+  shield (35% max mana, up to 10s) on Q's damage event as a
+  ``self_shield_events`` payload the survival ledger grants pre-fight,
+  live-tested end to end
+  (``tests/test_e8_shields.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
+  ``test_blitzcrank_api_mana_barrier_absorbs_sourced_amount``).  That
+  channel is why the coverage map calls P ``modeled`` rather than
+  out_of_scope, with no standalone P row in the ``abilities`` dict.
 """
 
 from typing import Any
@@ -239,6 +243,6 @@ SOURCES = load_champion_sources("Blitzcrank")
 
 # P emits no cast row, so the derivation would call it out_of_scope; the
 # shield Q carries is what the engine prices (331.45 for 10s at level 18
-# with no items, 30% of max mana).
+# with no items, 35% of max mana).
 MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

@@ -282,11 +282,17 @@ class TestWInfernalChains:
 
 
 class TestEUmbralDash:
-    """Tests for E (Umbral Dash) — should not appear in abilities."""
+    """E (Umbral Dash) carries no enemy-damage attribute (damageType: None,
+    no leveling row on any effect) — it emits a sourced zero-damage row
+    rather than staying silently absent."""
 
-    def test_e_not_in_results(self, aatrox_data, parse_at) -> None:
+    def test_e_present_zero_damage(self, aatrox_data, parse_at) -> None:
         _, abilities = parse_at(aatrox_data, 9)
-        assert "E" not in abilities
+        entry = abilities["E"]
+        assert entry["name"] == "Umbral Dash"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
 
 
 class TestReviewedCrowdControl:
@@ -348,19 +354,16 @@ class TestReviewedCrowdControl:
 
 
 def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
-    """E emits no cast row; the heal rule is what prices the slot.
+    """E's own row is a sourced zero; the heal rule is what prices the slot.
 
     A level-18 itemless timed fight with autos pays Umbral Dash 821.5 —
     the receipt behind E's ``modeled`` label.
     """
-    import pytest
-
     from src.calculator.calculate import calculate_payload
     from src.calculator.champions import get_champion_module_contract
 
     contract = get_champion_module_contract("Aatrox")
-    assert "E" not in contract.slots
-    assert contract.coverage["E"] == "modeled"
+    assert set(contract.coverage.values()) == {"modeled"}
     assert contract.coverage_channels["E"] == ("self_healing_rule",)
 
     payload = calculate_payload(
@@ -377,3 +380,21 @@ def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
         if event["source"] == "Umbral Dash"
     )
     assert paid == pytest.approx(821.5, abs=0.1)
+
+
+class TestModuleCoverage:
+    """Every slot is covered: E's emitted row is a sourced zero and the
+    heal channel is what prices it, so no slot is left out_of_scope."""
+
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions import get_champion_module_contract
+
+        contract = get_champion_module_contract("Aatrox")
+        assert contract.coverage == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "modeled",
+            "R": "modeled",
+        }
+        assert contract.slots["E"] is aatrox.SLOTS["E"]

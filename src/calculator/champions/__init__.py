@@ -524,6 +524,16 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "p_ready": {"role": "self_state", "slot": "P"},
     "p_right_punches": {"role": "self_state", "slot": "P"},
     "p_self_health_percent": {"role": "self_state", "slot": "P"},
+    # Mel P: how many Searing Brilliance stacks the empowered swing
+    # consumes.  Deliberately ``self_state`` and NOT a ``stack_consume``
+    # consume edge: the arming relation is already structural, not
+    # inferred — the module's ``empower_window`` declares armed_by
+    # (Q/W/E/R) and consumed_by ("auto"), and damage.py walks the real
+    # accepted cast timeline against it.  A ``consume`` declaration would
+    # also have to name ONE ``setup_slot``, which cannot express "any of
+    # the four ability slots arms it" (the classification-notes rule:
+    # acknowledge in the receipt, never invent a duplicate edge).
+    "p_searing_brilliance_missiles": {"role": "self_state", "slot": "P"},
     "p_shot_number": {"role": "self_state", "slot": "P"},
     "p_stacks": {"role": "self_state", "slot": "P"},
     "p_style_stacks": {"role": "self_state", "slot": "P"},
@@ -715,6 +725,19 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "w_epicenter": {"role": "irrelevant", "slot": "W"},
     "w_evolved": {"role": "irrelevant", "slot": "W"},
     "w_grit": {"role": "self_state", "slot": "W"},
+    # Naafiri W: whether The Call of the Pack's hunt is running.  It is a
+    # SELF steroid, so ``self_state`` and NOT ``setup``: the setup role in
+    # this table is reserved for target-side conditions (``mark_applier``,
+    # ``amp``), and W's ordering edge is already structural rather than
+    # inferred — the slot emits a ``stat_buff`` payload keyed
+    # ``bonus_attack_damage``, which is in the resolver's
+    # ``_DAMAGE_AMP_STAT_KEYS``, so buffs-first derives W -> Q/E/R from the
+    # parsed row itself.  A ``consume`` declaration would also have to name
+    # ONE ``setup_slot``, which cannot express that the same hunt state
+    # gates both W's own AD steroid and P's raised Packmate cap
+    # (the classification-notes rule: acknowledge in the receipt, never
+    # invent a duplicate edge).
+    "w_hunt": {"role": "self_state", "slot": "W"},
     "w_hunters_vigor_stacks": {"role": "self_state", "slot": "W"},
     "w_in_brush": {"role": "irrelevant", "slot": "W"},
     "w_nearby_champions": {"role": "self_state", "slot": "W"},

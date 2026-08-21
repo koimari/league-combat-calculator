@@ -25,10 +25,14 @@ Why each slot is non-generic:
   the autos landing inside the window against decaying current health,
   and shows zero with no autos (one-rotation / autos off).
 - P (Adaptive Defenses) is a defensive shield with no cast of its own,
-  so it is absent from the slot map; ``_tactical_sweep_with_shield``
-  hangs its ``self_shield_events`` payload on W's damage event instead,
-  which is why the coverage map calls P ``modeled`` through the
-  ``self_shield_events`` channel.
+  so it is absent from the slot map; ``_tactical_sweep_with_shield`` (W)
+  hangs the sourced shield (20% max HP, 2s) on W's damage event as a
+  ``self_shield_events`` payload the survival ledger grants pre-fight,
+  live-tested end to end
+  (``tests/test_e8_shields.py::test_camille_adaptive_defenses_payload_is_sourced``,
+  ``test_camille_api_adaptive_defenses_absorbs_known_incoming_hit``).
+  That channel is why the coverage map calls P ``modeled`` rather than
+  out_of_scope, with no standalone P row in the ``abilities`` dict.
 
 All numeric values are read from the champion JSON data.
 """

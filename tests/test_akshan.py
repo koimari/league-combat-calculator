@@ -43,11 +43,30 @@ class TestQAvengerang:
 
 
 class TestWGoingRogue:
-    """Tests for W (Going Rogue) — utility, should be skipped."""
+    """W (Going Rogue) carries no enemy-damage attribute (damageType: None,
+    no effect row deals HP loss to a champion) — it emits a sourced
+    zero-damage row rather than staying silently absent."""
 
-    def test_w_not_in_results(self, akshan_data, parse_at) -> None:
+    def test_w_present_zero_damage(self, akshan_data, parse_at) -> None:
         _, abilities = parse_at(akshan_data, 9)
-        assert "W" not in abilities
+        entry = abilities["W"]
+        assert entry["name"] == "Going Rogue"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+
+
+class TestModuleCoverage:
+    def test_all_five_slots_covered(self) -> None:
+        from src.calculator.champions.akshan import MODULE_COVERAGE
+
+        assert MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "modeled",
+            "R": "modeled",
+        }
 
 
 class TestEHeroicSwing:
@@ -423,7 +442,7 @@ class TestFightEngineIntegration:
             champion_options={"passive_procs": 3, "e_shots": 5},
         )
         assert "Q" in abilities
-        assert "W" not in abilities
+        assert "W" in abilities
         assert "E" in abilities
         assert "R" in abilities
         assert "passive_double_shot" in abilities

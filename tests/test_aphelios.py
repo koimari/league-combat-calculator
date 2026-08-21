@@ -141,17 +141,49 @@ class TestReviewedCrowdControl:
 
 
 def test_the_weapon_queue_slot_is_no_damage_not_a_missing_axis() -> None:
-    """E is the one slot with no row, because it has nothing to price.
+    """E emits a sourced zero, because it has nothing to price.
 
     The Weapon Queue System reorders the next weapons and has no gameplay
-    effect of its own, so E is ``no_damage`` rather than an engine axis
-    Aphelios is waiting on.
+    effect of its own, so E is ``no_damage`` — the pinned packet's own
+    zero-damage row — rather than an engine axis Aphelios is waiting on.
     """
     from src.calculator.champions import get_champion_module_contract
 
     contract = get_champion_module_contract("Aphelios")
-    assert "E" not in contract.slots
+    assert "E" in contract.slots
     assert contract.coverage["E"] == "no_damage"
     assert contract.coverage_channels == {}
     for weapon in WEAPONS:
-        assert "E" not in _parse(weapon), weapon
+        entry = _parse(weapon)["E"]
+        assert entry["name"] == "Weapon Queue System", weapon
+        assert entry["total_raw"] == 0.0, weapon
+        assert entry["parts"] == (), weapon
+        assert entry["detail"], weapon
+
+
+class TestEWeaponQueueSystem:
+    """The same zero row through the shared champion fixtures."""
+
+    def test_e_present_zero_damage(self, aphelios_data, parse_at) -> None:
+        _, abilities = parse_at(aphelios_data, 9)
+        entry = abilities["E"]
+        assert entry["name"] == "Weapon Queue System"
+        assert entry["total_raw"] == 0.0
+        assert entry["parts"] == ()
+        assert entry["detail"]
+
+
+class TestModuleCoverage:
+    """P/Q/W/R are exercised through the thematic suites
+    (test_e1_healing_b1.py, test_issue_137.py, test_p1_review_2.py,
+    test_spellblade_on_hit_matrix.py, test_survival_kernel.py); what this
+    pins is that no slot is left out_of_scope."""
+
+    def test_all_five_slots_covered(self) -> None:
+        assert aphelios.MODULE_COVERAGE == {
+            "P": "modeled",
+            "Q": "modeled",
+            "W": "modeled",
+            "E": "no_damage",
+            "R": "modeled",
+        }

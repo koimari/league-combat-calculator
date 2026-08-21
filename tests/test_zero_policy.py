@@ -5,7 +5,7 @@ defaulted disposition is the indistinguishable zero this campaign exists to
 remove.  The champion tree is the one place that rule is discharged by a
 *declared default* instead: ``damage_entry`` and ``simple_damage`` are the
 single construction layer for every numeric leaf a champion module authors,
-so the policy is stated once there and the 397 call sites across 152
+so the policy is stated once there and the 399 call sites across 152
 champion modules are deliberately not edited — a required-no-default field
 there would be a campaign-wide champion sweep smuggled in by an idiom.  That
 blast radius is measured here rather than recalled, because a decision
@@ -116,16 +116,17 @@ def test_the_blast_radius_the_exception_avoids_is_measured_not_recalled() -> Non
     criterion 7 all state these two numbers, so they cannot be restated
     without this going red.
 
-    Re-measured on the merge of origin/main: 397 call sites across **152**
+    Re-measured on the second merge of origin/main: 399 call sites across **152**
     modules, up from 151.  The module count moved for exactly one reason —
     main's ``vladimir.py`` authors its first ``damage_entry``, so a module
     that held none now holds one.  The 397 is unchanged only by arithmetic
     coincidence: ``aatrox.py`` 2->3, ``miss_fortune.py`` 1->2,
-    ``rengar.py`` 7->4, ``vladimir.py`` 0->1 nets to zero.  Both halves are
+    ``rengar.py`` 7->4, ``vladimir.py`` 0->1 nets to zero; the second merge
+    adds two sites (main's session-4 Mel and Aphelios rows).  Both halves are
     re-measured, not carried over.
     """
     counts = _builder_call_sites()
-    assert (sum(counts.values()), len(counts)) == (397, 152)
+    assert (sum(counts.values()), len(counts)) == (399, 152)
 
 
 def test_the_declared_default_is_keyword_only_at_both_builders() -> None:

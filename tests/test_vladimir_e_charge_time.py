@@ -1151,6 +1151,8 @@ class TestRegressionSurface:
         # carries a named ``test_vladimir.py`` plus the packet-module,
         # scanner-scope and zero-policy suites that cite the kit.
         assert hits == [
+            # ci-evidence scanner cites this file as a docstring-citation fixture
+            "test_ci_evidence_parity.py",
             "test_e2_dot_3.py",
             "test_e9_corpus.py",
             "test_f2_rotation.py",

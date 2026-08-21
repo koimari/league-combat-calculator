@@ -187,10 +187,10 @@ def test_jayce_runtime_and_published_review_metadata_share_one_module():
     contract = get_champion_module_contract("Jayce")
 
     assert contract.parse_abilities is jayce.parse_abilities
-    assert set(contract.slots) == set(jayce.SLOTS) == {"Q", "W", "E", "R"}
+    assert set(contract.slots) == set(jayce.SLOTS) == {"P", "Q", "W", "E", "R"}
     assert contract.sources == tuple(jayce.SOURCES)
     assert contract.coverage == {
-        "P": "out_of_scope",
+        "P": "no_damage",
         "Q": "modeled",
         "W": "modeled",
         "E": "modeled",

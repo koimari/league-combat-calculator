@@ -55,10 +55,20 @@ Why each slot is non-generic:
   range from 125 to 500 — a range change with no damage effect, noted
   here and modeled nowhere.
 - P (Hextech Capacitor) grants movement speed and ghosting on stance
-  swap. No damage, no damage-relevant stat — absent from the map. Its
-  two JSON entries ("Hextech Capacitor" / "Hextech Capacitor 2") carry
-  byte-identical descriptions and are a parser artifact, not two
-  effects.
+  swap; its one leveling array is empty (``leveling: []``) — pure
+  utility state with no combat-damage interaction. Roadmap session 4
+  batch C (2026-08-21): closes the single out_of_scope slot with an
+  explicit ``no_damage`` row via ``module_helpers.no_damage`` (the
+  Cassiopeia P / Cho'Gath P pattern) rather than leaving
+  MODULE_COVERAGE reading "out_of_scope" for an intentionally
+  unmodeled state passive. Its two JSON entries ("Hextech Capacitor" /
+  "Hextech Capacitor 2") carry byte-identical descriptions and are a
+  parser artifact, not two effects — the row reads entry [0]. Jayce is
+  not in ``rotation_resolver.COMBO_TABLE``, but IS a hand-authored
+  ``CAST_ORDER`` champion (the derived-rule path filters by
+  ``CAST_ORDER`` membership, per the Aatrox/Aphelios batch-A
+  precedent) — appended "P" to ``CAST_ORDER`` so the fully-derived
+  rotation still carries it.
 """
 
 from typing import Any
@@ -67,6 +77,7 @@ from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..stats import ATTACK_SPEED_CAP
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     by_option,
     damage_entry,
@@ -475,7 +486,10 @@ OPTIONS: list[dict[str, Any]] = [
 # Jayce transforms INTO a stance and only then uses its abilities, so R
 # resolves FIRST — the engine's default puts it last, where Cannon R's
 # armor/MR shred would reach the autos but none of the Q/W it precedes.
-CAST_ORDER = ["R", "Q", "Q2", "W", "E"]
+# P (Hextech Capacitor) is a zero-damage state row with no ordering
+# dependency — appended at the end (the Aatrox/Aphelios batch-A pattern)
+# so the derived-rule path still carries it.
+CAST_ORDER = ["R", "Q", "Q2", "W", "E", "P"]
 
 ASSUMPTIONS = [
     "Jayce is modeled in ONE stance at a time — toggle hammer_stance to "
@@ -552,11 +566,29 @@ ASSUMPTIONS = [
     "Cannon R raises attack range from 125 to 500; Jayce's JSON attackType "
     "is RANGED, so melee/ranged item scaling treats him as ranged in BOTH "
     "stances (matching the wiki's range-type classification)",
-    "Passive (Hextech Capacitor) not modeled — movement speed and "
-    "ghosting on stance swap only",
+    "Passive (Hextech Capacitor) grants 30 bonus movement speed and "
+    "ghosting for 0.75s on every stance swap; the leveling array is "
+    "empty (pure utility state, no combat-damage interaction), so it "
+    "emits a sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
+    "out_of_scope)",
 ]
 
+
+def _hextech_capacitor(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: zero-damage row for Hextech Capacitor's MS + ghosting on swap."""
+    return no_damage(
+        ctx,
+        name="Hextech Capacitor",
+        reason=(
+            "Innate: gains ghosting and 30 bonus movement speed for 0.75s "
+            "whenever Jayce switches stances. Pure utility state — no "
+            "leveling row and no combat-damage interaction"
+        ),
+    )
+
+
 SLOTS = {
+    "P": _hextech_capacitor,
     "Q": _q,
     "W": _w,
     "E": _e,
@@ -567,3 +599,12 @@ parse_abilities = build_parser(SLOTS, "Jayce")
 
 
 SOURCES = load_champion_sources("Jayce")
+
+# P is emitted, but its row is a sourced zero — not a fact SLOTS derives.
+MODULE_COVERAGE = {
+    "P": "no_damage",
+    "Q": "modeled",
+    "W": "modeled",
+    "E": "modeled",
+    "R": "modeled",
+}

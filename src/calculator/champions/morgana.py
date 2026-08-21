@@ -18,6 +18,20 @@ Shield) deals no damage but is ``modeled``: the ally-support scanner prices
 its cached "Magic Shield Strength" row (320.0 to the target ally at rank 5,
 0 AP).  The ledger absorbs it as an ordinary pool — the magic-only
 restriction and the crowd-control immunity it carries are the boundary.
+
+P (Soul Siphon) is the self-heal passive: no enemy-damage formula exists
+anywhere in the cached packet (the pinned packet already declares P
+``kind: "no_damage"``, and this module's ``_soul_siphon`` override emits
+the same sourced zero-damage row so the heal rule has a P entry to
+attach to). It was never an enemy-damage gap; MODULE_COVERAGE was
+simply stale, still reading "out_of_scope" for an already-covered
+passive. Roadmap session 4 batch D (2026-08-21) reclassifies P to
+"no_damage" (the Cassiopeia/Cho'Gath/Jarvan precedent) — a
+documentation-only fix with zero fight-computation change. P is not a
+cast slot in this engine (``rotation_resolver`` only schedules
+Q/Q2/W/E/R).  Coverage for P is declared through
+``COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}`` rather than a
+hand-written MODULE_COVERAGE table.
 """
 
 from functools import partial
@@ -196,6 +210,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Black Shield) emits the selected recipient's magic shield from the "
     "typed Magic Shield Strength atom. Its typed active-duration atom keeps "
     "crowd control from adding action downtime while the shield holds.",
+    "P (Soul Siphon) has no enemy-damage formula anywhere in the cached "
+    "packet; it emits a sourced zero-damage row (MODULE_COVERAGE: "
+    "no_damage, not out_of_scope). P is not a cast slot in this engine's "
+    "rotation.",
 ]
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 

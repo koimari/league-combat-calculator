@@ -18,11 +18,116 @@ E9-2 gap fixes:
 - E (Eviscerate) prices BOTH the dash and the Flurry explosion on
   arrival (Dash Physical Damage + Flurry Physical Damage == Total
   Physical Damage), instead of the packet's dash-only row.
-- W (The Call of the Pack) prices the one grant the engine dispatches:
-  "while on the hunt, Naafiri gains 20% AD bonus attack damage" for the
-  cast's sourced 5 seconds.  The two extra Packmates it summons, its
-  bonus movement speed, and P's Packmate roster have no axis — no pet
-  timeline exists.
+
+!!! GAME-FILE SLOT LABELS ARE SWAPPED — READ BEFORE ANY PATCH-DAY CHECK
+Naafiri's binary (``data/bin/characters/naafiri.bin.json``) names her
+two upper spell slots the OPPOSITE way round from the live kit, the
+wiki, and ``data/champions.json``.  This is a naming artifact of her
+2025 rework, not a data error, and it is the single easiest way to
+mis-source this champion (the Gnar-P game-file caveat pattern):
+
+  - binary ``Characters/Naafiri/Spells/NaafiriRAbility/NaafiriR``
+    IS wiki/live **W — The Call of the Pack**.  Proof: its
+    ``cooldownTime`` is the padded 7-slot ``[26, 26, 24, 22, 20, 18,
+    18]`` (ranks 1-5 at indices 1-5 = 26/24/22/20/18, the wiki W
+    cooldown), and its ``DataValues`` are ``PackmatesToAdd`` (2),
+    ``Duration`` (5.0), ``MoveSpeedAmount`` (padded ``[.175, .20,
+    .225, .25, .275, .30, .325]`` = the wiki W row 20/22.5/25/27.5/30%
+    at ranks 1-5), ``UntargetableDuration`` (1.0 — the wiki W's
+    "untargetable for the first 1 second") and ``NaafiriADPercentBoost``
+    (0.20 — the wiki W's "gains 20% AD bonus attack damage").
+  - binary ``Characters/Naafiri/Spells/NaafiriWAbility/NaafiriW``
+    IS wiki/live **R — Hounds' Pursuit**.  Proof: ``cooldownTime`` is
+    the padded ``[110, 110, 95, 80, 80, 80, 80]`` (R ranks 1-3 =
+    110/95/80), and its calculations are ``TotalDamage`` /
+    ``PackmateDamage`` / ``ArmorShred`` / ``ShieldTotal``.
+
+The same swap runs through ``data/atoms/v2/naafiri.atoms.v2.json``,
+whose ``behavior`` field uses the BINARY names: the atom row tagged
+``NaafiriR`` (``Trait_Untargetable``) is wiki W, and the rows tagged
+``NaafiriW`` (``Trait_DamageAbility``, ``Trait_Shield``,
+``Trait_AttackBuff_Duration``) are wiki R.  Everything in THIS module
+is named by the live/wiki kit, matching ``data/champions.json``.
+
+Do NOT try to resolve the swap from the ``NaafiriR*`` / ``NaafiriW*``
+CHILD objects (``NaafiriRShield``, ``NaafiriRVision``,
+``NaafiriRMoveSpeed``, ``NaafiriRPassive``, ``NaafiriWShred``, the
+``NaafiriPackmate*`` shells).  Every one of them is an empty marker —
+``DataValues`` and ``mSpellCalculations`` are both empty — so they
+carry no number to cross-check a cooldown or a ratio against, and the
+atomizer classifies them by NAME (``evidence`` reads ``name:shield``,
+``name:movespeed``), which is precisely the signal the swap corrupts.
+Only the five primary records ``NaafiriP`` / ``NaafiriQ`` /
+``NaafiriW`` / ``NaafiriE`` / ``NaafiriR`` hold DataValues or
+calculations, and the two-channel cooldown match above is the only
+sound way to bind them to live slots.
+
+Roadmap session (2026-08-21): closes both of Naafiri's out_of_scope
+slots (P, W).
+
+  - W (The Call of the Pack) is a real, sourced steroid, so it gets a
+    slot-parser override rather than a relabel (Aatrox R / Singed R
+    precedent: a BUFF-phase ``stat_buff``).  The wiki W's third effect
+    branch reads "While on the hunt, Naafiri gains 20% AD bonus attack
+    damage and grants herself and all Packmates bonus movement speed";
+    the 20% lives in prose rather than a leveling row, so it is pinned
+    as a module constant and corroborated by the binary's
+    ``NaafiriADPercentBoost`` = 0.20 (see the swap note above).  Both
+    channels agree it is unranked, and the binary's ``BonusAD``
+    calculation is a ``StatByNamedDataValueCalculationPart`` on stat 2
+    (attack damage) with NO ``mStatFormula`` override — i.e. 20% of
+    TOTAL AD, granted as bonus AD, which is exactly what the wiki's
+    "20% AD" notation means.  Modeled as BUFF phase (mutates
+    ``ctx.stats`` in-parse) so Q/E/R and the packmate row below all
+    scale off the buffed bonus AD, and emitted as a ``stat_buff``
+    payload so the fight engine's autos see it too.
+    The same branch's bonus movement speed (20/22.5/25/27.5/30% by W
+    rank, a real leveling row, corroborated by the binary's
+    ``MoveSpeedAmount``) is sourced but deliberately NOT modeled: it is
+    an additive PERCENT bonus, and the only ability-buff channel
+    (``_apply_stat_buff_ultimates`` in ``damage.py``) adds a flat
+    number straight onto ``champion_stats["move_speed"]``, bypassing
+    both the additive-percent composition and
+    ``stats.apply_movement_speed_soft_caps``.  Feeding that unclamped
+    scalar to the one live consumer (``item_effects``'
+    ``adaptive_force_per_total_move_speed``, i.e. Swiftmarch's adaptive
+    force) would turn an uncertified movement number into damage, so
+    it stays a documented rider — see ASSUMPTIONS.
+  - P (We Are More) closes as the packmate DAMAGE coupling, the Illaoi-P
+    precedent (a passive slot that prices the pet damage other slots
+    trigger).  The innate summon itself deals nothing; what the pack
+    contributes on Hounds' Pursuit IS wiki-sourced, on R's own second
+    leveling row "Physical Damage per Packmate" (12.5/20/27.5 + 10%
+    bonus AD), which the packet ignored entirely.  The packmate count
+    is sourced three ways and all three agree exactly:
+      * wiki P text: "up to 2 / 3 / 4 / 5 (based on level)";
+      * binary ``NaafiriP``'s ``PackmateCap`` calculation:
+        ``mLevel1Value`` 2 with +1 breakpoints at levels 9, 12 and 15;
+      * the wiki R notes' packmate-total table, which is the arithmetic
+        product of the two rows above — "Levels 16:18: 137.5 (+ 50%
+        bonus AD) / 192.5 (+ 70% bonus AD)" is exactly 5 x 27.5 (+5 x
+        10%) and 7 x 27.5 (+7 x 10%), and every other band checks the
+        same way (L6-8: 2 x 12.5 = 25 / 4 x 12.5 = 50; L9-11: 3 x 12.5
+        = 37.5 at rank 1 and 3 x 20 = 60 at rank 2; L12-14: 4 x 20 =
+        80; L15: 5 x 20 = 100).  The table's second column is the
+        wiki W note's raised cap ("While The Call of the Pack is
+        active, it increases We Are More's summon cap to 4 / 5 / 6 / 7
+        (based on level)"), so the two columns are selected by the SAME
+        ``w_hunt`` option that gates the AD steroid — one hunt state,
+        not two independent guesses.
+    Packmate BASIC ATTACKS stay unpriced with a named receipt: their
+    formula exists only in the game binary (``NaafiriP``'s
+    ``PackmateTotalDamage`` = level-interpolated 10->20 + 4% bonus AD,
+    with ``PackmateBaseAS`` 0.688), because the wiki's per-champion
+    Pets entry is NOT part of the local cache — ``data/champions.json``
+    P says only "See Pets for full details on Packmates".  The E4
+    summon precedent (Malzahar voidlings, Annie's Tibbers) requires a
+    cached wiki row for the per-attack damage and pins only the cadence
+    as a module constant; there is no cached row here to pin against,
+    and the pack's uptime/target-selection (leap range, frenzy
+    stacking, taunt) is unmodeled state on top.  Pricing it would be a
+    single-channel invention, so it is documented instead — see
+    ASSUMPTIONS.
 """
 
 from typing import Any
@@ -55,28 +160,54 @@ _BLEED_TICK_INTERVAL = 0.5
 _BLEED_DURATION = 5.0
 _RECAST_TIME_OFFSET = 0.5
 
-# HARDCODED: verify on patch updates — The Call of the Pack's hunt lasts
-# "the next 5 seconds" and grants "20% AD bonus attack damage"; both are
-# cached W prose, and the JSON's only W leveling row is movement speed.
-_W_DURATION_SECONDS = 5.0
-_W_BONUS_AD_RATIO = 0.20
+# HARDCODED: verify on patch updates against the GAME FILES as well as the
+# wiki — and read the slot-swap warning in the module docstring first.
+# W (The Call of the Pack) grants "20% AD bonus attack damage" in wiki
+# prose only (no leveling row), corroborated by the binary's
+# NaafiriADPercentBoost = 0.20 on the SWAPPED record
+# Characters/Naafiri/Spells/NaafiriRAbility/NaafiriR, whose BonusAD
+# calculation reads stat 2 (attack damage) with no mStatFormula override,
+# i.e. 20% of TOTAL AD granted as bonus AD.  The hunt lasts 5 seconds
+# (wiki W text; binary Duration = 5.0).
+_HUNT_AD_PERCENT = 20.0
+_HUNT_DURATION = 5.0
+
+# Packmate counts by champion level, sourced three ways (wiki P text, the
+# binary's PackmateCap breakpoints at levels 9/12/15, and the wiki R
+# notes' packmate-total table — see the module docstring).  The first
+# column is We Are More's own cap; the second is the cap while The Call
+# of the Pack's hunt is active (wiki W note).
+_PACKMATE_CAP_BY_LEVEL = ((15, 5, 7), (12, 4, 6), (9, 3, 5), (1, 2, 4))
+# Wiki R: "Naafiri and her Packmates channel for 0.75 seconds ... upon
+# completion of the channel, they dash to the target".  The pack lands
+# with her, so every packmate hit is authored at the end of the channel.
+_R_CHANNEL_TIME = 0.75
+_PACKMATE_DAMAGE_ATTR = "Physical Damage per Packmate"
+
+
+def _packmate_count(level: int, *, hunt: bool) -> int:
+    """Sourced number of Packmates at *level*, per the hunt state."""
+    for threshold, base_cap, hunt_cap in _PACKMATE_CAP_BY_LEVEL:
+        if level >= threshold:
+            return hunt_cap if hunt else base_cap
+    raise ValueError(f"Naafiri: no sourced Packmate cap for level {level!r}")
 
 
 def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: the hunt's 20% AD bonus attack damage for its 5 seconds."""
-    ability = ctx.ability("W")
+    """W: the hunt's 20%-of-total-AD bonus-attack-damage steroid.
+
+    See the module docstring's W entry for the two-channel sourcing of
+    the 20% (wiki prose + the swapped binary record's
+    ``NaafiriADPercentBoost``) and for why the branch's bonus movement
+    speed stays a documented rider instead of a ``stat_buff`` key.
+    """
+    ability = ctx.ability("W", 0)
     if ability is None:
         return None
     rank = ctx.rank_for("W")
     if rank < 1:
         return None
 
-    share = buff_window_share(ctx, _W_DURATION_SECONDS)
-    granted = _W_BONUS_AD_RATIO * ctx.stat("attack_damage")
-    movement = extract_value(ability, "Bonus Movement Speed", rank)
-    bonus_ad = granted * share
-    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
-    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
         ability.get("name", "The Call of the Pack"),
         rank,
@@ -85,17 +216,111 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
         zero_policy=STEROID_ZERO,
     )
-    entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
+    if not bool(ctx.option("w_hunt")):
+        entry["detail"] = (
+            "Hunt not priced (w_hunt off): the 20% AD bonus attack damage "
+            "and the raised Packmate cap are both withheld."
+        )
+        return entry
+
+    # The hunt expires; a stat_buff is one scalar for the whole fight, so
+    # the grant lands time-weighted by the share of the window it covers
+    # (Blitzcrank's Overdrive rule, module_helpers.buff_window_share).
+    granted = _HUNT_AD_PERCENT / 100.0 * ctx.stat("attack_damage")
+    bonus = granted * buff_window_share(ctx, _HUNT_DURATION)
+    movement = extract_value(ability, "Bonus Movement Speed", rank)
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus
+    entry["stat_buff"] = {"bonus_attack_damage": bonus}
     entry["detail"] = (
-        f"+{_W_BONUS_AD_RATIO * 100:g}% AD = +{granted:.2f} bonus attack "
-        f"damage for {_W_DURATION_SECONDS:g}s (+{bonus_ad:.2f} over the "
-        f"fight window); the hunt's two extra Packmates and its "
-        f"+{movement:g}% movement speed have no axis"
+        f"+{granted:.1f} bonus attack damage for {_HUNT_DURATION:g}s "
+        f"({_HUNT_AD_PERCENT:g}% of total AD, wiki W prose corroborated by "
+        f"the game binary's NaafiriADPercentBoost); +{bonus:.1f} over the "
+        "fight window.  The hunt also raises the Packmate cap (priced on "
+        f"the We Are More row) and grants +{movement:g}% movement speed, "
+        "which stays a sourced-but-unmodeled rider — see ASSUMPTIONS.  The "
+        "untargetability and the Packmate vanish/reappear are state."
     )
     return entry
 
 
 _call_of_the_pack.phase = BUFF
+
+
+def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the pack's sourced share of Hounds' Pursuit (Illaoi-P pattern).
+
+    The innate summon deals no damage of its own.  What the Packmates
+    contribute is R's own "Physical Damage per Packmate" leveling row
+    times the sourced Packmate count at this level and hunt state; their
+    basic attacks stay unpriced with a named receipt (module docstring).
+    """
+    ability = ctx.ability("P", 0)
+    if ability is None:
+        return None
+    name = ability.get("name", "We Are More")
+    hunt = bool(ctx.option("w_hunt"))
+    count = _packmate_count(ctx.level, hunt=hunt)
+    r_ability = ctx.ability("R", 0)
+    r_rank = ctx.rank_for("R")
+    if r_ability is None or r_rank < 1 or count < 1:
+        return {
+            "name": name,
+            "damage_type": "physical",
+            "total_raw": 0.0,
+            "parts": (),
+            "detail": (
+                f"{count} Packmate(s) active; Hounds' Pursuit is unlearned, "
+                "so the pack has no sourced damage row (their basic attacks "
+                "are documented-not-modeled — see ASSUMPTIONS)."
+            ),
+        }
+
+    per_packmate = extract_named(
+        r_ability, _PACKMATE_DAMAGE_ATTR, r_rank, ctx.stats, ctx.target
+    )
+    # ``proc_count`` is the number of DISCRETE proc instances and
+    # ``DamagePart.count`` is the number of hits INSIDE one instance;
+    # ``_add_precomputed_proc_damage`` prices
+    # ``sum(part.amount * part.count) * proc_count``, so carrying the pack
+    # size in both fields would multiply it in twice (a count-squared
+    # overstatement, and ``_apply_basic_amp`` would also be told about
+    # ``count x proc_count`` damage instances).  One Packmate hit is one
+    # part; the pack size is the proc count.
+    return {
+        "name": name,
+        "damage_type": "physical",
+        "total_raw": per_packmate * count,
+        "parts": (
+            DamagePart(
+                "physical",
+                per_packmate,
+                count=1,
+                time_offset=_R_CHANNEL_TIME,
+                hit_interval=0.0,
+            ),
+        ),
+        "proc_count": count,
+        "unit": "Packmate hits",
+        "event_phase": "effect",
+        "damage_events": [
+            {
+                "time": _R_CHANNEL_TIME,
+                "damage_type": "physical",
+                "damage": per_packmate,
+                "event_precision": "phase_order",
+            }
+            for _ in range(count)
+        ],
+        "detail": (
+            f"{count} Packmate(s) land Hounds' Pursuit with her at "
+            f"{per_packmate:.2f} physical each (sourced 'Physical Damage per "
+            f"Packmate' row at R rank {r_rank}); the count is the "
+            + ("hunt-raised" if hunt else "We Are More")
+            + " cap at level "
+            f"{ctx.level}.  Packmate basic attacks are not priced."
+        ),
+    }
 
 
 def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -203,9 +428,10 @@ def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
 # "deals physical damage to enemies hit and inflicts them with a bleed"
 # with no control clause, and E (Eviscerate) dashes and explodes with
 # none either.  R (Hounds' Pursuit) arrives and "deals physical damage
-# and slows the target by 99% for 0.25 seconds".  P and W author no
-# damage part.
-MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
+# and slows the target by 99% for 0.25 seconds" — the slow lands on
+# Naafiri's own arrival hit.  P's Packmates land with her and apply
+# nothing of their own; W authors no damage part.
+MODULE_CC = {"P": "none", "Q": "none", "E": "none", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Naafiri",
@@ -229,6 +455,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         }
     },
     slot_parsers={
+        "P": _we_are_more,
         "Q": _darkin_daggers,
         "E": _eviscerate,
         "W": _call_of_the_pack,
@@ -242,6 +469,14 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
         "type": "bool",
         "default": True,
         "label": "Q recast hits the bleeding target (bonus damage + heal)",
+    },
+    {
+        "key": "w_hunt",
+        "type": "bool",
+        "default": True,
+        "label": (
+            "W hunt is active (20% AD bonus attack damage + the raised " "Packmate cap)"
+        ),
     },
 ]
 
@@ -259,22 +494,51 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "ledger receipt",
     "E (Eviscerate) prices the dash plus the Flurry explosion (Dash "
     "Physical Damage + Flurry Physical Damage == Total Physical Damage)",
-    "W (The Call of the Pack) grants 20% AD bonus attack damage for the "
-    "hunt's 5 seconds (cached W prose; the JSON's only W leveling row is "
-    "movement speed), time-weighted by the share of the fight window the "
-    "buff covers and fed into the parse context so Q/E/R's bonus-AD "
-    "ratios scale off it.  The two extra Packmates, the untargetable "
-    "first second and the bonus movement speed have no axis.",
-    "P (We Are More) is the Packmate roster: an emitted zero-damage row, "
-    "because no pet timeline exists.  R's recast shield needs the "
-    "takedown-gated second cast and is not priced.",
+    "W (The Call of the Pack) grants bonus attack damage equal to 20% of "
+    "total AD for the 5s hunt (wiki W prose, corroborated by the game "
+    "binary's NaafiriADPercentBoost = 0.20 on the SWAPPED NaafiriR "
+    "record — see the module docstring's slot-label warning).  It is a "
+    "BUFF-phase stat_buff, so Q/E/R and the Packmate row all price off "
+    "the buffed bonus AD and the fight engine applies it to autos; the "
+    "w_hunt option (default on) withholds the whole hunt when off",
+    "W's bonus movement speed (20/22.5/25/27.5/30% by rank, a real "
+    "leveling row corroborated by the binary's MoveSpeedAmount) is "
+    "sourced but NOT modeled: the ability stat_buff channel adds a flat "
+    "number onto champion_stats['move_speed'], bypassing both the "
+    "additive-percent composition and stats.apply_movement_speed_soft_"
+    "caps, and the one live consumer is item_effects' "
+    "adaptive_force_per_total_move_speed (Swiftmarch) — an uncertified "
+    "movement number would become damage.  The hunt's 1s "
+    "untargetability, the Packmate vanish/reappear and the 1.75s "
+    "hunt extension from casting R are state",
+    "P (We Are More) prices the pack's sourced share of Hounds' Pursuit: "
+    "R's own 'Physical Damage per Packmate' row (12.5/20/27.5 + 10% "
+    "bonus AD) times the sourced Packmate count — 2/3/4/5 by level "
+    "(wiki P text; binary PackmateCap breakpoints at levels 9/12/15), "
+    "or the hunt-raised 4/5/6/7 while w_hunt is on (wiki W note).  Both "
+    "columns are confirmed by the wiki R notes' packmate-total table "
+    "(e.g. levels 16-18: 5 x 27.5 = 137.5 + 50% bonus AD, 7 x 27.5 = "
+    "192.5 + 70% bonus AD).  The whole pack lands at the end of R's "
+    "0.75s channel, emitted as proc_count = the Packmate count with ONE "
+    "hit per part — the engine prices sum(part.amount x part.count) x "
+    "proc_count, so carrying the pack size in both fields would square "
+    "it — and the row is withheld entirely while Hounds' Pursuit is "
+    "unlearned, which keeps it exactly one pack landing per R cast",
+    "P Packmate BASIC ATTACKS are documented-not-modeled: their formula "
+    "exists only in the game binary (NaafiriP's PackmateTotalDamage = "
+    "level-interpolated 10-20 + 4% bonus AD, PackmateBaseAS 0.688) "
+    "because the wiki's Pets entry is not part of the local cache "
+    "(data/champions.json P says only 'See Pets for full details'), and "
+    "the pack's uptime, leap range, frenzy stacking and taunt are "
+    "unmodeled state on top; the E4 summon precedent requires a cached "
+    "wiki row for a pet's per-attack damage",
+    "R (Hounds' Pursuit) prices Naafiri's own dash hit; its shield "
+    "(100/150/200 + 150% bonus AD) and the 99% slow stay state",
 ]
 
-# P is emitted and grants nothing the engine prices — Packmates have no
-# pet timeline.
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
-}
+# No MODULE_COVERAGE: every slot now emits a priced row — P the pack's
+# share of Hounds' Pursuit, W the hunt's stat_buff — which is exactly
+# what the contract derives from SLOTS.
 
 
 # pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument

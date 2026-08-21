@@ -119,13 +119,27 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(35/37.5/40/42.5/45% by W rank) of the stored shield — the E8a "
     "grey-health primitive authors it from the incoming/outgoing "
     "ledgers. Shield conversion and both decay curves are state.",
+    "W (Indestructible) deals no enemy damage in any channel: the "
+    "cached wiki entry lists only the Potential Shield store, the "
+    "shield active and the recast heal, the game binary's MordekaiserW "
+    "spell object has no damage field (only Duration/DamageConversion/"
+    "BaseShield/HealingPercent/MinionPenalty/DamageTakenConversion/"
+    "MaxHealthCap/TimeBeforeDecay/DecayPerSecond), and the v2 atoms "
+    "capture tags it Trait_ActiveHeal + Trait_Shield with no damage "
+    "atom.  Its shield and recast heal are priced by the E8a "
+    "grey-health primitive, so the slot is no_damage, not withheld.",
     "R (Realm of Death) heals 10% of the banished champion's maximum "
     "health at the cast (cached R prose). Only the primary defender's "
-    "pair fight authors it — one banishment, one heal. The 7-second "
-    "stat theft (10% of the target's ability power, total attack speed, "
-    "maximum health, armour, magic resistance and total AD, transferred "
-    "to Mordekaiser) and the Death Realm itself have no engine axis and "
-    "are not modeled.",
+    "pair fight authors it — one banishment, one heal. R itself deals "
+    "no enemy damage (binary MordekaiserR carries only "
+    "SpiritRealmDuration/StatStealPercentScalar/ZoneRadius/"
+    "GhostAPRatio; v2 atoms tag it Trait_ImmobilizingCCSpell + "
+    "Trait_ActiveHeal). The 7-second stat theft (10% of the target's "
+    "ability power, total attack speed, maximum health, armour, magic "
+    "resistance and total AD, transferred to Mordekaiser) and the "
+    "Death Realm itself are not modeled: the attacker-only stat_buff "
+    "channel (_apply_stat_buff_ultimates) has no defender input, so "
+    "pricing the steal would mean inventing the target's stats.",
 ]
 
 # No MODULE_COVERAGE any more: W's Potential Shield recast heal is

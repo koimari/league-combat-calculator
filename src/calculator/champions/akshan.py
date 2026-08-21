@@ -21,12 +21,26 @@ Why each slot is non-generic:
   ratio regex-read from the description) and ``passive`` (the 3-stack
   magic proc whose level breakpoints and AP ratio are also
   description text, × the ``passive_procs`` option, default 3).
-- W (Going Rogue) is stealth/revive utility — not modeled, absent
-  from the slot map.
+- W (Going Rogue) is stealth/revive utility — no enemy-damage attribute
+  of its own.
 
 All numeric values are read from the champion JSON data (several from
 description text) except the two R scaling constants below, which are
 wiki prose with no JSON home.
+
+Roadmap session (2026-08-21): closes the single out_of_scope slot (W).
+W (Going Rogue): ``data/champions.json`` Akshan W carries
+``damageType: None`` and every effect row is stealth/mark/resurrection/
+recast-timing text — no HP number against an enemy champion anywhere.
+The one leveling row on the ability ("Bonus Movement Speed" 80-120 by
+rank) is a conditional self-buff ("while facing them if they are within
+5000 units, he gains bonus mana regeneration ... as well as bonus
+movement speed" during camouflage) — situational utility, not a
+default-active steroid for a one-rotation combat calc, so it stays a
+documented, sourced-but-unmodeled rider in ASSUMPTIONS rather than an
+unconditional stat_buff (the Singed R precedent for riders with no
+default-on consumer). Reclassified from out_of_scope to no_damage (an
+atoms-confirmed zero-HP-number effect), not left silently absent.
 """
 
 import re
@@ -35,6 +49,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
 from .engine import SlotCtx, build_parser
+from .module_helpers import no_damage
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -340,6 +355,33 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+def _going_rogue(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: stealth/mark/resurrection utility — sourced zero-enemy-damage row.
+
+    The cached W entry carries ``damageType: None``; every effect row is
+    Scoundrel-marking, resurrection, camouflage, or recast-timing text with
+    no HP number against an enemy champion. The one leveling row on the
+    ability (Bonus Movement Speed, conditional on facing a marked Scoundrel
+    during camouflage) is documented as a sourced-but-unmodeled rider in
+    ASSUMPTIONS rather than an unconditional stat_buff.
+    """
+    ability = ctx.ability()
+    if ability is None:
+        return None
+    return no_damage(
+        ctx,
+        name=ability.get("name", "Going Rogue"),
+        reason=(
+            "Going Rogue is stealth/Scoundrel-mark/resurrection utility "
+            "with no enemy-damage attribute of its own (data/champions.json "
+            "Akshan W carries damageType: None); its conditional bonus "
+            "movement speed (80-120 by rank, only while facing a marked "
+            "Scoundrel in camouflage) has no default-on consumer for a "
+            "one-rotation combat calc and stays a documented rider."
+        ),
+    )
+
+
 OPTIONS = [
     {
         "key": "passive_procs",
@@ -364,7 +406,6 @@ ASSUMPTIONS = [
     "R assumes full channel (max bullets at max damage)",
     "R crit scaling at 30% effectiveness applied",
     "Double shot applies on-hit effects and can crit",
-    "W is utility only (no damage)",
     "Dirty Fighting stacks up to 3 (cap) on the target and the third "
     "stack consumes them all: each passive_procs entry is one completed "
     "3-stack detonation (15/40/80/150 by level + 60% AP, the level "
@@ -374,6 +415,11 @@ ASSUMPTIONS = [
     "row); one shield per proc burst — the proc events ride the cast "
     "boundary and the shield internal cooldown (16/12/8/4s by level, "
     "game-file PassiveCooldown) cannot elapse between them",
+    "W (Going Rogue) carries no enemy-damage attribute (damageType: None, "
+    "no effect row deals HP loss to a champion); it emits a sourced "
+    "no_damage row. Its conditional bonus movement speed (80-120 by rank, "
+    "only while facing a marked Scoundrel in camouflage) is a documented, "
+    "sourced-but-unmodeled rider — not a default-on steroid.",
 ]
 
 SLOTS = {
@@ -382,6 +428,7 @@ SLOTS = {
     "R": _comeuppance,
     "passive_double_shot": _double_shot,
     "P": _dirty_fighting,
+    "W": _going_rogue,
 }
 
 # Cached kit review.  R's bullets, P's 3-stack detonation and E's swing
@@ -401,3 +448,12 @@ parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Akshan")
+
+# W is emitted, but its row is a sourced zero — a fact SLOTS cannot derive.
+MODULE_COVERAGE = {
+    "P": "modeled",
+    "Q": "modeled",
+    "W": "no_damage",
+    "E": "modeled",
+    "R": "modeled",
+}
