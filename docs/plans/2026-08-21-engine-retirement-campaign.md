@@ -44,7 +44,7 @@ Log: `decisions.tsv` in the session scratchpad; folded into this doc's results a
 | U02 one packet path | 2 | `participant_timeline.py`, `program/` | `_pair_packet`/`add_packet` gone; receipt enrichment derived from compiled actions; equivalence tests now test one path against goldens. |
 | U03 interpreter table | 2 | `interpreters/`, `item_behavior.py` lane/family tables | One table, lane set in one place; `reachability_report` output identical. |
 | U04 damage.py rule 5 | 2 | `damage.py` | Every cached-data `.get(key, literal)` typed-or-deleted; count pinned by test. |
-| U05 trigger bus + item_effects rule 5 | 2 | `trigger_stream.py`, `item_effects.py` | Name sets gone or derived from `CAPABILITIES`; raw `.get("kind")` only in `trigger_stream.py`; `_cached_sustain_stat` fails closed. |
+| U05 trigger bus + item_effects rule 5 | 2 | `trigger_stream.py`, `item_effects.py` | Name sets gone, each fact at its one home (`ON_ATTACK_TRIGGER_ITEMS` was not a `CAPABILITIES` projection — it is the registry's `counter_trigger`); `_cached_sustain_stat` fails closed. The 30 raw `.get("kind")` reads are four non-bus vocabularies (support packet kind, utility dimension, graph-edge label, packet-spec shape); typed homes for them are wave-3 asides, not bus routing. |
 | U06 MODULE_CC | 2 | `champions/`, `module_contract.py` | 177/177 declare; contract refuses parts-level stamps; Fimbulwinter coverage cells unchanged. |
 | U07 test corpus | 3 | `tests/`, `docs/receipts/` | D6 applied; a pure-refactor probe (rename a private helper) turns nothing red. |
 | U08 prose | 3 | all `src/` (prose only) | D7 applied; lint test pins both counts at zero. |
