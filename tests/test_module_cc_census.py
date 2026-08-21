@@ -118,24 +118,36 @@ def test_only_a_per_part_slot_authors_a_kind_on_its_parts(name):
 def test_a_per_part_slot_really_authors_a_kind_somewhere(name):
     """The sentinel is a pointer; a pointer at nothing is a silenced slot.
 
-    One parse at the module's option defaults is enough to show the parts
-    do answer — a branch that reviewed its way to no answer (Rammus'
-    aggregated thorns row) is a branch, not the whole slot.
+    The parts must answer at the option defaults or with one boolean option
+    flipped (Jayce's R is reviewed in hammer stance only) — a branch that
+    reviewed its way to no answer (Rammus' aggregated thorns row) is a
+    branch, not the whole slot.
     """
     contract = get_champion_module_contract(name)
     champion = get_champion(name)
     stats = calculate_total_stats(champion, 18, [])
-    parsed = parse_abilities(
-        name, champion, 18, stats["ability_power"], champion_stats=stats
-    )
+    variants = [{}] + [
+        {row["key"]: not row["default"]}
+        for row in contract.options
+        if isinstance(row.get("default"), bool)
+    ]
+    parsed = [
+        parse_abilities(
+            name,
+            champion,
+            18,
+            stats["ability_power"],
+            champion_stats=stats,
+            champion_options=variant,
+        )
+        for variant in variants
+    ]
     for slot in PER_PART[name]:
         result_key = "passive" if slot == "P" else slot
-        entry = parsed.get(result_key)
-        if entry is None:
-            continue
         kinds = {
             part.cc_kind
-            for part in entry.get("parts") or ()
+            for result in parsed
+            for part in (result.get(result_key) or {}).get("parts") or ()
             if part.cc_kind is not None
         }
         assert kinds, (name, slot)

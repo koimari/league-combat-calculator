@@ -97,16 +97,16 @@ Orchestrator commits: plan_audit stops indexing `.claude/worktrees` (`c549935c`)
 
 | Gate | Result |
 |---|---|
-| `pytest -n auto` | 14,163 passed, 81 skipped, 3 xfailed (113 s; was 13,900 collected / ~193 s) |
+| `pytest -n auto` | 14,163 passed, 81 skipped, 3 xfailed (120 s; was 13,900 collected / ~193 s) |
 | `black --check src/ tests/ scripts/` | 894 files unchanged |
 | `pylint src/` | 9.64/10 (unchanged) |
 | `golden_snapshot.py compare` pair / coupled / exact | identical / identical / identical |
 | `coverage_census.py check` | exit 0 — frontier total 100, acknowledged residue 25 (unchanged) |
 | `plan_audit.py` | 16 plan documents clean |
-| `bench_request.py --compare benchmarks.md` | exit 0 — 7.52 / 29.18 / 26.75 ms vs 8.43 / 32.39 / 32.85 pinned (−11% / −10% / −19%) |
+| `bench_request.py --compare benchmarks.md` | exit 0 — 7.48 / 28.93 / 26.54 ms vs 8.43 / 32.39 / 32.85 pinned (−11% / −11% / −19%) |
 | `prose_lint.py` | long_docstring 0, long_comment 0, history 0 |
-| `literal_defaults.py damage.py` | LITERAL_ROW |
-| Blind audit | *changes requested* → remediated in `REMEDIATION_SHA`: Jayce R reviewed-CC marker restored (hammer stance was the only unreviewed slot; no golden cell holds hammer); the N1 neutrality claim re-proven by a committed probe (`scripts/probe_control_parity.py`, receipt `docs/receipts/control-parity-7bb9701e.json`); `max_procs` given one absence meaning; four sourced-evidence comments restored; `scripts/term_census.py` (orphaned by U07) deleted and the two census `getattr`s it justified converted, closing `ER4`. |
+| `literal_defaults.py damage.py` | 107 listed sites, every one on the frozen allowlist (internal breakdown-row reads, plus the two census `getattr`s `ER4` retires); cached-data, option and typed-default buckets all empty |
+| Blind audit | *changes requested* → remediated in `7ca6b137` + `52832e7e`: Jayce R reviewed-CC marker restored (hammer stance was the only unreviewed slot; no golden cell holds hammer); the N1 neutrality claim re-proven by a committed probe (`scripts/probe_control_parity.py`, receipt `docs/receipts/control-parity-7bb9701e.json`); `max_procs` given one absence meaning; four sourced-evidence comments restored; `scripts/term_census.py` (orphaned by U07) deleted; the two census `getattr`s stay because `golden_snapshot.swing_term_declarations()` — not the census — is what demands the Guardian's Horn scenario (`ER4`, re-pointed). |
 
 ### Success criteria
 
