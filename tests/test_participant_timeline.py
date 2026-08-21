@@ -5080,9 +5080,9 @@ def test_shared_pair_cache_replays_identical_coupled_receipts():
     assert cache, "the pair cache was never populated"
 
 
-def test_pair_packet_reuse_survives_redirect_expansion():
+def test_pair_cache_reuse_survives_redirect_expansion():
     """Knight's Vow rewrites incoming packets during the survival
-    composition; a served pair packet's receipts must stay byte-identical
+    composition; a served pair view's receipts must stay byte-identical
     to a fresh no-cache computation across every rewrite."""
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.scenario import ChampionLoadout
