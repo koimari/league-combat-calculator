@@ -68,7 +68,11 @@ _CLONE_ATTACK_AD_RATIO = 0.75
 
 # HARDCODED: verify on patch updates — the cached Backstab row carries
 # only the per-level flat term (20 : 31.18); the wiki sentence's
-# "(+ 20% bonus AD)" has no modifier in the cache at all.
+# "(+ 20% bonus AD)" has no modifier in the cache at all.  The game file
+# corroborates the ratio: shaco.bin.json ShacoPassive's
+# mSpellCalculations.BasicAttackDamage sums the ByCharLevelInterpolation
+# flat term with StatByNamedDataValue(mStat=2, mStatFormula=2,
+# AttackBonusADRatio=0.2) — bonus AD, 0.2, matching the prose 1:1.
 _BACKSTAB_BONUS_AD_RATIO = 0.20
 
 

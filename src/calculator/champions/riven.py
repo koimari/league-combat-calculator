@@ -21,6 +21,20 @@ the cached R[0] description reads "gaining 20% AD bonus attack
 damage").  The buff is a BUFF-phase stat entry (the Aatrox R
 precedent) so every later physical slot (Q/W/R) scales off the buffed
 AD; the amount is factored at cast and does not change (wiki note).
+
+Roadmap session 4 batch F (2026-08-21): E (Valor) is a mobility dash
+plus a self shield, with no enemy-damage formula. Both cached E
+effects (data/champions.json) are self-directed: effect 0's "Shield
+Strength" leveling row is the dash's own defensive shield, effect 1 is
+the cast-during-dash utility note — already documented below as
+"outside the packet's damage model." The pinned reviewed packet
+(static/reviewed-packets.json) independently declares E ``kind:
+"no_damage"`` with a sourced reason, and E is not overridden away from
+``build_packet_module``'s cast slots (only P and R_buff are reassigned
+below), so it already emits the packet's sourced zero-damage row today
+— MODULE_COVERAGE was simply stale, still reading "out_of_scope" for
+an already-covered slot (the Malzahar/Nasus precedent, roadmap session
+4 batch D). Reclassified to "no_damage"; zero fight-computation change.
 """
 
 from .engine import BUFF, ONHIT, SlotCtx
@@ -129,7 +143,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "AD, flat at all ranks — the retired 20/25/30% rank array was "
     "patched to a flat 20% bonus AD), factored at cast; the Wind Slash "
     "stays priced by the R slot and now scales off the buffed AD.",
-    "E (Valor) shield is documented no_damage: 70-170 + 110% bonus AD "
-    "for 1.5s is a defensive shield on a no-damage dash, outside the "
-    "packet's damage model.",
+    "E (Valor) has no enemy-damage formula: both cached effects are "
+    "self-directed — the 70-170 + 110% bonus AD shield for 1.5s on a "
+    "no-damage dash, and the cast-during-dash utility note — which the "
+    "pinned reviewed packet confirms with kind='no_damage' for E. E is "
+    "a cast slot here: it emits that sourced zero-damage row while the "
+    "support scanner prices its Valor shield, so the slot is modeled.",
 ]

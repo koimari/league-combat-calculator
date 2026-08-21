@@ -15,7 +15,9 @@ not amplified (wiki bug note); Vladimir's kit deals none.
 Coverage: P (Crimson Pact) converts ability power into bonus health and
 bonus health back into ability power. A two-way stat conversion is an
 axis the engine does not have — ``stat_buff`` grants a stat, it does not
-derive one from another — so the slot is out of scope.
+derive one from another — and the pinned reviewed packet declares P
+``kind: "no_damage"``, so the slot emits that sourced zero row and
+``MODULE_COVERAGE`` states the reviewed absence of damage.
 """
 
 from typing import Any
@@ -410,9 +412,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "% maximum health term follows the reviewed packet's stat "
     "resolution: the champion's own maximum health.  The 40-60% slow "
     "on fully charged casts is utility.",
+    "P (Crimson Pact) has no enemy-damage formula: it converts a "
+    "percentage of bonus health into ability power, a pure self "
+    "stat-conversion (confirmed by the pinned reviewed packet's "
+    "kind='no_damage' declaration for P). P is a cast slot in this "
+    "module (never reassigned away from build_packet_module's "
+    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
+    "no-damage classification rather than an unmodeled gap (no_damage, "
+    "not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 

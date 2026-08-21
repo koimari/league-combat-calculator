@@ -25,6 +25,9 @@ the cache's "Total Bonus Physical Damage" row (90/105/120/135/150% AD)
 is all three.  Three attacks is not one hit, so the variant declares its
 aggregate at the cast boundary instead of certifying a single hit —
 Prey Seeker (variant 1) keeps its own certification.
+
+P is therefore *modeled*, not the packet's zero-damage row: this module
+replaces that slot with the priced burrow heal.
 """
 
 from typing import Any

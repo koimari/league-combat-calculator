@@ -534,7 +534,7 @@ class TestSourceEvidence:
             == "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
         )
         assert MODULE_COVERAGE == {
-            "P": "out_of_scope",
+            "P": "no_damage",
             "Q": "modeled",
             "W": "modeled",
             "E": "modeled",
@@ -1179,7 +1179,7 @@ class TestRegressionSurface:
         assert any("Tides of Blood" in text for text in meta["assumptions"])
         assert any("Hemoplague" in text for text in meta["assumptions"])
         assert MODULE_COVERAGE["E"] == "modeled"
-        assert MODULE_COVERAGE["P"] == "out_of_scope"
+        assert MODULE_COVERAGE["P"] == "no_damage"
         assert MODULE_COVERAGE["R"] == "modeled"
 
 

@@ -27,6 +27,12 @@ Why each slot is non-generic:
 All numeric values are read from the champion JSON data except the
 proc cadence: Silver Bolts' every-3rd-hit rule is prose, not leveling
 data, hence the module constant.
+
+Coverage: P (Night Hunter) is a self movement-speed buff toward
+slowed/immobile enemies — the pinned reviewed packet declares it
+``kind: "no_damage"``. It stays off the slot map so the ledger never
+invents an enemy hit, and ``MODULE_COVERAGE`` states that reviewed
+absence of damage rather than an unmodeled gap.
 """
 
 from typing import Any
@@ -152,7 +158,13 @@ ASSUMPTIONS = [
     "and the W/on-hit counters ride the augmented stream.  Default "
     "keeps the conservative cap (the reset's gain not modeled).",
     "E stuns for the sourced 1.5 seconds only when Condemn is set to hit a wall",
-    "Passive (Night Hunter) is utility only — not modeled",
+    "P (Night Hunter) has no enemy-damage formula: the bonus movement "
+    "speed toward slowed/immobile enemies is self-directed only "
+    "(confirmed by the pinned reviewed packet's kind='no_damage' "
+    "declaration for P). P is deliberately absent from SLOTS so the "
+    "fight ledger never invents an enemy hit; MODULE_COVERAGE reflects "
+    "a sourced no-damage classification rather than an unmodeled gap "
+    "(no_damage, not out_of_scope).",
 ]
 
 SLOTS = {
@@ -206,3 +218,12 @@ parse_abilities = build_parser(SLOTS, "Vayne", cc_kinds=MODULE_CC)
 
 
 SOURCES = load_champion_sources("Vayne")
+
+# P damages nothing and is deliberately off the slot map, so it is a
+# reviewed no-damage slot rather than the unmodeled gap SLOTS derives.
+MODULE_COVERAGE = {
+    slot: (
+        "modeled" if slot in SLOTS else "no_damage" if slot == "P" else "out_of_scope"
+    )
+    for slot in "PQWER"
+}

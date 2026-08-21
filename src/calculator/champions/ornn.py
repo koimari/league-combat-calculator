@@ -8,7 +8,10 @@ damage rider, but the cached passive carries no leveling row for it
 (every effect in ``data/champions.json`` Ornn P has ``leveling: []``);
 the percentage lives only in the Temper description prose. Pricing it
 means a prose-sourced per-level array plus a Brittle apply-and-consume
-timeline, which is a champion-module unit, not a relabel.
+timeline, which is a champion-module unit, not a relabel.  The pinned
+packet's ``kind: "no_damage"`` for P records that no *leveling row* is
+listed; it is not evidence the ability deals none, so the slot stays
+out_of_scope rather than being relabelled.
 """
 
 from typing import Any
@@ -135,6 +138,11 @@ ASSUMPTIONS = [
     "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout Brittle state in its detail receipt.",
     "Call of the Forge God defaults to both sourced passes; one pass is available as an explicit option.",
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
+    "P (Living Forge) lists no enemy-damage leveling row (the pinned "
+    "reviewed packet declares P kind='no_damage' on that basis, and it "
+    "is not a cast slot in this module's SLOTS map), but Temper's "
+    "Brittle consume is a real prose-sourced max-health rider, so the "
+    "slot stays out_of_scope — an unpriced formula, not a zero row.",
 ]
 
 SOURCES = load_champion_sources("Ornn")

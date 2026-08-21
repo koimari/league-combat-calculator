@@ -11,7 +11,8 @@ doubles that row to "Enhanced Bonus Attack Speed" (60-100%) for 5
 seconds "upon successfully blocking a hostile effect", which a damage
 package does not imply: the ``w_spellshield_block`` option arms it, and
 only the difference between the two rows is time-weighted onto the
-5-second window.
+5-second window.  W is therefore *modeled*, not the packet's
+zero-damage row: this module replaces that slot.
 """
 
 from functools import partial
@@ -186,4 +187,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "re-derived for a tether broken early.",
 ]
 
-# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now
+# (W's own attack-speed steroid replaces the packet's zero-damage row).

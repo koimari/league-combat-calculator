@@ -414,7 +414,10 @@ class TestSourceEvidence:
         )
         # MERGE: coverage and review status have ONE home — the validated
         # module contract.  Quinn now prices every slot (W included), so
-        # the module derives its coverage instead of restating it.
+        # the module derives its coverage instead of restating it.  Main's
+        # session-4 batch F pin (MODULE_COVERAGE["W"] == "no_damage") moved
+        # because this branch's W emits its own attack-speed steroid rather
+        # than the packet's zero-damage row.
         from src.calculator.champions import get_champion_module_contract
 
         contract = get_champion_module_contract("Quinn")

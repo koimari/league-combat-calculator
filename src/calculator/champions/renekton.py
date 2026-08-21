@@ -4,9 +4,12 @@ E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
 30 sourced 0.5s ticks (this module's packet timing declaration).
 
 Coverage: P (Reign of Anger) is the Fury meter that empowers the next
-ability. Its empowered rows are priced on the abilities themselves;
-what the slot holds is resource generation, an axis the engine does not
-have.
+ability. Its empowered rows are priced on the abilities themselves; all
+three cached P effects (generation/decay, the 50-Fury empower gate, the
+sub-50%-health rule) carry zero leveling rows, and the pinned reviewed
+packet declares P ``kind: "no_damage"`` on that basis. P is a cast slot
+here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
+"no_damage", not "out_of_scope".
 """
 
 from functools import partial
@@ -57,8 +60,18 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
 )
 
+ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "P (Reign of Anger) has no enemy-damage formula: all three cached "
+    "effects (Fury generation/decay, the 50-Fury empower gate, the "
+    "sub-50%-health bonus-Fury-generation rule) carry zero leveling "
+    "rows (confirmed by the pinned reviewed packet's kind='no_damage' "
+    "declaration for P). P is a cast slot in this module (never "
+    "reassigned away from build_packet_module's no_damage branch), so "
+    "MODULE_COVERAGE reflects a sourced no-damage classification "
+    "rather than an unmodeled gap (no_damage, not out_of_scope).",
+]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }
 

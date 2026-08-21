@@ -19,8 +19,12 @@ P1-3 closures:
   (ShieldDuration), riding the R damage event via self_shield_events.
 
 Coverage: P (Inherent Glamour) disguises Neeko as an allied champion or
-unit. Vision and stealth are axes the engine does not have, so the slot
-is out of scope.
+unit — vision and stealth are axes the engine does not have, and the
+disguise carries no enemy-damage formula. The pinned reviewed packet
+declares P ``kind: "no_damage"`` with a sourced reason and this module
+never overrides P, so the slot already emits the packet's zero-damage
+row (``build_packet_module``'s ``no_damage`` branch): MODULE_COVERAGE
+reads "no_damage", not "out_of_scope".
 """
 
 from ..ability_spec import DamagePart
@@ -168,8 +172,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "nearby enemy champion + 75% AP + 40% AP, 2s) — the cached wiki page "
     "omits the shield row; the 1v1 fight's own target is the one nearby "
     "enemy champion.",
+    "P (Inherent Glamour) is the disguise passive with no enemy-damage "
+    "formula in the pinned packet; it emits the sourced zero-damage row "
+    "(MODULE_COVERAGE: no_damage, not out_of_scope). P is already a cast "
+    "slot in this module (never overridden from build_packet_module's "
+    "no_damage branch).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }

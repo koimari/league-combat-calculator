@@ -8,6 +8,12 @@ E3 addition over the CP10.8 packet module:
   count is priced (module convention for permanent scaling). The AP
   feeds Q/W/E/R scaling because P runs first in the BUFF phase; the
   armor is published as a stat buff for the fight's defensive side.
+
+Coverage: W (Dark Passage) deals no enemy damage — the pinned reviewed
+packet declares it ``kind: "no_damage"`` and this module does not
+reassign the slot, so W emits that sourced zero row. The ally-support
+Dark Passage shield priced through the ally scanner (ASSUMPTIONS below)
+is a separate, already-modeled mechanism.
 """
 
 from typing import Any
@@ -119,4 +125,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "portion are documented boundaries), which absorbs incoming damage "
     "in the participant ledger when a teammate is selected",
     "All other CC is utility only — no damage",
+    "W (Dark Passage) has no enemy-damage formula: the lantern dash and "
+    "its shield are self/ally utility only (confirmed by the pinned "
+    "reviewed packet's kind='no_damage' declaration for W). W is a cast "
+    "slot in this module: it emits the packet's sourced zero-damage row "
+    "while the support scanner prices the lantern shield, so the slot is "
+    "modeled.",
 ]

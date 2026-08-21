@@ -21,8 +21,12 @@ E3 additions over the CP10.7 packet module:
   the Mist-buffed AD because P runs first in the BUFF phase.
 
 Coverage: E (Curse of the Black Mist) wraps Senna and her team in
-camouflage. Vision and stealth are axes the engine does not have, so the
-slot is out of scope.
+camouflage — all five cached effects are self/ally utility prose
+(camouflage duration, allied Wraith Form, obscured vision, bonus movement
+speed) with no enemy-damage leveling. The pinned reviewed packet
+(``static/reviewed-packets.json``) declares E ``kind: "no_damage"``, and
+this module does not reassign E, so the slot is emitted as a sourced zero
+row rather than left unmodeled.
 """
 
 from functools import partial
@@ -363,10 +367,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "150% of the selected Mist stacks for 3s at the cast; the ally "
     "half of the light wave is emitted by the ally-support scanner "
     "without the Mist term (documented boundary)",
+    "E (Curse of the Black Mist) has no enemy-damage formula: all five "
+    "cached effects are self/ally camouflage and movement-speed utility "
+    "(confirmed by the pinned reviewed packet's kind='no_damage' "
+    "declaration for E). E is a cast slot in this module (never "
+    "reassigned away from build_packet_module's no_damage branch), so "
+    "MODULE_COVERAGE reflects a sourced no-damage classification "
+    "rather than an unmodeled gap (no_damage, not out_of_scope).",
 ]
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
     for slot in "PQWER"
 }
 

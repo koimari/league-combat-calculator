@@ -14,7 +14,9 @@ speed and 10% bonus movement speed" whenever the duo damage an enemy
 champion, and successive triggers extend the 4-second window — so the
 attack-speed half rides a BUFF-phase ``stat_buff`` the fight's own
 damage holds up.  Its movement speed has no stat_buff key, and Willump's
-cone cleave lands on secondary targets a 1v1 does not have.
+cone cleave lands on secondary targets a 1v1 does not have.  P is
+therefore *modeled*, not the packet's zero-damage row: this module
+replaces that slot.
 """
 
 from typing import Any
@@ -164,7 +166,8 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "on secondary targets are named rather than priced.",
 ]
 
-# No MODULE_COVERAGE: every one of the five slots emits a priced row now.
+# No MODULE_COVERAGE: every one of the five slots emits a priced row now
+# (P's own attack-speed steroid replaces the packet's zero-damage row).
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments

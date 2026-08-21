@@ -23,6 +23,19 @@ inflicts armor reduction for 4 seconds", the cached "Armor Reduction"
 row (15/20/25) — emitted as a ``target_debuff`` the fight engine shreds
 with (``engine.py`` ``_ALLOWED_DEBUFF_KEYS``).  All numeric values are
 read from the champion JSON data.
+
+What R still does NOT price is the ambush attack's damage rider —
+"deals 100% AD additional physical damage" — and that stays open on
+sourced grounds: rengar.bin.json
+RengarRAbility/RengarR carries mSpellCalculations.BonusDamage
+(StatByCoefficientCalculationPart, mStat=2 = bonus AD, coefficient 1.0)
+against wiki prose reading an ambiguous "100% AD", and an ArmorShred
+DataValues array of 7 values ([10,15,20,25,30,35,40]) against the
+wiki's 3-value leveling row — two authority conflicts — while no
+marked-target / Unseen-Predator proc-condition kernel exists to gate a
+"next basic attack against the marked enemy" trigger.  A
+discovered-but-unresolved formula stays named and unpriced rather than
+being mislabelled in either direction (the Dr. Mundo P precedent).
 """
 
 from __future__ import annotations
@@ -339,7 +352,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "(default).  The engine weights the shred by the share of the fight its window covers, "
         "timed from the cast rather than from the empowered attack that lands 2 seconds later, "
         "and the 100% AD rider on that attack, the camouflage and the movement speed are not "
-        "priced",
+        "priced.  That rider stays unpriced on sourced grounds: rengar.bin.json RengarR carries "
+        "mSpellCalculations.BonusDamage (mStat=2 bonus AD, coefficient 1.0) against the wiki's "
+        "ambiguous '100% AD' prose, and a 7-value ArmorShred DataValues array against the wiki's "
+        "3-value leveling row, and no marked-target / Unseen-Predator proc-condition kernel "
+        "exists to gate the ambush attack",
     ),
     slot_parsers={
         "P": _unseen_predator,

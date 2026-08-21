@@ -15,8 +15,10 @@ E9-1 closes the two remaining audit gaps over the CP10.8 packet:
 
 W two-hit and R are modeled.
 
-Coverage: E (Assassin's Path) vaults terrain and deals nothing. Mobility
-is an axis the engine does not have, so the slot stays out of scope.
+Coverage: E (Assassin's Path) vaults terrain and deals nothing. The
+pinned reviewed packet declares E ``kind: "no_damage"``, and this module
+does not reassign the slot, so E emits that sourced zero row rather than
+being left an unmodeled gap.
 """
 
 from typing import Any
@@ -158,9 +160,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "this module's derive_self_healing; the fight model prices it once "
     "per Q cast because the outgoing ledger cannot identify the "
     "killing blow.",
+    "E (Assassin's Path) has no enemy-damage formula: the parkour dash "
+    "is a terrain-crossing repositioning tool only (confirmed by the "
+    "pinned reviewed packet's kind='no_damage' declaration for E). E is "
+    "a cast slot in this module (never reassigned away from "
+    "build_packet_module's no_damage branch), so MODULE_COVERAGE "
+    "reflects a sourced no-damage classification rather than an "
+    "unmodeled gap (no_damage, not out_of_scope).",
 ]
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
     for slot in "PQWER"
 }
 

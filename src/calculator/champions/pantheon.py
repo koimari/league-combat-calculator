@@ -263,6 +263,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E Aegis Assault blocks selected marked skillshots during the sourced "
     "1.5 second front-facing channel; direction is represented by the "
     "explicit source selection.",
+    "P (Mortal Will) itself has no enemy-damage formula in the pinned "
+    "packet; it emits the sourced zero-damage row (MODULE_COVERAGE: "
+    "no_damage, not out_of_scope). P is already a cast slot in this "
+    "module (never overridden from build_packet_module's no_damage "
+    "branch); its empowered rider is priced in Q, not on P itself.",
 ]
 
 # P emits a row and there is nothing left for it to price — Mortal Will's

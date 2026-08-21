@@ -15,7 +15,9 @@ or consumes their mark, she gains bonus attack speed ... for 2 seconds".
 The module already prices Harrier on every auto, so the same auto stream
 keeps the 2-second window refreshed and the cached "Bonus Attack Speed"
 row (28-80%) is emitted as a BUFF-phase ``stat_buff``.  W's other grant
-is movement speed, for which ``stat_buff`` has no key.
+is movement speed, for which ``stat_buff`` has no key.  W is therefore
+*modeled*, not the packet's zero-damage row: this module replaces that
+slot.
 """
 
 from typing import Any
@@ -157,4 +159,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 # No MODULE_COVERAGE: every one of the five slots now emits a priced row,
-# which is exactly what the contract derives from SLOTS.
+# which is exactly what the contract derives from SLOTS (W's own
+# attack-speed steroid replaces the packet's zero-damage row).

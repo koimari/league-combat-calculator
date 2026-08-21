@@ -1,8 +1,11 @@
 """Ryze — CP10.7 full-entry-reviewed packet module.
 
 Coverage: P (Arcane Mastery) converts ability power into maximum mana,
-which the rest of Ryze's kit then scales off. A resource pool is an axis
-the engine does not have, so the slot is out of scope.
+which the rest of Ryze's kit then scales off. That is a self resource
+buff with no enemy-damage formula, and the pinned reviewed packet
+(``static/reviewed-packets.json``) declares P ``kind: "no_damage"`` with
+its own sourced reason, so the slot is emitted as a sourced zero row
+rather than left unmodeled.
 """
 
 from .packet_module import build_packet_module
@@ -29,9 +32,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # blast.  Each certifies the cast boundary its reviewed control rides on.
     single_hit_slots=frozenset({"Q", "W", "E", "R"}),
     cc_kinds=MODULE_CC,
+    assumption_overrides=(
+        "P (Arcane Mastery) has no enemy-damage formula: its one cached "
+        "effect ('increases his maximum mana by 10% per 100 AP') carries an "
+        "empty leveling row, and the pinned reviewed packet declares P "
+        "kind='no_damage'. The slot is emitted, so MODULE_COVERAGE records a "
+        "sourced no-damage classification rather than an unmodeled gap.",
+    ),
 )
 
 MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "out_of_scope")
+    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
     for slot in "PQWER"
 }

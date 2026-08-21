@@ -376,6 +376,9 @@ ASSUMPTIONS = [
     "patch-wide 40% window",
     "R's primary-target root is a sourced 2-second action lock; secondary "
     "chain spread and Q's self-slow are outside the single-target model",
+    "P (Living Vengeance) deals no enemy damage — the pinned reviewed "
+    "packet declares it kind='no_damage' — so the slot's priced row is "
+    "the self steroid it grants (a zero-damage stat buff), not a hit.",
 ]
 
 
