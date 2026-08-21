@@ -1,12 +1,18 @@
 """Sorcery's minor runes.
 
-Two of the three shapes a minor rune takes are here: Absolute Focus grants a
-stat, Scorch prices a proc. Sorcery's remaining eight runes land beside them.
+Every shape a minor rune takes is here: Absolute Focus, Waterwalking and
+Gathering Storm grant adaptive force behind an explicit option, Transcendence
+and Celerity grant a stat outright, Scorch prices a proc, and the two runes
+whose halves this engine holds no channel for compile to a refusal with the
+reason. Axiom Arcanist is the ninth and needs a slot-filtered amplifier.
 """
 
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
+from ..ability_spec import Disposition
 from ..rune_effects import (
+    RUNE_EFFECTS,
+    RuneEffect,
     RuneOption,
     RuneOptionKind,
     RuneProcEffect,
@@ -15,11 +21,14 @@ from ..rune_effects import (
     RuneStatGrantEffect,
     RuneTrigger,
     RuneValues,
+    adaptive_force_attack_damage_ratio,
     at_level,
     breakdown_key,
     display_name,
+    no_damage_compiler,
     required_level_table,
     required_leveling,
+    required_pair,
     stated_type,
 )
 
@@ -99,12 +108,298 @@ def _compile_scorch(entry: Mapping[str, Any]) -> RuneProcEffect:
     )
 
 
-COMPILERS = {
+#: Waterwalking's river and Gathering Storm's clock are both facts about
+#: where and when the fight happens, and the request carries neither.
+_IN_RIVER = "in_river"
+_GAME_MINUTE = "game_minute"
+
+
+def _cached_effects(name: str) -> RuneValues:
+    """One rune's parsed effects block, for a declaration read at import.
+
+    A compiler reads the record it is handed; an option's *bounds* are
+    declared before any request exists, and the rune's own table is what
+    bounds them — so the declaration reads the cache through the same
+    fail-loud door.
+    """
+    return RuneValues(name, RUNE_EFFECTS.get(name, {}).get("effects", {}))
+
+
+def _keyed_columns(
+    name: str, effects: RuneValues, key: str, index: int
+) -> tuple[float, ...]:
+    """Read one table whose columns are not champion levels.
+
+    ``required_leveling`` requires all 20 of them, which is the right door
+    for a level table and the wrong one for a table keyed by game minutes:
+    Gathering Storm states eight columns and would fail a level check that
+    is not its rule.
+    """
+    tables = effects.value(key)
+    if index >= len(tables):
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} holds {len(tables)} tables and "
+            f"table {index} was required — wiki parse degraded"
+        )
+    columns = tuple(float(value) for value in tables[index])
+    if len(columns) < 2:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} table {index} holds {len(columns)} "
+            "columns; a keyed table needs at least two to state its step — "
+            "wiki parse degraded"
+        )
+    return columns
+
+
+def _level_gates(
+    name: str, effects: RuneValues, key: str
+) -> tuple[tuple[int, float], ...]:
+    """Read a rune's ``level, bonus`` gates, requiring at least one."""
+    gates = tuple((int(level), float(bonus)) for level, bonus in effects.value(key))
+    if not gates:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] {key} states no gates — wiki parse degraded"
+        )
+    return gates
+
+
+def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Transcendence: ability haste at the levels the rune names.
+
+    Both halves of each gate are read: the haste and the level that arms
+    it. Below the first level the rune grants nothing, which is the state a
+    level-1 request is in.
+    """
+    name = "Transcendence"
+    effects = RuneValues(name, entry.get("effects", {}))
+    gates = _level_gates(name, effects, "ability_haste_level_gates")
+    granted = ", ".join(f"{bonus:g} at level {level}" for level, bonus in gates)
+
+    def amount(context: RuneStatContext) -> float:
+        # float, not the int an empty sum returns: a published zero's type
+        # decides whether the leaf gets a disposition entry (CLAUDE.md).
+        return float(sum(bonus for level, bonus in gates if context.level >= level))
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.ABILITY_HASTE,
+        amount=amount,
+        disclosures=(
+            f"{name} grants ability haste {granted}, and nothing below the "
+            "first of those levels.",
+            f"{name}'s last gate — a takedown refunding a share of the basic "
+            "abilities' current cooldowns — is withheld: the fight model has "
+            "no takedowns to spend, and the cache carries the level but not "
+            "the share.",
+        ),
+    )
+
+
+def _compile_celerity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Celerity: a flat share of bonus movement speed."""
+    name = "Celerity"
+    effects = RuneValues(name, entry.get("effects", {}))
+    percent = effects.number("move_speed_percent")
+
+    def amount(context: RuneStatContext) -> float:
+        del context  # unconditional: no level, no gate, no option
+        return percent
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.MOVE_SPEED_PERCENT,
+        amount=amount,
+        disclosures=(
+            f"{name}'s {percent:g}% bonus movement speed reaches the stat "
+            "card; no damage row reads movement speed, and Swiftmarch's "
+            "conversion of it into adaptive force is priced from the build's "
+            "own movement speed before rune grants resolve, so this share "
+            "moves no damage.",
+            f"{name}'s other half — every other movement-speed bonus made "
+            "more effective — is withheld: it multiplies sources the rune "
+            "stat block does not own, and the cache carries no share for it.",
+        ),
+    )
+
+
+def _compile_waterwalking(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Waterwalking: leveled adaptive force while in the river."""
+    name = "Waterwalking"
+    effects = RuneValues(name, entry.get("effects", {}))
+    force_by_level = required_level_table(name, effects, "adaptive_force_leveling")
+
+    def amount(context: RuneStatContext) -> float:
+        if not context.option(name, _IN_RIVER, 0.0):
+            return 0.0
+        return at_level(force_by_level, context.level)
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.ADAPTIVE_FORCE,
+        amount=amount,
+        disclosures=(
+            f"{name} is priced wherever its {_IN_RIVER!r} option says the "
+            "holder is, out of the river by default: the fight model carries "
+            "no terrain, so the river is asked for rather than inferred, and "
+            "the grant is nothing until it is set.",
+            f"{name}'s river movement speed is withheld: it is a flat grant "
+            "and the rune stat channels carry movement speed as a percent.",
+        ),
+    )
+
+
+def _certify_adaptive_rendering(
+    name: str, effects: RuneValues, force_by_mark: tuple[float, ...]
+) -> None:
+    """Certify table 0 is table 1 rendered as attack damage, not a second table.
+
+    Gathering Storm states one grant twice — as the bonus attack damage the
+    adaptive force buys and as the ability power it buys — and only sentence
+    order says which is which. ``Template:Adaptive``'s own conversion decides
+    it without pinning either table, so a patch may move both freely and a
+    reworded description still fails loudly.
+    """
+    rendered = _keyed_columns(name, effects, "leveling", 0)
+    ratio = adaptive_force_attack_damage_ratio()
+    if len(rendered) != len(force_by_mark) or any(
+        abs(attack_damage - ratio * force) > 1e-6
+        for attack_damage, force in zip(rendered, force_by_mark)
+    ):
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] leveling is not the attack-damage "
+            "rendering of the adaptive force followed by the force itself — "
+            "wiki parse degraded or description reordered"
+        )
+
+
+def _minute_span(name: str, effects: RuneValues) -> tuple[float, float]:
+    """The first and last game minute a rune's own table is keyed by."""
+    first, last = required_pair(name, effects, "minutes_range")
+    if last <= first:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] minutes_range runs {first:g} to {last:g} "
+            "and states no span — wiki parse degraded"
+        )
+    return first, last
+
+
+#: Gathering Storm's option is bounded by its own table: the minutes it
+#: states, no further. Read at import because bounds are declared before
+#: any request exists.
+_STORM_MINUTES = _minute_span("Gathering Storm", _cached_effects("Gathering Storm"))
+
+
+def _compile_gathering_storm(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Gathering Storm: adaptive force by how long the game has run.
+
+    The rune's table is keyed by game minute, one column per ten of them,
+    and the fight model carries no clock — so the minute is an option whose
+    default is the table's own first column, where the rune grants nothing.
+    """
+    name = "Gathering Storm"
+    effects = RuneValues(name, entry.get("effects", {}))
+    force_by_mark = _keyed_columns(name, effects, "leveling", 1)
+    _certify_adaptive_rendering(name, effects, force_by_mark)
+    first_minute, last_minute = _minute_span(name, effects)
+    minutes_per_mark = (last_minute - first_minute) / (len(force_by_mark) - 1)
+
+    def amount(context: RuneStatContext) -> float:
+        minute = context.option(name, _GAME_MINUTE, first_minute)
+        marks = int((minute - first_minute) // minutes_per_mark)
+        return at_level(force_by_mark, marks + 1)
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.ADAPTIVE_FORCE,
+        amount=amount,
+        disclosures=(
+            f"{name} is priced at the game minute its {_GAME_MINUTE!r} "
+            f"option names, minute {first_minute:g} by default — where it "
+            "grants nothing: the fight model carries no clock, so the minute "
+            "is asked for rather than inferred.",
+            f"{name} grows every {minutes_per_mark:g} minutes and its table "
+            f"ends at minute {last_minute:g}; the rune keeps growing past it "
+            "in game, and minutes beyond the table are refused by the option "
+            "rather than extrapolated.",
+        ),
+    )
+
+
+#: The Sorcery runes that book no damage: disposition, the reason that
+#: becomes the receipt, and any further half this engine refuses.
+_NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
+    # Mana is a stat this engine carries for items (Muramana, Archangel's),
+    # but not a channel a rune may grant into: the closed ``RuneStat`` set
+    # is what the fight's stat block reads, and mana is not in it. The
+    # number exists and is refused rather than converted.
+    "Manaflow Band": (
+        Disposition.WITHHELD,
+        "it grants maximum mana and then restores a share of the missing "
+        "mana, and no rune stat channel carries mana",
+        (
+            "Manaflow Band's zero is exact only while the holder owns no "
+            "mana-converting item; Muramana and Archangel's Staff buy attack "
+            "damage and ability power from maximum mana, and that coupling "
+            "is disclosed, not modeled.",
+        ),
+    ),
+    # Nimbus Cloak's table is keyed by summoner-spell cooldown, not level —
+    # and the fight casts no summoner spells at all, so no column of it is
+    # ever reached.
+    "Nimbus Cloak": (
+        Disposition.WITHHELD,
+        "its movement speed follows a summoner spell, and the fight model "
+        "casts none",
+        (
+            "Nimbus Cloak deals no damage of its own, so nothing in the "
+            "damage total is understated by withholding it.",
+        ),
+    ),
+}
+
+
+COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Absolute Focus": _compile_absolute_focus,
+    "Celerity": _compile_celerity,
+    "Gathering Storm": _compile_gathering_storm,
     "Scorch": _compile_scorch,
+    "Transcendence": _compile_transcendence,
+    "Waterwalking": _compile_waterwalking,
+    **{
+        name: no_damage_compiler(name, *declaration)
+        for name, declaration in _NO_DAMAGE.items()
+    },
 }
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Gathering Storm": (
+        RuneOption(
+            key=_GAME_MINUTE,
+            label="Game minute",
+            kind=RuneOptionKind.COUNT,
+            default=_STORM_MINUTES[0],
+            bounds=_STORM_MINUTES,
+            disclosure=(
+                "Which minute of the game the fight happens in; Gathering "
+                "Storm grows one step every ten of them and grants nothing "
+                "at its default."
+            ),
+        ),
+    ),
+    "Waterwalking": (
+        RuneOption(
+            key=_IN_RIVER,
+            label="In the river",
+            kind=RuneOptionKind.SWITCH,
+            default=0.0,
+            bounds=(0.0, 1.0),
+            disclosure=(
+                "1 prices Waterwalking with the holder in the river, where "
+                "its adaptive force is live; 0, its default, is the rest of "
+                "the map."
+            ),
+        ),
+    ),
     "Absolute Focus": (
         RuneOption(
             key=_ABOVE_THRESHOLD,

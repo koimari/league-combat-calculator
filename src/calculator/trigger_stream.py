@@ -1675,6 +1675,32 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
             ("absolute_focus", "Absolute Focus"),
             ("scorch", "Scorch"),
             ("cosmic_insight", "Cosmic Insight"),
+            # Sorcery
+            ("manaflow_band", "Manaflow Band"),
+            ("nimbus_cloak", "Nimbus Cloak"),
+            ("transcendence", "Transcendence"),
+            ("celerity", "Celerity"),
+            ("waterwalking", "Waterwalking"),
+            ("gathering_storm", "Gathering Storm"),
+            # Resolve
+            ("demolish", "Demolish"),
+            ("font_of_life", "Font of Life"),
+            ("shield_bash", "Shield Bash"),
+            ("conditioning", "Conditioning"),
+            ("second_wind", "Second Wind"),
+            ("bone_plating", "Bone Plating"),
+            ("overgrowth", "Overgrowth"),
+            ("revitalize", "Revitalize"),
+            ("unflinching", "Unflinching"),
+            # Inspiration
+            ("hextech_flashtraption", "Hextech Flashtraption"),
+            ("magical_footwear", "Magical Footwear"),
+            ("cash_back", "Cash Back"),
+            ("triple_tonic", "Triple Tonic"),
+            ("time_warp_tonic", "Time Warp Tonic"),
+            ("biscuit_delivery", "Biscuit Delivery"),
+            ("approach_velocity", "Approach Velocity"),
+            ("jack_of_all_trades", "Jack Of All Trades"),
         )
     ),
     *(

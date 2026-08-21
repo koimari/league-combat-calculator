@@ -10,6 +10,10 @@ numbers appear in a small set of template forms:
   default 18 columns (Module:Ability progression, ``defaultSize = 18``)
 - ``{{pp|0 to 100 by 5|0 to 750|type=distance ...}}`` — a distance-keyed table
   (values enumerated by the first param, keyed over the second's span)
+- ``{{pp|4*x*(x-1);∞|0 to 70 for 8;∞|type=minutes}}`` — a table whose columns
+  are keyed by something other than champion level: ``x`` is the column's
+  ordinal, the second param's span is recorded as ``<type>_range``, and the
+  ``;∞`` final column is the wiki's "and beyond" mark, not a value
 - ``{{rd|<melee formula>|<ranged formula>|pp=true}}`` — a melee/ranged pair of
   level tables (``color=heal`` marks a heal table, not damage)
 - ``{{as|(+ 10% '''bonus''' AD)}}`` / ``{{as|(+ 5% AP)}}`` — scaling ratios
@@ -35,6 +39,9 @@ numbers appear in a small set of template forms:
 - ``8% increased damage to champions below {{as|40% '''maximum''' health}}`` —
   a conditional damage amplifier and the health gate it reads
 - ``while above {{as|70% of your '''maximum''' health}}`` — a self-health gate
+- ``* Level 5: + 5 [[ability haste]].`` — a stat a rune grants only on
+  reaching one champion level, recorded with the level that gates it
+- ``After reaching 15 stacks`` — the stack count a rune names as its threshold
 - flat stat grants: ``{{as|10% '''bonus''' attack speed}}``,
   ``{{as|65 '''bonus''' health}}``, ``8 ability haste``,
   ``{{as|2.5% '''bonus''' movement speed}}``
@@ -134,9 +141,25 @@ _CONDITIONAL_DAMAGE_AMP = re.compile(
 _SELF_HEALTH_GATE = re.compile(
     r"while (above|below) \{\{as\|([\d.]+)% of your '''maximum''' health\}\}"
 )
+# "* Level 5: + 5 [[ability haste]]." — the level gating a grant is as
+# load-bearing as the number: a rune stating two of these grants neither
+# until its own level is reached.
+_LEVEL_GATED_HASTE = re.compile(r"Level (\d+): \+ ([\d.]+) \[\[ability haste\]\]")
+# "After reaching 15 stacks" — the count a rune names as its own threshold.
+_STACK_THRESHOLD = re.compile(r"After reaching (\d+) stacks")
 _TT_TEMPLATE = re.compile(r"\{\{tt\|([^|}]+)")
 _RANGE_SPEC = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)(?:\s+by\s+([\d.]+))?$")
 _FOR_SUFFIX = re.compile(r"^(.+?)\s+for\s+(\d+)$")
+# "0 to 70 for 8" — eight columns keyed 0, 10, … 70.  The keys are not the
+# numbers the formula takes: ``x`` is the column's ordinal, exactly as the
+# ``for N`` suffix reads it, and the span is what the columns are keyed by.
+_COLUMN_SPAN = re.compile(r"^([\d.]+)\s+to\s+([\d.]+)\s+for\s+(\d+)$")
+# "…;∞" — the wiki's mark that a table's formula continues past its last
+# stated column.  It states no value, so it is dropped, never evaluated.
+_UNBOUNDED_COLUMN = re.compile(r"\s*;\s*∞\s*$")
+# What a non-level pp table's key span is recorded under: the pp's own
+# ``type``, so "minutes" reads back as ``minutes_range``.
+_KEY_WORD = re.compile(r"\W+")
 _ADAPTIVE_FORCE = re.compile(r"\{\{adaptive\|([^{}|]+)\|(\d+)\}\}")
 _ADAPTIVE_FLAT = re.compile(r"\{\{adaptive\|([\d.]+)\}\}")
 _SOUL_DAMAGE = re.compile(r"deals ([\d.]+) \{\{as\|\(\+ ([\d.]+) per Soul\)\}\}")
@@ -299,7 +322,8 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     formula in ``x``.  A ``for N`` suffix on the formula supplies the
     range ``1..N`` when no second param does.
     """
-    formula = formula.strip()
+    formula = _drop_unbounded_column(formula)
+    range_spec = _drop_unbounded_column(range_spec) if range_spec else range_spec
     for_suffix = _FOR_SUFFIX.match(formula)
     if for_suffix:
         formula = for_suffix.group(1).strip()
@@ -314,6 +338,13 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
         return _interpolate_endpoints(shorthand, range_spec)
     if not range_spec:
         raise ValueError(f"pp formula {formula!r} has no level range")
+    columns = _COLUMN_SPAN.match(range_spec.strip())
+    if columns:
+        expression = _safe_pp_expression(formula)
+        return [
+            _evaluate_pp_node(expression.body, float(column))
+            for column in range(1, int(columns.group(3)) + 1)
+        ]
     range_match = _RANGE_SPEC.match(range_spec.strip())
     if not range_match:
         raise ValueError(f"Unsupported pp range spec {range_spec!r}")
@@ -321,6 +352,11 @@ def evaluate_pp(formula: str, range_spec: str | None) -> list[float]:
     return [
         _evaluate_pp_node(expression.body, x) for x in _enumerate_range(range_match)
     ]
+
+
+def _drop_unbounded_column(spec: str) -> str:
+    """Strip a ``;∞`` final column: the wiki's "and beyond", not a value."""
+    return _UNBOUNDED_COLUMN.sub("", spec.strip())
 
 
 def _enumerate_range(match: re.Match) -> list[float]:
@@ -553,10 +589,28 @@ def _parse_leveling(description: str, recorder: _EffectRecorder) -> None:
                 },
             )
         else:
+            _record_key_span(named, range_spec, recorder)
             leveling.append(values)
     if leveling:
         recorder.effects["leveling"] = leveling
     _parse_split_leveling(description, recorder)
+
+
+def _record_key_span(
+    named: dict[str, str], range_spec: str | None, recorder: _EffectRecorder
+) -> None:
+    """Record what a non-level table's columns are keyed by, when it says.
+
+    A ``type=`` plus a column-count span means the table is read by
+    something other than champion level — game minutes, not levels — and
+    the span is the only statement of the step between its columns. Without
+    it the values are a list nothing can index.
+    """
+    span = _COLUMN_SPAN.match(_drop_unbounded_column(range_spec or ""))
+    if not span or not named.get("type"):
+        return
+    key = _KEY_WORD.sub("_", named["type"].strip().lower()).strip("_")
+    recorder.record(f"{key}_range", [float(span.group(1)), float(span.group(2))])
 
 
 def _parse_split_leveling(description: str, recorder: _EffectRecorder) -> None:
@@ -714,6 +768,17 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     )
     if max_stacks_match:
         recorder.record("max_stacks", int(max_stacks_match.group(1)))
+
+    threshold_match = _STACK_THRESHOLD.search(description)
+    if threshold_match:
+        recorder.record("stack_threshold", int(threshold_match.group(1)))
+
+    level_gates = [
+        [int(level), float(bonus)]
+        for level, bonus in _LEVEL_GATED_HASTE.findall(description)
+    ]
+    if level_gates:
+        recorder.record("ability_haste_level_gates", level_gates)
 
     _parse_conditional_amp(description, recorder)
 
