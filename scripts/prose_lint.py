@@ -22,11 +22,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TARGETS = ("src", "scripts")
 FAILING = ("long_docstring", "long_comment", "history")
-KINDS = FAILING + ("pointer",)
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
-EVIDENCE = re.compile(r"https?://|wiki|\.bin\.json|CommunityDragon|game file", re.I)
+EVIDENCE = re.compile(
+    r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar", re.I
+)
 HISTORY = re.compile(
     r"\bretired\b|\bused to\b|\bpreviously\b|\blegacy\b|\bno longer\b"
     r"|\b(?:issue|PR) #\d+"
@@ -46,8 +47,7 @@ def _span(nodes: list[ast.stmt]) -> int:
 def _docstring(node: ast.AST) -> ast.Constant | None:
     body = node.body if isinstance(node, SCOPES) else []
     head = body[0].value if body and isinstance(body[0], ast.Expr) else None
-    ok = isinstance(head, ast.Constant) and isinstance(head.value, str)
-    return head if ok else None
+    return head if isinstance(getattr(head, "value", None), str) else None
 
 
 def _comment_blocks(source: str) -> list[tuple[int, list[str]]]:
@@ -76,7 +76,7 @@ def _cite(found: dict[str, list], where: str, line: int, text: str) -> None:
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
     """Report the four findings over every ``.py`` file under ``TARGETS``."""
-    found: dict[str, list[str]] = {kind: [] for kind in KINDS}
+    found: dict[str, list[str]] = {k: [] for k in FAILING + ("pointer",)}
     paths = (
         p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
     )
