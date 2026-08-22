@@ -35921,10 +35921,9 @@
         "passive": {
           "cooldown": 300.0,
           "damage_type": "magic",
+          "detail": "Cell Division deals no enemy damage: the cached 'Max Health Damage' ratio is Zac's own Goo chunk heal (4% : 8.47% of HIS maximum health), priced through the self_healing_rule channel, and the resurrection through starting_revive_defense.",
           "name": "Cell Division",
-          "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0)"
-          ],
+          "parts": [],
           "rank": 11,
           "total_raw": 0.0
         }
@@ -52263,14 +52262,14 @@
       "numeric_leaves": 45896,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "d13d32ff448de2aaa83475f20ce43820d57d7bb8",
+    "git_head": "74fa3cb9becd7a0657245d7a21d3be764827fa0a",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "e7b27d614ed89985c3da168cc448708d96c0debf"
+    "src_tree_sha": "c2ce74eb3532b5025f0902fffc7a9541d7891b22"
   },
   "registered_champion_fights": {
     "Aatrox": {

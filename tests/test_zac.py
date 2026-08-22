@@ -83,9 +83,54 @@ def test_p_is_modeled_through_the_1269_cell_division_revive() -> None:
     data = cc_review.kit("Zac")
     parsed = parse_champion_abilities(data, 18, 0.0, _RANKS)
     assert parsed["passive"]["total_raw"] == 0.0
+    # The heal-as-damage part is gone: a self-heal has no damage row.
+    assert parsed["passive"]["parts"] == ()
 
     defenses = resolve_starting_defenses(
         "Zac", 18, calculate_total_stats(data, 18, []), []
     )
     assert defenses.revive_source == "Cell Division"
     assert defenses.revive_health_amount == pytest.approx(1269.0)
+
+
+def test_the_goo_chunk_heal_is_resolved_in_the_one_pair_receipt() -> None:
+    """The chunk pays off Zac's OWN maximum health, so it needs no formula.
+
+    It used to ride an ``amount_formula`` only the coupled walk could
+    evaluate, so the one-pair receipt published ``amount: 0.0`` on every
+    row and a top-level ``self_healing`` of 0.0 while the walk paid 203.0.
+    """
+    import pytest
+
+    from src import app as app_module
+
+    app_module.app.config["TESTING"] = True
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Zac",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "deterministic": True,
+        },
+    )
+    assert response.status_code == 200
+    payload = response.get_json()
+    chunks = [
+        event
+        for event in payload["self_healing_events"]
+        if event["source"] == "Cell Division"
+    ]
+    assert chunks
+    # 8.47% of Zac's level-18 itemless 2538.0 maximum health.
+    assert all(event["amount"] == pytest.approx(203.0, abs=0.5) for event in chunks)
+    assert "amount_formula" not in chunks[0]
+    # The published total is the same rows summed before rounding, so it
+    # is no longer the 0.0 an unresolved formula left behind.
+    assert payload["self_healing"] == pytest.approx(
+        sum(event["amount"] for event in chunks), abs=1.0
+    )

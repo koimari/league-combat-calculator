@@ -52,21 +52,21 @@
     "entries": 670,
     "leaves": 59562,
     "numeric_leaves": 45896,
-    "src_tree_sha": "e7b27d614ed89985c3da168cc448708d96c0debf"
+    "src_tree_sha": "c2ce74eb3532b5025f0902fffc7a9541d7891b22"
   },
   "coupled_golden": {
     "sections": "coupled_scenarios",
     "entries": 22,
     "leaves": 86080,
     "numeric_leaves": 28951,
-    "src_tree_sha": "e7b27d614ed89985c3da168cc448708d96c0debf"
+    "src_tree_sha": "c2ce74eb3532b5025f0902fffc7a9541d7891b22"
   },
   "coupled_golden_exact": {
     "sections": "coupled_scenarios",
     "entries": 26,
     "leaves": 189,
     "numeric_leaves": 0,
-    "src_tree_sha": "e7b27d614ed89985c3da168cc448708d96c0debf"
+    "src_tree_sha": "c2ce74eb3532b5025f0902fffc7a9541d7891b22"
   },
   "bench": {
     "cassiopeia_3champ": {
