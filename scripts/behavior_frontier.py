@@ -416,7 +416,14 @@ def name_sites(root: Path, names: frozenset[str]) -> tuple[Site, ...]:
     sites: list[Site] = []
     for path in sorted(root.rglob("*.py")):
         module = path.relative_to(root).as_posix()
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        try:
+            source = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            # A file that vanished between the listing and the read is not
+            # part of the tree being measured (a concurrent test plants and
+            # unlinks fixtures inside the scanned root under pytest -n).
+            continue
+        tree = ast.parse(source)
         owners = top_level_bindings(tree)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Constant):
@@ -1285,7 +1292,13 @@ def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
     entries: dict[str, int] = {}
     for path in sorted(root.rglob("*.py")):
         module = path.relative_to(root).as_posix()
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        try:
+            source = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            # See name_sites: a file that vanished between the listing and
+            # the read (a concurrent test's planted fixture) is not measured.
+            continue
+        tree = ast.parse(source)
         stamping = _policy_stamping_nodes(tree)
         for node in ast.walk(tree):
             if id(node) in stamping:

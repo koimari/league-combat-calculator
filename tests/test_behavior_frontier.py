@@ -1250,3 +1250,25 @@ def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:
     for stage, row in behavior_frontier.declared_stages().items():
         assert row["blocked_on"].startswith("docs/receipts/"), stage
         assert row["slice_tag"] and row["followed_by"], stage
+
+
+def test_a_file_vanishing_mid_scan_is_skipped(tmp_path) -> None:
+    """A path listed but gone by read time is not part of the measured tree.
+
+    Under ``pytest -n`` another worker plants and unlinks fixture modules
+    inside the scanned roots (tests/test_champion_inputs.py); the scan must
+    skip the vanished file instead of failing the unrelated test.
+    """
+    real = tmp_path / "real.py"
+    real.write_text('X = "Infinity Edge"' + chr(10), encoding="utf-8")
+    ghost = tmp_path / "ghost.py"  # listed below, never on disk
+
+    class _RacingRoot:
+        def __fspath__(self):
+            return str(tmp_path)
+
+        def rglob(self, pattern):
+            return [real, ghost]
+
+    sites = behavior_frontier.name_sites(_RacingRoot(), frozenset({"Infinity Edge"}))
+    assert [site.module for site in sites] == ["real.py"]
