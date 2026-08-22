@@ -2348,8 +2348,9 @@ function scheduleEngineCalculation() {
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
         renderScenarioRail();
-        // feedback.js re-reads the displayed payload off this signal.
-        document.dispatchEvent(new Event("scryglass:result"));
+        // The one published result signal. feedback.js re-reads the displayed
+        // request off it; eventorder.js reads the receipt it carries.
+        document.dispatchEvent(new CustomEvent("scryglass:result", { detail: engine.responses.a }));
       })
       .catch((error) => {
         if (requestId === engine.requestId) {
