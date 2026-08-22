@@ -140,6 +140,29 @@ SPELLBLADE_BUILD = ["Trinity Force", "Infinity Edge", "Berserker's Greaves"]
 # Eclipse delta is largest.
 SWEEP_TIMED_CHAMPION = "Ziggs"
 SWEEP_TIMED_DURATIONS = (12.0, 30.0)
+# The keystone arm. Two runes own the auto-attack schedule itself — Hail of
+# Blades and Lethal Tempo are the only names ``damage._auto_attack_timestamps``
+# reads a swing list from, and both rewrite ``num_auto_attacks`` before the
+# rotation is priced, so they move every auto, on-hit, crit and stacking-
+# penetration number in the fight at once. No other section arms a rune, so
+# until this one nothing in the golden set could see either of them.
+# "" is the control arm: the same champion, build, level and length with an
+# empty page, so a moved leaf is attributable to the rune rather than to the
+# stream underneath it.
+SWING_SCHEDULING_KEYSTONES = ("", "Hail of Blades", "Lethal Tempo")
+# One melee holder and one ranged, because both runes state their bonus
+# attack speed as a melee/ranged pair (and Lethal Tempo its bolt damage too);
+# a one-range-class scenario would leave half of every declared number
+# unexercised. Both are registered, and both are auto-attack champions, which
+# is what a swing scheduler needs to schedule.
+KEYSTONE_FIGHT_CHAMPIONS = ("Master Yi", "Vayne")
+# Two lengths, chosen against the two runes' own cached cadences rather than
+# by taste. Hail's window is its initial stacks inside 3s, so 5s prices it
+# whole; Lethal Tempo stacks to its cached maximum of six over a 6s stack
+# duration and fires its bolt only at that cap, so 12s is the shortest length
+# here that reaches it — and at 12s Hail's window is long expired, which is
+# what makes the fight prove the schedule reverts instead of staying fast.
+KEYSTONE_FIGHT_DURATIONS = (5.0, 12.0)
 # Deliberately non-default regression scenario; product defaults live in pipeline.py.
 SNAPSHOT_TARGET_HEALTH = 2000.0
 SNAPSHOT_TARGET_ARMOR = 50.0
@@ -200,14 +223,15 @@ def _run_fight(
     auto_attack_uptime=0.0,
     one_rotation=True,
     duration=ONE_ROTATION_DURATION,
+    keystone="",
 ):
     """Fight at fixed regression target stats, mirroring _evaluate_build.
 
-    Default is a one-rotation burst with no autos. Pass
-    auto_attack_uptime=1.0 (and one_rotation=False for the sustained
-    scenario) to exercise auto-attack and on-hit item paths, and
-    ``duration`` for the timed arm that lets a fight outlive an item's
-    cooldown, window or stack cadence.
+    Default is a one-rotation burst with no autos and an empty rune page.
+    Pass auto_attack_uptime=1.0 (and one_rotation=False for the sustained
+    scenario) to exercise auto-attack and on-hit item paths, ``duration``
+    for the timed arm that lets a fight outlive an item's cooldown, window
+    or stack cadence, and ``keystone`` for the arm that arms a rune.
     """
     items = copy.deepcopy(items)
     params = FightParams(
@@ -224,6 +248,7 @@ def _run_fight(
         ability_ranks=None,
         champion_options=None,
         deterministic=True,
+        keystone=keystone,
     )
     return run_fight(champion_data, level, items, params)
 
@@ -317,6 +342,46 @@ def snapshot_registered_fights(champions, items_by_name, substitutions):
                 except Exception as exc:
                     fights["sustained"][build_name] = _error_entry(exc)
             levels[str(level)] = fights
+        out[display_name] = levels
+    return out
+
+
+def snapshot_keystone_fights(champions, items_by_name, substitutions):
+    """Section 4: the two swing-scheduling keystones, armed.
+
+    One melee and one ranged holder on the physical build, at both fight
+    levels and both lengths, with each rune and with none. The build is
+    ``PHYSICAL_BUILD`` because a swing scheduler is only visible through the
+    auto stream, and that build is the one whose on-hit, crit and stacking-
+    penetration rows are priced from the auto count the rune rewrote.
+    """
+    build = _resolve_build(PHYSICAL_BUILD, items_by_name, substitutions)
+    by_display_name = {data.get("name"): data for data in champions.values()}
+    out = {}
+    for display_name in KEYSTONE_FIGHT_CHAMPIONS:
+        champion_data = by_display_name[display_name]
+        levels = {}
+        for level in FIGHT_LEVELS:
+            arms = {}
+            for keystone in SWING_SCHEDULING_KEYSTONES:
+                label = keystone.lower().replace(" ", "_") or "no_keystone"
+                for duration in KEYSTONE_FIGHT_DURATIONS:
+                    key = f"{label}_{duration:g}s"
+                    try:
+                        arms[key] = _fight_summary(
+                            _run_fight(
+                                champion_data,
+                                level,
+                                build,
+                                auto_attack_uptime=1.0,
+                                one_rotation=False,
+                                duration=duration,
+                                keystone=keystone,
+                            )
+                        )
+                    except Exception as exc:  # pylint: disable=broad-except
+                        arms[key] = _error_entry(exc)
+            levels[str(level)] = arms
         out[display_name] = levels
     return out
 
@@ -431,6 +496,9 @@ def build_snapshot():
             champions, items_by_name, substitutions
         ),
         "item_sweep": item_sweep,
+        "keystone_fights": snapshot_keystone_fights(
+            champions, items_by_name, substitutions
+        ),
     }
     return {
         **sections,
