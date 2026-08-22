@@ -1233,6 +1233,52 @@ class CooldownState:
         }
 
 
+class TriggerGate:
+    """The acceptance gate a reactive author runs before it authors a row.
+
+    One readiness clock plus the keys already answered, applied in the order
+    every author applies them: a repeated key is refused without touching the
+    clock, and a trigger inside the cooldown is refused without consuming the
+    key.  :class:`CooldownState` is the receipted sibling; this one is for
+    authors that publish no transition log of their own.
+
+    ``inclusive`` is the boundary convention.  A trigger landing exactly on
+    ``ready_at`` is accepted with the walk's 1e-9 tolerance (the survival
+    convention) or refused without it; both are in the tree, they differ by
+    one ulp of fight clock, so each author names its own rather than
+    inheriting a default that would move its numbers.
+    """
+
+    __slots__ = ("cooldown_seconds", "inclusive", "_ready_at", "_seen")
+
+    def __init__(self, cooldown_seconds: float = 0.0, *, inclusive: bool) -> None:
+        self.cooldown_seconds = cooldown_seconds
+        self.inclusive = inclusive
+        self._ready_at = float("-inf")
+        self._seen: set[Any] = set()
+
+    @property
+    def ready_at(self) -> float:
+        """When the next trigger may be accepted."""
+        return self._ready_at
+
+    def accepts(self, time: float, key: Any = None) -> bool:
+        """Whether this trigger authors.  An accepted key is consumed."""
+        if key is not None and key in self._seen:
+            return False
+        if time + (_EPS if self.inclusive else 0.0) < self._ready_at:
+            return False
+        if key is not None:
+            self._seen.add(key)
+        return True
+
+    def arm(self, time: float, *, cooldown: float | None = None) -> None:
+        """Start the readiness clock from *time*."""
+        self._ready_at = time + (
+            self.cooldown_seconds if cooldown is None else cooldown
+        )
+
+
 # ---------------------------------------------------------------------------
 # Per-cast-instance cadence
 # ---------------------------------------------------------------------------

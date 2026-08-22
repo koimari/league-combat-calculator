@@ -327,6 +327,20 @@ def test_merged_interval_duration_union_semantics():
     assert ce.merged_interval_duration([]) == pytest.approx(0.0)
 
 
+def test_merged_spans_is_the_fold_the_duration_measures():
+    assert ce.merged_spans([(3.0, 4.0), (1.0, 2.0), (2.0, 2.5)]) == (
+        (1.0, 2.5),
+        (3.0, 4.0),
+    )
+    assert ce.merged_spans([]) == ()
+    # The engine's burst blocks and the walk's downtime are one fold: the
+    # duration is the summed length of exactly these spans.
+    spans = [(1.0, 3.0), (2.0, 4.0), (6.0, 6.5)]
+    assert ce.merged_interval_duration(
+        [_interval("stun", start, end) for start, end in spans]
+    ) == pytest.approx(sum(end - start for start, end in ce.merged_spans(spans)))
+
+
 # ---------------------------------------------------------------------------
 # Receipts
 # ---------------------------------------------------------------------------

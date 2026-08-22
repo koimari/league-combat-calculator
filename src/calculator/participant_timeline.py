@@ -17,7 +17,7 @@ from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
 import math
 from operator import itemgetter
-from typing import Any
+from typing import Any, TypeVar
 
 from .defensive_effects import StartingDefenses
 from . import rune_effects
@@ -74,6 +74,7 @@ from .interpreters.stat_derivation import (
 )
 from .item_behavior import BelowHalfHealingRule, RegenerationRule, ThresholdRegenRule
 from .ability_spec import AttackClass, DamageClass
+from .state_lifecycle import TriggerGate
 from .interpreters.delta_amp import (
     StaticHolderAmps,
     resolve_static_holder_amps,
@@ -717,6 +718,84 @@ def _guardian_selection_template() -> dict[str, Any]:
     }
 
 
+#: The compiled keystone effect a scheduler resolved, whatever its shape.
+_KeystoneEffect = TypeVar("_KeystoneEffect")
+
+
+def _keystone_holder(
+    all_actors: list[Combatant],
+    keystone_name: str,
+    name: str,
+    effect_type: type[_KeystoneEffect],
+) -> tuple[Combatant, _KeystoneEffect] | None:
+    """The opening every keystone scheduler shares: the selected keystone, its
+    compiled effect, and the one holder that carries a rune page.
+
+    The request carries one selected keystone for the main loadout, so roster
+    actors have no separate rune-page input and cannot hold a keystone here.
+    """
+    if keystone_name != name:
+        return None
+    effect = rune_effects.resolve_keystone(name)
+    if not isinstance(effect, effect_type):
+        return None
+    return next(
+        ((actor, effect) for actor in all_actors if actor.participant_id == "main"),
+        None,
+    )
+
+
+def _reactive_candidate(
+    *,
+    holder: Combatant,
+    recipient: str,
+    keystone: str,
+    label: str,
+    kind: str,
+    time: float,
+    rank: TransitionRank,
+    event_id: str,
+    trigger_id: str,
+    sequence: int,
+    amount: float = 0.0,
+    target_scope: str = "self",
+    target_policy: str = "self",
+    reactive: bool = True,
+    sort_key: bool = True,
+    **fields: Any,
+) -> dict[str, Any]:
+    """One keystone-authored support candidate on its shared frame.
+
+    Who authored it, who receives it, which trigger it answers and where it
+    sorts are the same fields in every scheduler below; only the mechanic's
+    own payload is spelled at the call site.  ``sort_key`` stamps the walk's
+    precomputed transition key, and ``reactive`` marks a row that dies with a
+    skipped trigger — the zone rows a control leaves behind are neither.
+    """
+    candidate: dict[str, Any] = {
+        "time": time,
+        "kind": kind,
+        "amount": amount,
+        "source": f"{keystone} · {label}",
+        "source_key": f"rune_{keystone}",
+        "attacker": holder.participant_id,
+        "target": recipient,
+        "target_scope": target_scope,
+        "target_policy": target_policy,
+        "sequence": sequence,
+        "event_precision": "exact",
+        "_event_id": event_id,
+        "_trigger_event_id": trigger_id,
+        SUPPORT_RANK_KEY: rank,
+        **fields,
+    }
+    if reactive:
+        candidate["_reactive"] = True
+    if sort_key:
+        candidate["_sk"] = _action_key(time, rank, recipient, candidate)
+    return candidate
+
+
 def _schedule_guardian_events(
     all_actors: list[Combatant],
     incoming: dict[str, list[dict[str, Any]]],
@@ -730,94 +809,74 @@ def _schedule_guardian_events(
     incoming hit.  The survival kernel decides whether the current hit or
     the recent 2.5-second window reaches the sourced threshold.
     """
-    if keystone_name != "Guardian":
+    resolved = _keystone_holder(
+        all_actors, keystone_name, "Guardian", rune_effects.KeystoneGuardianEffect
+    )
+    if resolved is None:
         return
-    effect = rune_effects.resolve_keystone("Guardian")
-    if not isinstance(effect, rune_effects.KeystoneGuardianEffect):
-        return
+    holder, effect = resolved
     combatant_by_id = {actor.participant_id: actor for actor in all_actors}
-    for holder in all_actors:
-        # The request carries one selected keystone for the main loadout.
-        # Roster actors have no separate rune-page input.
-        if holder.participant_id != "main":
-            continue
-        selected = _guardian_target(holder, all_actors)
-        if selected is None:
-            continue
-        guarded, target_policy = selected
-        protected = (holder, guarded)
-        protected_ids = tuple(actor.participant_id for actor in protected)
-        shield_amount = effect.shield_amount(holder.level, holder.stats)
-        threshold = effect.threshold_at(holder.level)
-        cooldown = effect.cooldown_at(holder.level)
-        for trigger_target_id in protected_ids:
-            events = incoming.get(trigger_target_id, [])
-            for event_index, trigger in enumerate(events):
-                attacker = combatant_by_id.get(str(trigger.get("attacker", "")))
-                if attacker is None or attacker.team == holder.team:
-                    continue
-                if float(trigger.get("damage", 0.0) or 0.0) <= 0.0:
-                    continue
-                trigger_id = str(
-                    trigger.get(
-                        "_event_id",
-                        f"{attacker.participant_id}:{trigger_target_id}:guardian:{event_index}",
+    selected = _guardian_target(holder, all_actors)
+    if selected is None:
+        return
+    guarded, target_policy = selected
+    protected = (holder, guarded)
+    protected_ids = tuple(actor.participant_id for actor in protected)
+    shield_amount = effect.shield_amount(holder.level, holder.stats)
+    threshold = effect.threshold_at(holder.level)
+    cooldown = effect.cooldown_at(holder.level)
+    for trigger_target_id in protected_ids:
+        events = incoming.get(trigger_target_id, [])
+        for event_index, trigger in enumerate(events):
+            attacker = combatant_by_id.get(str(trigger.get("attacker", "")))
+            if attacker is None or attacker.team == holder.team:
+                continue
+            trigger_amount = float(trigger.get("damage", 0.0) or 0.0)
+            if trigger_amount <= 0.0:
+                continue
+            trigger_id = str(
+                trigger.get(
+                    "_event_id",
+                    f"{attacker.participant_id}:{trigger_target_id}:guardian:{event_index}",
+                )
+            )
+            owners = trigger.setdefault("_guardian_owner_ids", [])
+            if holder.participant_id not in owners:
+                owners.append(holder.participant_id)
+            activation_id = f"{holder.participant_id}:{trigger_id}"
+            for recipient in protected:
+                is_holder = recipient.participant_id == holder.participant_id
+                support_effects[recipient.participant_id].append(
+                    _reactive_candidate(
+                        holder=holder,
+                        recipient=recipient.participant_id,
+                        keystone="Guardian",
+                        label="Shield",
+                        kind="shield",
+                        time=float(trigger.get("time", 0.0) or 0.0),
+                        rank=TransitionRank.AURA_ARM,
+                        event_id=(
+                            f"{holder.participant_id}:guardian:{trigger_id}:"
+                            f"{recipient.participant_id}"
+                        ),
+                        trigger_id=trigger_id,
+                        sequence=trigger.get("sequence", event_index),
+                        amount=shield_amount,
+                        target_scope="self" if is_holder else "explicit_selected_ally",
+                        target_policy="self" if is_holder else target_policy,
+                        duration=effect.shield_duration_seconds,
+                        target_selection_key="guardian:target",
+                        _guardian_reactive=True,
+                        _guardian_owner_id=holder.participant_id,
+                        _guardian_activation_id=activation_id,
+                        _guardian_trigger_event_id=trigger_id,
+                        _guardian_trigger_target=trigger_target_id,
+                        _guardian_trigger_amount=trigger_amount,
+                        _guardian_threshold=threshold,
+                        _guardian_window_seconds=effect.trigger_window_seconds,
+                        _guardian_cooldown_seconds=cooldown,
                     )
                 )
-                owners = trigger.setdefault("_guardian_owner_ids", [])
-                if holder.participant_id not in owners:
-                    owners.append(holder.participant_id)
-                activation_id = f"{holder.participant_id}:{trigger_id}"
-                for recipient in protected:
-                    candidate_id = (
-                        f"{holder.participant_id}:guardian:{trigger_id}:"
-                        f"{recipient.participant_id}"
-                    )
-                    candidate = {
-                        "time": float(trigger.get("time", 0.0) or 0.0),
-                        "kind": "shield",
-                        "amount": shield_amount,
-                        "duration": effect.shield_duration_seconds,
-                        "source": "Guardian · Shield",
-                        "source_key": "rune_Guardian",
-                        "attacker": holder.participant_id,
-                        "target": recipient.participant_id,
-                        "target_scope": (
-                            "self"
-                            if recipient.participant_id == holder.participant_id
-                            else "explicit_selected_ally"
-                        ),
-                        "target_policy": (
-                            "self"
-                            if recipient.participant_id == holder.participant_id
-                            else target_policy
-                        ),
-                        "target_selection_key": "guardian:target",
-                        "sequence": trigger.get("sequence", event_index),
-                        "event_precision": "exact",
-                        "_event_id": candidate_id,
-                        "_trigger_event_id": trigger_id,
-                        "_guardian_reactive": True,
-                        "_reactive": True,
-                        SUPPORT_RANK_KEY: TransitionRank.AURA_ARM,
-                        "_guardian_owner_id": holder.participant_id,
-                        "_guardian_activation_id": activation_id,
-                        "_guardian_trigger_event_id": trigger_id,
-                        "_guardian_trigger_target": trigger_target_id,
-                        "_guardian_trigger_amount": float(
-                            trigger.get("damage", 0.0) or 0.0
-                        ),
-                        "_guardian_threshold": threshold,
-                        "_guardian_window_seconds": effect.trigger_window_seconds,
-                        "_guardian_cooldown_seconds": cooldown,
-                    }
-                    candidate["_sk"] = _action_key(
-                        candidate["time"],
-                        TransitionRank.AURA_ARM,
-                        recipient.participant_id,
-                        candidate,
-                    )
-                    support_effects[recipient.participant_id].append(candidate)
 
 
 #: The bus stream a control reader asks for.  Damage triggers ride the same
@@ -891,68 +950,47 @@ def _schedule_aftershock_events(
     keystone_name: str,
 ) -> None:
     """Author Aftershock's resistance snapshot after an accepted control."""
-    if keystone_name != "Aftershock":
-        return
-    effect = rune_effects.resolve_keystone("Aftershock")
-    if not isinstance(effect, rune_effects.KeystoneAftershockEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors, keystone_name, "Aftershock", rune_effects.KeystoneAftershockEffect
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     armor_bonus = effect.resistance_bonus(holder.level, holder.stats, "armor")
     magic_resistance_bonus = effect.resistance_bonus(
         holder.level, holder.stats, "magic_resistance"
     )
-    ready_at = 0.0
-    seen: set[tuple[str, float, str]] = set()
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     for event, cc_kind, duration in _immobilizing_controls(
         outgoing.get(holder.participant_id, [])
     ):
         trigger_time = float(event.get("time", 0.0) or 0.0)
-        key = (
-            str(event.get("source_key", "")),
-            round(trigger_time, 9),
-            cc_kind,
-        )
-        if key in seen or trigger_time + 1e-9 < ready_at:
+        key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
+        if not gate.accepts(trigger_time, key):
             continue
-        seen.add(key)
         trigger_id = str(event.get("_event_id", ""))
-        activation_time = trigger_time + 1e-9
-        candidate = {
-            "time": activation_time,
-            "kind": "stat_buff",
-            "amount": 0.0,
-            "duration": effect.duration_seconds,
-            "source": "Aftershock · Resistance",
-            "source_key": "rune_Aftershock",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(event.get("sequence", 0) or 0),
-            "event_precision": "exact",
-            "bonus_armor": armor_bonus,
-            "bonus_magic_resistance": magic_resistance_bonus,
-            "_aftershock": True,
-            "_reactive": True,
-            SUPPORT_RANK_KEY: TransitionRank.DAMAGE,
-            "_event_id": f"{holder.participant_id}:aftershock:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "aftershock_trigger_kind": cc_kind,
-            "aftershock_duration": effect.duration_seconds,
-            "aftershock_cooldown": effect.cooldown_seconds,
-        }
-        candidate["_sk"] = _action_key(
-            activation_time,
-            TransitionRank.DAMAGE,
-            holder.participant_id,
-            candidate,
+        support_effects[holder.participant_id].append(
+            _reactive_candidate(
+                holder=holder,
+                recipient=holder.participant_id,
+                keystone="Aftershock",
+                label="Resistance",
+                kind="stat_buff",
+                time=trigger_time + 1e-9,
+                rank=TransitionRank.DAMAGE,
+                event_id=f"{holder.participant_id}:aftershock:{trigger_id}",
+                trigger_id=trigger_id,
+                sequence=int(event.get("sequence", 0) or 0),
+                duration=effect.duration_seconds,
+                bonus_armor=armor_bonus,
+                bonus_magic_resistance=magic_resistance_bonus,
+                _aftershock=True,
+                aftershock_trigger_kind=cc_kind,
+                aftershock_duration=effect.duration_seconds,
+                aftershock_cooldown=effect.cooldown_seconds,
+            )
         )
-        support_effects[holder.participant_id].append(candidate)
-        ready_at = trigger_time + effect.cooldown_seconds
+        gate.arm(trigger_time)
 
 
 def _schedule_grasp_events(
@@ -963,16 +1001,15 @@ def _schedule_grasp_events(
     keystone_name: str,
 ) -> None:
     """Author Grasp's permanent health gain after each accepted proc."""
-    if keystone_name != "Grasp of the Undying":
-        return
-    effect = rune_effects.resolve_keystone("Grasp of the Undying")
-    if not isinstance(effect, rune_effects.KeystoneGraspEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors,
+        keystone_name,
+        "Grasp of the Undying",
+        rune_effects.KeystoneGraspEffect,
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     proc_events = sorted(
         (
             event
@@ -981,42 +1018,30 @@ def _schedule_grasp_events(
         ),
         key=_sequence_reading_order,
     )
-    seen: set[float] = set()
+    gate = TriggerGate(inclusive=False)
     bonus_health = effect.bonus_health(bool(holder.stats.get("is_melee", True)))
     for event in proc_events:
         trigger_time = float(event.get("time", 0.0) or 0.0)
-        if trigger_time in seen:
+        if not gate.accepts(trigger_time, trigger_time):
             continue
-        seen.add(trigger_time)
         trigger_id = str(event.get("_event_id", ""))
-        activation_time = trigger_time + 1e-9
-        candidate = {
-            "time": activation_time,
-            "kind": "stat_buff",
-            "amount": 0.0,
-            "source": "Grasp of the Undying · Permanent health",
-            "source_key": "rune_Grasp of the Undying",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(event.get("sequence", 0) or 0),
-            "event_precision": "exact",
-            "bonus_health": bonus_health,
-            "_grasp_permanent_health": True,
-            "_reactive": True,
-            SUPPORT_RANK_KEY: TransitionRank.DEBUFF_ARM,
-            "_event_id": f"{holder.participant_id}:grasp:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "grasp_bonus_health": bonus_health,
-        }
-        candidate["_sk"] = _action_key(
-            activation_time,
-            TransitionRank.DEBUFF_ARM,
-            holder.participant_id,
-            candidate,
+        support_effects[holder.participant_id].append(
+            _reactive_candidate(
+                holder=holder,
+                recipient=holder.participant_id,
+                keystone="Grasp of the Undying",
+                label="Permanent health",
+                kind="stat_buff",
+                time=trigger_time + 1e-9,
+                rank=TransitionRank.DEBUFF_ARM,
+                event_id=f"{holder.participant_id}:grasp:{trigger_id}",
+                trigger_id=trigger_id,
+                sequence=int(event.get("sequence", 0) or 0),
+                bonus_health=bonus_health,
+                _grasp_permanent_health=True,
+                grasp_bonus_health=bonus_health,
+            )
         )
-        support_effects[holder.participant_id].append(candidate)
 
 
 def _schedule_glacial_events(
@@ -1027,16 +1052,12 @@ def _schedule_glacial_events(
     keystone_name: str,
 ) -> None:
     """Author Glacial's zones from the holder's reviewed control events."""
-    if keystone_name != "Glacial Augment":
-        return
-    effect = rune_effects.resolve_keystone("Glacial Augment")
-    if not isinstance(effect, rune_effects.KeystoneGlacialEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors, keystone_name, "Glacial Augment", rune_effects.KeystoneGlacialEffect
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     actor_by_id = {actor.participant_id: actor for actor in all_actors}
     allied_targets = [
         actor
@@ -1045,8 +1066,7 @@ def _schedule_glacial_events(
         and ("main" if actor.team in {"main", "ally"} else actor.team) == "main"
     ]
     slow_percent = effect.slow_ratio(holder.stats) * 100.0
-    ready_at = 0.0
-    seen: set[tuple[str, float, str]] = set()
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     for event, cc_kind, cc_duration in _immobilizing_controls(
         outgoing.get(holder.participant_id, [])
     ):
@@ -1056,11 +1076,11 @@ def _schedule_glacial_events(
             continue
         trigger_time = float(event.get("time", 0.0) or 0.0)
         key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
-        if key in seen or trigger_time + 1e-9 < ready_at:
+        if not gate.accepts(trigger_time, key):
             continue
-        seen.add(key)
         trigger_id = str(event.get("_event_id", ""))
         activation_time = trigger_time + 1e-9
+        sequence = int(event.get("sequence", 0) or 0)
         zone_duration = effect.zone_duration(cc_duration)
         zone_id = f"{holder.participant_id}:glacial:{trigger_id}"
         zone_fields = {
@@ -1071,59 +1091,63 @@ def _schedule_glacial_events(
             "glacial_slow_percent": slow_percent,
             "glacial_damage_reduction_ratio": effect.damage_reduction_ratio,
         }
+        # The zone outlives the control that dropped it, so its rows are not
+        # reactive republishes and the walk sorts them itself.
         support_effects[target_id].append(
-            {
-                "time": activation_time,
-                "kind": "slow",
-                "amount": slow_percent,
-                "slow_percent": slow_percent,
-                "duration": zone_duration,
-                "source": "Glacial Augment · Icy zone",
-                "source_key": "rune_Glacial Augment",
-                "attacker": holder.participant_id,
-                "target": target_id,
-                "target_scope": "enemy_champion",
-                "target_policy": "immobilized_target",
-                "sequence": int(event.get("sequence", 0) or 0),
-                "event_precision": "exact",
-                "_event_id": f"{zone_id}:slow",
-                "_trigger_event_id": trigger_id,
-                "_glacial_zone": dict(zone_fields),
-                SUPPORT_RANK_KEY: TransitionRank.BARRIER_GRANT,
+            _reactive_candidate(
+                holder=holder,
+                recipient=target_id,
+                keystone="Glacial Augment",
+                label="Icy zone",
+                kind="slow",
+                time=activation_time,
+                rank=TransitionRank.BARRIER_GRANT,
+                event_id=f"{zone_id}:slow",
+                trigger_id=trigger_id,
+                sequence=sequence,
+                amount=slow_percent,
+                target_scope="enemy_champion",
+                target_policy="immobilized_target",
+                reactive=False,
+                sort_key=False,
+                slow_percent=slow_percent,
+                duration=zone_duration,
+                _glacial_zone=dict(zone_fields),
                 **zone_fields,
-            }
+            )
         )
         for ally in allied_targets:
             support_effects[ally.participant_id].append(
-                {
-                    "time": activation_time,
-                    "kind": "damage_modifier",
-                    "amount": effect.damage_reduction_ratio,
-                    "duration": zone_duration,
-                    "multiplier": 1.0 - effect.damage_reduction_ratio,
-                    "all_sources": True,
+                _reactive_candidate(
+                    holder=holder,
+                    recipient=ally.participant_id,
+                    keystone="Glacial Augment",
+                    label="Ally damage reduction",
+                    kind="damage_modifier",
+                    time=activation_time,
+                    rank=TransitionRank.AURA_ARM,
+                    event_id=f"{zone_id}:reduction:{ally.participant_id}",
+                    trigger_id=trigger_id,
+                    sequence=sequence,
+                    amount=effect.damage_reduction_ratio,
+                    target_scope="ally_champion",
+                    target_policy="glacial_zone",
+                    reactive=False,
+                    sort_key=False,
+                    duration=zone_duration,
+                    multiplier=1.0 - effect.damage_reduction_ratio,
+                    all_sources=True,
                     # D-04: the zone reduces "damage dealt" with no carve-out
                     # in the sourced prose, so every damage and attack class
                     # is the full declaration - never an empty one.
-                    "damage_classes": frozenset(DamageClass),
-                    "attack_classes": frozenset(AttackClass),
-                    "source": "Glacial Augment · Ally damage reduction",
-                    "source_key": "rune_Glacial Augment",
-                    "attacker": holder.participant_id,
-                    "target": ally.participant_id,
-                    "target_scope": "ally_champion",
-                    "target_policy": "glacial_zone",
-                    "source_participant": target_id,
-                    "sequence": int(event.get("sequence", 0) or 0),
-                    "event_precision": "exact",
-                    "_event_id": f"{zone_id}:reduction:{ally.participant_id}",
-                    "_trigger_event_id": trigger_id,
-                    "_glacial_zone": dict(zone_fields),
-                    SUPPORT_RANK_KEY: TransitionRank.AURA_ARM,
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
+                    source_participant=target_id,
+                    _glacial_zone=dict(zone_fields),
                     **zone_fields,
-                }
+                )
             )
-        ready_at = trigger_time + effect.cooldown_seconds
+        gate.arm(trigger_time)
 
 
 def _schedule_stormraider_events(
@@ -1134,16 +1158,15 @@ def _schedule_stormraider_events(
     keystone_name: str,
 ) -> None:
     """Author Stormraider's movement burst from exact damage windows."""
-    if keystone_name != "Stormraider's Surge":
-        return
-    effect = rune_effects.resolve_keystone("Stormraider's Surge")
-    if not isinstance(effect, rune_effects.KeystoneStormraiderEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors,
+        keystone_name,
+        "Stormraider's Surge",
+        rune_effects.KeystoneStormraiderEffect,
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     actors_by_id = {actor.participant_id: actor for actor in all_actors}
     events_by_target: dict[str, list[tuple[float, int, dict[str, Any], float]]] = (
         defaultdict(list)
@@ -1188,12 +1211,11 @@ def _schedule_stormraider_events(
                 )
 
     trigger_candidates.sort(key=lambda row: (row[0], row[1], row[2]))
-    ready_at = 0.0
+    gate = TriggerGate(effect.cooldown_at(holder.level), inclusive=True)
     move_speed = effect.bonus_move_speed_percent(
         bool(holder.stats.get("is_melee", True))
     )
     slow_resist_percent = effect.slow_resist_ratio * 100.0
-    seen_events: set[str] = set()
     for (
         trigger_time,
         event_index,
@@ -1207,45 +1229,35 @@ def _schedule_stormraider_events(
                 f"{holder.participant_id}:{target_id}:stormraider:{event_index}",
             )
         )
-        if trigger_id in seen_events or trigger_time + 1e-9 < ready_at:
+        if not gate.accepts(trigger_time, trigger_id):
             continue
-        seen_events.add(trigger_id)
-        event = {
-            "time": trigger_time + 1e-9,
-            "kind": "movement",
-            "amount": move_speed,
-            "bonus_move_speed_percent": move_speed,
-            "slow_resist_percent": slow_resist_percent,
-            "duration": effect.duration_seconds,
-            "source": "Stormraider's Surge · Movement burst",
-            "source_key": "rune_Stormraider's Surge",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(trigger.get("sequence", event_index) or event_index),
-            "event_precision": "exact",
-            "stormraider_damage_threshold_ratio": effect.damage_threshold_ratio,
-            "stormraider_damage_window_seconds": effect.damage_window_seconds,
-            "stormraider_trigger_damage": window_damage,
-            "stormraider_target_max_health": actors_by_id[target_id].stats.get(
-                "health", 0.0
-            ),
-            "stormraider_cooldown_seconds": effect.cooldown_at(holder.level),
-            "_event_id": f"{holder.participant_id}:stormraider:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "_stormraider": True,
-            "_reactive": True,
-            SUPPORT_RANK_KEY: TransitionRank.BARRIER_GRANT,
-        }
-        event["_sk"] = _action_key(
-            float(event["time"]),
-            TransitionRank.BARRIER_GRANT,
-            holder.participant_id,
-            event,
+        support_effects[holder.participant_id].append(
+            _reactive_candidate(
+                holder=holder,
+                recipient=holder.participant_id,
+                keystone="Stormraider's Surge",
+                label="Movement burst",
+                kind="movement",
+                time=trigger_time + 1e-9,
+                rank=TransitionRank.BARRIER_GRANT,
+                event_id=f"{holder.participant_id}:stormraider:{trigger_id}",
+                trigger_id=trigger_id,
+                sequence=int(trigger.get("sequence", event_index) or event_index),
+                amount=move_speed,
+                bonus_move_speed_percent=move_speed,
+                slow_resist_percent=slow_resist_percent,
+                duration=effect.duration_seconds,
+                stormraider_damage_threshold_ratio=effect.damage_threshold_ratio,
+                stormraider_damage_window_seconds=effect.damage_window_seconds,
+                stormraider_trigger_damage=window_damage,
+                stormraider_target_max_health=actors_by_id[target_id].stats.get(
+                    "health", 0.0
+                ),
+                stormraider_cooldown_seconds=effect.cooldown_at(holder.level),
+                _stormraider=True,
+            )
         )
-        support_effects[holder.participant_id].append(event)
-        ready_at = trigger_time + effect.cooldown_at(holder.level)
+        gate.arm(trigger_time)
 
 
 def _aery_support_templates(
@@ -1266,7 +1278,7 @@ def _aery_support_templates(
             "is missing participant stats"
         )
     templates: list[dict[str, Any]] = []
-    ready_at = 0.0
+    gate = TriggerGate(inclusive=False)
     ordered = sorted(
         (event for event in trigger_effects if isinstance(event, Mapping)),
         key=lambda event: _trigger_reading_order(event, attacker.participant_id),
@@ -1289,7 +1301,7 @@ def _aery_support_templates(
             )
         if (
             trigger_amount <= 0.0 and not callable(trigger.get("amount_formula"))
-        ) or trigger_time < ready_at:
+        ) or not gate.accepts(trigger_time):
             continue
         target = str(trigger.get("target", ""))
         if not target:
@@ -1324,8 +1336,12 @@ def _aery_support_templates(
             }
         )
         # Return travel has no fixed source duration.  The same lower-bound
-        # cadence as the offensive Aery path uses the sourced linger window.
-        ready_at = trigger_time + effect.shield_flight_seconds + effect.linger_seconds
+        # cadence as the offensive Aery path uses the sourced linger window:
+        # Aery flies, lands, and lingers there.
+        gate.arm(
+            trigger_time + effect.shield_flight_seconds,
+            cooldown=effect.linger_seconds,
+        )
     return templates
 
 
