@@ -55,7 +55,7 @@ def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:
     # Physical Damage" row (90 : 390 + 180% bonus AD) is their sum, so the
     # pull reads as the difference without depending on effect order.
     impact = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    pulls = bool(ctx.options.get("q_pull", True))
+    pulls = bool(ctx.option("q_pull"))
     total = (
         extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
         if pulls

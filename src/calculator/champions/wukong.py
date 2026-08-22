@@ -90,7 +90,7 @@ def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
     # armor while everything after it (R ticks, E follow-up, later Q
     # casts) sees the reduced armor — matching in-game.
     shred = extract_value(ability, "Armor Reduction", rank)
-    if ctx.options.get("q_armor_reduction", True) and shred > 0:
+    if ctx.option("q_armor_reduction") and shred > 0:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "duration": Q_SHRED_DURATION,

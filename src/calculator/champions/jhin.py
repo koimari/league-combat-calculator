@@ -38,7 +38,7 @@ def _fourth_shot_missing_ratio(level: int) -> float:
 
 def _final_round_active(ctx: SlotCtx) -> bool:
     """The next auto is Whisper's final round (4th shot of the clip)."""
-    if bool(ctx.options.get("p_final_shot", False)):
+    if bool(ctx.option("p_final_shot")):
         return True
     return int(ctx.option("p_shot_number")) >= 4
 

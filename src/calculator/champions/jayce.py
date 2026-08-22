@@ -136,7 +136,7 @@ _TRANSFORM_NAMES = {"hammer": "Mercury Hammer", "cannon": "Mercury Cannon"}
 
 def _is_hammer(ctx: SlotCtx) -> bool:
     """True in Hammer stance; Cannon (Jayce's default form) is False."""
-    return bool(ctx.options.get("hammer_stance", False))
+    return bool(ctx.option("hammer_stance"))
 
 
 def _level_tier(level: int) -> int:

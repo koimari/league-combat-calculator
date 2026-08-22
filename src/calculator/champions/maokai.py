@@ -58,7 +58,7 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     cooldown = extract_cooldown(ability, rank)
-    if not bool(ctx.options.get("sapling_empowered", True)):
+    if not bool(ctx.option("sapling_empowered")):
         explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         entry = damage_entry(
             ability_name(ability),

@@ -99,7 +99,7 @@ _CRUNCH_OWN_HP_UNIT = "% of his maximum health"
 
 def _form_index(ctx: SlotCtx) -> int:
     """JSON entry index for the current form: 0 = Mini, 1 = Mega."""
-    return 1 if ctx.options.get("mega", False) else 0
+    return 1 if ctx.option("mega") else 0
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: form-picked "Physical Damage"; catching it refunds cooldown."""
     form = _form_index(ctx)
     entry = _q_forms[form](ctx)
-    if entry is not None and ctx.options.get("q_pickup", True):
+    if entry is not None and ctx.option("q_pickup"):
         entry["cooldown"] *= _Q_PICKUP_CD_MULT[form]
     return entry
 

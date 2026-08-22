@@ -56,7 +56,7 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_named(
             ability, "Increased Bonus Magic Damage", rank, ctx.stats, ctx.target
         )
-        if bool(ctx.options.get("w_empowered", True))
+        if bool(ctx.option("w_empowered"))
         else 0.0
     )
     entry = ability_on_hit_entry(

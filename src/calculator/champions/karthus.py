@@ -53,7 +53,7 @@ def _wall_of_pain(ctx: SlotCtx) -> dict[str, Any] | None:
         "parts": (),
         "detail": "Target crosses the wall before the damaging sequence",
     }
-    if bool(ctx.options.get("wall_contact", True)):
+    if bool(ctx.option("wall_contact")):
         entry["target_debuff"] = {
             "mr_reduction_percent": _W_MR_REDUCTION_PERCENT,
             "duration": _W_DEBUFF_DURATION,
@@ -72,7 +72,7 @@ def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
 
-    requested_isolated = bool(ctx.options.get("q_isolated", True))
+    requested_isolated = bool(ctx.option("q_isolated"))
     roster_count = int(ctx.target_stat("roster_target_count"))
     isolated = requested_isolated and roster_count <= 1
     attribute = "Isolated Enhanced Damage" if isolated else "Magic Damage"

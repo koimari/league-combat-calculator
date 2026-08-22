@@ -108,7 +108,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     events into champion-module parses, so the option is the explicit
     pre-stack state (documented in ASSUMPTIONS).
     """
-    if not bool(ctx.options.get("q_active", True)):
+    if not bool(ctx.option("q_active")):
         return None
     focus = TimedStackState(
         ASHE_FOCUS_STACK_RULE,

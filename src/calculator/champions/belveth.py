@@ -264,7 +264,7 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
         # which carries R's reviewed slow into the event ledger.
         event_order_certified="single_hit",
     )
-    if bool(ctx.options.get("true_form", False)):
+    if bool(ctx.option("true_form")):
         bonus_health = extract_named(ability, "Bonus Health", rank, ctx.stats)
         total_as = extract_value(ability, "Increased Total Attack Speed", rank)
         entry["stat_buff"] = {

@@ -154,7 +154,7 @@ def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    if ctx.options.get("w_outer_cone", True):
+    if ctx.option("w_outer_cone"):
         # Modifier 0: base % of target max health; modifier 1: extra %
         # per 100 bonus AD (of max health too — not a flat scaling).
         percent = extract_value(ability, "Outer Cone Additional Damage", rank, 0)

@@ -20,7 +20,7 @@ def _reaping_slash(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     hits = 2
-    form = str(ctx.options.get("form", "base"))
+    form = str(ctx.option("form"))
     value = extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
     if form == "darkin":
         per_hit = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
@@ -74,7 +74,7 @@ def _blades_reach(ctx: SlotCtx) -> dict[str, Any] | None:
     )(ctx)
     if entry is None:
         return None
-    kind = "knockup" if str(ctx.options.get("form", "base")) == "darkin" else "slow"
+    kind = "knockup" if str(ctx.option("form")) == "darkin" else "slow"
     entry["parts"] = tuple(replace(part, cc_kind=kind) for part in entry["parts"])
     return entry
 
@@ -84,7 +84,7 @@ def _umbral_trespass(ctx: SlotCtx) -> dict[str, Any] | None:
     if result:
         result["detail"] = (
             "Umbral Trespass recast after the sourced attach/channel delay; "
-            f"form={ctx.options.get('form', 'base')}."
+            f"form={ctx.option('form')}."
         )
     return result
 

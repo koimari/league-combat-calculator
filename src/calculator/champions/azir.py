@@ -71,7 +71,7 @@ def _soldier_attack_damage(
 
 def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: zero-damage entry carrying the Sand Soldier auto replacement."""
-    if not bool(ctx.options.get("soldier_autos", True)):
+    if not bool(ctx.option("soldier_autos")):
         return None  # Azir autos normally (physical, crits, full on-hit)
     ranked = ctx.ranked()
     if ranked is None:

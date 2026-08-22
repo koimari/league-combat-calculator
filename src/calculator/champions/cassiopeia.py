@@ -83,7 +83,7 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
     # Base scales per champion LEVEL: modifier 0 is the 40-entry array
     # (indexed level-1), modifier 1 the 10% AP ratio.
     total = sum_modifiers(base_leveling, ctx.level, ctx.stats, ctx.target)
-    if ctx.options.get("target_poisoned", True):
+    if ctx.option("target_poisoned"):
         # Poisoned: + rank-scaled bonus and +55% AP (65% AP total).
         total += sum_modifiers(poison_leveling, rank, ctx.stats, ctx.target)
 

@@ -247,7 +247,7 @@ def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
         0.0,
         "magic",
     )
-    if not ctx.options.get("w_active", True):
+    if not ctx.option("w_active"):
         return entry
 
     def self_buff(attr: str, bonus_stat: str) -> float:

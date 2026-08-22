@@ -21,7 +21,7 @@ from .source_receipts import load_champion_sources
 
 
 def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
-    mantra = bool(ctx.options.get("q_mantra", False))
+    mantra = bool(ctx.option("q_mantra"))
     ability = ctx.ability("Q", 1 if mantra else 0)
     if ability is None:
         return None
@@ -44,14 +44,14 @@ def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
-    renewal = bool(ctx.options.get("w_renewal", False))
+    renewal = bool(ctx.option("w_renewal"))
     ability = ctx.ability("W", 1 if renewal else 0)
     if ability is None:
         return None
     rank = ctx.rank_for("R") if renewal else ctx.rank_for("W")
     rank = max(1, min(rank, 4 if renewal else 5))
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    holds = bool(ctx.options.get("w_tether_holds", True))
+    holds = bool(ctx.option("w_tether_holds"))
     # The opening hit only tethers and reveals; the root arrives with the
     # second hit, "if the tether is not broken by the end of its duration".
     parts = [DamagePart("magic", value, time_offset=0.1, cc_kind="none")]

@@ -89,7 +89,7 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
     # Resistance shred: damage.py reduces target armor and MR by this
     # percentage before all other damage calculations.
     shred = extract_value(ability, "Resistances Reduction", rank)
-    if ctx.options.get("q_shred", True) and shred > 0:
+    if ctx.option("q_shred") and shred > 0:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "mr_reduction_percent": shred,
@@ -103,7 +103,7 @@ _caustic_spittle.phase = DEBUFF
 
 def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: on-hit %maxHP magic damage in a castable shell."""
-    if not ctx.options.get("w_active", True):
+    if not ctx.option("w_active"):
         return None
     ranked = ctx.ranked()
     if ranked is None:

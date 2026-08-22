@@ -195,7 +195,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
 
-    ground = str(ctx.options.get("q_ground", "normal"))
+    ground = str(ctx.option("q_ground"))
     if ground not in {"normal", "worked"}:
         raise ValueError("Taliyah q_ground must be normal or worked")
     distance = clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)

@@ -61,7 +61,7 @@ def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    nearest = bool(ctx.options.get("e_nearest_target", True))
+    nearest = bool(ctx.option("e_nearest_target"))
     spins = 7 + int(max(0.0, ctx.stat("bonus_attack_speed")) // 25.0)
     spins = min(max(spins, 7), 15)
     attr = "Increased Damage Per Spin" if nearest else "Physical Damage Per Spin"

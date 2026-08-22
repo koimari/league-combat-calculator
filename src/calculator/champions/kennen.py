@@ -33,9 +33,7 @@ def _electrical_surge(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
         {
             "name": "Electrical Surge passive",
-            "damage_per_hit": (
-                passive if bool(ctx.options.get("w_empowered", True)) else 0.0
-            ),
+            "damage_per_hit": (passive if bool(ctx.option("w_empowered")) else 0.0),
             "damage_type": "magic",
         },
         extract_cooldown(ability, rank),

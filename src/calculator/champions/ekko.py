@@ -72,7 +72,7 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    ready = bool(ctx.options.get("w_passive_ready", False))
+    ready = bool(ctx.option("w_passive_ready"))
     entry = no_damage(
         ctx,
         name=ability_name(ability),

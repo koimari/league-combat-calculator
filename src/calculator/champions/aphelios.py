@@ -93,7 +93,7 @@ _R_CC_BY_WEAPON = dict.fromkeys(_WEAPON_INDEX, "none") | {"gravitum": "slow"}
 
 
 def _main_weapon(ctx: SlotCtx) -> str:
-    value = str(ctx.options.get("aphelios_main_weapon", "calibrum")).lower()
+    value = str(ctx.option("aphelios_main_weapon")).lower()
     return value if value in _WEAPON_INDEX else "calibrum"
 
 
@@ -314,9 +314,7 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         detail += " follow-up is event-ordered separately"
     # The healing rule reads this marker to gate Severum's overheal-to-
     # shield conversion (the Shyvana dragon-form convention).
-    if _main_weapon(ctx) == "severum" and bool(
-        ctx.options.get("aphelios_overheal_shield", True)
-    ):
+    if _main_weapon(ctx) == "severum" and bool(ctx.option("aphelios_overheal_shield")):
         detail += " · overheal shield on"
     entry["detail"] = detail
     return entry

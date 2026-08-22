@@ -55,7 +55,7 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
 
-    if bool(ctx.options.get("q_execute", False)):
+    if bool(ctx.option("q_execute")):
         # Target below 20% of maximum health: the Increased Hurl Damage row.
         base = extract_named(
             ability, "Increased Hurl Damage", rank, ctx.stats, ctx.target
@@ -68,7 +68,7 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
         branch = "hurl"
 
     empowered = 0.0
-    if bool(ctx.options.get("q_mortal_will", True)):
+    if bool(ctx.option("q_mortal_will")):
         per_level = extract_value(ability, "Per-Level Scaling", ctx.level)
         empowered = per_level + _MORTAL_WILL_BONUS_AD_RATIO * float(
             ctx.stat("bonus_attack_damage") or 0.0
@@ -141,9 +141,7 @@ def _grand_starfall(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
 
-    attr = (
-        "Reduced Damage" if bool(ctx.options.get("r_edge", False)) else "Magic Damage"
-    )
+    attr = "Reduced Damage" if bool(ctx.option("r_edge")) else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),

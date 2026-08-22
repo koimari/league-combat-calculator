@@ -68,7 +68,7 @@ def _w_active_empower(ctx: SlotCtx, rank: int) -> float:
     sourced "Active Maximum Magic Damage" row (9-21% of missing health
     by W rank) against the shared ``target_missing_hp_pct`` option.
     """
-    if not ctx.options.get("w_active_empower", True):
+    if not ctx.option("w_active_empower"):
         return 0.0
     ability = ctx.ability("W", 0)
     if ability is None:

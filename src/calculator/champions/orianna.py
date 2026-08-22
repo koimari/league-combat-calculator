@@ -152,7 +152,7 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     total = 0.0
-    if ctx.options.get("e_passes_through_target", True):
+    if ctx.option("e_passes_through_target"):
         total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     return damage_entry(
         ability_name(ability),

@@ -27,9 +27,7 @@ def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     rank = ctx.rank_for()
     attribute = (
-        "Total Magic Damage"
-        if bool(ctx.options.get("q_consume", True))
-        else "Magic Damage"
+        "Total Magic Damage" if bool(ctx.option("q_consume")) else "Magic Damage"
     )
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     return {
@@ -63,7 +61,7 @@ def _ethereal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    completes = bool(ctx.options.get("e_chain_complete", True))
+    completes = bool(ctx.option("e_chain_complete"))
     parts = [DamagePart("magic", initial, time_offset=0.0, cc_kind="none")]
     total = initial
     if completes:
@@ -109,7 +107,7 @@ def _mimic(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for()
-    choice = str(ctx.options.get("r_mimic", "Q"))
+    choice = str(ctx.option("r_mimic"))
     attribute = {
         "Q": "Total Magic Damage",
         "W": "Magic Damage",

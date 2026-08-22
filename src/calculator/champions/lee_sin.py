@@ -49,7 +49,7 @@ def _sonic_wave_and_resonating_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     parts = [DamagePart("physical", sonic, time_offset=0.0)]
     total = sonic
 
-    if bool(ctx.options.get("q_recast", True)):
+    if bool(ctx.option("q_recast")):
         strike = ctx.ability("Q", 1)
         minimum = extract_named(
             strike, "Minimum Physical Damage", rank, ctx.stats, ctx.target

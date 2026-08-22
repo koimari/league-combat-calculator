@@ -213,8 +213,8 @@ def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    fire_at_will = bool(ctx.options.get("r_fire_at_will", False))
-    deaths_daughter = bool(ctx.options.get("r_deaths_daughter", False))
+    fire_at_will = bool(ctx.option("r_fire_at_will"))
+    deaths_daughter = bool(ctx.option("r_deaths_daughter"))
     waves = 18 if fire_at_will else 12
     magic_attr = "Magic Damage Per Wave"
     per_wave = extract_named(ability, magic_attr, rank, ctx.stats, ctx.target)

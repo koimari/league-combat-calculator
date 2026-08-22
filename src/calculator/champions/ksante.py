@@ -27,7 +27,7 @@ _ALLOUT_OMNIVAMP_PERCENT = 20.0
 def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     base = extract_value(ability, "Bonus Damage", ctx.level)
     ratio = extract_value(ability, "Max Health Damage", ctx.level) / 100.0
-    all_out = bool(ctx.options.get("all_out", False))
+    all_out = bool(ctx.option("all_out"))
     extra = (
         0.01
         + 0.01 * ctx.stat("bonus_armor") / 100.0
@@ -71,7 +71,7 @@ def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
             }
             for i in range(count)
         ],
-        "detail": f"{count} marked attack consumption(s); All Out bonus is {bool(ctx.options.get('all_out', False))}.",
+        "detail": f"{count} marked attack consumption(s); All Out bonus is {bool(ctx.option('all_out'))}.",
     }
 
 
@@ -197,7 +197,7 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
         _W_PHYS_RESIST_PCT_PER_100 * (bonus_mr / 100.0)
     )
     physical = flat + (base_pct + resist_pct) / 100.0 * max_health
-    if bool(ctx.options.get("all_out", False)):
+    if bool(ctx.option("all_out")):
         min_flat = extract_value(ability, "Minimum Bonus True Damage", rank, 0)
         min_pct = extract_value(ability, "Minimum Bonus True Damage", rank, 1)
         max_flat = extract_value(ability, "Maximum Bonus True Damage", rank, 0)
@@ -231,7 +231,7 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = parts
     entry["detail"] = (
-        f"{charge:.2f} charge; All Out true damage is {bool(ctx.options.get('all_out', False))}."
+        f"{charge:.2f} charge; All Out true damage is {bool(ctx.option('all_out'))}."
     )
     return entry
 
@@ -242,7 +242,7 @@ def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    if bool(ctx.options.get("r_terrain", False)):
+    if bool(ctx.option("r_terrain")):
         strike = extract_named(
             ability, "Strike Physical Damage", rank, ctx.stats, ctx.target
         )
@@ -267,7 +267,7 @@ def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
         "conversion are state; All Out's 20% omnivamp is priced on the "
         "fight's explicitly single-target attack/on-hit packets."
     )
-    if bool(ctx.options.get("all_out", False)):
+    if bool(ctx.option("all_out")):
         entry["stat_buff"] = {
             "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank),
             "armor_penetration_bonus_percent": 50.0,

@@ -64,7 +64,7 @@ def _keepers_verdict(packet_r):
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        if not bool(ctx.options.get("r_charged", False)):
+        if not bool(ctx.option("r_charged")):
             return packet_r(ctx)
         ranked = ctx.ranked("R")
         if ranked is None:

@@ -103,7 +103,7 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    awaken = bool(ctx.options.get("q_awaken", False))
+    awaken = bool(ctx.option("q_awaken"))
     empowered = min(
         max(
             int(ctx.options.get("q_empowered_attacks", _Q_EMPOWERED_ATTACKS_DEFAULT)), 0

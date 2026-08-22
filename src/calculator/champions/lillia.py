@@ -50,7 +50,7 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     rank = ctx.rank_for()
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    true_damage = magic if bool(ctx.options.get("q_outer_edge", True)) else 0.0
+    true_damage = magic if bool(ctx.option("q_outer_edge")) else 0.0
     entry = mixed_damage(
         ctx,
         ability_name(ability),
@@ -70,9 +70,7 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _watch_out_eep(ctx: SlotCtx) -> dict[str, Any] | None:
     attribute = (
-        "Increased Damage"
-        if bool(ctx.options.get("w_epicenter", True))
-        else "Magic Damage"
+        "Increased Damage" if bool(ctx.option("w_epicenter")) else "Magic Damage"
     )
     result = typed_damage(ctx, attribute, "magic", time_offset=0.759)
     if result:
@@ -84,7 +82,7 @@ def _watch_out_eep(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _lilting_lullaby(ctx: SlotCtx) -> dict[str, Any] | None:
-    if not bool(ctx.options.get("r_wake", True)):
+    if not bool(ctx.option("r_wake")):
         return no_damage(
             ctx,
             name="Lilting Lullaby",

@@ -48,7 +48,7 @@ def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    second_hit = bool(ctx.options.get("e_second_hit", True))
+    second_hit = bool(ctx.option("e_second_hit"))
     count = 2 if second_hit else 1
     entry: dict[str, Any] = {
         "name": ability_name(ability),

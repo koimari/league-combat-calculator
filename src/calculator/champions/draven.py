@@ -112,7 +112,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _league_of_draven(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("adoration_stacks")), 0), 10000)
-    cash_in = bool(ctx.options.get("adoration_cash_in", False))
+    cash_in = bool(ctx.option("adoration_cash_in"))
     reason = (
         f"{stacks} Adoration stack(s); cash-in yields {25 + 2 * stacks} bonus gold."
         if cash_in

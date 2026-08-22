@@ -37,7 +37,7 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     total_ratio = _level_scaling(ability, 2, ctx.level, ctx.stats, ctx.target)
-    critical = bool(ctx.options.get("p_critical_pellets", False))
+    critical = bool(ctx.option("p_critical_pellets"))
     if critical:
         total_ratio = _level_scaling(ability, 3, ctx.level, ctx.stats, ctx.target)
     entry = no_damage(
@@ -131,7 +131,7 @@ def _collateral_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    secondary = bool(ctx.options.get("r_secondary_target", False))
+    secondary = bool(ctx.option("r_secondary_target"))
     attr = "Reduced Damage" if secondary else "Physical Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(

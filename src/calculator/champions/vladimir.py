@@ -309,7 +309,7 @@ def _apply_hemoplague(result: dict[str, Any]) -> None:
 
 def _hemoplague_amp(ctx: SlotCtx) -> None:
     """AMP pseudo-slot: the 10% debuff amplifies every damage entry."""
-    if not ctx.options.get("r_hemoplague_debuff", True):
+    if not ctx.option("r_hemoplague_debuff"):
         return
     for key in ("Q", "W", "E", "R"):
         entry = ctx.results.get(key)

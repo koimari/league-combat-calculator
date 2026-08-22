@@ -348,7 +348,7 @@ def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
     ]
     total = initial + per_tick * _BLEED_TICKS
 
-    if bool(ctx.options.get("q_recast", True)):
+    if bool(ctx.option("q_recast")):
         minimum = extract_named(
             ability, "Minimum Bonus Physical Damage", rank, ctx.stats, ctx.target
         )
@@ -384,7 +384,7 @@ def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
         + (
             "; recast bonus damage interpolated between the Minimum/Maximum "
             "Bonus Physical Damage rows by target missing health"
-            if bool(ctx.options.get("q_recast", True))
+            if bool(ctx.option("q_recast"))
             else "; recast bonus not priced (q_recast off)"
         )
     )

@@ -78,7 +78,7 @@ def _apply_curse(result: dict[str, Any]) -> None:
 
 def _cursed_touch_amp(ctx: SlotCtx) -> None:
     """AMP pseudo-slot: apply the curse to every magic-damage ability."""
-    if not ctx.options.get("target_cursed", True):
+    if not ctx.option("target_cursed"):
         return
     for key in ("Q", "W", "E", "R"):
         entry = ctx.results.get(key)

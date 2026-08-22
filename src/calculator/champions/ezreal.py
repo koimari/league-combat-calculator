@@ -197,7 +197,7 @@ def _essence_flux(ctx: SlotCtx) -> dict[str, Any] | None:
     )(ctx)
     if entry is None:
         return None
-    detonation = str(ctx.options.get("w_mark_detonation", "ability"))
+    detonation = str(ctx.option("w_mark_detonation"))
     if detonation not in {"ability", "basic_attack"}:
         raise ValueError(
             f"unknown w_mark_detonation {detonation!r}; supported: "

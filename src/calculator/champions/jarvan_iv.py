@@ -107,7 +107,7 @@ def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     # Armor REDUCTION (not penetration): damage.py shreds target armor
     # after Q's own damage, so post-Q hits see the reduced armor.
     shred = extract_value(ability, "Armor Reduction", rank)
-    if ctx.options.get("q_armor_shred", True) and shred > 0:
+    if ctx.option("q_armor_shred") and shred > 0:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "duration": Q_SHRED_DURATION,
@@ -138,7 +138,7 @@ def _demacian_standard(ctx: SlotCtx) -> dict[str, Any] | None:
     # Bonus attack speed: the fight engine recalculates the auto count
     # (and therefore the passive's proc schedule) from the stat_buff.
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
-    if ctx.options.get("near_flag", True):
+    if ctx.option("near_flag"):
         bonus_as *= 2.0
     if bonus_as > 0:
         entry["stat_buff"] = {"bonus_attack_speed": bonus_as}

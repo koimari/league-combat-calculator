@@ -23,7 +23,7 @@ from .module_contract import coverage
 
 
 def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
-    if not bool(ctx.options.get("p_ready", True)):
+    if not bool(ctx.option("p_ready")):
         return no_damage(
             ctx,
             name="Unseen Threat",
@@ -48,7 +48,7 @@ def _taste_their_fear(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    isolated = bool(ctx.options.get("q_isolated", True))
+    isolated = bool(ctx.option("q_isolated"))
     attribute = "Isolated Target Physical Damage" if isolated else "Physical Damage"
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     return {

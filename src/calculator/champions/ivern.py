@@ -24,7 +24,7 @@ def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    if not bool(ctx.options.get("w_in_brush", True)):
+    if not bool(ctx.option("w_in_brush")):
         return no_damage(
             ctx,
             name=ability_name(ability),

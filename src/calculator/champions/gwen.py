@@ -88,7 +88,7 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     stacks = min(max(int(ctx.option("q_snippy_stacks")), 0), 4)
-    center = bool(ctx.options.get("q_center", True))
+    center = bool(ctx.option("q_center"))
     # Gwen "snips at least twice", and "if Gwen has any Snippy stacks, she
     # consumes them to snip an additional time for each" — so the cached
     # Minimum rows are one plain snip plus the final one, and the Maximum

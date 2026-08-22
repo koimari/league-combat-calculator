@@ -168,7 +168,7 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
         _Q_ATTACKS,
         max(0, int(ctx.options.get("q_attacks_landed", _Q_ATTACKS))),
     )
-    enhanced = bool(ctx.options.get("q_spirit_blade_hit", True))
+    enhanced = bool(ctx.option("q_spirit_blade_hit"))
     attribute = "Increased Bonus Damage" if enhanced else "Bonus Magic Damage"
     per_hit = _named_level_rank_damage(ctx, ability, attribute, rank)
     baseline_target_health = float(ctx.target_stat("target_max_health"))

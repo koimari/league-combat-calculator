@@ -209,7 +209,7 @@ def _w_beam_modifier(ctx: SlotCtx) -> float:
     Beam only, per the wiki's "its non-burst flat damage is increased" —
     never the burst base or any AP portion. No effect until W is learned.
     """
-    if not ctx.options.get("w_active", False):
+    if not ctx.option("w_active"):
         return 1.0
     w_ability = ctx.ability("W")
     w_rank = ctx.rank_for("W")

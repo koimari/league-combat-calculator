@@ -31,7 +31,7 @@ def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    weapon = str(ctx.options.get("jinx_weapon", "minigun")).lower()
+    weapon = str(ctx.option("jinx_weapon")).lower()
     entry = damage_entry(
         ability_name(ability),
         rank,

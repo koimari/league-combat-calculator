@@ -74,7 +74,7 @@ def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     """W's damage only exists after both tethered marks are present."""
-    if not bool(ctx.options.get("soul_mark_proc", False)):
+    if not bool(ctx.option("soul_mark_proc")):
         return None
     ranked = ctx.ranked("W")
     if ranked is None:

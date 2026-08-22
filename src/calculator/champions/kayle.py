@@ -31,7 +31,7 @@ def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    if ctx.level < 11 or not bool(ctx.options.get("p_exalted", True)):
+    if ctx.level < 11 or not bool(ctx.option("p_exalted")):
         return no_damage(
             ctx,
             name="Divine Ascent",

@@ -121,11 +121,7 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["detail"] = f"Q variant: {attribute}."
         return entry
 
-    attrs = (
-        _Q_SWEETSPOT_ATTRS
-        if bool(ctx.options.get("sweetspot", True))
-        else _Q_NORMAL_ATTRS
-    )
+    attrs = _Q_SWEETSPOT_ATTRS if bool(ctx.option("sweetspot")) else _Q_NORMAL_ATTRS
     total = sum(
         extract_named(ability, attr, rank, ctx.stats, ctx.target) for attr in attrs
     )

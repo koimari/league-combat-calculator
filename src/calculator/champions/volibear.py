@@ -134,7 +134,7 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     cooldown = extract_cooldown(ability, rank)
     name = ability_name(ability)
 
-    if not ctx.options.get("w_wounded", True):
+    if not ctx.option("w_wounded"):
         entry = damage_entry(name, rank, cooldown, base, "physical")
         entry["parts"] = (DamagePart("physical", base, time_offset=_W_BITE_SECONDS),)
         return entry

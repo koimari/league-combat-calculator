@@ -151,7 +151,7 @@ def _evolution_state(
     stat_label: str,
 ) -> tuple[bool, str]:
     """Resolve Auto/Base/Evolved while accepting old shared-link booleans."""
-    selected = ctx.options.get(option_key, "auto")
+    selected = ctx.option(option_key)
     if isinstance(selected, bool):
         return selected, "shared-link override"
     if selected == "evolved":

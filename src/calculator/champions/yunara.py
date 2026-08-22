@@ -47,7 +47,7 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    transcendent = bool(ctx.options.get("r_transcendent", False))
+    transcendent = bool(ctx.option("r_transcendent"))
     if transcendent:
         r_rank = ctx.rank_for("R")
         base = extract_named(

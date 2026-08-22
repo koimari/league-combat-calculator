@@ -172,7 +172,7 @@ def _blood_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     The cleave (60-100% AD around the target) is skipped entirely — it
     never hits the primary target. Off-toggle drops the whole slot.
     """
-    if not ctx.options.get("blood_frenzy_active", True):
+    if not ctx.option("blood_frenzy_active"):
         return None
     ranked = ctx.ranked("W", 0)
     if ranked is None:
@@ -207,7 +207,7 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     already applies item on-hits; one-rotation mode appends the
     consumed base swing to this row).
     """
-    if not ctx.options.get("blood_frenzy_active", True):
+    if not ctx.option("blood_frenzy_active"):
         return None
     ability = ctx.ability("W", 1)
     frenzy = ctx.ability("W", 0)
@@ -279,7 +279,7 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     total = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
-    if ctx.options.get("e_wall_collision", False):
+    if ctx.option("e_wall_collision"):
         total += extract_named(
             ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target
         )
@@ -369,7 +369,7 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
             }
         ]
 
-    if ctx.options.get("e_wall_collision", False):
+    if ctx.option("e_wall_collision"):
         control_atom = required_ability_atom(
             ctx.champion_name,
             champion_data,

@@ -84,7 +84,7 @@ def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     casts = min(max(int(ctx.option("q_casts")), 1), 3)
-    dragon = bool(ctx.options.get("dragon_form", False))
+    dragon = bool(ctx.option("dragon_form"))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
     dragon_third = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
     parts: list[DamagePart] = []
@@ -132,8 +132,8 @@ def _inferno_aegis(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for("W")
-    recast = bool(ctx.options.get("w_recast", True))
-    dragon = bool(ctx.options.get("dragon_form", False))
+    recast = bool(ctx.option("w_recast"))
+    dragon = bool(ctx.option("dragon_form"))
     shield = _inferno_aegis_shield(ctx)
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     if recast:
@@ -194,11 +194,11 @@ def _molten_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for("E")
-    dragon = bool(ctx.options.get("dragon_form", False))
+    dragon = bool(ctx.option("dragon_form"))
     attr = "Increased/Explosion Magic Damage" if dragon else "Magic Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     parts = [DamagePart("magic", total, time_offset=0.0)]
-    if dragon and bool(ctx.options.get("e_second_explosion", False)):
+    if dragon and bool(ctx.option("e_second_explosion")):
         second = extract_named(
             ability, "Subsequent Explosion Damage", rank, ctx.stats, ctx.target
         )

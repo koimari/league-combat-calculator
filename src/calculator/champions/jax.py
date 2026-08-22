@@ -116,7 +116,7 @@ def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
         / 100.0
     )
     entry["stat_buff"] = {"bonus_armor": armor, "bonus_magic_resistance": mr}
-    if bool(ctx.options.get("r_passive_ready", False)):
+    if bool(ctx.option("r_passive_ready")):
         proc = extract_named(
             ability, "Additional Magic Damage", rank, ctx.stats, ctx.target
         )

@@ -34,7 +34,7 @@ def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    feared = bool(ctx.options.get("q_target_already_feared", False))
+    feared = bool(ctx.option("q_target_already_feared"))
     attr = "Increased Magic Damage" if feared else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     minimum = extract_named(
@@ -76,7 +76,7 @@ _terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Durat
 
 
 def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
-    if bool(ctx.options.get("q_target_already_feared", False)):
+    if bool(ctx.option("q_target_already_feared")):
         return _terrify(ctx)
     return _terrify_fearing(ctx)
 

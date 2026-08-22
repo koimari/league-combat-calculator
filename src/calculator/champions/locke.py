@@ -86,9 +86,7 @@ def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
 def _ashen_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: blink packet plus the optional empowered dash attack."""
     attribute = (
-        "Total Magic Damage"
-        if bool(ctx.options.get("e_dash", True))
-        else "Blink Magic Damage"
+        "Total Magic Damage" if bool(ctx.option("e_dash")) else "Blink Magic Damage"
     )
     result = typed_damage(ctx, attribute, "magic", time_offset=0.1)
     if result:

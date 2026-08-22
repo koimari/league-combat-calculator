@@ -183,7 +183,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if ability is None or rank < 1:
         return None
-    active = bool(ctx.options.get("w_active", False))
+    active = bool(ctx.option("w_active"))
     duration = extract_description_duration(ability)
     if duration is None:
         return None
@@ -201,7 +201,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
             "kind": "yasuo_wind_wall",
             "active": active,
             "duration": duration if active else 0.0,
-            "blocked_sources": list(ctx.options.get("w_blocked_skillshots", [])),
+            "blocked_sources": list(ctx.option("w_blocked_skillshots")),
         },
         "detail": (
             "Wind Wall destroys selected marked projectiles during the "

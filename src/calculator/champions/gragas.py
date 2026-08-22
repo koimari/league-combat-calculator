@@ -29,7 +29,7 @@ def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    charged = bool(ctx.options.get("q_fully_fermented", True))
+    charged = bool(ctx.option("q_fully_fermented"))
     attr = "Maximum Magic Damage" if charged else "Minimum Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(

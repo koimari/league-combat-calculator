@@ -48,7 +48,7 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     variant = min(max(int(ctx.option("q_variant")), 0), 2)
-    low_health = bool(ctx.options.get("q_target_below_half", False))
+    low_health = bool(ctx.option("q_target_below_half"))
     attr = "Increased Damage" if variant == 2 and low_health else "Physical Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(

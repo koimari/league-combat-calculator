@@ -179,7 +179,7 @@ def _lunar_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     per_dash = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    dashes = 2 if ctx.options.get("moonlight_reset", True) else 1
+    dashes = 2 if ctx.option("moonlight_reset") else 1
     return {
         "name": ability_name(ability),
         "rank": rank,

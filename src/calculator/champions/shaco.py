@@ -165,7 +165,7 @@ def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    execute = bool(ctx.options.get("e_execute", False))
+    execute = bool(ctx.option("e_execute"))
     attribute = "Increased Damage" if execute else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     entry = damage_entry(

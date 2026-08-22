@@ -33,7 +33,7 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     recasts = min(max(int(ctx.option("q_recasts")), 0), 3)
-    marked = bool(ctx.options.get("q_marked_target", True))
+    marked = bool(ctx.option("q_marked_target"))
     dart = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     spike = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     marked_bonus = extract_named(
@@ -75,13 +75,13 @@ def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     if entry is None:
         return None
-    if bool(ctx.options.get("w_charmed", True)):
+    if bool(ctx.option("w_charmed")):
         shred = extract_value(ability, "Magic Resistance Reduction", rank)
         entry["target_debuff"] = {"mr_reduction_percent": shred, "duration": 4.0}
         entry["detail"] = (
             f"Charmed champion branch: {shred:g}% magic-resistance reduction for 4 seconds."
         )
-        if bool(ctx.options.get("w_charm_triggered", False)):
+        if bool(ctx.option("w_charm_triggered")):
             entry["control_events"] = (
                 ControlEvent(
                     "charm",
@@ -98,7 +98,7 @@ def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
-    empowered = bool(ctx.options.get("e_empowered", False))
+    empowered = bool(ctx.option("e_empowered"))
     index = 1 if empowered else 0
     ability = ctx.ability("E", index)
     base_ability = ctx.ability("E", 0)
@@ -136,7 +136,7 @@ def _last_caress(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    execute = bool(ctx.options.get("r_execute_ready", False))
+    execute = bool(ctx.option("r_execute_ready"))
     attr = "Empowered Damage" if execute else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
