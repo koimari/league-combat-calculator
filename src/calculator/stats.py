@@ -90,6 +90,11 @@ def calculate_attack_speed(
     return base_attack_speed + attack_speed_ratio * (bonus_percent / 100.0)
 
 
+def resolve_move_speed(flat_total: float, percent_total: float) -> float:
+    """The one fold from movement-speed components to a displayed number."""
+    return apply_movement_speed_soft_caps(flat_total * (1.0 + percent_total / 100.0))
+
+
 def apply_movement_speed_soft_caps(raw_speed: float) -> float:
     """Apply League's displayed movement-speed soft caps."""
     if raw_speed > 490:
@@ -482,24 +487,19 @@ def calculate_total_stats(
     # uncapped pre-rune one here and the real one there. No rune's
     # movement-speed grant reads the adaptive comparison, which is why
     # this total can be taken before the conversions that decide it.
-    final_move_speed = apply_movement_speed_soft_caps(
-        (base_stats["move_speed"] + total_item_stats["move_speed_flat"])
-        * (
-            1.0
-            + (
-                total_item_stats["move_speed_percent"]
-                + input_move_speed_percent
-                + page.grants(
-                    level=level,
-                    is_melee=is_melee,
-                    bonus_attack_damage=total_item_stats["attack_damage"],
-                    ability_power=total_item_stats["ability_power"],
-                    item_stat_types=item_stat_types,
-                ).move_speed_percent
-            )
-            / 100.0
-        )
+    move_speed_flat = base_stats["move_speed"] + total_item_stats["move_speed_flat"]
+    move_speed_percent = (
+        total_item_stats["move_speed_percent"]
+        + input_move_speed_percent
+        + page.grants(
+            level=level,
+            is_melee=is_melee,
+            bonus_attack_damage=total_item_stats["attack_damage"],
+            ability_power=total_item_stats["ability_power"],
+            item_stat_types=item_stat_types,
+        ).move_speed_percent
     )
+    final_move_speed = resolve_move_speed(move_speed_flat, move_speed_percent)
 
     # Every stat-granting item passive, compiled once. item_effects owns
     # the per-item knowledge; this function owns the application order.
@@ -719,6 +719,12 @@ def calculate_total_stats(
         "level": level,
         "is_melee": is_melee,
         "move_speed": final_move_speed,
+        # The two terms ``resolve_move_speed`` folded, published so a
+        # mid-fight percent grant (a champion's own ``move_speed_percent``
+        # stat buff) re-folds through the same call instead of trying to
+        # decompose the soft-capped scalar.
+        "move_speed_flat": move_speed_flat,
+        "move_speed_percent": move_speed_percent,
     }
     if champion_data.get("name") == "Kai'Sa":
         result.update(

@@ -277,6 +277,64 @@ def test_ally_ledger_receives_sourced_support(champion, source, kind, amount):
         )
 
 
+def test_bastion_prices_each_recipient_off_their_own_maximum_health():
+    """CF16: the ally copy is priced, and it tracks the RECIPIENT's build.
+
+    "7 / 8 / 9 / 10 / 11% of target's maximum health" — the scan holds only
+    the caster's stats, so the ratio rides the packet and the composition
+    prices each recipient.  A packet priced off a recipient's build cannot
+    ride the per-search template cache, which is what the second request
+    here would expose: the ally's Warmog's would otherwise serve the first
+    request's number.
+    """
+    app_module.app.config["TESTING"] = True
+
+    def bastion(ally_items):
+        response = app_module.app.test_client().post(
+            "/api/calculate",
+            json={
+                "champion": "Taric",
+                "level": 18,
+                "items": [],
+                "fight_mode": "time_based",
+                "fight_duration": 6,
+                "include_auto_attacks": False,
+                "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+                "allies": [
+                    {
+                        "champion": "Jinx",
+                        "level": 18,
+                        "items": ally_items,
+                        "ally_effects_enabled": True,
+                    }
+                ],
+            },
+        )
+        assert response.status_code == 200, response.get_data(as_text=True)[:400]
+        combat = response.get_json()["combat"]
+        rows = {
+            event["recipient"]: event["amount"]
+            for event in combat["support_events"]
+            if str(event["source"]).startswith("Bastion")
+        }
+        ally = next(
+            row
+            for row in combat["participants"]
+            if row["participant_id"] == "ally:Jinx"
+        )
+        return rows, ally["survival"]["max_health"]
+
+    bare, bare_health = bastion([])
+    stacked, stacked_health = bastion(["Warmog's Armor"])
+
+    assert stacked_health > bare_health
+    # Rank 5 pays 11% of each recipient's own maximum health.
+    assert bare["ally:Jinx"] == pytest.approx(0.11 * bare_health, abs=0.05)
+    assert stacked["ally:Jinx"] == pytest.approx(0.11 * stacked_health, abs=0.05)
+    # Taric's own copy is the scan's, and the ally's build never moves it.
+    assert bare["main"] == pytest.approx(stacked["main"])
+
+
 def test_taric_cosmic_radiance_targets_the_caster_and_selected_ally():
     combat, ally_row = _roster_combat("Taric", ally="Jinx")
     events = [
@@ -741,15 +799,17 @@ def test_revive_module_sourcing_matches_cached_rows():
             "ally:Jinx",
         ),
         # Bastion "Shield Strength" 7/8/9/10/11% of the RECIPIENT's maximum
-        # health; the scan holds only the caster's, so Taric's own copy is
-        # priced (11% of his level-18 2328.0) and granted to him alone.
+        # health.  The caster's copy is priced by the scan (11% of his
+        # level-18 2328.0); the ally copy is priced by the composition off
+        # the recipient's own maximum health, so the slot keeps its sourced
+        # self_and_one_teammate scope.
         pytest.param(
             "Taric",
             "W",
             "Bastion",
             "shield",
             256.08,
-            "self",
+            "self_and_one_teammate",
             "main",
         ),
         # Fey Feathers "Shield" 30:247.94 by level (+95% AP) at 18, riding

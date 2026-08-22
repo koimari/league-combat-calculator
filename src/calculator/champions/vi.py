@@ -108,11 +108,9 @@ def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
     (``slotlib.attach_self_shield``), which the participant ledger turns
     into a timed self-shield at that event's timestamp.  One activation is
     one shield, so the earliest ranked carrier takes the payload and the
-    later ones leave it alone; secondary roster targets never carry it, so
-    a roster grants Vi one shield rather than one per enemy.
+    later ones leave it alone; the payload's ``actor_wide`` flag is what
+    keeps a roster from granting one shield per enemy pair.
     """
-    if not _is_primary_target(ctx):
-        return entry
     if any(
         (ctx.results.get(slot) or {}).get("self_shield_events")
         for slot in _SHIELD_CARRIERS

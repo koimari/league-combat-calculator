@@ -843,7 +843,7 @@ def test_target_unending_despair_self_heal_is_wounded_in_receipt_order():
     )
     assert any(
         "Mortal Reminder" in source
-        for source in enemy_survival["healing_reduction_sources"]
+        for source in enemy_survival["healing_reduction_window_sources"]
     ) or any(
         "Mortal Reminder" in source
         for event in enemy_survival["healing_reduction_events"]
@@ -1007,6 +1007,86 @@ def test_mundo_regeneration_is_actor_wide_and_deduplicated_in_a_roster():
     assert [event["time"] for event in healing] == [
         round(0.75 + index * 0.5, 3) for index in range(9)
     ]
+
+
+class TestRecipientScaledSupportIsNotCached:
+    """CF16: a packet priced off a recipient's build is per-evaluation.
+
+    The per-search pair-view cache serves templates across optimizer
+    candidates, and a candidate moves the recipient's maximum health --
+    so a list holding one such packet must not be stored on the view.
+    """
+
+    class _View:
+        """The two fields ``_attached_support_templates`` reads and writes."""
+
+        def __init__(self):
+            self.support = None
+            self.support_denials = None
+            self.result = {}
+
+    def _templates(self, monkeypatch, rows):
+        import src.calculator.participant_timeline as timeline
+
+        monkeypatch.setattr(
+            timeline,
+            "_support_effect_templates",
+            lambda *args, **kwargs: list(rows),
+        )
+        view = self._View()
+        returned = timeline._attached_support_templates(
+            view, object(), [], pair_defender_id="enemy:Ashe"
+        )
+        return view, returned
+
+    def test_a_recipient_scaled_list_is_returned_but_not_stored(self, monkeypatch):
+        import src.calculator.participant_timeline as timeline
+
+        rows = [{"target": "ally:Jinx", timeline.RECIPIENT_SCALED_KEY: True}]
+        view, returned = self._templates(monkeypatch, rows)
+        assert returned == rows
+        assert view.support is None
+
+    def test_an_ordinary_list_still_rides_the_pair_packet(self, monkeypatch):
+        view, returned = self._templates(monkeypatch, [{"target": "main"}])
+        assert view.support is returned
+
+
+def test_a_module_self_shield_is_actor_wide_and_granted_once_per_roster():
+    """One Mana Barrier against five enemies, not one per enemy pair.
+
+    The payload is authored once per rotation and replayed by every pair
+    fight, so the ``actor_wide`` flag ``slotlib.attach_self_shield`` stamps
+    is what the composition de-duplicates on -- the same convention
+    actor-wide heals use, rather than a per-module roster-index gate.
+    """
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Blitzcrank",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "deterministic": True,
+            "enemies": [
+                {"champion": name, "level": 18, "items": []}
+                for name in ("Aphelios", "Ambessa", "Ashe", "Annie", "Akali")
+            ],
+        },
+    )
+    assert response.status_code == 200
+    barriers = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event["source"] == "Mana Barrier"
+    ]
+    (barrier,) = barriers
+    assert barrier["target"] == "main"
+    # 35% of Blitzcrank's level-18 max mana, granted once.
+    assert barrier["amount"] == pytest.approx(331.45, abs=0.01)
 
 
 def test_fight_result_promotes_the_same_ordered_damage_ledger_used_by_shields():
@@ -3266,7 +3346,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
     assert result["source"]["healing_reduction_until"] == 3.0
     assert any(
         "Bramble Vest" in source
-        for source in result["source"]["healing_reduction_sources"]
+        for source in result["source"]["healing_reduction_window_sources"]
     )
     assert result["target"]["damage_taken"] == 50.0
 
@@ -4953,7 +5033,7 @@ def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
     )
     assert any(
         "Bramble Vest" in source
-        for source in enemy["survival"]["healing_reduction_sources"]
+        for source in enemy["survival"]["healing_reduction_window_sources"]
     )
 
 
