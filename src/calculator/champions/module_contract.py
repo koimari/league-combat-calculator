@@ -438,6 +438,17 @@ def _coverage_channels(
             f"{module.__name__} calls {unpriced} modeled but neither emits "
             "them nor names the COVERAGE_CHANNELS channel that prices them"
         )
+    # No rule here ties ``no_damage`` or ``out_of_scope`` to whether the
+    # slot map emits the slot, and that is a finding rather than an
+    # omission: both labels are in live use for both answers, on purpose.
+    # Samira's P is emitted and ``out_of_scope`` because its blade-zone
+    # bonus is real, sourced and unpriced (the Olaf-R rule); Azir's P is
+    # unemitted and ``no_damage`` because the Sun Disc needs a destroyed
+    # tower.  Either direction, stated as an import-time rule, overrules one
+    # of those reviews.  What IS checkable is what the parse did, and
+    # ``tests/test_coverage_truth_sweep.py`` checks it at both vantages:
+    # ``modeled`` must produce a row, and neither other label may price
+    # enemy damage.
     return channels
 
 
