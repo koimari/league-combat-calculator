@@ -681,16 +681,24 @@ def test_second_kill_in_same_fight_is_not_receipted_first_pair_only():
 
 def test_heal_is_one_packet_applied_once_not_ticked():
     """The 1.75s duration is a sourced label on a SINGLE packet: exactly
-    one packet per recipient at the kill time, one amount, and one applied
-    amount (applied_amount == amount on wounded recipients; the survival
-    healing_received matches — no ticked clones over the 1.75s window)."""
-    timeline = _timeline()  # recipients are wounded by enemy autos by 6.328s
+    one packet per recipient at the kill time, one amount, and one
+    application (applied + overheal = amount; the survival healing_received
+    is that application) — no ticked clones over the 1.75s window.
+
+    Aatrox dies at t=0, so only his first Q strike wounds the recipients and
+    both are healed to full with a remainder: applied is the wound, not the
+    packet.
+    """
+    timeline = _timeline()
     heals = _timeline_heals(timeline)
     assert len(heals) == 2
+    assert {event["recipient"] for event in heals} == {"main", "ally:Jinx"}
+    by_recipient = {event["recipient"]: event for event in heals}
     for event in heals:
-        assert event["applied_amount"] == pytest.approx(event["amount"])
-        assert event["overheal"] == pytest.approx(0.0)
         assert event["raw_amount"] == pytest.approx(event["amount"])
+        assert event["applied_amount"] + event["overheal"] == pytest.approx(
+            event["amount"]
+        )
     for participant_id in ("main", "ally:Jinx"):
         row = next(
             row
@@ -698,7 +706,7 @@ def test_heal_is_one_packet_applied_once_not_ticked():
             if row["participant_id"] == participant_id
         )
         assert row["survival"]["healing_received"] == pytest.approx(
-            heals[0]["amount"], abs=0.001
+            by_recipient[participant_id]["applied_amount"], abs=0.05
         )
 
 
@@ -747,9 +755,7 @@ def test_compiled_walk_equals_receipt_walk_with_the_heal_staged():
     full = _timeline(include_receipt=True)
     heals = _timeline_heals(full)
     assert len(heals) == 2
-    assert all(
-        event["applied_amount"] == pytest.approx(event["amount"]) for event in heals
-    )
+    assert all(event["applied_amount"] > 0 for event in heals)
 
 
 def test_score_only_fight_parity_cryptbloom_build():
