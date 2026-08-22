@@ -1788,7 +1788,6 @@
           "area_damage": true,
           "cooldown": 10.0,
           "damage_type": "magic",
-          "detail": "0 retaliation landing(s) at 25.00 magic each (once per enemy per cast, while the shield holds)",
           "name": "Molten Shield",
           "parts": [
             "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -1801,7 +1800,6 @@
         "P": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "0 Energized stun(s) of 1.75s (charge 4/4 at the opening, 4/4 at the end); the charge is spent by the next Q/R/W cast",
           "name": "Pyromania",
           "parts": [
             "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -2054,13 +2052,6 @@
           "total_raw": 0.0
         },
         "Q": {
-          "applies_item_on_hits": {
-            "effectiveness": 1.0,
-            "hits": 1,
-            "triggers": [
-              "on_hit"
-            ]
-          },
           "cooldown": 8.82,
           "damage_type": "physical",
           "event_order_certified": "single_hit",
@@ -2091,9 +2082,9 @@
           "total_raw": 175.0
         },
         "W": {
-          "cooldown": 0.25,
+          "cooldown": 0.8,
           "damage_type": "physical",
-          "detail": "Swap main and off-hand weapons",
+          "detail": "Swap main and off-hand weapons over 0.25 s; the fight holds one main weapon (Calibrum)",
           "name": "Phase",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -2106,7 +2097,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "physical",
-          "detail": "Weapon Master: 0 AD / 0 AS / 0 lethality points",
+          "detail": "Weapon Master: 0 AD / 0 AS / 0 lethality points \u00b7 Calibrum: no marks consumed, so the empowered attack is a plain one",
           "name": "The Hitman and the Seer",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -13923,6 +13914,7 @@
           "cooldown": 120.0,
           "damage_type": "magic",
           "detail": "6 ordered bolts; later strikes use the sourced escalating storm packet.",
+          "event_order_certified": true,
           "name": "Slicing Maelstrom",
           "parts": [
             "DamagePart(magic, amount=80.0, count=6, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.5, hit_interval=0.5)"
@@ -13955,7 +13947,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "0 third-mark stun(s) (the walk ends at 0/3 marks); marks last 6s, refreshing on each application, and the stun's energy refund stays ordered control state",
+          "detail": "Mark stacks, stun and energy refund are ordered control state.",
           "name": "Mark of the Storm",
           "parts": [],
           "rank": 11,
@@ -52872,8 +52864,8 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59966,
-      "numeric_leaves": 46183,
+      "leaves": 59960,
+      "numeric_leaves": 46179,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
     "git_head": "8c7d82983302b09b072f2558f195904d918b5f98",
@@ -54647,10 +54639,9 @@
             "Q": 126.63,
             "R": 131.47,
             "W": 0.0,
-            "auto_attacks": 0.0,
-            "spellblade_Trinity Force": 100.0
+            "auto_attacks": 0.0
           },
-          "total_damage": 358.09
+          "total_damage": 258.09
         },
         "sustained": {
           "magic_build": {
@@ -54681,9 +54672,9 @@
               "R": 137.33,
               "W": 0.0,
               "auto_attacks": 1265.0,
-              "on_hit_Kraken Slayer": 220.92
+              "on_hit_Kraken Slayer": 104.7
             },
-            "total_damage": 1765.72
+            "total_damage": 1649.5
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -54736,10 +54727,9 @@
             "Q": 126.63,
             "R": 164.8,
             "W": 0.0,
-            "auto_attacks": 0.0,
-            "spellblade_Trinity Force": 125.33
+            "auto_attacks": 0.0
           },
-          "total_damage": 416.76
+          "total_damage": 291.43
         },
         "sustained": {
           "magic_build": {
@@ -54770,9 +54760,9 @@
               "R": 170.67,
               "W": 0.0,
               "auto_attacks": 1369.5,
-              "on_hit_Kraken Slayer": 272.82
+              "on_hit_Kraken Slayer": 128.58
             },
-            "total_damage": 1955.45
+            "total_damage": 1811.21
           },
           "spellblade_build": {
             "breakdown_totals": {
