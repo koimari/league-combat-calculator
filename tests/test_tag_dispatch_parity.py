@@ -112,7 +112,6 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
     assert branches == {
         "ult_empowered_autos",
         "ult_attack_speed_buff",
-        "secondary_target",
         "magic_damage_amp",
     }
     # Every one of them is a tag the catalog also files under a family: the
@@ -293,9 +292,14 @@ def test_magic_damage_amp_is_the_ladders_alone_and_the_catalog_books_it_so():
     )
 
 
-def test_secondary_target_is_the_catalogs_alone():
-    """The ladder's branch is a ``continue``: it prices nothing, and the
-    catalog's SECONDARY_TARGET rule is the only owner of the numbers."""
+def test_secondary_target_is_retired_and_was_always_the_catalogs_alone():
+    """The fifth retirement, and the one that priced nothing to begin with.
+
+    The ladder's branch was a bare ``continue``.  It skipped the loop's whole
+    tail for the holder, so a secondary-target item that ever grew a splash
+    note or a phantom hit would have lost it silently; today's one holder
+    declares none of those keys, so removing the branch moves no number and
+    closes that trap."""
     owner = _sole("secondary_target")
     ladder = _ladder(owner)
     assert ladder.conditional_notes == ()
@@ -303,6 +307,9 @@ def test_secondary_target_is_the_catalogs_alone():
     assert [rule.family for rule in behavior_rules(owner)] == [
         RuleFamily.SECONDARY_TARGET
     ]
+    assert not {"unmodeled_splash_note", "secondary_behavior", "phantom_hit"} & set(
+        ITEM_EFFECTS[owner]
+    )
 
 
 def test_the_empowered_auto_note_quotes_the_catalogs_number():

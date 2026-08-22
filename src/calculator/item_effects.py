@@ -5279,11 +5279,6 @@ def _resolve_damage_effects_uncached(
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
             )
-        elif effect_type == "secondary_target":
-            # Wind's Fury is priced by the shared roster event ledger.  Keep
-            # the typed effect in the build projection without adding a stale
-            # conditional note that would contradict its targeting receipt.
-            continue
         if effect_type == "magic_damage_amp":
             magic_amp += _RequiredValues(item_name, values).number("magic_amp")
         splash_note = values.get("unmodeled_splash_note")
