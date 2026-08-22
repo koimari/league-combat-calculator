@@ -256,6 +256,15 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
         ),
         "on_hit": MappingProxyType(
             {
+                # Slots that feed this counter, ``{slot: stacks per landed
+                # hit}``, for a counter only part of the kit generates (Xin
+                # Zhao's W).  ``count_ability_hits`` is the kit-wide
+                # alternative.
+                "ability_stack_slots": None,
+                # >0 — the row is affected by critical strike modifiers at
+                # this effectiveness, the crit PROBABILITY scale
+                # ``DamagePart.crit_effectiveness`` names on an ability part.
+                "crit_effectiveness": 0.0,
                 "damage_per_hit": 0.0,
                 # Two engine paths read this key and disagreed on what an
                 # unauthored one meant — physical on the current-health proc,

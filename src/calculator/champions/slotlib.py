@@ -686,8 +686,23 @@ def on_hit_entry(
     name: str,
     damage_per_hit: float,
     dmg_type: str,
+    *,
+    crit_effectiveness: float = 0.0,
 ) -> dict[str, Any]:
-    """Build an on-hit entry the fight engine applies per auto attack."""
+    """Build an on-hit entry the fight engine applies per auto attack.
+
+    ``crit_effectiveness`` is the crit-probability scale the row's own
+    sourced text states ("affected by critical strike modifiers" is 1.0);
+    the default 0.0 is the wiki's general rule that on-hit damage does not
+    crit unless stated.
+    """
+    on_hit: dict[str, Any] = {
+        "name": f"{name} (on-hit)",
+        "damage_per_hit": damage_per_hit,
+        "damage_type": dmg_type,
+    }
+    if crit_effectiveness:
+        on_hit["crit_effectiveness"] = crit_effectiveness
     return {
         "name": name,
         "damage_type": dmg_type,
@@ -696,11 +711,7 @@ def on_hit_entry(
         # parts tuple, even when the row's damage is attached to the next
         # basic attack rather than dealt by the cast itself.
         "parts": (),
-        "on_hit": {
-            "name": f"{name} (on-hit)",
-            "damage_per_hit": damage_per_hit,
-            "damage_type": dmg_type,
-        },
+        "on_hit": on_hit,
     }
 
 
