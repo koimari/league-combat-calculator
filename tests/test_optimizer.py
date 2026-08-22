@@ -795,18 +795,18 @@ class TestOptimizerBasic:
         )
         assert result["total_damage"] > 0
 
-    def test_optimizer_completes_under_8_seconds(self):
+    def test_optimizer_completes_under_15_seconds(self):
         """A smoke cap on the exhaustive-opening search, not a perf gate.
 
         The campaign's perf gates are the bench fingerprints (wall is a
         ratchet, R-28) and the allocation budget.  Measured best-of-5 on
-        the 16-core dev box: 1,584 ms on main alone, 2,491 ms on this
-        branch before merging main, 2,403 ms merged; the CI runner runs
-        this suite under ``-n auto`` at ~2.2x that, so the merged figure
-        lands at ~5.2 s.  The remaining cost is the certified event-row
-        schema main brought (~22 fields per row, +22% rows), which this
-        cap must not pretend away; 8 s keeps the smoke guard meaningful
-        (a runaway search still fails) without flaking on the runner.
+        the 16-core dev box: 2,616 ms at the surface-dedup merge (2,677 ms
+        on its base — the merge did not slow the search).  The CI runner's
+        ``-n auto`` multiplier over the dev box was ~2.2x when the old 8 s
+        cap was set and measures ~3.4x now (8.2 s and 8.7 s on two green
+        trees), so the cap is recalibrated to 15 s: still an instant fail
+        on a runaway search (historically >30 s) without repinning the
+        runner pool's scheduling noise as a formula change.
         """
         champ_data = get_champion("Ahri")
         result = optimize_build(
@@ -818,7 +818,7 @@ class TestOptimizerBasic:
             target_mr=40,
             max_legendary_slots=5,
         )
-        assert result["optimization_time_ms"] < 8000
+        assert result["optimization_time_ms"] < 15000
 
 
 class TestLockedItems:
