@@ -3,6 +3,8 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.item_effects import swiftmarch_adaptive_force
+from src.calculator.rune_effects import validate_rune_page
 from src.calculator.stats import (
     apply_movement_speed_soft_caps,
     growth_stat,
@@ -10,6 +12,7 @@ from src.calculator.stats import (
     get_champion_base_stats,
     get_item_stats,
     calculate_total_stats,
+    item_mana_reaches_pool,
 )
 
 
@@ -27,6 +30,91 @@ class TestLethality:
         stats = calculate_total_stats(ahri_data, level, [ghostblade])
         assert stats["lethality"] > 0
         assert stats["flat_armor_penetration"] == stats["lethality"]
+
+
+class TestOneMovementSpeed:
+    """Swiftmarch converts the one movement speed the build publishes.
+
+    Its adaptive force is priced from the same soft-capped, post-rune
+    number the stat card and the fight's item state receipts report, not
+    from a raw pre-rune total only this fold could see.
+    """
+
+    def _page(self):
+        return validate_rune_page("Arcane Comet", ["Celerity"], None)
+
+    @pytest.mark.parametrize("with_runes", [False, True])
+    def test_the_conversion_reads_the_published_speed(
+        self, ahri_data: dict, with_runes: bool
+    ):
+        swiftmarch = [get_item_by_name("Swiftmarch")]
+        stats = calculate_total_stats(
+            ahri_data, 18, swiftmarch, rune_page=self._page() if with_runes else None
+        )
+        assert stats["ability_power"] == round(
+            swiftmarch_adaptive_force(swiftmarch, total_move_speed=stats["move_speed"])
+        )
+
+    def test_a_rune_movement_speed_grant_moves_the_conversion(self, ahri_data: dict):
+        swiftmarch = [get_item_by_name("Swiftmarch")]
+        quest = {"role": "mid", "role_quest_complete": True}
+        bare = calculate_total_stats(ahri_data, 18, swiftmarch, **quest)
+        celerity = calculate_total_stats(
+            ahri_data, 18, swiftmarch, rune_page=self._page(), **quest
+        )
+        assert (bare["move_speed"], bare["ability_power"]) == (395.0, 21)
+        assert (celerity["move_speed"], celerity["ability_power"]) == (398.95, 22)
+
+
+class TestResourcePoolKind:
+    """Item mana reaches a MANA pool and nothing else.
+
+    An energy pool is a fixed 200 (Shen's 400): a mana item on Akali is a
+    wasted stat line, not a bigger pool, faster regeneration or a larger
+    Awe/Muramana conversion.
+    """
+
+    def test_mana_items_do_not_grow_an_energy_pool(self):
+        akali = get_champion("Akali")
+        bare = calculate_total_stats(akali, 18, [])
+        toothed = calculate_total_stats(
+            akali, 18, [get_item_by_name("Tear of the Goddess")]
+        )
+        assert bare["max_mana"] == 200
+        assert toothed["max_mana"] == 200
+        assert toothed["bonus_mana"] == 0
+        assert toothed["resource_regen_per_second"] == pytest.approx(
+            bare["resource_regen_per_second"]
+        )
+
+    def test_awe_converts_nothing_on_an_energy_pool(self):
+        akali = get_champion("Akali")
+        seraphs = get_item_by_name("Archangel's Staff")
+        stats = calculate_total_stats(akali, 18, [seraphs])
+        assert stats["max_mana"] == 200
+        assert stats["ability_power"] == round(get_item_stats(seraphs)["ability_power"])
+
+    def test_mana_items_still_grow_a_mana_pool(self, ahri_data: dict):
+        tear = get_item_by_name("Tear of the Goddess")
+        bare = calculate_total_stats(ahri_data, 18, [])
+        stats = calculate_total_stats(ahri_data, 18, [tear])
+        assert stats["max_mana"] == bare["max_mana"] + round(
+            get_item_stats(tear)["mana"]
+        )
+        assert stats["bonus_mana"] == round(get_item_stats(tear)["mana"])
+
+    @pytest.mark.parametrize(
+        ("record", "expected"),
+        [
+            ({"resource": "MANA"}, True),
+            ({"resource": "ENERGY"}, False),
+            ({"resource": "NONE"}, False),
+            ({"resource": "FURY"}, False),
+            ({}, True),
+        ],
+    )
+    def test_only_a_mana_pool_takes_item_mana(self, record: dict, expected: bool):
+        assert item_mana_reaches_pool(record) is expected
 
 
 class TestStatefulItemStats:

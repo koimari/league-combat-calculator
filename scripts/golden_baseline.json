@@ -5407,7 +5407,6 @@
           ],
           "cooldown": 26.0,
           "damage_type": "physical",
-          "innate_grant": true,
           "name": "Apprehend",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -14297,7 +14296,6 @@
           "cooldown": 7.0,
           "damage_type": "magic",
           "event_order_certified": "single_hit",
-          "innate_grant": true,
           "name": "Caustic Spittle",
           "parts": [
             "DamagePart(magic, amount=170.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
@@ -20033,7 +20031,6 @@
           "cooldown": 16.0,
           "damage_type": "physical",
           "detail": "+40% bonus attack speed (the passive half, no duration); a successful spell-shield block doubles it to +80% for 5s (not armed: 40% applied)",
-          "innate_grant": true,
           "name": "Shroud of Darkness",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -21881,7 +21878,6 @@
           "cooldown": 40.0,
           "damage_type": "physical",
           "detail": "+54% bonus attack speed for 2s per Harrier auto \u2014 the same auto stream P prices keeps it refreshed; the row's +30% bonus movement speed has no stat_buff key",
-          "innate_grant": true,
           "name": "Heightened Senses",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -29348,7 +29344,6 @@
         "W": {
           "cooldown": 16.0,
           "damage_type": "physical",
-          "detail": "Bonus Attack Speed priced at 100% uptime (60 applied across the fight window)",
           "name": "Frozen Domain",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -51207,18 +51202,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58512,
+      "leaves": 58507,
       "numeric_leaves": 44857,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "1dbaa38591a80f96116812dadce315b5903e0c5d",
+    "git_head": "f5eba8988b34294c3c73e8f08d5da9c2d568d9e3",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "3d2b72d67b4c410dbc8b00427ca05f0ffb7d65df"
+    "src_tree_sha": "70335fa0da6c6a2b322080748e0d2235c1b03426"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -70054,13 +70049,13 @@
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "E": 140.67,
-            "Q": 255.5,
-            "R": 206.27,
+            "E": 156.67,
+            "Q": 267.5,
+            "R": 212.67,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 602.43
+          "total_damage": 636.83
         },
         "sustained": {
           "magic_build": {
@@ -70097,14 +70092,14 @@
           },
           "spellblade_build": {
             "breakdown_totals": {
-              "E": 140.67,
-              "Q": 255.5,
-              "R": 206.27,
+              "E": 156.67,
+              "Q": 267.5,
+              "R": 212.67,
               "W": 0.0,
-              "auto_attacks": 1012.3,
+              "auto_attacks": 1134.2,
               "spellblade_Trinity Force": 213.33
             },
-            "total_damage": 1828.07
+            "total_damage": 1984.37
           }
         }
       },
@@ -70142,13 +70137,13 @@
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "E": 274.0,
-            "Q": 255.5,
-            "R": 212.93,
+            "E": 290.0,
+            "Q": 267.5,
+            "R": 219.33,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 742.43
+          "total_damage": 776.83
         },
         "sustained": {
           "magic_build": {
@@ -70185,14 +70180,14 @@
           },
           "spellblade_build": {
             "breakdown_totals": {
-              "E": 274.0,
-              "Q": 255.5,
-              "R": 212.93,
+              "E": 290.0,
+              "Q": 267.5,
+              "R": 219.33,
               "W": 0.0,
-              "auto_attacks": 1097.1,
+              "auto_attacks": 1224.3,
               "spellblade_Trinity Force": 256.0
             },
-            "total_damage": 2095.53
+            "total_damage": 2257.13
           }
         }
       }

@@ -422,6 +422,12 @@ class SurvivalAction(NamedTuple):
     baseline_effective_mr: float | None = None
     # Heal fields
     healing_category: str = ""
+    #: Whether the caster's heal and shield power reaches this recovery.
+    #: Stamped from the packet's own ``kind`` and ``healing_category``,
+    #: which the kernel does not hold: health regeneration and the vamp
+    #: family are drained rather than applied, and the game amplifies
+    #: neither. Every other recovery is amplified, hence the default.
+    amplified_recovery: bool = True
     amount_formula: Any = None
     requires_existing_shield: bool = False
     # P2 Slice 5: a self-cast that fires while the caster is crowd-

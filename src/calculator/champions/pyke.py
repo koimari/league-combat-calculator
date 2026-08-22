@@ -27,23 +27,35 @@ axis, which the label does not close:
   80.0 at level 18 with no items — the flat cap; "Pyke" is registered in
   ``healing.GREY_HEALTH_RULE_CHAMPIONS``), but its consume is a VISION
   boundary ("while Pyke is not visible to enemies") and the engine has no
-  vision axis, so nothing is paid back. The other half is a stat
-  CONVERSION the stat layer cannot express: Pyke's maximum health may not
-  rise except by growth, and bonus health becomes 7.143% of itself as
-  bonus attack damage instead. Probe with Warmog's Armor: health
-  2540 -> 3660 and attack damage unchanged at 96 — the model grants him
-  the health the game denies him and none of the attack damage the game
-  gives him.
+  vision axis, so nothing is paid back. The stat half is a CONVERSION,
+  declared as ``MODULE_STAT_CONVERSION`` and applied where item stats are
+  folded: his maximum health may not rise except by growth, and the bonus
+  health he is denied returns as 1 attack damage per 14. Probe at level
+  18 with Warmog's Armor: health 2540, attack damage 96 -> 176 (the
+  wiki's own conversion table reads 71.4 for Warmog's 1000-health stat
+  block, and Vitality raises that block to 1120 before the conversion).
 - W (Ghostwater Dive) is camouflage plus lethality-scaled movement speed:
   no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
 """
 
+from ..stat_conversion import BonusHealthConversion
 from .packet_module import build_packet_module
 from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_modifiers
 from .module_contract import coverage
 
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
+
+# P's stat half, declared where the stat fold reads it.  The cached wiki
+# description states one rule twice — "1 bonus attack damage per 14 bonus
+# health" and "bonus attack damage equal to 7.143% of bonus health" — and
+# 1/14 is the exact form the percent rounds.  P's ``leveling`` is empty, so
+# this is a tested constant like Gnar's Mega stats;
+# tests/test_pyke.py pins it against the cached sentence.
+MODULE_STAT_CONVERSION = BonusHealthConversion(
+    source="Gift of the Drowned Ones",
+    attack_damage_ratio=1.0 / 14.0,
+)
 
 
 # The non-execute damage row's scaling, from the wiki prose on R:
@@ -121,6 +133,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "the stored pool and is a vision boundary the 1v1 ledger does not "
     "model (the E8a grey-health primitive authors the store receipts, "
     "no in-window heal)",
+    "P (Gift of the Drowned Ones) denies every point of bonus health and "
+    "returns it as 1 bonus attack damage per 14 "
+    "(MODULE_STAT_CONVERSION, applied in stats.calculate_total_stats on "
+    "the completed bonus health, after item multipliers and rune grants "
+    "as the wiki's own note orders it). Residual: an item passive that "
+    "reads bonus health resolves before that denial, so Riftmaker's Void "
+    "Infusion and Overlord's Bloodmail still price the health he never "
+    "keeps; his displayed bonus health is 0 in game and those two would "
+    "read it as such.",
     "R (Death from Below) prices the wiki's non-execute damage row — "
     "125 : 275 (based on level) (+ 40% bonus AD) (+ 0.75 per 1 "
     "Lethality) physical damage, the 50%-of-threshold amount dealt to "

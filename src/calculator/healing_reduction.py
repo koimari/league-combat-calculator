@@ -13,6 +13,35 @@ from .item_source import effect_text
 GRIEVOUS_WOUNDS_FACTOR = 0.60
 GRIEVOUS_WOUNDS_DURATION = 3.0
 
+# The other side of the same question — how much of a recovery lands — is
+# the caster's heal and shield power, which amplifies every heal and shield
+# it applies, its own included.  The game's carve-outs are the recoveries
+# that are not applied at all but drained: health regeneration and the vamp
+# family (life steal, omnivamp, spell vamp).  Those are exactly the two
+# markers a recovery packet already carries.
+UNAMPLIFIED_RECOVERY_KINDS = frozenset({"regen"})
+UNAMPLIFIED_HEALING_CATEGORIES = frozenset({"vamp"})
+
+
+def amplifies_recovery(kind: str, healing_category: str) -> bool:
+    """Whether heal and shield power reaches a recovery of this shape."""
+    return (
+        kind not in UNAMPLIFIED_RECOVERY_KINDS
+        and healing_category not in UNAMPLIFIED_HEALING_CATEGORIES
+    )
+
+
+# A stat block that carries no heal and shield power amplifies nothing: the
+# neutral 1.0 is the same answer a champion with the stat at zero gets, and
+# a partial stat packet staged by a direct engine caller is exactly the
+# case that has no such block.
+def heal_and_shield_power_factor(stats: Mapping[str, Any] | None) -> float:
+    """What one caster's heal and shield power multiplies a recovery by."""
+    if not stats:
+        return 1.0
+    percent = float(stats.get("heal_and_shield_power_percent", 0.0) or 0.0)
+    return 1.0 + percent / 100.0 if percent else 1.0
+
 
 def _trigger_damage_types(text: str) -> frozenset[str]:
     lowered = text.lower()

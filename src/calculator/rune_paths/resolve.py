@@ -199,9 +199,10 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     ),
     "Revitalize": (
         Disposition.WITHHELD,
-        "it grants heal and shield power, which reaches the stat card and no "
-        "heal packet: the self-healing ledger applies no such multiplier to "
-        "anyone's heal, a rune's or an item's",
+        "it grants heal and shield power, which every heal and shield the "
+        "holder applies now reads — but the rune stat block has no channel "
+        "for that stat, so a page's grant would have nowhere to land, and "
+        "neither number survives the parse",
         (
             "Revitalize's second half — more healing and shielding on "
             "targets below a share of their maximum health — is withheld "

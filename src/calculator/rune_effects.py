@@ -2073,33 +2073,51 @@ def resolve_stat_grants(
     return RuneStatGrants(**totals)
 
 
-def rune_page_stat_grants(
-    page: RunePage,
-    *,
-    level: int,
-    is_melee: bool,
-    bonus_attack_damage: float,
-    ability_power: float,
-    item_stat_types: int = 0,
-) -> RuneStatGrants:
-    """Compile one page and total the stats it grants, in one call.
+@dataclass(frozen=True, slots=True)
+class CompiledRunePage:
+    """One validated page compiled once, ready to be totalled.
 
-    The door ``stats.py`` uses: it holds the build's bonus attack damage and
-    ability power (which decide every adaptive grant), the count of stat
-    types the build's items grant (which is Jack Of All Trades' whole stack
-    rule), and nothing else about runes.
+    The stat fold asks the page two questions at two points: what movement
+    speed it grants, before an item converts the build's total movement
+    speed into adaptive force (Swiftmarch), and everything else after those
+    conversions have decided which of bonus attack damage and ability power
+    is larger. Compiling once and totalling twice is what makes one request
+    see one rune page.
     """
-    return resolve_stat_grants(
-        resolve_rune_page(page),
-        RuneStatContext(
-            level=level,
-            is_melee=is_melee,
-            bonus_attack_damage=bonus_attack_damage,
-            ability_power=ability_power,
-            options=page.options,
-            item_stat_types=item_stat_types,
-        ),
-    )
+
+    effects: tuple[RuneEffect, ...] = ()
+    options: Mapping[str, Mapping[str, float]] = MappingProxyType({})
+
+    def grants(
+        self,
+        *,
+        level: int,
+        is_melee: bool,
+        bonus_attack_damage: float,
+        ability_power: float,
+        item_stat_types: int = 0,
+    ) -> RuneStatGrants:
+        """Total this page against one build state."""
+        return resolve_stat_grants(
+            self.effects,
+            RuneStatContext(
+                level=level,
+                is_melee=is_melee,
+                bonus_attack_damage=bonus_attack_damage,
+                ability_power=ability_power,
+                options=self.options,
+                item_stat_types=item_stat_types,
+            ),
+        )
+
+
+# The door ``stats.py`` uses: it knows the build's stats and nothing else
+# about runes.
+def compile_rune_page(page: RunePage | None) -> CompiledRunePage:
+    """Compile a validated page; ``None`` grants nothing."""
+    if page is None:
+        return CompiledRunePage()
+    return CompiledRunePage(resolve_rune_page(page), page.options)
 
 
 def rune_catalog() -> list[dict[str, Any]]:

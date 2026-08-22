@@ -3009,6 +3009,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -3145,6 +3146,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -3281,6 +3283,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 8.0,
               "action_downtime_intervals": [
@@ -3914,6 +3917,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 3087.6,
             "physical": 0.0,
@@ -9139,6 +9143,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -9275,6 +9280,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -9411,6 +9417,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.8,
               "action_downtime_intervals": [
@@ -9577,6 +9584,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.8,
               "action_downtime_intervals": [
@@ -10197,6 +10205,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 878.4,
             "physical": 0.0,
@@ -10851,6 +10860,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 900.0,
             "physical": 0.0,
@@ -20211,6 +20221,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.15,
               "action_downtime_intervals": [
@@ -20355,6 +20366,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 2.61,
               "action_downtime_intervals": [
@@ -20499,6 +20511,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -21612,6 +21625,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 2467.7,
             "physical": 1453.2,
@@ -31925,6 +31939,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -32061,6 +32076,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -32197,6 +32213,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 2.75,
               "action_downtime_intervals": [
@@ -32377,6 +32394,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 5.84,
               "action_downtime_intervals": [
@@ -33338,6 +33356,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
             "physical": 2170.1,
@@ -33939,6 +33958,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
             "physical": 2298.0,
@@ -50455,6 +50475,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 2.65,
               "action_downtime_intervals": [
@@ -50614,6 +50635,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 7.51,
               "action_downtime_intervals": [
@@ -50773,6 +50795,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -50909,6 +50932,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 5.16,
               "action_downtime_intervals": [
@@ -51638,6 +51662,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 167.7,
             "physical": 8052.4,
@@ -52685,6 +52710,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 171.8,
             "physical": 10749.1,
@@ -57091,6 +57117,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -57227,6 +57254,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -57363,6 +57391,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -57950,6 +57979,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 377.2,
             "physical": 0.0,
@@ -60586,6 +60616,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -60740,6 +60771,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -61222,6 +61254,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 903.8,
             "physical": 186.7,
@@ -67817,6 +67850,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.53,
               "action_downtime_intervals": [
@@ -67961,6 +67995,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 3.69,
               "action_downtime_intervals": [
@@ -68105,6 +68140,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -68676,6 +68712,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 167.7,
             "physical": 3764.8,
@@ -77893,6 +77930,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -78029,6 +78067,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.15,
               "action_downtime_intervals": [
@@ -78173,6 +78212,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -78823,6 +78863,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 178.4,
             "physical": 4258.9,
@@ -85841,6 +85882,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.15,
               "action_downtime_intervals": [
@@ -85985,6 +86027,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 3.69,
               "action_downtime_intervals": [
@@ -86129,6 +86172,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -86794,6 +86838,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
             "physical": 3157.7,
@@ -90623,6 +90668,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -90759,6 +90805,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -90897,6 +90944,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.8,
               "action_downtime_intervals": [
@@ -91473,6 +91521,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 1953.1,
             "physical": 0.0,
@@ -95545,6 +95594,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -95681,6 +95731,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -95817,6 +95868,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 4.47,
               "action_downtime_intervals": [
@@ -96688,6 +96740,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 2012.8,
             "physical": 0.0,
@@ -98478,6 +98531,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 1865.2,
             "physical": 0.0,
@@ -100232,6 +100286,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 2089.8,
             "physical": 0.0,
@@ -101935,6 +101990,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 1643.9,
             "physical": 0.0,
@@ -116962,6 +117018,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 7.34,
               "action_downtime_intervals": [
@@ -117121,6 +117178,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 7.51,
               "action_downtime_intervals": [
@@ -117282,6 +117340,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -117421,6 +117480,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -118141,6 +118201,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 167.7,
             "physical": 3315.4,
@@ -119070,6 +119131,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 171.8,
             "physical": 4248.5,
@@ -121293,6 +121355,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -121514,6 +121577,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -122082,6 +122146,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5856.0,
             "physical": 0.0,
@@ -123829,6 +123894,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -124050,6 +124116,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -124593,6 +124660,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 4720.0,
             "physical": 0.0,
@@ -126287,6 +126355,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -126508,6 +126577,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -127076,6 +127146,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5370.0,
             "physical": 0.0,
@@ -128823,6 +128894,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -129044,6 +129116,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -129612,6 +129685,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5856.0,
             "physical": 0.0,
@@ -131386,6 +131460,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -131607,6 +131682,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -132150,6 +132226,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 4720.0,
             "physical": 0.0,
@@ -133861,6 +133938,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -134082,6 +134160,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -134650,6 +134729,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5370.0,
             "physical": 0.0,
@@ -135092,4815 +135172,22 @@
           "total_damage": 5648.4
         }
       }
-    },
-    "undaunted_armed_swing_roster": {
-      "combat": {
-        "breakdown": [
-          {
-            "champion": "Teemo",
-            "death_time": null,
-            "effective_health": 2383.0,
-            "healing_output": 0.0,
-            "healing_received": 0.0,
-            "healing_reduced": 0.0,
-            "health_damage": 1321.7,
-            "incoming_damage": 1321.7,
-            "outgoing_damage_before_death": 2007.8,
-            "participant_id": "main",
-            "shield_absorbed": 0.0,
-            "sources": [
-              {
-                "name": "Blinding Dart",
-                "total_damage": 540.2
-              },
-              {
-                "name": "Auto Attacks",
-                "total_damage": 522.6
-              },
-              {
-                "name": "Nashor's Tooth (on-hit)",
-                "total_damage": 368.5
-              },
-              {
-                "name": "Toxic Shot",
-                "total_damage": 225.2
-              },
-              {
-                "name": "Noxious Trap",
-                "total_damage": 351.2
-              }
-            ],
-            "support_shield_received": 0.0,
-            "support_value": 0.0,
-            "survived_window": true,
-            "team": "main",
-            "total_damage": 2007.8,
-            "utility_outcomes": {
-              "applied_dimensions": [],
-              "cleanse": {
-                "event_count": 0
-              },
-              "contract": "utility_outcomes_v1",
-              "damage_reduction": {
-                "event_count": 0,
-                "multiplier_windows": [],
-                "ratio_seconds": 0
-              },
-              "dimensions": [],
-              "economy": {
-                "event_count": 0,
-                "gold": 0
-              },
-              "item_coverage": [],
-              "metric_note": "Movement, cleanse, economy, and vision remain separate units; no cross-unit utility score is inferred. Healing, shielding, and applied support amounts remain event-derived values.",
-              "movement": {
-                "event_count": 0,
-                "speed_percent_seconds": 0
-              },
-              "multi_target": {
-                "allocated_packet_count": 0,
-                "packet_count": 0
-              },
-              "resource": {
-                "bonus_mana": 0,
-                "event_count": 0
-              },
-              "scored_support_amount": 0,
-              "slow": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "slow_resistance": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "vision": {
-                "blackout": {
-                  "event_count": 0,
-                  "trigger_windows": 0
-                },
-                "event_count": 0,
-                "ward_uses": 0
-              }
-            }
-          },
-          {
-            "champion": "Ornn",
-            "death_time": null,
-            "effective_health": 2695.0,
-            "healing_output": 0.0,
-            "healing_received": 32.0,
-            "healing_reduced": 0.0,
-            "health_damage": 2007.8,
-            "incoming_damage": 2007.8,
-            "outgoing_damage_before_death": 1321.7,
-            "participant_id": "enemy:Ornn",
-            "shield_absorbed": 0.0,
-            "sources": [
-              {
-                "name": "Volcanic Rupture",
-                "total_damage": 260.8
-              },
-              {
-                "name": "Auto Attacks",
-                "total_damage": 384.0
-              },
-              {
-                "name": "Bellows Breath",
-                "total_damage": 250.8
-              },
-              {
-                "name": "Searing Charge",
-                "total_damage": 130.0
-              },
-              {
-                "name": "Call of the Forge God",
-                "total_damage": 296.1
-              }
-            ],
-            "support_shield_received": 0.0,
-            "support_value": 0.0,
-            "survived_window": true,
-            "team": "enemy",
-            "total_damage": 1321.7,
-            "utility_outcomes": {
-              "applied_dimensions": [],
-              "cleanse": {
-                "event_count": 0
-              },
-              "contract": "utility_outcomes_v1",
-              "damage_reduction": {
-                "event_count": 0,
-                "multiplier_windows": [],
-                "ratio_seconds": 0
-              },
-              "dimensions": [],
-              "economy": {
-                "event_count": 0,
-                "gold": 0
-              },
-              "item_coverage": [],
-              "metric_note": "Movement, cleanse, economy, and vision remain separate units; no cross-unit utility score is inferred. Healing, shielding, and applied support amounts remain event-derived values.",
-              "movement": {
-                "event_count": 0,
-                "speed_percent_seconds": 0
-              },
-              "multi_target": {
-                "allocated_packet_count": 0,
-                "packet_count": 0
-              },
-              "resource": {
-                "bonus_mana": 0,
-                "event_count": 0
-              },
-              "scored_support_amount": 0,
-              "slow": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "slow_resistance": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "vision": {
-                "blackout": {
-                  "event_count": 0,
-                  "trigger_windows": 0
-                },
-                "event_count": 0,
-                "ward_uses": 0
-              }
-            }
-          }
-        ],
-        "dispositions": {
-          "breakdown[0].effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].healing_output": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].healing_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].healing_reduced": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].health_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].incoming_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].outgoing_damage_before_death": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].shield_absorbed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].sources[0].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].sources[1].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].sources[2].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].sources[3].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].sources[4].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].support_shield_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].support_value": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].healing_output": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].healing_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].healing_reduced": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].health_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].incoming_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].outgoing_damage_before_death": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].shield_absorbed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].sources[0].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].sources[1].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].sources[2].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].sources[3].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].sources[4].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].support_shield_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].support_value": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[1].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[0].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[0].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[0].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[0].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[0].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[10].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[10].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[10].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[10].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[10].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[11].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[11].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[11].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[11].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[11].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[12].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[12].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[12].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[12].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[12].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[13].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[13].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[13].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[13].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[13].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[14].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[14].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[14].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[14].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[14].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[15].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[15].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[15].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[15].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[15].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[16].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[16].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[16].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[16].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[16].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[17].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[17].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[17].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[17].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[17].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[18].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[18].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[18].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[18].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[18].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[19].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[19].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[19].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[19].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[19].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[1].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[1].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[1].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[1].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[20].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[20].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[20].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[20].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[20].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[21].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[21].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[21].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[21].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[21].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[23].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[23].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[23].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[23].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[23].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[24].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[24].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[24].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[24].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[24].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[25].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[25].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[25].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[25].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[25].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[26].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[26].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[26].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[26].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[26].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[27].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[27].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[27].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[27].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[27].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[28].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[28].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[28].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[28].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[28].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[29].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[29].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[29].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[29].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[29].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[2].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[2].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[2].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[2].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[2].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[34].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[34].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[34].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[34].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[34].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[35].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[35].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[35].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[35].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[35].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[36].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[36].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[36].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[36].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[36].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[37].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[37].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[37].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[37].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[37].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[38].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[38].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[38].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[38].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[38].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[39].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[39].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[39].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[39].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[39].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[3].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[3].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[3].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[3].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[3].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[40].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[40].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[40].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[40].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[40].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[41].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[41].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[41].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[41].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[41].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[42].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[42].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[42].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[42].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[42].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[43].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[43].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[43].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[43].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[43].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[44].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[44].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[44].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[44].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[44].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[45].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[45].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[45].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[45].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[45].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[46].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[46].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[46].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[46].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[46].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[47].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[47].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[47].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[47].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[47].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[4].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[4].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[4].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[4].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[4].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[5].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[5].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[5].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[5].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[5].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[6].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[6].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[6].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[6].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[6].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[7].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[7].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[7].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[7].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[7].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[8].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[8].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[8].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[8].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[8].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[9].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[9].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[9].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[9].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[9].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[0].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[10].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[11].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[12].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[13].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[14].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[15].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[2].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[3].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[4].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[5].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[6].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[7].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[8].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].healing_reduction_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].overheal": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].temporary_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "healing_events[9].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.enemy_team_damage_before_death": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.enemy_team_effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_damage_before_death": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_healing": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_support_value": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.action_downtime": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.aftershock.bonus_armor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.aftershock.bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.aftershock.until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.crowd_control_immunity_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.crowd_control_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.damage_deferral_cleared": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.damage_deferral_fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.damage_deferral_pending": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.damage_taken": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.defy_heal_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.ending_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.ending_health_ratio": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.force_of_nature.dynamic_bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.force_of_nature.stacks_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.guardian.cooldown_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.healing_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.healing_reduced": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.healing_reduction_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.health_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.invulnerable_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.jaksho.dynamic_bonus_armor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.jaksho.dynamic_bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.max_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.overhealing": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.permanent_bonus_health_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.remaining_shield": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.revive_health_restored": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.shield_absorbed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.spell_shield_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.starting_shield": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.stasis_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.support_shield_expired": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.support_shield_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.temporary_health_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.temporary_health_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.untargetable_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.venom_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.focus_survival.venom_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.main_team_damage_before_death": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.main_team_effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.total_healing_reduced": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "objective.total_support_value": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.ability_haste": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.armor_penetration_bonus_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.armor_penetration_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.attack_speed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.attack_speed_ratio": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.base_health_regen_per_five": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.basic_ability_haste": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.bonus_attack_speed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.critical_strike_chance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.critical_strike_damage_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.flat_armor_penetration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.gold_per_10": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.heal_and_shield_power_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.health_regen_per_five": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.health_regen_per_second": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.health_regen_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.lethality": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.lifesteal_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.magic_penetration_flat": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.magic_penetration_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.move_speed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.omnivamp_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.resource_regen_per_second": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.tenacity_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].stats.ultimate_haste": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.action_downtime": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.aftershock.bonus_armor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.aftershock.bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.aftershock.until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.crowd_control_immunity_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.crowd_control_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.damage_deferral_cleared": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.damage_deferral_fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.damage_deferral_pending": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.damage_taken": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.defy_heal_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.ending_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.ending_health_ratio": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.force_of_nature.dynamic_bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.force_of_nature.stacks_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.guardian.cooldown_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.healing_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.healing_reduced": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.healing_reduction_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.health_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.invulnerable_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.jaksho.dynamic_bonus_armor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.jaksho.dynamic_bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.max_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.overhealing": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.permanent_bonus_health_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.remaining_shield": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.revive_health_restored": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.shield_absorbed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.spell_shield_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.starting_shield": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.stasis_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.support_shield_expired": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.support_shield_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.temporary_health_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.temporary_health_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.untargetable_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.venom_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[0].survival.venom_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.ability_haste": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.armor_penetration_bonus_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.armor_penetration_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.attack_speed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.attack_speed_ratio": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.base_health_regen_per_five": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.basic_ability_haste": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.bonus_attack_speed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.critical_strike_chance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.critical_strike_damage_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.flat_armor_penetration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.gold_per_10": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.heal_and_shield_power_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.health_regen_per_five": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.health_regen_per_second": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.health_regen_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.lethality": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.lifesteal_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.magic_penetration_flat": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.magic_penetration_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.move_speed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.omnivamp_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.resource_regen_per_second": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.tenacity_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].stats.ultimate_haste": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.action_downtime": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.aftershock.bonus_armor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.aftershock.bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.aftershock.until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.crowd_control_immunity_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.crowd_control_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.damage_deferral_cleared": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.damage_deferral_fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.damage_deferral_pending": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.damage_taken": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.defy_heal_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.effective_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.ending_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.ending_health_ratio": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.force_of_nature.dynamic_bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.force_of_nature.stacks_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.guardian.cooldown_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.healing_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.healing_reduced": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.healing_reduction_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.health_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.invulnerable_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.jaksho.dynamic_bonus_armor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.jaksho.dynamic_bonus_magic_resistance": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.max_health": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.overhealing": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.permanent_bonus_health_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.remaining_shield": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.revive_health_restored": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.shield_absorbed": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.spell_shield_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.starting_shield": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.stasis_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.support_shield_expired": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.support_shield_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.temporary_health_received": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.temporary_health_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.untargetable_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.venom_factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "participants[1].survival.venom_until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          }
-        },
-        "duration": 8.0,
-        "events": [
-          {
-            "attacker": "main",
-            "cc_kind": "blind",
-            "damage": 270.1,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:0",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 270.1,
-            "raw_damage": 451.1,
-            "sequence": 0,
-            "skillshot": true,
-            "source": "Q",
-            "target": "enemy:Ornn",
-            "time": 0.0
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "slow",
-            "damage": 130.4,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:0",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 130.4,
-            "raw_damage": 260.8,
-            "sequence": 0,
-            "skillshot": true,
-            "source": "Q",
-            "target": "main",
-            "time": 0.0
-          },
-          {
-            "attacker": "enemy:Ornn",
-            "damage": 64.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:1",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 64.0,
-            "raw_damage": 64.0,
-            "sequence": 10,
-            "source": "auto_attacks",
-            "target": "main",
-            "time": 0.0
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:1",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 11,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 0.0
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:2",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 22,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 0.0
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 88.0,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:3",
-            "event_precision": "hit",
-            "overkill": 0.0,
-            "pair_damage": 88.0,
-            "raw_damage": 146.9,
-            "sequence": 2,
-            "source": "E",
-            "target": "enemy:Ornn",
-            "time": 0.25
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "none",
-            "damage": 50.2,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:2",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 50.2,
-            "raw_damage": 76.3,
-            "sequence": 2,
-            "skillshot": true,
-            "source": "W",
-            "target": "main",
-            "time": 0.25
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "none",
-            "damage": 130.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:3",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 130.0,
-            "raw_damage": 260.0,
-            "sequence": 7,
-            "source": "E",
-            "target": "main",
-            "time": 0.25
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "none",
-            "damage": 50.2,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 50.2,
-            "raw_damage": 76.3,
-            "sequence": 3,
-            "skillshot": true,
-            "source": "W",
-            "target": "main",
-            "time": 0.4
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "none",
-            "damage": 50.2,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 50.2,
-            "raw_damage": 76.3,
-            "sequence": 4,
-            "skillshot": true,
-            "source": "W",
-            "target": "main",
-            "time": 0.55
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "slow",
-            "damage": 148.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:6",
-            "event_precision": "hit",
-            "overkill": 0.0,
-            "pair_damage": 148.0,
-            "raw_damage": 225.0,
-            "sequence": 8,
-            "skillshot": true,
-            "source": "R",
-            "target": "main",
-            "time": 0.6
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 12,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 0.7
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 23,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 0.7
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "none",
-            "damage": 50.2,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:7",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 50.2,
-            "raw_damage": 76.3,
-            "sequence": 5,
-            "skillshot": true,
-            "source": "W",
-            "target": "main",
-            "time": 0.7
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "none",
-            "damage": 50.2,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:8",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 50.2,
-            "raw_damage": 76.3,
-            "sequence": 6,
-            "skillshot": true,
-            "source": "W",
-            "target": "main",
-            "time": 0.85
-          },
-          {
-            "attacker": "enemy:Ornn",
-            "damage": 64.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:9",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 64.0,
-            "raw_damage": 64.0,
-            "sequence": 11,
-            "source": "auto_attacks",
-            "target": "main",
-            "time": 1.19
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:6",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 3,
-            "source": "E",
-            "target": "enemy:Ornn",
-            "time": 1.25
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 87.8,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:7",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 87.8,
-            "raw_damage": 146.6,
-            "sequence": 7,
-            "skillshot": true,
-            "source": "R",
-            "target": "enemy:Ornn",
-            "time": 1.25
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:8",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 13,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:9",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 24,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 1.4
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "immobilize",
-            "damage": 148.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Ornn:main:10",
-            "event_precision": "hit",
-            "overkill": 0.0,
-            "pair_damage": 148.0,
-            "raw_damage": 225.0,
-            "sequence": 9,
-            "skillshot": true,
-            "source": "R",
-            "target": "main",
-            "time": 1.85
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:10",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 14,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 2.1
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:11",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 25,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 2.1
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:12",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 4,
-            "source": "E",
-            "target": "enemy:Ornn",
-            "time": 2.25
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 87.8,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:13",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 87.8,
-            "raw_damage": 146.6,
-            "sequence": 8,
-            "skillshot": true,
-            "source": "R",
-            "target": "enemy:Ornn",
-            "time": 2.25
-          },
-          {
-            "attacker": "enemy:Ornn",
-            "damage": 64.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:11",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 64.0,
-            "raw_damage": 64.0,
-            "sequence": 12,
-            "source": "auto_attacks",
-            "target": "main",
-            "time": 2.39
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:14",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 15,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 2.79
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:15",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 26,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 2.79
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:16",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 5,
-            "source": "E",
-            "target": "enemy:Ornn",
-            "time": 3.25
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 87.8,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:17",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 87.8,
-            "raw_damage": 146.6,
-            "sequence": 9,
-            "skillshot": true,
-            "source": "R",
-            "target": "enemy:Ornn",
-            "time": 3.25
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:18",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 16,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 3.49
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:19",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 27,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 3.49
-          },
-          {
-            "attacker": "enemy:Ornn",
-            "damage": 64.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:12",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 64.0,
-            "raw_damage": 64.0,
-            "sequence": 13,
-            "source": "auto_attacks",
-            "target": "main",
-            "time": 3.58
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:20",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 17,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 4.19
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:21",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 28,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 4.19
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:22",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 6,
-            "source": "E",
-            "target": "enemy:Ornn",
-            "time": 4.25
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 87.8,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:23",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 87.8,
-            "raw_damage": 146.6,
-            "sequence": 10,
-            "skillshot": true,
-            "source": "R",
-            "target": "enemy:Ornn",
-            "time": 4.25
-          },
-          {
-            "attacker": "enemy:Ornn",
-            "damage": 64.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:13",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 64.0,
-            "raw_damage": 64.0,
-            "sequence": 14,
-            "source": "auto_attacks",
-            "target": "main",
-            "time": 4.78
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:24",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 18,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 4.89
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:25",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 29,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 4.89
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:26",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 19,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 5.59
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:27",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 30,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 5.59
-          },
-          {
-            "attacker": "enemy:Ornn",
-            "damage": 64.0,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:14",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 64.0,
-            "raw_damage": 64.0,
-            "sequence": 15,
-            "source": "auto_attacks",
-            "target": "main",
-            "time": 5.97
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:28",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 20,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 6.29
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:29",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 31,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 6.29
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "blind",
-            "damage": 270.1,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:30",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 270.1,
-            "raw_damage": 451.1,
-            "sequence": 1,
-            "skillshot": true,
-            "source": "Q",
-            "target": "enemy:Ornn",
-            "time": 6.34
-          },
-          {
-            "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:31",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 47.5,
-            "sequence": 21,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 6.99
-          },
-          {
-            "attacker": "main",
-            "damage": 33.5,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:32",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 32,
-            "source": "on_hit_Nashor's Tooth",
-            "target": "enemy:Ornn",
-            "time": 6.99
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Ornn",
-            "cc_kind": "slow",
-            "damage": 130.4,
-            "damage_type": "physical",
-            "event_id": "enemy:Ornn:main:15",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 130.4,
-            "raw_damage": 260.8,
-            "sequence": 1,
-            "skillshot": true,
-            "source": "Q",
-            "target": "main",
-            "time": 7.25
-          }
-        ],
-        "healing_events": [
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:0:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 0.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:1:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 1.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:2:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 1.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:3:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 2.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:4:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 2.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:5:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 3.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:6:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 3.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:7:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 4.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:8:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 4.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:9:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 5.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:10:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 5.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:11:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 6.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:12:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 6.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:13:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 7.0
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:14:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 7.5
-          },
-          {
-            "amount": 2.0,
-            "applied_amount": 2.0,
-            "attacker": "enemy:Ornn",
-            "event_id": "enemy:Ornn:heal:15:main",
-            "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
-            "raw_amount": 2.0,
-            "reduced_amount": 2.0,
-            "source": "Health regeneration",
-            "temporary_health": 0.0,
-            "time": 8.0
-          }
-        ],
-        "item_denial_receipts": [],
-        "objective": {
-          "enemy_team_damage_before_death": 1321.7,
-          "enemy_team_effective_health": 2695.0,
-          "focus_damage_before_death": 2007.8,
-          "focus_healing": 0.0,
-          "focus_participant_id": "main",
-          "focus_support_value": 0.0,
-          "focus_survival": {
-            "action_downtime": 0.0,
-            "action_downtime_intervals": [],
-            "aftershock": {
-              "bonus_armor": 0.0,
-              "bonus_magic_resistance": 0.0,
-              "trigger_events": [],
-              "until": 0.0
-            },
-            "crowd_control_immunity_source": "",
-            "crowd_control_immunity_until": 0.0,
-            "crowd_control_intervals": [],
-            "crowd_control_until": 0.0,
-            "damage_deferral_cleared": 0.0,
-            "damage_deferral_fraction": 0.0,
-            "damage_deferral_pending": 0.0,
-            "damage_taken": 1321.7,
-            "death_time": null,
-            "defy_heal_received": 0.0,
-            "defy_trigger_time": null,
-            "defy_triggered": false,
-            "effective_health": 2383.0,
-            "ending_health": 1061.3,
-            "ending_health_ratio": 0.45,
-            "execute_source": "",
-            "execute_time": null,
-            "first_death_time": null,
-            "force_of_nature": {
-              "dynamic_bonus_magic_resistance": 0.0,
-              "events": [],
-              "stacks": 0,
-              "stacks_until": 0.0
-            },
-            "guardian": {
-              "cooldown_until": 0.0,
-              "trigger_events": []
-            },
-            "healing_received": 0.0,
-            "healing_reduced": 0.0,
-            "healing_reduction_events": [],
-            "healing_reduction_sources": [],
-            "healing_reduction_until": 0.0,
-            "health_damage": 1321.7,
-            "invulnerable_until": 0.0,
-            "jaksho": {
-              "dynamic_bonus_armor": 0.0,
-              "dynamic_bonus_magic_resistance": 0.0,
-              "events": [],
-              "stacks": 0
-            },
-            "max_health": 2383.0,
-            "overhealing": 0.0,
-            "overkill": 0.0,
-            "permanent_bonus_health_events": [],
-            "permanent_bonus_health_received": 0.0,
-            "projectile_defense": null,
-            "projectile_defense_blocked": [],
-            "remaining_shield": 0.0,
-            "revive_health_restored": 0.0,
-            "revive_source": "",
-            "revive_time": null,
-            "revived": false,
-            "shield_absorbed": 0.0,
-            "spell_shield_heal_triggered": false,
-            "spell_shield_source": "",
-            "spell_shield_until": 0.0,
-            "spell_shield_used": false,
-            "starting_shield": 0.0,
-            "stasis_source": "",
-            "stasis_started_at": null,
-            "stasis_until": 0.0,
-            "support_shield_expired": 0.0,
-            "support_shield_received": 0.0,
-            "survived_window": true,
-            "temporary_health_expired_at": null,
-            "temporary_health_received": 0.0,
-            "temporary_health_source": "",
-            "temporary_health_until": 0.0,
-            "terminal_phase": "alive",
-            "threshold_health_triggered": false,
-            "threshold_shield_expired_at": null,
-            "threshold_shield_triggered": false,
-            "untargetable_until": 0.0,
-            "venom_events": [],
-            "venom_factor": 1.0,
-            "venom_until": 0.0
-          },
-          "focus_utility_outcomes": {
-            "applied_dimensions": [],
-            "cleanse": {
-              "event_count": 0
-            },
-            "contract": "utility_outcomes_v1",
-            "damage_reduction": {
-              "event_count": 0,
-              "multiplier_windows": [],
-              "ratio_seconds": 0
-            },
-            "dimensions": [],
-            "economy": {
-              "event_count": 0,
-              "gold": 0
-            },
-            "item_coverage": [],
-            "metric_note": "Movement, cleanse, economy, and vision remain separate units; no cross-unit utility score is inferred. Healing, shielding, and applied support amounts remain event-derived values.",
-            "movement": {
-              "event_count": 0,
-              "speed_percent_seconds": 0
-            },
-            "multi_target": {
-              "allocated_packet_count": 0,
-              "packet_count": 0
-            },
-            "resource": {
-              "bonus_mana": 0,
-              "event_count": 0
-            },
-            "scored_support_amount": 0,
-            "slow": {
-              "event_count": 0,
-              "percent_seconds": 0
-            },
-            "slow_resistance": {
-              "event_count": 0,
-              "percent_seconds": 0
-            },
-            "vision": {
-              "blackout": {
-                "event_count": 0,
-                "trigger_windows": 0
-              },
-              "event_count": 0,
-              "ward_uses": 0
-            }
-          },
-          "main_team_damage_before_death": 2007.8,
-          "main_team_effective_health": 2383.0,
-          "surviving_main_team": 1,
-          "total_healing_reduced": 0.0,
-          "total_support_value": 0.0
-        },
-        "participants": [
-          {
-            "champion": "Teemo",
-            "items": [
-              "Nashor's Tooth",
-              "Rabadon's Deathcap"
-            ],
-            "level": 18,
-            "participant_id": "main",
-            "stats": {
-              "ability_haste": 15.0,
-              "ability_power": 273,
-              "armor": 100,
-              "armor_penetration_bonus_percent": 0.0,
-              "armor_penetration_percent": 0.0,
-              "attack_damage": 105,
-              "attack_speed": 1.43,
-              "attack_speed_ratio": 0.69,
-              "base_attack_damage": 105,
-              "base_health": 2383,
-              "base_health_regen_per_five": 16.55,
-              "basic_ability_haste": 0.0,
-              "bonus_armor": 0,
-              "bonus_attack_damage": 0,
-              "bonus_attack_speed": 107.46,
-              "bonus_health": 0,
-              "bonus_magic_resistance": 0,
-              "bonus_mana": 0,
-              "critical_strike_chance": 0.0,
-              "critical_strike_damage_percent": 0.0,
-              "flat_armor_penetration": 0.0,
-              "gold_per_10": 0.0,
-              "heal_and_shield_power_percent": 0.0,
-              "health": 2383,
-              "health_regen_per_five": 16.55,
-              "health_regen_per_second": 3.31,
-              "health_regen_percent": 0.0,
-              "is_melee": false,
-              "lethality": 0.0,
-              "level": 18,
-              "lifesteal_percent": 0.0,
-              "magic_penetration_flat": 0.0,
-              "magic_penetration_percent": 0.0,
-              "magic_resistance": 52,
-              "max_mana": 759,
-              "move_speed": 330.0,
-              "omnivamp_percent": 0.0,
-              "resource_regen_per_second": 3.45,
-              "tenacity_percent": 0.0,
-              "ultimate_haste": 0.0
-            },
-            "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
-              "aftershock": {
-                "bonus_armor": 0.0,
-                "bonus_magic_resistance": 0.0,
-                "trigger_events": [],
-                "until": 0.0
-              },
-              "crowd_control_immunity_source": "",
-              "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
-              "damage_deferral_cleared": 0.0,
-              "damage_deferral_fraction": 0.0,
-              "damage_deferral_pending": 0.0,
-              "damage_taken": 1321.7,
-              "death_time": null,
-              "defy_heal_received": 0.0,
-              "defy_trigger_time": null,
-              "defy_triggered": false,
-              "effective_health": 2383.0,
-              "ending_health": 1061.3,
-              "ending_health_ratio": 0.45,
-              "execute_source": "",
-              "execute_time": null,
-              "first_death_time": null,
-              "force_of_nature": {
-                "dynamic_bonus_magic_resistance": 0.0,
-                "events": [],
-                "stacks": 0,
-                "stacks_until": 0.0
-              },
-              "guardian": {
-                "cooldown_until": 0.0,
-                "trigger_events": []
-              },
-              "healing_received": 0.0,
-              "healing_reduced": 0.0,
-              "healing_reduction_events": [],
-              "healing_reduction_sources": [],
-              "healing_reduction_until": 0.0,
-              "health_damage": 1321.7,
-              "invulnerable_until": 0.0,
-              "jaksho": {
-                "dynamic_bonus_armor": 0.0,
-                "dynamic_bonus_magic_resistance": 0.0,
-                "events": [],
-                "stacks": 0
-              },
-              "max_health": 2383.0,
-              "overhealing": 0.0,
-              "overkill": 0.0,
-              "permanent_bonus_health_events": [],
-              "permanent_bonus_health_received": 0.0,
-              "projectile_defense": null,
-              "projectile_defense_blocked": [],
-              "remaining_shield": 0.0,
-              "revive_health_restored": 0.0,
-              "revive_source": "",
-              "revive_time": null,
-              "revived": false,
-              "shield_absorbed": 0.0,
-              "spell_shield_heal_triggered": false,
-              "spell_shield_source": "",
-              "spell_shield_until": 0.0,
-              "spell_shield_used": false,
-              "starting_shield": 0.0,
-              "stasis_source": "",
-              "stasis_started_at": null,
-              "stasis_until": 0.0,
-              "support_shield_expired": 0.0,
-              "support_shield_received": 0.0,
-              "survived_window": true,
-              "temporary_health_expired_at": null,
-              "temporary_health_received": 0.0,
-              "temporary_health_source": "",
-              "temporary_health_until": 0.0,
-              "terminal_phase": "alive",
-              "threshold_health_triggered": false,
-              "threshold_shield_expired_at": null,
-              "threshold_shield_triggered": false,
-              "untargetable_until": 0.0,
-              "venom_events": [],
-              "venom_factor": 1.0,
-              "venom_until": 0.0
-            },
-            "team": "main"
-          },
-          {
-            "champion": "Ornn",
-            "items": [
-              "Guardian's Horn"
-            ],
-            "level": 18,
-            "participant_id": "enemy:Ornn",
-            "stats": {
-              "ability_haste": 0.0,
-              "ability_power": 0,
-              "armor": 121,
-              "armor_penetration_bonus_percent": 0.0,
-              "armor_penetration_percent": 0.0,
-              "attack_damage": 128,
-              "attack_speed": 0.84,
-              "attack_speed_ratio": 0.62,
-              "base_attack_damage": 128,
-              "base_health": 2513,
-              "base_health_regen_per_five": 24.3,
-              "basic_ability_haste": 0.0,
-              "bonus_armor": 0,
-              "bonus_attack_damage": 0,
-              "bonus_attack_speed": 34.0,
-              "bonus_health": 150,
-              "bonus_magic_resistance": 0,
-              "bonus_mana": 0,
-              "critical_strike_chance": 0.0,
-              "critical_strike_damage_percent": 0.0,
-              "flat_armor_penetration": 0.0,
-              "gold_per_10": 0.0,
-              "heal_and_shield_power_percent": 0.0,
-              "health": 2663,
-              "health_regen_per_five": 44.3,
-              "health_regen_per_second": 8.86,
-              "health_regen_percent": 0.0,
-              "is_melee": true,
-              "lethality": 0.0,
-              "level": 18,
-              "lifesteal_percent": 0.0,
-              "magic_penetration_flat": 0.0,
-              "magic_penetration_percent": 0.0,
-              "magic_resistance": 67,
-              "max_mana": 1446,
-              "move_speed": 335.0,
-              "omnivamp_percent": 0.0,
-              "resource_regen_per_second": 3.64,
-              "tenacity_percent": 0.0,
-              "ultimate_haste": 0.0
-            },
-            "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
-              "aftershock": {
-                "bonus_armor": 0.0,
-                "bonus_magic_resistance": 0.0,
-                "trigger_events": [],
-                "until": 0.0
-              },
-              "crowd_control_immunity_source": "",
-              "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
-              "damage_deferral_cleared": 0.0,
-              "damage_deferral_fraction": 0.0,
-              "damage_deferral_pending": 0.0,
-              "damage_taken": 2007.8,
-              "death_time": null,
-              "defy_heal_received": 0.0,
-              "defy_trigger_time": null,
-              "defy_triggered": false,
-              "effective_health": 2695.0,
-              "ending_health": 687.2,
-              "ending_health_ratio": 0.26,
-              "execute_source": "",
-              "execute_time": null,
-              "first_death_time": null,
-              "force_of_nature": {
-                "dynamic_bonus_magic_resistance": 0.0,
-                "events": [],
-                "stacks": 0,
-                "stacks_until": 0.0
-              },
-              "guardian": {
-                "cooldown_until": 0.0,
-                "trigger_events": []
-              },
-              "healing_received": 32.0,
-              "healing_reduced": 0.0,
-              "healing_reduction_events": [],
-              "healing_reduction_sources": [],
-              "healing_reduction_until": 0.0,
-              "health_damage": 2007.8,
-              "invulnerable_until": 0.0,
-              "jaksho": {
-                "dynamic_bonus_armor": 0.0,
-                "dynamic_bonus_magic_resistance": 0.0,
-                "events": [],
-                "stacks": 0
-              },
-              "max_health": 2663.0,
-              "overhealing": 0.0,
-              "overkill": 0.0,
-              "permanent_bonus_health_events": [],
-              "permanent_bonus_health_received": 0.0,
-              "projectile_defense": null,
-              "projectile_defense_blocked": [],
-              "remaining_shield": 0.0,
-              "revive_health_restored": 0.0,
-              "revive_source": "",
-              "revive_time": null,
-              "revived": false,
-              "shield_absorbed": 0.0,
-              "spell_shield_heal_triggered": false,
-              "spell_shield_source": "",
-              "spell_shield_until": 0.0,
-              "spell_shield_used": false,
-              "starting_shield": 0.0,
-              "stasis_source": "",
-              "stasis_started_at": null,
-              "stasis_until": 0.0,
-              "support_shield_expired": 0.0,
-              "support_shield_received": 0.0,
-              "survived_window": true,
-              "temporary_health_expired_at": null,
-              "temporary_health_received": 0.0,
-              "temporary_health_source": "",
-              "temporary_health_until": 0.0,
-              "terminal_phase": "alive",
-              "threshold_health_triggered": false,
-              "threshold_shield_expired_at": null,
-              "threshold_shield_triggered": false,
-              "untargetable_until": 0.0,
-              "venom_events": [],
-              "venom_factor": 1.0,
-              "venom_until": 0.0
-            },
-            "team": "enemy"
-          }
-        ],
-        "support_events": [],
-        "target_allocation": {
-          "allocated_secondary_packet_count": 0,
-          "complete": true,
-          "contract": "ordered_roster_target_allocation_v1",
-          "policy": "none",
-          "secondary_packet_count": 0,
-          "target_count": 1,
-          "unallocated_reasons": []
-        },
-        "timeline_coverage": {
-          "certification": "event_order_certified",
-          "coarse_sources": [],
-          "complete": true,
-          "exact_sources": [
-            "E",
-            "Q",
-            "R",
-            "W",
-            "auto_attacks",
-            "on_hit_Nashor's Tooth"
-          ],
-          "note": "Every active damage source is event-ordered across 2 selected targets."
-        },
-        "utility_outcomes": {
-          "contract": "utility_outcomes_v1",
-          "focus": {
-            "applied_dimensions": [],
-            "cleanse": {
-              "event_count": 0
-            },
-            "contract": "utility_outcomes_v1",
-            "damage_reduction": {
-              "event_count": 0,
-              "multiplier_windows": [],
-              "ratio_seconds": 0
-            },
-            "dimensions": [],
-            "economy": {
-              "event_count": 0,
-              "gold": 0
-            },
-            "item_coverage": [],
-            "metric_note": "Movement, cleanse, economy, and vision remain separate units; no cross-unit utility score is inferred. Healing, shielding, and applied support amounts remain event-derived values.",
-            "movement": {
-              "event_count": 0,
-              "speed_percent_seconds": 0
-            },
-            "multi_target": {
-              "allocated_packet_count": 0,
-              "packet_count": 0
-            },
-            "resource": {
-              "bonus_mana": 0,
-              "event_count": 0
-            },
-            "scored_support_amount": 0,
-            "slow": {
-              "event_count": 0,
-              "percent_seconds": 0
-            },
-            "slow_resistance": {
-              "event_count": 0,
-              "percent_seconds": 0
-            },
-            "vision": {
-              "blackout": {
-                "event_count": 0,
-                "trigger_windows": 0
-              },
-              "event_count": 0,
-              "ward_uses": 0
-            }
-          },
-          "metric_note": "Utility dimensions are reported in their native units. The calculator does not convert movement, cleanse, vision, or economy into TDD or a guessed common scalar.",
-          "participants": {
-            "enemy:Ornn": {
-              "applied_dimensions": [],
-              "cleanse": {
-                "event_count": 0
-              },
-              "contract": "utility_outcomes_v1",
-              "damage_reduction": {
-                "event_count": 0,
-                "multiplier_windows": [],
-                "ratio_seconds": 0
-              },
-              "dimensions": [],
-              "economy": {
-                "event_count": 0,
-                "gold": 0
-              },
-              "item_coverage": [],
-              "metric_note": "Movement, cleanse, economy, and vision remain separate units; no cross-unit utility score is inferred. Healing, shielding, and applied support amounts remain event-derived values.",
-              "movement": {
-                "event_count": 0,
-                "speed_percent_seconds": 0
-              },
-              "multi_target": {
-                "allocated_packet_count": 0,
-                "packet_count": 0
-              },
-              "resource": {
-                "bonus_mana": 0,
-                "event_count": 0
-              },
-              "scored_support_amount": 0,
-              "slow": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "slow_resistance": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "vision": {
-                "blackout": {
-                  "event_count": 0,
-                  "trigger_windows": 0
-                },
-                "event_count": 0,
-                "ward_uses": 0
-              }
-            },
-            "main": {
-              "applied_dimensions": [],
-              "cleanse": {
-                "event_count": 0
-              },
-              "contract": "utility_outcomes_v1",
-              "damage_reduction": {
-                "event_count": 0,
-                "multiplier_windows": [],
-                "ratio_seconds": 0
-              },
-              "dimensions": [],
-              "economy": {
-                "event_count": 0,
-                "gold": 0
-              },
-              "item_coverage": [],
-              "metric_note": "Movement, cleanse, economy, and vision remain separate units; no cross-unit utility score is inferred. Healing, shielding, and applied support amounts remain event-derived values.",
-              "movement": {
-                "event_count": 0,
-                "speed_percent_seconds": 0
-              },
-              "multi_target": {
-                "allocated_packet_count": 0,
-                "packet_count": 0
-              },
-              "resource": {
-                "bonus_mana": 0,
-                "event_count": 0
-              },
-              "scored_support_amount": 0,
-              "slow": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "slow_resistance": {
-                "event_count": 0,
-                "percent_seconds": 0
-              },
-              "vision": {
-                "blackout": {
-                  "event_count": 0,
-                  "trigger_windows": 0
-                },
-                "event_count": 0,
-                "ward_uses": 0
-              }
-            }
-          }
-        }
-      },
-      "fights": {
-        "0:Ornn": {
-          "ability_damage": 1052.9,
-          "auto_attack_damage": 726.2,
-          "auto_attack_policy": {
-            "assumptions": [
-              "No inferred player uptime; caller supplied the numeric value."
-            ],
-            "mode": "legacy",
-            "source": "legacy request semantics",
-            "status": "legacy_numeric",
-            "uptime": 1.0,
-            "window_seconds": 8.0
-          },
-          "auto_attack_schedule": {
-            "expected_autos_per_rotation": 11.0,
-            "expected_autos_total": 11,
-            "rotation_count": 1,
-            "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
-            "status": "known",
-            "window_seconds": 8.0
-          },
-          "breakdown": {
-            "E": {
-              "casts": 1,
-              "count": null,
-              "crit_damage_per_hit": null,
-              "damage_per_hit": null,
-              "detail": "initial hit + 4 sourced 1.0s-interval ticks (Magic Damage per Tick x4 = Toxic Shot total)",
-              "name": "Toxic Shot",
-              "non_crit_damage_per_hit": null,
-              "num_crits": null,
-              "num_non_crits": null,
-              "total_amount": null,
-              "total_damage": 206.5,
-              "unit": null
-            },
-            "Q": {
-              "casts": 2,
-              "count": null,
-              "crit_damage_per_hit": null,
-              "damage_per_hit": null,
-              "name": "Blinding Dart",
-              "non_crit_damage_per_hit": null,
-              "num_crits": null,
-              "num_non_crits": null,
-              "total_amount": null,
-              "total_damage": 510.2,
-              "unit": null
-            },
-            "R": {
-              "casts": 1,
-              "count": null,
-              "crit_damage_per_hit": null,
-              "damage_per_hit": null,
-              "detail": "1 shroom detonation(s), each poisoning for 4s (4 ticks at 1s intervals) and slowing 50% for 4s.",
-              "name": "Noxious Trap",
-              "non_crit_damage_per_hit": null,
-              "num_crits": null,
-              "num_non_crits": null,
-              "total_amount": null,
-              "total_damage": 336.2,
-              "unit": null
-            },
-            "W": {
-              "casts": 1,
-              "count": null,
-              "crit_damage_per_hit": null,
-              "damage_per_hit": null,
-              "detail": "Movement only: 28% bonus movement speed after 5s undamaged, doubled to 56% for 3s on cast. No enemy-damage clause exists in the slot; the percent movement grant is not published as a stat_buff (the named percent-movement boundary).",
-              "name": "Move Quick",
-              "non_crit_damage_per_hit": null,
-              "num_crits": null,
-              "num_non_crits": null,
-              "total_amount": null,
-              "total_damage": 0.0,
-              "unit": null
-            },
-            "auto_attacks": {
-              "casts": null,
-              "count": 11,
-              "crit_damage_per_hit": null,
-              "damage_per_hit": 32.5,
-              "name": "Auto Attacks",
-              "non_crit_damage_per_hit": 32.5,
-              "num_crits": 0,
-              "num_non_crits": 11,
-              "total_amount": null,
-              "total_damage": 357.6,
-              "unit": null
-            },
-            "on_hit_Nashor's Tooth": {
-              "casts": null,
-              "count": 11,
-              "crit_damage_per_hit": null,
-              "damage_per_hit": 33.5,
-              "name": "Nashor's Tooth (on-hit)",
-              "non_crit_damage_per_hit": null,
-              "num_crits": null,
-              "num_non_crits": null,
-              "total_amount": null,
-              "total_damage": 368.5,
-              "unit": null
-            }
-          },
-          "cast_timeline": [
-            {
-              "cast_id": "Q:1",
-              "name": "Blinding Dart",
-              "ordinal": 1,
-              "resource_after": 669.0,
-              "resource_before": 759.0,
-              "resource_cost": 90.0,
-              "resource_restored": 0.0,
-              "slot": "Q",
-              "target_id": "target:0",
-              "time": 0.0
-            },
-            {
-              "cast_id": "W:1",
-              "name": "Move Quick",
-              "ordinal": 1,
-              "resource_after": 629.86,
-              "resource_before": 669.86,
-              "resource_cost": 40.0,
-              "resource_restored": 0.0,
-              "slot": "W",
-              "target_id": "target:0",
-              "time": 0.25
-            },
-            {
-              "cast_id": "E:1",
-              "name": "Toxic Shot",
-              "ordinal": 1,
-              "resource_after": 629.86,
-              "resource_before": 629.86,
-              "resource_cost": 0.0,
-              "resource_restored": 0.0,
-              "slot": "E",
-              "target_id": "target:0",
-              "time": 0.25
-            },
-            {
-              "cast_id": "R:1",
-              "name": "Noxious Trap",
-              "ordinal": 1,
-              "resource_after": 594.86,
-              "resource_before": 629.86,
-              "resource_cost": 35.0,
-              "resource_restored": 0.0,
-              "slot": "R",
-              "target_id": "target:0",
-              "time": 0.25
-            },
-            {
-              "cast_id": "Q:2",
-              "name": "Blinding Dart",
-              "ordinal": 2,
-              "resource_after": 525.86,
-              "resource_before": 615.86,
-              "resource_cost": 90.0,
-              "resource_restored": 0.0,
-              "slot": "Q",
-              "target_id": "target:0",
-              "time": 6.34
-            }
-          ],
-          "champion_stats": {
-            "ability_haste": 15.0,
-            "ability_power": 273,
-            "armor": 100,
-            "armor_penetration_bonus_percent": 0.0,
-            "armor_penetration_percent": 0.0,
-            "attack_damage": 105,
-            "attack_speed": 1.43,
-            "attack_speed_ratio": 0.69,
-            "base_attack_damage": 105,
-            "base_health": 2383,
-            "base_health_regen_per_five": 16.55,
-            "basic_ability_haste": 0.0,
-            "bonus_armor": 0,
-            "bonus_attack_damage": 0,
-            "bonus_attack_speed": 107.46,
-            "bonus_health": 0,
-            "bonus_magic_resistance": 0,
-            "bonus_mana": 0,
-            "critical_strike_chance": 0.0,
-            "critical_strike_damage_percent": 0.0,
-            "flat_armor_penetration": 0.0,
-            "gold_per_10": 0.0,
-            "heal_and_shield_power_percent": 0.0,
-            "health": 2383,
-            "health_regen_per_five": 16.55,
-            "health_regen_per_second": 3.31,
-            "health_regen_percent": 0.0,
-            "is_melee": false,
-            "lethality": 0.0,
-            "level": 18,
-            "lifesteal_percent": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "magic_resistance": 52,
-            "max_mana": 759,
-            "move_speed": 330.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 3.45,
-            "tenacity_percent": 0.0,
-            "ultimate_haste": 0.0
-          },
-          "damage_by_type": {
-            "magic": 1421.4,
-            "physical": 357.6,
-            "true": 0.0
-          },
-          "damage_events": [
-            {
-              "cc_kind": "blind",
-              "damage": 255.1,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "Q",
-              "time": 0.0
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 0.0
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 0.0
-            },
-            {
-              "cc_kind": "none",
-              "damage": 84.2,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "hit",
-              "phase": "ability",
-              "source": "E",
-              "time": 0.25
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 0.7
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 0.7
-            },
-            {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 1.25
-            },
-            {
-              "cc_kind": "slow",
-              "damage": 84.0,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "R",
-              "time": 1.25
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 1.4
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 1.4
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 2.1
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 2.1
-            },
-            {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 2.25
-            },
-            {
-              "cc_kind": "slow",
-              "damage": 84.0,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "R",
-              "time": 2.25
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 2.79
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 2.79
-            },
-            {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 3.25
-            },
-            {
-              "cc_kind": "slow",
-              "damage": 84.0,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "R",
-              "time": 3.25
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 3.49
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 3.49
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 4.19
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 4.19
-            },
-            {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 4.25
-            },
-            {
-              "cc_kind": "slow",
-              "damage": 84.0,
-              "damage_over_time": true,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "R",
-              "time": 4.25
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 4.89
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 4.89
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 5.59
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 5.59
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 6.29
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 6.29
-            },
-            {
-              "cc_kind": "blind",
-              "damage": 255.1,
-              "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "Q",
-              "time": 6.34
-            },
-            {
-              "damage": 32.5,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 6.99
-            },
-            {
-              "damage": 33.5,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_Nashor's Tooth",
-              "time": 6.99
-            }
-          ],
-          "effective_armor": 121.0,
-          "effective_mr": 67.0,
-          "general_shield_absorbed": 0.0,
-          "health_damage": 1779.1,
-          "magic_shield_absorbed": 0.0,
-          "notes": [],
-          "overkill": 0.0,
-          "physical_shield_absorbed": 0.0,
-          "resource_ledger": {
-            "base_maximum": 759.0,
-            "bonus_maximum": 0.0,
-            "closing_current": 525.86,
-            "closing_maximum": 759.0,
-            "contract": "resource_ledger_v1",
-            "kind": "mana",
-            "opening_current": 759.0,
-            "opening_maximum": 759.0,
-            "owner": "main",
-            "receipts": [
-              {
-                "accepted": true,
-                "amount": 90.0,
-                "atoms": [],
-                "current_after": 669.0,
-                "current_before": 759.0,
-                "detail": {
-                  "ordinal": 1,
-                  "slot": "Q"
-                },
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "spend",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 0,
-                "source": "ability Q cast",
-                "tier": 1.0,
-                "time": 0.0
-              },
-              {
-                "accepted": true,
-                "amount": 0.86,
-                "atoms": [],
-                "current_after": 669.86,
-                "current_before": 669.0,
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "regen",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 1,
-                "source": "base regeneration",
-                "tier": 0.0,
-                "time": 0.25
-              },
-              {
-                "accepted": true,
-                "amount": 40.0,
-                "atoms": [],
-                "current_after": 629.86,
-                "current_before": 669.86,
-                "detail": {
-                  "ordinal": 1,
-                  "slot": "W"
-                },
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "spend",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 2,
-                "source": "ability W cast",
-                "tier": 1.0,
-                "time": 0.25
-              },
-              {
-                "accepted": true,
-                "amount": 0.0,
-                "atoms": [],
-                "current_after": 629.86,
-                "current_before": 629.86,
-                "detail": {
-                  "ordinal": 1,
-                  "slot": "E"
-                },
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "spend",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 3,
-                "source": "ability E cast",
-                "tier": 1.0,
-                "time": 0.25
-              },
-              {
-                "accepted": true,
-                "amount": 35.0,
-                "atoms": [],
-                "current_after": 594.86,
-                "current_before": 629.86,
-                "detail": {
-                  "ordinal": 1,
-                  "slot": "R"
-                },
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "spend",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 4,
-                "source": "ability R cast",
-                "tier": 1.0,
-                "time": 0.25
-              },
-              {
-                "accepted": true,
-                "amount": 21.0,
-                "atoms": [],
-                "current_after": 615.86,
-                "current_before": 594.86,
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "regen",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 5,
-                "source": "base regeneration",
-                "tier": 0.0,
-                "time": 6.34
-              },
-              {
-                "accepted": true,
-                "amount": 90.0,
-                "atoms": [],
-                "current_after": 525.86,
-                "current_before": 615.86,
-                "detail": {
-                  "ordinal": 2,
-                  "slot": "Q"
-                },
-                "kind": "mana",
-                "maximum_after": 759.0,
-                "maximum_before": 759.0,
-                "operation": "spend",
-                "owner": "main",
-                "reason": "accepted",
-                "sequence": 6,
-                "source": "ability Q cast",
-                "tier": 1.0,
-                "time": 6.34
-              }
-            ]
-          },
-          "resource_remaining": 525.9,
-          "resource_spent": 255.0,
-          "rotation": {
-            "aoe": {
-              "E": 1,
-              "Q": 1,
-              "R": 5,
-              "W": 1,
-              "passive": 1
-            },
-            "cast_order": [
-              "Q",
-              "W",
-              "E",
-              "R"
-            ],
-            "consume": [],
-            "order": [
-              "Q",
-              "W",
-              "E",
-              "R",
-              "Q"
-            ],
-            "rationale": "Teemo has no detectable setup/consume signal in the atomized ability data \u2014 no DoT/poison/mark/stack consumer, no resistance shred, no damage-amplifying buff, no missing-health execute. The certified module order (engine default Q \u2192 Q2 \u2192 W \u2192 E \u2192 R) is kept exactly as reviewed; the flat kit derives no reorder. Declared options classified for rotation: option r_shrooms (self_state, slot R).",
-            "setup": [],
-            "sources": [
-              "no setup/consume atoms detected (flat kit)",
-              "option r_shrooms (self_state, slot R)"
-            ]
-          },
-          "self_healing": 0.0,
-          "self_healing_events": [],
-          "shield_absorbed": 0.0,
-          "target_effective_health": 2663.0,
-          "target_effective_max_health": 2663,
-          "target_ending_health": 883.9,
-          "target_healing_received": 0.0,
-          "threshold_health_bonus_gained": 0.0,
-          "threshold_health_triggered": false,
-          "threshold_shield_absorbed": 0.0,
-          "timeline_coverage": {
-            "certification": "event_order_certified",
-            "coarse_sources": [],
-            "complete": true,
-            "exact_sources": [
-              "E",
-              "Q",
-              "R",
-              "auto_attacks",
-              "on_hit_Nashor's Tooth"
-            ],
-            "note": "Every active damage source has authored event or cast-boundary order."
-          },
-          "total_damage": 1779.1
-        }
-      }
     }
   },
   "metadata": {
     "champions_fetched_at": 1787268652.393148,
     "exact": false,
     "fingerprint": {
-      "entries": 23,
-      "leaves": 88881,
-      "numeric_leaves": 29870,
+      "entries": 22,
+      "leaves": 85925,
+      "numeric_leaves": 28820,
       "sections": "coupled_scenarios"
     },
-    "git_head": "8f66e575aafe48ac44aed3f10be588998ff944f1",
+    "git_head": "8c5232f8e46d7c96e3a7b4b481ccf9b13190561a",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
-    "scenario_count": 23,
+    "scenario_count": 22,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "3c70611bd052d69975eb7aeaa1104ee2fdd6d797"
+    "src_tree_sha": "a0aa3f4935e9ed84d3effbcdae9c028e4fdf0b8c"
   }
 }

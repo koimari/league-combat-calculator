@@ -10,6 +10,7 @@ import importlib
 from typing import Any
 
 from ..cast_dependency import CastDependency
+from ..stat_conversion import BonusHealthConversion
 from .module_contract import ChampionModuleContract, contract_from_module
 
 # Map display name -> module name within this package.  This is the single
@@ -318,6 +319,16 @@ def get_champion_cast_dependencies(champion_name: str) -> tuple[CastDependency, 
         return get_champion_module_contract(champion_name).cast_dependencies
     except KeyError:
         return ()
+
+
+# ``None`` for a champion with no registered module too: a kit the
+# calculator has not reviewed keeps the stats its items grant.
+def get_champion_stat_conversion(champion_name: str) -> BonusHealthConversion | None:
+    """The validated ``MODULE_STAT_CONVERSION``, or ``None``."""
+    try:
+        return get_champion_module_contract(champion_name).stat_conversion
+    except KeyError:
+        return None
 
 
 def get_champion_options_meta(champion_name: str) -> dict[str, Any]:

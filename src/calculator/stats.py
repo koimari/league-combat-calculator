@@ -15,7 +15,8 @@ from .item_effects import (
 from .data_registry import data_version, store_for_generation
 from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
-from .rune_effects import RunePage, RuneStatGrants, rune_page_stat_grants
+from .rune_effects import RunePage, compile_rune_page
+from .stat_conversion import BonusHealthConversion
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
@@ -325,6 +326,29 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
     return extracted
 
 
+# Champion modules import this module, so the registry that owns their
+# declarations is reached at call time rather than at import.
+def champion_stat_conversion(
+    champion_data: Mapping[str, Any],
+) -> BonusHealthConversion | None:
+    """This champion's declared stat conversion, or ``None``."""
+    from .champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_stat_conversion,
+    )
+
+    return get_champion_stat_conversion(str(champion_data.get("name", "")))
+
+
+# Only a MANA pool takes an item's mana: an energy pool is a fixed 200
+# (Shen's 400) and no other declared resource grows from items either, so a
+# mana item is a wasted stat line on those kits.  A record declaring no
+# resource is a sparse unit fixture and keeps the mana pool.
+def item_mana_reaches_pool(champion_data: Mapping[str, Any]) -> bool:
+    """Whether an item's mana and mana regeneration reach this pool."""
+    resource = champion_data.get("resource")
+    return resource is None or str(resource) == "MANA"
+
+
 def calculate_total_stats(
     champion_data: dict[str, Any],
     level: int,
@@ -406,14 +430,24 @@ def calculate_total_stats(
     total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
     total_item_stats["ability_haste"] += float(external.get("ability_haste", 0.0))
 
-    # Mana first — stat conversions read it (Awe → AP, Muramana → AD)
+    # Mana first — stat conversions read it (Awe → AP, Muramana → AD).
+    # An item's mana grant lands in a MANA pool only; the item still grants
+    # the stat (Jack Of All Trades counts it above), the kit just has no
+    # pool it can grow. The two reads stay separate from the item totals so
+    # every consumer of the pool — the published card, the conversions and
+    # the fight's resource walk — sees the same one.
+    pool_takes_item_mana = item_mana_reaches_pool(champion_data)
+    pool_item_mana = total_item_stats["mana"] if pool_takes_item_mana else 0.0
+    pool_item_mana_regen_percent = (
+        total_item_stats["mana_regen_percent"] if pool_takes_item_mana else 0.0
+    )
     cdm = champion_data["stats"]
     base_mana = growth_stat(
         cdm.get("mana", {}).get("flat", 0),
         cdm.get("mana", {}).get("perLevel", 0),
         level,
     )
-    total_mana = base_mana + total_item_stats["mana"]
+    total_mana = base_mana + pool_item_mana
     base_resource_regen_per_five = growth_stat(
         cdm.get("manaRegen", {}).get("flat", 0),
         cdm.get("manaRegen", {}).get("perLevel", 0),
@@ -421,7 +455,7 @@ def calculate_total_stats(
     )
     resource_regen_per_second = (
         base_resource_regen_per_five
-        * (1.0 + total_item_stats["mana_regen_percent"] / 100.0)
+        * (1.0 + pool_item_mana_regen_percent / 100.0)
         / 5.0
     )
     base_health_regen_per_five = growth_stat(
@@ -433,27 +467,54 @@ def calculate_total_stats(
         base_health_regen_per_five + total_item_stats["health_regen_flat"]
     ) * (1.0 + total_item_stats["health_regen_percent"] / 100.0)
     health_regen_per_second = health_regen_per_five / 5.0
+
+    # The page compiles once and is totalled twice, because the fold needs
+    # two of its answers at two different points.
+    page = compile_rune_page(rune_page)
+    item_stat_types = item_stat_type_count(total_item_stats)
+
+    # Movement speed is the first of those two points, and it is settled
+    # here: every source of it — items, item state, rune grants — is
+    # already known, and the soft caps are what the champion actually
+    # moves at. Swiftmarch converts that one number into adaptive force,
+    # and the fight's ``item_state_receipts`` read the same published
+    # ``move_speed``, so the item sees one movement speed rather than an
+    # uncapped pre-rune one here and the real one there. No rune's
+    # movement-speed grant reads the adaptive comparison, which is why
+    # this total can be taken before the conversions that decide it.
+    final_move_speed = apply_movement_speed_soft_caps(
+        (base_stats["move_speed"] + total_item_stats["move_speed_flat"])
+        * (
+            1.0
+            + (
+                total_item_stats["move_speed_percent"]
+                + input_move_speed_percent
+                + page.grants(
+                    level=level,
+                    is_melee=is_melee,
+                    bonus_attack_damage=total_item_stats["attack_damage"],
+                    ability_power=total_item_stats["ability_power"],
+                    item_stat_types=item_stat_types,
+                ).move_speed_percent
+            )
+            / 100.0
+        )
+    )
+
     # Every stat-granting item passive, compiled once. item_effects owns
     # the per-item knowledge; this function owns the application order.
     bonuses = resolve_stat_effects(
         items,
-        bonus_mana=total_item_stats["mana"],
+        bonus_mana=pool_item_mana,
         max_mana=total_mana,
         bonus_health=total_item_stats["health"],
         base_attack_damage=base_stats["attack_damage"],
         bonus_attack_damage=total_item_stats["attack_damage"],
-        bonus_mana_regen_percent=total_item_stats["mana_regen_percent"],
+        bonus_mana_regen_percent=pool_item_mana_regen_percent,
         is_melee=is_melee,
         level=level,
         item_options=item_options,
-        total_move_speed=(
-            base_stats["move_speed"] + total_item_stats["move_speed_flat"]
-        )
-        * (
-            1.0
-            + (total_item_stats["move_speed_percent"] + input_move_speed_percent)
-            / 100.0
-        ),
+        total_move_speed=final_move_speed,
         adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
@@ -475,23 +536,18 @@ def calculate_total_stats(
     # is added below where that stat belongs, because a rune's adaptive
     # force is not an item stat (Kai'Sa's evolutions exclude it) even though
     # it lands in the same total.
-    runes = (
-        rune_page_stat_grants(
-            rune_page,
-            level=level,
-            is_melee=is_melee,
-            bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
-            * quest_bonus_ad_multiplier,
-            ability_power=(
-                base_stats["ability_power"]
-                + total_item_stats["ability_power"]
-                + bonuses.bonus_ap
-            )
-            * (bonuses.ap_multiplier + quest_ap_multiplier),
-            item_stat_types=item_stat_type_count(total_item_stats),
+    runes = page.grants(
+        level=level,
+        is_melee=is_melee,
+        bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
+        * quest_bonus_ad_multiplier,
+        ability_power=(
+            base_stats["ability_power"]
+            + total_item_stats["ability_power"]
+            + bonuses.bonus_ap
         )
-        if rune_page is not None
-        else RuneStatGrants()
+        * (bonuses.ap_multiplier + quest_ap_multiplier),
+        item_stat_types=item_stat_types,
     )
 
     # Ability power: base + items + converted AP, then the additive %AP
@@ -525,8 +581,26 @@ def calculate_total_stats(
     lethality = total_item_stats["lethality"] + runes.lethality
     flat_armor_pen = lethality
 
+    effective_bonus_health = (
+        total_item_stats["health"] + bonuses.bonus_health
+    ) * bonuses.item_bonus_health_multiplier + runes.bonus_health
+
+    # A kit that denies itself a stat rewrites it here, where the build's
+    # bonus health is complete: every multiplier and rune grant has landed,
+    # which is the order the wiki states (anything raising the health first
+    # raises the converted attack damage with it).
+    conversion = champion_stat_conversion(champion_data)
+    converted_bonus_ad = 0.0
+    if conversion is not None:
+        converted_bonus_ad = effective_bonus_health * conversion.attack_damage_ratio
+        effective_bonus_health = 0.0
+    total_health = base_stats["health"] + effective_bonus_health
+
     raw_bonus_ad = (
-        total_item_stats["attack_damage"] + bonuses.bonus_ad + runes.bonus_attack_damage
+        total_item_stats["attack_damage"]
+        + bonuses.bonus_ad
+        + runes.bonus_attack_damage
+        + converted_bonus_ad
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
@@ -557,11 +631,6 @@ def calculate_total_stats(
     evolution_attack_speed_percent = (
         level_as_bonus + total_item_stats["attack_speed_percent"]
     )
-    effective_bonus_health = (
-        total_item_stats["health"] + bonuses.bonus_health
-    ) * bonuses.item_bonus_health_multiplier + runes.bonus_health
-    total_health = base_stats["health"] + effective_bonus_health
-
     # Terminus max-stack display assumption: bonus resists to both armor
     # and MR, percent pen to both armor and magic.
     final_armor = round(
@@ -579,19 +648,6 @@ def calculate_total_stats(
     final_magic_pen_percent = (
         total_item_stats["magic_penetration_percent"] + bonuses.bonus_pen_percent
     )
-    raw_move_speed = (
-        base_stats["move_speed"] + total_item_stats["move_speed_flat"]
-    ) * (
-        1
-        + (
-            total_item_stats["move_speed_percent"]
-            + bonuses.bonus_move_speed_percent
-            + runes.move_speed_percent
-        )
-        / 100.0
-    )
-    final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
-
     result = {
         "health": round(total_health),
         "attack_damage": round(total_ad),
@@ -634,7 +690,7 @@ def calculate_total_stats(
         ),
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
-        "bonus_mana": round(total_item_stats["mana"]),
+        "bonus_mana": round(pool_item_mana),
         "resource_regen_per_second": resource_regen_per_second,
         "base_health_regen_per_five": base_health_regen_per_five,
         "health_regen_per_five": health_regen_per_five,

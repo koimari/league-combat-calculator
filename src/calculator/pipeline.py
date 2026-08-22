@@ -42,6 +42,7 @@ from .item_behavior import (
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import derive_self_healing, self_heal_rule_owner
+from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
 from .support_effects import derive_self_state_effects
 from .auto_attack_policy import (
@@ -777,8 +778,21 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
     split of numbers already present, and computing them for a candidate
     nobody renders is work the optimizer pays per fight.
     """
+    # The champion is its own caster here, so its heal and shield power
+    # amplifies its self-heals — read through the one rule the survival
+    # walk reads, so the published scalar and the walk cannot disagree.
+    heal_power = heal_and_shield_power_factor(result.get("champion_stats"))
     result["self_healing"] = sum(
-        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
+        float(event.get("amount", 0.0))
+        * (
+            heal_power
+            if amplifies_recovery(
+                str(event.get("kind", "")),
+                str(event.get("healing_category", "")),
+            )
+            else 1.0
+        )
+        for event in result["self_healing_events"]
     )
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage

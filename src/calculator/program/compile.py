@@ -93,6 +93,7 @@ from ..survival.pricing import (
     DeclaredPacket,
     route_declared_packet,
 )
+from ..healing_reduction import amplifies_recovery
 from ..ledger_projection import LightRow
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
@@ -557,6 +558,9 @@ def action_from_event(
         ),
         baseline_effective_mr=(float(baseline_mr) if baseline_mr is not None else None),
         healing_category=str(get("healing_category", "")),
+        amplified_recovery=amplifies_recovery(
+            kind_str, str(get("healing_category", ""))
+        ),
         amount_formula=get("amount_formula"),
         requires_existing_shield=bool(get("requires_existing_shield")),
         cast_while_disabled=bool(get("cast_while_disabled")),
@@ -1384,6 +1388,10 @@ class WalkCompiler:
                     amount=amount,
                     amount_formula=event.get("amount_formula"),
                     healing_category=str(event.get("healing_category", "")),
+                    amplified_recovery=amplifies_recovery(
+                        str(event.get("kind", "")),
+                        str(event.get("healing_category", "")),
+                    ),
                     temporary_health_duration=(
                         max(
                             0.0,
@@ -1504,6 +1512,10 @@ class WalkCompiler:
                     aidx=aidx,
                     amount=max(0.0, float(template.get("amount", 0.0))),
                     healing_category=str(template.get("healing_category", "")),
+                    amplified_recovery=amplifies_recovery(
+                        str(template.get("kind", "")),
+                        str(template.get("healing_category", "")),
+                    ),
                     source_key=str(template.get("source_key", "")),
                     source=str(template.get("source", "")),
                     event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
@@ -2120,6 +2132,7 @@ class _StagedPayload(NamedTuple):
     healing_category: str = ""
     amount_formula: Any = None
     duration: float = 0.0
+    amplified_recovery: bool = True
 
 
 def _stage_damage(payload: ev.Damage) -> _StagedPayload:
@@ -2138,6 +2151,7 @@ def _stage_recovery(payload: ev.Recovery) -> _StagedPayload:
         max(0.0, float(payload.amount)),
         healing_category=str(payload.healing_category),
         amount_formula=payload.amount_formula,
+        amplified_recovery=bool(payload.amplified),
     )
 
 
@@ -2257,6 +2271,7 @@ def compile_program(
                 raw_formula=staged.raw_formula,
                 raw_damage=staged.raw_damage,
                 healing_category=staged.healing_category,
+                amplified_recovery=staged.amplified_recovery,
                 amount_formula=staged.amount_formula,
                 duration=staged.duration,
                 event_slot=EVENT_SLOTS.slot(text),
