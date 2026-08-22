@@ -862,6 +862,45 @@ def test_kernel_cancels_redirect_when_holder_falls_below_health_gate():
     assert result["holder"]["health_damage"] == pytest.approx(90.0)
 
 
+def test_a_cancelled_redirect_publishes_the_packet_the_walk_applied():
+    """The parent's PUBLISHED row is the one the walk restored onto.
+
+    Same gate-cancelled fight, driven with the outgoing receipt ledger the
+    receipt caller supplies: the Worthy meets the whole 40, so the public
+    parent packet must read 40 with its split retracted, not the 86% direct
+    share the split staged before the gate cancelled it."""
+    source = _combatant("source", "enemy")
+    protected = _combatant("protected", "main")
+    holder = _combatant("holder", "main")
+    holder_hit = {
+        "time": 0.0,
+        "damage": 90.0,
+        "damage_type": "true",
+        "attacker": "source",
+        "target": "holder",
+        "sequence": 0,
+        "_event_id": "holder-hit",
+    }
+    parent = _kv_redirect_event("kv-gated", 1.0, 40.0)
+    outgoing = {"source": [holder_hit, parent]}
+    result = simulate_survival(
+        [source, protected, holder],
+        {"holder": [holder_hit], "protected": [parent]},
+        {},
+        {},
+        10.0,
+        receipt_events=outgoing,
+    )
+    assert result["protected"]["health_damage"] == pytest.approx(40.0)
+    published = next(
+        row for row in outgoing["source"] if row["_event_id"] == "kv-gated"
+    )
+    assert published["damage"] == pytest.approx(40.0)
+    assert published["_redirected_amount"] == pytest.approx(0.0)
+    assert published["_redirect_fraction"] == pytest.approx(0.0)
+    assert published["redirect_skipped_reason"] == "holder_health_gate"
+
+
 def test_kernel_skips_the_holder_heal_below_the_health_gate():
     """The heal packet carries requires_holder_health_ratio 0.30; the walk
     skips it (reason "holder_health_gate") while the holder is at/below
@@ -1145,13 +1184,16 @@ def test_score_path_agrees_with_receipt_on_every_observable():
 
 def test_compiled_panels_carry_the_knights_vow_fight():
     ctx = CoupledSearchContext()
+    receipt = _coupled_fight()
     legacy = _coupled_fight(include_receipt=False)
     fast = _coupled_fight(include_receipt=False, search_context=ctx)
-    # Survival rows and every breakdown field except the CC-blocked
-    # attacker's total_damage are byte-equal (the receipt/legacy totals
-    # are the outgoing event ledger sum; the compiled total is the
-    # applied-based sum — the documented delta is the CC-blocked parents'
-    # event values, pinned in the parity test above).
+    # Survival rows and every breakdown field except the redirect
+    # attacker's total_damage are byte-equal.  Both totals are
+    # applied-based: the outgoing ledger publishes the packet the walk
+    # applied, so a skipped parent contributes nothing on either lane.
+    # The one delta left is the redirected children — the compiled lane
+    # counts them applied, and the score lane has no receipt ledger to
+    # mirror them into.
     assert fast["participants"] == legacy["participants"]
     assert fast["duration"] == legacy["duration"]
     for fast_row, legacy_row in zip(fast["breakdown"], legacy["breakdown"]):
@@ -1162,7 +1204,16 @@ def test_compiled_panels_carry_the_knights_vow_fight():
         assert fast_row["death_time"] == legacy_row["death_time"]
         assert fast_row["survived_window"] == legacy_row["survived_window"]
         if fast_row["participant_id"] == "enemy:Janna":
-            assert fast_row["total_damage"] < legacy_row["total_damage"]
+            clones = [
+                event.get("damage", 0.0)
+                for event in receipt["events"]
+                if event.get("redirected_from")
+                and event.get("attacker") == fast_row["participant_id"]
+            ]
+            assert clones
+            assert fast_row["total_damage"] == pytest.approx(
+                legacy_row["total_damage"] + sum(clones), abs=0.15
+            )
         else:
             assert fast_row["total_damage"] == legacy_row["total_damage"]
     assert ctx.uncompilable is False
@@ -1638,9 +1689,17 @@ def test_the_cancelled_gate_restores_the_direct_share_in_both_lanes():
         if event.get("skipped_reason") == "holder_health_gate"
     ]
     assert cancelled, "the fixture must drive the holder under the gate"
+    parents = {str(event["event_id"]): event for event in receipt["events"]}
     for event in cancelled:
         assert event.get("redirected_from") == "main"
         assert float(event.get("damage") or 0.0) == 0.0
+        # The parent's published row is the walk's own: a retracted split,
+        # named, and no share still standing against a redirect that never
+        # happened.
+        parent = parents[str(event["trigger_event_id"])]
+        assert parent["redirect_skipped_reason"] == "holder_health_gate"
+        assert parent["redirected_amount"] == pytest.approx(0.0)
+        assert parent["redirect_fraction"] == pytest.approx(0.0)
     context = CoupledSearchContext()
     compiled = _declared_source_fight(
         (ITEM_NAME,), include_receipt=False, search_context=context

@@ -3294,18 +3294,21 @@ def _simulate_survival(
                 # The source packet's outgoing receipt represents the direct
                 # share; the redirected clone carries the other share.  This
                 # keeps public event damage additive without double counting.
-                original["damage"] = direct_amount
-                original["_redirect_original_damage"] = original_amount
-                original["_redirected_amount"] = redirected_amount
-                original["_redirect_fraction"] = redirect_fraction
-                event = {
-                    **event,
-                    "target": target_id,
-                    "damage": direct_amount,
-                    "_redirect_original_damage": original_amount,
-                    "_redirected_amount": redirected_amount,
-                    "_redirect_fraction": redirect_fraction,
-                }
+                #
+                # Written onto the packet the walk goes on to apply, which is
+                # the same object the outgoing receipt publishes.  A second
+                # dict carrying the same split would have to be kept in step
+                # with every later write, and the walk's own restore is the
+                # one that never was: the holder-health gate puts the whole
+                # packet back on the Worthy, and a copy the publisher does
+                # not hold went on showing the retracted direct share.
+                event.update(
+                    target=target_id,
+                    damage=direct_amount,
+                    _redirect_original_damage=original_amount,
+                    _redirected_amount=redirected_amount,
+                    _redirect_fraction=redirect_fraction,
+                )
 
             # A declared deferral receives post-mitigation physical and magic
             # packets.  Apply its rider here, before the shared split logic,
