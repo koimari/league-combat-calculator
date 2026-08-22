@@ -1330,6 +1330,83 @@ class OnHitProc(NamedTuple):
     mitigated: float
 
 
+@dataclass(slots=True)
+class DecayingTarget:
+    """The target's health as an ordered walk of the fight reads it.
+
+    Every current-health formula prices against a health that falls as the
+    fight runs, and this engine has TWO readings of "what has landed before
+    this instant" that disagree.  A per-auto walk decays by INDEX: each auto
+    subtracts its own swing plus the averaged per-hit share of the other
+    on-hit effects, and a proc prices against the health left before its own
+    auto settles.  :meth:`ledger_health` decays by TIMESTAMP: it sums the
+    authored packets the shared ledger stamped strictly before the instant,
+    so a packet stamped AT that instant, and every untimed row, is outside
+    it.  The two answers are kept exactly as they are — the readings differ
+    because the walks price different things, and unifying them here would
+    move numbers rather than share code.
+    """
+
+    max_health: float
+    current_health: float
+
+    @classmethod
+    def at_full(cls, max_health: float) -> "DecayingTarget":
+        """A target the walk has not hit yet."""
+        return cls(max_health, max_health)
+
+    def inputs(
+        self, base_inputs: item_effects.DamageInputs
+    ) -> item_effects.DamageInputs:
+        """The pricing inputs a proc landing right now reads."""
+        return item_effects.DamageInputs(
+            champion_stats=base_inputs.champion_stats,
+            level=base_inputs.level,
+            is_melee=base_inputs.is_melee,
+            target_max_health=self.max_health,
+            target_current_health=self.current_health,
+        )
+
+    def take_proc(self, mitigated: float) -> None:
+        """A proc lands: the next proc on this same auto prices below it."""
+        self.current_health -= mitigated
+
+    def settle_auto(self, mitigated: float) -> None:
+        """The auto and its siblings land and the walk settles at zero."""
+        self.current_health -= mitigated
+        if self.current_health < 0:
+            self.current_health = 0
+
+    @staticmethod
+    def ledger_health(state: "FightState", timestamp: float) -> float:
+        """Target HP before the packets authored AT ``timestamp``.
+
+        Current-health item formulas that hold a real swing time read the
+        shared event ledger rather than the fight aggregate.  Untimed rows are
+        deliberately ignored: they cannot justify a fabricated HP transition
+        and remain an explicit coverage gap.
+        """
+        dealt = 0.0
+        for row in state.breakdown.values():
+            if not isinstance(row, (dict, Mapping)):
+                continue
+            events = row.get("damage_events")
+            if not isinstance(events, list):
+                continue
+            for event in events:
+                if not isinstance(event, (dict, Mapping)):
+                    continue
+                event_time = _finite_numeric_receipt(event.get("time"))
+                damage = _finite_numeric_receipt(event.get("damage"))
+                if (
+                    event_time is not None
+                    and damage is not None
+                    and event_time < timestamp - 1e-9
+                ):
+                    dealt += max(0.0, damage)
+        return max(0.0, float(state.target_health) - dealt)
+
+
 def _simulate_stacking_on_hit_damage(
     effect: item_effects.StackingOnHitEffect,
     base_inputs: item_effects.DamageInputs,
@@ -1374,20 +1451,14 @@ def _simulate_stacking_on_hit_damage(
     # Convert proc list to a counter: how many procs fire on each auto
     proc_counts: dict[int, int] = Counter(proc_autos)
 
-    current_hp = target_health
+    target = DecayingTarget.at_full(target_health)
     proc_damages: list[StackingProc] = []
 
     for i in range(num_auto_attacks):
         procs_this_auto = proc_counts.get(i, 0)
 
         for _ in range(procs_this_auto):
-            inputs = item_effects.DamageInputs(
-                champion_stats=base_inputs.champion_stats,
-                level=base_inputs.level,
-                is_melee=base_inputs.is_melee,
-                target_max_health=target_health,
-                target_current_health=current_hp,
-            )
+            inputs = target.inputs(base_inputs)
             raw_damage = effect.source.raw_damage(inputs) * effectiveness
             mitigated = _mitigate(
                 raw_damage,
@@ -1400,12 +1471,10 @@ def _simulate_stacking_on_hit_damage(
                 mitigated *= target_basic_damage_multiplier
                 basic_share = target_basic_damage_multiplier
             proc_damages.append(StackingProc(raw_damage * basic_share, mitigated))
-            current_hp -= mitigated
+            target.take_proc(mitigated)
 
         # Reduce HP from auto attack + other on-hit damage
-        current_hp -= auto_damage_per_hit + other_on_hit_per_hit
-        if current_hp < 0:
-            current_hp = 0
+        target.settle_auto(auto_damage_per_hit + other_on_hit_per_hit)
 
     return proc_damages
 
@@ -1469,18 +1538,17 @@ def _simulate_cooldown_current_health_procs(
     dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
     proc_set = set(proc_autos)
 
-    current_hp = target_health
+    target = DecayingTarget.at_full(target_health)
     proc_damages: list[float] = []
     for i in range(num_auto_attacks):
         if i in proc_set:
-            raw_damage = max(pct * current_hp, min_damage) * effectiveness
+            raw_damage = max(pct * target.current_health, min_damage) * effectiveness
             mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
             proc_damages.append(mitigated)
-            current_hp -= mitigated
+            target.take_proc(mitigated)
 
         # Reduce HP from auto attack + other on-hit damage
-        current_hp -= auto_damage_per_hit + other_on_hit_per_hit
-        current_hp = max(current_hp, 0.0)
+        target.settle_auto(auto_damage_per_hit + other_on_hit_per_hit)
 
     return proc_damages
 
@@ -1532,7 +1600,7 @@ def _simulate_current_health_on_hit(
     if phantom_hit_autos is None:
         phantom_hit_autos = set()
 
-    current_hp = target_health
+    target = DecayingTarget.at_full(target_health)
     total_damage = 0.0
     total_hits = 0
     hit_damages: list[OnHitProc] = []
@@ -1547,13 +1615,7 @@ def _simulate_current_health_on_hit(
             procs_this_auto += 1
 
         for _ in range(procs_this_auto):
-            inputs = item_effects.DamageInputs(
-                champion_stats=base_inputs.champion_stats,
-                level=base_inputs.level,
-                is_melee=base_inputs.is_melee,
-                target_max_health=target_health,
-                target_current_health=current_hp,
-            )
+            inputs = target.inputs(base_inputs)
             raw_damage = effect.source.raw_damage(inputs) * effectiveness
             mitigated = _mitigate(
                 raw_damage,
@@ -1565,7 +1627,7 @@ def _simulate_current_health_on_hit(
             total_hits += 1
             hit_damages.append(OnHitProc(raw_damage, mitigated))
 
-            current_hp -= mitigated
+            target.take_proc(mitigated)
 
         # Also reduce HP by auto attack damage and other on-hit damage
         # (other on-hit phantom procs are accounted for in other_on_hit_per_hit
@@ -1579,9 +1641,7 @@ def _simulate_current_health_on_hit(
         # added to the breakdown exactly once by _add_single_proc_on_hits.
         if i < len(first_auto_damage_by_auto):
             on_hit_this_auto += max(0.0, float(first_auto_damage_by_auto[i]))
-        current_hp -= auto_damage_per_hit + on_hit_this_auto
-        if current_hp < 0:
-            current_hp = 0
+        target.settle_auto(auto_damage_per_hit + on_hit_this_auto)
 
     return total_damage, total_hits, hit_damages
 
@@ -4812,7 +4872,9 @@ def _return_denied_burst_budget(
     if delta <= 0:
         return
     base_index = len(auto_restore_rows)
-    for offset in range(delta):
+    for offset, swing_time in enumerate(
+        _swings_at_rate(delta, normal_rate, ordinary_total / normal_rate)
+    ):
         row_index = len(auto_restore_rows)
         auto_restore_rows.append(
             {
@@ -4821,17 +4883,7 @@ def _return_denied_burst_budget(
                 "burst_seconds": 0.0,
             }
         )
-        timeline.append(
-            (
-                ordinary_total / normal_rate + offset / normal_rate,
-                0,
-                -4,
-                row_index,
-                "auto_restore",
-                "",
-                0.0,
-            )
-        )
+        timeline.append((swing_time, 0, -4, row_index, "auto_restore", "", 0.0))
 
 
 def _auto_restore_decl(
@@ -4973,7 +5025,7 @@ def _auto_restore_schedule(
         return (), swing_events
     leftover = max(0.0, state.fight_duration_seconds - burst_seconds)
     ordinary = math.floor(normal_rate * leftover)
-    return tuple(index / normal_rate for index in range(ordinary)), swing_events
+    return tuple(_swings_at_rate(ordinary, normal_rate)), swing_events
 
 
 def _kill_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -7583,6 +7635,11 @@ def _weave_around_bursts(
     return times
 
 
+def _swings_at_rate(count: int, rate: float, start: float = 0.0) -> list[float]:
+    """The one index/rate swing sequence: ``count`` swings from ``start``."""
+    return [start + index / rate for index in range(count)]
+
+
 def _base_auto_attack_timestamps(state: FightState) -> list[float]:
     """Return the per-swing schedule the auto count is derived from.
 
@@ -7609,7 +7666,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
             burst.times
             + tuple(
                 _weave_around_bursts(
-                    [index / normal_rate for index in range(ordinary)],
+                    _swings_at_rate(ordinary, normal_rate),
                     burst.blocks,
                 )
             )
@@ -7627,19 +7684,19 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
         base_rate = state.q_window_base_rate * state.auto_attack_uptime
         times = []
         if base_rate > 0.0:
-            times.extend(index / base_rate for index in range(state.q_window_pre_autos))
+            times.extend(_swings_at_rate(state.q_window_pre_autos, base_rate))
         if buffed_rate > 0.0:
             times.extend(
-                state.q_window_start + index / buffed_rate
-                for index in range(state.q_window_autos)
+                _swings_at_rate(state.q_window_autos, buffed_rate, state.q_window_start)
             )
         if base_rate > 0.0:
             times.extend(
-                state.q_window_end + index / base_rate
-                for index in range(
+                _swings_at_rate(
                     state.num_auto_attacks
                     - state.q_window_pre_autos
-                    - state.q_window_autos
+                    - state.q_window_autos,
+                    base_rate,
+                    state.q_window_end,
                 )
             )
         return times
@@ -7666,9 +7723,9 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
                 # the priced fact, so the schedule follows the model that
                 # produced it rather than being dropped — an eventless
                 # fallback kept every swing-riding row coarse.
-                times = [index / normal_rate for index in range(state.num_auto_attacks)]
+                times = _swings_at_rate(state.num_auto_attacks, normal_rate)
         else:
-            times = [index / normal_rate for index in range(state.num_auto_attacks)]
+            times = _swings_at_rate(state.num_auto_attacks, normal_rate)
         return times
 
     buffed_rate = (
@@ -7676,14 +7733,32 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
         + state.attack_speed_ratio * buff.bonus_attack_speed_percent / 100.0
     ) * state.auto_attack_uptime
     if buffed_rate <= 0:
-        return [index / normal_rate for index in range(state.num_auto_attacks)]
-    times = [index / buffed_rate for index in range(empowered)]
-    normal_start = empowered / buffed_rate
+        return _swings_at_rate(state.num_auto_attacks, normal_rate)
+    times = _swings_at_rate(empowered, buffed_rate)
     times.extend(
-        normal_start + index / normal_rate
-        for index in range(state.num_auto_attacks - empowered)
+        _swings_at_rate(
+            state.num_auto_attacks - empowered, normal_rate, empowered / buffed_rate
+        )
     )
     return times
+
+
+def _install_swing_count(state: FightState, count: int) -> None:
+    """Install a keystone's authored auto count and re-price what reads it.
+
+    Terminus and Black Cleaver are priced from that count, and the ability
+    rotation consumes the resistance object next, so both keystone schedules
+    re-resolve here rather than after the rotation has read stale averages.
+    """
+    state.num_auto_attacks = count
+    if state.damage_effects.stacking_pen is not None:
+        state.resists.terminus_avg_pen = state.damage_effects.stacking_pen.average_pen(
+            count
+        )
+    if state.item_armor_shred is not None:
+        state.resists.bc_reduction = state.item_armor_shred.average_reduction(count)
+    state.resists.resolve_magic()
+    state.resists.resolve_armor()
 
 
 def _hail_attack_schedule(
@@ -7762,21 +7837,7 @@ def _prepare_hail_attack_schedule(state: FightState) -> None:
     state.hail_attack_times = tuple(times)
     state.hail_active_attack_indices = tuple(active_indexes)
     state.hail_activation_times = tuple(activation_times)
-    state.num_auto_attacks = len(times)
-
-    # Terminus and Black Cleaver are priced from the authored auto count.
-    # Re-resolve their auto variants after Hail changes that count, before
-    # the ability rotation consumes the resistance object.
-    if state.damage_effects.stacking_pen is not None:
-        state.resists.terminus_avg_pen = state.damage_effects.stacking_pen.average_pen(
-            state.num_auto_attacks
-        )
-    if state.item_armor_shred is not None:
-        state.resists.bc_reduction = state.item_armor_shred.average_reduction(
-            state.num_auto_attacks
-        )
-    state.resists.resolve_magic()
-    state.resists.resolve_armor()
+    _install_swing_count(state, len(times))
 
 
 def _lethal_tempo_stacks_at(
@@ -7809,16 +7870,10 @@ def _lethal_tempo_attack_schedule(
     ):
         return [], [], [], []
 
-    if attack_times is not None:
-        times = sorted(float(time) for time in attack_times)
-        generated = False
-    else:
-        times = []
-        current = 0.0
-        generated = True
-        while current < state.fight_duration_seconds - 1e-12:
-            times.append(current)
-            current += 1.0 / base_rate
+    # A schedule this walk generates is laid down below, at the rate each
+    # attack's own stack count sets; only a caller's schedule is read here.
+    generated = attack_times is None
+    times = [] if generated else sorted(float(time) for time in attack_times or ())
 
     bolt_indexes: list[int] = []
     stack_counts: list[int] = []
@@ -7827,7 +7882,6 @@ def _lethal_tempo_attack_schedule(
     last_attack: float | None = None
 
     if generated:
-        times = []
         current = 0.0
         while current < state.fight_duration_seconds - 1e-12:
             current_stacks = _lethal_tempo_stacks_at(
@@ -7881,18 +7935,7 @@ def _prepare_lethal_tempo_attack_schedule(state: FightState) -> None:
     state.lethal_bolt_attack_indices = tuple(bolt_indexes)
     state.lethal_stack_counts = tuple(stack_counts)
     state.lethal_activation_times = tuple(activation_times)
-    state.num_auto_attacks = len(times)
-
-    if state.damage_effects.stacking_pen is not None:
-        state.resists.terminus_avg_pen = state.damage_effects.stacking_pen.average_pen(
-            state.num_auto_attacks
-        )
-    if state.item_armor_shred is not None:
-        state.resists.bc_reduction = state.item_armor_shred.average_reduction(
-            state.num_auto_attacks
-        )
-    state.resists.resolve_magic()
-    state.resists.resolve_armor()
+    _install_swing_count(state, len(times))
 
 
 def _auto_attack_timestamps(state: FightState) -> list[float]:
@@ -8724,7 +8767,7 @@ def _uniform_swing_schedule(state: "FightState", num_auto_attacks: int) -> list[
     autos_per_second = state.attack_speed * state.auto_attack_uptime
     if autos_per_second <= 0:
         return []
-    return [index / autos_per_second for index in range(num_auto_attacks)]
+    return _swings_at_rate(num_auto_attacks, autos_per_second)
 
 
 # pylint: disable-next=too-many-arguments,too-many-positional-arguments,too-many-locals
@@ -14775,34 +14818,6 @@ def _author_energized_ability_proc(
     return True
 
 
-def _target_health_before_timestamp(state: FightState, timestamp: float) -> float:
-    """Return target HP before authored packets at ``timestamp``.
-
-    Current-health item formulas read the shared event ledger rather than the
-    fight aggregate.  Untimed rows are deliberately ignored: they cannot
-    justify a fabricated HP transition and remain an explicit coverage gap.
-    """
-    dealt = 0.0
-    for row in state.breakdown.values():
-        if not isinstance(row, (dict, Mapping)):
-            continue
-        events = row.get("damage_events")
-        if not isinstance(events, list):
-            continue
-        for event in events:
-            if not isinstance(event, (dict, Mapping)):
-                continue
-            event_time = _finite_numeric_receipt(event.get("time"))
-            damage = _finite_numeric_receipt(event.get("damage"))
-            if (
-                event_time is not None
-                and damage is not None
-                and event_time < timestamp - 1e-9
-            ):
-                dealt += max(0.0, damage)
-    return max(0.0, float(state.target_health) - dealt)
-
-
 def _first_auto_damage_by_auto_for_health_walk(
     state: FightState,
     rotation: RotationResult,
@@ -14859,7 +14874,7 @@ def _first_auto_damage_by_auto_for_health_walk(
             if proc_index >= num_auto_attacks:
                 continue
             if proc_index < len(swing_times):
-                target_current_health = _target_health_before_timestamp(
+                target_current_health = DecayingTarget.ledger_health(
                     state, float(swing_times[proc_index])
                 )
             else:
@@ -15160,7 +15175,7 @@ def _add_copied_stacking_on_hit_packets(
                 )
                 target_current_health = max(
                     0.0,
-                    _target_health_before_timestamp(state, swing_time)
+                    DecayingTarget.ledger_health(state, swing_time)
                     - prior_copied_damage,
                 )
                 raw = (
@@ -15313,7 +15328,7 @@ def _add_single_proc_on_hits(
                                     state,
                                     on_hits,
                                     effectiveness,
-                                    _target_health_before_timestamp(state, event_time),
+                                    DecayingTarget.ledger_health(state, event_time),
                                 ),
                             }
                         )
@@ -15517,7 +15532,7 @@ def _add_single_proc_on_hits(
             for proc_time in proc_times:
                 proc_inputs = _damage_inputs(
                     state,
-                    target_current_health=_target_health_before_timestamp(
+                    target_current_health=DecayingTarget.ledger_health(
                         state, proc_time
                     ),
                 )
@@ -15621,7 +15636,7 @@ def _add_single_proc_on_hits(
                                 state,
                                 on_hits,
                                 effectiveness,
-                                _target_health_before_timestamp(state, proc_time),
+                                DecayingTarget.ledger_health(state, proc_time),
                             ),
                         }
                     )
