@@ -19107,7 +19107,7 @@
           "cast_time": 0.75,
           "cooldown": 22.0,
           "damage_type": "physical",
-          "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed, published as a move_speed_percent stat buff \u2014 a term in the shared movement-speed fold.  The untargetability and the Packmate vanish/reappear are state.",
+          "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed, which stays a sourced-but-unmodeled rider \u2014 see ASSUMPTIONS.  The untargetability and the Packmate vanish/reappear are state.",
           "name": "The Call of the Pack",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -19116,8 +19116,7 @@
           "resource_cost": 60.0,
           "resource_type": "MANA",
           "stat_buff": {
-            "bonus_attack_damage": 14.6,
-            "move_speed_percent": 25.0
+            "bonus_attack_damage": 14.6
           },
           "total_raw": 0.0
         },
@@ -25629,16 +25628,13 @@
           "cast_time": 0.25,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Shield only, priced by the ally-support scanner. The cast's own 20% (+ 2% per 100 AP) grant (20% at this build) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold; its 2.5s decay, its 2-stack rule and the ally half of the grant are state.",
+          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
           "name": "Surround Sound",
           "parts": [],
           "rank": 3,
           "resource_cost": 80.0,
           "resource_type": "MANA",
           "skillshot": true,
-          "stat_buff": {
-            "move_speed_percent": 20.0
-          },
           "total_raw": 0.0
         },
         "passive": {
@@ -26656,7 +26652,7 @@
             "ability_power": 55.0,
             "armor": 55.0,
             "magic_resistance": 55.0,
-            "move_speed_flat": 55.0
+            "move_speed": 55.0
           },
           "total_raw": 0.0
         },
@@ -27142,26 +27138,30 @@
           "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "On the Hunt grants 25% bonus movement speed for 10s, published as a move_speed_percent stat buff at the fight-start boundary every stat_buff has. The ally share and the 0.5s basic-ability cooldown refund stay unmodeled.",
           "name": "On the Hunt",
           "parts": [],
           "rank": 2,
           "resource_cost": 100.0,
           "resource_type": "MANA",
+          "stat_buff": {
+            "move_speed_percent": 25.0
+          },
           "total_raw": 0.0
         },
         "W": {
           "cooldown": 12.0,
           "damage_type": "physical",
+          "detail": "1 bounce(s) of the cached Bounce Damage row (45% AD = 36.9) \u2014 one per empowered basic attack in the sourced 4s window, each critting with the swing that triggered it (Bounce Critical Damage is exactly 2x the Bounce Damage row). W's own 20-40% bonus attack speed is not modeled, so the swing count is a floor.",
           "name": "Ricochet",
           "parts": [
-            "DamagePart(physical, amount=24.599999999999998, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=36.9, count=1, hp_scaled=no, crit_effectiveness=1.0)"
           ],
           "rank": 3,
           "resource_cost": 60.0,
           "resource_type": "MANA",
           "skillshot": true,
-          "total_raw": 24.6
+          "total_raw": 36.9
         },
         "passive": {
           "cc_reviewed": true,
@@ -31177,15 +31177,12 @@
           ],
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The stance's own grant (25% at this build) is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold; the decayed row and the Awaken recast's per-level bonus are not published.",
+          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The percent movement grants are not yet wired onto the shared move-speed fold (the named percent-movement boundary).",
           "name": "Blazing Stampede",
           "parts": [],
           "rank": 1,
           "resource_cost": 28.82,
           "resource_type": "MANA",
-          "stat_buff": {
-            "move_speed_percent": 25.0
-          },
           "total_raw": 0.0
         },
         "Q": {
@@ -52847,18 +52844,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59949,
-      "numeric_leaves": 46175,
+      "leaves": 59948,
+      "numeric_leaves": 46173,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "f8971b4f83352bd29c58e852a2436f1a326a0586",
+    "git_head": "c6fce5032e97c2187a3907d9d1649ecc7164d800",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "5f97a41b7d7d77ab910b3c8932c81ad40e23de4c"
+    "src_tree_sha": "c8d8de0b38767ad3eb29da391436502ec4fdcbd3"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -75924,41 +75921,41 @@
             "E": 0.0,
             "Q": 566.93,
             "R": 0.0,
-            "W": 16.4,
+            "W": 24.6,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 738.69
+          "total_damage": 746.89
         },
         "no_items": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 213.33,
             "R": 0.0,
-            "W": 16.4,
+            "W": 24.6,
             "auto_attacks": 0.0
           },
-          "total_damage": 229.73
+          "total_damage": 237.93
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 358.0,
             "R": 0.0,
-            "W": 47.4,
+            "W": 117.31,
             "auto_attacks": 0.0
           },
-          "total_damage": 405.4
+          "total_damage": 475.31
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 316.93,
             "R": 0.0,
-            "W": 38.6,
+            "W": 76.72,
             "auto_attacks": 0.0
           },
-          "total_damage": 355.53
+          "total_damage": 393.65
         },
         "sustained": {
           "magic_build": {
@@ -75966,43 +75963,43 @@
               "E": 0.0,
               "Q": 566.93,
               "R": 0.0,
-              "W": 16.4,
+              "W": 49.2,
               "auto_attacks": 164.0,
               "proc_Luden's Echo": 155.36
             },
-            "total_damage": 902.69
+            "total_damage": 935.49
           },
           "no_items": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 213.33,
               "R": 0.0,
-              "W": 16.4,
+              "W": 49.2,
               "auto_attacks": 164.0
             },
-            "total_damage": 393.73
+            "total_damage": 426.53
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 358.0,
               "R": 0.0,
-              "W": 47.4,
+              "W": 351.94,
               "auto_attacks": 1042.8,
               "on_hit_Kraken Slayer": 105.21
             },
-            "total_damage": 1553.41
+            "total_damage": 1857.95
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 316.93,
               "R": 0.0,
-              "W": 38.6,
+              "W": 306.87,
               "auto_attacks": 852.42,
               "spellblade_Trinity Force": 218.67
             },
-            "total_damage": 1426.62
+            "total_damage": 1694.89
           }
         }
       },
@@ -76012,41 +76009,41 @@
             "E": 0.0,
             "Q": 566.93,
             "R": 0.0,
-            "W": 27.2,
+            "W": 34.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 749.49
+          "total_damage": 756.29
         },
         "no_items": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 213.33,
             "R": 0.0,
-            "W": 27.2,
+            "W": 34.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 240.53
+          "total_damage": 247.33
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 358.0,
             "R": 0.0,
-            "W": 68.8,
+            "W": 141.9,
             "auto_attacks": 0.0
           },
-          "total_damage": 426.8
+          "total_damage": 499.9
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 0.0,
             "Q": 316.93,
             "R": 0.0,
-            "W": 57.07,
+            "W": 94.52,
             "auto_attacks": 0.0
           },
-          "total_damage": 374.0
+          "total_damage": 411.45
         },
         "sustained": {
           "magic_build": {
@@ -76054,43 +76051,43 @@
               "E": 0.0,
               "Q": 566.93,
               "R": 0.0,
-              "W": 27.2,
+              "W": 102.0,
               "auto_attacks": 204.0,
               "proc_Luden's Echo": 155.36
             },
-            "total_damage": 953.49
+            "total_damage": 1028.29
           },
           "no_items": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 213.33,
               "R": 0.0,
-              "W": 27.2,
+              "W": 102.0,
               "auto_attacks": 204.0
             },
-            "total_damage": 444.53
+            "total_damage": 519.33
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 358.0,
               "R": 0.0,
-              "W": 68.8,
+              "W": 567.6,
               "auto_attacks": 1419.0,
               "on_hit_Kraken Slayer": 129.37
             },
-            "total_damage": 1975.17
+            "total_damage": 2473.97
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 0.0,
               "Q": 316.93,
               "R": 0.0,
-              "W": 57.07,
+              "W": 378.07,
               "auto_attacks": 945.17,
               "spellblade_Trinity Force": 272.0
             },
-            "total_damage": 1591.17
+            "total_damage": 1912.17
           }
         }
       }
