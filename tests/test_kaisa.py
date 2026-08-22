@@ -18,7 +18,7 @@ from src.calculator.champions import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.optimizer import _evaluate_build
 from src.calculator.pipeline import DEFAULT_AUTO_ATTACK_UPTIME, FightParams, run_fight
-from tests import cc_review
+from tests import cc_review, row_review
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -359,6 +359,90 @@ def test_timed_plasma_seeded_stacks_rupture_sooner():
         seeded["breakdown"]["passive_plasma"]["total_damage"]
         > unseeded["breakdown"]["passive_plasma"]["total_damage"]
     )
+
+
+_MAGIC_BUILD = ["Luden's Echo", "Shadowflame", "Rabadon's Deathcap"]
+
+
+def _seeded_plasma_row(stacks):
+    """The one-rotation Plasma row on the AP build at one seeded stack count."""
+    payload = calculate_payload(
+        {
+            "champion": "Kai'Sa",
+            "level": 18,
+            "items": _MAGIC_BUILD,
+            "fight_mode": "one_rotation",
+            "deterministic": True,
+            "champion_options": {"plasma_starting_stacks": stacks},
+        }
+    )
+    return payload["breakdown"]["passive_plasma"]["total_damage"]
+
+
+class TestSeededPlasmaIsNotMonotonic:
+    """CF22: seeding more Plasma is not the same question as more damage.
+
+    The priced row peaks at 2 seeded stacks and falls at 4. The walk is
+    right and the kit is what is non-monotonic, so these tests pin the
+    mechanism rather than the shape: a later change that quietly sorts the
+    row into an increasing one has broken one of the two causes below.
+    """
+
+    def test_the_row_peaks_at_two_seeded_stacks(self):
+        assert [_seeded_plasma_row(stacks) for stacks in (0, 2, 4)] == [
+            pytest.approx(169.1),
+            pytest.approx(347.7),
+            pytest.approx(268.7),
+        ]
+
+    def test_cause_one_is_the_flat_ramp_resetting_under_the_fifth_stack(self):
+        """Seeding 4 spends the top of the ladder once, then restarts at 0.
+
+        Each application prices ``base + per_prior_stack x stacks-before``,
+        so three applications seeded at 2 climb 2 -> 3 -> 4, while three
+        seeded at 4 fire the fifth stack immediately and then restart from
+        0 -> 1. The second sequence is strictly the cheaper one.
+        """
+        flats = {}
+        for stacks in (2, 4):
+            parts = row_review.entry(
+                "Kai'Sa", "W", plasma_starting_stacks=stacks, w_evolved="evolved"
+            )["post_hit_proc"]["parts"]
+            flats[stacks] = [
+                part.amount for part in parts if part.hp_scaled_damage is None
+            ]
+        # AP 200: base 54, +14 per prior stack.
+        assert flats[2] == [82.0, 96.0, 110.0]
+        assert flats[4] == [110.0, 54.0, 68.0]
+        assert sum(flats[4]) < sum(flats[2])
+
+    def test_cause_two_is_the_rupture_pricing_missing_health_too_early(self):
+        """The earlier rupture lands on a target the rotation has barely hurt.
+
+        The rupture is a share of MISSING health, so its size depends on
+        where in the ledger it fires. Seeded at 2 it is the last of W's
+        applications; seeded at 4 it is the second, before two of the three
+        flat hits have landed.
+        """
+        raw_flats = {2: 125.56 + 146.82 + 168.08, 4: 168.08 + 83.04 + 104.30}
+        mitigation = 100.0 / (100.0 + 85.0)  # the build's effective MR
+        ruptures = {
+            stacks: _seeded_plasma_row(stacks) - raw_flats[stacks] * mitigation
+            for stacks in (2, 4)
+        }
+        assert ruptures[2] == pytest.approx(109.6, abs=0.1)
+        assert ruptures[4] == pytest.approx(76.6, abs=0.1)
+        assert ruptures[4] < ruptures[2]
+
+    def test_the_module_discloses_it(self):
+        disclosure = [
+            text
+            for text in get_champion_options_meta("Kai'Sa")["assumptions"]
+            if "plasma_starting_stacks" in text
+        ]
+        assert len(disclosure) == 1
+        assert "NOT monotonic" in disclosure[0]
+        assert "169.1 / 347.7 / 268.7" in disclosure[0]
 
 
 def test_supercharge_window_raises_timed_attack_speed_and_auto_cadence():
