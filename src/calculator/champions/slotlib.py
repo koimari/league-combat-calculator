@@ -14,7 +14,7 @@ Extraction core:
 """
 
 import re
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any, Callable
 
 from ..ability_spec import ControlEvent, DamagePart, Disposition, ZeroPolicy
@@ -720,8 +720,23 @@ def on_hit_entry(
     name: str,
     damage_per_hit: float,
     dmg_type: str,
+    *,
+    crit_effectiveness: float = 0.0,
 ) -> dict[str, Any]:
-    """Build an on-hit entry the fight engine applies per auto attack."""
+    """Build an on-hit entry the fight engine applies per auto attack.
+
+    ``crit_effectiveness`` is the crit-probability scale the row's own
+    sourced text states ("affected by critical strike modifiers" is 1.0);
+    the default 0.0 is the wiki's general rule that on-hit damage does not
+    crit unless stated.
+    """
+    on_hit: dict[str, Any] = {
+        "name": f"{name} (on-hit)",
+        "damage_per_hit": damage_per_hit,
+        "damage_type": dmg_type,
+    }
+    if crit_effectiveness:
+        on_hit["crit_effectiveness"] = crit_effectiveness
     return {
         "name": name,
         "damage_type": dmg_type,
@@ -730,12 +745,105 @@ def on_hit_entry(
         # parts tuple, even when the row's damage is attached to the next
         # basic attack rather than dealt by the cast itself.
         "parts": (),
-        "on_hit": {
-            "name": f"{name} (on-hit)",
-            "damage_per_hit": damage_per_hit,
-            "damage_type": dmg_type,
-        },
+        "on_hit": on_hit,
     }
+
+
+@dataclass(frozen=True)
+class HitRider:
+    """A per-hit bonus a champion's passive adds to declared carriers.
+
+    Some passives ride more than one delivery channel: a bonus that lands
+    on named ability hits AND on the basic attacks a range gate admits
+    (Samira's Daredevil Impulse, on Blade Whirl, Wild Rush, Flair's blade
+    branches and every attack inside the 200-unit blade zone).  One
+    declaration serves both — :func:`with_hit_rider` attaches it to a
+    slot's parts, :meth:`auto_entry` to the basic-attack stream — so the
+    number and its missing-health amplification have one home.
+
+    Attributes:
+        name: The passive's own name, for the rows both channels publish.
+        damage_type: The rider's type, which need not be its carrier's.
+        amount: Raw damage of one application at the target's full health.
+        missing_health_amp: Extra fraction at the target's full missing
+            health; 1.0 doubles the rider (Daredevil Impulse).
+    """
+
+    name: str
+    damage_type: str
+    amount: float
+    missing_health_amp: float = 0.0
+
+    def _raw_at(self, missing_ratio: float) -> float:
+        return self.amount * (1.0 + self.missing_health_amp * missing_ratio)
+
+    def part(self, ridden: DamagePart) -> DamagePart:
+        """The rider instance one ridden part's hits carry.
+
+        It mirrors that part's hit count and authored timing, so a
+        multi-hit or offset carrier rides its own schedule rather than a
+        boundary this helper invents.
+        """
+        return DamagePart(
+            self.damage_type,
+            amount=self.amount,
+            hp_scaled_damage=self._raw_at if self.missing_health_amp else None,
+            count=ridden.count,
+            time_offset=ridden.time_offset,
+            hit_interval=ridden.hit_interval,
+        )
+
+    def auto_entry(self, *, max_procs: int | None = None) -> dict[str, Any]:
+        """The basic-attack half: this rider on the swings a gate admits.
+
+        The gate is a count because position is not a request input (the
+        Shaco Backstab precedent), and None is every swing.  The engine
+        prices each admitted swing against the target's health at it.
+        """
+        entry = on_hit_entry(self.name, self.amount, self.damage_type)
+        if max_procs is not None:
+            entry["on_hit"]["max_procs"] = max(0, int(max_procs))
+        if self.missing_health_amp:
+            entry["on_hit"]["missing_health_amp"] = self.missing_health_amp
+        return entry
+
+
+def with_hit_rider(parser: SlotParser, rider_for) -> SlotParser:
+    """Wrap a slot so every hit its parts deal carries a declared rider.
+
+    ``rider_for(ctx)`` returns this fight's :class:`HitRider`, or None when
+    the slot is not a carrier at these options.  The rider parts LEAD the
+    entry: they are priced against the target's health before the hit they
+    ride lands, and a mixed row's magic instance is the one its readers
+    take as the trigger (the Fizz Q shape).  A row certified as one hit at
+    the cast gives up that single-part certification and authors the cast
+    instant on both parts instead.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is None:
+            return None
+        rider = rider_for(ctx)
+        ridden = tuple(entry.get("parts") or ())
+        if rider is None or rider.amount <= 0 or not ridden:
+            return entry
+        if entry.get("event_order_certified") == "single_hit" and all(
+            part.time_offset is None for part in ridden
+        ):
+            del entry["event_order_certified"]
+            ridden = tuple(replace(part, time_offset=0.0) for part in ridden)
+        riders = tuple(rider.part(part) for part in ridden)
+        entry["parts"] = riders + ridden
+        entry["total_raw"] = float(entry.get("total_raw") or 0.0) + sum(
+            part.amount * part.count for part in riders
+        )
+        if any(part.damage_type != rider.damage_type for part in ridden):
+            entry["damage_type"] = "mixed"
+        return entry
+
+    parse.phase = getattr(parser, "phase", DAMAGE)
+    return parse
 
 
 def fixed_count_pet_row(

@@ -116,23 +116,46 @@ class TestDetermination:
         assert on_hit["stacks_required"] == xin_zhao.DETERMINATION_STACKS == 3
         assert on_hit["damage_per_hit"] == pytest.approx(160.0 / 3)
 
+    def test_wind_becomes_lightning_is_the_only_declared_stack_source(self):
+        """The cached sentence names exactly W's first slash and thrust."""
+        text = cc_review.slot_text(cc_review.kit("Xin Zhao"), "P")
+        assert (
+            "basic attacks on-hit and wind becomes lightning's first slash "
+            "hit and thrust on at least one enemy hit each generate a stack"
+        ) in text
+        assert xin_zhao.W_DETERMINATION_STACKS == {"W": 2}
+        assert (
+            row_review.entry("Xin Zhao", "passive")["on_hit"]["ability_stack_slots"]
+            == xin_zhao.W_DETERMINATION_STACKS
+        )
+        # The kit-wide counter is exactly what this row must NOT use: E and
+        # R land damaging ability hits and generate no Determination.
+        assert (
+            "count_ability_hits"
+            not in row_review.entry("Xin Zhao", "passive")["on_hit"]
+        )
+
     def test_the_procs_reach_the_fight_total(self):
-        """6 autos are 2 complete procs — 68.4 post-mitigation physical."""
+        """6 autos plus W's two stacks are 8 — 91.2 post-mitigation."""
         result = rider_probe.fight("Xin Zhao")
         row = result["breakdown"][rider_probe.RIDER_ROW]
         assert row["name"] == "Determination"
         assert row["unit"] == "procs"
         assert row["count"] == 2
         assert result["breakdown"]["auto_attacks"]["count"] == 6
-        assert row["total_damage"] == pytest.approx(68.4, abs=0.05)
+        assert result["breakdown"]["W"]["casts"] == 1
+        assert row["total_damage"] == pytest.approx(91.2, abs=0.05)
         assert row["total_damage"] < result["total_damage"]
 
     def test_the_heal_rides_the_same_events_as_the_damage(self):
         """5% maximum health per proc at level 18, on the same cadence."""
         result = rider_probe.fight("Xin Zhao")
         health = result["champion_stats"]["health"]
-        autos = result["breakdown"]["auto_attacks"]["count"]
-        expected = autos * (0.05 * health) / xin_zhao.DETERMINATION_STACKS
+        stacks = (
+            result["breakdown"]["auto_attacks"]["count"]
+            + result["breakdown"]["W"]["casts"] * xin_zhao.W_DETERMINATION_STACKS["W"]
+        )
+        expected = stacks * (0.05 * health) / xin_zhao.DETERMINATION_STACKS
         assert rider_probe.healing_from(result, "Determination") == pytest.approx(
             expected, abs=0.5
         )

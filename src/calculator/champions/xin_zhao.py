@@ -29,11 +29,11 @@ all to deal 15% / 30% / 45% / 60% (based on level) AD (+ 5% / 10% / 15%
 / 20% (based on level) AP) bonus physical damage and heal Xin Zhao for
 2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% / 70%
 (based on level) AP)."  The cached P entry carries no leveling row at
-all, so the bands are module constants.  W's first slash and thrust also
-generate a stack; the engine's ability-hit counter is kit-wide (it would
-count E and R too), so the stack counter here runs on the auto stream
-alone and the two W stacks are unpriced.  The heal is paid by the Xin
-Zhao healing rule off the same on-hit events.
+all, so the bands are module constants.  W's first slash hit and thrust
+each generate a stack too; the kit-wide ability-hit counter would count E
+and R as well, so the row names its stack source per slot instead
+(``ability_stack_slots``: ``{"W": 2}``).  The heal is paid by the Xin Zhao
+healing rule off the same on-hit events.
 """
 
 from typing import Any
@@ -55,6 +55,13 @@ PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf6
 # 1/6/11/16 for both damage terms).  The heal's bands live in the
 # healing rule that pays it (this module's ``derive_self_healing``).
 DETERMINATION_STACKS = 3
+# "Xin Zhao's basic attacks on-hit AND Wind Becomes Lightning's first
+# slash hit and thrust ... each generate a stack of Determination"
+# (cached P effect 0).  W's row is one aggregate hit at the cast, so that
+# hit carries both stacks; no other slot feeds the counter, which is why
+# this is a per-slot source and not the kit-wide ``count_ability_hits``
+# (E and R would count too, and they generate none).
+W_DETERMINATION_STACKS = {"W": 2}
 _DAMAGE_BANDS: tuple[tuple[int, float, float], ...] = (
     (16, 0.60, 0.20),
     (11, 0.45, 0.15),
@@ -96,14 +103,15 @@ def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": per_proc / DETERMINATION_STACKS,
             "damage_type": "physical",
             "stacks_required": DETERMINATION_STACKS,
+            "ability_stack_slots": W_DETERMINATION_STACKS,
         },
     )
     entry["detail"] = (
         f"every {DETERMINATION_STACKS}rd basic attack consumes the stacks "
         f"for {per_proc:.2f} bonus physical damage ({ad_ratio:.0%} AD + "
         f"{ap_ratio:.0%} AP at level {ctx.level}) and the sourced "
-        "maximum-health heal; Wind Becomes Lightning's two stacks are not "
-        "counted"
+        "maximum-health heal; Wind Becomes Lightning's first slash and "
+        "thrust each feed the counter one stack"
     )
     return entry
 
@@ -165,10 +173,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "15% / 30% / 45% / 60% (based on level) AD + 5% / 10% / 15% / "
         "20% AP (level breakpoints 1/6/11/16) — module constants, "
         "because the cached P entry carries no leveling row.  Stacks "
-        "come from basic attacks only: Wind Becomes Lightning's first "
-        "slash and thrust also generate one each, but the engine's "
-        "ability-hit stack counter is kit-wide and would also count E "
-        "and R, which generate none.  The Challenged mark is state.",
+        "come from basic attacks and from Wind Becomes Lightning's "
+        "first slash hit and thrust, one each — declared per slot "
+        "(ability_stack_slots {'W': 2}) rather than through the "
+        "kit-wide ability-hit counter, which would also count E and R, "
+        "and they generate none.  The Challenged mark is state.",
     ),
     cc_kinds=MODULE_CC,
 )

@@ -905,6 +905,34 @@ def _apply_target_champion_damage_reduction(
     return max(0.0, post_mitigation_damage - reduction * hits)
 
 
+def _crit_scaled_raw(
+    state: "FightState",
+    raw: float,
+    crit_effectiveness: float,
+    damage_type: str,
+) -> float:
+    """Raw damage of an instance that crits at *crit_effectiveness*.
+
+    ``crit_effectiveness`` scales the crit PROBABILITY, not the multiplier
+    (Akshan R: 0.3, a full-effectiveness rider: 1.0), and the result is the
+    probability-weighted value — never a roll, so a crit-capable build stays
+    reproducible.  Both channels that carry a champion's own crit modifier
+    read it here: ``DamagePart.crit_effectiveness`` on an ability part and
+    ``on_hit["crit_effectiveness"]`` on an on-hit row.
+    """
+    if crit_effectiveness <= 0:
+        return raw
+    crit_probability = min(1.0, crit_effectiveness * state.crit_chance)
+    target_crit_multiplier = (
+        1.0 if damage_type == "true" else state.target_critical_strike_damage_multiplier
+    )
+    return raw * (
+        1.0
+        - crit_probability
+        + crit_probability * state.crit_multiplier * target_crit_multiplier
+    )
+
+
 def _mitigate_basic_attack_swing(
     state: "FightState",
     raw_damage: float,
@@ -1502,7 +1530,31 @@ def _schedule_cooldown_procs(
     return proc_autos
 
 
-def _simulate_cooldown_current_health_procs(
+def _hp_scaled_on_hit_raw(
+    on_hit_data: Mapping[str, Any],
+    target_health: float,
+) -> Callable[[float], float]:
+    """One application's raw damage at a target current HP.
+
+    Two declared shapes read the same live health and so share one walk:
+    a share of the target's CURRENT health floored at a minimum (Jarvan
+    IV's Martial Cadence), and a flat amount amplified by the target's
+    MISSING health — ``missing_health_amp`` 1.0 doubles at full missing
+    health (Samira's Daredevil Impulse blade rider).
+    """
+    percent = on_hit_data.get("current_health_percent")
+    if percent is not None:
+        share = float(percent) / 100.0
+        floor = float(ability_field(on_hit_data, "min_damage", form="on_hit"))
+        return lambda current_hp: max(share * current_hp, floor)
+    amount = float(ability_field(on_hit_data, "damage_per_hit", form="on_hit"))
+    amp = float(ability_field(on_hit_data, "missing_health_amp", form="on_hit"))
+    return lambda current_hp: amount * (
+        1.0 + amp * (1.0 - current_hp / target_health if target_health > 0 else 1.0)
+    )
+
+
+def _simulate_hp_scaled_on_hit_procs(
     on_hit_data: dict[str, Any],
     target_health: float,
     num_auto_attacks: int,
@@ -1513,16 +1565,16 @@ def _simulate_cooldown_current_health_procs(
     proc_autos: list[int],
     effectiveness: float = 1.0,
 ) -> list[float]:
-    """Simulate cooldown-gated current-health procs (Jarvan IV passive).
+    """Simulate schedule-gated procs that read the target's live health.
 
-    Each proc deals ``current_health_percent`` of the target's decayed
-    current HP, floored at ``min_damage``, as ``damage_type`` damage.
-    Same decaying-HP walk as the stacking on-hit simulation: the proc
-    lands before that auto's own damage is subtracted.
+    Each proc is priced by :func:`_hp_scaled_on_hit_raw` against the
+    target's decayed current HP. Same decaying-HP walk as the stacking
+    on-hit simulation: the proc lands before that auto's own damage is
+    subtracted.
 
     Args:
         on_hit_data: The ability entry's ``on_hit`` payload, carrying
-            ``current_health_percent`` / ``min_damage`` / ``damage_type``.
+            the shape's own fields and ``damage_type``.
         target_health: Target's starting (max) health.
         num_auto_attacks: Number of auto attacks in the fight.
         auto_damage_per_hit: Mitigated base auto attack damage per hit.
@@ -1537,8 +1589,7 @@ def _simulate_cooldown_current_health_procs(
     if not proc_autos:
         return []
 
-    pct = on_hit_data["current_health_percent"] / 100.0
-    min_damage = ability_field(on_hit_data, "min_damage", form="on_hit")
+    raw_for = _hp_scaled_on_hit_raw(on_hit_data, target_health)
     dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
     proc_set = set(proc_autos)
 
@@ -1546,7 +1597,7 @@ def _simulate_cooldown_current_health_procs(
     proc_damages: list[float] = []
     for i in range(num_auto_attacks):
         if i in proc_set:
-            raw_damage = max(pct * target.current_health, min_damage) * effectiveness
+            raw_damage = raw_for(target.current_health) * effectiveness
             mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
             proc_damages.append(mitigated)
             target.take_proc(mitigated)
@@ -3813,19 +3864,9 @@ def _evaluate_cast_parts(
             # derivative in bonus AD (Darius' Noxian Might).
             raw += part.bonus_ad_ratio * price.bonus_attack_damage
             hits = price.dot_stacks if part.dot_stack_scaled else part.count
-            if part.crit_effectiveness > 0:
-                eff = part.crit_effectiveness
-                crit_probability = min(1.0, eff * state.crit_chance)
-                target_crit_multiplier = (
-                    1.0
-                    if part.damage_type == "true"
-                    else state.target_critical_strike_damage_multiplier
-                )
-                raw *= (
-                    1.0
-                    - crit_probability
-                    + crit_probability * state.crit_multiplier * target_crit_multiplier
-                )
+            raw = _crit_scaled_raw(
+                state, raw, part.crit_effectiveness, part.damage_type
+            )
             rock_solid_instances = int(
                 part.basic_damage
                 and part.damage_type != "true"
@@ -8933,6 +8974,37 @@ def _armed_class_restricted_per_hits(
     )
 
 
+def _declared_slot_stacks(
+    on_hit_data: Mapping[str, Any],
+    ability_hit_ledger: list[tuple[str, float]],
+) -> tuple[int, list[float]]:
+    """Stacks a kit's own named slots feed one on-hit counter.
+
+    ``count_ability_hits`` counts every damaging ability hit the rotation
+    landed, which is the whole kit; a counter that only some slots feed
+    declares them instead — ``{"W": 2}`` is Xin Zhao's Wind Becomes
+    Lightning, whose first slash hit and thrust each generate a
+    Determination stack, and whose row is one aggregate hit at the cast.
+    A stack is generated by a landed HIT, so the count rides that slot's
+    own entries in the ability ledger: every stack carries the timestamp
+    of the hit that made it, and a slot the ledger never saw feeds nothing
+    rather than inventing a boundary.
+    """
+    declared = ability_field(on_hit_data, "ability_stack_slots", form="on_hit")
+    if not declared:
+        return 0, []
+    stacks = 0
+    times: list[float] = []
+    for slot, per_hit_stacks in sorted(declared.items()):
+        count = int(per_hit_stacks)
+        if count <= 0:
+            continue
+        slot_times = [time for key, time in ability_hit_ledger if key == slot]
+        stacks += count * len(slot_times)
+        times.extend(time for time in slot_times for _ in range(count))
+    return stacks, times
+
+
 def _layer_on_hit_effects(
     state: FightState,
     autos: AutoAttackResult,
@@ -8947,7 +9019,10 @@ def _layer_on_hit_effects(
     total application count; BoRK is simulated per-auto against the
     target's decreasing current HP. Ability on-hits flagged
     ``count_ability_hits`` (e.g. Aurora P) also count the rotation's
-    damaging ability hits toward their stack counter.
+    damaging ability hits toward their stack counter, and one that names
+    ``ability_stack_slots`` counts only the slots it declares (Xin Zhao's
+    W). A row whose sourced text says the bonus is affected by critical
+    strike modifiers declares ``crit_effectiveness`` (Shaco P: 1.0).
 
     A champion ``auto_attack_override`` may carry ``on_hit_effectiveness``
     (Azir soldiers: on-hit at 50%) — it scales every per-hit on-hit
@@ -9164,9 +9239,9 @@ def _layer_on_hit_effects(
     # per-hit average would invent damage before the third stack exists.
     # Only the ability on-hit loop below reads these times, so a kit with
     # no ability-carried on-hit skips the ledger reconstruction entirely.
-    ability_hit_times = (
+    ability_hit_ledger = (
         [
-            float(event["time"])
+            (str(event.get("source_key")), float(event["time"]))
             for event in _ordered_damage_events(
                 state.breakdown,
                 state.ability_damages,
@@ -9182,6 +9257,7 @@ def _layer_on_hit_effects(
         )
         else []
     )
+    ability_hit_times = [time for _, time in ability_hit_ledger]
     combined_application_times = ability_hit_times + application_times
 
     # Process ability on-hit effects (Case 2: abilities that add damage per
@@ -9192,8 +9268,12 @@ def _layer_on_hit_effects(
         on_hit_data = ability_info.get("on_hit")
         if not on_hit_data:
             continue
-        if "proc_cooldown" in on_hit_data or "proc_window" in on_hit_data:
-            continue  # scheduled current-health procs are simulated below
+        if (
+            "proc_cooldown" in on_hit_data
+            or "proc_window" in on_hit_data
+            or "missing_health_amp" in on_hit_data
+        ):
+            continue  # procs that read the target's live health are below
         if "empower_window" in on_hit_data:
             on_hit_total += _add_empower_window_on_hit(
                 state,
@@ -9212,10 +9292,14 @@ def _layer_on_hit_effects(
             continue  # cast-armed charges are scheduled, never per-auto
         counts_ability_hits = bool(on_hit_data.get("count_ability_hits"))
         carries_on_ability_on_hits = bool(on_hit_data.get("applies_on_ability_on_hits"))
+        slot_stacks, slot_stack_times = _declared_slot_stacks(
+            on_hit_data, ability_hit_ledger
+        )
         if (
             num_auto_attacks == 0
             and not counts_ability_hits
             and not carries_on_ability_on_hits
+            and slot_stacks == 0
         ):
             continue
 
@@ -9224,10 +9308,22 @@ def _layer_on_hit_effects(
             continue
 
         dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
+        # A champion on-hit row whose sourced text says the bonus is
+        # affected by critical strike modifiers declares its effectiveness
+        # here — the same axis, and the same formula, ability parts carry as
+        # ``DamagePart.crit_effectiveness`` (Shaco's Backstab: 1.0).
+        crit_effectiveness = float(
+            ability_field(on_hit_data, "crit_effectiveness", form="on_hit")
+        )
+        raw_base = _crit_scaled_raw(state, raw_base, crit_effectiveness, dmg_type)
         raw_per_hit = raw_base * on_hit_effectiveness
         per_hit = _mitigate(raw_per_hit, dmg_type, resists, magic_amp)
 
-        hits = on_hit_hits + (rotation.total_ability_hits if counts_ability_hits else 0)
+        hits = (
+            on_hit_hits
+            + (rotation.total_ability_hits if counts_ability_hits else 0)
+            + slot_stacks
+        )
 
         # Some champion on-hits explicitly ride ability-carried on-hit
         # instances as well as ordinary attacks. Bel'Veth R is the canonical
@@ -9303,7 +9399,16 @@ def _layer_on_hit_effects(
             bool(application_times)
             and leading_carrier_hits == 0
             and not (counts_ability_hits and rotation.total_ability_hits > 0)
+            and slot_stacks == 0
             and hits <= len(application_times)
+        )
+        # Declared per-slot stacks arrive on their own ability hits, so the
+        # row stays exact: their authored times join the swing schedule.
+        slot_stack_application_times = slot_stack_times + application_times
+        slot_stack_stampable = (
+            slot_stacks > 0
+            and len(slot_stack_times) == slot_stacks
+            and len(slot_stack_application_times) >= hits
         )
         carrier_stampable = (
             carrier_effectiveness is not None
@@ -9327,7 +9432,13 @@ def _layer_on_hit_effects(
             # deals per_hit + min(k, max_stacks) x per_stack. Stacks are
             # assumed never to drop mid-fight (sustained attacking).
             per_stack = _mitigate(
-                float(stack_ramp["damage_per_stack"]) * on_hit_effectiveness,
+                _crit_scaled_raw(
+                    state,
+                    float(stack_ramp["damage_per_stack"]),
+                    crit_effectiveness,
+                    dmg_type,
+                )
+                * on_hit_effectiveness,
                 dmg_type,
                 resists,
                 magic_amp,
@@ -9392,7 +9503,10 @@ def _layer_on_hit_effects(
             # The total includes partial stacks, so events are the same
             # per-swing shares — the ledger must sum to the row exactly.
             ability_on_hit_damage = per_hit * hits
-            if stampable:
+            if slot_stack_stampable:
+                event_times = slot_stack_application_times[:hits]
+                event_damages = [per_hit] * hits
+            elif stampable:
                 event_times = application_times[:hits]
                 event_damages = [per_hit] * hits
         on_hit_total += ability_on_hit_damage
@@ -9519,13 +9633,15 @@ def _layer_on_hit_effects(
                 )
             )
 
-    # Scheduled current-health on-hits ride the fight's auto timeline and
-    # read the target's decayed current HP per proc. Two schedules:
+    # Scheduled live-health on-hits ride the fight's auto timeline and
+    # read the target's decayed current HP per proc. Three schedules:
     # ``proc_cooldown`` (Jarvan IV's Martial Cadence) procs the first
     # auto, then the first auto at/after (last proc + per-target
     # cooldown); ``proc_window`` (Camille R's rider) procs every auto
     # landing inside the window after the ability is cast — so a fight
-    # that never casts it (auto-only mode) gets nothing. Schedule-gated
+    # that never casts it (auto-only mode) gets nothing;
+    # ``missing_health_amp`` (Samira's blade rider) procs the swings a
+    # range gate admits, ``max_procs`` of them. Schedule-gated
     # procs don't land on every auto, which is why phantom hits / double
     # shots never add procs and why the proc stays out of
     # static_on_hit_per_hit (spellblade doubling and the BoRK simulation
@@ -9548,6 +9664,18 @@ def _layer_on_hit_effects(
                 proc_autos = _schedule_cooldown_procs(
                     proc_schedule, on_hit_data["proc_cooldown"]
                 )
+            elif "missing_health_amp" in on_hit_data:
+                # A range-gated rider on the basic-attack stream: it rides
+                # every swing inside the gate, and ``max_procs`` is how many
+                # of them the request says land there.
+                gated = ability_field(on_hit_data, "max_procs", form="on_hit")
+                proc_autos = list(
+                    range(
+                        num_auto_attacks
+                        if gated is None
+                        else min(num_auto_attacks, int(gated))
+                    )
+                )
             elif "proc_window" in on_hit_data:
                 if breakdown.get(ability_key, {}).get("casts", 0) < 1:
                     continue  # rider exists only after the ability is cast
@@ -9563,7 +9691,7 @@ def _layer_on_hit_effects(
                 continue
             if not proc_autos:
                 continue
-            proc_damages = _simulate_cooldown_current_health_procs(
+            proc_damages = _simulate_hp_scaled_on_hit_procs(
                 on_hit_data,
                 state.target_health,
                 num_auto_attacks,
