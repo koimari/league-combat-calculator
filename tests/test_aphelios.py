@@ -14,14 +14,39 @@ SINGLE_HIT_WEAPONS = ("calibrum", "gravitum", "infernum", "crescendum")
 REVIEWED_WEAPONS = SINGLE_HIT_WEAPONS
 
 
-def _parse(weapon, level=18):
+def _parse(weapon, level=18, **options):
     data = cc_review.kit("Aphelios")
     return parse_champion_abilities(
         data,
         level,
         0.0,
         champion_stats=calculate_total_stats(data, level, []),
-        champion_options={"aphelios_main_weapon": weapon},
+        champion_options={"aphelios_main_weapon": weapon, **options},
+    )
+
+
+def _p_effects(name):
+    """The cached P entry with this name, as (entry, joined descriptions)."""
+    for entry in cc_review.kit("Aphelios")["abilities"]["P"]:
+        if entry.get("name") == name:
+            effects = entry.get("effects") or []
+            return entry, " ".join(str(e.get("description", "")) for e in effects)
+    raise AssertionError(f"no cached Aphelios P entry named {name!r}")
+
+
+def _fight(weapon, **options):
+    """One deterministic timed fight on a crit-capable build."""
+    return calculate_payload(
+        {
+            "champion": "Aphelios",
+            "level": 18,
+            "items": ["Infinity Edge", "Kraken Slayer"],
+            "fight_mode": "timed",
+            "fight_duration_seconds": 10.0,
+            "include_auto_attacks": True,
+            "champion_options": {"aphelios_main_weapon": weapon, **options},
+        },
+        deterministic=True,
     )
 
 
@@ -179,6 +204,167 @@ class TestEWeaponQueueSystem:
         assert entry["total_raw"] == 0.0
         assert entry["parts"] == ()
         assert entry["detail"]
+
+
+class TestWeaponBranches:
+    """P is five innates behind one slot, and each branch says what it prices.
+
+    Two of them put damage on the basic-attack channel, one is priced as
+    healing, one damages nothing, and one is blocked by the cache.
+    """
+
+    def test_every_weapon_names_its_branch_on_the_passive_row(self):
+        for weapon in WEAPONS:
+            entry = _parse(weapon)["passive"]
+            assert aphelios._WEAPON_LABELS[weapon] in entry["detail"], weapon
+
+    def test_calibrums_mark_bonus_is_the_cached_sentence(self):
+        _, text = _p_effects("Calibrum")
+        assert (
+            "dealing 15 (+ 15% bonus AD) bonus physical damage to the main "
+            "target for each mark consumed" in text
+        )
+        assert aphelios._CALIBRUM_MARK_FLAT == 15.0
+        assert aphelios._CALIBRUM_MARK_BONUS_AD_RATIO == 0.15
+        assert _parse("calibrum").get("passive", {}).get("on_hit") is None
+        on_hit = _parse("calibrum", aphelios_calibrum_marks=3)["passive"]["on_hit"]
+        # No items, so bonus AD is zero and each mark is the flat 15.
+        assert on_hit["damage_per_hit"] == pytest.approx(45.0)
+        assert on_hit["max_procs"] == 1
+
+    def test_infernums_primary_target_bonus_is_the_cached_sentence(self):
+        _, text = _p_effects("Infernum")
+        assert (
+            "The fire bolt deals 110% AD physical damage to the primary target" in text
+        )
+        assert aphelios._INFERNUM_PRIMARY_AD_RATIO == 1.10
+        stats = calculate_total_stats(cc_review.kit("Aphelios"), 18, [])
+        on_hit = _parse("infernum")["passive"]["on_hit"]
+        assert on_hit["damage_per_hit"] == pytest.approx(0.10 * stats["attack_damage"])
+        # The bolt IS the basic attack, so it crits when the attack does.
+        assert on_hit["crit_effectiveness"] == 1.0
+
+    def test_crescendums_chakram_bonus_has_no_cached_row_to_price(self):
+        """The one branch the cache genuinely cannot support."""
+        entry, text = _p_effects("Crescendum")
+        assert (
+            "0% : 138.5% (based on number of Chakrams) AD additional physical "
+            "damage" in text
+        )
+        assert all(effect.get("leveling") == [] for effect in entry["effects"])
+        assert _parse("crescendum")["passive"].get("on_hit") is None
+        assert "UNPRICED" in _parse("crescendum")["passive"]["detail"]
+
+    def test_severum_and_gravitum_branches_price_no_damage(self):
+        _, severum = _p_effects("Severum")
+        assert "Severum's attacks heal Aphelios" in severum
+        _, gravitum = _p_effects("Gravitum")
+        assert "Basic attacks with Gravitum slow enemies by 30%" in gravitum
+        for weapon in ("severum", "gravitum"):
+            assert _parse(weapon)["passive"].get("on_hit") is None, weapon
+
+    def test_weapon_master_grants_are_read_from_the_cached_rows(self):
+        """The AD/AS/lethality rows are cached and indexed by points spent."""
+        ability, _ = _p_effects("The Hitman and the Seer")
+        rows = {
+            leveling["attribute"]: leveling["modifiers"][0]["values"]
+            for effect in ability["effects"]
+            for leveling in effect.get("leveling", [])
+        }
+        assert rows["Bonus Attack Damage"] == [4, 8, 12, 16, 20, 24]
+        assert rows["Bonus Attack Speed"] == [9, 18, 27, 36, 45, 54]
+        assert rows["Lethality"] == [4.5, 9, 13.5, 18, 22.5, 27]
+        entry = _parse(
+            "calibrum", aphelios_bonus_ad_points=6, aphelios_bonus_as_points=4
+        )["passive"]
+        assert entry["stat_buff"] == {
+            "bonus_attack_damage": 24.0,
+            "bonus_attack_speed": 36.0,
+        }
+        # Spending nothing grants nothing — a rank-zero read would index the
+        # row's LAST value, which is the whole six-point grant.
+        assert _parse("calibrum")["passive"]["stat_buff"] == {
+            "bonus_attack_damage": 0.0,
+            "bonus_attack_speed": 0.0,
+        }
+
+    def test_the_mark_bonus_lands_once_and_scales_with_the_marks(self):
+        """One empowered attack spends every mark: one proc, N marks' worth."""
+        totals = {}
+        for marks in (0, 1, 3, 5):
+            row = _fight("calibrum", aphelios_calibrum_marks=marks)["breakdown"].get(
+                "on_hit_ability_passive"
+            )
+            if marks == 0:
+                assert row is None
+                continue
+            assert row["name"] == "Calibrum mark (on-hit)"
+            assert row["count"] == 1
+            totals[marks] = row["total_damage"]
+        assert totals[3] == pytest.approx(3 * totals[1])
+        assert totals[5] == pytest.approx(5 * totals[1])
+
+    def test_infernum_prices_its_extra_ten_percent_on_every_swing(self):
+        fight = _fight("infernum")
+        row = fight["breakdown"]["on_hit_ability_passive"]
+        assert row["name"] == "Infernum (on-hit)"
+        assert row["count"] == fight["breakdown"]["auto_attacks"]["count"]
+        assert row["total_damage"] > 0.0
+        assert "on_hit_ability_passive" not in _fight("calibrum")["breakdown"]
+
+
+class TestPhaseKeepsItsTwoNumbersApart:
+    """SC4: the swap duration is not a cooldown, and never was one."""
+
+    def test_the_row_carries_the_cached_cooldown(self):
+        cached = cc_review.kit("Aphelios")["abilities"]["W"][0]
+        assert cached["cooldown"]["modifiers"][0]["values"][0] == 0.8
+        for weapon in WEAPONS:
+            assert _parse(weapon)["W"]["cooldown"] == pytest.approx(0.8), weapon
+
+    def test_the_swap_duration_is_stated_from_the_cache(self):
+        cached = cc_review.kit("Aphelios")["abilities"]["W"][0]
+        assert (
+            "switches between his main weapon and off-hand weapon over 0.25 "
+            "seconds" in cached["effects"][0]["description"]
+        )
+        assert "over 0.25 s" in _parse("calibrum")["W"]["detail"]
+
+    def test_the_row_still_damages_nothing(self):
+        entry = _parse("calibrum")["W"]
+        assert entry["total_raw"] == 0.0
+        assert _fight("calibrum")["breakdown"]["W"]["total_damage"] == 0.0
+
+
+class TestDuskwaveAppliesTheOnHits:
+    """SC4: Duskwave is Infernum's Q, not Calibrum's."""
+
+    def test_the_cached_volley_sentence_belongs_to_duskwave(self):
+        text = cc_review.slot_text(cc_review.kit("Aphelios"), "Q")
+        assert (
+            "aphelios then fires a volley of attacks at each locked-on target "
+            "from his current off-hand weapon, dealing 100% ad physical damage "
+            "and applying on-hit effects" in text
+        )
+
+    def test_only_infernums_q_carries_the_on_hit_application(self):
+        assert _parse("infernum")["Q"]["applies_item_on_hits"] == {
+            "effectiveness": 1.0,
+            "hits": 1,
+            "triggers": ("on_hit",),
+        }
+        for weapon in ("calibrum", "gravitum", "crescendum"):
+            assert "applies_item_on_hits" not in _parse(weapon)["Q"], weapon
+
+    def test_the_on_hit_matrix_receipt_agrees(self):
+        import json
+        from pathlib import Path
+
+        matrix = json.loads(Path("data/onhit-matrix.json").read_text(encoding="utf-8"))
+        duskwave = [
+            row for row in matrix["champions"]["Aphelios"] if row["name"] == "Duskwave"
+        ]
+        assert duskwave and duskwave[0]["effectiveness"] == 1.0
 
 
 class TestModuleCoverage:
