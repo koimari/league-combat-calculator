@@ -362,8 +362,14 @@ IMMOBILIZING_CC_KINDS = frozenset(
 # call them "slow" or "none", and both of those are false.
 # Polymorph blocks actions (``ACTION_BLOCKING_CC_KINDS``) but the target
 # keeps moving, so it is not an immobilize for Everlasting / Command.
+# "berserk" (Renata Glasc's Hostile Takeover) is here rather than above for
+# the same reason polymorph is: a berserked unit keeps moving and keeps
+# attacking — it attacks its own allies — so the Wiki's Immobilizing class
+# does not hold it, and neither Command nor Everlasting arms on it.  It is a
+# forced action, which is real reviewed control and not a slow, and calling
+# it either of those would be false.
 NON_IMMOBILIZING_CC_KINDS = frozenset(
-    {"slow", "cripple", "silence", "blind", "polymorph"}
+    {"slow", "cripple", "silence", "blind", "polymorph", "berserk"}
 )
 
 # Every value a module may author as a part's ``cc_kind``. "none" is an
@@ -484,6 +490,13 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     # Authored control duration.  A zero value means that the module has
     # marked the control kind but has not supplied a usable downtime interval.
     cc_duration: float = 0.0
+    # Authored control magnitude, in the units the cached row states it:
+    # a slow's percent, a cripple's attack-speed percent.  Zero is the
+    # honest reading for both a kind that HAS no magnitude (a stun is a
+    # stun) and one whose magnitude the cache does not carry, which is why
+    # the two are told apart by ``control_source_atoms`` rather than by a
+    # sentinel: a sourced magnitude arrives with the atom that proves it.
+    cc_magnitude: float = 0.0
     # A blockable projectile or skillshot marker for target-side defensive
     # interactions such as Braum E and Yasuo W.
     skillshot: bool = False
@@ -505,6 +518,10 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             raise ValueError("DamagePart cc_kind must be a string or None")
         if self.cc_duration < 0:
             raise ValueError("DamagePart cc_duration cannot be negative")
+        if self.cc_magnitude < 0:
+            raise ValueError("DamagePart cc_magnitude cannot be negative")
+        if self.cc_magnitude and self.cc_kind is None:
+            raise ValueError("DamagePart cc_magnitude needs a cc_kind")
 
     def __repr__(self) -> str:
         # Deterministic repr: the golden snapshot serializes entries via
@@ -525,6 +542,8 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             extras += f", cc_kind={self.cc_kind!r}"
         if self.cc_duration:
             extras += f", cc_duration={self.cc_duration}"
+        if self.cc_magnitude:
+            extras += f", cc_magnitude={self.cc_magnitude}"
         if self.skillshot:
             extras += ", skillshot=yes"
         if self.control_source_atoms:
@@ -546,6 +565,9 @@ class ControlEvent:
 
     kind: str
     duration: float
+    #: The control's sourced strength in the units the cached row states
+    #: it -- a slow's percent.  Zero where the kind has none.
+    magnitude: float = 0.0
     time_offset: float | None = 0.0
     count: int = 1
     hit_interval: float | None = None
@@ -556,6 +578,8 @@ class ControlEvent:
             raise ValueError("ControlEvent kind must be a non-empty string")
         if self.duration <= 0.0:
             raise ValueError("ControlEvent duration must be positive")
+        if self.magnitude < 0.0:
+            raise ValueError("ControlEvent magnitude cannot be negative")
         if self.time_offset is not None and self.time_offset < 0.0:
             raise ValueError("ControlEvent time_offset cannot be negative")
         if self.count < 1:
@@ -567,6 +591,8 @@ class ControlEvent:
 
     def __repr__(self) -> str:
         extras = ""
+        if self.magnitude:
+            extras += f", magnitude={self.magnitude}"
         if self.time_offset is not None:
             extras += f", time_offset={self.time_offset}"
         if self.count != 1:

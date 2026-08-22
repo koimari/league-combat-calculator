@@ -28,7 +28,7 @@ from .inputs import bool_option, champion_stat
 from .packet_module import build_packet_module
 
 from ..champions.skill_orders import get_ability_rank
-from .slotlib import with_control
+from .slotlib import with_control, with_control_event
 from .module_contract import coverage
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
@@ -88,12 +88,24 @@ def _time_bomb(compiled):
 
 # Q's kind depends on the second-bomb state, so the slot names itself
 # per-part and ``_time_bomb`` authors the answer.  P/W/E/R price no damage.
-MODULE_CC = {"Q": CC_PER_PART}
+MODULE_CC = {"Q": CC_PER_PART, "E": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zilean",
     PACKET_SHA256,
-    slot_wrappers={"Q": _time_bomb},
+    slot_wrappers={
+        "Q": _time_bomb,
+        # Time Warp prices no damage; cast on an enemy it slows for the
+        # effect's own window ("lasts for 2.5 seconds", the slot's
+        # active-duration atom) by the cached "Movement Speed Modifier"
+        # row (40/55/70/85/99%) — one row for both branches, so the
+        # enemy branch is what the enemy-facing ledger reads.
+        "E": lambda parser: with_control_event(
+            parser,
+            duration_source="active",
+            magnitude_attr="Movement Speed Modifier",
+        ),
+    },
     cc_kinds=MODULE_CC,
 )
 

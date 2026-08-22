@@ -267,7 +267,9 @@ def _bridge_between(packet_p):
 # Stampede) deals no damage of its own, so its stun is not a part kind —
 # it is published as a standalone sourced ControlEvent by the
 # ``with_control_event`` wrapper below (the Rammus-E shape).
-MODULE_CC = {"R": "slow"}
+# E (Blazing Stampede) prices no damage of its own; its reviewed stun rides
+# the entry as a sourced ControlEvent read off the slot's prose atom.
+MODULE_CC = {"E": "stun", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Udyr",
@@ -292,7 +294,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         # sourced control event, read through the validated atom catalog.
         "E": lambda parser: with_control_event(
             _blazing_stampede(parser),
-            kind="stun",
             duration_attr="Stun Duration",
             time_offset=None,
         ),

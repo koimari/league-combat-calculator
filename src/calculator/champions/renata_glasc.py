@@ -52,6 +52,7 @@ from .slotlib import (
     extract_named,
     extract_value,
     proc_damage,
+    with_control_event,
 )
 from .inputs import int_option
 from .module_contract import coverage
@@ -463,7 +464,9 @@ def _loyalty_program(packet_e):
 # W (Bailout) and R (Hostile Takeover) deal no damage — R's berserk is
 # real control with no damage row to carry it — and P is an on-hit mark on
 # the auto stream, so none of the three can carry an answer of its own.
-MODULE_CC = {"Q": "root", "E": "slow"}
+# R (Hostile Takeover) prices no damage; berserk is a forced action, not
+# an immobilize, so it arms no immobilize-gated item.
+MODULE_CC = {"Q": "root", "E": "slow", "R": "berserk"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Renata Glasc",
@@ -479,6 +482,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
     slot_wrappers={
         "E": _loyalty_program,
+        # Hostile Takeover prices no damage; the berserk it applies is
+        # the cached "Berserk Duration" row (1.25/1.75/2.25s).
+        "R": lambda parser: with_control_event(
+            parser,
+            duration_attr="Berserk Duration",
+        ),
     },
     cc_kinds=MODULE_CC,
 )

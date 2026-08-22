@@ -2364,12 +2364,7 @@ def is_packet_kind(packet: Mapping[str, object], kind: PacketKind) -> bool:
 
 
 def is_denial_receipt(packet: Mapping[str, object]) -> bool:
-    """Whether *packet* is the fail-closed item-denial receipt.
-
-    Named rather than spelled out because the denial split is the one read
-    that changes which *stream* a packet belongs to, and its two call sites
-    (the support-template resolver and the roster walk) have to agree.
-    """
+    """Whether *packet* is the fail-closed item-denial receipt."""
     return is_packet_kind(packet, PacketKind.ITEM_DENIAL)
 
 

@@ -753,6 +753,7 @@ def _apply_module_cc(
             ControlEvent(
                 kind,
                 float(pending["duration"]),
+                magnitude=float(pending.get("magnitude", 0.0)),
                 time_offset=pending["time_offset"],
                 skillshot=False,
             )
@@ -814,13 +815,9 @@ def _resolve_pending_control_events(
 ) -> None:
     """Refuse a sourced control interval no ``MODULE_CC`` entry gave a kind.
 
-    :func:`_apply_module_cc` stamps every declared slot's pending intervals,
-    so anything still parked here belongs to a slot the module never
-    declared — a control the kit applies and its one declaration site does
-    not list.
-
     Raises:
-        ValueError: The entry still carries an unstamped control interval.
+        ValueError: The entry still carries an unstamped control interval,
+            so its slot is one the module never declared.
     """
     if entry.pop(PENDING_CONTROL_EVENTS, ()):
         raise ValueError(

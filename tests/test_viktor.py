@@ -20,15 +20,26 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Viktor")
-        assert viktor.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
+        # A cc-only slot states its kind in MODULE_CC like any other and
+        # publishes the sourced interval as a ControlEvent (CF8).
+        assert viktor.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "none",
+            "R": "none",
+        }
         assert viktor.parse_abilities.cc_kinds == viktor.MODULE_CC
         for slot in ("Q", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
 
-    def test_gravity_field_is_absent_because_the_module_does_not_price_it(self):
+    def test_gravity_field_publishes_the_slow_it_can_source(self):
+        """W prices no damage, so its slow is a sourced control event.
+
+        The 1-second refreshing slow window and the ranked Slow row both
+        have atoms; the fifth-stack 1.5s stun has none, so it stays
+        unpriced rather than being declared against a prose literal.
+        """
         data = cc_review.kit("Viktor")
-        assert "W" not in viktor.MODULE_CC
-        assert get_champion_module_contract("Viktor").coverage["W"] == "out_of_scope"
         w_text = cc_review.slot_text(data, "W")
         assert "slow enemies within for 1 second" in w_text
         assert "knock down and stun the target for 1.5 seconds" in w_text

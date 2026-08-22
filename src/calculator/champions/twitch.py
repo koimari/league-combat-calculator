@@ -339,6 +339,11 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
+    "W (Venom Cask) stays out of MODULE_CC: its slow is sourced (the "
+    "cached 'Slow' row, 30/35/40/45/50% + 6% per 100 AP) but its window "
+    "is not. The contaminated area lasts 3 seconds by the second effect's "
+    "description alone, and the slot carries no seconds atom at all, so "
+    "there is no sourced interval for a control event to publish.",
     "Deadly Venom stacks come from the poison_stacks option (default 6 "
     "= the sourced max); each stack deals its full 6-second total of "
     "level-scaled true damage (6/12/18/24/30 by level + 18% AP — wiki "

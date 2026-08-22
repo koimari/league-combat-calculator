@@ -3032,6 +3032,26 @@
         },
         "R": {
           "cast_time": 0.5,
+          "control_events": [
+            "ControlEvent('stasis', duration=2.5, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "timing.active_duration",
+              "behavior": "timing",
+              "evidence": [
+                "active duration@effects[0].description"
+              ],
+              "hash": "d07b8e95a2cb5c56",
+              "source": "Bard.R[0].effects[0].description",
+              "units": [
+                "s"
+              ],
+              "values": [
+                2.5
+              ]
+            }
+          ],
           "cooldown": 95.0,
           "damage_type": "magic",
           "detail": "Tempered Fate puts struck units into 2.5s stasis and stuns enemy champions/minions/turrets for the same duration; the cached entry's own notes state Tempered Fate deals 0 proc true damage (data/champions.json Bard R notes). Atoms-confirmed zero numeric combat effect.",
@@ -12045,6 +12065,30 @@
           "total_raw": 373.95
         },
         "R": {
+          "control_events": [
+            "ControlEvent('airborne', duration=1.5, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "ability.airborne _duration",
+              "behavior": "ability",
+              "evidence": [
+                "Airborne Duration@effects[2]"
+              ],
+              "hash": "f53dd3f8580c23d6",
+              "source": "Kalista.R[0].effects[2].leveling[0].modifiers[0]",
+              "units": [
+                " seconds",
+                " seconds",
+                " seconds"
+              ],
+              "values": [
+                1.0,
+                1.5,
+                2.0
+              ]
+            }
+          ],
           "cooldown": 140.0,
           "damage_type": "magic",
           "detail": "Fate's Call retrieves and holds the Oathsworn ally (cleanse, invulnerability, untargetable), lets them dash with displacement immunity, then knocks back and keeps nearby enemies airborne on landing \u2014 no damage sentence anywhere in the cached entry (data/champions.json Kalista R); its only leveling row is 'Airborne Duration' (1/1.5/2s), a CC duration. Corroborated by the game binary (KalistaRx and its child spells): the only named DataValues entry is KnockupDuration [0, 1, 1.5, 2, ...], matching the wiki value, and no spell record carries a mSpellCalculations table. R prices nothing; its effects land on the Oathsworn ally or as pure enemy CC.",
@@ -18976,6 +19020,49 @@
         },
         "W": {
           "cast_time": 0.25,
+          "control_events": [
+            "ControlEvent('slow', duration=5.0, magnitude=71.0, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "timing.active_duration",
+              "behavior": "timing",
+              "evidence": [
+                "active duration@effects[0].description"
+              ],
+              "hash": "4d7eacfb6582c1be",
+              "source": "Nasus.W[0].effects[0].description",
+              "units": [
+                "s"
+              ],
+              "values": [
+                5.0
+              ]
+            },
+            {
+              "atom_id": "ability.maximum _slow",
+              "behavior": "ability",
+              "evidence": [
+                "Maximum Slow@effects[0]"
+              ],
+              "hash": "f4453837777598b8",
+              "source": "Nasus.W[0].effects[0].leveling[0].modifiers[0]",
+              "units": [
+                "%",
+                "%",
+                "%",
+                "%",
+                "%"
+              ],
+              "values": [
+                47.0,
+                59.0,
+                71.0,
+                83.0,
+                95.0
+              ]
+            }
+          ],
           "cooldown": 13.0,
           "damage_type": "magic",
           "detail": "Slow and attack-speed cripple: CC only, no damage.",
@@ -22895,6 +22982,30 @@
         },
         "R": {
           "cast_time": 0.75,
+          "control_events": [
+            "ControlEvent('berserk', duration=1.75, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "ability.berserk _duration",
+              "behavior": "ability",
+              "evidence": [
+                "Berserk Duration@effects[0]"
+              ],
+              "hash": "e7c60e64aa5ec719",
+              "source": "Renata Glasc.R[0].effects[0].leveling[0].modifiers[0]",
+              "units": [
+                " seconds",
+                " seconds",
+                " seconds"
+              ],
+              "values": [
+                1.25,
+                1.75,
+                2.25
+              ]
+            }
+          ],
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -29303,6 +29414,49 @@
       "abilities_level_11": {
         "E": {
           "cast_time": 0.25,
+          "control_events": [
+            "ControlEvent('slow', duration=6.0, magnitude=34.0, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "timing.active_duration",
+              "behavior": "timing",
+              "evidence": [
+                "active duration@effects[0].description"
+              ],
+              "hash": "db51a47bb17e5c27",
+              "source": "Trundle.E[0].effects[0].description",
+              "units": [
+                "s"
+              ],
+              "values": [
+                6.0
+              ]
+            },
+            {
+              "atom_id": "ability.slow",
+              "behavior": "ability",
+              "evidence": [
+                "Slow@effects[0]"
+              ],
+              "hash": "9f18aa212ea80304",
+              "source": "Trundle.E[0].effects[0].leveling[0].modifiers[0]",
+              "units": [
+                "%",
+                "%",
+                "%",
+                "%",
+                "%"
+              ],
+              "values": [
+                34.0,
+                38.0,
+                42.0,
+                46.0,
+                50.0
+              ]
+            }
+          ],
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -32081,6 +32235,49 @@
         },
         "W": {
           "cast_time": 0.25,
+          "control_events": [
+            "ControlEvent('slow', duration=1.0, magnitude=39.0, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "timing.control_duration",
+              "behavior": "timing",
+              "evidence": [
+                "control duration@effects[0].description"
+              ],
+              "hash": "b70cc8f2ae6b0d3d",
+              "source": "Viktor.W[0].effects[0].description",
+              "units": [
+                "s"
+              ],
+              "values": [
+                1.0
+              ]
+            },
+            {
+              "atom_id": "ability.slow",
+              "behavior": "ability",
+              "evidence": [
+                "Slow@effects[0]"
+              ],
+              "hash": "e923f2fc55840403",
+              "source": "Viktor.W[0].effects[0].leveling[0].modifiers[0]",
+              "units": [
+                "%",
+                "%",
+                "%",
+                "%",
+                "%"
+              ],
+              "values": [
+                33.0,
+                36.0,
+                39.0,
+                42.0,
+                45.0
+              ]
+            }
+          ],
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -35692,6 +35889,49 @@
     "Zilean": {
       "abilities_level_11": {
         "E": {
+          "control_events": [
+            "ControlEvent('slow', duration=2.5, magnitude=40.0, time_offset=0.0)"
+          ],
+          "control_source_atoms": [
+            {
+              "atom_id": "timing.active_duration",
+              "behavior": "timing",
+              "evidence": [
+                "active duration@effects[0].description"
+              ],
+              "hash": "75213c5240e05a72",
+              "source": "Zilean.E[0].effects[0].description",
+              "units": [
+                "s"
+              ],
+              "values": [
+                2.5
+              ]
+            },
+            {
+              "atom_id": "ability.movement _speed _modifier",
+              "behavior": "ability",
+              "evidence": [
+                "Movement Speed Modifier@effects[1]"
+              ],
+              "hash": "ed6310a3df9631d7",
+              "source": "Zilean.E[0].effects[1].leveling[0].modifiers[0]",
+              "units": [
+                "%",
+                "%",
+                "%",
+                "%",
+                "%"
+              ],
+              "values": [
+                40.0,
+                55.0,
+                70.0,
+                85.0,
+                99.0
+              ]
+            }
+          ],
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -51202,18 +51442,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58507,
-      "numeric_leaves": 44857,
+      "leaves": 58631,
+      "numeric_leaves": 44888,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
+    "git_head": "ca3e2647dfd31f07dc26f5ba714960789da3b22a",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
+    "src_tree_sha": "ee392f9a20ee3305ad0982d86b1b77dc3f725f6d"
   },
   "registered_champion_fights": {
     "Aatrox": {

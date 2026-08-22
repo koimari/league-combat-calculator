@@ -22,7 +22,7 @@ from .. import healing_helpers as _healing
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import extract_value, stat_buff
+from .slotlib import extract_value, stat_buff, with_control_event
 from .inputs import int_option
 from .module_contract import coverage
 
@@ -68,7 +68,7 @@ def _kings_tribute(compiled):
 # for the same amount" and reduces resistances and size — real debuffs,
 # but none of them crowd control.  W (Frozen Domain) and E (Pillar of Ice)
 # carry the kit's other control and deal no damage.
-MODULE_CC = {"Q": "slow", "R": "none"}
+MODULE_CC = {"Q": "slow", "E": "slow", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Trundle",
@@ -100,7 +100,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             apply_to=("bonus_attack_speed",),
         ),
     },
-    slot_wrappers={"P": _kings_tribute},
+    slot_wrappers={
+        "P": _kings_tribute,
+        # Pillar of Ice prices no damage; it "acts as terrain and slows
+        # nearby enemies" for the pillar's own 6-second window, which is
+        # the slot's active-duration atom, and the cached "Slow" row
+        # (34/38/42/46/50%) is how hard.  The creation knockback carries
+        # no sourced duration anywhere and stays unpriced.
+        "E": lambda parser: with_control_event(
+            parser,
+            duration_source="active",
+            magnitude_attr="Slow",
+        ),
+    },
 )
 
 OPTIONS = list(OPTIONS) + [
