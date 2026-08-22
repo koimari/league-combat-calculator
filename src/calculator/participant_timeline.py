@@ -43,6 +43,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
+    repriced_for_recipient,
     resolve_knights_vow_tether,
     schedule_knights_vow,
 )
@@ -653,7 +654,13 @@ def _apply_item_support_selection(
     template: Mapping[str, Any],
     all_actors: list[Combatant],
 ) -> dict[str, Any]:
-    """Apply an authored recipient choice to a one-target item packet."""
+    """Apply an authored recipient choice to a one-target item packet.
+
+    The choice moves the packet's amount with it: a row the emitter priced at
+    its default ally's level (Mikael's Purify is "100 to 250 by target's
+    level") is re-read at the chosen ally's, through the emitter's own ramp
+    declaration rather than a second copy of the formula.
+    """
     kind = str(template.get("kind", ""))
     scope = str(template.get("target_scope", ""))
     if kind not in {"shield", "heal"} or scope not in {
@@ -681,11 +688,14 @@ def _apply_item_support_selection(
             f"roster for {attacker.participant_id} from "
             f"{template.get('source', '')!r}"
         )
-    return {
-        **template,
-        "target": teammates[selected_index].participant_id,
-        "target_policy": "selected_teammate",
-    }
+    return repriced_for_recipient(
+        {
+            **template,
+            "target": teammates[selected_index].participant_id,
+            "target_policy": "selected_teammate",
+        },
+        teammates[selected_index],
+    )
 
 
 def _guardian_target(

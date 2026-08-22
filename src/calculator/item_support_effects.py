@@ -340,6 +340,49 @@ def _ramp_value(
     return slot.level_value(key, level)
 
 
+#: Stamped on a packet whose amount was read at its RECIPIENT's own level,
+#: naming the producer and the ramp that priced it.  A one-ally packet's
+#: recipient is chosen downstream, so the price has to move with the choice.
+RECIPIENT_RAMP_KEY = "_recipient_level_ramp"
+
+
+def _recipient_amount(
+    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any
+) -> dict[str, Any]:
+    """The *key* ramp's amount, stamped when it belongs to *recipient*."""
+    fields: dict[str, Any] = {
+        "amount": _ramp_value(slot, key, holder=holder, recipient=recipient)
+    }
+    if slot.level_subject(key) is LevelSubject.RECIPIENT:
+        fields[RECIPIENT_RAMP_KEY] = (slot.producer.value, key)
+    return fields
+
+
+def repriced_for_recipient(
+    template: Mapping[str, Any], recipient: Any
+) -> dict[str, Any]:
+    """*template* with any recipient-scaled amount re-read at *recipient*.
+
+    The one re-read of :data:`RECIPIENT_RAMP_KEY`, for the one place a packet
+    can change hands after it was priced.  An unstamped template comes back
+    unchanged; a stamp naming a producer the holder's build does not declare
+    is a stop, never the default ally's amount.
+    """
+    stamp = template.get(RECIPIENT_RAMP_KEY)
+    if stamp is None:
+        return dict(template)
+    producer_value, key = stamp
+    source = str(template["source"])
+    owner = producer_item(source)
+    slot = _producer(resolve_slots({owner}), AllyProducer(producer_value))
+    if slot is None:
+        raise ValueError(
+            f"{source!r} is priced at its recipient's level, but {owner!r} "
+            f"declares no {producer_value!r} producer to re-read it through"
+        )
+    return {**template, "amount": slot.level_value(key, recipient.level)}
+
+
 def _support_triggers(
     trigger_effects: Iterable[Mapping[str, Any]], attacker: Any
 ) -> list[Mapping[str, Any]]:
@@ -1812,7 +1855,7 @@ def derive_item_support_effects(
                     time=active_time,
                     kind="shield",
                     source="Locket of the Iron Solari — Devotion",
-                    amount=_ramp_value(
+                    **_recipient_amount(
                         devotion, "shield_min", holder=attacker, recipient=target
                     ),
                     duration=devotion.value("shield_duration"),
@@ -1831,7 +1874,7 @@ def derive_item_support_effects(
                 time=active_time,
                 kind="heal",
                 source="Mikael's Blessing — Purify",
-                amount=_ramp_value(
+                **_recipient_amount(
                     purify, "heal_min", holder=attacker, recipient=target
                 ),
                 target_scope="explicit_selected_ally",
@@ -1890,7 +1933,7 @@ def derive_item_support_effects(
                     time=active_time + beam_delay,
                     kind="heal",
                     source="Redemption — Intervention",
-                    amount=_ramp_value(
+                    **_recipient_amount(
                         intervention, "heal_min", holder=attacker, recipient=target
                     ),
                     target_scope="redemption_allies_in_radius",
@@ -2260,6 +2303,7 @@ def producer_item(source: str) -> str:
 __all__ = [
     "derive_item_support_effects",
     "producer_item",
+    "repriced_for_recipient",
     "require_event_view",
     "schedule_knights_vow",
 ]

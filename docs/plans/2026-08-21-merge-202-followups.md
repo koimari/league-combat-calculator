@@ -19,7 +19,6 @@ Delete a row when it lands.
 | compiled walk misses participant[2] cleanse/canister heal (search_context parity) — support staging gap in compiled path; no test pins it | #226 |
 | milio residual: tests/test_milio_r_cleanse.py:56-59 docstring still claims the R cleanse kernel fails closed — kernel is wired; p_procs and count == 1 landed | #217 |
 | e9 steraks re-derived to death_time 9.702; HANDOVER.md:2513 and scenarios.json:639 still cite the superseded 15.091 — reconcile (corpus via repin, never hand-edit) | #227 |
-| per-recipient pricing of ally-scaled support rows (one row per recipient with that recipient's stats) | #210 |
 | Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
 | F-2: four main-new ITEM_EFFECTS entries (Doran's Helm, Gluttonous Greaves, Ionian Boots, Lost Chapter) have no rule compiler — pinned by name UNDECLARED_ON_ARRIVAL | #211 |
 | F-9: cleanse KNOWN_CONTROL_KINDS vs CC_KIND_VOCABULARY disagree (disarm/ground dead; cripple/flee/pull/snare/stasis/berserk undeclared for cleanse) | #212 |
