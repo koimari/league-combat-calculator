@@ -22,7 +22,7 @@ Delete a row when it lands.
 | Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
 | F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up | #228 |
 | F-5: Vi Blast Shield rider binds to a carrier by ordinal before the walk decides (D-VI-1); the strict xfail is retired for a green denial-receipt test (test_w2_sustain.py:313); walk-side re-anchor to first unblocked cast still needed (old damage.py:1864 pin stale) | #229 |
-| PERF DEBT: the lean row shape is now adopted via score_only and the smoke cap recalibrated to 15 s (853c1cf7); the 2.40 s vs 1.58 s merged-vs-main optimize_build gap was never re-measured — benchmark, then close or act | #213 |
+| PERF DEBT: measured, not recovered — the merged-vs-main optimize_build gap is 1190 ms, wider than the recorded 819 ms (numbers and profile: `benchmarks.md`, "Optimizer search — `optimize_build`, uncoupled"). `score_only`'s lean shape reaches only the coupled path; the residual is per-evaluation cost in `behavior_rules`, `_damage_event_row` and `resolved_item_name`. Act, or accept and close | #213 |
 
 ## Coordination note (2026-08-21, from the roadmap-closeout session)
 
