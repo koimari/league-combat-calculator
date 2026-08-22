@@ -1060,7 +1060,6 @@ def test_a_module_self_shield_is_actor_wide_and_granted_once_per_roster():
     is what the composition de-duplicates on -- the same convention
     actor-wide heals use, rather than a per-module roster-index gate.
     """
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={

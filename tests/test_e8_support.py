@@ -287,7 +287,6 @@ def test_bastion_prices_each_recipient_off_their_own_maximum_health():
     here would expose: the ally's Warmog's would otherwise serve the first
     request's number.
     """
-    app_module.app.config["TESTING"] = True
 
     def bastion(ally_items):
         response = app_module.app.test_client().post(

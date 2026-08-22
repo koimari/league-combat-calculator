@@ -104,7 +104,6 @@ def test_the_goo_chunk_heal_is_resolved_in_the_one_pair_receipt() -> None:
 
     from src import app as app_module
 
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
