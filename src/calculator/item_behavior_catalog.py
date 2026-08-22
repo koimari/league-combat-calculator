@@ -1496,20 +1496,55 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
     "RUNE_EFFECTS": {},
 }
 
-# Which keystones declare an amp-chain slot, and which slot.  A rune record
-# carries no effect tag — the shape *is* the keystone — so this is the closed
-# key set that makes the name dispatch total, exactly as
+# Which runes declare an amp-chain slot, and which slot.  A rune record
+# carries no effect tag — the shape *is* the rune — so this is the closed key
+# set that makes the name dispatch total, exactly as
 # ``rune_effects._compilers()`` is for the runes themselves.  Rule 5 reaches
-# keystones (D-46), so their numbers are references like any other.  Two of
-# the rune page's amplifiers are *not* here: the health-gated one (Coup de
-# Grace, Cut Down) and the flat one (Last Stand, Axiom Arcanist) walk their
-# own ledger in ``damage.py`` and keep their ratios in their compiled
-# effects, because a rule for either needs vocabulary the chain does not
-# have yet — a live predicate on the holder's health, and a magnitude keyed
-# on a declared rune option.
-KEYSTONE_AMPS: Mapping[str, AmpChainSlot] = {
+# runes (D-46), so their numbers are references like any other.  Keystones
+# and minor runes are both here: a rune's row decides where the page puts it,
+# not whether the chain can hold its amplifier.
+#
+# One rune-page amplifier kind is deliberately *not* here.  Last Stand and
+# Axiom Arcanist keep their ratio in a compiled ``RuneFlatAmpEffect`` and
+# walk their own ledger in ``damage.py``, because a ``DeltaAmpRule`` cannot
+# state either of them.  Last Stand's magnitude is a linear interpolation
+# between two sourced ends keyed on a declared rune *option* (the holder's
+# own health, which the pair engine does not track), and no ``Magnitude``
+# member reads an option: a magnitude resolves against ``BuildContext``,
+# which carries build facts, and feeding a request-scoped scenario control
+# into it would put an option key where ``value_ref`` says only a sourced
+# number may go.  Axiom Arcanist's filter is the cast slot that authored the
+# row, which no ``Typing`` field expresses — ``Typing`` names damage and
+# attack classes, and "the ultimate" is neither.  Two new vocabulary members
+# for two runes buys nothing the flat kind does not already say, so the flat
+# kind stays where it is and this comment is the reason.
+RUNE_AMP_SLOTS: Mapping[str, AmpChainSlot] = {
     "First Strike": AmpChainSlot.OPENING_WINDOW,
     "Press the Attack": AmpChainSlot.LASTING_PROC_AMP,
+    "Coup de Grace": AmpChainSlot.TARGET_HEALTH_GATE,
+    "Cut Down": AmpChainSlot.TARGET_HEALTH_GATE,
+}
+
+# Which side of its health threshold each target-health-gated rune arms on.
+# The cache states this too, under ``damage_amp_health_gate``, and the rule
+# builder reads it there and checks it against this table: a wiki description
+# whose two halves were reordered would otherwise price Coup de Grace as the
+# rune that rewards attacking a healthy target.  Declared here rather than in
+# the rune's compiler because this is the chain's vocabulary — a
+# ``Comparison`` — and the compiler produces no comparison of its own.
+TARGET_HEALTH_GATE_DIRECTIONS: Mapping[str, Comparison] = {
+    "Coup de Grace": Comparison.LT,
+    "Cut Down": Comparison.GT,
+}
+
+# How ``data/runes.json`` spells each comparison under
+# ``damage_amp_health_gate``.  Closed: a word outside it is a parse this
+# catalog refuses rather than a gate it guesses the side of.  ``self_below``
+# is deliberately absent — that is Last Stand's gate on the *holder's* own
+# health, which no chain slot reads.
+CACHED_HEALTH_GATE_WORDS: Mapping[str, Comparison] = {
+    "target_below": Comparison.LT,
+    "target_above": Comparison.GT,
 }
 
 
@@ -2365,7 +2400,7 @@ def _compile_ally_delta_amp(
 
     Dispatch is on the value keys, through :data:`ALLY_DELTA_AMP_SLOTS`,
     which is the closed key set that makes it total — the same device
-    :data:`KEYSTONE_AMPS` is for runes, and for the same reason: the record
+    :data:`RUNE_AMP_SLOTS` is for runes, and for the same reason: the record
     carries no effect tag to dispatch on.  A record holding some of a slot's
     keys and not the rest raises: routing on key presence must not let a
     broken parse read as an item that declares no amplifier.
@@ -2440,19 +2475,93 @@ def _lasting_proc_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _compile_keystone_amp(owner: str) -> tuple[BehaviorRule, ...]:
-    """The amp-chain slots one compiled keystone declares.
+def _cached_health_gate(owner: str) -> Comparison:
+    """Which side of its threshold *owner*'s cached description arms on.
 
-    Dispatch is on the keystone's name because a rune record has no effect
-    tag to dispatch on — the shape *is* the keystone.  That is
-    ``rune_effects._compilers()``' own idiom, and :data:`KEYSTONE_AMPS` is
+    Read from the cache and then checked against
+    :data:`TARGET_HEALTH_GATE_DIRECTIONS`, so neither source can quietly win:
+    a description whose halves were reordered stops the rune instead of
+    pricing it as its opposite, and a direction this catalog states against a
+    cache that says otherwise stops too.
+    """
+    stated = str(rune_effects.cached_effects(owner).value("damage_amp_health_gate"))
+    cached = CACHED_HEALTH_GATE_WORDS.get(stated)
+    if cached is None:
+        raise BehaviorCatalogError(
+            f"RUNE_EFFECTS[{owner!r}] states the {stated!r} health gate, which "
+            f"is not one of {sorted(CACHED_HEALTH_GATE_WORDS)} — wiki parse "
+            "degraded or a gate no chain slot reads"
+        )
+    declared = TARGET_HEALTH_GATE_DIRECTIONS[owner]
+    if cached is not declared:
+        raise BehaviorCatalogError(
+            f"RUNE_EFFECTS[{owner!r}] states a {stated!r} gate and this catalog "
+            f"declares the {declared.value} one — wiki description reordered"
+        )
+    return declared
+
+
+def _target_health_gate_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """A Coup de Grace-class rune: everything landing on one side of a gate.
+
+    The second amp whose pool is not precomputable, and the same shape
+    Cinderbloom declares: the *threshold* is a sourced share of the target's
+    maximum health and compiles at build time, while the *reading* — how much
+    health the target has left when this packet lands — arrives event by
+    event.  Which side arms is the rule's ``cmp``, so Coup de Grace and Cut
+    Down are one declaration with one number different rather than two
+    walkers.
+
+    ``Pool.ALL_EVENTS`` and every damage class: the wiki gates these on the
+    target's health and on nothing about the damage, so a filter here would
+    be a restriction no source states.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.target_health_gate",
+        payload=DeltaAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=LivePredicate(
+                probe=Probe.TARGET_HEALTH_FRACTION,
+                cmp=_cached_health_gate(owner),
+                threshold=ValueRef(registry, owner, "damage_amp_health_ratio"),
+            ),
+            consumption=Persist(),
+            magnitude=Fixed(ValueRef(registry, owner, "damage_amp_ratio")),
+            typing=_all_damage_typing(),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.HOLDER,
+            lane_chain_rank=chain_rank(AmpChainSlot.TARGET_HEALTH_GATE),
+        ),
+        compilability=AMP_COMPILABILITY,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the bonus is a sourced ratio of the timestamped damage that "
+            "landed while the target's health satisfied the declared gate; a "
+            "zero means none did, which the ordered ledger measured",
+        ),
+    )
+
+
+def _compile_rune_amp(owner: str) -> tuple[BehaviorRule, ...]:
+    """The amp-chain slots one compiled rune declares.
+
+    Dispatch is on the rune's name because a rune record has no effect tag to
+    dispatch on — the shape *is* the rune.  That is
+    ``rune_effects._compilers()``' own idiom, and :data:`RUNE_AMP_SLOTS` is
     the closed key set that makes it total.
     """
-    slot = KEYSTONE_AMPS[owner]
+    slot = RUNE_AMP_SLOTS[owner]
     if slot is AmpChainSlot.OPENING_WINDOW:
         return (_opening_window_rule(owner, "RUNE_EFFECTS"),)
     if slot is AmpChainSlot.LASTING_PROC_AMP:
         return (_lasting_proc_amp_rule(owner, "RUNE_EFFECTS"),)
+    if slot is AmpChainSlot.TARGET_HEALTH_GATE:
+        return (_target_health_gate_rule(owner, "RUNE_EFFECTS"),)
     raise BehaviorCatalogError(
         f"RUNE_EFFECTS[{owner!r}] is declared in the {slot.value} chain slot "
         "and no compiler builds that slot's rule yet"
@@ -2476,7 +2585,7 @@ def _compile_delta_amp(
     del family
     rules: list[BehaviorRule] = []
     if registry == "RUNE_EFFECTS":
-        rules.extend(_compile_keystone_amp(owner))
+        rules.extend(_compile_rune_amp(owner))
     elif registry == "ALLY_ITEM_EFFECTS":
         rules.extend(_compile_ally_delta_amp(owner, registry, entry))
     else:
@@ -5888,7 +5997,7 @@ def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
     return (
         item_effects.ITEM_EFFECTS.get(owner),
         item_effects.ALLY_ITEM_EFFECTS.get(owner),
-        rune_effects.RUNE_EFFECTS.get(owner) if owner in KEYSTONE_AMPS else None,
+        rune_effects.RUNE_EFFECTS.get(owner) if owner in RUNE_AMP_SLOTS else None,
     )
 
 
@@ -5917,7 +6026,7 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
         if cached[0] is records[0] and cached[1] is records[1]:
             if cached[2] is records[2]:
                 return cached[3]
-    entries = registry_entries(owner) + keystone_entries(owner)
+    entries = registry_entries(owner) + rune_amp_entries(owner)
     rules: list[BehaviorRule] = []
     for registry, family, entry in entries:
         for claimed in entry_families(registry, family, entry, owner):
@@ -5929,23 +6038,23 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     return compiled
 
 
-def keystone_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
+def rune_amp_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
     """The rune record *owner* declares an amp-chain slot from, if any.
 
     Deliberately not part of :func:`registry_entries`: counter 3's population
     is the two **item** registries, and folding runes into it would silently
-    change what the frontier's headline number counts.  Keystones are still
+    change what the frontier's headline number counts.  Runes are still
     bound by rule 5 — their numbers are references — they are simply not
     entries of the registries that counter measures.
     """
-    if owner not in KEYSTONE_AMPS:
+    if owner not in RUNE_AMP_SLOTS:
         return ()
     entry = rune_effects.RUNE_EFFECTS.get(owner)
     if not isinstance(entry, Mapping):
         raise BehaviorCatalogError(
             f"{owner!r} declares an amp-chain slot and RUNE_EFFECTS holds no "
             "record for it — a declaration against a missing rune is a stop, "
-            "not a keystone that quietly amplifies nothing"
+            "not a rune that quietly amplifies nothing"
         )
     return (("RUNE_EFFECTS", RuleFamily.DELTA_AMP, entry),)
 
@@ -5956,8 +6065,8 @@ def declares_runtime_behaviour(rule: BehaviorRule) -> bool:
 
 
 def rule_owners() -> frozenset[str]:
-    """Every owner a rule can be compiled for — items and declared keystones."""
-    return registry_owners() | frozenset(KEYSTONE_AMPS)
+    """Every owner a rule can be compiled for — items and declared runes."""
+    return registry_owners() | frozenset(RUNE_AMP_SLOTS)
 
 
 def entry_families(
@@ -6285,6 +6394,28 @@ def _validate_delta_amp_migration() -> None:
         )
 
 
+def _validate_target_health_gate_closure() -> None:
+    """Exactly the runes in the gated slot declare which side they arm on.
+
+    Structural, so it runs at import beside the other closures: a rune added
+    to the slot with no declared direction, or a direction left behind by a
+    rune that moved out of it, both stop collection here rather than at the
+    first fight that selects one.
+    """
+    gated = frozenset(
+        owner
+        for owner, slot in RUNE_AMP_SLOTS.items()
+        if slot is AmpChainSlot.TARGET_HEALTH_GATE
+    )
+    declared = frozenset(TARGET_HEALTH_GATE_DIRECTIONS)
+    if gated != declared:
+        raise BehaviorCatalogError(
+            "every target-health-gated rune declares which side it arms on; "
+            f"undeclared={sorted(gated - declared)} "
+            f"stale={sorted(declared - gated)}"
+        )
+
+
 def _validate_ally_packet_migration() -> None:
     """Every producer is declared, so none can be silently dropped."""
     declared = frozenset(AllyProducer)
@@ -6353,6 +6484,7 @@ def validate_catalog() -> None:
     _validate_defense_receipts()
     _validate_compilers()
     _validate_delta_amp_migration()
+    _validate_target_health_gate_closure()
     _validate_ally_packet_migration()
     _validate_ally_entry_closure()
 
@@ -6393,7 +6525,9 @@ __all__ = [
     "H4_DEAD_TAGS",
     "H4_SELF_REFERENTIAL_TAGS",
     "H4_TAG_REASONS",
-    "KEYSTONE_AMPS",
+    "RUNE_AMP_SLOTS",
+    "TARGET_HEALTH_GATE_DIRECTIONS",
+    "CACHED_HEALTH_GATE_WORDS",
     "MIGRATED_DELTA_AMP_TAGS",
     "MULTIPLIER_ORIGIN",
     "ON_HIT_FORMULA_FLOORS",
@@ -6409,7 +6543,7 @@ __all__ = [
     "declares_runtime_behaviour",
     "declared_tags",
     "entry_families",
-    "keystone_entries",
+    "rune_amp_entries",
     "owners_for",
     "producers_for",
     "registry_entries",

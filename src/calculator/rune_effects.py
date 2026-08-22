@@ -1228,43 +1228,26 @@ class KeystoneDarkHarvestEffect:
         )
 
 
-class AmpCondition(Enum):
-    """When a conditional amplifier is live, in the cache's own spelling.
-
-    The values are what ``rune_parser`` records under
-    ``damage_amp_health_gate``, so a compiler reads the condition instead of
-    translating it — one fact, one spelling, no mapping table to drift.
-
-    Only the gates the ledger walk can *evaluate* are members. The cache also
-    records ``self_below`` (Last Stand's gate on the holder's own health),
-    and it is deliberately absent: the pair engine prices outgoing damage
-    and carries no holder-health track, so a compiler naming it fails here
-    rather than compiling into a walker branch that would book nothing. That
-    rune is a :class:`RuneFlatAmpEffect` instead, where the holder's health
-    is a declared option rather than a track the fight does not have.
-    """
-
-    TARGET_BELOW = "target_below"
-    TARGET_ABOVE = "target_above"
-
-
 @dataclass(frozen=True, slots=True)
 class RuneConditionalAmpEffect:
-    """A damage amplifier gated on a health share (Coup de Grace-class).
+    """A damage amplifier gated on the target's health (Coup de Grace-class).
 
     The engine walks its ordered damage ledger and amplifies exactly the
-    instances that land while the condition holds, so the row is the real
-    share of the fight the rune reached rather than a flat multiplier over
-    the total.
+    instances that land while the gate holds, so the row is the real share of
+    the fight the rune reached rather than a flat multiplier over the total.
+
+    **The gate and the ratio are not here.** They are the amp chain's
+    ``TARGET_HEALTH_GATE`` slot, declared as a ``BehaviorRule`` whose
+    ``LivePredicate`` names the threshold, the pool it reads and which side
+    arms — the same move First Strike and Press the Attack already made, and
+    for the same reason: one number with two homes is drift waiting to
+    happen. What is left is the rune's identity, which is what tells the
+    engine a slot on the page is asking for the slot on the chain.
     """
 
     rune_name: str
     breakdown_key: str
     display_name: str
-    condition: AmpCondition
-    health_ratio: float
-    amp_ratio: float
-    disclosures: tuple[str, ...] = ()
 
 
 #: The cast-order key of the ultimate slot — the one slot a rune's filter

@@ -7,10 +7,21 @@ the four exemplars that prove the three shapes a minor rune can take: a stat
 grant, a conditional damage amplifier, a proc, and a compiled refusal.
 """
 
+import dataclasses
+
 import pytest
 
+from src.calculator import item_behavior_catalog
 from src.calculator import rune_effects
 from src.calculator import rune_paths
+from src.calculator.item_behavior import (
+    AmpChainSlot,
+    Comparison,
+    Probe,
+    chain_rank,
+)
+from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
+from src.calculator.value_ref import resolve as resolve_ref
 from src.calculator.rune_paths import (
     domination,
     inspiration,
@@ -77,22 +88,56 @@ class TestTheRegistrationContract:
 
 
 class TestCoupDeGrace:
-    """Precision row 3: a conditional amplifier read out of three keys."""
+    """Precision row 3: the marker for an amp the chain declares.
 
-    def test_it_compiles_to_the_target_health_gate_the_cache_states(self):
+    Its gate and its ratio live in the ``TARGET_HEALTH_GATE`` chain slot, so
+    what the path compiles is the rune's identity — which is what tells the
+    engine a page slot is asking for a chain slot.
+    """
+
+    def test_it_compiles_to_the_marker_the_chain_slot_is_keyed_by(self):
         effect = rune_effects.resolve_rune("Coup de Grace")
         assert isinstance(effect, rune_effects.RuneConditionalAmpEffect)
-        assert effect.condition is rune_effects.AmpCondition.TARGET_BELOW
-        assert effect.health_ratio == pytest.approx(0.40)
-        assert effect.amp_ratio == pytest.approx(0.08)
         assert effect.breakdown_key == "rune_Coup de Grace"
         assert effect.display_name == "Coup de Grace (rune)"
 
-    def test_a_reordered_description_fails_closed(self):
+    def test_its_numbers_are_the_chain_declarations_and_not_the_effects(self):
+        (rule,) = behavior_rules("Coup de Grace")
+        assert rule.payload.lane_chain_rank == chain_rank(
+            AmpChainSlot.TARGET_HEALTH_GATE
+        )
+        assert rule.payload.activation.probe is Probe.TARGET_HEALTH_FRACTION
+        assert rule.payload.activation.cmp is Comparison.LT
+        assert resolve_ref(rule.payload.activation.threshold) == pytest.approx(0.40)
+        assert resolve_ref(rule.payload.magnitude.value) == pytest.approx(0.08)
+        assert not [
+            field
+            for field in dataclasses.fields(rune_effects.RuneConditionalAmpEffect)
+            if "ratio" in field.name or field.name == "condition"
+        ], "the gate and the ratio have one home, and it is the declaration"
+
+    def test_a_reordered_description_fails_closed(self, monkeypatch):
         """An unknown gate spelling is refused, never priced as one we know."""
-        with pytest.raises(ValueError):
-            precision._compile_coup_de_grace(
-                {"effects": {"damage_amp_health_gate": "target_sideways"}}
+        monkeypatch.setitem(
+            rune_effects.RUNE_EFFECTS["Coup de Grace"]["effects"],
+            "damage_amp_health_gate",
+            "target_sideways",
+        )
+        with pytest.raises(BehaviorCatalogError, match="not one of"):
+            item_behavior_catalog._target_health_gate_rule(
+                "Coup de Grace", "RUNE_EFFECTS"
+            )
+
+    def test_a_description_naming_the_other_side_fails_closed(self, monkeypatch):
+        """The two sources are checked against each other, neither one wins."""
+        monkeypatch.setitem(
+            rune_effects.RUNE_EFFECTS["Coup de Grace"]["effects"],
+            "damage_amp_health_gate",
+            "target_above",
+        )
+        with pytest.raises(BehaviorCatalogError, match="description reordered"):
+            item_behavior_catalog._target_health_gate_rule(
+                "Coup de Grace", "RUNE_EFFECTS"
             )
 
 
