@@ -10,8 +10,13 @@ explosion hits a champion) is authored by the healing rule in
 ``healing.py`` (HEALING_RULE_CHAMPIONS), keyed on the W recast damage
 events and gated on the ``dragon_form`` option; the support scanner
 defers both (see ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS`` and
-``_MODULE_AUTHORED_HEAL_SLOTS``)."""
+``_MODULE_AUTHORED_HEAL_SLOTS``).
 
+P (Scalemail) is the ``scalemail_stacks`` option's one consumer: the
+per-stack resists live in the cached effect prose alone, so
+``_scalemail_per_stack`` reads them out of that sentence."""
+
+import re
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -20,13 +25,12 @@ from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    STEROID_ZERO,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
-    find_named_leveling,
     simple_damage,
-    sum_modifiers,
 )
 from .module_contract import coverage
 from .source_receipts import load_champion_sources
@@ -54,23 +58,67 @@ def _inferno_aegis_shield(ctx: SlotCtx) -> float:
     return base + nearby * per_champion
 
 
+# Scalemail's per-stack resists are cached PROSE with no leveling row of
+# any kind, so the sentence itself is the source and is read here rather
+# than copied — the Ornn P (Temper) shape.  ``_SCALEMAIL_MAX_STACKS`` is
+# the option's own bound, not a game cap: takedown stacks have none.
+_SCALEMAIL_EFFECT_MARKER = "Scalemail:"
+_SCALEMAIL_RE = re.compile(
+    r"For each stack,\s*Shyvana gains\s+(?P<armor>\d+(?:\.\d+)?)\s+bonus armor"
+    r"\s+and\s+(?P<mr>\d+(?:\.\d+)?)\s+bonus magic resistance",
+    re.IGNORECASE,
+)
+_SCALEMAIL_MAX_STACKS = 100
+
+
+def _scalemail_per_stack(passive: dict[str, Any] | None) -> tuple[float, float]:
+    """One Scalemail stack's bonus armor and bonus magic resistance."""
+    match = next(
+        filter(
+            None,
+            (
+                _SCALEMAIL_RE.search(text)
+                for text in (
+                    str(effect.get("description") or "")
+                    for effect in (passive or {}).get("effects") or []
+                )
+                if _SCALEMAIL_EFFECT_MARKER in text
+            ),
+        ),
+        None,
+    )
+    if match is None:
+        raise ValueError(
+            "Shyvana P (Scalemail): the cached passive description no longer "
+            "states 'For each stack, Shyvana gains <n> bonus armor and <n> "
+            "bonus magic resistance' — the per-stack resists cannot be sourced"
+        )
+    return float(match.group("armor")), float(match.group("mr"))
+
+
 def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the sourced per-stack armor and magic resistance (BUFF phase)."""
     ability = ctx.ability("P")
     if ability is None:
         return None
-    base = find_named_leveling(ability, "Per-Level Scaling", 0)
-    stack = find_named_leveling(ability, "Per-Level Scaling", 1)
-    if base is None or stack is None:
-        return None
-    stacks = min(max(int(ctx.option("scalemail_stacks")), 0), 100)
-    bonus_armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
-        stack, ctx.level
+    armor_per_stack, mr_per_stack = _scalemail_per_stack(ability)
+    stacks = min(max(int(ctx.option("scalemail_stacks")), 0), _SCALEMAIL_MAX_STACKS)
+    bonus_armor = stacks * armor_per_stack
+    bonus_mr = stacks * mr_per_stack
+    entry = damage_entry(
+        ability.get("name", "Scalemail"),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        zero_policy=STEROID_ZERO,
     )
-    ctx.stats["armor"] = ctx.stat("armor") + bonus_armor
-    ctx.stats["magic_resistance"] = ctx.stat("magic_resistance") + bonus_armor
-    entry = damage_entry("Scalemail", ctx.level, 0.0, 0.0, "physical")
-    entry["stat_buff"] = {"armor": bonus_armor, "magic_resistance": bonus_armor}
-    entry["detail"] = f"{stacks} Scalemail stack(s); +{bonus_armor:.2f} armor/MR"
+    entry["stat_buff"] = {"armor": bonus_armor, "magic_resistance": bonus_mr}
+    entry["detail"] = (
+        f"{stacks} Scalemail stack(s) x {armor_per_stack:g} armor / "
+        f"{mr_per_stack:g} magic resistance: +{bonus_armor:.2f} armor, "
+        f"+{bonus_mr:.2f} magic resistance"
+    )
     return entry
 
 
@@ -254,17 +302,17 @@ OPTIONS = [
     bool_option("e_second_explosion", False, label="Dragon E second explosion"),
 ]
 
-MODULE_COVERAGE = coverage(out_of_scope="P")
+MODULE_COVERAGE = coverage(no_damage="P")
 
 ASSUMPTIONS = [
-    "P (Fury of the Dragonborn) is out_of_scope, not modeled: Scalemail "
-    "is a real, sourced mechanic -- 'For each stack, Shyvana gains 0.3 "
-    "bonus armor and 0.3 bonus magic resistance' -- but that 0.3 lives "
-    "in the effect prose alone.  The slot parser reads a "
-    "'Per-Level Scaling' leveling row, and the cached entry carries no "
-    "leveling row at all, so it returns None at every vantage and the "
-    "scalemail_stacks option changes nothing.  Declaring the slot "
-    "modeled claimed a row that cannot exist (coverage-truth sweep).",
+    "P (Fury of the Dragonborn) prices Scalemail: the cached effect "
+    "sentence 'For each stack, Shyvana gains 0.3 bonus armor and 0.3 "
+    "bonus magic resistance' is read out of the description (there is no "
+    "leveling row anywhere in the entry) and multiplied by the "
+    "user-set scalemail_stacks option, emitted as a BUFF-phase "
+    "stat_buff.  Takedown stacking is not simulated -- stacks come from "
+    "takedowns before the fight -- so the count is an input with a "
+    "disclosed default of 0, and the slot deals no enemy damage.",
     "Inferno Aegis grants the sourced self-shield ('Shield Strength' 60-140 "
     "by rank + 12% bonus health, plus 'Increased shield per champion' "
     "18-42 by rank + 3.6% bonus health per nearby enemy champion, "

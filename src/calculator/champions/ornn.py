@@ -49,6 +49,10 @@ def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart("magic", per_tick, count=5, time_offset=0.0, hit_interval=0.15),
     )
     entry["detail"] = "five sourced 0.15-second fire ticks; final gout applies Brittle"
+    # Both cached W rows carry the unit "% of target's maximum health", so
+    # every tick is priced off the target's maximum health — the same stamp
+    # R's Temper consume carries.
+    entry["target_max_health_sensitive"] = True
     return entry
 
 

@@ -561,6 +561,7 @@ def damage_entry(
     *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
+    crit_effectiveness: float = 0.0,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -585,6 +586,12 @@ def damage_entry(
     "mixed" entry is two parts, which the engine's certified single-hit export
     cannot carry, so that combination raises rather than silently dropping the
     marker.
+
+    ``crit_effectiveness`` is the same declaration :func:`on_hit_entry` takes,
+    on the cast channel instead of the on-hit one: the crit-probability scale
+    the row's own sourced text states ("affected by critical strike
+    modifiers" is 1.0).  The default 0.0 is the wiki's general rule that
+    ability damage does not crit unless stated.
     """
     if cc_kind is not None and dmg_type == "mixed":
         raise ValueError(
@@ -600,12 +607,28 @@ def damage_entry(
     }
     if dmg_type == "mixed":
         entry["parts"] = (
-            DamagePart("magic", total / 2.0, zero_policy=zero_policy),
-            DamagePart("true", total / 2.0, zero_policy=zero_policy),
+            DamagePart(
+                "magic",
+                total / 2.0,
+                crit_effectiveness=crit_effectiveness,
+                zero_policy=zero_policy,
+            ),
+            DamagePart(
+                "true",
+                total / 2.0,
+                crit_effectiveness=crit_effectiveness,
+                zero_policy=zero_policy,
+            ),
         )
     else:
         entry["parts"] = (
-            DamagePart(dmg_type, total, cc_kind=cc_kind, zero_policy=zero_policy),
+            DamagePart(
+                dmg_type,
+                total,
+                crit_effectiveness=crit_effectiveness,
+                cc_kind=cc_kind,
+                zero_policy=zero_policy,
+            ),
         )
     if event_order_certified is not None:
         entry["event_order_certified"] = event_order_certified
@@ -1109,6 +1132,7 @@ def simple_damage(
     *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
+    crit_effectiveness: float = 0.0,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -1159,6 +1183,10 @@ def simple_damage(
             slot is one landing split into a magic and a true part, which
             certifies too: ``engine._certify_shared_instant`` gives the
             split parts the instant they share.
+        crit_effectiveness: Keyword-only. The crit-probability scale this
+            slot's own sourced text states ("affected by critical strike
+            modifiers" is 1.0, Xin Zhao Q). Default 0.0 is the wiki's
+            general rule that ability damage does not crit unless stated.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -1226,6 +1254,7 @@ def simple_damage(
             cc_kind,
             zero_policy=zero_policy,
             event_order_certified=event_order_certified,
+            crit_effectiveness=crit_effectiveness,
         )
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration

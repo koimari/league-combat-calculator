@@ -60,6 +60,11 @@ _Q_REAPPEAR_SECONDS = 1.087
 # leveling for the passive.
 _DOUBLE_STRIKE_STACKS = 3
 _SECOND_STRIKE_AD_RATIO = 0.5
+# "The second strike ... is affected by critical strike modifiers"
+# (cached P effect 1), and the entry's notes add that it "separately
+# rolls a critical strike" — full crit probability on its own roll,
+# which is the axis this key scales.
+_SECOND_STRIKE_CRIT_EFFECTIVENESS = 1.0
 
 # HARDCODED: verify on patch updates — Highlander's window is cached R
 # prose ("For the next 7 seconds, he gains ghosting, bonus attack speed,
@@ -83,6 +88,7 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": per_proc / _DOUBLE_STRIKE_STACKS,
             "damage_type": "physical",
             "stacks_required": _DOUBLE_STRIKE_STACKS,
+            "crit_effectiveness": _SECOND_STRIKE_CRIT_EFFECTIVENESS,
         },
     )
 
@@ -173,6 +179,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Double Strike procs on every 3rd basic attack; the second strike "
     "deals 50% AD physical damage — wiki prose (module constants)",
+    "The second strike 'is affected by critical strike modifiers' and "
+    "'separately rolls a critical strike' (cached P effect 1 and notes), "
+    "so the on-hit row declares crit_effectiveness=1.0 and the engine "
+    "prices it at the fight's own crit chance and multiplier.",
     "Only basic attacks generate stacks (Alpha Strike explicitly does "
     "not; Meditate's channel stacks are not simulated)",
     "The engine prices the proc spread across the 3 stacking hits "
