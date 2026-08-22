@@ -15,7 +15,10 @@ the redesign. This file owns what the redesign itself promises, from
   no insight sentence the backend did not supply
 """
 
+import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -499,7 +502,10 @@ def test_feedback_widget_validates_the_displayed_payload(source: str):
     assert 'window.scryglass.postJson("/api/receipts", body)' in feedback
     calculation = function_body(source, "function scheduleEngineCalculation()")
     assert "requests: { a: payloads[0], b: payloads[1] || null }" in calculation
-    assert 'dispatchEvent(new Event("scryglass:result"))' in calculation
+    assert (
+        'dispatchEvent(new CustomEvent("scryglass:result",'
+        " { detail: engine.responses.a }))" in calculation
+    )
 
 
 def test_the_dead_quick_mode_layer_is_gone(source: str):
@@ -627,3 +633,77 @@ def test_opening_the_champion_step_with_no_champion_opens_the_picker(source: str
     branch = handler.split("applyRailDisclosure();")[1].split("return;")[0]
     assert 'next === "champion" && !state.attacker.champion' in branch
     assert 'openPicker("champion", "attacker.champion")' in branch
+
+
+# ---------------------------------------------------------------------------
+# The event-order panel, driven headlessly through the real eventorder.js
+# ---------------------------------------------------------------------------
+
+EVENT_ORDER_JS = ROOT / "static" / "js" / "eventorder.js"
+EVENT_ORDER_HARNESS = Path(__file__).resolve().parent / "js" / "event_order_harness.mjs"
+
+
+def _event_order_panel(results, tmp_path):
+    """Dispatch each result as one ``scryglass:result`` and read the mount."""
+    node = shutil.which("node")
+    if node is None:  # pragma: no cover - toolchain dependent
+        pytest.skip("node is not installed")
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps({"results": results}), encoding="utf-8")
+    process = subprocess.run(
+        [node, str(EVENT_ORDER_HARNESS), str(EVENT_ORDER_JS), str(fixture)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(process.stdout)
+
+
+def _calculate_receipt():
+    response = app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ziggs",
+            "level": 11,
+            "items": [],
+            "target_health": 2000,
+            "target_armor": 50,
+            "target_mr": 50,
+            "deterministic": True,
+        },
+    )
+    assert response.status_code == 200
+    return response.get_json()
+
+
+def test_the_event_order_panel_renders_from_the_published_result(tmp_path):
+    """eventorder.js used to wrap window.fetch to sniff /api/calculate, which
+    forced it to load before app.js. It reads the receipt app.js publishes on
+    "scryglass:result" instead — the same numbers, one script-order constraint
+    fewer."""
+    receipt = _calculate_receipt()
+    assert receipt["rotation"]["order"] == ["Q", "W", "E", "R"]
+    panel = _event_order_panel([receipt], tmp_path)
+    assert panel["listened"] == 1
+    rendered = panel["seen"][0]
+    assert rendered["hidden"] is False
+    for slot in receipt["rotation"]["order"]:
+        assert f"<b>{slot}</b>" in rendered["html"]
+    assert receipt["rotation"]["rationale"][:40] in rendered["html"]
+
+
+def test_the_panel_stays_hidden_for_a_result_with_no_rotation(tmp_path):
+    """A comparison response and an engine error both arrive on the same
+    signal; neither carries a rotation receipt."""
+    panel = _event_order_panel(
+        [{"results": [{"total_damage": 1}]}, {"error": "Engine unavailable"}], tmp_path
+    )
+    assert [seen["hidden"] for seen in panel["seen"]] == [True, True]
+    assert panel["seen"][0]["html"] == ""
+
+
+def test_eventorder_never_touches_the_apps_own_request():
+    source = EVENT_ORDER_JS.read_text(encoding="utf-8")
+    for gone in ("window.fetch", "installFetchCapture", "__scryglassEventOrderCapture"):
+        assert gone not in source, gone
+    assert 'document.addEventListener("scryglass:result"' in source

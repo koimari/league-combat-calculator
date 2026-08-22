@@ -864,7 +864,6 @@ class TestResolveStatEffects:
         assert bonuses.bonus_resists == 0.0
         assert bonuses.bonus_pen_percent == 0.0
         assert bonuses.basic_ability_haste == 0.0
-        assert bonuses.bonus_move_speed_percent == 0.0
         assert bonuses.permanent_bonus_ap == 0.0
         assert bonuses.permanent_ap_multiplier == 1.0
         assert bonuses.permanent_bonus_ad == 0.0

@@ -15,6 +15,7 @@ from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_dependencies,
     get_champion_cast_order,
+    get_champion_ultimate_recasts,
     get_custom_cast_order_unavailable_reason,
     parse_champion_abilities,
 )
@@ -41,6 +42,7 @@ from .item_behavior import (
 )
 from .item_effects import resolve_damage_effects, validate_item_input_options
 from .healing import derive_self_healing, self_heal_rule_owner
+from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
 from .support_effects import derive_self_state_effects
 from .auto_attack_policy import (
@@ -776,8 +778,21 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
     split of numbers already present, and computing them for a candidate
     nobody renders is work the optimizer pays per fight.
     """
+    # The champion is its own caster here, so its heal and shield power
+    # amplifies its self-heals — read through the one rule the survival
+    # walk reads, so the published scalar and the walk cannot disagree.
+    heal_power = heal_and_shield_power_factor(result.get("champion_stats"))
     result["self_healing"] = sum(
-        float(event.get("amount", 0.0)) for event in result["self_healing_events"]
+        float(event.get("amount", 0.0))
+        * (
+            heal_power
+            if amplifies_recovery(
+                str(event.get("kind", "")),
+                str(event.get("healing_category", "")),
+            )
+            else 1.0
+        )
+        for event in result["self_healing_events"]
     )
     auto_damage, ability_damage = split_auto_vs_ability(result["breakdown"])
     result["auto_attack_damage"] = auto_damage
@@ -952,6 +967,12 @@ class FightParams(FightConfig):
         # says, so it sets it.  Validating the name and then dropping it served
         # a full rotation — abilities, summons and all — to anyone who asked
         # for autos alone, and made the mode indistinguishable from time_based.
+        # No cast means no cast: an ability stat grant (Tristana Q, Olaf R,
+        # Lulu W/R, Warwick W) is bought with the cast that grants it, so
+        # autos-only earns none of them and reports the unbuffed attack speed.
+        # The full rotation stays in ``cast_order`` for the breakdown's slot
+        # rows; ``damage._apply_stat_buff_ultimates`` is what reads the mode,
+        # and it names every grant it withheld in the fight notes.
         auto_attacks_only = (
             _request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
         )
@@ -1451,15 +1472,25 @@ def run_fight(
         )
         is ResultProjection.LIGHT_TUPLE_LEDGER
     )
+    # Whether the timed scheduler may recast R is the champion module's
+    # reviewed answer, not the request's: a silent module and an
+    # unregistered name both keep the conservative one-cast rule (CF18).
+    ultimate_recasts = get_champion_ultimate_recasts(champion_data.get("name", ""))
+    engine_config = (
+        params
+        if params.enforce_resource_limits
+        and params.ultimate_recasts == ultimate_recasts
+        else replace(
+            params,
+            enforce_resource_limits=True,
+            ultimate_recasts=ultimate_recasts,
+        )
+    )
     result = calculate_fight_damage(
         fight_stats,
         ability_damages,
         items,
-        (
-            params
-            if params.enforce_resource_limits
-            else replace(params, enforce_resource_limits=True)
-        ),
+        engine_config,
         score_only=score_only,
         tuple_ledger=tuple_ledger,
         item_options=params.item_options,

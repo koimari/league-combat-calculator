@@ -161,7 +161,6 @@ def test_deployment_package_metrics_endpoint_returns_scorecard(
     code = """
 import json
 import src.app as app_module
-app_module.app.config["TESTING"] = True
 app_module.app.config["RATE_LIMIT_ENABLED"] = False
 client = app_module.app.test_client()
 response = client.get("/api/metrics")
@@ -184,7 +183,6 @@ def test_deployment_package_cli_and_endpoint_share_the_gate(
     code = """
 import json
 import src.app as app_module
-app_module.app.config["TESTING"] = True
 app_module.app.config["RATE_LIMIT_ENABLED"] = False
 client = app_module.app.test_client()
 endpoint_body = client.get("/api/metrics").get_json()

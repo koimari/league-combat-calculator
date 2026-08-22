@@ -94,6 +94,7 @@ from ..survival.pricing import (
     RoutingProvenance,
     route_declared_packet,
 )
+from ..healing_reduction import amplifies_recovery
 from ..ledger_projection import LightRow
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
@@ -558,6 +559,9 @@ def action_from_event(
         ),
         baseline_effective_mr=(float(baseline_mr) if baseline_mr is not None else None),
         healing_category=str(get("healing_category", "")),
+        amplified_recovery=amplifies_recovery(
+            kind_str, str(get("healing_category", ""))
+        ),
         amount_formula=get("amount_formula"),
         requires_existing_shield=bool(get("requires_existing_shield")),
         cast_while_disabled=bool(get("cast_while_disabled")),
@@ -1385,6 +1389,10 @@ class WalkCompiler:
                     amount=amount,
                     amount_formula=event.get("amount_formula"),
                     healing_category=str(event.get("healing_category", "")),
+                    amplified_recovery=amplifies_recovery(
+                        str(event.get("kind", "")),
+                        str(event.get("healing_category", "")),
+                    ),
                     temporary_health_duration=(
                         max(
                             0.0,
@@ -1505,6 +1513,10 @@ class WalkCompiler:
                     aidx=aidx,
                     amount=max(0.0, float(template.get("amount", 0.0))),
                     healing_category=str(template.get("healing_category", "")),
+                    amplified_recovery=amplifies_recovery(
+                        str(template.get("kind", "")),
+                        str(template.get("healing_category", "")),
+                    ),
                     source_key=str(template.get("source_key", "")),
                     source=str(template.get("source", "")),
                     event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
@@ -2125,6 +2137,43 @@ def grey_health_heal_action(
     )
 
 
+def grey_health_shield_action(  # pylint: disable=too-many-arguments
+    grant_time: float,
+    source: str,
+    amount: float,
+    duration: float,
+    index: int,
+    aidx: int,
+) -> SurvivalAction:
+    """One main-participant grey-health-to-shield press, as an action.
+
+    The barrier sibling of :func:`grey_health_heal_action`, in the shape
+    the receipt composition's own support template compiles to, so the two
+    walks stage one press identically (Tahm Kench's Thick Skin active).
+    """
+    event_id = f"main:grey:{source}:shield:{index}"
+    return SurvivalAction(
+        sort_key=action_key(
+            float(grant_time),
+            TransitionRank.LATE_BARRIER,
+            "main",
+            {"attacker": "main", "_event_id": event_id, "source": source},
+        ),
+        time=float(grant_time),
+        phase=TransitionRank.LATE_BARRIER,
+        kind=ActionKind.SHIELD,
+        subject=0,
+        attacker=0,
+        aidx=aidx,
+        amount=float(amount),
+        source_key=str(source),
+        source=str(source),
+        event_slot=EVENT_SLOTS.slot(event_id),
+        duration=float(duration),
+        duration_set=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # The program entry point
 # ---------------------------------------------------------------------------
@@ -2180,6 +2229,7 @@ class _StagedPayload(NamedTuple):
     healing_category: str = ""
     amount_formula: Any = None
     duration: float = 0.0
+    amplified_recovery: bool = True
 
 
 def _stage_damage(payload: ev.Damage) -> _StagedPayload:
@@ -2198,6 +2248,7 @@ def _stage_recovery(payload: ev.Recovery) -> _StagedPayload:
         max(0.0, float(payload.amount)),
         healing_category=str(payload.healing_category),
         amount_formula=payload.amount_formula,
+        amplified_recovery=bool(payload.amplified),
     )
 
 
@@ -2317,6 +2368,7 @@ def compile_program(
                 raw_formula=staged.raw_formula,
                 raw_damage=staged.raw_damage,
                 healing_category=staged.healing_category,
+                amplified_recovery=staged.amplified_recovery,
                 amount_formula=staged.amount_formula,
                 duration=staged.duration,
                 event_slot=EVENT_SLOTS.slot(text),
@@ -2339,6 +2391,7 @@ __all__ = [
     "action_from_event",
     "compile_program",
     "grey_health_heal_action",
+    "grey_health_shield_action",
     "is_authored_ability_event",
     "modifier_delivery_receipt",
     "pair_resistance_baselines",

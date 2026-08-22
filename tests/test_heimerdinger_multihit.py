@@ -167,7 +167,6 @@ def _fight(
 
 
 def _api(option: dict):
-    app_module.app.config["TESTING"] = True
     return app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -657,7 +656,6 @@ class TestOptions:
         assert option["label"] == "Grenade variant"
 
     def test_options_served_by_config_endpoint(self):
-        app_module.app.config["TESTING"] = True
         response = app_module.app.test_client().get("/api/config")
         assert response.status_code == 200
         options = response.get_json()["champion_options"]["Heimerdinger"]["options"]

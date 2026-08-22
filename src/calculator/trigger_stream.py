@@ -23,7 +23,7 @@ test that pins the projections.
 # The module is long because most of it is one declaration table; splitting
 # the registry out would make every projection a cross-module round trip and
 # duplicate the acyclicity proof, which is the trade this phase deliberately
-# rejected.  The repo idiom (``rune_effects._KEYSTONE_COMPILERS``,
+# rejected.  The repo idiom (``rune_paths.keystones.COMPILERS``,
 # ``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS``) co-locates a frozen table
 # with its reader for the same reason.
 # pylint: disable=too-many-lines

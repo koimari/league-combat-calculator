@@ -88,6 +88,10 @@ def _shroud_of_darkness(ctx: SlotCtx) -> dict[str, Any] | None:
         zero_policy=STEROID_ZERO,
     )
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    # "Passive: Nocturne gains bonus attack speed" (cached W effect 0): the
+    # base row is innate, so autos-only keeps it. The enhanced half rides
+    # the option's declared block, not a cast either.
+    entry["innate_grant"] = True
     entry["detail"] = (
         f"+{passive_as:g}% bonus attack speed (the passive half, no "
         f"duration); a successful spell-shield block doubles it to "

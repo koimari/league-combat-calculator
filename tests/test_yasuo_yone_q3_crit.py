@@ -204,32 +204,24 @@ def _api(
     duration: float = 6.0,
     fight_mode: str = "time_based",
 ):
-    # TESTING bypasses the rate limiter (app.py:506); restore the previous
-    # value so this file never pollutes later rate-limit tests.
-    previous_testing = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = True
-    try:
-        resp = app_module.app.test_client().post(
-            "/api/calculate",
-            json={
-                "champion": name,
-                "level": _LEVEL,
-                "items": item_names or [],
-                "fight_mode": fight_mode,
-                "fight_duration": duration,
-                "include_auto_attacks": True,
-                "auto_attack_uptime": 1.0,
-                "ability_ranks": _RANKS,
-                "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
-                "target_health": 3000.0,
-                "target_armor": 0,
-                "target_mr": 0,
-                "champion_options": options or {},
-            },
-        )
-        return resp
-    finally:
-        app_module.app.config["TESTING"] = previous_testing
+    return app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": name,
+            "level": _LEVEL,
+            "items": item_names or [],
+            "fight_mode": fight_mode,
+            "fight_duration": duration,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "ability_ranks": _RANKS,
+            "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+            "target_health": 3000.0,
+            "target_armor": 0,
+            "target_mr": 0,
+            "champion_options": options or {},
+        },
+    )
 
 
 def _atom(objects: dict, atom_id: str) -> dict:

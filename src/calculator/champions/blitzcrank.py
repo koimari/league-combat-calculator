@@ -166,6 +166,13 @@ def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
 
 OPTIONS: list[dict[str, Any]] = []
 
+# Static Field is an ordinary repeatable cast: a burst around Blitzcrank on
+# a flat 100 mana cost and a cooldown the cache marks ``affectedByCdr``
+# (60/40/20 s), with no form, stance, charge pool or escalating cost the
+# engine would have to simulate to repeat it.  Certified, so the timed
+# scheduler recasts it on its hasted cooldown instead of once per fight.
+ULTIMATE_RECASTS = True
+
 ASSUMPTIONS = [
     "P (Mana Barrier) is modeled as a pre-fight granted shield: the "
     "cached passive (35% of maximum mana for up to 10s, 90s cooldown) "
@@ -182,6 +189,12 @@ ASSUMPTIONS = [
     "R (Static Field) passive lightning is not modeled — casting R "
     "disables it and realistic bolt counts are small next to the "
     "active; only the active burst is counted",
+    "R (Static Field) recasts on its cooldown inside a timed window "
+    "(ULTIMATE_RECASTS): the cached 60/40/20s cooldown is marked "
+    "affectedByCdr, the 100 mana cost is flat at every rank, and the "
+    "active is a plain burst with no form, charge or stack state, so "
+    "ultimate haste shortens it exactly as ability haste shortens a "
+    "basic. Every other kit keeps the engine's one-cast-per-fight rule",
 ]
 
 

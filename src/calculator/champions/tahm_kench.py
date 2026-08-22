@@ -16,10 +16,11 @@ rank 5 / one enemy dealing 314.4 post-mitigation: ``grey_health_stored``
 147.75 (0.47 x, the rank row) and a ``Thick Skin (grey health)`` heal of
 147.75 four seconds after the last hit — which lands only when the fight
 leaves him those four seconds, exactly as the wiki states. The E ACTIVE
-(grey health converted into a 2.5 s shield) is the part with no channel:
-the pool is walk state and a parse-time ``attach_self_shield`` payload
-cannot read it. E remains absent from ``parse_abilities``' output, so
-the reclassification changes no fight computation.
+(grey health converted into a 2.5 s shield) rides the same primitive: the
+pool is walk state, so a parse-time ``attach_self_shield`` payload cannot
+read it, and the presses are authored beside the consume heal from the
+incoming ledger under the ``e_convert_grey_shield`` option. E remains
+absent from ``parse_abilities``' output, so no cast row is invented.
 """
 
 from typing import Any
@@ -36,7 +37,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
+from .inputs import bool_option, int_option
 from .module_contract import coverage
 
 
@@ -153,7 +154,15 @@ OPTIONS = [
         minimum=0,
         maximum=3,
         label="Acquired Taste stacks before Q",
-    )
+    ),
+    bool_option(
+        "e_convert_grey_shield",
+        False,
+        label="Thick Skin: press the active to convert grey health",
+        # Defensive self-state: it converts a pool the incoming ledger
+        # banked and never sets up or consumes an outgoing cast.
+        rotation={"role": "self_state", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -163,7 +172,12 @@ ASSUMPTIONS = [
     "out-of-combat consume (4 s without damage) restores 60% : 100% "
     "based on level of the pool as a heal — the E8a grey-health "
     "primitive authors it from the incoming ledger. The E active "
-    "converts grey into a 2.5 s shield and is defensive state, not a heal.",
+    "converts the banked grey into a 2.5 s shield instead, on E's cached "
+    "3 s haste-scaled cooldown; pressing it is a player decision, so it "
+    "is the off-by-default e_convert_grey_shield option and the model "
+    "presses at the earliest available time (the Mordekaiser-recast "
+    "convention). A press blocks the out-of-combat heal until its own "
+    "cooldown has run out, and the residual bank still pays that heal.",
     "R defaults to the enemy Regurgitate branch; ally Devour is a separate support/shield scenario.",
     "E (Thick Skin) has no enemy-damage formula: all three cached "
     "effects are self-directed grey-health resource state (store %, "

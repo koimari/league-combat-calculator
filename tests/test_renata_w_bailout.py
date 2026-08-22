@@ -84,15 +84,7 @@ def _bailout_denials(combat, component=None):
 
 
 def _calculate(payload):
-    previous = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = True
-    try:
-        return app_module.app.test_client().post("/api/calculate", json=payload)
-    finally:
-        if previous is None:
-            app_module.app.config.pop("TESTING", None)
-        else:
-            app_module.app.config["TESTING"] = previous
+    return app_module.app.test_client().post("/api/calculate", json=payload)
 
 
 def _lethal_payload(*, duration=4.0, items=None):
@@ -163,15 +155,7 @@ def test_cached_w_source_pins_all_behavior_numbers_and_precedence():
 
 def test_module_and_api_expose_the_exact_w_source_receipt():
     assert W_SOURCE in renata_glasc.SOURCES
-    previous = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = True
-    try:
-        metadata = app_module.app.test_client().get("/api/config").get_json()
-    finally:
-        if previous is None:
-            app_module.app.config.pop("TESTING", None)
-        else:
-            app_module.app.config["TESTING"] = previous
+    metadata = app_module.app.test_client().get("/api/config").get_json()
     assert W_SOURCE in metadata["champion_options"][CHAMPION]["sources"]
 
 

@@ -88,14 +88,43 @@ class TestMoveQuickIsASourcedZeroDamageRow:
         assert not [atom_id for atom_id in ids if atom_id.startswith("damage")]
         assert any("movement" in atom_id.replace(" ", "") for atom_id in ids)
 
-    def test_w_percent_movement_is_not_published_as_a_stat_buff(self, abilities):
-        """The named Naafiri-W / Sivir-R percent-movement boundary.
+    def test_w_publishes_the_active_grant_as_a_move_speed_stat_buff(self, abilities):
+        """The cast's own row, on the shared movement-speed channel.
 
-        Only the final soft-capped ``move_speed`` scalar is exposed, so a
-        percent-to-flat decomposition would be invented — and Swiftmarch's
-        adaptive force turns an over-credited movement number into DAMAGE.
+        The percent-movement boundary closed when ``calculate_total_stats``
+        started publishing the two components its fold reads, so the grant
+        is a term in that one fold rather than a decomposition somebody
+        would have to invent.  The PASSIVE branch is still withheld: its
+        5s-undamaged condition is a state a fight never enters.
         """
-        assert "stat_buff" not in abilities["W"]
+        assert abilities["W"]["stat_buff"] == {"move_speed_percent": 56.0}
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.stats import calculate_total_stats, resolve_move_speed
+
+        data = get_champion("Teemo")
+        build = calculate_total_stats(data, 18, [])
+        result = run_fight(
+            data,
+            18,
+            [],
+            FightParams(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=10.0,
+                ability_ranks=dict(RANKS),
+            ),
+        )
+        buffed = result["champion_stats"]["move_speed"]
+        assert buffed == pytest.approx(
+            resolve_move_speed(
+                build["move_speed_flat"], build["move_speed_percent"] + 56.0
+            )
+        )
+        assert buffed > build["move_speed"]
 
 
 class TestGuerrillaWarfareStaysReceiptedOpen:
