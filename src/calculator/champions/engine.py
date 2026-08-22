@@ -172,6 +172,14 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # these once per accepted cast and sends them to the participant
         # ledger as typed state transitions.
         "self_state_events",
+        # Seconds of the fight the champion silences ITSELF and can cast
+        # nothing (Rumble's Overheat).  ``damage._schedule_shared_casts``
+        # takes them off the shared timeline's horizon, so the fight buys
+        # the casts the lockout leaves rather than the casts it would have
+        # had.  WHERE in the fight the span sits is deliberately not
+        # declared: a module that cannot source the instant prices how much
+        # casting the window costs, never which casts it eats.
+        "self_cast_lockout_seconds",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it

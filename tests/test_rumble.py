@@ -159,12 +159,56 @@ class TestOverheatedOnHit:
         assert one["breakdown"]["on_hit_ability_passive"]["count"] == 1
         assert three["breakdown"]["on_hit_ability_passive"]["count"] == 3
 
-    def test_the_attack_speed_half_of_overheating_is_left_out(self):
-        """Granting it without the ability lockout would be a free upgrade."""
+    def test_the_attack_speed_half_needs_a_declared_heat_window(self):
+        """Granting it without the ability lockout would be a free upgrade.
+
+        The heat axis is what makes the pair declarable at all, so the
+        default request — which declares no window — still emits neither.
+        """
         assert "bonus attack speed" in cc_review.slot_text(cc_review.kit("Rumble"), "P")
         entry = row_review.entry("Rumble", "passive", overheat_autos=1)
         assert "stat_buff" not in entry
-        assert "ability lockout are both unmodeled" in entry["detail"]
+        assert "self_cast_lockout_seconds" not in entry
+        assert "no Overheat window is declared" in entry["detail"]
+
+    def test_a_declared_heat_window_buys_the_attack_speed_and_its_cost(self):
+        """The two halves are one purchase: the fight pays for the steroid.
+
+        A timed probe through the real pipeline — the AS goes up, and the
+        casts the lockout costs come off the same fight.
+        """
+        probe = {
+            "champion": "Rumble",
+            "level": 18,
+            "items": ["Rabadon's Deathcap"],
+            "fight_mode": "timed",
+            "fight_duration": 10.0,
+            "include_auto_attacks": True,
+        }
+        cold = calculate_payload({**probe, "champion_options": {}})
+        hot = calculate_payload(
+            {**probe, "champion_options": {"overheat_windows": 1}},
+        )
+        cold_as = cold["champion_stats"]["bonus_attack_speed"]
+        hot_as = hot["champion_stats"]["bonus_attack_speed"]
+        # 130% at level 18, over the 4s of a 10s fight the window covers.
+        assert hot_as - cold_as == pytest.approx(130.0 * 0.4)
+        assert (
+            hot["champion_stats"]["attack_speed"]
+            > cold["champion_stats"]["attack_speed"]
+        )
+        assert hot["auto_attack_damage"] > cold["auto_attack_damage"]
+        # ...and the cost: four seconds off the shared cast schedule.
+        assert len(hot["cast_timeline"]) < len(cold["cast_timeline"])
+        assert hot["ability_damage"] < cold["ability_damage"]
+
+    def test_an_autos_only_fight_never_overheats(self):
+        """No cast, no Heat — the axis cannot conjure a window."""
+        entry = row_review.entry(
+            "Rumble", "passive", overheat_windows=2, auto_attacks_only=True
+        )
+        assert "stat_buff" not in entry
+        assert "self_cast_lockout_seconds" not in entry
 
 
 class TestCoverageMap:
