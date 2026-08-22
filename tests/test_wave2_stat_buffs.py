@@ -373,6 +373,9 @@ def test_singed_insanity_potion_amplifies_his_own_poison():
     speed", and ``champions/singed.py`` grants the same flat number to all
     four.  Only the row's health/mana regeneration is left without a
     ``stat_buff`` key, because nothing in a fixed-window fight reads it.
+
+    The movement key is ``move_speed_flat``, the shared fold's input —
+    tests/test_singed.py pins why the displayed key is wrong.
     """
     bonus = _row("Singed", "R", "Bonus Stats")
     assert bonus == pytest.approx(85.0)
@@ -381,7 +384,7 @@ def test_singed_insanity_potion_amplifies_his_own_poison():
         "ability_power": pytest.approx(bonus),
         "armor": pytest.approx(bonus),
         "magic_resistance": pytest.approx(bonus),
-        "move_speed": pytest.approx(bonus),
+        "move_speed_flat": pytest.approx(bonus),
     }
     build = _build_stats("Singed")
     result = _fight("Singed")

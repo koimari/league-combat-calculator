@@ -26656,7 +26656,7 @@
             "ability_power": 55.0,
             "armor": 55.0,
             "magic_resistance": 55.0,
-            "move_speed": 55.0
+            "move_speed_flat": 55.0
           },
           "total_raw": 0.0
         },
@@ -52851,14 +52851,14 @@
       "numeric_leaves": 46175,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "c6fce5032e97c2187a3907d9d1649ecc7164d800",
+    "git_head": "f8971b4f83352bd29c58e852a2436f1a326a0586",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "c8d8de0b38767ad3eb29da391436502ec4fdcbd3"
+    "src_tree_sha": "5f97a41b7d7d77ab910b3c8932c81ad40e23de4c"
   },
   "registered_champion_fights": {
     "Aatrox": {

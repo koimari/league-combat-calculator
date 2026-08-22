@@ -34,6 +34,9 @@ from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions import singed
 from src.calculator.champions.singed import ASSUMPTIONS, MODULE_COVERAGE
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.data_fetcher import get_champion
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.stats import calculate_total_stats, resolve_move_speed
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
@@ -47,7 +50,9 @@ STATS_0AP = {
     "move_speed": 350.0,
 }
 
-_R_STAT_KEYS = {"ability_power", "armor", "magic_resistance", "move_speed"}
+# ``move_speed_flat`` is the fold's INPUT, not the displayed ``move_speed``
+# it produces — see TestRMovementRidesTheSharedFold.
+_R_STAT_KEYS = {"ability_power", "armor", "magic_resistance", "move_speed_flat"}
 
 
 def _parse(singed_data, *, ap=0.0, ranks, stats=None):
@@ -95,9 +100,9 @@ class TestNonDamageSlots:
 class TestRInsanityPotion:
     """One sourced Bonus Stats row feeds every stat the cast grants that has
     a consumer here: ability power, the two self-resist keys every other
-    steroid module publishes, and move speed (read back out for
-    ``item_state_receipts``' ``total_move_speed`` input).  The row's
-    health/mana regeneration has none, so it carries no key."""
+    steroid module publishes, and move speed (through the shared fold,
+    whose output is ``item_state_receipts``' ``total_move_speed`` input).
+    The row's health/mana regeneration has none, so it carries no key."""
 
     def test_r_deals_no_damage(self, singed_data) -> None:
         abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 1})
@@ -195,6 +200,56 @@ class TestRStatBuffInFightEngine:
         result = self._fight(stats, abilities)
         r_entry = result["breakdown"].get("R", {})
         assert r_entry.get("total_damage", 0.0) == 0.0
+
+
+# ---------------------------------------------------------------------------
+# R's movement grant on the shared fold
+# ---------------------------------------------------------------------------
+
+
+class TestRMovementRidesTheSharedFold:
+    """The grant is the fold's input, so the soft caps still apply.
+
+    Keying the displayed ``move_speed`` wrote past
+    ``stats.resolve_move_speed`` and published an uncapped 430.0 where
+    the fold gives 427.0 — and ``item_state_receipts`` reads that number
+    as its ``total_move_speed`` input, so the miss reached Swiftmarch's
+    adaptive force.
+    """
+
+    RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+
+    def test_the_grant_keys_the_folds_input_not_its_output(self, singed_data) -> None:
+        stat_buff = _parse(singed_data, ranks=dict(self.RANKS))["R"]["stat_buff"]
+        assert "move_speed" not in stat_buff
+        assert stat_buff["move_speed_flat"] == pytest.approx(85.0)
+
+    def test_the_fight_publishes_the_soft_capped_number(self) -> None:
+        data = get_champion("Singed")
+        build = calculate_total_stats(data, 18, [])
+        result = run_fight(
+            data,
+            18,
+            [],
+            FightParams(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=10.0,
+                ability_ranks=dict(self.RANKS),
+                deterministic=True,
+            ),
+        )
+        raw = build["move_speed_flat"] + 85.0
+        buffed = result["champion_stats"]["move_speed"]
+
+        assert build["move_speed_flat"] == pytest.approx(345.0)
+        assert raw == pytest.approx(430.0)
+        # Above the 415 breakpoint: raw * 0.8 + 83.
+        assert buffed == pytest.approx(427.0)
+        assert buffed == pytest.approx(
+            resolve_move_speed(raw, build["move_speed_percent"])
+        )
 
 
 # ---------------------------------------------------------------------------

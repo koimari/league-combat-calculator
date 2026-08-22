@@ -8,7 +8,8 @@ row (25/55/85, corroborated by the game binary's InsanityPotion
 ability power is fed into the parse context as well as the fight engine,
 because Q's poison ticks and E's fling both carry AP ratios, so the
 ultimate amplifies Singed's own damage exactly as the census said it
-should.  The movement speed rides the same row into
+should.  The movement speed rides the same row into the shared
+``stats.resolve_move_speed`` fold, whose output is
 ``item_state_receipts``' ``total_move_speed`` input.  The health/mana
 regeneration has no stat_buff key — this fixed-window burst engine
 consumes no regen — and the Grievous Wounds R adds to Poison Trail is an
@@ -48,15 +49,21 @@ _R_DURATION_SECONDS = 25.0
 # once.  Three of them have a consumer here: ability power (Q's poison
 # ticks and E's fling both carry AP ratios), armour and magic resistance
 # (the self-resist keys every other steroid module publishes — Braum,
-# Briar, Gnar, Graves, Jayce, Olaf, Shyvana), and movement speed (read
-# back out of ``champion_stats`` for ``item_state_receipts``'
-# ``total_move_speed`` input).  The row's health/mana regeneration has
-# none, so it carries no key.
+# Briar, Gnar, Graves, Jayce, Olaf, Shyvana), and movement speed.  The
+# row's health/mana regeneration has none, so it carries no key.
+#
+# The movement key is ``move_speed_flat``, the fold's INPUT, never the
+# displayed ``move_speed`` it produces: writing the displayed stat
+# directly skipped ``stats.resolve_move_speed`` and with it the soft
+# caps, publishing an uncapped 430.0 where the fold gives 427.0 — and
+# ``item_state_receipts`` reads that same displayed number as its
+# ``total_move_speed`` input, so the miss reached Swiftmarch's adaptive
+# force.
 _INSANITY_POTION_STATS = (
     "ability_power",
     "armor",
     "magic_resistance",
-    "move_speed",
+    "move_speed_flat",
 )
 
 
@@ -133,7 +140,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "and movement speed for the sourced 25 seconds, time-weighted by the "
     "share of the fight window the buff covers.  The ability power "
     "reaches the parse context before Q and E, so their AP ratios scale "
-    "off it.  The same row's health/mana regeneration (2.5/5.5/8.5 per "
+    "off it.  The movement key is move_speed_flat, the shared "
+    "resolve_move_speed fold's INPUT, so the grant is soft-capped like "
+    "every other movement term; keying the displayed move_speed directly "
+    "skipped the fold and published an uncapped number.  The same row's "
+    "health/mana regeneration (2.5/5.5/8.5 per "
     "0.5s by rank) has no stat_buff key because nothing in this "
     "fixed-window engine consumes regen, and the Grievous Wounds R adds "
     "to Poison Trail reduces enemy healing, which the one-pair fight "
