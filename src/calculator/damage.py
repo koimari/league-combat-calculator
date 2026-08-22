@@ -727,6 +727,7 @@ class FightState:
     champion_options: Mapping[str, Any]
     actualizer_active_until: float
     actualizer_basic_cooldown_multiplier: float
+    actualizer_resource_cost_multiplier: float
     ability_haste: float
     one_rotation: bool
     include_actives: bool
@@ -2755,6 +2756,14 @@ def _resolve_combat_state(
         if actualizer_active_until > 0.0 and cast_economy is not None
         else 1.0
     )
+    # The other half of the same trade, resolved here rather than inside a
+    # resource walk: both walks price a cast against ONE number, and 1.0 is
+    # what a build with no open window multiplies by.
+    actualizer_resource_cost_multiplier = (
+        cast_economy.value("resource_cost_multiplier")
+        if actualizer_active_until > 0.0 and cast_economy is not None
+        else 1.0
+    )
 
     # The two per-part amps, read off their declarations.  The engine asks by
     # the attack class it is about to price — "what amplifies an ability",
@@ -2832,7 +2841,10 @@ def _resolve_combat_state(
         champion_stats = dict(champion_stats)
         attack_speed = max(
             0.0,
-            attack_speed - as_ratio * swing_schedule.opening_rate_bonus_percent / 100.0,
+            attack_speed
+            - calculate_attack_speed(
+                0.0, as_ratio, swing_schedule.opening_rate_bonus_percent
+            ),
         )
         champion_stats["attack_speed"] = attack_speed
 
@@ -2986,6 +2998,7 @@ def _resolve_combat_state(
         champion_options=dict(champion_options or {}),
         actualizer_active_until=actualizer_active_until,
         actualizer_basic_cooldown_multiplier=actualizer_basic_cooldown_multiplier,
+        actualizer_resource_cost_multiplier=actualizer_resource_cost_multiplier,
         ability_haste=champion_stats["ability_haste"],
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
@@ -4328,9 +4341,14 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     (``resource_ledger``): one account owns regen ticks, external restores
     (Catalyst's Eternity, Essence Reaver's Spellblade), ability restores,
     cast spends, Tear's max-mana growth, and Lost Chapter's Enlighten.
-    ENERGY fights run ``_apply_energy_resource_limits`` instead: the energy
-    lane has no ledger representation for the temporary maximum bonus Akali's
-    W declares, which is the one energy mechanic the account cannot hold.
+    ENERGY fights run ``_apply_energy_resource_limits`` instead.  The account
+    is certified for mana only and its maximum grows but never falls, so it
+    cannot hold the temporary maximum Akali's W declares; and every mechanic
+    the mana walk carries beyond the shared skeleton restores MANA, so an
+    energy fight routed through it would have to switch each one off by kind.
+    Both walks admit casts on the same skeleton (``_cast_admission_events``,
+    ``_resource_timeline``, ``_CastAdmission``) and price a cast against the
+    one ``actualizer_resource_cost_multiplier``.
     """
     if not state.enforce_resource_limits:
         # Direct engine callers may provide an intentionally partial stat
@@ -4521,8 +4539,10 @@ def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan
     """Admit ENERGY casts against a plain account with a temporary maximum.
 
     Energy has no ledger receipts of its own: the one mechanic beyond regen
-    and spend is the temporary maximum bonus (Akali's W), so the walk carries
-    a running ``remaining`` rather than a ``resource_ledger`` account.
+    and spend is the temporary maximum bonus (Akali's W), which the typed
+    account cannot hold, so the walk carries a running ``remaining`` rather
+    than a ``resource_ledger`` account.  The pool is clamped into the live
+    maximum on every pop, the bonus's expiry included.
     """
     base_maximum = float(state.champion_stats["max_mana"])
     remaining = base_maximum
@@ -4543,12 +4563,6 @@ def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan
     # where this build declares none, which is the case where the rows came
     # from a caller staging them directly.
     restore_slot = declared_sustain(schedule_owners, ManaSpentHealRule)
-    # The casting trade an open active window makes, resolved once rather
-    # than per cast: what a cast costs is a build fact, and re-asking it
-    # inside the loop would buy the same answer at a per-event price.
-    cast_economy = stat_derivation.sole_declared_derivation(
-        schedule_owners, ActiveWindowCastEconomyRule
-    )
     timeline = _resource_timeline(
         state,
         events,
@@ -4572,6 +4586,11 @@ def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan
             maximum, remaining + max(0.0, cast_time - previous_time) * regen
         )
         previous_time = cast_time
+        if kind == "maximum_expiry":
+            # The temporary maximum ended.  The pop above already re-read the
+            # maximum and clamped ``remaining`` into it, which is the whole
+            # transition: a pool that outlived its bonus returns to base.
+            continue
         if kind == "restore":
             remaining = min(maximum, remaining + restore_amount)
             continue
@@ -4583,9 +4602,8 @@ def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
-            and cast_economy is not None
         ):
-            cost *= cast_economy.value("resource_cost_multiplier")
+            cost *= state.actualizer_resource_cost_multiplier
         if cost > remaining + _CAST_SCHEDULE_EPS:
             admission.omit(key)
             continue
@@ -4601,6 +4619,17 @@ def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan
                 + float(ability_field(info, "resource_maximum_bonus_duration")),
             )
             maximum = base_maximum + maximum_bonus
+            # The bonus is temporary, so its END is an event: without one a
+            # pool raised above base stays there for every reader after the
+            # last cast (Akali holding 300 of a 200 pool once the shroud is
+            # gone).  It rides the restore tier, matching the ``cast_time <
+            # maximum_bonus_until`` rule this walk admits by; a refresh
+            # leaves the stale row in place, where it clamps nothing.
+            if maximum_bonus_until <= state.fight_duration_seconds + _CAST_SCHEDULE_EPS:
+                heapq.heappush(
+                    timeline,
+                    (maximum_bonus_until, 0, -3, ordinal, "maximum_expiry", key, 0.0),
+                )
 
         restored = admission.restore_for(info)
         remaining = min(maximum, remaining + restored)
@@ -5379,11 +5408,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         if (
             cost > 0.0
             and state.actualizer_active_until > cast_time + _CAST_SCHEDULE_EPS
-            and item_effects.has_item(state.items, "Actualizer")
         ):
-            cost *= item_effects.required_effect_value(
-                "Actualizer", "mana_cost_multiplier"
-            )
+            cost *= state.actualizer_resource_cost_multiplier
         spend = ledger.apply(
             resource_ledger.ResourceEvent(
                 owner=owner,
@@ -7685,8 +7711,11 @@ def _hail_attack_schedule(
 
     bonus_percent = effect.bonus_attack_speed_percent(state.is_melee)
     active_rate = (
-        state.attack_speed + state.attack_speed_ratio * bonus_percent / 100.0
-    ) * state.auto_attack_uptime
+        calculate_attack_speed(
+            state.attack_speed, state.attack_speed_ratio, bonus_percent
+        )
+        * state.auto_attack_uptime
+    )
     if active_rate <= 0.0:
         return [], [], []
 
@@ -7820,8 +7849,11 @@ def _lethal_tempo_attack_schedule(
             last_attack = current
             bonus_percent = effect.attack_speed_percent(state.is_melee, stacks)
             rate = (
-                state.attack_speed + state.attack_speed_ratio * bonus_percent / 100.0
-            ) * state.auto_attack_uptime
+                calculate_attack_speed(
+                    state.attack_speed, state.attack_speed_ratio, bonus_percent
+                )
+                * state.auto_attack_uptime
+            )
             if rate <= 0.0:
                 break
             current += 1.0 / rate
@@ -9526,8 +9558,11 @@ def _apply_spellblade_attack_speed(
         return times
     normal_rate = state.attack_speed * state.auto_attack_uptime
     buffed_rate = (
-        state.attack_speed + state.attack_speed_ratio * bonus_percent / 100.0
-    ) * state.auto_attack_uptime
+        calculate_attack_speed(
+            state.attack_speed, state.attack_speed_ratio, bonus_percent
+        )
+        * state.auto_attack_uptime
+    )
     if normal_rate <= 0.0 or buffed_rate <= normal_rate:
         return times
     normal_interval = 1.0 / normal_rate

@@ -45,7 +45,7 @@ Nine dependency-light leaves own the typed contracts shared mechanics need. Each
 | leaf | owns |
 |---|---|
 | `state_lifecycle.py` | trigger predicates, stack gain/loss, caps, durations, expiry/refresh, cooldowns, charge pools, lockouts, resets, and the deterministic transition order they record in |
-| `resource_ledger.py` | one mana account per participant and resource kind: gain, spend, refund, regeneration, caps, same-time order, ownership, receipts |
+| `resource_ledger.py` | one MANA account per participant: gain, spend, refund, regeneration, caps, same-time order, ownership, receipts. Any other kind is refused — an account maximum grows and never falls, so the temporary maximum an energy kit declares (Akali's W) has no representation here; `damage._apply_energy_resource_limits` admits energy casts against a plain clamped pool on the same skeleton instead |
 | `delivery_eligibility.py` | how a packet is delivered (projectile, hitscan, area, targeted, basic attack, damage over time), which defenses accept which classes, and `stable_event_key` |
 | `crowd_control_eligibility.py` | control classification — blocking versus soft kinds — and Black-Shield-style immunity windows |
 | `cleanse_eligibility.py` | item cleanses (Mikael's Purify, Quicksilver Sash and Mercurial Scimitar) and the action-downtime truncation they cause |

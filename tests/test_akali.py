@@ -1,9 +1,28 @@
 """Tests for Akali champion ability parsing and damage calculation."""
 
+import pytest
+
 from src.calculator.champions.slotlib import build_stats_context, extract_named
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.champions import akali
+from src.calculator.pipeline import FightParams, run_fight
 from tests import cc_review
+
+
+def _shroud_params(duration: float) -> FightParams:
+    """A W-only fight of one length, so only the shroud window varies."""
+    return FightParams(
+        target_health=2000.0,
+        target_bonus_health=0.0,
+        target_armor=50.0,
+        target_magic_resistance=40.0,
+        fight_duration_seconds=duration,
+        auto_attack_uptime=0.0,
+        one_rotation=False,
+        include_actives=True,
+        deterministic=True,
+        cast_order=["W"],
+    )
 
 
 def _passive_damage(
@@ -51,6 +70,19 @@ class TestWTwilightShroud:
         assert abilities["W"]["resource_restore"] == 100
         assert abilities["W"]["resource_maximum_bonus"] == 100
         assert abilities["W"]["resource_maximum_bonus_duration"] > 0
+
+    def test_the_expanded_energy_pool_ends_with_the_shroud(self, akali_data) -> None:
+        """The rank-5 shroud lasts 7s, and the pool it raised falls with it.
+
+        A fight ending inside the window keeps the 300 the restore filled; a
+        fight outliving it reports the base 200.  The clamp admits and denies
+        nothing — both fights run the same one cast.
+        """
+        inside = run_fight(akali_data, 18, [], _shroud_params(6.0))
+        outlived = run_fight(akali_data, 18, [], _shroud_params(12.0))
+        assert inside["resource_remaining"] == pytest.approx(300.0)
+        assert outlived["resource_remaining"] == pytest.approx(200.0)
+        assert outlived["cast_timeline"] == inside["cast_timeline"]
 
 
 class TestEShurikenFlip:

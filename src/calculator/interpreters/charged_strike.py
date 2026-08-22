@@ -495,6 +495,9 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     active_until = 0.0 if window is None else window.duration
     cooldown = 0.0 if window is None else window.cooldown
     refund = 0.0 if window is None else window.refund(critical_chance)
+    # Call-time import: stats -> interpreters -> this module at import time.
+    from ..stats import calculate_attack_speed
+
     first_attack = True
     while True:
         if ramp is None:
@@ -504,9 +507,12 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
                 start for start in stack_times if current - start < ramp.stack_duration
             ]
         bonus = 0.0 if ramp is None else ramp.bonus_percent(len(stack_times))
-        rate = (attack_speed + attack_speed_ratio * bonus / 100.0) * uptime
+        rate = calculate_attack_speed(attack_speed, attack_speed_ratio, bonus) * uptime
         if window is not None and not first_attack and current < active_until:
-            rate += attack_speed_ratio * window.bonus_percent / 100.0 * uptime
+            rate += (
+                calculate_attack_speed(0.0, attack_speed_ratio, window.bonus_percent)
+                * uptime
+            )
         if rate <= 0.0:
             break
         next_time = current + 1.0 / rate
