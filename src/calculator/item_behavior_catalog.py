@@ -1338,7 +1338,7 @@ DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
 # where the declaration ships the conservative one.  Keyed by ``mechanic_id``
 # and co-located with the declarations it qualifies — the repo idiom
 # ``trigger_stream`` names (``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS``,
-# ``rune_effects._KEYSTONE_COMPILERS``): a frozen table beside its reader.
+# ``rune_paths.keystones.COMPILERS``): a frozen table beside its reader.
 #
 # The two existing divergence tables are the wrong shape for this and are
 # gated shut against it.  ``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS`` is

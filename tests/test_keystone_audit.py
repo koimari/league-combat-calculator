@@ -27,11 +27,12 @@ import math
 import pytest
 
 from src.calculator import rune_effects
+from src.calculator.rune_paths import keystones
 
-COMPILED_KEYSTONES = frozenset(rune_effects._KEYSTONE_COMPILERS)
+COMPILED_KEYSTONES = frozenset(keystones.COMPILERS)
 # MERGE: nothing in the keystone row is refused outright any more; the
 # damageless ones compile to a ``RuneNoDamageEffect`` instead.
-NO_DAMAGE_KEYSTONES = frozenset(rune_effects._NO_DAMAGE_KEYSTONES)
+NO_DAMAGE_KEYSTONES = frozenset(keystones.NO_DAMAGE)
 
 
 def _registry_names():
