@@ -106,23 +106,21 @@ def test_the_declared_zero_reaches_a_payload_at_all() -> None:
         for entry in combat["dispositions"].values()
         if entry["disposition"] == "STRUCTURAL_ZERO"
     ]
-    # Re-measured after the landing-instant ruling: 41, and the composition
-    # pinned by its composition rather than as a bare figure, so a shift in
-    # *which* refusal reaches the payload is a failure and not a silent
+    # 39, pinned by its composition rather than as a bare figure, so a shift
+    # in *which* refusal reaches the payload is a failure and not a silent
     # re-count.  ``attacker_state_blocked`` is the merged castability gate:
     # a leaf refused because its caster was disabled when the cast was due.
-    # Re-measured once more after Whimsy stopped polymorphing the board on
-    # a self cast (one cast, one branch): far fewer leaves sit out a
-    # disabled window, so more attackers and targets die inside it.
+    # Last re-measured when this roster's Aatrox stopped landing his Q and W
+    # as one event each: three strikes a second apart and two chain hits 1.5
+    # seconds apart give a disabled window and the fight's end far more
+    # leaves to refuse, and spread the same damage out so that fewer
+    # attackers and targets die inside the window at all.
     assert collections.Counter(entry["reason"] for entry in declared) == {
-        "attacker_state_blocked": 8,
-        "trigger_event_skipped": 10,
-        "outside_window": 2,
-        # A control takes effect AFTER the damage at its own timestamp, so
-        # an opening volley lands and its attacker can die inside the window
-        # that used to be pure downtime.
-        "attacker_dead": 12,
-        "target_dead": 9,
+        "attacker_state_blocked": 16,
+        "trigger_event_skipped": 11,
+        "outside_window": 8,
+        "attacker_dead": 2,
+        "target_dead": 2,
     }
     assert all(entry["reason"] for entry in declared)
 

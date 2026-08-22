@@ -919,6 +919,10 @@ def test_target_unending_multitarget_heals_have_pair_receipts_and_dead_targets_s
     The target-side item fight is evaluated once per selected teammate.  Heal
     ids and trigger links therefore need pair-local identity; a dead teammate's
     skipped pulse must not still grant the defender a second self-heal.
+
+    The uptime is what kills Yuumi inside the window, and it has to: at 0.3
+    she survives all eight seconds now that Aatrox's Q lands as three strikes
+    a second apart, and the skipped pulse this test exists for never happens.
     """
     response = app.test_client().post(
         "/api/calculate",
@@ -929,7 +933,7 @@ def test_target_unending_multitarget_heals_have_pair_receipts_and_dead_targets_s
             "fight_mode": "time_based",
             "fight_duration": 8,
             "include_auto_attacks": True,
-            "auto_attack_uptime": 0.3,
+            "auto_attack_uptime": 0.6,
             "role": "top",
             "enemies": [
                 {
