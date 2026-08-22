@@ -35,7 +35,7 @@ from ..rune_effects import (
     display_name,
     no_damage_compiler,
     required_leveling,
-    rune_effect_value,
+    stack_count_option,
     stated_type,
 )
 
@@ -306,20 +306,13 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
         ),
     ),
     "Ultimate Hunter": (
-        RuneOption(
-            key=_HUNTER_STACKS,
-            label="Bounty Hunter stacks",
-            kind=RuneOptionKind.COUNT,
-            default=0.0,
-            bounds=(
-                0.0,
-                rune_effect_value("Ultimate Hunter", "max_stacks"),
-            ),
-            disclosure=(
-                "How many unique enemy champions Ultimate Hunter's holder "
-                "has taken down when the fight opens. 0 is the default: the "
-                "engine simulates one fight and scores no takedown in it."
-            ),
+        stack_count_option(
+            "Ultimate Hunter",
+            _HUNTER_STACKS,
+            "Bounty Hunter stacks",
+            "How many unique enemy champions Ultimate Hunter's holder has "
+            "taken down when the fight opens; the engine simulates one fight "
+            "and scores no takedown in it.",
         ),
     ),
 }

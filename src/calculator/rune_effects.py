@@ -548,6 +548,38 @@ def armed_by_option(
     return armed
 
 
+def stack_count_option(
+    rune_name: str,
+    key: str,
+    label: str,
+    disclosure: str,
+    ceiling_key: str = "max_stacks",
+) -> RuneOption:
+    """One rune's stack-count option, bounded by the ceiling its cache states.
+
+    Every stacking rune declares the same option shape — a count from zero to
+    the ceiling the rune itself names — and differs only in what a stack *is*.
+    *disclosure* says that, and the range sentence is composed here off the
+    cached ceiling, so the bound and the sentence describing it cannot drift.
+    ``ceiling_key`` is the cached key that states the ceiling: ``max_stacks``
+    for a rune that caps, the rune's own threshold key for one that does not.
+    """
+    ceiling = rune_effect_value(rune_name, ceiling_key)
+    if ceiling < 1.0:
+        raise KeyError(
+            f"RUNE_EFFECTS[{rune_name!r}] {ceiling_key} is {ceiling:g} and "
+            "bounds nothing — wiki parse degraded"
+        )
+    return RuneOption(
+        key=key,
+        label=label,
+        kind=RuneOptionKind.COUNT,
+        default=0.0,
+        bounds=(0.0, ceiling),
+        disclosure=f"{disclosure} The count runs 0 to {ceiling:g}, 0 by default.",
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class RuneStatContext:
     """What a stat grant is allowed to read when it resolves its amount.

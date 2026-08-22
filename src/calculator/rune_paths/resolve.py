@@ -12,12 +12,10 @@ from typing import Any, Callable, Mapping
 from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
-    cached_effects,
     RuneEffect,
     RuneHealEffect,
     RuneHealTrigger,
     RuneOption,
-    RuneOptionKind,
     RuneProcEffect,
     RuneStat,
     RuneStatContext,
@@ -30,6 +28,7 @@ from ..rune_effects import (
     no_damage_compiler,
     pure_adaptive_type,
     required_leveling,
+    stack_count_option,
 )
 
 #: Overgrowth's stacks are minions and monsters that died near the holder
@@ -230,19 +229,15 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
     "Overgrowth": (
-        RuneOption(
-            key=_STACKS,
-            label="Overgrowth stacks",
-            kind=RuneOptionKind.COUNT,
-            default=0.0,
-            bounds=(
-                0.0,
-                float(_stack_threshold("Overgrowth", cached_effects("Overgrowth"))),
-            ),
-            disclosure=(
-                "How many Overgrowth stacks the holder has earned; each is "
-                "worth its share of maximum health, and the default is none."
-            ),
+        stack_count_option(
+            "Overgrowth",
+            _STACKS,
+            "Overgrowth stacks",
+            "How many Overgrowth stacks the holder has earned; each is worth "
+            "its share of maximum health.",
+            # Overgrowth stacks indefinitely in game and states no maximum;
+            # the option stops at the threshold its description names.
+            ceiling_key="stack_threshold",
         ),
     ),
 }

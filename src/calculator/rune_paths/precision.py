@@ -38,7 +38,7 @@ from ..rune_effects import (
     display_name,
     no_damage_compiler,
     required_leveling,
-    rune_effect_value,
+    stack_count_option,
 )
 
 #: ``Legend`` stacks are earned across a whole game — takedowns, epic
@@ -55,18 +55,12 @@ def _legend_stack_option(rune_name: str) -> RuneOption:
     ten, Bloodline at fifteen — so the control refuses a count the rune could
     never reach instead of accepting one and quietly clamping it.
     """
-    ceiling = rune_effect_value(rune_name, "max_stacks")
-    return RuneOption(
-        key=_LEGEND_STACKS,
-        label="Legend stacks",
-        kind=RuneOptionKind.COUNT,
-        default=0.0,
-        bounds=(0.0, ceiling),
-        disclosure=(
-            f"How many Legend stacks {rune_name} has banked when the fight "
-            f"opens, 0 to {ceiling:g}. 0 is the un-stacked default: the "
-            "engine simulates one fight and earns no stacks during it."
-        ),
+    return stack_count_option(
+        rune_name,
+        _LEGEND_STACKS,
+        "Legend stacks",
+        f"How many Legend stacks {rune_name} has banked when the fight "
+        "opens; the engine simulates one fight and earns no stacks during it.",
     )
 
 
