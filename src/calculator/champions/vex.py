@@ -1,5 +1,11 @@
-"""Vex — CP10.9 full-entry-reviewed packet module, plus the E8c W shield and
-the P1 Gloom detonation.
+"""Vex — CP10.9 full-entry-reviewed packet module, plus the E8c W shield,
+the P1 Gloom detonation, and the ER2 R split.
+
+ER2 addition over the reviewed packet:
+- R (Shadow Surge) is two hits, not one: the Shadow's own "Magic Damage"
+  and the recast dash's, which the cached "Total Magic Damage" row sums
+  exactly at every rank.  ``_shadow_surge`` reads both, checks the sum
+  against that row, and lands them at their own instants.
 
 E8c addition over the reviewed packet:
 - W (Personal Space) deals its magic damage AND shields Vex herself for
@@ -27,11 +33,20 @@ P1 addition over the reviewed packet:
   non-champion reduced damage are state and out of scope.
 """
 
+import math
 from typing import Any
 
+from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import attach_self_shield, extract_named, on_hit_entry
+from .slotlib import (
+    attach_self_shield,
+    extract_description_duration,
+    extract_named,
+    find_named_leveling,
+    on_hit_entry,
+    sum_modifiers,
+)
 from .inputs import int_option
 
 PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd15"
@@ -65,6 +80,71 @@ def _personal_space(packet_w):
                 f"{_PERSONAL_SPACE_SHIELD_DURATION_SECONDS:g}s (self)"
             ),
         )
+
+    return parse
+
+
+# The cached R effect whose description times the mark the recast lives
+# in ("mark them for 4 seconds"), read live by ``_shadow_surge``.
+_R_MARK_EFFECT_INDEX = 1
+
+# HARDCODED: verify on patch updates — the recast's instant is the
+# player's, anywhere inside that mark, so the cache times the window and
+# not the hit.  The authored cadence is Lee Sin Q's (``lee_sin.py``): the
+# 0.25-second cast the game file gives VexR plus the recast reaction.
+# VexR2 itself has spellCastTime 0.
+_R_RECAST_DELAY_SECONDS = 0.5
+
+
+def _shadow_surge(packet_r):
+    """R: the Shadow's hit, then the recast consume it marked a target for.
+
+    The reviewed packet prices the cached "Total Magic Damage" row, which
+    is exactly the "Magic Damage" of the Shadow (effect 0) plus the
+    "Magic Damage" of the recast (effect 2) at every rank.  One row cannot
+    carry two landing times, so the two are read separately, checked
+    against the total, and land at their own instants.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_r(ctx)
+        ranked = ctx.ranked("R", 0)
+        if entry is None or ranked is None:
+            return entry
+        ability, rank = ranked
+        window = extract_description_duration(ability, _R_MARK_EFFECT_INDEX)
+        if window is None or window < _R_RECAST_DELAY_SECONDS:
+            raise ValueError(
+                "Vex R: the cached Shadow Surge effect "
+                f"{_R_MARK_EFFECT_INDEX} states no mark window holding the "
+                f"{_R_RECAST_DELAY_SECONDS:g}s recast, so the consume has no "
+                "sourced instant"
+            )
+        surge = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
+        recast_row = find_named_leveling(ability, "Magic Damage", 1)
+        recast = (
+            sum_modifiers(recast_row, rank, ctx.stats, ctx.target)
+            if recast_row is not None
+            else 0.0
+        )
+        total = extract_named(
+            ability, "Total Magic Damage", rank, ctx.stats, ctx.target
+        )
+        if not math.isclose(surge + recast, total, rel_tol=1e-9, abs_tol=1e-6):
+            raise ValueError(
+                f"Vex R: the Shadow's {surge:g} and the recast's {recast:g} "
+                f"do not compose the cached Total Magic Damage {total:g}"
+            )
+        entry["parts"] = (
+            DamagePart("magic", surge, time_offset=0.0),
+            DamagePart("magic", recast, time_offset=_R_RECAST_DELAY_SECONDS),
+        )
+        entry["detail"] = (
+            f"Shadow's hit {surge:g}, then the recast consume {recast:g} "
+            f"{_R_RECAST_DELAY_SECONDS:g}s later, inside the cached "
+            f"{window:g}s mark"
+        )
+        return entry
 
     return parse
 
@@ -124,11 +204,11 @@ _gloom_detonation.phase = ONHIT
 # 30-50%) but its 2-second window is prose only, so the marker carries the
 # kind with no interval -- which is what a zero cc_duration states.
 #
-# R stays undeclared, and not for want of a certification: its one part is
-# the cached "Total Magic Damage" row, which sums the Shadow's hit and the
-# recast consume.  Those land at two instants the player chooses inside the
-# 4-second mark, so calling the row one landing would be false.
-MODULE_CC = {"P": "none", "Q": "none", "W": "none", "E": "slow"}
+# R answers too, now that its row lands its two hits at their own instants
+# rather than as one "Total Magic Damage" lump: the Shadow "deals magic
+# damage to enemies hit", the mark only reveals, and the recast dash's
+# displacement immunity is Vex's own.
+MODULE_CC = {"P": "none", "Q": "none", "W": "none", "E": "slow", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vex",
@@ -138,6 +218,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "P": _gloom_detonation,
     },
     slot_wrappers={
+        "R": _shadow_surge,
         "W": _personal_space,
     },
     cc_kinds=MODULE_CC,
@@ -156,6 +237,12 @@ OPTIONS = list(OPTIONS) + [
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "R (Shadow Surge) always lands both hits: the Shadow's cached Magic "
+    "Damage at the cast and the recast consume 0.5s later. The player "
+    "picks that instant anywhere inside the cached 4-second mark, so the "
+    "0.5s cadence is authored (Lee Sin Q's) rather than cached; the two "
+    "hits sum to the cached Total Magic Damage row exactly, and the "
+    "parser refuses the slot if they ever stop doing so.",
     "W (Personal Space) grants Vex the sourced shield (flat + 75% AP) for "
     "2.5s at the cast; the shield absorbs damage before health in the "
     "participant ledger.",
