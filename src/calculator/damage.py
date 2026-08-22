@@ -1456,7 +1456,31 @@ def _schedule_cooldown_procs(
     return proc_autos
 
 
-def _simulate_cooldown_current_health_procs(
+def _hp_scaled_on_hit_raw(
+    on_hit_data: Mapping[str, Any],
+    target_health: float,
+) -> Callable[[float], float]:
+    """One application's raw damage at a target current HP.
+
+    Two declared shapes read the same live health and so share one walk:
+    a share of the target's CURRENT health floored at a minimum (Jarvan
+    IV's Martial Cadence), and a flat amount amplified by the target's
+    MISSING health — ``missing_health_amp`` 1.0 doubles at full missing
+    health (Samira's Daredevil Impulse blade rider).
+    """
+    percent = on_hit_data.get("current_health_percent")
+    if percent is not None:
+        share = float(percent) / 100.0
+        floor = float(ability_field(on_hit_data, "min_damage", form="on_hit"))
+        return lambda current_hp: max(share * current_hp, floor)
+    amount = float(ability_field(on_hit_data, "damage_per_hit", form="on_hit"))
+    amp = float(ability_field(on_hit_data, "missing_health_amp", form="on_hit"))
+    return lambda current_hp: amount * (
+        1.0 + amp * (1.0 - current_hp / target_health if target_health > 0 else 1.0)
+    )
+
+
+def _simulate_hp_scaled_on_hit_procs(
     on_hit_data: dict[str, Any],
     target_health: float,
     num_auto_attacks: int,
@@ -1467,16 +1491,16 @@ def _simulate_cooldown_current_health_procs(
     proc_autos: list[int],
     effectiveness: float = 1.0,
 ) -> list[float]:
-    """Simulate cooldown-gated current-health procs (Jarvan IV passive).
+    """Simulate schedule-gated procs that read the target's live health.
 
-    Each proc deals ``current_health_percent`` of the target's decayed
-    current HP, floored at ``min_damage``, as ``damage_type`` damage.
-    Same decaying-HP walk as the stacking on-hit simulation: the proc
-    lands before that auto's own damage is subtracted.
+    Each proc is priced by :func:`_hp_scaled_on_hit_raw` against the
+    target's decayed current HP. Same decaying-HP walk as the stacking
+    on-hit simulation: the proc lands before that auto's own damage is
+    subtracted.
 
     Args:
         on_hit_data: The ability entry's ``on_hit`` payload, carrying
-            ``current_health_percent`` / ``min_damage`` / ``damage_type``.
+            the shape's own fields and ``damage_type``.
         target_health: Target's starting (max) health.
         num_auto_attacks: Number of auto attacks in the fight.
         auto_damage_per_hit: Mitigated base auto attack damage per hit.
@@ -1491,8 +1515,7 @@ def _simulate_cooldown_current_health_procs(
     if not proc_autos:
         return []
 
-    pct = on_hit_data["current_health_percent"] / 100.0
-    min_damage = ability_field(on_hit_data, "min_damage", form="on_hit")
+    raw_for = _hp_scaled_on_hit_raw(on_hit_data, target_health)
     dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
     proc_set = set(proc_autos)
 
@@ -1500,7 +1523,7 @@ def _simulate_cooldown_current_health_procs(
     proc_damages: list[float] = []
     for i in range(num_auto_attacks):
         if i in proc_set:
-            raw_damage = max(pct * current_hp, min_damage) * effectiveness
+            raw_damage = raw_for(current_hp) * effectiveness
             mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
             proc_damages.append(mitigated)
             current_hp -= mitigated
@@ -9141,8 +9164,12 @@ def _layer_on_hit_effects(
         on_hit_data = ability_info.get("on_hit")
         if not on_hit_data:
             continue
-        if "proc_cooldown" in on_hit_data or "proc_window" in on_hit_data:
-            continue  # scheduled current-health procs are simulated below
+        if (
+            "proc_cooldown" in on_hit_data
+            or "proc_window" in on_hit_data
+            or "missing_health_amp" in on_hit_data
+        ):
+            continue  # procs that read the target's live health are below
         if "empower_window" in on_hit_data:
             on_hit_total += _add_empower_window_on_hit(
                 state,
@@ -9502,13 +9529,15 @@ def _layer_on_hit_effects(
                 )
             )
 
-    # Scheduled current-health on-hits ride the fight's auto timeline and
-    # read the target's decayed current HP per proc. Two schedules:
+    # Scheduled live-health on-hits ride the fight's auto timeline and
+    # read the target's decayed current HP per proc. Three schedules:
     # ``proc_cooldown`` (Jarvan IV's Martial Cadence) procs the first
     # auto, then the first auto at/after (last proc + per-target
     # cooldown); ``proc_window`` (Camille R's rider) procs every auto
     # landing inside the window after the ability is cast — so a fight
-    # that never casts it (auto-only mode) gets nothing. Schedule-gated
+    # that never casts it (auto-only mode) gets nothing;
+    # ``missing_health_amp`` (Samira's blade rider) procs the swings a
+    # range gate admits, ``max_procs`` of them. Schedule-gated
     # procs don't land on every auto, which is why phantom hits / double
     # shots never add procs and why the proc stays out of
     # static_on_hit_per_hit (spellblade doubling and the BoRK simulation
@@ -9531,6 +9560,18 @@ def _layer_on_hit_effects(
                 proc_autos = _schedule_cooldown_procs(
                     proc_schedule, on_hit_data["proc_cooldown"]
                 )
+            elif "missing_health_amp" in on_hit_data:
+                # A range-gated rider on the basic-attack stream: it rides
+                # every swing inside the gate, and ``max_procs`` is how many
+                # of them the request says land there.
+                gated = ability_field(on_hit_data, "max_procs", form="on_hit")
+                proc_autos = list(
+                    range(
+                        num_auto_attacks
+                        if gated is None
+                        else min(num_auto_attacks, int(gated))
+                    )
+                )
             elif "proc_window" in on_hit_data:
                 if breakdown.get(ability_key, {}).get("casts", 0) < 1:
                     continue  # rider exists only after the ability is cast
@@ -9546,7 +9587,7 @@ def _layer_on_hit_effects(
                 continue
             if not proc_autos:
                 continue
-            proc_damages = _simulate_cooldown_current_health_procs(
+            proc_damages = _simulate_hp_scaled_on_hit_procs(
                 on_hit_data,
                 state.target_health,
                 num_auto_attacks,

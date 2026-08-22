@@ -146,6 +146,8 @@ def _assert_ticked_ability(
     initial_attr: str | None = None,
     ranks: dict | None = None,
     recast_attr: str | None = None,
+    rider_band=None,
+    rider_hits: int = 0,
 ) -> None:
     """Fight one champion and pin total damage + per-tick event count.
 
@@ -158,6 +160,11 @@ def _assert_ticked_ability(
     missing health grows, so the row total is bounded by
     ``(initial + ticks + minimum) x casts`` and
     ``(initial + ticks + maximum) x casts``.
+
+    ``rider_band(stats)`` is the same shape for a champion passive that
+    rides this ability's own hits (Samira's Daredevil Impulse): its
+    ``(minimum, maximum)`` per hit widens the band by ``rider_hits`` hits
+    per cast, and each one is an extra event.
     """
     data = _fight(champion, duration=duration, ranks=ranks)
     stats = data["champion_stats"]
@@ -194,18 +201,21 @@ def _assert_ticked_ability(
             stats,
             data["target_effective_max_health"],
         )
+    rider_min, rider_max = rider_band(stats) if rider_band is not None else (0.0, 0.0)
     row = data["breakdown"][slot]
     casts = max(1, int(row.get("casts", 1)))
-    expected_min = (fixed_per_cast + recast_min) * casts
-    expected_max = (fixed_per_cast + recast_max) * casts
+    expected_min = (fixed_per_cast + recast_min + rider_min * rider_hits) * casts
+    expected_max = (fixed_per_cast + recast_max + rider_max * rider_hits) * casts
     assert row["total_damage"] >= expected_min - 1e-6
     assert row["total_damage"] <= expected_max + 1e-6
     # One event per tick (plus the initial hit when the ability has one,
-    # plus the recast hit) for every cast the fight schedules.
+    # plus the recast hit, plus each rider instance) for every cast the
+    # fight schedules.
     expected_events = (
         count
         + (1 if initial_attr is not None else 0)
         + (1 if recast_attr is not None else 0)
+        + rider_hits
     ) * casts
     events = [
         event
@@ -520,15 +530,38 @@ def test_renekton_dominus_prices_thirty_ticks():
 # ---------------------------------------------------------------------------
 
 
+def _samira_blade_rider(stats: dict) -> tuple[float, float]:
+    """Daredevil Impulse's per-hit band at level 18, from the cached rows.
+
+    "2 : 21 (based on level) (+ 3.5% : 11.32% (based on level) AD) bonus
+    magic damage, increased by 0% : 100% (based on target's missing
+    health), up to 4 : 42 (+ 7% : 22.65% AD)" — the minimum is the
+    full-health value and the maximum is its double.
+    """
+    passive = _CHAMPION_DATA[_CACHE_KEY_BY_DISPLAY["Samira"]]["abilities"]["P"][0]
+    rows = [
+        leveling
+        for effect in passive["effects"]
+        for leveling in effect.get("leveling") or []
+    ]
+    flat = float(rows[0]["modifiers"][0]["values"][17])
+    ad_percent = float(rows[1]["modifiers"][0]["values"][17])
+    minimum = flat + ad_percent / 100.0 * float(stats["attack_damage"])
+    return minimum, 2.0 * minimum
+
+
 def test_samira_blade_whirl_prices_two_slashes():
     """W rank 5: "Physical Damage per Hit" 80 (+ 50% bonus AD), "Total
-    Physical Damage" 160 (+ 100% bonus AD) -> 2 slashes."""
+    Physical Damage" 160 (+ 100% bonus AD) -> 2 slashes, each carrying
+    the Daredevil Impulse rider Blade Whirl is a named carrier of."""
     _assert_ticked_ability(
         "Samira",
         "W",
         per_tick_attr="Physical Damage per Hit",
         count=2,
         ranks=_FULL_RANKS,
+        rider_band=_samira_blade_rider,
+        rider_hits=2,
     )
 
 
