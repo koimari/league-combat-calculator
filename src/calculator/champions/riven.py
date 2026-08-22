@@ -6,10 +6,9 @@ attacks are empowered to each consume a stack to deal bonus physical
 damage equal to 30% : 46.76% (based on level) AD" (data/champions.json
 P "Per-Level Scaling" [0], 30-46.76% AD; the second row is the 50%
 structure-reduced share).  The passive is an on-hit entry priced at
-``AD x per-level% / 100`` per empowered auto.  The bonus damage is
-crit-affected and life-steals at 100% in game; the on-hit framework
-prices the flat per-hit amount (no crit rider), conservative for the
-0%-crit test fights.
+``AD x per-level% / 100`` per empowered auto, declaring the crit clause
+the cached row states (``_RUNIC_BLADE_CRIT_EFFECTIVENESS``).  The 100%
+life-steal effectiveness is a healing axis the on-hit row does not carry.
 
 P1-3 fix — Blade of the Exile (R1): the reviewed R slot priced only
 the Wind Slash.  The R1 active buffs Riven for 15 seconds with bonus
@@ -50,6 +49,11 @@ PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b
 # from 25%").
 _R_BONUS_AD_RATIO = 0.20
 _R_BUFF_DURATION = 15.0  # wiki prose: "empowers her blade for 15 seconds"
+
+# Runic Blade's own cached sentence: "The bonus damage is affected by
+# critical strike modifiers and applies life steal at 100% effectiveness"
+# (P effect 1) — full crit probability, which is what this key scales.
+_RUNIC_BLADE_CRIT_EFFECTIVENESS = 1.0
 
 
 def _blade_of_the_exile(ctx: SlotCtx):
@@ -96,7 +100,12 @@ def _runic_blade(ctx: SlotCtx):
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )
     per_hit = float(ctx.stat("attack_damage") or 0.0) * percent / 100.0
-    return on_hit_entry(ability.get("name", "Runic Blade"), per_hit, "physical")
+    return on_hit_entry(
+        ability.get("name", "Runic Blade"),
+        per_hit,
+        "physical",
+        crit_effectiveness=_RUNIC_BLADE_CRIT_EFFECTIVENESS,
+    )
 
 
 _runic_blade.phase = ONHIT
@@ -132,10 +141,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "basic attacks deal bonus physical damage equal to 30% : 46.76% "
     "(based on level) AD, one stack per auto (data/champions.json P "
     "'Per-Level Scaling' [0]).",
-    "Runic Blade's bonus damage is affected by critical strike "
-    "modifiers in game; the on-hit framework prices the flat per-hit "
-    "amount and does not roll crits on it (conservative, and exact at "
-    "0% crit).",
+    "Runic Blade's bonus damage 'is affected by critical strike "
+    "modifiers' (cached P effect 1), so the on-hit row declares "
+    "crit_effectiveness=1.0 and the engine prices it at the fight's own "
+    "crit chance and multiplier.  The same sentence's 100% life-steal "
+    "effectiveness is a healing axis the row does not carry.",
     "R1 (Blade of the Exile) prices the AD steroid: +20% of bonus AD "
     "as bonus AD for 15s (riven.bin.json PercentBonusAD 0.20 x bonus "
     "AD, flat at all ranks — the retired 20/25/30% rank array was "

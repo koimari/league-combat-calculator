@@ -68,11 +68,14 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
                 hit_interval=interval,
             ),
         ),
+        # No ``event_order_certified``: the certification vocabulary is a
+        # string ("single_hit" / "auto_stack_proc"), and 15 daggers over a
+        # 2.5-second channel is neither.  The parts author their own
+        # cadence, which is what the ledger reads.
         "detail": (
             f"{daggers} sourced daggers at 0.166-second cadence; "
             "on-hit/Grievous Wounds are ordered state."
         ),
-        "event_order_certified": True,
     }
 
 

@@ -9,8 +9,28 @@ stays coarse.
 
 import pytest
 
-from src.calculator.champions import get_champion_module_contract, xin_zhao
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
+    xin_zhao,
+)
+from src.calculator.scenario import load_public_champion
 from tests import cc_review, rider_probe, row_review
+
+
+def _row_at_crit(slot, crit_chance_percent):
+    """One parsed slot at the shared stat block plus a crit chance."""
+    return parse_champion_abilities(
+        load_public_champion("Xin Zhao"),
+        18,
+        row_review.STATS["ability_power"],
+        row_review.RANKS,
+        champion_stats={
+            **row_review.STATS,
+            "critical_strike_chance": crit_chance_percent,
+        },
+        target_stats=dict(row_review.TARGET),
+    )[slot]
 
 
 class TestReviewedCrowdControl:
@@ -92,6 +112,80 @@ class TestPricedRows:
         assert slashes == pytest.approx(4 * per_slash)
         assert row_review.priced("Xin Zhao", "W") == pytest.approx(total)
         assert row_review.packet_row("Xin Zhao", "W", xin_zhao)[4] == 17.5
+
+
+class TestCritVocabulary:
+    """Q and W each state a crit clause, and they are different axes.
+
+    ``crit_effectiveness`` scales the crit PROBABILITY, so it routes
+    through the fight's crit multiplier.  W's thrust rider does not: it
+    reaches a fixed +33.3% at 100% crit chance whatever the multiplier
+    is, which is why it is priced in the parser instead.
+    """
+
+    def test_three_talon_strike_declares_the_clause_its_row_states(self):
+        text = cc_review.slot_text(cc_review.kit("Xin Zhao"), "Q")
+        assert "bonus damage is affected by critical strike modifiers" in text
+        (part,) = row_review.entry("Xin Zhao", "Q")["parts"]
+        assert part.crit_effectiveness == xin_zhao._Q_CRIT_EFFECTIVENESS == 1.0
+        # The declaration is on the probability axis only: the priced
+        # amount is still the cached row, at any crit chance.
+        for crit in (0.0, 100.0):
+            assert _row_at_crit("Q", crit)["total_raw"] == pytest.approx(
+                row_review.cached_row("Xin Zhao", "Q", "Total Bonus Physical Damage")
+            )
+
+    def test_the_thrust_rider_is_priced_here_and_is_not_crit_effectiveness(self):
+        text = cc_review.slot_text(cc_review.kit("Xin Zhao"), "W")
+        assert "increased by 0% : 33.3% (based on critical strike chance)" in text
+        total = row_review.cached_row("Xin Zhao", "W", "Total Physical Damage")
+        thrust = row_review.cached_row("Xin Zhao", "W", "Thrust Physical Damage")
+        # At 0% crit the row is exactly the cached Total; at 100% it is
+        # that total plus a third of the thrust, and nothing else moves.
+        assert _row_at_crit("W", 0.0)["total_raw"] == pytest.approx(total)
+        assert _row_at_crit("W", 100.0)["total_raw"] == pytest.approx(
+            total + thrust * xin_zhao._W_THRUST_CRIT_CHANCE_AMP
+        )
+        assert _row_at_crit("W", 50.0)["total_raw"] == pytest.approx(
+            total + thrust * xin_zhao._W_THRUST_CRIT_CHANCE_AMP * 0.5
+        )
+        # The key stays off the part: a crit roll would move with the
+        # build's crit multiplier, and this rider does not.
+        for crit in (0.0, 100.0):
+            (part,) = _row_at_crit("W", crit)["parts"]
+            assert part.crit_effectiveness == 0.0
+
+    def test_the_crit_clauses_reach_a_real_fight(self):
+        """Cloak of Agility grants 15% crit chance and no other stat.
+
+        Both sides of the comparison therefore price the same AD and AP,
+        so every difference below is the crit clause and nothing else.
+        """
+        plain = rider_probe.fight("Xin Zhao", deterministic=True)
+        crit = rider_probe.fight(
+            "Xin Zhao", items=["Cloak of Agility"], deterministic=True
+        )
+        assert crit["champion_stats"]["critical_strike_chance"] == pytest.approx(15.0)
+        assert crit["champion_stats"]["attack_damage"] == pytest.approx(
+            plain["champion_stats"]["attack_damage"]
+        )
+        # Q's whole row crits: 1 - 0.15 + 0.15 x 2.0 == 1.15.
+        assert crit["breakdown"]["Q"]["total_damage"] == pytest.approx(
+            1.15 * plain["breakdown"]["Q"]["total_damage"], abs=0.1
+        )
+        # W's thrust rider is a flat 0.333 x 0.15 of the thrust term, and
+        # the four slashes are untouched — so W grows by strictly less
+        # than the crit multiplier would have grown it.
+        assert (
+            1.0
+            < (
+                crit["breakdown"]["W"]["total_damage"]
+                / plain["breakdown"]["W"]["total_damage"]
+            )
+            < 1.15
+        )
+        assert "adds 0.00 at 0% crit chance" in plain["breakdown"]["W"]["detail"]
+        assert "amplifier adds" in crit["breakdown"]["W"]["detail"]
 
 
 class TestDetermination:

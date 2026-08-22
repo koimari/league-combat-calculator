@@ -66,10 +66,22 @@ class TestReviewedCrowdControl:
         assert coverage["coarse_sources"] == []
 
 
-def test_the_dagger_ult_authors_a_certified_order():
-    """R's blades ride an ordered schedule, not a coarse total."""
+def test_the_dagger_ult_authors_its_order_in_the_parts_not_a_flag():
+    """R's blades ride an authored cadence, and claim no certification.
+
+    ``event_order_certified`` is a string vocabulary ("single_hit" /
+    "auto_stack_proc") every reader compares against; a bool never
+    matched one, so the row carries none.  Fifteen daggers over a
+    2.5-second channel is neither kind anyway — the schedule the ledger
+    reads is the parts' own ``time_offset``/``hit_interval``.
+    """
     from tests import row_review
 
-    assert row_review.entry("Katarina", "R", p_daggers=2, r_daggers=15)[
-        "event_order_certified"
+    entry = row_review.entry("Katarina", "R", p_daggers=2, r_daggers=15)
+    assert "event_order_certified" not in entry
+    assert [
+        (part.count, part.time_offset, part.hit_interval) for part in entry["parts"]
+    ] == [
+        (15, 0.166, 2.5 / 15),
+        (15, 0.166, 2.5 / 15),
     ]
