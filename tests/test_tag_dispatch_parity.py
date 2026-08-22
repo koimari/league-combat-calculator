@@ -1,24 +1,28 @@
 """SD9 — the two dispatchers over one effect `type` tag, number by number.
 
-`item_effects._resolve_damage_effects_uncached` branches on eight tags;
-`item_behavior_catalog.TAG_FAMILY` maps all thirty-eight to a family whose
-compiler builds a declaration an interpreter prices.  `validate_catalog`
-proves the two see the same tag vocabulary and nothing proved they produce
-the same NUMBER for a tag both claim.
+`item_behavior_catalog.TAG_FAMILY` maps all thirty-eight tags to a family
+whose compiler builds a declaration an interpreter prices.
+`item_effects._resolve_damage_effects_uncached` used to branch on eight of
+them and compile a second number for six.  It branches on two now, and
+neither prices anything: `ult_empowered_autos` and `ult_attack_speed_buff`
+quote the catalog's attack-speed digits into an assumption note, which is
+the one prose surface the projection owns.
 
-This file is that proof, and the gate any retirement has to keep green: for
-every tag the ladder branches on, either both lanes are compared here and
-agree, or this file names which lane owns the number and why the other one
-cannot.  The ladder's tag set is read off its own source rather than listed,
-so a ninth branch fails here until somebody decides which lane owns it.
+This file is the proof each retirement was made against and the gate the
+next one has to keep green: for every tag the ladder still branches on,
+either both lanes are compared here and agree, or this file names which lane
+owns the number.  The ladder's tag set is read off its own source rather
+than listed, so a third branch fails here until somebody decides which lane
+owns it, and each retired tag keeps a test asserting the projection carries
+no field for it.
 
-Where the two lanes DISAGREE by construction, the difference is composition
-and not arithmetic: the ladder's single-holder slots silently take the last
-holder (`execute`, `cd_refund_percent`), while the catalog's stop naming both
-holders.  Today's registry carries exactly one item per those tags, so no
-build reaches the difference; the case is pinned in
+The one place the two lanes DISAGREED by construction was composition and
+not arithmetic: the ladder's single-holder slots silently took the last
+holder (`execute`, `cd_refund_percent`) where the catalog's stop naming
+both.  Every one of those slots is now the catalog's alone;
 ``test_a_second_holder_is_a_stop_on_one_lane_and_the_last_word_on_the_other``
-rather than left for a future second holder to discover.
+pins that today's registry carries exactly one holder per tag, so no build
+ever reached the difference.
 """
 
 from pathlib import Path
