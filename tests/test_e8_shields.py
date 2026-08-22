@@ -52,7 +52,9 @@ def _parse(champion, *, level=18, stats=None, options=None, ranks=None):
     )
 
 
-def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None):
+def _run_api_fight(
+    champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None, items=None
+):
     # TESTING is scoped to this request and restored afterwards: the flag
     # is session-global, and a module-level assignment would leak into
     # every later test file (the rate-limiter short-circuits on TESTING).
@@ -65,6 +67,7 @@ def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=N
             duration=duration,
             allies=allies,
             ranks=ranks,
+            items=items,
         )
     finally:
         if previous_testing is None:
@@ -73,11 +76,13 @@ def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=N
             app.config["TESTING"] = previous_testing
 
 
-def _post_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None):
+def _post_fight(
+    champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None, items=None
+):
     payload = {
         "champion": champion,
         "level": 18,
-        "items": [],
+        "items": list(items or []),
         "fight_mode": "time_based",
         "fight_duration": duration,
         "include_auto_attacks": True,
@@ -120,6 +125,17 @@ def test_annie_molten_shield_amount_is_sourced():
     ) == pytest.approx(
         240.0
     )  # 200 + 40% AP
+
+
+def test_a_shield_is_amplified_by_the_caster_s_heal_and_shield_power():
+    """Redemption's 10% reaches the shield Annie puts on herself."""
+    bare = _run_api_fight("Annie")
+    powered = _run_api_fight("Annie", items=["Redemption"])
+    assert _main_survival(bare)["support_shield_received"] == pytest.approx(200.0)
+    authored = _shield_rows(powered, source_startswith="Molten Shield")[0]["amount"]
+    assert _main_survival(powered)["support_shield_received"] == pytest.approx(
+        authored * 1.1
+    )
 
 
 def test_annie_api_molten_shield_row_absorbs_sourced_amount():

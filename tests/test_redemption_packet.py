@@ -590,7 +590,9 @@ def test_beam_landing_exactly_at_fight_end_is_in_window():
     # The vision receipt rides the activation (1.0, in-window); the beam
     # packets ride 3.5 == fight end (in-window, strict ">").
     assert all(packet.get("skipped_reason") is None for packet in packets)
-    assert survival_of(combat, "ally:Jinx")["healing_received"] == pytest.approx(350.0)
+    # The authored packet is 350; the holder's own 10% heal and shield
+    # power amplifies what it applies, so 385 lands.
+    assert survival_of(combat, "ally:Jinx")["healing_received"] == pytest.approx(385.0)
 
     payload["fight_duration"] = 3.49
     combat = _calculate(payload)
@@ -1092,7 +1094,8 @@ def test_compiled_walk_equals_receipt_walk_with_redemption_packets_staged():
     jinx = next(
         row for row in legacy["participants"] if row["participant_id"] == "ally:Jinx"
     )
-    assert jinx["survival"]["healing_received"] == pytest.approx(350.0)
+    # 350 authored, amplified by the holder's own 10% heal and shield power.
+    assert jinx["survival"]["healing_received"] == pytest.approx(385.0)
     enemy = next(
         row for row in legacy["participants"] if row["participant_id"] == "enemy:Aatrox"
     )

@@ -23,7 +23,7 @@ REFUSALS = {
     "Conditioning": "outgoing damage",
     "Second Wind": "carries neither the holder's health",
     "Bone Plating": "damage the holder receives",
-    "Revitalize": "reaches the stat card and no heal packet",
+    "Revitalize": "the rune stat block has no channel for that stat",
     "Unflinching": "while the holder is crowd controlled",
 }
 
