@@ -1061,12 +1061,25 @@ def test_an_effect_key_the_registry_lacks_is_unresolved(key, message: str) -> No
 
 
 def test_a_live_effect_tag_resolves_to_a_handler_that_branches_on_it() -> None:
-    """A tag with a handler; the ten without one are the frontier's."""
-    _resolve_live(
-        EffectTag(
-            tag="execute", handler="item_effects._resolve_damage_effects_uncached"
-        )
-    )
+    """A tag with a handler; the ten without one are the frontier's.
+
+    Two lanes of handler, because SD9 moved where a tag's behaviour lives: the
+    ladder in ``item_effects`` still dispatches the two tags that author an
+    assumption note, and a tag it retired is dispatched by the catalog
+    compiler that builds the declaration.  The evidence names whichever one
+    reads the tag, so a retirement re-points a claim rather than voiding it.
+
+    Only a handler that branches on the *tag* can carry this member, which is
+    why the crit family is absent: ``_compile_crit_profile`` dispatches on the
+    entry's value keys, so nothing in it reads ``crit_modifier`` as a string
+    and this evidence type has nothing to check there.
+    """
+    for tag, handler in (
+        ("ult_empowered_autos", "item_effects._resolve_damage_effects_uncached"),
+        ("execute", "item_behavior_catalog._compile_damage_routing"),
+        ("magic_damage_amp", "item_behavior_catalog._compile_delta_amp"),
+    ):
+        _resolve_live(EffectTag(tag=tag, handler=handler))
 
 
 @pytest.mark.parametrize(
@@ -2118,11 +2131,13 @@ COMMAND_PACKET = "Imperial Mandate — Command"
 COMMAND_ACCESSOR = "item_effects.ally_item_effect_value"
 SUPPORT_MODULE = "src/calculator/item_support_effects.py"
 EFFECTS_MODULE = "src/calculator/item_effects.py"
+CATALOG_MODULE = "src/calculator/item_behavior_catalog.py"
 
 # The files the nine mutations describe.  They are hashed either side of the
 # suite, because "driven through the seams" is a claim about these bytes.
 MUTATED_FILES: tuple[str, ...] = (
     EFFECTS_MODULE,
+    CATALOG_MODULE,
     "src/calculator/damage.py",
     SUPPORT_MODULE,
     "src/calculator/trigger_stream.py",
@@ -2310,17 +2325,24 @@ def test_M6_renaming_an_effect_tag_is_noticed() -> None:
     A renamed tag reclassifies every item carrying it with no other signal —
     the registry still declares the name, so only the dispatch says whether
     anything reads it.
+
+    The dispatch is the catalog compiler since SD9 retired the ladder's
+    ``execute`` branch, and mutating that file is what makes the premise
+    exact: the tag's own registry entry lives in ``item_effects`` and is
+    untouched here, so the data really does keep the name the handler stopped
+    reading.
     """
     tag = EffectTag(
-        tag="execute", handler="item_effects._resolve_damage_effects_uncached"
+        tag="execute", handler="item_behavior_catalog._compile_damage_routing"
     )
     coverage_resolver.resolve(tag, MANDATE_SPLIT_CLAIM, _live())
 
-    text = coverage_resolver.read_repo_file(EFFECTS_MODULE)
-    renamed = text.replace('"execute"', '"execute_bonus"')
+    text = coverage_resolver.read_repo_file(CATALOG_MODULE)
+    renamed = text.replace('if tag == "execute"', 'if tag == "execute_bonus"')
     assert renamed != text
+    assert '"execute"' in coverage_resolver.read_repo_file(EFFECTS_MODULE)
     mutated = dataclasses.replace(
-        _live(), read_source=_read_source_with(EFFECTS_MODULE, renamed)
+        _live(), read_source=_read_source_with(CATALOG_MODULE, renamed)
     )
     with pytest.raises(EvidenceUnresolved, match="does not branch on 'execute'"):
         coverage_resolver.resolve(tag, MANDATE_SPLIT_CLAIM, mutated)
