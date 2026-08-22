@@ -65,7 +65,6 @@
       "Doran's Blade": [
         "sustain"
       ],
-      "Doran's Helm": [],
       "Doran's Ring": [
         "sustain"
       ],
@@ -78,18 +77,13 @@
       "Fimbulwinter": [
         "ally_packet"
       ],
-      "Gluttonous Greaves": [],
       "Immortal Path": [
         "sustain"
-      ],
-      "Ionian Boots of Lucidity": [],
-      "Lost Chapter": []
+      ]
     },
     "scope": "survival_ledger_transition",
     "symbol": "interpreters.compilability_for",
-    "undeclared_base": [
-      "counter_3 is not yet 0: Doran's Helm, Gluttonous Greaves, Ionian Boots of Lucidity, Lost Chapter carry a registry entry no family declares, so the declaration base this fold reads is knowingly incomplete."
-    ]
+    "undeclared_base": []
   },
   "counters": {
     "counter_1": {
@@ -111,7 +105,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 4
+      "value": 0
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -463,10 +457,10 @@
       "counter_3": {
         "bound": 0,
         "criterion": "criterion 2: every registry entry declares a rule or a reviewed NO_RUNTIME_BEHAVIOR",
-        "gap": 4,
-        "measured": 4,
-        "met": false,
-        "owed_to": "post-merge lane: undeclared registry entries (frontier-open-debts.json)"
+        "gap": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
       },
       "counter_4/pair_engine": {
         "bound": 0,

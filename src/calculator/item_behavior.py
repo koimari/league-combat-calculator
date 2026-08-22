@@ -1810,6 +1810,61 @@ class PenetrationChannelRule:
     subject: Subject
 
 
+class RestrictedChannel(Enum):
+    """A channel a sourced item number reaches that this fight model never runs.
+
+    The champion-versus-champion stream is not a member, and that is the
+    point: a number declared here is real and sourced, and what the
+    declaration says is that it lands somewhere the modelled fight does not
+    look — so reading it into an ability haste pool or a champion-class
+    on-hit packet would be the silent mis-channelling this enum refuses.
+    """
+
+    SUMMONER_SPELL_HASTE = "summoner_spell_haste"
+    MINION_CLASS_ON_HIT = "minion_class_on_hit"
+
+
+@dataclass(frozen=True, slots=True)
+class RestrictedChannelRule:
+    """Where a sourced number lands when its channel is off the modelled fight.
+
+    The sibling of :class:`PenetrationChannelRule`: both say only *which
+    channel* a number reaches and schedule nothing, which is why neither
+    counts as runtime behaviour.  The difference is that a penetration
+    channel picks between two stat-block fields, and here one of the
+    channels is outside the block entirely — Ionian Insight's haste pays
+    summoner spells and Helping Hand's bonus damage pays minions.
+
+    ``amount`` is carried rather than dropped so the sourced number has a
+    declared home with its receipt, instead of living only in a sentence
+    beside the entry.
+    """
+
+    channel: RestrictedChannel
+    amount: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceRestoreRule:
+    """A share of the holder's maximum resource restored over a sourced window.
+
+    Three references because the mechanic answers three questions: what share
+    of the maximum it restores, over how long, and in how many ticks.  The
+    tick count is declared rather than divided out of the duration, because
+    the registry states it and a derived count would silently re-time the
+    schedule whenever either of the other two moved.
+    """
+
+    granted: DerivedStat
+    share_of_maximum: AnyValueRef
+    duration: AnyValueRef
+    ticks: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
 @dataclass(frozen=True, slots=True)
 class ManaflowRule:
     """The charge ledger that accrues permanent bonus mana.
@@ -2596,6 +2651,8 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     StatConversionRule: RuleFamily.STAT_DERIVATION,
     StatMultiplierRule: RuleFamily.STAT_DERIVATION,
     PenetrationChannelRule: RuleFamily.STAT_DERIVATION,
+    RestrictedChannelRule: RuleFamily.STAT_DERIVATION,
+    ResourceRestoreRule: RuleFamily.STAT_DERIVATION,
     ManaflowRule: RuleFamily.STAT_DERIVATION,
     StackedStatRule: RuleFamily.STAT_DERIVATION,
     FlatStatGrantRule: RuleFamily.STAT_DERIVATION,
@@ -3242,6 +3299,10 @@ STAT_DERIVATION_REQUIRED_REFERENCES: dict[type, tuple[str, ...]] = {
     # A channel carries no number: the percentage it routes is a cached stat
     # and the declaration says only where it lands.
     PenetrationChannelRule: (),
+    # A restricted channel does carry its number, because no stat block holds
+    # it: the declaration is the number's only home.
+    RestrictedChannelRule: ("amount",),
+    ResourceRestoreRule: ("share_of_maximum", "duration", "ticks"),
     ManaflowRule: (
         "charge_interval",
         "bonus_mana_per_trigger",
@@ -3274,6 +3335,8 @@ STAT_DERIVATION_OPTIONAL_REFERENCES: dict[type, tuple[str, ...]] = {
     StatConversionRule: ("basis_unit", "flat_base"),
     StatMultiplierRule: (),
     PenetrationChannelRule: (),
+    RestrictedChannelRule: (),
+    ResourceRestoreRule: (),
     ManaflowRule: ("max_charges", "transform_bonus_mana"),
     StackedStatRule: (
         "max_stacks",
@@ -3297,12 +3360,24 @@ STAT_DERIVATION_PAYLOADS: tuple[type, ...] = tuple(STAT_DERIVATION_REQUIRED_REFE
 STAT_DERIVATION_TARGET_PAYLOADS: tuple[type, ...] = (StatAuraRule,)
 
 # The payloads that grant no stat at all: an ultimate cooldown refund moves a
-# cooldown and an active window's cast economy moves a cost and a cooldown
-# progression, and naming a DerivedStat for either would invent a stat the
+# cooldown, an active window's cast economy moves a cost and a cooldown
+# progression, and a restricted channel's number lands off the block
+# altogether.  Naming a DerivedStat for any of them would invent a stat the
 # block does not hold.  Named for the same reason as the row above.
 STAT_DERIVATION_UNGRANTED_PAYLOADS: tuple[type, ...] = (
     UltimateRefundRule,
     ActiveWindowCastEconomyRule,
+    RestrictedChannelRule,
+)
+
+# The payloads that only say where a number lands and schedule nothing.  The
+# payload-level twin of ``item_behavior_catalog.STAT_CHANNEL_TAGS``, and what
+# ``declares_runtime_behaviour`` reads: a channel is a declaration *about* a
+# number the modelled fight either already holds or never sees, so an item
+# whose whole entry is one has no runtime behaviour to publish.
+STAT_CHANNEL_PAYLOADS: tuple[type, ...] = (
+    PenetrationChannelRule,
+    RestrictedChannelRule,
 )
 
 
@@ -3350,6 +3425,14 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
     ):
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a conversion names the stat it reads"
+        )
+    if isinstance(payload, RestrictedChannelRule) and not isinstance(
+        payload.channel, RestrictedChannel
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a restricted channel names the channel its "
+            "number reaches; an unnamed one is the mis-channelling the "
+            "declaration exists to refuse"
         )
     if not isinstance(payload, STAT_DERIVATION_UNGRANTED_PAYLOADS) and not isinstance(
         getattr(payload, "granted", None), DerivedStat
@@ -3795,9 +3878,13 @@ __all__ = [
     "Resistance",
     "ResistanceShredRule",
     "ResourceDrainRule",
+    "ResourceRestoreRule",
+    "RestrictedChannel",
+    "RestrictedChannelRule",
     "RuleFamily",
     "RulePayload",
     "SCALING_TYPES",
+    "STAT_CHANNEL_PAYLOADS",
     "STAT_DERIVATION_OPTIONAL_REFERENCES",
     "STAT_DERIVATION_PAYLOADS",
     "STAT_DERIVATION_REQUIRED_REFERENCES",
