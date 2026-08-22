@@ -4731,6 +4731,20 @@ class DamageInputs:
     target_max_health: float
     target_current_health: float
 
+    def stat(self, item_name: str, key: str) -> float:
+        """One champion stat by name; the stat layer always writes it.
+
+        Rule 5: a formula that reads a stat gets the stat or an error naming
+        who wanted what — never a zero that silently deletes the item's damage.
+        """
+        try:
+            return float(self.champion_stats[key])
+        except KeyError:
+            raise KeyError(
+                f"{item_name!r} needs champion stat {key!r}; the stat block "
+                f"carries {sorted(self.champion_stats)!r}"
+            ) from None
+
 
 @dataclass(frozen=True, slots=True)
 class DamageSource:
@@ -5097,7 +5111,7 @@ def _compile_auto_cooldown(
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.champion_stats.get("health", 0.0)
+        return ratio * inputs.stat(item_name, "health")
 
     source = damage_source(
         item_name,
@@ -5125,7 +5139,7 @@ def _compile_per_ability_hit(
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.champion_stats.get("max_mana", 0.0)
+        return ratio * inputs.stat(item_name, "max_mana")
 
     return damage_source(
         item_name,
