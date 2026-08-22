@@ -29726,7 +29726,7 @@
         "W": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Movement only: 20% bonus movement speed after 5s undamaged, doubled to 40% for 3s on cast. The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
+          "detail": "Movement only: 20% bonus movement speed after 5s undamaged, doubled to 40% for 3s on cast (40% over the fight window). The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
           "name": "Move Quick",
           "parts": [],
           "rank": 3,
@@ -52876,14 +52876,14 @@
       "numeric_leaves": 46179,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "c8e88a404072feb91bc9903e0318e7f679624365",
+    "git_head": "07713e7d7ad98d5470abfc1cae136a8db0a1d70c",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "dc31f169947293372173794fffa692046f9ae4e4"
+    "src_tree_sha": "efd776c22d59b5adf1b08edc6e1e8933e4c25be1"
   },
   "registered_champion_fights": {
     "Aatrox": {
