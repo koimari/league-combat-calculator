@@ -97,7 +97,9 @@ REVIEWED = {
     "Nocturne": {"P": {"status": "declared", "eff": 1.0}},
     "Pantheon": {"W": {"status": "out_of_scope", "eff": 1.0}},
     "Renekton": {"W": {"status": "declared", "eff": 1.0, "hits": 2}},
-    "Samira": {"P": {"status": "out_of_scope", "eff": 1.0}},
+    # Daredevil Impulse is a rider on attacks that already carry the item
+    # on-hits; the rider itself applies none, so it rides the auto stream.
+    "Samira": {"P": {"status": "auto_stream", "eff": 1.0, "on_attack": True}},
     "Senna": {"Q": {"status": "declared", "eff": 1.0, "on_attack": True}},
     "Smolder": {"Q": {"status": "declared", "eff": 1.0, "on_attack": True}},
     "Twitch": {"R": {"status": "auto_stream", "eff": 1.0, "note": "bolts ride autos"}},

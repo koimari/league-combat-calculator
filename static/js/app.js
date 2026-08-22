@@ -472,7 +472,11 @@ function applyPrerequisiteGates() {
  *
  * A family belongs here when its controls are in the served document at boot,
  * which is when this pass runs; the families whose controls a later render
- * creates (`optimize`) cannot be gated from here at all.
+ * creates (`optimize`, and best_in_slot's `.bis-trigger` / roster
+ * `[data-picker]` rows) can only be gated by their boot-time selectors.
+ * The server's `_feature_fields` currently builds every family with
+ * `supported: true`, so this pass is exercised by tests through synthetic
+ * contracts and waits on a server-side refusal to fire in production.
  */
 const CONTROL_FAMILY_GATES = {
   // The prerequisite pass re-enables #bisButton on every render, so a gated

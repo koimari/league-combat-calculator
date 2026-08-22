@@ -198,4 +198,4 @@ OPTIONS.append(
         "label": "Q Discharge empowered next basic attack",
     }
 )
-MODULE_COVERAGE = coverage(out_of_scope="PW")
+MODULE_COVERAGE = coverage(out_of_scope="P", no_damage="W")

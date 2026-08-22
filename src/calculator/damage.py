@@ -6527,6 +6527,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                         "kind": "crowd_control",
                         "cc_kind": control.kind,
                         "cc_duration": float(control.duration),
+                        **(
+                            {"cc_magnitude": float(control.magnitude)}
+                            if control.magnitude
+                            else {}
+                        ),
                         "time_offset": control.time_offset,
                         "count": int(control.count),
                         "hit_interval": control.hit_interval,
@@ -6554,6 +6559,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                                 "kind": "crowd_control",
                                 "cc_kind": control.kind,
                                 "cc_duration": float(control.duration),
+                                **(
+                                    {"cc_magnitude": float(control.magnitude)}
+                                    if control.magnitude
+                                    else {}
+                                ),
                                 "damage": 0.0,
                                 "damage_type": "",
                                 "source_key": ability_key,

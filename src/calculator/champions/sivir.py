@@ -48,11 +48,10 @@ point.
     (``SivirR``'s ``mSpellCalculations`` is empty), but both of its two
     sourced combat effects hit a named kernel gap:
       * the bonus movement speed (20/25/30% by rank) is an additive
-        PERCENT, and ``calculate_total_stats`` exposes only the final
-        soft-capped ``move_speed`` scalar — there is no
+        PERCENT; ``calculate_total_stats`` publishes the
         ``move_speed_flat`` / ``move_speed_percent`` pair to compose
-        against — so a percent-to-flat decomposition would have to be
-        invented.  Same Swiftmarch damage path as P.
+        against, and this slot is not yet wired onto that shared
+        channel.  Same Swiftmarch damage path as P.
       * "Sivir's basic attacks on-attack reduce her basic abilities'
         current cooldowns by 0.5 seconds each" has no channel:
         ``on_attack_cooldown_refund`` is a field of
@@ -76,7 +75,7 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import atom_receipt, damage_entry, extract_cooldown, extract_named
 from .module_contract import coverage
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
@@ -113,21 +112,6 @@ def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
 # atom in the catalog (prose-only — recorded SOURCE GAP in the slice
 # handover), so it stays a module-authored sourced literal.
 _SPELL_SHIELD_HEAL_DELAY_SECONDS = 0.25
-
-_ATOM_RECEIPT_KEYS = (
-    "atom_id",
-    "behavior",
-    "source",
-    "values",
-    "units",
-    "evidence",
-    "hash",
-)
-
-
-def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
-    """One JSON-safe atom receipt (the interaction-atoms shape)."""
-    return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
 
 
 def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -183,9 +167,9 @@ def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
                 "on_block_heal_delay": _SPELL_SHIELD_HEAL_DELAY_SECONDS,
                 "on_block_heal_source": "Spell Shield · Heal",
                 "source_atoms": [
-                    _atom_receipt(duration_atom),
-                    _atom_receipt(ad_atom),
-                    _atom_receipt(ap_atom),
+                    atom_receipt(duration_atom),
+                    atom_receipt(ad_atom),
+                    atom_receipt(ap_atom),
                 ],
             }
         ],
@@ -253,11 +237,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "damage to miss - the binary's SivirR carries an empty "
     "mSpellCalculations - but both of its sourced combat effects hit a "
     "named kernel gap. (1) The bonus movement speed (20/25/30% by rank) "
-    "is an additive PERCENT and calculate_total_stats exposes only the "
-    "final soft-capped move_speed scalar, with no move_speed_flat / "
-    "move_speed_percent pair to compose against, so a percent-to-flat "
-    "decomposition would have to be invented (the same Swiftmarch damage "
-    "path as P). (2) 'Sivir's basic attacks on-attack reduce her basic "
+    "is an additive PERCENT; calculate_total_stats publishes the "
+    "move_speed_flat / move_speed_percent pair to compose against, and "
+    "this slot is not yet wired onto that shared channel (the same "
+    "Swiftmarch damage path as P). (2) 'Sivir's basic attacks on-attack reduce her basic "
     "abilities' current cooldowns by 0.5 seconds each' has no channel: "
     "on_attack_cooldown_refund is a field of "
     "item_effects.CooldownProcEffect read only by the item-proc "

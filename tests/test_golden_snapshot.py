@@ -1261,11 +1261,16 @@ class TestSwingTermCoverage:
                         continue
                     (owner,) = equipped
                     key = f"target_{term}"
-                    read = (
-                        overrides[key]
-                        if key in overrides
-                        else getattr(enemy.defenses, term)
-                    )
+                    # Undaunted's two terms are priced off target.defenses by
+                    # both walks, so their hand-off deliberately has no
+                    # override; every other declared term must ride one.
+                    if term in (
+                        "champion_damage_flat_reduction",
+                        "champion_dot_damage_flat_reduction",
+                    ):
+                        read = getattr(enemy.defenses, term)
+                    else:
+                        read = overrides[key]
                     assert read == _declared_swing_value(owner, term)
                     carried[term] = owner
         assert set(carried) == set(declarations)

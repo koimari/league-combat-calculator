@@ -143,9 +143,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The slot's declared control is the unconditional displacement; the "
     "root would need a W-field placement the fight does not track.",
     "P (Noxious Slipstream) is stacking movement speed and W (Mega "
-    "Adhesive) a slow and a ground: both are emitted zero-damage rows, "
-    "because the engine has no movement-speed axis and records crowd "
-    "control as a kind without a magnitude.  Neither spell object "
+    "Adhesive) a slow and a ground: both are emitted zero-damage rows. "
+    "P is not yet wired onto the shared move-speed fold, and W's slow "
+    "magnitude is blocked on the cache (its only seconds atom is the "
+    "0.375 landing delay).  Neither spell object "
     "carries a damage field in the game binary.",
 ]
 

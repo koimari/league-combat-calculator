@@ -793,16 +793,12 @@ class HitRider:
             hit_interval=ridden.hit_interval,
         )
 
-    def auto_entry(self, *, max_procs: int | None = None) -> dict[str, Any]:
-        """The basic-attack half: this rider on the swings a gate admits.
+    def auto_entry(self) -> dict[str, Any]:
+        """The basic-attack half: this rider on every swing.
 
-        The gate is a count because position is not a request input (the
-        Shaco Backstab precedent), and None is every swing.  The engine
-        prices each admitted swing against the target's health at it.
+        The engine prices each swing against the target's health at it.
         """
         entry = on_hit_entry(self.name, self.amount, self.damage_type)
-        if max_procs is not None:
-            entry["on_hit"]["max_procs"] = max(0, int(max_procs))
         if self.missing_health_amp:
             entry["on_hit"]["missing_health_amp"] = self.missing_health_amp
         return entry
@@ -962,10 +958,10 @@ def _control_duration_atom(
         )
         value = ranked_ability_atom_value(atom, 1, source=source_path)
     _require_seconds(ctx, src_slot, atom)
-    return value, _atom_receipt(atom)
+    return value, atom_receipt(atom)
 
 
-_ATOM_RECEIPT_KEYS = (
+ATOM_RECEIPT_KEYS = (
     "atom_id",
     "behavior",
     "source",
@@ -976,9 +972,9 @@ _ATOM_RECEIPT_KEYS = (
 )
 
 
-def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+def atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
     """The provenance fields a sourced control number publishes."""
-    return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
+    return {key: atom[key] for key in ATOM_RECEIPT_KEYS}
 
 
 _PROSE_CONTROL_PREFIXES = {
@@ -1029,7 +1025,7 @@ def _prose_control_atom(
     )
     value = ranked_ability_atom_value(atom, 1, source=source_path)
     _require_seconds(ctx, src_slot, atom)
-    return value, _atom_receipt(atom)
+    return value, atom_receipt(atom)
 
 
 def _control_magnitude_atom(
@@ -1056,7 +1052,7 @@ def _control_magnitude_atom(
         rank,
         entry_index=src_index,
     )
-    return value, _atom_receipt(atom)
+    return value, atom_receipt(atom)
 
 
 def _require_seconds(ctx: SlotCtx, src_slot: str, atom: dict[str, Any]) -> None:

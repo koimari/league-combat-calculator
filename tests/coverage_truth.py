@@ -61,7 +61,7 @@ def parse(champion, *, vantage=None, **options):
     """One champion's parsed entries at the named vantage.
 
     Options are the module's own, passed through so a slot the module
-    hides behind one (Rumble's ``p_overheated``) can be read in either
+    hides behind one (Rumble's ``overheat_autos``) can be read in either
     state.  ``vantage`` is :data:`PER_CAST` (the default) or :data:`TIMED`.
     Stats, ranks and target come from :mod:`tests.row_review`, so every
     champion is read at the same level 18 vantage.

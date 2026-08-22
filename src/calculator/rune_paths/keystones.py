@@ -47,6 +47,7 @@ from ..rune_effects import (
     pure_adaptive_type,
     ratio_adaptive_type,
     required_cooldown_by_level,
+    required_level_table,
     required_leveling,
     required_pair,
     zero_receipts,
@@ -436,20 +437,7 @@ def _compile_lethal_tempo(entry: Mapping[str, Any]) -> KeystoneLethalTempoEffect
     effects = RuneValues(name, entry.get("effects", {}))
 
     def level_table(key: str) -> tuple[float, ...]:
-        values = effects.value(key)
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] {key!r} must cover 20 levels — "
-                "wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        return tuple(float(value) for value in values)
-
-    def adaptive_type(stats: Mapping[str, float]) -> str:
-        return (
-            "physical"
-            if stats.get("bonus_attack_damage", 0.0) > stats.get("ability_power", 0.0)
-            else "magic"
-        )
+        return tuple(required_level_table(name, effects, key))
 
     return KeystoneLethalTempoEffect(
         rune_name=name,
@@ -470,7 +458,7 @@ def _compile_lethal_tempo(entry: Mapping[str, Any]) -> KeystoneLethalTempoEffect
         max_stacks=int(effects.number("max_stacks")),
         stack_duration_seconds=effects.number("lethal_tempo_stack_duration_seconds"),
         expiry_step_seconds=effects.number("lethal_tempo_expiry_step_seconds"),
-        damage_type=adaptive_type,
+        damage_type=pure_adaptive_type,
     )
 
 
@@ -527,13 +515,7 @@ def _compile_fleet(entry: Mapping[str, Any]) -> KeystoneFleetEffect:
     effects = RuneValues(name, entry.get("effects", {}))
 
     def level_table(key: str) -> tuple[float, ...]:
-        values = effects.value(key)
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] {key!r} must cover 20 levels — "
-                "wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        return tuple(float(value) for value in values)
+        return tuple(required_level_table(name, effects, key))
 
     return KeystoneFleetEffect(
         rune_name=name,
@@ -562,13 +544,7 @@ def _compile_conqueror(entry: Mapping[str, Any]) -> KeystoneConquerorEffect:
     effects = RuneValues(name, entry.get("effects", {}))
 
     def level_table(key: str) -> tuple[float, ...]:
-        values = effects.value(key)
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] {key!r} must cover 20 levels — "
-                "wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        return tuple(float(value) for value in values)
+        return tuple(required_level_table(name, effects, key))
 
     return KeystoneConquerorEffect(
         rune_name=name,

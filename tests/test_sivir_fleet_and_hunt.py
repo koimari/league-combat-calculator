@@ -37,11 +37,11 @@ a real, sourced, unmodeled mechanic is ``out_of_scope``, never
 effects hit a *named* kernel gap, and each gap is pinned by measuring
 the kernel rather than by quoting the docstring:
 
-* the rank-scaled bonus movement speed is an additive PERCENT, and
-  ``calculate_total_stats`` exposes only the final soft-capped
-  ``move_speed`` scalar — ``TestOnTheHuntKernelGaps`` asserts no
-  ``move_speed_flat`` / ``move_speed_percent`` pair exists to compose
-  against, so a decomposition would have to be invented;
+* the rank-scaled bonus movement speed is an additive PERCENT;
+  ``calculate_total_stats`` publishes the ``move_speed_flat`` /
+  ``move_speed_percent`` pair — ``TestOnTheHuntKernelGaps`` asserts the
+  decomposition exists to compose against, and the slot is not yet
+  wired onto it;
 * ``on_attack_cooldown_refund`` is a field of
   ``item_effects.CooldownProcEffect`` (the item-proc scheduler's
   surface), so there is no ability-cooldown-refund channel a champion
@@ -321,7 +321,7 @@ class TestOnTheHuntStaysOutOfScope:
 class TestOnTheHuntKernelGaps:
     """Both blockers are measured against the kernel, not quoted."""
 
-    def test_the_move_speed_decomposition_now_exists_to_compose_against(self):
+    def test_the_move_speed_decomposition_exists_to_compose_against(self):
         """CF9 published the two terms the one movement fold reads.
 
         On the Hunt's own blocker was the missing decomposition, so this

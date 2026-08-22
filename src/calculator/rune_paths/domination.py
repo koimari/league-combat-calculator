@@ -225,12 +225,11 @@ def _compile_ultimate_hunter(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
             f"{ceiling:g}-stack maximum. The fight reads the "
             f"{_HUNTER_STACKS!r} option, whose default is no stacks: a stack "
             "is a takedown against a champion this engine never scores.",
-            f"{name} shortens the ultimate's cooldown and nothing else, and "
-            "the timed scheduler casts the ultimate exactly once whatever "
-            "its cooldown is — so the grant reaches the stat card and no "
-            "damage row. Every ultimate-haste source the engine carries is "
-            "in that same position; the floor is the scheduler's, not this "
-            "rune's.",
+            f"{name} shortens the ultimate's cooldown and nothing else. "
+            "The timed scheduler recasts the ultimate on its hasted "
+            "cooldown only for modules that certify ULTIMATE_RECASTS; for "
+            "every other kit the ultimate is cast exactly once, so there "
+            "the grant reaches the stat card and no damage row.",
         ),
     )
 

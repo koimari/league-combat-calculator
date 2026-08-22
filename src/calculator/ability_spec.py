@@ -490,13 +490,6 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     # Authored control duration.  A zero value means that the module has
     # marked the control kind but has not supplied a usable downtime interval.
     cc_duration: float = 0.0
-    # Authored control magnitude, in the units the cached row states it:
-    # a slow's percent, a cripple's attack-speed percent.  Zero is the
-    # honest reading for both a kind that HAS no magnitude (a stun is a
-    # stun) and one whose magnitude the cache does not carry, which is why
-    # the two are told apart by ``control_source_atoms`` rather than by a
-    # sentinel: a sourced magnitude arrives with the atom that proves it.
-    cc_magnitude: float = 0.0
     # A blockable projectile or skillshot marker for target-side defensive
     # interactions such as Braum E and Yasuo W.
     skillshot: bool = False
@@ -518,10 +511,6 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             raise ValueError("DamagePart cc_kind must be a string or None")
         if self.cc_duration < 0:
             raise ValueError("DamagePart cc_duration cannot be negative")
-        if self.cc_magnitude < 0:
-            raise ValueError("DamagePart cc_magnitude cannot be negative")
-        if self.cc_magnitude and self.cc_kind is None:
-            raise ValueError("DamagePart cc_magnitude needs a cc_kind")
 
     def __repr__(self) -> str:
         # Deterministic repr: the golden snapshot serializes entries via
@@ -542,8 +531,6 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             extras += f", cc_kind={self.cc_kind!r}"
         if self.cc_duration:
             extras += f", cc_duration={self.cc_duration}"
-        if self.cc_magnitude:
-            extras += f", cc_magnitude={self.cc_magnitude}"
         if self.skillshot:
             extras += ", skillshot=yes"
         if self.control_source_atoms:

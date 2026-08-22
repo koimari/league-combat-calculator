@@ -425,8 +425,8 @@ class TestSurroundSoundMovementSpeedIsWithheld:
             for a in ASSUMPTIONS
             if "Surround Sound" in a and "ally-support scanner" in a
         )
-        assert "move_speed" in assumption
-        assert "soft_caps" in assumption
+        assert "resolve_move_speed" in assumption
+        assert "soft caps" in assumption
         assert "NOT modeled" in assumption
 
 

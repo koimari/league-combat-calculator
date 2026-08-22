@@ -124,8 +124,8 @@ def test_cull_typed_values_match_the_cached_wiki_branches():
 
 
 def test_cull_reap_on_hit_heal_is_a_typed_health_packet():
-    """The declaration owns the number; the legacy projection no longer
-    carries a second copy of it (SD9)."""
+    """The declaration owns the number; the projection carries no second
+    copy of it (SD9)."""
     from src.calculator.item_behavior import OnHitHealRule
     from src.calculator.interpreters.sustain import declared_sustain
 

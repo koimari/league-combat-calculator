@@ -207,8 +207,8 @@ def _blazing_stampede(packet_e):
             "per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus "
             "and 1.5s of crowd-control immunity. The empowered attack's "
             "0.75s stun IS priced, as a sourced control event. The percent "
-            "movement grants are not published as a stat_buff (the named "
-            "percent-movement boundary)."
+            "movement grants are not yet wired onto the shared move-speed "
+            "fold (the named percent-movement boundary)."
         )
         return entry
 

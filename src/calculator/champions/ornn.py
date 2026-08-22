@@ -235,7 +235,7 @@ OPTIONS = [int_option("r_passes", 2, minimum=1, maximum=2, label="R elemental pa
 
 ASSUMPTIONS = [
     "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout Brittle state in its detail receipt.",
-    "Call of the Forge God defaults to both sourced passes; one pass is available as an explicit option.",
+    "Call of the Forge God defaults to both sourced passes; one pass is an explicit option, and Temper's Brittle consume rides the second pass, so a one-pass fight prices no consume.",
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
     "P (Temper) is modeled through Call of the Forge God: the recast pass "
     "immobilises a target the first pass made Brittle, so every two-pass R "
@@ -258,6 +258,7 @@ SOURCES = load_champion_sources("Ornn")
 
 # P prices Temper's consume through R's ``post_hit_proc`` and holds no
 # ``SLOTS`` entry of its own, so the derived reading (``out_of_scope``)
-# under-reports it.
+# under-reports it.  The proc rides the recast pass, so at ``r_passes=1``
+# (a non-default option) P emits nothing and the label overstates.
 MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("post_hit_proc",)}

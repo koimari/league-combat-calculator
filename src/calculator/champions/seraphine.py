@@ -258,9 +258,9 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "row (pinned by tests/test_e8_support.py). W's bonus movement speed "
     "(20% + 2% per 100 AP on self, 8% + "
     "0.8% per 100 AP on allies) is sourced but NOT modeled: it is an "
-    "additive percent and the ability stat_buff channel adds a flat "
-    "number onto champion_stats['move_speed'], bypassing "
-    "stats.apply_movement_speed_soft_caps (the Naafiri-W boundary). The "
+    "additive percent not yet wired onto the shared resolve_move_speed "
+    "fold (soft caps included) that stats publishes the flat/percent "
+    "pair for (the Naafiri-W boundary). The "
     "2-stack shield rule is state and the base Shield Strength row is "
     "priced. Reclassified from out_of_scope to modeled (the Ekko-W / "
     "Rumble-W precedent for a scanner-priced shield-only slot).",

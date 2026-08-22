@@ -701,11 +701,19 @@ def _recipient_max_health_row(ability: dict[str, Any], attribute: str) -> bool:
 def recipient_max_health_ratio(
     ability: dict[str, Any], attribute: str, rank: int
 ) -> float:
-    """One rank's share of the recipient's maximum health, as a fraction."""
+    """One rank's share of the recipient's maximum health, as a fraction.
+
+    Callers reach here only after the unit-shape gate certified the row, so
+    an empty values list is a vanished row and raises rather than returning
+    a ratio the downstream ``<= 0.0`` guard would silently swallow.
+    """
     leveling = find_named_leveling(ability, attribute)
     values = (leveling or {}).get("modifiers", [{}])[0].get("values") or []
     if not values:
-        return 0.0
+        raise ValueError(
+            f"recipient-scaled row {attribute!r} on {ability.get('name')!r} "
+            "certified by its unit shape but carries no values"
+        )
     return float(values[min(max(int(rank), 1), len(values)) - 1]) / 100.0
 
 

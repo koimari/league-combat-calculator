@@ -27,15 +27,15 @@ heal, a revive) — a slot with no row of its own says which engine channel pays
 | Stat or aura with no channel (movement speed, stat conversion) | 13 | Cassiopeia P, Jayce P, Nami P, Nidalee P, Pyke P, Sivir P, Sivir R, Sona E, Soraka P, Taliyah P, Teemo W, Vayne P, Vladimir P |
 | Summon, pet, clone, transform, terrain | 8 | Azir P, Lissandra P, Zyra P, Wukong W, Nidalee R, Udyr P, Anivia W, Yorick W |
 | Mobility | 7 | Aurora W, Bard E, Kalista P, Lucian E, Taliyah R, Talon E, Zoe R |
-| CC magnitude (the marker has no duration or percent) | 7 | Bard R, Kalista R, Nasus W, Trundle E, Udyr E, Viktor W, Zilean E |
-| Reflection, invulnerability, death, disguise, attachment, shop, experience | 9 | Shen W, Mel W, Taric R, Kog'Maw P, Neeko P, Yuumi W, Ornn P, Zilean P, Sylas R |
-| Priceable with no engine shape yet | 6 | Samira P (range-gated rider on ability parts), Aurelion Sol P/W (already reached through `stardust_stacks` / `w_active`), Nilah P (ally heal/shield amp), Yuumi P (on-hit self shield), Tahm Kench E (grey-health active) |
+| CC magnitude blocked on the cache (the marker carries duration and magnitude; these rows parse none) | 2 | Singed W, Twitch W |
+| Reflection, invulnerability, death, disguise, attachment, shop, experience | 8 | Shen W, Mel W, Taric R, Kog'Maw P, Neeko P, Yuumi W, Zilean P, Sylas R |
+| Priceable with no engine shape yet | 3 | Aurelion Sol P/W (already reached through `stardust_stacks` / `w_active`), Nilah P (ally heal/shield amp), Yuumi P (on-hit self shield) |
 | Vision, stealth | 5 | Akshan W, Ashe E, Pyke W, Senna E, Teemo P |
 | Damage-reduction taken | 5 | Alistar R, Braum E, Malzahar P, Nilah W, Warwick E |
 | Resource, cooldown | 5 | Renekton P, Ryze P, Viktor P, Xerath P, Zilean W |
 
-Closing these means new axes, not more packets; each is a backlog row
-(`docs/surface-area-backlog.md`, CF3–CF9).
+Closing these means new axes, not more packets; the open ones live in
+`docs/surface-area-backlog.md`.
 
 **Known-degraded wiki parses** (CLAUDE.md Known Quirks): Bard P chimes, Heimerdinger W/E
 multi-part rockets, Aurelion Sol Q stacks, Quinn P crit, Vladimir E charge, Yasuo/Yone Q3

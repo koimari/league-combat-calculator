@@ -580,7 +580,6 @@
       "event": 48,
       "fix": 2,
       "part_timing": 1,
-      "pending": 1,
       "proc_auto": 2,
       "realm": 1,
       "spec": 3,
@@ -591,7 +590,7 @@
     "totals": {
       "forbidden_input_fallbacks": 0,
       "hand_built_entries": 100,
-      "produced_fallbacks": 95
+      "produced_fallbacks": 94
     }
   }
 }

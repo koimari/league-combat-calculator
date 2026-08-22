@@ -10,10 +10,9 @@ W (Frozen Domain) is the kit's attack-speed steroid — the compiled
 no-damage row is replaced by the shared ``stat_buff`` slot so the cached
 "Bonus Attack Speed" row reaches the auto stream.
 
-E (Pillar of Ice) stays ``out_of_scope``: terrain, a knockback and a
-34-50% slow, and the engine has no terrain axis and no CC magnitude —
-``cc_kind`` is one vocabulary word per part with neither duration nor
-percent (``ability_spec.py``).
+E (Pillar of Ice) is a ``no_damage`` slot: its 34-50% slow rides a
+control event with the cached duration and magnitude, while the terrain
+and the creation knockback have no engine axis.
 """
 
 from typing import Any
@@ -169,11 +168,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "exact fight average rather than an approximation. W's bonus movement "
     "speed and its 25% increased healing from all sources are not modeled",
     "E (Pillar of Ice) is terrain, a knockback and a 34-50% slow: the "
-    "engine has no terrain axis, and cc_kind carries no duration or "
-    "magnitude, so the slot prices nothing",
+    "slow is priced as a control event with its cached duration and "
+    "magnitude, while the terrain and knockback have no engine axis",
 ]
 
-MODULE_COVERAGE = coverage(out_of_scope="E")
+MODULE_COVERAGE = coverage(no_damage="E")
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument

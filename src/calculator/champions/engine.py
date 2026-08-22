@@ -757,7 +757,7 @@ def _apply_module_cc(
             ControlEvent(
                 kind,
                 float(pending["duration"]),
-                magnitude=float(pending.get("magnitude", 0.0)),
+                magnitude=float(pending["magnitude"]),
                 time_offset=pending["time_offset"],
                 skillshot=False,
             )

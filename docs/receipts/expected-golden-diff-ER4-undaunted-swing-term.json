@@ -8,7 +8,15 @@
   },
   "expected_diff_paths": {
     "golden": [],
-    "coupled_golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/undaunted_armed_swing_roster"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/entries",
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves",
+      "/metadata/scenario_count"
+    ],
     "coupled_exact": {},
     "coupled_exact_new_scenarios": [
       "undaunted_armed_swing_roster"
@@ -18,7 +26,7 @@
     "claim": "No number the engine computed moved, in either jurisdiction.",
     "evidence": [
       "scripts/golden_baseline.json: `compare` reports 'snapshot identical'.",
-      "scripts/golden_coupled_baseline.json: the re-capture's diff against the committed file removes exactly six lines -- three /metadata/fingerprint counters and the two provenance stamps -- and adds the new scenario's block. Every leaf of the twenty-two committed scenarios is byte-identical.",
+      "scripts/golden_coupled_baseline.json: the re-capture's diff against the committed file removes exactly six lines -- three /metadata/fingerprint counters, /metadata/scenario_count, and the two provenance stamps -- and adds the new scenario's block. Every leaf of the twenty-two committed scenarios is byte-identical.",
       "Both fields are declared on FightState with a 0.0 default and written from scenario.resolve_scenario, so no getattr default was ever reachable and the attribute read cannot return anything else."
     ]
   },

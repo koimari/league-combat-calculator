@@ -271,5 +271,5 @@ OPTIONS = [
 ]
 
 
-# No MODULE_COVERAGE: P now prices the blade rider, so every slot the
+# No MODULE_COVERAGE: P prices the blade rider, so every slot the
 # contract derives from SLOTS is modeled.

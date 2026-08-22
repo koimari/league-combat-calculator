@@ -55,7 +55,7 @@ from .trigger_stream import (
 )
 from .champions.inputs import declared_option_defaults
 from .champions.skill_orders import get_ability_rank
-from .champions.slotlib import extract_named
+from .champions.slotlib import extract_cooldown, extract_named
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     champion_grievous_wound_sources,
@@ -2841,12 +2841,17 @@ def _declared_option(
 def _grey_cooldown(
     ability: Mapping[str, Any], rank: int, stats: Mapping[str, float]
 ) -> float:
-    """One cached ability cooldown at a rank, after ability haste."""
-    modifiers = (ability.get("cooldown") or {}).get("modifiers") or [{}]
-    values = modifiers[0].get("values") or []
-    if not values:
-        return 0.0
-    base = float(values[min(max(int(rank), 1), len(values)) - 1])
+    """One cached ability cooldown at a rank, after ability haste.
+
+    Thick Skin's press cadence hangs off this number, so a missing cooldown
+    row raises rather than pricing a zero-cooldown press loop.
+    """
+    base = extract_cooldown(dict(ability), rank)
+    if base <= 0.0:
+        raise ValueError(
+            "grey-health press cadence needs a cached cooldown row; "
+            f"ability {ability.get('name')!r} declares none"
+        )
     haste = max(0.0, float(stats.get("ability_haste", 0.0) or 0.0))
     return base * 100.0 / (100.0 + haste)
 

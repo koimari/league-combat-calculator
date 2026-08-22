@@ -32,6 +32,13 @@ class TestReviewedCrowdControl:
         for slot in ("Q", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
 
+    def test_the_coverage_labels_match_what_the_slots_emit(self):
+        # W emits its sourced control event, so it is no_damage, not
+        # out_of_scope; P alone stays outside the model.
+        contract = get_champion_module_contract("Viktor")
+        assert contract.coverage["W"] == "no_damage"
+        assert contract.coverage["P"] == "out_of_scope"
+
     def test_gravity_field_publishes_the_slow_it_can_source(self):
         """W prices no damage, so its slow is a sourced control event.
 

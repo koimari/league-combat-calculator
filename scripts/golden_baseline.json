@@ -31173,7 +31173,7 @@
           ],
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The percent movement grants are not published as a stat_buff (the named percent-movement boundary).",
+          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The percent movement grants are not yet wired onto the shared move-speed fold (the named percent-movement boundary).",
           "name": "Blazing Stampede",
           "parts": [],
           "rank": 1,
@@ -52844,14 +52844,14 @@
       "numeric_leaves": 46172,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "970842c089c64f1da16957f3003c980bf950dc4b",
+    "git_head": "35f2ec61cf272181be361119b7763b01f9f21795",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "8ce1b2f95ef622c72bd49f8d7ad5841a521614b2"
+    "src_tree_sha": "70db4bd0797ec3900fa4761ec045f7218ea9207c"
   },
   "registered_champion_fights": {
     "Aatrox": {

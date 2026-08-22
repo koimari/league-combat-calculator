@@ -1155,7 +1155,7 @@ class SpellbladeRule:  # pylint: disable=too-many-instance-attributes
     Dusk and Dawn's self-heal are *sibling mechanics of specific spellblades*,
     and the registry's own compiler decided which by comparing item names.
 
-    Which siblings an entry carries is now decided by
+    Which siblings an entry carries is decided by
     ``item_behavior_catalog``'s sibling groups: a group is declared whole or
     not at all, so a parse that dropped half of Essence Reaver's mana refund
     is a stop rather than a quietly weaker item, and no item name is compared.

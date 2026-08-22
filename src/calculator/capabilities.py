@@ -75,14 +75,17 @@ CAPABILITY_SCHEMA_VERSION = 8
 # fight is run (``/api/loadout-stats`` has no scenario to read), and the
 # fight's own block is an outcome — the engine folds each cast ability's
 # stat buff (Tristana Q, Olaf R, Lulu W and R, Warwick W) onto its own
-# copy of it. Every published block carries ``stats_state``, so a consumer
-# reads which fight state it is holding instead of inferring it from where
-# the block sits.
+# copy of it. A block that owns its own mapping carries ``stats_state``
+# inside it; ``champion_stats`` is a flat mapping, so its label is
+# the sibling key ``champion_stats_state``. Either way a consumer reads
+# which fight state a block holds instead of inferring it from where the
+# block sits.
 PRE_COMBAT_STATS = "pre_combat"
 FIGHT_EFFECTIVE_STATS = "fight_effective"
 STAT_SURFACE_CONTRACT: dict[str, Any] = {
     "name": "published_stat_surfaces",
     "label_key": "stats_state",
+    "sibling_label_keys": {"champion_stats": "champion_stats_state"},
     "states": {
         PRE_COMBAT_STATS: (
             "base stats and level growth, items and their declared state, "
