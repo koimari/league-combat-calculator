@@ -97,16 +97,16 @@ class TestCelerity:
         assert quick["champion_stats"]["move_speed"] == pytest.approx(333.3)
         assert quick["total_damage"] == pytest.approx(bare["total_damage"])
 
-    def test_swiftmarch_converts_the_build_s_movement_speed_and_not_the_rune_s(self):
-        """The receipt's own claim, probed: the conversion is priced first."""
+    def test_swiftmarch_converts_the_movement_speed_the_build_publishes(self):
+        """The receipt's own claim, probed: one item, one movement speed."""
         request = _request(boots="Swiftmarch", role="mid", role_quest_complete=True)
         bare = calculate_payload(dict(request))
         quick = calculate_payload({**request, "minor_runes": ["Celerity"]})
         assert bare["champion_stats"]["move_speed"] == pytest.approx(395.0)
         assert quick["champion_stats"]["move_speed"] == pytest.approx(398.95)
         assert bare["champion_stats"]["ability_power"] == 21
-        assert quick["champion_stats"]["ability_power"] == 21
-        assert quick["total_damage"] == pytest.approx(bare["total_damage"])
+        assert quick["champion_stats"]["ability_power"] == 22
+        assert quick["total_damage"] > bare["total_damage"]
 
 
 class TestWaterwalking:

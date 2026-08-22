@@ -84,7 +84,6 @@ def _fight(duration: float = 10.0, **options) -> dict:
         "target_mr": 0,
         "champion_options": options,
     }
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_json()
     return response.get_json()

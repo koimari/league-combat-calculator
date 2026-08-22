@@ -79,7 +79,6 @@ FABRICATED_ALLY_PACKETS = [
 
 def _coupled(champion, *, allies=("Jinx",), items=(), duration=12.0):
     """One coupled walk with *champion* as main and *allies* on the roster."""
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": champion,
         "level": 18,

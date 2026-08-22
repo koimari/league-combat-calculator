@@ -43,6 +43,9 @@ def _stub_state(
         crit_chance=crit_chance,
         crit_multiplier=crit_multiplier,
         target_critical_strike_damage_multiplier=1.0,
+        # Declared on FightState and read as attributes, so a stub owes them.
+        target_champion_damage_flat_reduction=0.0,
+        target_champion_dot_damage_flat_reduction=0.0,
         resists=SimpleNamespace(
             effective_armor=effective_armor,
             physical_damage_flat_reduction=0.0,

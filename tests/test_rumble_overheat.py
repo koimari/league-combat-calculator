@@ -340,6 +340,14 @@ class TestAttackSpeedSteroidIsWithheld:
         assert "ability lockout" in assumption
         assert "142.54" in assumption
 
+    def test_the_withholding_names_the_blocker_a_later_session_must_clear(self):
+        """CF17's ruling: what is missing is Overheat's START TIME, not a
+        lockout primitive.  Stated on the row so the next session does not
+        re-derive it and ship the upside on a guessed instant."""
+        assumption = next(a for a in ASSUMPTIONS if "Junkyard Titan" in a)
+        assert "START TIME" in assumption
+        assert "heat axis" in assumption
+
 
 # ---------------------------------------------------------------------------
 # W — the shield and the kernel repair it required

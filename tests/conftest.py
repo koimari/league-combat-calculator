@@ -41,6 +41,7 @@ from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests.app_config import app_config
 from tests.coverage_resolver import (
     COLLECTED_NODES,
     FULL_SESSION,
@@ -48,6 +49,19 @@ from tests.coverage_resolver import (
     node_facts,
     record_session,
 )
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _testing_flag():
+    """``TESTING`` is on for the whole session, borrowed rather than assigned.
+
+    ``src.app.app`` is a module-level singleton, so the flag is process-global
+    and a per-test assignment of it leaks into every later file.  One session
+    answer replaces those; a test needing it off borrows ``app_config`` too,
+    which is why the rate-limit tests can still turn it off and get it back.
+    """
+    with app_config(TESTING=True):
+        yield
 
 
 @pytest.fixture

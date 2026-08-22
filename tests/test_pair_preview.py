@@ -45,7 +45,6 @@ PREVIEW_ROW_PREFIX = "expose_weakness_"
 @lru_cache(maxsize=2)
 def _roster(items):
     """One roster response through the public request path."""
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": HOLDER,
         "level": 18,

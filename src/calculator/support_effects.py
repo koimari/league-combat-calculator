@@ -100,10 +100,9 @@ def _row_target(
     return None
 
 
-# The wiki's ability template names the last unlabelled row of a sentence
-# ``Heal`` whatever it measures: Mordekaiser W's is the Potential Shield decay
-# rate ("decays by 8 : 25 (based on level) every second") and Udyr Q's is the
-# lightning strikes' minimum-damage floor.  Neither sentence heals anyone.
+# The wiki's ability template names the last unlabelled row ``Heal`` whatever
+# it measures: Mordekaiser W's is the Potential Shield decay rate ("decays by
+# 8 : 25 (based on level) every second"), Udyr Q's a minimum-damage floor.
 def _declares_a_heal(prose: str) -> bool:
     """Whether the sentence declaring a ``Heal``-named row states a heal."""
     return bool(_HEAL_PROSE.search(prose))
@@ -678,6 +677,37 @@ def _caster_as_recipient(stats: dict[str, float]) -> dict[str, float]:
     return {"target_max_health": float(stats.get("health", 0.0) or 0.0)}
 
 
+def _recipient_max_health_row(ability: dict[str, Any], attribute: str) -> bool:
+    """Whether a row is a plain share of the recipient's MAXIMUM health.
+
+    That shape survives leaving the scan: maximum health is a build stat the
+    coupled composition holds for every recipient, so the packet can carry
+    its ratio and be priced per ally.  A share of the recipient's MISSING or
+    current health (Seraphine W) is live walk state and stays withheld.
+    """
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        return False
+    modifiers = leveling.get("modifiers") or []
+    if len(modifiers) != 1:
+        return False
+    units = modifiers[0].get("units") or []
+    return bool(units) and all(
+        str(unit).strip() == "% of target's maximum health" for unit in units
+    )
+
+
+def recipient_max_health_ratio(
+    ability: dict[str, Any], attribute: str, rank: int
+) -> float:
+    """One rank's share of the recipient's maximum health, as a fraction."""
+    leveling = find_named_leveling(ability, attribute)
+    values = (leveling or {}).get("modifiers", [{}])[0].get("values") or []
+    if not values:
+        return 0.0
+    return float(values[min(max(int(rank), 1), len(values)) - 1]) / 100.0
+
+
 @dataclass(frozen=True)
 class _Row:
     """One resolved leveling row: what it grants, to whom, from which cast."""
@@ -687,6 +717,7 @@ class _Row:
     target_scope: str
     target_self: bool
     recipient_scaled: bool = False
+    recipient_max_health: bool = False
 
 
 def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
@@ -756,11 +787,17 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
                 f"{sorted(SUPPORT_TARGET_RESOLUTION_SCOPES)}"
             )
         recipient_scaled = _scales_off_the_recipient(ability, attribute)
-        if recipient_scaled:
+        recipient_max_health = recipient_scaled and _recipient_max_health_row(
+            ability, attribute
+        )
+        if recipient_scaled and not recipient_max_health:
             # Only one recipient's stats are in reach, so only the caster's
             # copy has a sourced amount; the ally copy is withheld rather
             # than granted the caster's number.  A copy that resolves to
             # nothing even against the caster is refused by the emitter.
+            # A plain maximum-health share is the exception: it keeps its
+            # sourced scope and carries its ratio to the composition, which
+            # holds every recipient's maximum health.
             scope, resolved_self = "self", True
         # ``target_self`` is the resolver's fallback for a teammate-less
         # roster and only a shield row carries it: a heal packet is always
@@ -772,6 +809,7 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
                 scope,
                 kind == "shield" and resolved_self,
                 recipient_scaled,
+                recipient_max_health,
             )
         )
     return rows
@@ -1646,6 +1684,13 @@ def derive_ally_effects(
                         "target_selection_key": f"shield:{slot}:{cast_index}",
                         **amount_metadata,
                     }
+                    if shield_row.recipient_max_health:
+                        # The amount above is the CASTER's copy.  The ratio
+                        # rides the packet so the composition can price each
+                        # other recipient off their own maximum health.
+                        event["recipient_max_health_ratio"] = (
+                            recipient_max_health_ratio(ability, shield_attr, rank)
+                        )
                     if shield_attr == "Magic Shield Strength":
                         event["shield_pool"] = "magic"
                     if champion_key == ("Morgana", "E"):

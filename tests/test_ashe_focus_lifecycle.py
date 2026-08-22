@@ -155,32 +155,23 @@ def _fight(
 
 
 def _api(option: dict):
-    # The app skips the rate limiter and result cache in TESTING mode;
-    # restore the prior flag so this file never leaks state into
-    # sibling runs (test_app.py's dedicated rate-limit tests depend on
-    # TESTING being False when they run).
-    previous_testing = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
-        return app_module.app.test_client().post(
-            "/api/calculate",
-            json={
-                "champion": "Ashe",
-                "level": _LEVEL,
-                "items": [],
-                "role": "top",
-                "ability_ranks": _RANKS,
-                "fight_mode": "time_based",
-                "fight_duration": 10,
-                "include_auto_attacks": False,
-                "target_health": 2000,
-                "target_armor": 50,
-                "target_mr": 40,
-                "champion_options": option,
-            },
-        )
-    finally:
-        app_module.app.config["TESTING"] = previous_testing
+    return app_module.app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ashe",
+            "level": _LEVEL,
+            "items": [],
+            "role": "top",
+            "ability_ranks": _RANKS,
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "target_health": 2000,
+            "target_armor": 50,
+            "target_mr": 40,
+            "champion_options": option,
+        },
+    )
 
 
 def _q_leveling(attribute: str) -> dict:

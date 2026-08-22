@@ -28,8 +28,9 @@ trap health bar are state the fight model does not price — the damage
 is the detonation DoT above.
 
 Coverage: W (Move Quick) is Teemo's own movement speed with no
-enemy-damage clause anywhere in the slot, so it is a sourced
-zero-damage row (``no_damage``).  P (Guerrilla Warfare) is idle stealth
+enemy-damage clause anywhere in the slot, so it is a zero-damage row
+carrying the cast's sourced ``move_speed_percent`` stat buff.  P
+(Guerrilla Warfare) is idle stealth
 with a real attack-speed steroid on breaking it, which WOULD change
 damage — so it stays ``out_of_scope`` with a receipt (the Olaf-R rule),
 never ``no_damage``.
@@ -106,7 +107,8 @@ def _move_quick(packet_w):
     """W: movement only — a sourced zero-enemy-damage row.
 
     Replaces the packet's generic "no enemy-damage formula" stub with the
-    sourced movement numbers, read from the cache rather than restated.
+    sourced movement numbers, and publishes the cast's own grant as a
+    ``move_speed_percent`` stat buff.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -119,12 +121,17 @@ def _move_quick(packet_w):
             return entry
         passive_ms = extract_value(ability, "Bonus Movement Speed", rank)
         active_ms = extract_value(ability, "Enhanced Bonus Movement Speed", rank)
+        # The ACTIVE's row, because the passive's own condition ("after 5
+        # seconds without taking damage from enemy champions") is one a
+        # fight never satisfies.  It rides the cast like every other
+        # steroid the engine prices, so a rotation that never casts W
+        # earns none of it.
+        entry["stat_buff"] = {"move_speed_percent": active_ms}
         entry["detail"] = (
             f"Movement only: {passive_ms:g}% bonus movement speed after 5s "
-            f"undamaged, doubled to {active_ms:g}% for 3s on cast. No "
-            "enemy-damage clause exists in the slot; the percent movement "
-            "grant is not published as a stat_buff (the named "
-            "percent-movement boundary)."
+            f"undamaged, doubled to {active_ms:g}% for 3s on cast. The "
+            "cast's grant is published as a move_speed_percent stat buff, "
+            "which is a term in the shared movement-speed fold."
         )
         return entry
 
@@ -243,14 +250,14 @@ OPTIONS.append(
 )
 ASSUMPTIONS.extend(
     [
-        "W (Move Quick) is a sourced zero-damage row (MODULE_COVERAGE: "
-        "no_damage, reclassified from out_of_scope; the row stays "
-        "zero-damage and zero-part, only its detail becomes sourced). The "
-        "percent movement grant is NOT published as a stat_buff — the "
-        "named Naafiri-W / Sivir-R boundary: only the final soft-capped "
-        "move_speed scalar is exposed, so a percent-to-flat decomposition "
-        "would be invented, and Swiftmarch's adaptive force would turn it "
-        "into damage.",
+        "W (Move Quick) deals no damage; its ACTIVE grant "
+        "(24/32/40/48/56% for 3s) is published as a move_speed_percent "
+        "stat buff, priced for the fight the way every cast steroid is. "
+        "The passive branch is withheld: its 5s-undamaged condition is a "
+        "state a fight never enters. Move-speed-reading item passives "
+        "(Swiftmarch's adaptive force) are resolved from the build's "
+        "stats before any cast, so they do not grow with the buff — the "
+        "same fight-start boundary every stat_buff has.",
         "P (Guerrilla Warfare) stays out_of_scope, NOT no_damage (the "
         "Olaf-R rule): Element of Surprise grants 20/40/60/80% (based on "
         "level) bonus attack speed for 5s on breaking stealth, a real "

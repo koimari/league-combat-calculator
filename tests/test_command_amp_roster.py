@@ -74,7 +74,6 @@ ROUNDING = 0.1
 @lru_cache(maxsize=4)
 def _roster(items, holder=HOLDER, ally=ALLY, duration=8):
     """One roster response through the public request path."""
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": holder,
         "level": 18,

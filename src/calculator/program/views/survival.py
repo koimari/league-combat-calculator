@@ -296,7 +296,8 @@ def survival_leaves(
             round_field("healing_reduction_until", state["healing_reduction_until"]),
         )
         leaf.raw(
-            "healing_reduction_sources", sorted(state["healing_reduction_sources"])
+            "healing_reduction_window_sources",
+            sorted(state["healing_reduction_window_sources"]),
         )
         leaf.structure(
             "healing_reduction_events",

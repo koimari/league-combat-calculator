@@ -102,7 +102,6 @@ def _coupled_fight() -> dict:
     from level), so the ranks are the level-18 derived ones, which put E
     at rank 5 — the same rank the parse tests use.
     """
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={

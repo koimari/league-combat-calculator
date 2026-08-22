@@ -4,6 +4,8 @@ A lone Time Bomb only explodes; the kit's stun needs a second bomb inside
 the first one's fuse.
 """
 
+import copy
+
 import pytest
 
 from src.calculator.champions import (
@@ -96,6 +98,34 @@ class TestReviewedCrowdControl:
         defenses = resolve_starting_defenses("Zilean", 18, stats, [])
         assert defenses.revive_source == "Chronoshift"
         assert defenses.revive_health_amount == pytest.approx(1100.0)
+
+    def test_the_revive_row_is_read_from_the_cache_not_recalled(self, monkeypatch):
+        """CF5: move the cached Heal/cooldown rows and the revive follows.
+
+        The rank-3 numbers above are the cache's; doctoring the cached row
+        is what separates reading it from holding a copy of it.
+        """
+        doctored = copy.deepcopy(cc_review.kit("Zilean"))
+        chronoshift = doctored["abilities"]["R"][0]
+        heal = chronoshift["effects"][1]["leveling"][0]
+        heal["modifiers"][0]["values"] = [1.0, 2.0, 3.0]
+        heal["modifiers"][1]["values"] = [100.0, 100.0, 100.0]
+        chronoshift["cooldown"]["modifiers"][0]["values"] = [11.0, 12.0, 13.0]
+        monkeypatch.setattr(zilean, "get_champion", lambda _name: doctored)
+
+        assert zilean.starting_revive_defense(18, {"ability_power": 50.0}) == {
+            "revive_health_amount": pytest.approx(3.0 + 50.0),
+            "revive_delay": 3.0,
+            "revive_cooldown": 13.0,
+        }
+
+    def test_a_missing_heal_row_names_the_source_and_the_key(self, monkeypatch):
+        stripped = copy.deepcopy(cc_review.kit("Zilean"))
+        stripped["abilities"]["R"][0]["effects"][1]["leveling"] = []
+        monkeypatch.setattr(zilean, "get_champion", lambda _name: stripped)
+
+        with pytest.raises(KeyError, match="Heal.*data/champions.json"):
+            zilean.starting_revive_defense(18, {"ability_power": 0.0})
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Zilean") == []

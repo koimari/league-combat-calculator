@@ -3,9 +3,7 @@
 E3 boundary: the worklist assigns Zac no damage-relevant stack mechanic.
 The passive's Goo chunks heal Zac (4% : 8.47% max health per chunk) and
 reduce W's cooldown; the resurrection is a death passive. Neither
-changes outgoing damage, so no stack slot is added — the chunk heal row
-the packet prices as target-max-health damage is the passive's existing
-packet read and is left untouched (not part of the E3 worklist).
+changes outgoing damage, so no stack slot is added.
 
 Coverage: P is ``modeled`` through the revive channel, not through its
 own packet row; Q/W/E/R price their cached damage rows.
@@ -16,23 +14,14 @@ units" page lists only Zac's Cell Division Bloblets, which are a death
 passive with no outgoing damage).  No summon slot is added; the
 reviewed bounce packet pricing is unchanged.
 
-Roadmap session 5 slot 14 (2026-08-21): P (Cell Division) is a
-correction, not a plain stale-label fix.  P IS wired in SLOTS — the
-default build_packet_module packet parser (base 0.0 across all levels;
-ratio 4% : 8.47% of ``targetMaxHp``, data/champions.json P) — but that
-"targetMaxHp" ratio is a packet-generation mislabel: the cached prose is
-"Zac will consume it to heal for 4% : 8.47% (based on level) of HIS
-maximum health" — a Zac-self heal on chunk pickup, not an enemy-scaled
-damage term, and it shares the exact "Max Health Damage" attribute name
-``derive_self_healing`` below already reads directly from the ability
-data for the self-heal ledger.  Verified live: parse_champion_abilities
-emits P (surfaced as the "passive" key) with total_raw=0.0, and P/passive
-never appears in the fight breakdown — Zac's DEFAULT_CAST_ORDER
-(Q, Q2, W, E, R) never casts P, so the packet's target-scaled part is
-never evaluated for enemy damage.  So P's own row prices nothing; what
-the engine prices for the slot is the revive and the Goo chunk heal, and
-``COVERAGE_CHANNELS`` names both — the slot is ``modeled`` through those
-channels, not through its packet row.
+P (Cell Division) emits a named state row with no damage part.  The
+packet generator reads a ``targetMaxHp`` ratio there, but the cached
+prose pays it off ZAC — "Zac will consume it to heal for 4% : 8.47%
+(based on level) of HIS maximum health" — under the same "Max Health
+Damage" attribute name ``derive_self_healing`` below reads for the heal
+ledger.  A self-heal has no place in the damage vocabulary, so the slot
+publishes none; the revive and the chunk heal are what the engine prices
+for it, through the two channels ``COVERAGE_CHANNELS`` names.
 """
 
 from dataclasses import replace
@@ -41,6 +30,7 @@ from ..ability_spec import DamagePart
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .engine import CC_PER_PART, SlotCtx
+from .module_helpers import no_damage
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .. import healing_helpers as _healing
@@ -144,6 +134,28 @@ def _lets_bounce(packet_r):
 # authored per part in ``_lets_bounce``.  P is the Goo/revive state row.
 MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": CC_PER_PART}
 
+
+def _cell_division(ctx: SlotCtx):
+    """P: a state row with no enemy-damage term of its own.
+
+    The packet's ``targetMaxHp`` ratio is a generation mislabel — the
+    cached prose pays it off ZAC's maximum health — so publishing it as a
+    damage part put a heal in the damage vocabulary.  Both halves of the
+    slot are priced by the channels ``COVERAGE_CHANNELS`` names.
+    """
+    return no_damage(
+        ctx,
+        name="Cell Division",
+        reason=(
+            "Cell Division deals no enemy damage: the cached 'Max Health "
+            "Damage' ratio is Zac's own Goo chunk heal (4% : 8.47% of HIS "
+            "maximum health), priced through the self_healing_rule "
+            "channel, and the resurrection through "
+            "starting_revive_defense."
+        ),
+    )
+
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zac",
     PACKET_SHA256,
@@ -173,6 +185,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             dot_duration=3.0,
         ),
         "Q": _stretching_strikes,
+        # P's packet ratio is a mislabeled SELF heal, so the slot emits no
+        # enemy-damage row at all rather than one whose only honest value
+        # is zero.  The heal itself is the healing rule's, and the revive
+        # the starting-defense channel's.
+        "P": _cell_division,
     },
     slot_wrappers={
         "R": _lets_bounce,
@@ -197,15 +214,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "health restored after the level-bracketed resurrection window "
     "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "
     "(cached passive prose; all four bloblets assumed to survive).",
-    "P's cast-slot packet entry (build_packet_module's default parser: "
-    "base 0.0, 4% : 8.47% of targetMaxHp) has no enemy-damage formula: "
-    "the packet's 'targetMaxHp' ratio is a mislabeled self-heal-on-chunk "
-    "term ('heal for 4% : 8.47% of HIS maximum health', not the "
-    "target's); P is never cast (absent from DEFAULT_CAST_ORDER), so "
-    "the fight ledger never invents an enemy hit from it. The revive and "
-    "the chunk heal are what the engine prices for the slot, through the "
+    "P emits a state row with NO damage part: the packet generator's "
+    "'targetMaxHp' ratio is a mislabeled self-heal-on-chunk term ('heal "
+    "for 4% : 8.47% of HIS maximum health', not the target's), so it is "
+    "not published in the damage vocabulary at all. The revive and the "
+    "chunk heal are what the engine prices for the slot, through the "
     "starting_revive_defense and self_healing_rule channels this module "
-    "names in COVERAGE_CHANNELS, not through this packet row.",
+    "names in COVERAGE_CHANNELS.",
 ]
 
 
@@ -218,20 +233,21 @@ def derive_self_healing(
     cast_timeline=None,
     fight_duration_seconds=None,
 ):
-    """Resolve Zac self-healing events from its authored packet."""
+    """Resolve Zac self-healing events from its authored packet.
+
+    The chunk pays a percentage of Zac's own MAXIMUM health, which the
+    build already knows, so the amount is resolved here rather than
+    deferred to the walk as an ``amount_formula``: a formula is for a live
+    reading (current health, a missing-health ratio) and this rule has
+    none, while the one-pair receipt cannot evaluate one.
+    """
     healing = []
     p = _healing.ability_json(champion_data, "P")
     level = int(champion_stat(champion_stats, "level"))
     chunk_pct = _healing.extract_named(
         p, "Max Health Damage", level, champion_stats, {}
     )
-
-    def cell_division_heal(
-        _current_health: float,
-        maximum_health: float,
-        pct: float = chunk_pct,
-    ) -> float:
-        return maximum_health * pct / 100.0
+    amount = max(0.0, champion_stat(champion_stats, "health") * chunk_pct / 100.0)
 
     for event in _healing.attributed_events(
         damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
@@ -239,8 +255,7 @@ def derive_self_healing(
         healing.append(
             {
                 "time": float(event.get("time", 0.0)),
-                "amount": 0.0,
-                "amount_formula": cell_division_heal,
+                "amount": amount,
                 "source": "Cell Division",
                 "kind": "champion_passive",
                 **_healing.trigger_fields(event),

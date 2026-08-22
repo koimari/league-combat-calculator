@@ -239,7 +239,6 @@ def _api_payload(level: int = _LEVEL, **overrides) -> dict:
 
 
 def _api(level: int = _LEVEL, **overrides):
-    app_module.app.config["TESTING"] = True
     return app_module.app.test_client().post(
         "/api/calculate", json=_api_payload(level, **overrides)
     )
@@ -498,7 +497,6 @@ class TestDefaultAndAbsentParity:
         meta = get_champion_options_meta("Quinn")
         assert meta["options"] == []
         assert meta["assumptions"]
-        app_module.app.config["TESTING"] = True
         config = app_module.app.test_client().get("/api/config").get_json()
         assert config["champion_options"]["Quinn"]["options"] == []
         assert any(
@@ -793,7 +791,6 @@ class TestApiValidation:
     def test_option_surface_is_empty_in_meta_and_config(self):
         meta = get_champion_options_meta("Quinn")
         assert meta["options"] == []
-        app_module.app.config["TESTING"] = True
         config = app_module.app.test_client().get("/api/config").get_json()
         assert config["champion_options"]["Quinn"]["options"] == []
 

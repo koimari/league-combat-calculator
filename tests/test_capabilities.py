@@ -7,7 +7,10 @@ import pytest
 
 from src.calculator.capabilities import (
     CAPABILITY_SCHEMA_VERSION,
+    FIGHT_EFFECTIVE_STATS,
     PARTICIPANT_LEDGER_CONTRACT,
+    PRE_COMBAT_STATS,
+    STAT_SURFACE_CONTRACT,
     _ledger_phases,
     public_capability_contract,
 )
@@ -45,10 +48,30 @@ def test_capability_contract_exposes_named_participant_and_catalogue_fields() ->
         item_option_count=3,
     )
 
-    assert contract["schema_version"] == 7
+    assert contract["schema_version"] == 8
     assert contract["participants"]["main"]["fields"]["champion"]["supported"]
     assert contract["catalogs"]["champion_options"]["count"] == 2
     assert contract["catalogs"]["item_options"]["count"] == 3
+
+
+def test_the_contract_names_both_published_stat_surfaces() -> None:
+    """The two blocks are labelled, and the label vocabulary is published."""
+    contract = public_capability_contract(
+        input_limits={"level": (1.0, 18.0)},
+        champion_option_count=0,
+        item_option_count=0,
+    )
+    surfaces = contract["stat_surfaces"]
+    assert surfaces["label_key"] == "stats_state"
+    assert set(surfaces["states"]) == {PRE_COMBAT_STATS, FIGHT_EFFECTIVE_STATS}
+    assert "no ability stat buff" in surfaces["states"][PRE_COMBAT_STATS]
+    assert "ability stat buff" in surfaces["states"][FIGHT_EFFECTIVE_STATS]
+    # A published copy, so a caller cannot edit the module's declaration.
+    surfaces["states"].clear()
+    assert set(STAT_SURFACE_CONTRACT["states"]) == {
+        PRE_COMBAT_STATS,
+        FIGHT_EFFECTIVE_STATS,
+    }
 
 
 def test_the_published_phase_list_is_derived_from_the_transition_ladder() -> None:
@@ -87,9 +110,10 @@ def test_the_published_list_moved_the_schema_version_with_it() -> None:
     shard catalogs.  Every value in the chain has exactly one owning commit,
     which is why the phase list is still seven names at version 5; 6 is the
     survival row's certification fields and 7 the unsupported fields' null
-    locators, and neither touches a phase name.
+    locators, and 8 the two published stat blocks' ``stats_state`` labels;
+    none of them touches a phase name.
     """
-    assert CAPABILITY_SCHEMA_VERSION == 7
+    assert CAPABILITY_SCHEMA_VERSION == 8
     assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7
 
 

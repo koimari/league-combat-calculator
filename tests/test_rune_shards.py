@@ -422,8 +422,8 @@ class TestThePickerFillsThreeRowsAndTellsTheStatCard:
         page = rune_effects.validate_rune_page(
             card["keystone"], card["minor_runes"], card["stat_shards"]
         )
-        grants = rune_effects.rune_page_stat_grants(
-            page, level=9, is_melee=False, bonus_attack_damage=0.0, ability_power=100.0
+        grants = rune_effects.compile_rune_page(page).grants(
+            level=9, is_melee=False, bonus_attack_damage=0.0, ability_power=100.0
         )
         # The shard's 9 plus Absolute Focus's own 15.71 at level 9, both
         # adaptive and both resolving to ability power on an AP build.

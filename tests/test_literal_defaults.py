@@ -1,10 +1,10 @@
-"""Rule-5 lint: damage.py reads no cached data behind a literal default.
+"""Rule-5 lint: the scanned files read no cached data behind a literal default.
 
 `scripts/literal_defaults.py` flags `.get("key", <literal>)`, `<get> or
 <literal>` and `getattr(o, "attr", <literal>)`, exempting an index into a
 local accumulator and a None-coalesce by shape.  What survives is frozen here
-by enclosing function and key — never by line number, so an edit above a site
-does not turn this red.
+per file by enclosing function and key — never by line number, so an edit
+above a site does not turn this red.
 """
 
 import sys
@@ -12,9 +12,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
+import pytest  # noqa: E402  (path set above)
+
 import literal_defaults  # noqa: E402  (path set above)
 
-ENGINE = Path(__file__).resolve().parent.parent / "src" / "calculator" / "damage.py"
+CALCULATOR = Path(__file__).resolve().parent.parent / "src" / "calculator"
 
 #: Reads off an internal breakdown or damage-event row.  These rows have no
 #: schema home the way `_damage_event_row`'s mandatory five do; one row
@@ -120,27 +122,112 @@ ROW_READS = frozenset(
     }
 )
 
-#: Spelled with getattr against rule 5 on purpose, and only here: as plain
-#: attributes these two become visible to `scripts/term_census.py`, whose
-#: Amendment R gates then require a coupled scenario arming Guardian's Horn
-#: and a re-captured golden baseline.  Both fields are declared on FightState,
-#: so neither default is reachable.
-CENSUS_GETATTR = frozenset(
+#: Request-supplied per-item state, not cached data: an absent key is the
+#: item's declared off state, and `ITEM_INPUT_OPTIONS` owns what that is.
+REQUEST_ITEM_STATE = frozenset(
     {
-        (
-            "_apply_target_champion_damage_reduction",
-            "getattr",
-            '"target_champion_damage_flat_reduction"',
-        ),
-        (
-            "_apply_target_champion_damage_reduction",
-            "getattr",
-            '"target_champion_dot_damage_flat_reduction"',
-        ),
+        ("actualizer_active_seconds", "dict.get", '"mana_made_real_active"'),
+        ("actualizer_active_seconds", "dict.get", '"mana_made_real_active_seconds"'),
+        ("actualizer_active_seconds", "or-default", '"mana_made_real_active"'),
+        ("input_option_crit_chance", "dict.get", '"crit_stacks"'),
+        ("input_option_retribution_bonus_ad", "dict.get", '"missing_health_percent"'),
+        ("item_state_receipts", "dict.get", '"Endless Hunger"'),
+        ("item_state_receipts", "dict.get", '"Heartsteel"'),
+        ("item_state_receipts", "dict.get", '"Hubris"'),
+        ("item_state_receipts", "dict.get", '"Knight\'s Vow"'),
+        ("item_state_receipts", "dict.get", '"Rod of Ages"'),
+        ("item_state_receipts", "dict.get", '"Tear of the Goddess"'),
+        ("item_state_receipts", "dict.get", '"Yun Tal Wildarrows"'),
+        ("item_state_receipts", "dict.get", '"bonus_health"'),
+        ("item_state_receipts", "dict.get", '"crit_stacks"'),
+        ("item_state_receipts", "dict.get", '"eminence_active_seconds"'),
+        ("item_state_receipts", "dict.get", '"eminence_stacks"'),
+        ("item_state_receipts", "dict.get", '"feast_active_seconds"'),
+        ("item_state_receipts", "dict.get", '"holder_above_30_percent"'),
+        ("item_state_receipts", "dict.get", '"manaflow_bonus_mana"'),
+        ("item_state_receipts", "dict.get", '"missing_health_percent"'),
+        ("item_state_receipts", "dict.get", '"shared_riches_gold"'),
+        ("item_state_receipts", "dict.get", '"timeless_stacks"'),
+        ("item_state_receipts", "dict.get", '"ward_uses"'),
+        ("item_state_receipts", "dict.get", '"worthy_target_index"'),
+        ("item_state_receipts", "dict.get", '"worthy_within_range"'),
+        ("item_state_receipts", "or-default", '"Overlord\'s Bloodmail"'),
+        ("item_state_receipts", "or-default", '"crit_stacks"'),
+        ("item_state_receipts", "or-default", '"eminence_active_seconds"'),
+        ("item_state_receipts", "or-default", '"eminence_stacks"'),
+        ("item_state_receipts", "or-default", '"feast_active_seconds"'),
+        ("item_state_receipts", "or-default", '"shared_riches_gold"'),
+        ("item_state_receipts", "or-default", '"ward_uses"'),
     }
 )
 
-ALLOWED = ROW_READS | CENSUS_GETATTR
+#: Reads on the in-module `ITEM_INPUT_OPTIONS` declaration itself.  An absent
+#: facet means this option declares none, which is a source fact, not a
+#: cached-data miss.
+OPTION_SCHEMA = frozenset(
+    {
+        ("_input_option_stat_bonuses", "dict.get", '"bonus_ap_per_unit"'),
+        ("_input_option_stat_bonuses", "dict.get", '"bonus_health_per_unit"'),
+        ("_input_option_stat_bonuses", "dict.get", '"bonus_mana_per_unit"'),
+        ("_item_option_schemas", "dict.get", '"options"'),
+        ("input_option_float_value", "dict.get", '"step"'),
+        ("input_option_float_value", "or-default", '"step"'),
+        ("validate_item_input_options", "dict.get", '"step"'),
+        ("validate_item_input_options", "or-default", '"step"'),
+    }
+)
+
+#: A loadout row's own name.  The empty string is a sentinel the next
+#: statement rejects or skips past; no number rides on it.
+LOADOUT_NAMES = frozenset(
+    {
+        ("_cached_sustain_stat", "or-default", '"name"'),
+        ("_resolve_damage_effects_uncached", "dict.get", '"name"'),
+        ("active_secondary_ad_item_name", "dict.get", '"name"'),
+        ("cleave_on_hit_item_name", "dict.get", '"name"'),
+        ("grouped_sustain_stat_percent", "or-default", '"name"'),
+        ("hydra_secondary_item_name", "dict.get", '"name"'),
+        ("resolve_damage_effects", "dict.get", '"name"'),
+        ("target_class_denials", "dict.get", '"name"'),
+        ("target_class_denials", "or-default", '"name"'),
+    }
+)
+
+#: Atom rows compared against the registry.  The empty tuple is the failure
+#: branch: each of these raises on the next line rather than using it.
+ATOM_ROWS = frozenset(
+    {
+        ("counter_trigger", "dict.get", '"counter_trigger"'),
+        ("dorans_helm_helping_hand_minion_damage", "dict.get", '"values"'),
+        ("guardian_angel_rebirth_declaration", "dict.get", '"values"'),
+        ("ionian_insight_summoner_spell_haste", "dict.get", '"values"'),
+        ("spell_shield_cooldown_seconds", "dict.get", '"values"'),
+    }
+)
+
+#: Strict traversals of a raw cached ability row.  Every one of these feeds a
+#: shape check whose failure branch raises, naming champion, slot and source —
+#: the empty default is the path *to* that raise, never a served value.
+WIKI_TRAVERSALS = frozenset(
+    {
+        ("_valid_atom_hash", "dict.get", '"hash"'),
+        ("ranked_ability_atom_value", "dict.get", '"values"'),
+        ("required_ability_atom", "dict.get", '"evidence"'),
+        ("required_ranked_attribute_atom", "dict.get", '"abilities"'),
+        ("required_ranked_attribute_atom", "dict.get", '"attribute"'),
+        ("required_ranked_attribute_atom", "dict.get", '"effects"'),
+        ("required_ranked_attribute_atom", "dict.get", '"leveling"'),
+        ("required_ranked_attribute_atom", "dict.get", '"modifiers"'),
+    }
+)
+
+#: Every scanned file and the survivors frozen for it.  A file joins this map
+#: only once it is clean — that is what "widen one file at a time" means.
+SCANNED = {
+    "damage.py": ROW_READS,
+    "item_effects.py": REQUEST_ITEM_STATE | OPTION_SCHEMA | LOADOUT_NAMES | ATOM_ROWS,
+    "ability_atoms.py": WIKI_TRAVERSALS,
+}
 
 #: Receivers that carry a champion-module-authored ability payload.  A literal
 #: default on one of these is what `ability_atoms.ABILITY_PAYLOAD_SCHEMA`
@@ -165,8 +252,8 @@ PAYLOAD_RECEIVERS = (
 )
 
 
-def _findings():
-    return literal_defaults.scan([ENGINE])
+def _findings(name="damage.py"):
+    return literal_defaults.scan([CALCULATOR / name])
 
 
 def test_no_ability_payload_read_carries_a_literal_default():
@@ -179,11 +266,12 @@ def test_no_ability_payload_read_carries_a_literal_default():
     assert offenders == []
 
 
-def test_the_surviving_literal_defaults_are_the_frozen_ones():
-    """Nothing new joins the list, and a retired row leaves it."""
-    found = {(f.enclosing, f.kind, f.key) for f in _findings()}
-    assert found - ALLOWED == set()
-    assert ALLOWED - found == set()
+@pytest.mark.parametrize("name", sorted(SCANNED))
+def test_the_surviving_literal_defaults_are_the_frozen_ones(name):
+    """Nothing new joins a file's list, and a retired row leaves it."""
+    found = {(f.enclosing, f.kind, f.key) for f in _findings(name)}
+    assert found - SCANNED[name] == set()
+    assert SCANNED[name] - found == set()
 
 
 def test_the_scanner_still_finds_a_planted_cached_data_default(tmp_path):

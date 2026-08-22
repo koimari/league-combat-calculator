@@ -391,36 +391,28 @@ def test_sources_are_wiki_revision_receipts():
 
 
 def _post_shen_fight(*, duration=6.0):
-    previous_testing = app.config.get("TESTING")
-    app.config["TESTING"] = True
-    try:
-        response = app.test_client().post(
-            "/api/calculate",
-            json={
-                "champion": "Shen",
-                "level": 12,
-                "items": [],
-                "fight_mode": "time_based",
-                "fight_duration": duration,
-                "include_auto_attacks": True,
-                "auto_attack_uptime": 1.0,
-                "ability_ranks": {"Q": 5, "W": 1, "E": 3, "R": 2},
-                "champion_options": {
-                    "q_spirit_blade_hit": True,
-                    "q_attacks_landed": 3,
-                    "q_first_attack_delay": 0.5,
-                    "e_dash_distance": 600.0,
-                },
-                "enemies": [{"champion": "Aatrox", "level": 12, "items": []}],
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Shen",
+            "level": 12,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": duration,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "ability_ranks": {"Q": 5, "W": 1, "E": 3, "R": 2},
+            "champion_options": {
+                "q_spirit_blade_hit": True,
+                "q_attacks_landed": 3,
+                "q_first_attack_delay": 0.5,
+                "e_dash_distance": 600.0,
             },
-        )
-        assert response.status_code == 200, response.get_data(as_text=True)[:500]
-        return response.get_json()["combat"]
-    finally:
-        if previous_testing is None:
-            app.config.pop("TESTING", None)
-        else:
-            app.config["TESTING"] = previous_testing
+            "enemies": [{"champion": "Aatrox", "level": 12, "items": []}],
+        },
+    )
+    assert response.status_code == 200, response.get_data(as_text=True)[:500]
+    return response.get_json()["combat"]
 
 
 def test_api_ki_barrier_shield_absorbs_through_the_participant_ledger():

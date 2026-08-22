@@ -225,6 +225,5 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # worklist entry is stale and the wiki cache carries no wound on either Q
 # entry (autoresearch pass 11, 2026-08-07).  Empty declaration = no wound.
 GRIEVOUS_WOUNDS_SOURCES = frozenset()
-GRIEVOUS_WOUNDS_SOURCE_LABELS = {}
 
 MODULE_COVERAGE = coverage(no_damage="P")

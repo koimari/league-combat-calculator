@@ -370,6 +370,9 @@ def test_equipping_force_of_nature_yields_exactly_400_health_55_mr_and_4_ms():
         "magic_resistance": MR_FLAT,
         "bonus_magic_resistance": MR_FLAT,
         "move_speed": MS_DELTA,
+        # The percent component the one movement fold reads; the flat one
+        # does not move, which is why 4% resolves as 4% of the base.
+        "move_speed_percent": MS_PERCENT,
     }
 
 

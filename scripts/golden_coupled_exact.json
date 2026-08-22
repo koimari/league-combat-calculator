@@ -11,8 +11,8 @@
     },
     "cassiopeia_3champ": {
       "combat/0:main/incoming": "1128.1",
-      "combat/0:main/outgoing": "768.0",
-      "combat/1:enemy:Alistar/incoming": "509.7",
+      "combat/0:main/outgoing": "436.6",
+      "combat/1:enemy:Alistar/incoming": "178.4",
       "combat/1:enemy:Alistar/outgoing": "514.4",
       "combat/2:enemy:Dr. Mundo/incoming": "258.2",
       "combat/2:enemy:Dr. Mundo/outgoing": "613.7",
@@ -21,15 +21,15 @@
     },
     "cassiopeia_5champ": {
       "combat/0:main/incoming": "1488.0",
-      "combat/0:main/outgoing": "1309.3",
-      "combat/1:ally:Alistar/incoming": "1290.1",
-      "combat/1:ally:Alistar/outgoing": "1292.7",
-      "combat/2:enemy:Alistar/incoming": "1013.0",
-      "combat/2:enemy:Alistar/outgoing": "946.0",
+      "combat/0:main/outgoing": "978.0",
+      "combat/1:ally:Alistar/incoming": "475.8",
+      "combat/1:ally:Alistar/outgoing": "965.6",
+      "combat/2:enemy:Alistar/incoming": "354.5",
+      "combat/2:enemy:Alistar/outgoing": "665.4",
       "combat/3:enemy:Dr. Mundo/incoming": "513.2",
-      "combat/3:enemy:Dr. Mundo/outgoing": "1155.1",
+      "combat/3:enemy:Dr. Mundo/outgoing": "800.6",
       "combat/4:enemy:Vayne/incoming": "1075.9",
-      "combat/4:enemy:Vayne/outgoing": "676.9",
+      "combat/4:enemy:Vayne/outgoing": "497.8",
       "fights/0:Alistar": "509.7",
       "fights/1:Dr. Mundo": "258.2",
       "fights/2:Vayne": "541.4"
@@ -69,12 +69,12 @@
     },
     "crit_onhit_carry_roster": {
       "combat/0:main/incoming": "3794.0",
-      "combat/0:main/outgoing": "7698.5",
+      "combat/0:main/outgoing": "7455.2",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "745.1",
       "combat/2:enemy:Aatrox/incoming": "5524.0",
       "combat/2:enemy:Aatrox/outgoing": "4085.2",
-      "combat/3:enemy:Malphite/incoming": "2919.6",
+      "combat/3:enemy:Malphite/incoming": "2676.3",
       "combat/3:enemy:Malphite/outgoing": "1837.8",
       "fights/0:Aatrox": "8220.1",
       "fights/1:Malphite": "10920.9"
@@ -233,8 +233,8 @@
     },
     "syndra_mandate_3champ": {
       "combat/0:main/incoming": "1151.1",
-      "combat/0:main/outgoing": "1092.4",
-      "combat/1:enemy:Alistar/incoming": "717.6",
+      "combat/0:main/outgoing": "640.8",
+      "combat/1:enemy:Alistar/incoming": "266.0",
       "combat/1:enemy:Alistar/outgoing": "538.2",
       "combat/2:enemy:Dr. Mundo/incoming": "374.8",
       "combat/2:enemy:Dr. Mundo/outgoing": "612.9",
@@ -251,11 +251,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "87d1f4fe76457596cba1ebd862302af235db3b67",
+    "git_head": "475404a15380841c25d59d4f28ed337764aba3aa",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
+    "src_tree_sha": "7c400b2639ecedf9ac9de985d5d1da0f3adaa20a"
   }
 }

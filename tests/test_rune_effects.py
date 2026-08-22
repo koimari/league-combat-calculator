@@ -12,6 +12,7 @@ import pytest
 from src.calculator import rune_effects
 from src.calculator.ability_spec import Disposition
 from src.calculator.item_effects import DamageInputs
+from src.calculator.rune_paths import keystones as keystone_module
 
 
 def _inputs(level=1, bonus_ad=0.0, ap=0.0, is_melee=False, **stats):
@@ -62,7 +63,7 @@ class TestResolveKeystone:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
             if entry.get("row") == 0
         }
-        assert set(rune_effects._KEYSTONE_COMPILERS) == keystones
+        assert set(keystone_module.COMPILERS) == keystones
 
     def test_a_keystone_with_no_compiler_still_fails_closed(self, monkeypatch):
         """The withhold survives its own population emptying.

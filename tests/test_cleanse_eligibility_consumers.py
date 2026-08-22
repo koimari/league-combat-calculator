@@ -340,7 +340,6 @@ def test_a_kind_outside_the_vocabulary_never_reaches_the_walk():
 
 
 def _calculate(payload: dict) -> dict:
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()["combat"]

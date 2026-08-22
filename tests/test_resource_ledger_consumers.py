@@ -422,7 +422,14 @@ def test_both_walks_price_a_cast_against_the_one_actualizer_multiplier():
         open_window = paid(
             run_fight(champ, 18, items, _params(duration=3.0, item_options=window))
         )
-        priced = {key: amount for key, amount in closed.items() if amount > 0.0}
+        # Doubling the price can cost a fixed pool a later cast (Akali's
+        # 200 energy cannot pay a second 140-energy Q), which is admission
+        # rather than the pricing this test pins.
+        priced = {
+            key: amount
+            for key, amount in closed.items()
+            if amount > 0.0 and key in open_window
+        }
         assert priced
         for key, amount in priced.items():
             assert open_window[key] == pytest.approx(2.0 * amount)
