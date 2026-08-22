@@ -43,8 +43,20 @@ from src.calculator.item_effects import (
     required_effect_value,
     resolve_damage_effects,
 )
-from src.calculator.interpreters.crit_profile import resolve_profile
-from src.calculator.interpreters.damage_routing import resolve_execution
+from src.calculator.interpreters import crit_profile, damage_routing
+from src.calculator.interpreters.crit_profile import (
+    CRIT_PAYLOAD_REFERENCES,
+    CritProfileInterpretationError,
+    declared_crit_profile,
+    resolve_profile,
+)
+from src.calculator.interpreters.damage_routing import (
+    DamageRoutingInterpretationError,
+    FLAT_ROUTING_REFERENCES,
+    declared_execution,
+    resolve_execution,
+    walk_rules,
+)
 from src.calculator.interpreters.stat_derivation import (
     declared_stat_derivations,
     reference_fields,
@@ -197,6 +209,69 @@ def test_on_hit_heal_is_retired_from_the_ladder_and_owned_by_the_catalog():
         required_effect_value(owner, "health_per_on_hit")
     )
     assert not hasattr(_ladder(owner), "on_hit_heals")
+
+
+# ---------------------------------------------------------------------------
+# The fight-free readers — same numbers, no fight
+# ---------------------------------------------------------------------------
+
+CRIT_HOLDERS = ("Infinity Edge", "Navori Flickerblade", "Sundered Sky")
+
+
+def test_the_flat_crit_reader_answers_what_the_contextual_one_answers():
+    """``declared_crit_profile`` is ``resolve_profile`` without the fight.
+
+    Every crit reference is flat today, so the two readers agree on all six
+    numbers a build holding every crit item carries — which is what lets a
+    caller with item names and no fight read the declaration instead of the
+    ladder's projection."""
+    contextual = resolve_profile(list(CRIT_HOLDERS), **CATALOG_CONTEXT)
+    flat = declared_crit_profile(list(CRIT_HOLDERS))
+    assert flat.damage_bonus == pytest.approx(contextual.damage_bonus)
+    assert flat.cooldown_refund == contextual.cooldown_refund
+    assert flat.forced_crit == contextual.forced_crit
+
+
+def test_the_flat_execution_reader_answers_what_the_contextual_one_answers():
+    owner = _sole("execute")
+    assert declared_execution([owner]) == resolve_execution([owner], **CATALOG_CONTEXT)
+    assert declared_execution([]) is None
+
+
+def test_every_declared_crit_payload_has_a_reference_row():
+    """A fourth crit payload fails here rather than compiling no fields."""
+    declared = {
+        type(rule.payload)
+        for owner in ITEM_EFFECTS
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.CRIT_PROFILE
+    }
+    assert declared and declared <= set(CRIT_PAYLOAD_REFERENCES)
+
+
+def test_every_declared_routing_payload_has_a_reference_row():
+    """The flat table is total over the family the registry actually declares.
+
+    The empty rows are the answer and not an omission: a shield bypass and a
+    deferral both carry a melee/ranged share, so the fight-free reader stops
+    on them instead of picking a range class nobody supplied."""
+    declared = {
+        type(rule.payload) for owner in ITEM_EFFECTS for rule in walk_rules([owner])
+    }
+    assert declared and declared <= set(FLAT_ROUTING_REFERENCES)
+    assert {
+        shape for shape, refs in FLAT_ROUTING_REFERENCES.items() if not refs
+    } < declared
+
+
+def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
+    """Both refusals are raised, not returned as a zero."""
+    with pytest.raises(DamageRoutingInterpretationError):
+        damage_routing._flat_fields(  # pylint: disable=protected-access
+            walk_rules([_sole("shield_reduction")])[0], EngineLane.PAIR_ENGINE
+        )
+    with pytest.raises(CritProfileInterpretationError):
+        crit_profile.crit_references(walk_rules([_sole("execute")])[0])
 
 
 # ---------------------------------------------------------------------------
