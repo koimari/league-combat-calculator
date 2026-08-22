@@ -7,6 +7,7 @@ from typing import Any
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -28,7 +29,7 @@ def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    if not bool(ctx.options.get("spider_form", False)):
+    if not bool(ctx.option("spider_form")):
         return None
     tier = _spider_tier(ctx.level)
     bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stat("ability_power")
@@ -94,7 +95,7 @@ def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Volatile Spiderling"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -120,7 +121,7 @@ def _cocoon(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _form_toggle(ctx: SlotCtx) -> dict[str, Any] | None:
-    form = "Spider" if bool(ctx.options.get("spider_form", False)) else "Human"
+    form = "Spider" if bool(ctx.option("spider_form")) else "Human"
     return no_damage(
         ctx,
         name="Spider Form / Human Form",

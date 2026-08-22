@@ -79,6 +79,7 @@ from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     by_option,
     damage_entry,
     extract_cooldown,
@@ -135,7 +136,7 @@ _TRANSFORM_NAMES = {"hammer": "Mercury Hammer", "cannon": "Mercury Cannon"}
 
 def _is_hammer(ctx: SlotCtx) -> bool:
     """True in Hammer stance; Cannon (Jayce's default form) is False."""
-    return bool(ctx.options.get("hammer_stance", False))
+    return bool(ctx.option("hammer_stance"))
 
 
 def _level_tier(level: int) -> int:
@@ -210,7 +211,7 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Lightning Field"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -271,7 +272,7 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     total_ad = ctx.stat("attack_damage")
     delta_ratio = ratio - 1.0
     return {
-        "name": ability.get("name", "Hyper Charge"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -379,7 +380,7 @@ def _transform_ability(ctx: SlotCtx, stance: str) -> dict[str, Any] | None:
     needle = _TRANSFORM_NAMES[stance]
     for index in range(len(ctx.abilities.get("R", []))):
         ability = ctx.ability("R", index)
-        if ability is not None and needle in ability.get("name", ""):
+        if ability is not None and needle in ability_name(ability):
             return ability
     return None
 
@@ -394,7 +395,7 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         + HAMMER_EMPOWERED_AUTO_BONUS_AD_RATIO * bonus_ad
     )
     entry = damage_entry(
-        ability.get("name", "Transform Mercury Hammer"),
+        ability_name(ability),
         _TRANSFORM_RANK,
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
@@ -414,7 +415,7 @@ def _transform_cannon(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
     """R Cannon: ONE empowered attack shredding armor/MR; no damage."""
     shred = CANNON_SHRED_PERCENT[_level_tier(ctx.level)]
     entry = damage_entry(
-        ability.get("name", "Transform Mercury Cannon"),
+        ability_name(ability),
         _TRANSFORM_RANK,
         extract_cooldown(ability, _TRANSFORM_RANK),
         0.0,

@@ -102,7 +102,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import extract_named, on_hit_entry, simple_damage
+from .slotlib import ability_name, extract_named, on_hit_entry, simple_damage
 from .inputs import int_option
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
@@ -198,7 +198,7 @@ def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
     per_auto = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    entry = on_hit_entry(ability.get("name", "Junkyard Titan"), per_auto, "magic")
+    entry = on_hit_entry(ability_name(ability), per_auto, "magic")
     if autos:
         entry["on_hit"]["max_procs"] = autos
     else:

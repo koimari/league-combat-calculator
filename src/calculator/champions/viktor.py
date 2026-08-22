@@ -101,7 +101,7 @@ def _siphon_power(packet_q):
                 "on-hit"
             ),
         )
-        if bool(ctx.options.get("q_discharge", True)):
+        if bool(ctx.option("q_discharge")):
             ability = ctx.ability()
             discharge = extract_named(
                 ability, "Modified Magic Damage", rank, ctx.stats, ctx.target

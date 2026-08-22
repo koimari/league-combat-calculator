@@ -19,6 +19,7 @@ nothing else.
 from types import MappingProxyType
 from typing import Any, Callable, Mapping
 
+from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition, ZeroPolicy
 from ..item_effects import DamageInputs
 from ..rune_effects import (
@@ -133,8 +134,8 @@ def _compile_electrocute(entry: Mapping[str, Any]) -> RuneProcEffect:
         stats = inputs.champion_stats
         return (
             at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + ap_ratio * stats.get("ability_power", 0.0)
+            + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + ap_ratio * champion_stat(stats, "ability_power")
         )
 
     return RuneProcEffect(
@@ -265,8 +266,8 @@ def _compile_arcane_comet(entry: Mapping[str, Any]) -> RuneAbilityProcEffect:
         stats = inputs.champion_stats
         return (
             at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + ap_ratio * stats.get("ability_power", 0.0)
+            + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + ap_ratio * champion_stat(stats, "ability_power")
         ) * (1.0 + amp_ratio)
 
     return RuneAbilityProcEffect(

@@ -39,6 +39,7 @@ from typing import Any
 
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     by_option,
     pct_health_per_hit,
@@ -104,7 +105,7 @@ def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit is None:
         return None
 
-    name = ability.get("name", "Silver Bolts")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         rank,

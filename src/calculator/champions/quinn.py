@@ -26,6 +26,7 @@ from .packet_module import build_packet_module
 from .engine import BUFF, ONHIT, SlotCtx
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -44,7 +45,7 @@ def _harrier(ctx: SlotCtx):
     per_hit = extract_named(
         ability, "Bonus Physical Damage", ctx.level, ctx.stats, ctx.target
     )
-    return on_hit_entry(ability.get("name", "Harrier"), per_hit, "physical")
+    return on_hit_entry(ability_name(ability), per_hit, "physical")
 
 
 _harrier.phase = ONHIT
@@ -75,7 +76,7 @@ def _heightened_senses(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     entry = damage_entry(
-        ability.get("name", "Heightened Senses"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

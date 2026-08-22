@@ -15,6 +15,7 @@ merely that it dealt nothing.
 
 from typing import Any, Callable, Mapping
 
+from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
@@ -115,8 +116,8 @@ def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneHealEffect:
         stats = inputs.champion_stats
         return (
             at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + ap_ratio * stats.get("ability_power", 0.0)
+            + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + ap_ratio * champion_stat(stats, "ability_power")
         )
 
     return RuneHealEffect(

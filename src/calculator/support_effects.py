@@ -17,7 +17,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .item_behavior import PacketKind
 from .data_registry import data_version, store_for_generation
 from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
-from .champions.slotlib import extract_named, find_named_leveling
+from .champions.slotlib import ability_name, extract_named, find_named_leveling
 from .champions.skill_orders import get_ability_rank
 
 
@@ -1224,7 +1224,7 @@ def _morgana_black_shield_metadata(
         **duration_metadata,
         "shield_pool": "magic",
         "crowd_control_immunity_while_shield": True,
-        "crowd_control_immunity_source": str(ability.get("name", "Black Shield")),
+        "crowd_control_immunity_source": ability_name(ability),
         "source_atom": _atom_receipt(strength_atom),
     }
 

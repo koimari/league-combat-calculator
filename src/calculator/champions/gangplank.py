@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -51,7 +51,7 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Parrrley"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -194,7 +194,7 @@ def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     bonus = extract_named(ability, "Bonus Champion Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Powder Keg"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -213,8 +213,8 @@ def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    fire_at_will = bool(ctx.options.get("r_fire_at_will", False))
-    deaths_daughter = bool(ctx.options.get("r_deaths_daughter", False))
+    fire_at_will = bool(ctx.option("r_fire_at_will"))
+    deaths_daughter = bool(ctx.option("r_deaths_daughter"))
     waves = 18 if fire_at_will else 12
     magic_attr = "Magic Damage Per Wave"
     per_wave = extract_named(ability, magic_attr, rank, ctx.stats, ctx.target)
@@ -229,7 +229,7 @@ def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
         total += true
         parts.append(DamagePart("true", true, time_offset=2.25))
     entry = damage_entry(
-        ability.get("name", "Cannon Barrage"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

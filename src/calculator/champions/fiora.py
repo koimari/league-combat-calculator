@@ -9,7 +9,13 @@ from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    proc_damage,
+)
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 
@@ -35,7 +41,7 @@ def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Lunge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -61,7 +67,7 @@ def _riposte(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Riposte"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -82,7 +88,7 @@ def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
     attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Bladework"),
+        name=ability_name(ability),
         reason=f"{attacks} empowered basic attack(s); first cannot crit and second uses the sourced modified critical damage.",
     )
     if entry is None:

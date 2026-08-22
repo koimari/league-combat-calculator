@@ -47,7 +47,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits
+from .slotlib import ability_name, with_item_on_hits
 from .. import healing_helpers as _healing
 from .inputs import int_option
 from .module_contract import coverage
@@ -74,7 +74,7 @@ def _dragon_practice(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     stacks = max(0, int(ctx.options.get("p_stacks", _TIER3_STACKS)))
     return {
-        "name": ability.get("name", "Dragon Practice"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "true",

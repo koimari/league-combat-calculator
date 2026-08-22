@@ -35,6 +35,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -80,7 +81,7 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     ad = ctx.stat("attack_damage")
     per_proc = _SECOND_STRIKE_AD_RATIO * ad
     return ability_on_hit_entry(
-        ability.get("name", "Double Strike"),
+        ability_name(ability),
         ctx.level,
         "physical",
         {
@@ -103,7 +104,7 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     entry = damage_entry(
-        ability.get("name", "Meditate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -130,7 +131,7 @@ def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
     entry = damage_entry(
-        ability.get("name", "Highlander"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

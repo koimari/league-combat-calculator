@@ -42,7 +42,7 @@ fight ledger never invents an enemy hit for it.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
-from .slotlib import extract_cooldown, extract_value, simple_damage
+from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 from .module_contract import coverage
@@ -71,7 +71,7 @@ def _soldier_attack_damage(
 
 def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: zero-damage entry carrying the Sand Soldier auto replacement."""
-    if not bool(ctx.options.get("soldier_autos", True)):
+    if not bool(ctx.option("soldier_autos")):
         return None  # Azir autos normally (physical, crits, full on-hit)
     ranked = ctx.ranked()
     if ranked is None:
@@ -94,7 +94,7 @@ def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     return {
-        "name": ability.get("name", "Arise!"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": cooldown,
         "damage_type": "magic",

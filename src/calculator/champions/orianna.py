@@ -32,6 +32,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -80,7 +81,7 @@ def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
             "changed; re-derive the stack ramp"
         )
 
-    entry = on_hit_entry(ability.get("name", "Clockwork Windup"), base, "magic")
+    entry = on_hit_entry(ability_name(ability), base, "magic")
     entry["on_hit"]["stack_ramp"] = {
         "damage_per_stack": per_stack,
         "max_stacks": max_stacks,
@@ -110,7 +111,7 @@ def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
-        ability.get("name", "Command: Attack"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -151,10 +152,10 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     total = 0.0
-    if ctx.options.get("e_passes_through_target", True):
+    if ctx.option("e_passes_through_target"):
         total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     return damage_entry(
-        ability.get("name", "Command: Protect"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

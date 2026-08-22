@@ -37,7 +37,7 @@ pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, 4 shards; ~1 min on 16 cores)
 python scripts/prose_lint.py                                            # Docstrings/comments: current state only, none longer than its body
-python scripts/literal_defaults.py src/calculator/damage.py src/calculator/item_effects.py src/calculator/ability_atoms.py  # Rule-5 lint: literal fallbacks on cached data (tests/test_literal_defaults.py pins all three)
+python scripts/literal_defaults.py    # Rule-5 lint over the whole package: literal fallbacks on cached data (tests/test_literal_defaults.py owns the covered set `ROOTS` and the declared `TAIL`)
 python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/audit/fetch/bis/packets are its other subcommands (see /patch-update skill)
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
 ```

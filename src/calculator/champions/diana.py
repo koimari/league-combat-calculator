@@ -45,6 +45,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -105,9 +106,7 @@ def _moonsilver_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         "attack_speed_ratio"
     ) * (tripled_as / 100.0)
 
-    entry = damage_entry(
-        ability.get("name", "Moonsilver Blade"), ctx.level, 0.0, 0.0, "magic"
-    )
+    entry = damage_entry(ability_name(ability), ctx.level, 0.0, 0.0, "magic")
     entry["stat_buff"] = {"bonus_attack_speed": tripled_as}
     entry["detail"] = (
         f"+{tripled_as:g}% bonus attack speed (tripled post-cast value, "
@@ -180,9 +179,9 @@ def _lunar_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     per_dash = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    dashes = 2 if ctx.options.get("moonlight_reset", True) else 1
+    dashes = 2 if ctx.option("moonlight_reset") else 1
     return {
-        "name": ability.get("name", "Lunar Rush"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -210,7 +209,7 @@ def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     entry = damage_entry(
-        ability.get("name", "Moonfall"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

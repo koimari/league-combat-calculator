@@ -19,6 +19,7 @@ from typing import Any
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, delayed_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     extract_cooldown,
     extract_named,
@@ -59,7 +60,7 @@ def _shield_of_daybreak(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
-        ability.get("name", "Shield of Daybreak"),
+        ability_name(ability),
         rank,
         "magic",
         {

@@ -38,6 +38,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -76,7 +77,7 @@ def _pix_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
     ap = float(ctx.stat("ability_power"))
     per_bolt = per_bolt_flat + _PIX_BOLT_AP_RATIO * ap
     return on_hit_entry(
-        ability.get("name", "Pix, Faerie Companion"),
+        ability_name(ability),
         per_bolt * bolts,
         "magic",
     )
@@ -108,7 +109,7 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
     share = buff_window_share(ctx, duration) if target == _SELF_CAST else 0.0
     bonus_as = granted * share
     entry = damage_entry(
-        ability.get("name", "Whimsy"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -162,7 +163,7 @@ def _wild_growth(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.stats["bonus_health"] = ctx.stat("bonus_health") + bonus_health
         ctx.stats["health"] = ctx.stat("health") + bonus_health
     entry = damage_entry(
-        ability.get("name", "Wild Growth"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

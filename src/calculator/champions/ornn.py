@@ -19,6 +19,7 @@ from ..stats import MAX_LEVEL
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_contract import coverage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -39,7 +40,7 @@ def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = per_tick * 5
     entry = damage_entry(
-        ability.get("name", "Bellows Breath"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -174,7 +175,7 @@ def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     per_pass = total / passes
     entry = damage_entry(
-        ability.get("name", "Call of the Forge God"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

@@ -38,6 +38,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -79,7 +80,7 @@ def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:
         bonus_as *= OVERDRIVE_DURATION_SECONDS / duration
 
     entry = damage_entry(
-        ability.get("name", "Overdrive"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -104,7 +105,7 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
     ) + POWER_FIST_AP_RATIO * ctx.stat("ability_power")
 
     return {
-        "name": ability.get("name", "Power Fist"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -154,7 +155,7 @@ def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
         else 0.0
     )
     return damage_entry(
-        ability.get("name", "Static Field"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

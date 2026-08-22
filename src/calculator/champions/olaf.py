@@ -36,6 +36,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -86,7 +87,7 @@ def _berserker_rage(ctx: SlotCtx) -> dict[str, Any] | None:
     life_steal = _per_level_row(ability, _P_LIFE_STEAL_OCCURRENCE, ctx.level)
     bonus_as = at_full_rage * missing
     entry = damage_entry(
-        ability.get("name", "Berserker Rage"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,
@@ -115,7 +116,7 @@ def _tough_it_out(ctx: SlotCtx) -> dict[str, Any] | None:
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _W_DURATION_SECONDS)
     entry = damage_entry(
-        ability.get("name", "Tough It Out"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -152,7 +153,7 @@ def _ragnarok(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
     ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
-        ability.get("name", "Ragnarok"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

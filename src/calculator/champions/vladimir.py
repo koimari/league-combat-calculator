@@ -32,7 +32,7 @@ from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import damage_entry
+from .slotlib import ability_name, damage_entry
 from .inputs import bool_option, float_option
 from .module_contract import coverage
 
@@ -238,7 +238,7 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     cooldown = ranked_ability_atom_value(cooldown_atom, rank, source="E cooldown")
     entry = damage_entry(
-        ability.get("name", "Tides of Blood"),
+        ability_name(ability),
         rank,
         cooldown,
         total,
@@ -309,7 +309,7 @@ def _apply_hemoplague(result: dict[str, Any]) -> None:
 
 def _hemoplague_amp(ctx: SlotCtx) -> None:
     """AMP pseudo-slot: the 10% debuff amplifies every damage entry."""
-    if not ctx.options.get("r_hemoplague_debuff", True):
+    if not ctx.option("r_hemoplague_debuff"):
         return
     for key in ("Q", "W", "E", "R"):
         entry = ctx.results.get(key)

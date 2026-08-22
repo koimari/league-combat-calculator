@@ -67,7 +67,7 @@ from ..ability_spec import DamagePart
 from .inputs import champion_stat, float_option
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_named, simple_damage
+from .slotlib import ability_name, damage_entry, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 from .module_contract import coverage
 
@@ -99,9 +99,7 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Empowered Damage per Tick", rank, ctx.stats, ctx.target
     )
     total = initial_ticks * initial + empowered_ticks * empowered
-    entry = damage_entry(
-        ability.get("name", "Glacial Storm"), rank, 999.0, total, "magic"
-    )
+    entry = damage_entry(ability_name(ability), rank, 999.0, total, "magic")
     # Every tick slows what it damages ("slowing them for 1 second,
     # refreshing every 0.5 seconds while they remain inside"), growing phase
     # and empowered alike — a fact this module does NOT declare, and not
@@ -151,7 +149,7 @@ def _crystallize(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Crystallize"),
+        name=ability_name(ability),
         reason=(
             "Crystallize summons a 5-second knockback wall (width and "
             "segment count scale by rank); the cached W entry carries no "

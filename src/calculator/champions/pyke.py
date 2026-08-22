@@ -41,7 +41,13 @@ axis, which the label does not close:
 from ..stat_conversion import BonusHealthConversion
 from .packet_module import build_packet_module
 from .engine import SlotCtx
-from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_modifiers
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    find_named_leveling,
+    sum_modifiers,
+)
 from .module_contract import coverage
 
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
@@ -83,7 +89,7 @@ def _death_from_below(ctx: SlotCtx):
     damage += _R_DAMAGE_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
     damage += _R_DAMAGE_PER_LETHALITY * float(ctx.stat("lethality") or 0.0)
     entry = damage_entry(
-        ability.get("name", "Death from Below"),
+        ability_name(ability),
         level,
         extract_cooldown(ability, ctx.rank_for()),
         damage,

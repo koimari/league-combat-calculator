@@ -32,12 +32,19 @@ replaces that slot with the priced burrow heal.
 
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import typed_damage
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .. import healing_helpers as _healing
 from .inputs import int_option
 
@@ -101,7 +108,7 @@ def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
             "at 100 Fury the E packet prices the true-damage variant"
         )
     entry = damage_entry(
-        ability.get("name", "Furious Bite"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -219,7 +226,7 @@ def derive_self_healing(
     is paid there.
     """
     healing: list[dict[str, Any]] = []
-    burrow = ability_damages.get("passive", {}).get("self_heal_state")
+    burrow = ability_payload(ability_damages, "passive").get("self_heal_state")
     w_casts = _healing.cast_slot_times(cast_timeline, "W")
     if isinstance(burrow, dict) and w_casts:
         amount = float(burrow.get("amount", 0.0) or 0.0)

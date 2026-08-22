@@ -24,7 +24,7 @@ from .attribute_classifier import (
     is_primary_damage_attribute,
 )
 from .engine import BUFF, DAMAGE, PENDING_CONTROL_EVENTS, SlotCtx, SlotParser
-from .inputs import target_stat
+from .inputs import ChampionInputError, target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
 # ---------------------------------------------------------------------------
@@ -428,6 +428,23 @@ def pct_health_per_hit(
     if floor_attr:
         per_proc = max(per_proc, extract_value(ability, floor_attr, rank, level=level))
     return per_proc / stacks_required
+
+
+def ability_name(ability: dict[str, Any]) -> str:
+    """The cached row's own name — the fourth input block read with no literal.
+
+    ``SlotCtx`` refuses a ``.get(key, <literal>)`` on stats, target and
+    options; the ability JSON is the fourth such block, and every cached row
+    carries a name.  A module's own spelling of it would outlive the parse
+    that stopped supplying it.
+    """
+    name = ability.get("name")
+    if not isinstance(name, str) or not name:
+        raise ChampionInputError(
+            f"cached ability row carries no 'name' (data/champions.json, "
+            f"icon {ability.get('icon')!r})"
+        )
+    return name
 
 
 def extract_cooldown(
@@ -1244,7 +1261,7 @@ def simple_damage(
             resolved_type = dmg_type
 
         total *= _resolve_casts(casts, ability, rank, ctx.level)
-        name = ability.get("name", f"Ability {ctx.slot}")
+        name = ability_name(ability)
         entry = damage_entry(
             name,
             rank,
@@ -1468,7 +1485,7 @@ def with_control_event(
                 )
         if entry is None:
             entry = {
-                "name": ability.get("name", f"Ability {ctx.slot}"),
+                "name": ability_name(ability),
                 "rank": rank,
                 "cooldown": extract_cooldown(ability, rank),
                 "damage_type": "magic",
@@ -1584,7 +1601,7 @@ def stat_buff(
                 ability, couple_attr, rank, level=ctx.level
             )
 
-        name = ability.get("name", f"Ability {ctx.slot}")
+        name = ability_name(ability)
         entry = damage_entry(
             name,
             rank,
@@ -1688,7 +1705,7 @@ def proc_damage(
             return None
 
         result = {
-            "name": name or ability.get("name", f"Ability {ctx.slot}"),
+            "name": name or ability_name(ability),
             "damage_type": dmg_type,
             "total_raw": per_proc_damage * count,
             "parts": (DamagePart(dmg_type, per_proc_damage),),
@@ -1729,7 +1746,7 @@ def _slot_passive_on_hit(
     if total <= 0:
         return None
 
-    name = ability.get("name", f"Ability {ctx.slot}")
+    name = ability_name(ability)
     return on_hit_entry(name, total, resolved_type)
 
 

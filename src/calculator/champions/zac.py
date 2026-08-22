@@ -32,7 +32,13 @@ from .inputs import champion_stat
 from .engine import CC_PER_PART, SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module, full_plus_reduced_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
@@ -82,7 +88,7 @@ def _stretching_strikes(ctx: SlotCtx):
     ability, rank = ranked
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Stretching Strikes"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_hit * 2,

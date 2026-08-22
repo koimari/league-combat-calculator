@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
+from ..champions.inputs import champion_stat
 from ..item_behavior import (
     AtLeast,
     Basis,
@@ -83,7 +84,9 @@ def basis_value(basis: Basis, inputs: DamageInputs) -> float:
         return float(inputs.level)
     if basis is Basis.HOLDER_CRIT_FRACTION:
         return min(
-            float(inputs.champion_stats.get("critical_strike_chance", 0.0)) / 100.0, 1.0
+            float(champion_stat(inputs.champion_stats, "critical_strike_chance"))
+            / 100.0,
+            1.0,
         )
     if basis is Basis.TARGET_MAX_HEALTH:
         return float(inputs.target_max_health)

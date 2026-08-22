@@ -7,7 +7,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -19,7 +25,7 @@ def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Spinning Axe"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -42,7 +48,7 @@ def _blood_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     entry = damage_entry(
-        ability.get("name", "Blood Rush"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -65,7 +71,7 @@ def _stand_aside(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Stand Aside"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -86,7 +92,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     per_pass = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Whirling Death"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_pass * passes,
@@ -106,7 +112,7 @@ def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _league_of_draven(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("adoration_stacks")), 0), 10000)
-    cash_in = bool(ctx.options.get("adoration_cash_in", False))
+    cash_in = bool(ctx.option("adoration_cash_in"))
     reason = (
         f"{stacks} Adoration stack(s); cash-in yields {25 + 2 * stacks} bonus gold."
         if cash_in

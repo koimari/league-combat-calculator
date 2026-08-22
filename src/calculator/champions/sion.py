@@ -32,7 +32,7 @@ from typing import Any
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
-from .slotlib import extract_cooldown, extract_named, simple_damage
+from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
 from .inputs import float_option
 from .module_contract import coverage
@@ -59,7 +59,7 @@ def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     # once, which is what the un-narrowed reviewed kind names.
     charged = fraction >= 0.5
     return {
-        "name": ability.get("name", "Decimating Smash"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -90,7 +90,7 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = {
-        "name": ability.get("name", "Roar of the Slayer"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

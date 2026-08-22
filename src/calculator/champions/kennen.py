@@ -9,6 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     extract_cooldown,
     extract_named,
@@ -27,14 +28,12 @@ def _electrical_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     active = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     passive = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
-        ability.get("name", "Electrical Surge"),
+        ability_name(ability),
         rank,
         "magic",
         {
             "name": "Electrical Surge passive",
-            "damage_per_hit": (
-                passive if bool(ctx.options.get("w_empowered", True)) else 0.0
-            ),
+            "damage_per_hit": (passive if bool(ctx.option("w_empowered")) else 0.0),
             "damage_type": "magic",
         },
         extract_cooldown(ability, rank),
@@ -55,7 +54,7 @@ def _slicing_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     bolts = max(1, min(6, int(ctx.option("r_bolts"))))
     per = extract_named(ability, "Magic Damage Per Bolt", rank, ctx.stats, ctx.target)
     return {
-        "name": ability.get("name", "Slicing Maelstrom"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

@@ -46,6 +46,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -380,7 +381,7 @@ def _bailout(ctx: SlotCtx) -> dict[str, Any] | None:
     share = buff_window_share(ctx, _W_DURATION_SECONDS) if on_self else 0.0
     bonus_as = ramp_mean * share
     entry = damage_entry(
-        ability.get("name", "Bailout"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

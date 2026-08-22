@@ -24,13 +24,14 @@ weapon form builds (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
 from dataclasses import replace
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import ability_name, damage_entry, extract_cooldown
 from .module_contract import coverage
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
@@ -93,7 +94,7 @@ _R_CC_BY_WEAPON = dict.fromkeys(_WEAPON_INDEX, "none") | {"gravitum": "slow"}
 
 
 def _main_weapon(ctx: SlotCtx) -> str:
-    value = str(ctx.options.get("aphelios_main_weapon", "calibrum")).lower()
+    value = str(ctx.option("aphelios_main_weapon")).lower()
     return value if value in _WEAPON_INDEX else "calibrum"
 
 
@@ -185,7 +186,7 @@ def _q(packet_q):
         count = max(1, int(6 + 2 * bonus_as / 100.0))
         per_hit = ratio * float(ctx.stat("attack_damage"))
         entry = damage_entry(
-            ability.get("name", "Onslaught"),
+            ability_name(ability),
             rank,
             10.0,
             per_hit * count,
@@ -314,9 +315,7 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         detail += " follow-up is event-ordered separately"
     # The healing rule reads this marker to gate Severum's overheal-to-
     # shield conversion (the Shyvana dragon-form convention).
-    if _main_weapon(ctx) == "severum" and bool(
-        ctx.options.get("aphelios_overheal_shield", True)
-    ):
+    if _main_weapon(ctx) == "severum" and bool(ctx.option("aphelios_overheal_shield")):
         detail += " · overheal shield on"
     entry["detail"] = detail
     return entry
@@ -431,7 +430,7 @@ def derive_self_healing(
 ):
     """Resolve Aphelios self-healing events from its authored packet."""
     healing = []
-    r_detail = str(ability_damages.get("R", {}).get("detail", ""))
+    r_detail = str(ability_field(ability_payload(ability_damages, "R"), "detail"))
     if "Severum" in r_detail:
         severum = next(
             (

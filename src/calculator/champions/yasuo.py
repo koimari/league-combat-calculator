@@ -44,6 +44,7 @@ from .module_helpers import (
 )
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_description_control_duration,
@@ -80,7 +81,7 @@ def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
     shield = extract_named(ability, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Way of the Wanderer"),
+        name=ability_name(ability),
         reason=(
             f"Flow reaches 100 stacks (5900/5250/4600 units by level) to "
             f"grant a {shield:.2f} magic-damage shield for 1s.  Intent: "
@@ -127,7 +128,7 @@ def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Steel Tempest"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -182,7 +183,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if ability is None or rank < 1:
         return None
-    active = bool(ctx.options.get("w_active", False))
+    active = bool(ctx.option("w_active"))
     duration = extract_description_duration(ability)
     if duration is None:
         return None
@@ -190,7 +191,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
     if selected_duration > 0.0:
         duration = min(duration, selected_duration)
     return {
-        "name": ability.get("name", "Wind Wall"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "total_raw": 0.0,
@@ -200,7 +201,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
             "kind": "yasuo_wind_wall",
             "active": active,
             "duration": duration if active else 0.0,
-            "blocked_sources": list(ctx.options.get("w_blocked_skillshots", [])),
+            "blocked_sources": list(ctx.option("w_blocked_skillshots")),
         },
         "detail": (
             "Wind Wall destroys selected marked projectiles during the "
@@ -238,7 +239,7 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     total = base + stacks * per_stack
     lockout = _per_target_lockout(ability, rank)
     entry = damage_entry(
-        ability.get("name", "Sweeping Blade"),
+        ability_name(ability),
         rank,
         lockout,
         total,

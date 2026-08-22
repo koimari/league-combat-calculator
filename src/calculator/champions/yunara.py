@@ -20,7 +20,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import with_item_on_hits, damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    with_item_on_hits,
+)
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
 # 0.25s over the 1-second linger) is wiki W prose, reconciled by
@@ -41,7 +47,7 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    transcendent = bool(ctx.options.get("r_transcendent", False))
+    transcendent = bool(ctx.option("r_transcendent"))
     if transcendent:
         r_rank = ctx.rank_for("R")
         base = extract_named(
@@ -75,7 +81,7 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
         linger_total = extract_named(
             ability, "Total Expanded Damage", rank, ctx.stats, ctx.target
         )
-        name = ability.get("name", "Arc of Judgment")
+        name = ability_name(ability)
         detail = (
             f"initial impact {initial:g} + {_W_LINGER_TICKS} linger ticks at "
             f"{_W_LINGER_TICK_INTERVAL:g}s intervals (total {linger_total:g})"
@@ -108,7 +114,7 @@ def _transcend_one_self(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     entry = damage_entry(
-        ability.get("name", "Transcend One's Self"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

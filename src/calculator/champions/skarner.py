@@ -22,6 +22,7 @@ P1-3 closures:
 from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -49,7 +50,7 @@ def _seismic_bastion(ctx: SlotCtx):
     ability, rank = ranked
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Seismic Bastion"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -91,7 +92,7 @@ def _ixtals_impact(ctx: SlotCtx):
         leveling, rank, ctx.stats, ctx.target, modifier_override=max_health_override
     )
     entry = damage_entry(
-        ability.get("name", "Ixtal's Impact"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,

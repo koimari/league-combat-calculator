@@ -3,12 +3,6 @@
     "app.py": {
       "class_d": 1
     },
-    "calculator/champions/janna.py": {
-      "class_d": 1
-    },
-    "calculator/champions/viego.py": {
-      "class_d": 1
-    },
     "calculator/cleanse_eligibility.py": {
       "counter_1": 20
     },
@@ -330,7 +324,7 @@
         "calculator/scenario.py": "the same `kind=\"Boots\"` stat-category label on the request-parsing side",
         "calculator/shield_ledger.py": "the shield-source label `Lifeline`, which names a mechanic class and collides with an item name"
       },
-      "sites": 14
+      "sites": 12
     }
   },
   "h4_tags": {
@@ -575,7 +569,6 @@
       "carnivore": 2,
       "carried": 1,
       "cast": 13,
-      "chained": 2,
       "entry": 15,
       "event": 48,
       "fix": 2,
@@ -590,7 +583,7 @@
     "totals": {
       "forbidden_input_fallbacks": 0,
       "hand_built_entries": 100,
-      "produced_fallbacks": 94
+      "produced_fallbacks": 92
     }
   }
 }

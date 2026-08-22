@@ -14,7 +14,7 @@ from .module_helpers import (
     no_damage,
     typed_damage,
 )
-from .slotlib import extract_cooldown, extract_named, simple_damage
+from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -29,7 +29,7 @@ def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:
     total = max_hp * (0.05 + 0.0125 * ap / 100.0)
     per_tick = total / 6.0
     return {
-        "name": ability.get("name", "Dream-Laden Bough"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",
@@ -50,10 +50,10 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     rank = ctx.rank_for()
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    true_damage = magic if bool(ctx.options.get("q_outer_edge", True)) else 0.0
+    true_damage = magic if bool(ctx.option("q_outer_edge")) else 0.0
     entry = mixed_damage(
         ctx,
-        ability.get("name", "Blooming Blows"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         magic,
@@ -70,9 +70,7 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _watch_out_eep(ctx: SlotCtx) -> dict[str, Any] | None:
     attribute = (
-        "Increased Damage"
-        if bool(ctx.options.get("w_epicenter", True))
-        else "Magic Damage"
+        "Increased Damage" if bool(ctx.option("w_epicenter")) else "Magic Damage"
     )
     result = typed_damage(ctx, attribute, "magic", time_offset=0.759)
     if result:
@@ -84,7 +82,7 @@ def _watch_out_eep(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _lilting_lullaby(ctx: SlotCtx) -> dict[str, Any] | None:
-    if not bool(ctx.options.get("r_wake", True)):
+    if not bool(ctx.option("r_wake")):
         return no_damage(
             ctx,
             name="Lilting Lullaby",

@@ -26,6 +26,7 @@ from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -50,7 +51,7 @@ def _staggering_blow(ctx: SlotCtx):
     per_hit = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )
-    return on_hit_entry(ability.get("name", "Staggering Blow"), per_hit, "physical")
+    return on_hit_entry(ability_name(ability), per_hit, "physical")
 
 
 _staggering_blow.phase = ONHIT
@@ -64,7 +65,7 @@ def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Titan's Wrath"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -96,7 +97,7 @@ def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     # immobilize of that length states both without inventing a number.
     immobilize_duration = extract_value(ability, "Knock Up Duration", rank)
     entry = damage_entry(
-        ability.get("name", "Depth Charge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         increased,

@@ -21,7 +21,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .inputs import int_option
 from .module_contract import coverage
 
@@ -69,7 +69,7 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
             )
             total += amount
         entry = damage_entry(
-            ability.get("name", "Rite of the Arcane"),
+            ability_name(ability),
             rank,
             extract_cooldown(ability, rank),
             total,
@@ -85,7 +85,7 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
         return entry
     total = per_shot * recasts
     entry = damage_entry(
-        ability.get("name", "Rite of the Arcane"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

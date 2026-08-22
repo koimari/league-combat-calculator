@@ -8,7 +8,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 
@@ -30,7 +30,7 @@ def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     attack_damage = ctx.stat("attack_damage")
     entry = damage_entry(
-        ability.get("name", "Urchin Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         magic + attack_damage,
@@ -76,7 +76,7 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Passive Magic Damage per Tick", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Seastone Trident"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         active + passive_per_tick * _W_PASSIVE_TICKS,
@@ -161,7 +161,7 @@ def _chum_the_waters(ctx: SlotCtx) -> dict[str, Any] | None:
     attributes = ("Guppy Damage", "Chomper Damage", "Gigalodon Damage")
     value = extract_named(ability, attributes[size], rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Chum the Waters"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

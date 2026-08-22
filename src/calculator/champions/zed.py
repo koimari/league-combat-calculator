@@ -35,6 +35,7 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import (
+    ability_name,
     extract_cooldown,
     extract_value,
     simple_damage,
@@ -77,7 +78,7 @@ def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = ad_damage + stored_damage
     entry = {
-        "name": ability.get("name", "Death Mark"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",

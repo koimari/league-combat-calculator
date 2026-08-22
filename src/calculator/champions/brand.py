@@ -28,6 +28,7 @@ from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .module_helpers import delayed_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -71,7 +72,7 @@ def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total = per_bounce * _r_bounces(ctx)
     entry = damage_entry(
-        ability.get("name", "Pyroclasm"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -140,7 +141,7 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = sum(part.amount * part.count for part in parts)
     return {
-        "name": ability.get("name", "Blaze"),
+        "name": ability_name(ability),
         "damage_type": "magic",
         "total_raw": total,
         "parts": tuple(parts),

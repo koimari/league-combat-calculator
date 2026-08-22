@@ -74,7 +74,13 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import atom_receipt, damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    ability_name,
+    atom_receipt,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+)
 from .module_contract import coverage
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
@@ -90,7 +96,7 @@ def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Total Maximum Champion Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Boomerang Blade"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -219,7 +225,7 @@ def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
         + ap_ratio * ctx.stat("ability_power") / 100.0
     )
     return {
-        "name": ability.get("name", "Spell Shield"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "total_raw": 0.0,
@@ -229,7 +235,7 @@ def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
             {
                 "kind": "spell_shield",
                 "duration": duration,
-                "source": ability.get("name", "Spell Shield"),
+                "source": ability_name(ability),
                 "on_block_heal_amount": heal,
                 "on_block_heal_delay": _SPELL_SHIELD_HEAL_DELAY_SECONDS,
                 "on_block_heal_source": "Spell Shield · Heal",

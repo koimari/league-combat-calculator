@@ -28,6 +28,7 @@ import re
 from dataclasses import replace
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, SlotParser, build_parser
@@ -337,7 +338,7 @@ def derive_self_healing(
 ):
     """Resolve Ambessa self-healing events from its authored packet."""
     healing = []
-    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    r_rank = int(ability_field(ability_payload(ability_damages, "R"), "rank"))
     ratio = _healing.leveling_value(
         _healing.ability_json(champion_data, "R"), "Healing Percentage", r_rank
     )

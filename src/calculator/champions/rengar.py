@@ -49,6 +49,7 @@ from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -79,7 +80,7 @@ def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
     shred = extract_value(ability, "Armor Reduction", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     entry = damage_entry(
-        ability.get("name", "Thrill of the Hunt"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -185,7 +186,7 @@ def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     return no_damage(
         ctx,
-        name=ability.get("name", "Unseen Predator"),
+        name=ability_name(ability),
         reason=(
             f"Ferocity: {state}.  Bonetooth Necklace trophies (up to 5, "
             "1-36% bonus AD) are state; brush leap is mobility state."
@@ -209,7 +210,7 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
     ferocity_bonus = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
     entry = damage_entry(
-        ability.get("name", "Savagery"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         ferocity_bonus if empowered else base_bonus,
@@ -245,7 +246,7 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Magic Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
     entry = damage_entry(
-        ability.get("name", "Battle Roar"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         ferocity_damage if empowered else base_damage,
@@ -282,7 +283,7 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
     entry = damage_entry(
-        ability.get("name", "Bola Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         ferocity_damage if empowered else base_damage,

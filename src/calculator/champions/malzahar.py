@@ -53,6 +53,7 @@ from .engine import SlotCtx
 from .module_helpers import rank
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -176,7 +177,7 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
         )
 
     return {
-        "name": ability.get("name", "Void Swarm"),
+        "name": ability_name(ability),
         "rank": w_rank,
         "cooldown": extract_cooldown(ability, w_rank),
         "damage_type": "magic",
@@ -201,7 +202,7 @@ def _malefic_visions(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Total Magic Damage", selected_rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Malefic Visions"),
+        ability_name(ability),
         selected_rank,
         extract_cooldown(ability, selected_rank),
         total,
@@ -239,7 +240,7 @@ def _nether_grasp(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Total Magic Damage", selected_rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Nether Grasp"),
+        ability_name(ability),
         selected_rank,
         extract_cooldown(ability, selected_rank),
         total,

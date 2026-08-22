@@ -8,7 +8,13 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    with_control,
+)
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 from .inputs import bool_option, int_option
@@ -28,7 +34,7 @@ def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    feared = bool(ctx.options.get("q_target_already_feared", False))
+    feared = bool(ctx.option("q_target_already_feared"))
     attr = "Increased Magic Damage" if feared else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     minimum = extract_named(
@@ -40,7 +46,7 @@ def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     value = max(value, minimum)
     entry = damage_entry(
-        ability.get("name", "Terrify"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -70,7 +76,7 @@ _terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Durat
 
 
 def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
-    if bool(ctx.options.get("q_target_already_feared", False)):
+    if bool(ctx.option("q_target_already_feared")):
         return _terrify(ctx)
     return _terrify_fearing(ctx)
 
@@ -86,7 +92,7 @@ def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     final = extract_named(ability, "Last Tick of Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Bountiful Harvest"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_instance * ticks + final,
@@ -112,7 +118,7 @@ def _reap(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Reap"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -132,7 +138,7 @@ def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Crowstorm"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_tick * ticks,

@@ -25,7 +25,13 @@ from typing import Any
 from .engine import SlotCtx, build_parser
 from .. import healing_helpers as _healing
 from .healing_contract import self_healing_rule
-from .slotlib import damage_entry, extract_named, simple_damage, with_control
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_named,
+    simple_damage,
+    with_control,
+)
 from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
@@ -47,7 +53,7 @@ def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     entry = damage_entry(
-        ability.get("name", "Iceborn Subjugation"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

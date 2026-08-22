@@ -38,6 +38,7 @@ from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     extract_named,
     extract_value,
@@ -102,7 +103,7 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    awaken = bool(ctx.options.get("q_awaken", False))
+    awaken = bool(ctx.option("q_awaken"))
     empowered = min(
         max(
             int(ctx.options.get("q_empowered_attacks", _Q_EMPOWERED_ATTACKS_DEFAULT)), 0
@@ -156,7 +157,7 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
         )
 
     entry = ability_on_hit_entry(
-        ability.get("name", "Wilding Claw"),
+        ability_name(ability),
         rank,
         "physical",
         {

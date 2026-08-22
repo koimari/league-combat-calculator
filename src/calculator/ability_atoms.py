@@ -242,6 +242,7 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "on_hit": EMPTY_PAYLOAD,
                 "parts": (),
                 "proc_count": 0,
+                "rank": 0,
                 "resource_cost": 0.0,
                 "resource_maximum_bonus": 0.0,
                 "resource_maximum_bonus_duration": 0.0,

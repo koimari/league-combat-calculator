@@ -39,11 +39,12 @@ from typing import Any, Callable
 from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
+    ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
-    ability_on_hit_entry,
     pct_health_per_hit,
     simple_damage,
 )
@@ -64,7 +65,7 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Caustic Spittle"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -88,7 +89,7 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
     # Resistance shred: damage.py reduces target armor and MR by this
     # percentage before all other damage calculations.
     shred = extract_value(ability, "Resistances Reduction", rank)
-    if ctx.options.get("q_shred", True) and shred > 0:
+    if ctx.option("q_shred") and shred > 0:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "mr_reduction_percent": shred,
@@ -102,7 +103,7 @@ _caustic_spittle.phase = DEBUFF
 
 def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: on-hit %maxHP magic damage in a castable shell."""
-    if not ctx.options.get("w_active", True):
+    if not ctx.option("w_active"):
         return None
     ranked = ctx.ranked()
     if ranked is None:
@@ -120,7 +121,7 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit is None:
         return None
 
-    name = ability.get("name", "Bio-Arcane Barrage")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         rank,
@@ -148,7 +149,7 @@ def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     entry = damage_entry(
-        ability.get("name", "Icathian Surprise"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

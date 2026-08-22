@@ -22,7 +22,7 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import rank_gated_no_damage_parser
 from .packet_module import build_packet_module
-from .slotlib import extract_named, on_hit_entry
+from .slotlib import ability_name, extract_named, on_hit_entry
 from .inputs import int_option
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
@@ -50,7 +50,7 @@ def _fired_up(ctx: SlotCtx) -> dict[str, Any] | None:
     if burn <= 0:
         return None
     procs = max(0, int(ctx.option("p_procs")))
-    entry = on_hit_entry(ability.get("name", "Fired Up!"), burn, "magic")
+    entry = on_hit_entry(ability_name(ability), burn, "magic")
     entry["on_hit"]["max_procs"] = procs
     entry["detail"] = (
         f"{procs} enchanted hit(s) applying the sourced burn {burn:.2f} "

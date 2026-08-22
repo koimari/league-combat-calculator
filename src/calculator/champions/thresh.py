@@ -19,6 +19,7 @@ is a separate, already-modeled mechanism.
 from typing import Any
 
 from .engine import BUFF, SlotCtx
+from .slotlib import ability_name
 from .packet_module import build_packet_module
 from .inputs import int_option
 
@@ -58,7 +59,7 @@ def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["ability_power"] = ctx.stat("ability_power") + bonus_ap
 
     return {
-        "name": ability.get("name", "Damnation"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "damage_type": "magic",
         "total_raw": 0.0,

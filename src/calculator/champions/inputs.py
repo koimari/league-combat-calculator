@@ -115,6 +115,7 @@ CHAMPION_STATS: Mapping[str, InputDefault] = {
     "bonus_magic_resistance": _build(_ABSENT_MEANS_NONE),
     "bonus_mana": _build(_ABSENT_MEANS_NONE),
     "critical_strike_chance": _build(_ABSENT_MEANS_NONE),
+    "heal_and_shield_power_percent": _build(_ABSENT_MEANS_NONE),
     "health": _build(_ABSENT_MEANS_NONE),
     "lethality": _build(_ABSENT_MEANS_NONE),
     "level": InputDefault(

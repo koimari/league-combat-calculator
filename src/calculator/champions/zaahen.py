@@ -40,6 +40,7 @@ from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -90,7 +91,7 @@ def _cultivation_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
     ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
-        ability.get("name", "Cultivation of War"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,
@@ -133,7 +134,7 @@ def _darkin_glaive(ctx: SlotCtx) -> dict[str, Any] | None:
     count = 2 if variant < 2 else 1
     amount = sourced_amount / 2.0 if variant == 0 else sourced_amount
     entry = damage_entry(
-        ability.get("name", "The Darkin Glaive"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         sourced_amount if variant != 1 else sourced_amount * count,

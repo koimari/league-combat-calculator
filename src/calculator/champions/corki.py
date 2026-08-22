@@ -47,6 +47,7 @@ from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cast_time,
     extract_cooldown,
@@ -113,7 +114,7 @@ def _hextech_munitions(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     return {
-        "name": ability.get("name", "Hextech Munitions"),
+        "name": ability_name(ability),
         "damage_type": "true",
         "total_raw": 0.0,  # priced per attack by the fight engine
         "parts": (),
@@ -142,7 +143,7 @@ def _valkyrie(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     entry = damage_entry(
-        ability.get("name", "Valkyrie"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_tick * ticks,
@@ -183,7 +184,7 @@ def _gatling_gun(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(_E_MAX_SHRED_STACKS, ticks)
 
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Gatling Gun"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -302,7 +303,7 @@ def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
         for index in range(missiles)
     )
     return {
-        "name": ability.get("name", "Missile Barrage"),
+        "name": ability_name(ability),
         "rank": rank,
         # The recharge, not the 2s inter-cast timer, is what limits
         # sustained use (the Amumu charge-ability rule).

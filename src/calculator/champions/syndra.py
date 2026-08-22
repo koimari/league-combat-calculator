@@ -44,6 +44,7 @@ from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency, SuppressedInference
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cast_time,
     extract_cooldown,
@@ -115,7 +116,7 @@ def _transcendent(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["ability_power"] = ap + delta
 
     return {
-        "name": ability.get("name", "Transcendent"),
+        "name": ability_name(ability),
         "damage_type": "magic",
         "total_raw": 0.0,
         "parts": (),
@@ -200,7 +201,7 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    name = ability.get("name", "Dark Sphere")
+    name = ability_name(ability)
     # A stocked charge is a whole cast of Dark Sphere, so it is the same
     # one sphere and one detonation Q certifies above.
     entry = damage_entry(
@@ -237,7 +238,7 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
 
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
-    name = ability.get("name", "Force of Will")
+    name = ability_name(ability)
     # One landing either way: the thrown target deals its damage "once
     # they land", which is the instant this row certifies.  Above 60
     # splinters that landing is split into a magic and a true part, which
@@ -287,7 +288,7 @@ def _unleashed_power(ctx: SlotCtx) -> dict[str, Any] | None:
     spheres = min(max(spheres, _R_MIN_SPHERES), _R_MAX_SPHERES)
 
     entry = damage_entry(
-        ability.get("name", "Unleashed Power"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_sphere * spheres,

@@ -40,6 +40,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -71,7 +72,7 @@ def _spirit_abjuration(ctx: SlotCtx) -> dict[str, Any] | None:
     percent = _SPIRIT_PCT_BASE + _SPIRIT_PCT_PER_100_AP * ap / 100.0
     per_proc = percent / 100.0 * ctx.target_stat("target_max_health")
 
-    name = ability.get("name", "Spirit Abjuration")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         ctx.level,
@@ -154,7 +155,7 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
         bound += bolt_min * extra_marks
 
     entry = damage_entry(
-        ability.get("name", "Twofold Hex"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bound,  # full-HP bound (hp-scaled entries store a bound)
@@ -183,7 +184,7 @@ def _across_the_veil(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Across the Veil"),
+        name=ability_name(ability),
         reason=(
             "Across the Veil is a dash/invisibility/movement-speed "
             "utility with no enemy-damage attribute of its own "

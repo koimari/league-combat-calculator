@@ -31,11 +31,13 @@ Why each slot is non-generic:
 import re
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import delayed_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -113,7 +115,7 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
         leveling, rank, ctx.stats, ctx.target, modifier_override=_stack_rider
     )
     return {
-        "name": ability.get("name", "Vorpal Spikes"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -141,7 +143,7 @@ def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
     if heal <= 0.0:
         return None
     return {
-        "name": ability.get("name", "Carnivore"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",
@@ -176,7 +178,7 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Champion True Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Feast"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -295,7 +297,7 @@ def derive_self_healing(
     damaging hits.
     """
     healing: list[dict[str, Any]] = []
-    carnivore = ability_damages.get("passive", {}).get("self_heal_state")
+    carnivore = ability_payload(ability_damages, "passive").get("self_heal_state")
     if isinstance(carnivore, dict):
         amount = float(carnivore.get("amount", 0.0) or 0.0)
         for payment in _healing.takedown_payments(

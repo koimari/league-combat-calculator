@@ -31,6 +31,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -67,7 +68,7 @@ def _blooming_burst(ctx: SlotCtx):
     )
     total = initial + 2 * subsequent
     entry = damage_entry(
-        ability.get("name", "Blooming Burst"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -99,7 +100,7 @@ def _pop_blossom(ctx: SlotCtx):
     ability, rank = ranked
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Pop Blossom"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,

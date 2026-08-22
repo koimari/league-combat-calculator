@@ -10,7 +10,12 @@ list, because neither reads a named field of cached data:
 * ``<expr> or <literal>`` where ``<expr>`` is not itself a ``.get()`` — a
   None-coalesce on an Optional value, not a default for missing data.
 
-    python scripts/literal_defaults.py src/calculator/damage.py
+    python scripts/literal_defaults.py            # the whole package
+    python scripts/literal_defaults.py <paths>    # files or directories
+
+The CLI reports; ``tests/test_literal_defaults.py`` gates.  Its ``ROOTS`` is
+the covered set and its ``TAIL`` names every module still outside it, so what
+this prints is a superset of what is pinned.
 """
 
 from __future__ import annotations
@@ -172,8 +177,12 @@ def targets(raw_paths: Iterable[str]) -> Iterator[Path]:
         yield from sorted(path.rglob("*.py")) if path.is_dir() else iter((path,))
 
 
+#: Scanned when the CLI is given no paths — the rule's whole subject.
+PACKAGE = Path(__file__).resolve().parent.parent / "src" / "calculator"
+
+
 if __name__ == "__main__":
-    _FOUND = scan(targets(sys.argv[1:]))
+    _FOUND = scan(targets(sys.argv[1:] or [str(PACKAGE)]))
     for _row in _FOUND:
         print(f"{_row.path}:{_row.line} [{_row.kind}] {_row.expression}")
     print(f"total {len(_FOUND)}", file=sys.stderr)

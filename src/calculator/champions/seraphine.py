@@ -80,6 +80,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -128,9 +129,7 @@ def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_note <= 0:
         return None
     notes = min(max(0, int(ctx.option("p_notes"))), _NOTE_CAP)
-    entry = on_hit_entry(
-        ability.get("name", "Stage Presence"), per_note * notes, "magic"
-    )
+    entry = on_hit_entry(ability_name(ability), per_note * notes, "magic")
     # One empowered attack fires every Note it holds; the next attack has
     # none until her abilities grant more.
     entry["on_hit"]["max_procs"] = 1 if notes else 0
@@ -187,7 +186,7 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Maximum Enhanced Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "High Note"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         base,

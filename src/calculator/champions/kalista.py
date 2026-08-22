@@ -44,6 +44,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -61,7 +62,7 @@ def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Pierce"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -73,7 +74,7 @@ def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     """W's damage only exists after both tethered marks are present."""
-    if not bool(ctx.options.get("soul_mark_proc", False)):
+    if not bool(ctx.option("soul_mark_proc")):
         return None
     ranked = ctx.ranked("W")
     if ranked is None:
@@ -100,7 +101,7 @@ def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = first + max(0, stacks - 1) * additional
     entry = damage_entry(
-        ability.get("name", "Rend"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -123,7 +124,7 @@ def _martial_poise(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Martial Poise"),
+        name=ability_name(ability),
         reason=(
             "Martial Poise is the windup-dash mechanic and the Oathsworn "
             "Bond declaration; all four cached effect rows carry empty "
@@ -147,7 +148,7 @@ def _fates_call(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Fate's Call"),
+        name=ability_name(ability),
         reason=(
             "Fate's Call retrieves and holds the Oathsworn ally (cleanse, "
             "invulnerability, untargetable), lets them dash with "
