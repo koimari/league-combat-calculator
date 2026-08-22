@@ -6,51 +6,16 @@
  * `/api/config` publishes) and `page` (what the user picked). stdout is JSON: `payload` (the rune
  * half of the build the UI would POST), `statCard` (what the stat card asks
  * `/api/loadout-stats` for), `rows` (the rendered slot markup),
- * `choices` (what each minor-rune slot offers) and `copied` (the page after
- * Copy A -> B).
+ * `shardChoices` (what each shard row offers), `picks` (the page after each
+ * replayed minor-rune pick) and `copied` (the page after Copy A -> B).
  */
-import { readFileSync } from "node:fs";
-import vm from "node:vm";
+import { evaluate, harnessContext, runScript } from "./harness_context.mjs";
 
 const [appPath, fixturePath] = process.argv.slice(2);
+const context = harnessContext(fixturePath);
+runScript(context, appPath, "app.js");
 
-const noop = () => {};
-const stub = () => new Proxy(function () {}, {
-  get: (target, key) => {
-    if (key === Symbol.toPrimitive || key === "toString") return () => "";
-    if (key === "then") return undefined;
-    if (key === "length") return 0;
-    return stub();
-  },
-  set: () => true,
-  apply: () => stub(),
-  has: () => false,
-});
-
-const context = {
-  document: stub(),
-  window: new Proxy({
-    location: { search: "", href: "", hash: "", origin: "http://harness" },
-    addEventListener: noop, removeEventListener: noop, dispatchEvent: noop,
-    setTimeout, clearTimeout,
-    matchMedia: () => ({ matches: false, addEventListener: noop }),
-  }, { get: (t, k) => (k in t ? t[k] : stub()), set: (t, k, v) => ((t[k] = v), true) }),
-  navigator: { userAgent: "node" },
-  localStorage: { getItem: () => null, setItem: noop, removeItem: noop },
-  fetch: () => Promise.resolve({ ok: false, json: () => Promise.resolve({}) }),
-  console,
-  setTimeout, clearTimeout, setInterval, clearInterval, requestAnimationFrame: noop,
-  CustomEvent: class { constructor(type, init) { this.type = type; Object.assign(this, init); } },
-  Event: class { constructor(type) { this.type = type; } },
-  URL, URLSearchParams, TextEncoder, TextDecoder, structuredClone,
-  __fixture: JSON.parse(readFileSync(fixturePath, "utf8")),
-};
-context.globalThis = context;
-context.self = context;
-vm.createContext(context);
-vm.runInContext(readFileSync(appPath, "utf8"), context, { filename: "app.js" });
-
-console.log(vm.runInContext(`
+console.log(evaluate(context, `
   engine.capabilities = __fixture.capabilities;
   engine.runes = __fixture.runes;
   engine.keystones = __fixture.runes.filter((rune) => rune.row === 0);
@@ -71,6 +36,13 @@ console.log(vm.runInContext(`
   const rows = runePageRows("A");
   const statCard = loadoutStatsPayload();
   copyRunePage("A", "B");
+  // Every pick in \`picks\`, replayed through the production handler, with the
+  // five minor-rune slots as they stand after each one.  Last, because it
+  // moves the page every other reading above is taken from.
+  const picks = (__fixture.picks || []).map((name) => {
+    pickMinorRune("A", name);
+    return [name, [...state.attacker.minorRunesA]];
+  });
   JSON.stringify({
     payload: {
       keystone: build.keystone,
@@ -80,8 +52,8 @@ console.log(vm.runInContext(`
     },
     statCard,
     rows,
-    choices: [0, 1, 2, 3, 4].map((index) => minorRuneChoices("A", index).map((rune) => rune.name)),
     shardChoices: [0, 1, 2].map((index) => statShardChoices(index).map((option) => option.name)),
+    picks,
     sides: ["attacker.keystoneA", "attacker.minorRunesB.3", "attacker.statShardsB.0", "attacker.buildA.2"].map(pickerSide),
     copied: {
       keystone: state.attacker.keystoneB,
@@ -90,4 +62,4 @@ console.log(vm.runInContext(`
       runeOptions: state.attacker.runeOptionsB,
     },
   });
-`, context));
+`));
