@@ -229,7 +229,7 @@ from .trigger_stream import (
     event_triggers,
     is_immobilizing_event,
 )
-from .state_lifecycle import InstanceCadence, TimedStackState
+from .state_lifecycle import InstanceCadence, TimedStackState, TriggerGate
 from .champions import get_champion_options_meta
 from .champions.ashe import ASHE_FOCUS_STACK_RULE
 from .resistance import (
@@ -11178,11 +11178,11 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
         armed = effect.armed(state.rune_options)
         proc_times: list[float] = []
         live_stacks: list[float] = []
-        ready_at = 0.0
+        gate = TriggerGate(effect.cooldown_seconds, inclusive=False)
         for instance_time in (
             _rune_trigger_times(state, rotation, effect.trigger) if armed else ()
         ):
-            if instance_time < ready_at:
+            if not gate.accepts(instance_time):
                 continue
             if effect.stack_window_seconds is not None:
                 live_stacks = [
@@ -11193,7 +11193,7 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
             live_stacks.append(instance_time)
             if len(live_stacks) >= effect.stacks_required:
                 proc_times.append(instance_time + effect.proc_delay_seconds)
-                ready_at = instance_time + effect.cooldown_seconds
+                gate.arm(instance_time)
                 if effect.consumes_stacks:
                     live_stacks = []
         state.notes.extend(effect.disclosures)
@@ -11296,14 +11296,13 @@ def _add_rune_ability_proc_damage(state: FightState, rotation: RotationResult) -
     and assumed to land; both assumptions are disclosed in the notes.
     """
     for effect in _page_effects(state, rune_effects.RuneAbilityProcEffect):
-        cooldown = effect.cooldown_at(state.level)
         proc_times: list[float] = []
-        ready_at = 0.0
+        gate = TriggerGate(effect.cooldown_at(state.level), inclusive=False)
         for cast_time in _damaging_cast_times(state, rotation):
-            if cast_time < ready_at:
+            if not gate.accepts(cast_time):
                 continue
             proc_times.append(cast_time + effect.proc_delay_seconds)
-            ready_at = cast_time + cooldown
+            gate.arm(cast_time)
         if not proc_times:
             # A selected rune that never fires must say so — only damaging
             # ability casts trigger it, so autos-only fights get zero.
@@ -11354,15 +11353,17 @@ def _add_keystone_aery_damage(state: FightState, rotation: RotationResult) -> No
     if not isinstance(effect, rune_effects.KeystoneAeryEffect):
         return
     proc_times: list[float] = []
-    ready_at = 0.0
+    gate = TriggerGate(inclusive=False)
     for trigger_time in _aery_trigger_times(state, rotation):
-        if trigger_time < ready_at:
+        if not gate.accepts(trigger_time):
             continue
-        proc_times.append(trigger_time + effect.damage_flight_seconds)
+        impact = trigger_time + effect.damage_flight_seconds
+        proc_times.append(impact)
         # The wiki gives a target linger but gives no fixed return travel
         # duration.  The sourced linger boundary is the deterministic lower
-        # bound for the next signal and is disclosed in the fight notes.
-        ready_at = trigger_time + effect.damage_flight_seconds + effect.linger_seconds
+        # bound for the next signal and is disclosed in the fight notes: the
+        # bolt flies, lands, and lingers there.
+        gate.arm(impact, cooldown=effect.linger_seconds)
     if not proc_times:
         state.notes.append(
             f"{effect.rune_name} never procced: the simulated fight "
@@ -11388,7 +11389,7 @@ def _aftershock_trigger_events(
     source/time identity and must not trigger twice.
     """
     triggers: list[dict[str, Any]] = []
-    seen: set[tuple[str, float, str]] = set()
+    gate = TriggerGate(inclusive=False)
 
     def add(event: Mapping[str, Any]) -> None:
         # Classification is the bus's: comparing the token against a set here
@@ -11410,10 +11411,9 @@ def _aftershock_trigger_events(
             time = float(event["time"])
         except (TypeError, ValueError):
             return
-        key = (str(event["source_key"]), round(time, 9), kind)
-        if key in seen:
+        # A control event and its damage packet share one identity.
+        if not gate.accepts(time, (str(event["source_key"]), round(time, 9), kind)):
             return
-        seen.add(key)
         triggers.append(
             {
                 "time": time,
@@ -11457,11 +11457,11 @@ def _add_keystone_aftershock_damage(
         return
     raw_damage = effect.shockwave_raw_damage(state.level, state.champion_stats)
     mitigated_damage = _mitigate(raw_damage, "magic", state.resists, state.magic_amp)
-    ready_at = 0.0
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     proc_events: list[dict[str, Any]] = []
     for trigger in triggers:
         trigger_time = float(trigger["time"])
-        if trigger_time + 1e-9 < ready_at:
+        if not gate.accepts(trigger_time):
             continue
         proc_events.append(
             {
@@ -11475,7 +11475,7 @@ def _add_keystone_aftershock_damage(
                 "shockwave_radius": effect.shockwave_radius,
             }
         )
-        ready_at = trigger_time + effect.cooldown_seconds
+        gate.arm(trigger_time)
     if not proc_events:
         state.notes.append(
             f"{effect.rune_name} never procced: every immobilizing event "
@@ -11529,7 +11529,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
     damage_type = effect.damage_type(state.champion_stats)
     target_health = max(0.0, float(state.target_health))
     threshold = target_health * effect.health_threshold_ratio
-    ready_at = 0.0
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     souls = 0
     source_index = 0
     pending: list[dict[str, Any]] = []
@@ -11537,7 +11537,6 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
     skipped_after_death = 0
 
     def queue_proc(trigger_time: float) -> None:
-        nonlocal ready_at
         raw_damage = effect.raw_damage(_damage_inputs(state), souls)
         mitigated_damage = _mitigate(
             raw_damage, damage_type, state.resists, state.magic_amp
@@ -11551,7 +11550,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
                 "damage": mitigated_damage,
             }
         )
-        ready_at = trigger_time + effect.cooldown_seconds
+        gate.arm(trigger_time)
 
     while source_index < len(base_events) or pending:
         next_source = (
@@ -11574,7 +11573,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
                 damage > 0.0
                 and _dark_harvest_trigger_event(source)
                 and target_health < threshold
-                and source_time + 1e-9 >= ready_at
+                and gate.accepts(source_time)
             ):
                 queue_proc(source_time)
             target_health = max(0.0, target_health - damage)
@@ -11760,10 +11759,10 @@ def _refreshing_stack_proc_times(
     proc_times: list[float] = []
     stacks = 0
     last_stack_time = float("-inf")
-    ready_at = 0.0
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=False)
     cooldown_gated = False
     for swing_time in _auto_attack_timestamps(state):
-        if swing_time < ready_at:
+        if not gate.accepts(swing_time):
             cooldown_gated = True
             continue
         if swing_time - last_stack_time >= effect.stack_duration_seconds:
@@ -11772,7 +11771,7 @@ def _refreshing_stack_proc_times(
         last_stack_time = swing_time
         if stacks >= effect.stacks_required:
             proc_times.append(swing_time)
-            ready_at = swing_time + effect.cooldown_seconds
+            gate.arm(swing_time)
             stacks = 0
     return proc_times, cooldown_gated
 
