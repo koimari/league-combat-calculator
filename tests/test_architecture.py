@@ -148,3 +148,132 @@ def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> No
     assert set(FRONT_DOOR_FRONTIER) <= surveyed
     assert reported <= surveyed
     assert surveyed - reported
+
+
+# SC9: the pre-combat stat surface had three recipes -- a roster card
+# resolved without `external_stat_bonuses`, the coupled capture without
+# `rune_page`, the request path with both -- and every omission read as a
+# default rather than as a decision.  The recipe now has one home and the
+# read off a request has one home; these two names are what the guards below
+# hold the tree to.
+PRE_COMBAT_RECIPE_HOME = "calculator.stats.resolve_pre_combat_stats"
+PRE_COMBAT_PARAMS_READ = "calculator.pipeline.FightParams.pre_combat_stats"
+
+# The inputs that make a stat block a *build's* rather than a champion's.  A
+# call passing none of them is the level-and-items block three harnesses ask
+# for and is not this surface.
+BUILD_CONTEXT_KEYWORDS = frozenset(
+    {
+        "item_options",
+        "role",
+        "role_quest_complete",
+        "external_stat_bonuses",
+        "rune_page",
+    }
+)
+
+# Every surface that composes a participant's stats as combat begins, and the
+# helper it reaches the recipe through: the module function directly when it
+# holds no request, the FightParams read when it does.
+PRE_COMBAT_SURFACES: Mapping[str, str] = {
+    "calculator.scenario.ChampionLoadout.resolve": "resolve_pre_combat_stats",
+    "calculator.calculate._combat_receipt": "pre_combat_stats",
+    "calculator.optimizer._evaluate_build_uncached": "pre_combat_stats",
+    "calculator.pipeline.run_fight": "pre_combat_stats",
+    "golden_snapshot._coupled_receipt": "pre_combat_stats",
+}
+
+
+def _called_name(node: ast.Call) -> str:
+    """What one call expression spells, bare name or dotted attribute alike."""
+    if isinstance(node.func, ast.Name):
+        return node.func.id
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr
+    return ""
+
+
+def _calls_by_scope(path: Path, module: str) -> list[tuple[str, ast.Call]]:
+    """Every call expression in one module, tagged with the def enclosing it."""
+    found: list[tuple[str, ast.Call]] = []
+
+    def visit(node: ast.AST, scope: str) -> None:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                visit(child, f"{scope}.{child.name}")
+                continue
+            if isinstance(child, ast.Call):
+                found.append((scope, child))
+            visit(child, scope)
+
+    visit(ast.parse(path.read_text(encoding="utf-8")), module)
+    return found
+
+
+def _scanned_scopes() -> list[tuple[str, ast.Call]]:
+    """Calls in `src/calculator` and in the capture harnesses beside it.
+
+    `scripts/` is scanned because the drift this guards against happened
+    there: `golden_snapshot._coupled_receipt` calls itself a mirror of the
+    request path's composition, and a src-only scan is exactly the reading
+    under which it stayed one for a campaign while missing an input.
+    """
+    scoped: list[tuple[str, ast.Call]] = []
+    for path in sorted(SRC_ROOT.rglob("*.py"), key=lambda item: item.as_posix()):
+        module = ".".join(path.relative_to(SRC_ROOT.parent).with_suffix("").parts)
+        scoped.extend(_calls_by_scope(path, module))
+    for path in sorted((ROOT / "scripts").glob("*.py"), key=lambda item: item.name):
+        scoped.extend(_calls_by_scope(path, path.stem))
+    return scoped
+
+
+def _recipe_sites() -> dict[str, int]:
+    """Where a build-context `calculate_total_stats` call is written."""
+    sites: dict[str, int] = {}
+    for scope, call in _scanned_scopes():
+        if _called_name(call) != "calculate_total_stats":
+            continue
+        supplied = {keyword.arg for keyword in call.keywords if keyword.arg}
+        if BUILD_CONTEXT_KEYWORDS & supplied:
+            sites[scope] = sites.get(scope, 0) + 1
+
+    return sites
+
+
+def test_the_pre_combat_stat_recipe_is_written_in_exactly_one_place() -> None:
+    """SC9: one composition, so no surface can drop an input by omission."""
+    assert _recipe_sites() == {PRE_COMBAT_RECIPE_HOME: 1}
+
+
+def test_the_one_recipe_states_every_input_and_the_request_read_answers_all_of_them():
+    """Both halves, so neither guard above can pass vacuously.
+
+    A helper that named three of the five inputs would satisfy the site count
+    while leaving the other two to a default -- which is the failure, not the
+    fix -- and a `FightParams` read that answered only some of them would put
+    the same silence one call deeper.
+    """
+    (recipe,) = [
+        call
+        for scope, call in _scanned_scopes()
+        if scope == PRE_COMBAT_RECIPE_HOME
+        and _called_name(call) == "calculate_total_stats"
+    ]
+    assert {keyword.arg for keyword in recipe.keywords} == BUILD_CONTEXT_KEYWORDS
+    (request_read,) = [
+        call
+        for scope, call in _scanned_scopes()
+        if scope == PRE_COMBAT_PARAMS_READ
+        and _called_name(call) == "resolve_pre_combat_stats"
+    ]
+    assert {keyword.arg for keyword in request_read.keywords} == BUILD_CONTEXT_KEYWORDS
+
+
+def test_every_pre_combat_surface_routes_through_the_one_helper() -> None:
+    """The three recipes SC9 named, plus the two that shared one of them."""
+    routed: dict[str, set[str]] = {scope: set() for scope in PRE_COMBAT_SURFACES}
+    for scope, call in _scanned_scopes():
+        if scope in routed:
+            routed[scope].add(_called_name(call))
+    for scope, helper in PRE_COMBAT_SURFACES.items():
+        assert helper in routed[scope], scope

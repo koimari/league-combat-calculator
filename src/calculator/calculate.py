@@ -28,7 +28,6 @@ from .scenario import (
     parse_scenario_request,
     resolve_scenario,
 )
-from .stats import calculate_total_stats
 from .validation_receipts import displayed_prediction
 
 
@@ -166,16 +165,7 @@ def _combat_receipt(
         return None
     items = list(resolved.items)
     params = resolved.fight_params
-    main_stats = calculate_total_stats(
-        champion_data,
-        request.level,
-        items,
-        item_options=params.item_options,
-        role=params.role,
-        role_quest_complete=params.role_quest_complete,
-        external_stat_bonuses=params.ally_stat_bonuses,
-        rune_page=params.rune_page,
-    )
+    main_stats = params.pre_combat_stats(champion_data, request.level, items)
     combat = build_participant_timeline(
         champion_data,
         request.level,

@@ -70,7 +70,7 @@ from .rune_effects import (
     validate_keystone_options,
     validate_rune_page,
 )
-from .stats import calculate_total_stats, get_item_stats
+from .stats import get_item_stats, resolve_pre_combat_stats
 from .trigger_stream import applies_control
 from .data_registry import data_version
 from .cast_dependency import (
@@ -949,6 +949,24 @@ class FightParams(FightConfig):
     # engine never reads this; participant_timeline owns the semantics.
     enemies_attack: bool = True
 
+    def pre_combat_stats(
+        self,
+        champion_data: dict[str, Any],
+        level: int,
+        items: list[dict[str, Any]],
+    ) -> dict[str, float]:
+        """This request's answer to every input of the pre-combat stat recipe."""
+        return resolve_pre_combat_stats(
+            champion_data,
+            level,
+            items,
+            item_options=self.item_options,
+            role=self.role,
+            role_quest_complete=self.role_quest_complete,
+            rune_page=self.rune_page,
+            external_stat_bonuses=self.ally_stat_bonuses,
+        )
+
     @classmethod
     def from_request(
         cls,
@@ -1318,16 +1336,7 @@ def run_fight(
     champion_stats = (
         precomputed_stats
         if precomputed_stats is not None
-        else calculate_total_stats(
-            champion_data,
-            level,
-            items,
-            item_options=params.item_options,
-            role=params.role,
-            role_quest_complete=params.role_quest_complete,
-            external_stat_bonuses=params.ally_stat_bonuses,
-            rune_page=params.rune_page,
-        )
+        else params.pre_combat_stats(champion_data, level, items)
     )
 
     # Reserved option keys are pipeline-owned: strip whatever the caller
