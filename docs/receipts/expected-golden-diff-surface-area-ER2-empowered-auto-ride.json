@@ -1,0 +1,382 @@
+{
+ "slice": "surface-area-ER2-empowered-auto-ride",
+ "backlog_row": "ER2",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "rule": "R-17 - the slice declares its pair diffs here; the capture is its own commit"
+ },
+ "what_landed": [
+  "damage.py grows one declared key on the empowers_next_auto vocabulary, rides_scheduled_auto: the empowerment is delivered by the fight's next scheduled swing at or after the cast instead of at the cast. _resolve_scheduled_auto_rides claims those swings once, after the keystone schedules are installed, and both the row's authored events and its target_debuff window read the claim.",
+  "champions/jayce.py declares it on BOTH Transform branches. The cache gives Transform no attack-timer reset, so Cannon's armour/MR shred and Hammer's bonus magic both land on the swing they empower. Cannon R therefore carries a basic attack it never carried before, and MODULE_CC['R'] becomes a plain 'none' instead of per_part.",
+  "champions/vex.py splits Shadow Surge into the Shadow's cached Magic Damage and the recast consume's, which the cached Total Magic Damage row sums exactly at every rank. MODULE_CC['R'] = 'none' follows, and Vex's last coarse source is gone."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": true,
+  "rule": "Only two champion modules changed, so the qualifying set is the Jayce and Vex entries of champion_baselines plus every registered_champion_fights scenario whose attacker is Jayce or Vex. Nothing else in the snapshot reads the new timing: every other empowering entry leaves rides_scheduled_auto absent and keeps being timed at its cast.",
+  "method": "'golden_snapshot.py compare scripts/golden_baseline.json --report' at the slice tip.",
+  "measured": {
+   "differing_leaves": 74,
+   "qualifying_leaves": 73,
+   "numeric_leaves": 46183,
+   "leaf_ratio": 0.001602321200441721,
+   "ratio_clause_triggered": false
+  }
+ },
+ "why_each_family_moved": {
+  "champion_baselines/Jayce/R": "the entry gains empowers_next_auto and a reviewed cc_kind, and its detail says 'no bonus damage' rather than 'no direct damage' - the row now carries the attack.",
+  "champion_baselines/Vex/R": "one 375.0 part becomes 125.0 at t=0 and 250.0 at t=0.5 (level 11, 0 AP). The sum is the cached Total Magic Damage row, unchanged.",
+  "registered_champion_fights/Jayce/<level>/<build> (burst, no autos)": "R's row goes from 0.0 to the basic attack the cast forces, and the fight total rises by exactly that. A spellblade build rises by one more proc as well: R is a cast, it arms a charge, and the swing it forces now exists to spend it.",
+  "registered_champion_fights/Jayce/<level>/sustained/<build>": "two effects at once. One swing moves off auto_attacks onto R's row (attribution only), and the shred's 5-second window now opens at that swing instead of at t=0, so it covers less of the fight - every armour-mitigated row drops by the same 2.57 percent at level 18 (Q 514.04 -> 500.82, W 1175.30 -> 1145.08, autos before the move 1780.75 -> 1734.97).",
+  "registered_champion_fights/Vex/*": "nothing moved. The recast's 0.5s offset sits well inside every scenario's window, so the two hits land where the one lump did and the totals are identical."
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Jayce/abilities_level_11/R/cc_reviewed",
+   "/champion_baselines/Jayce/abilities_level_11/R/detail",
+   "/champion_baselines/Jayce/abilities_level_11/R/empowers_next_auto",
+   "/champion_baselines/Jayce/abilities_level_11/R/parts[0]",
+   "/champion_baselines/Vex/abilities_level_11/R/cc_reviewed",
+   "/champion_baselines/Vex/abilities_level_11/R/detail",
+   "/champion_baselines/Vex/abilities_level_11/R/parts[0]",
+   "/champion_baselines/Vex/abilities_level_11/R/parts[0]",
+   "/champion_baselines/Vex/abilities_level_11/R/parts[1]",
+   "/registered_champion_fights/Jayce/11/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/magic_build/total_damage",
+   "/registered_champion_fights/Jayce/11/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/no_items/total_damage",
+   "/registered_champion_fights/Jayce/11/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/physical_build/total_damage",
+   "/registered_champion_fights/Jayce/11/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/spellblade_build/breakdown_totals/spellblade_Trinity Force",
+   "/registered_champion_fights/Jayce/11/spellblade_build/total_damage",
+   "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/proc_Luden's Echo",
+   "/registered_champion_fights/Jayce/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Jayce/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force",
+   "/registered_champion_fights/Jayce/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Jayce/18/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/magic_build/total_damage",
+   "/registered_champion_fights/Jayce/18/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/no_items/total_damage",
+   "/registered_champion_fights/Jayce/18/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/physical_build/total_damage",
+   "/registered_champion_fights/Jayce/18/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/spellblade_build/breakdown_totals/spellblade_Trinity Force",
+   "/registered_champion_fights/Jayce/18/spellblade_build/total_damage",
+   "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/proc_Luden's Echo",
+   "/registered_champion_fights/Jayce/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Jayce/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/Q",
+   "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/W",
+   "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force",
+   "/registered_champion_fights/Jayce/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": []
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "old": 59965,
+   "new": 59970
+  },
+  "/registered_champion_fights/Jayce/11/magic_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 64.0
+  },
+  "/registered_champion_fights/Jayce/11/no_items/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 64.0
+  },
+  "/registered_champion_fights/Jayce/11/physical_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 276.1
+  },
+  "/registered_champion_fights/Jayce/11/spellblade_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 182.85
+  },
+  "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 69.57
+  },
+  "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 69.57
+  },
+  "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 300.12
+  },
+  "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 198.75
+  },
+  "/registered_champion_fights/Jayce/18/magic_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 87.33
+  },
+  "/registered_champion_fights/Jayce/18/no_items/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 87.33
+  },
+  "/registered_champion_fights/Jayce/18/physical_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 314.6
+  },
+  "/registered_champion_fights/Jayce/18/spellblade_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 213.77
+  },
+  "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 96.33
+  },
+  "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 96.33
+  },
+  "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 346.99
+  },
+  "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/R": {
+   "old": 0.0,
+   "new": 235.78
+  },
+  "/registered_champion_fights/Jayce/11/spellblade_build/breakdown_totals/spellblade_Trinity Force": {
+   "old": 142.22,
+   "new": 284.44
+  },
+  "/registered_champion_fights/Jayce/18/spellblade_build/breakdown_totals/spellblade_Trinity Force": {
+   "old": 197.74,
+   "new": 395.47
+  },
+  "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/auto_attacks": {
+   "old": 296.6,
+   "new": 192.65
+  },
+  "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/auto_attacks": {
+   "old": 296.6,
+   "new": 192.65
+  },
+  "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/auto_attacks": {
+   "old": 213.33,
+   "new": 139.13
+  },
+  "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/auto_attacks": {
+   "old": 213.33,
+   "new": 139.13
+  },
+  "/registered_champion_fights/Jayce/18/spellblade_build/total_damage": {
+   "old": 1449.94,
+   "new": 1861.44
+  },
+  "/registered_champion_fights/Jayce/11/spellblade_build/total_damage": {
+   "old": 1160.35,
+   "new": 1485.42
+  },
+  "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/auto_attacks": {
+   "old": 812.67,
+   "new": 596.26
+  },
+  "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/auto_attacks": {
+   "old": 1227.11,
+   "new": 900.35
+  },
+  "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/auto_attacks": {
+   "old": 1210.0,
+   "new": 943.11
+  },
+  "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/auto_attacks": {
+   "old": 1780.75,
+   "new": 1387.98
+  },
+  "/registered_champion_fights/Jayce/11/physical_build/total_damage": {
+   "old": 1369.63,
+   "new": 1645.73
+  },
+  "/registered_champion_fights/Jayce/18/physical_build/total_damage": {
+   "old": 1689.34,
+   "new": 2003.94
+  },
+  "/registered_champion_fights/Jayce/18/no_items/total_damage": {
+   "old": 627.4,
+   "new": 714.73
+  },
+  "/registered_champion_fights/Jayce/11/no_items/total_damage": {
+   "old": 496.09,
+   "new": 560.09
+  },
+  "/registered_champion_fights/Jayce/18/magic_build/total_damage": {
+   "old": 802.35,
+   "new": 889.68
+  },
+  "/registered_champion_fights/Jayce/11/magic_build/total_damage": {
+   "old": 667.95,
+   "new": 731.95
+  },
+  "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+   "old": 361.33,
+   "new": 349.0
+  },
+  "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer": {
+   "old": 278.71,
+   "new": 270.87
+  },
+  "/registered_champion_fights/Jayce/18/sustained/physical_build/total_damage": {
+   "old": 3831.42,
+   "new": 3729.88
+  },
+  "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/Q": {
+   "old": 514.04,
+   "new": 500.82
+  },
+  "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force": {
+   "old": 395.47,
+   "new": 385.3
+  },
+  "/registered_champion_fights/Jayce/18/sustained/no_items/total_damage": {
+   "old": 924.0,
+   "new": 900.24
+  },
+  "/registered_champion_fights/Jayce/18/sustained/physical_build/breakdown_totals/W": {
+   "old": 1175.3,
+   "new": 1145.08
+  },
+  "/registered_champion_fights/Jayce/18/sustained/spellblade_build/total_damage": {
+   "old": 2857.67,
+   "new": 2784.2
+  },
+  "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/W": {
+   "old": 798.6,
+   "new": 778.07
+  },
+  "/registered_champion_fights/Jayce/18/sustained/spellblade_build/breakdown_totals/Q": {
+   "old": 453.6,
+   "new": 441.94
+  },
+  "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/Q": {
+   "old": 301.13,
+   "new": 293.39
+  },
+  "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/Q": {
+   "old": 301.13,
+   "new": 293.39
+  },
+  "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/W": {
+   "old": 326.26,
+   "new": 317.88
+  },
+  "/registered_champion_fights/Jayce/18/sustained/no_items/breakdown_totals/W": {
+   "old": 326.26,
+   "new": 317.88
+  },
+  "/registered_champion_fights/Jayce/18/sustained/magic_build/total_damage": {
+   "old": 1098.95,
+   "new": 1070.9
+  },
+  "/registered_champion_fights/Jayce/18/sustained/magic_build/breakdown_totals/proc_Luden's Echo": {
+   "old": 174.95,
+   "new": 170.65
+  },
+  "/registered_champion_fights/Jayce/11/sustained/physical_build/total_damage": {
+   "old": 2875.45,
+   "new": 2811.22
+  },
+  "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/Q": {
+   "old": 504.52,
+   "new": 493.56
+  },
+  "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/Q": {
+   "old": 295.56,
+   "new": 289.14
+  },
+  "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/Q": {
+   "old": 295.56,
+   "new": 289.14
+  },
+  "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/Q": {
+   "old": 445.2,
+   "new": 435.53
+  },
+  "/registered_champion_fights/Jayce/11/sustained/physical_build/breakdown_totals/W": {
+   "old": 865.11,
+   "new": 846.32
+  },
+  "/registered_champion_fights/Jayce/11/sustained/spellblade_build/total_damage": {
+   "old": 2115.24,
+   "new": 2069.3
+  },
+  "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/W": {
+   "old": 572.93,
+   "new": 560.49
+  },
+  "/registered_champion_fights/Jayce/11/sustained/no_items/total_damage": {
+   "old": 709.42,
+   "new": 694.02
+  },
+  "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/W": {
+   "old": 200.53,
+   "new": 196.18
+  },
+  "/registered_champion_fights/Jayce/11/sustained/no_items/breakdown_totals/W": {
+   "old": 200.53,
+   "new": 196.18
+  },
+  "/registered_champion_fights/Jayce/11/sustained/spellblade_build/breakdown_totals/spellblade_Trinity Force": {
+   "old": 284.44,
+   "new": 278.27
+  },
+  "/registered_champion_fights/Jayce/11/sustained/magic_build/total_damage": {
+   "old": 881.28,
+   "new": 862.3
+  },
+  "/registered_champion_fights/Jayce/11/sustained/magic_build/breakdown_totals/proc_Luden's Echo": {
+   "old": 171.86,
+   "new": 168.29
+  }
+ },
+ "what_did_not_move": [
+  "Every champion other than Jayce and Vex: no other module declares rides_scheduled_auto, and an empower without it keeps its cast-instant timing.",
+  "The coupled baseline and the coupled exact set: their difference sets stay empty.",
+  "Vex's fight totals, and Jayce's Hammer R row total (169.5 at the reference build) - only its event ledger re-times."
+ ]
+}

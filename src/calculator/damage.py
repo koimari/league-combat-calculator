@@ -821,6 +821,9 @@ class FightState:
     # Where a self-rated empowered burst (Jayce's Hyper Charge) puts its
     # swings, resolved with the cast plan and read by the swing schedule.
     burst_swings: "BurstSwingSchedule | None" = None
+    # Which scheduled swings an empower that rides the ordinary stream
+    # claimed, ``{slot: times}`` (see ``_resolve_scheduled_auto_rides``).
+    empowered_ride_times: dict[str, tuple[float, ...]] = field(default_factory=dict)
     # Rengar's Ferocity stack walk, built with the cast plan. ``None`` for
     # every champion whose module emits no ``ferocity_parts``.
     ferocity_timeline: "FerocityTimeline | None" = None
@@ -3498,6 +3501,15 @@ def _empower_burst_attack_speed(empower: Any) -> float:
     return float(ability_field(empower, "attack_speed", form="empower"))
 
 
+def _empower_rides_scheduled_auto(empower: Any) -> bool:
+    """Whether this empower waits for the stream's next swing to deliver it."""
+    return (
+        bool(empower.get("rides_scheduled_auto"))
+        if isinstance(empower, dict)
+        else False
+    )
+
+
 def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
     """Return module-authored first-hit delay and interval for a burst.
 
@@ -4388,6 +4400,54 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
         state.attack_speed * leftover * state.auto_attack_uptime
     ) + len(schedule.times)
     state.burst_swings = schedule
+
+
+def _resolve_scheduled_auto_rides(state: "FightState", plan: "CastPlan") -> None:
+    """Claim the stream swing each ``rides_scheduled_auto`` cast is delivered by.
+
+    An empower is timed at its cast by default, which is where a kit that
+    resets its attack timer (Darius W, Jax W, Fiora E) genuinely swings, and
+    a burst that sets its own rate re-times the stream and declares its own
+    impacts (``BurstSwingSchedule``).  A rider does neither: the cache gives
+    it no reset, so it is carried by a swing already on the stream — the
+    first at or after its cast that an earlier rider has not taken.
+    Resolving that here, once, is what lets the ability's damage and its
+    ``target_debuff`` window both open at the swing rather than at the cast.
+
+    Casts left without a swing keep nothing: the stream ran out, and the
+    engine already caps such casts by the autos that consume them.
+    """
+    if state.num_auto_attacks <= 0:
+        return
+    rides: dict[str, tuple[float, ...]] = {}
+    # A self-rated burst already owns its impacts, so a rider may not take
+    # one of them: those swings are spoken for (Jayce's R rides an ordinary
+    # swing while his Hyper Charge fires its own three).
+    claimed_by_burst = set(state.burst_swings.times if state.burst_swings else ())
+    available = [
+        time for time in _auto_attack_timestamps(state) if time not in claimed_by_burst
+    ]
+    taken = 0
+    for ability_key in state.cast_order:
+        ability_info = state.ability_damages.get(ability_key)
+        if not ability_info:
+            continue
+        empower = ability_info.get("empowers_next_auto")
+        if not empower or not _empower_rides_scheduled_auto(empower):
+            continue
+        hits = _empower_hits(empower)
+        claimed: list[float] = []
+        for cast_time in plan.times.get(ability_key, ()):
+            for _ in range(hits):
+                while taken < len(available) and available[taken] < cast_time:
+                    taken += 1
+                if taken >= len(available):
+                    break
+                claimed.append(available[taken])
+                taken += 1
+        if claimed:
+            rides[ability_key] = tuple(claimed)
+    state.empowered_ride_times = rides
 
 
 @dataclass(frozen=True)
@@ -6345,6 +6405,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     _apply_empowered_burst_autos(state, plan)
     _prepare_hail_attack_schedule(state)
     _prepare_lethal_tempo_attack_schedule(state)
+    # Riders read the finished swing schedule, so they resolve after every
+    # keystone that owns one has installed it.
+    _resolve_scheduled_auto_rides(state, plan)
     state.stack_timeline = _build_stack_timeline(state, plan)
     timeline = state.stack_timeline
     state.ferocity_timeline = _build_ferocity_timeline(state, plan)
@@ -6929,11 +6992,17 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             # One-rotation mode is a burst: the whole combo lands well
             # inside any shred window, and its ``fight_duration_seconds``
             # is only a nominal cap — weighting by it would be arbitrary.
+            # A debuff an empowered swing delivers opens its window at that
+            # swing, not at the cast that armed it (Jayce's Cannon
+            # Transform shreds when the attack lands).
+            debuff_times = state.empowered_ride_times.get(
+                ability_key
+            ) or plan.times.get(ability_key, ())
             coverage = (
                 1.0
                 if state.one_rotation
                 else _debuff_coverage(
-                    plan.times.get(ability_key, ()),
+                    debuff_times,
                     ability_field(target_debuff, "duration", form="target_debuff"),
                     state.fight_duration_seconds,
                 )
@@ -17649,12 +17718,13 @@ class _EmpoweredSwings(NamedTuple):
     row: dict[str, Any]
     count: int
     # When those swings land. A kit that rates its own burst declares the
-    # impacts (``BurstSwingSchedule.by_ability``); every other empower is
-    # timed at the cast that forced it — where a timer-resetting one
-    # (Darius W, Jax W, Fiora E) genuinely swings, and the instant the
-    # reconstruction has always placed this damage at.  A multi-hit
-    # empower that resets nothing (Cho'Gath E's three spiked attacks)
-    # therefore stacks its hits on the cast until its kit declares a rate.
+    # impacts (``BurstSwingSchedule.by_ability``); one that declares
+    # ``rides_scheduled_auto`` lands on the stream swings it claimed
+    # (``FightState.empowered_ride_times``); every other empower is timed
+    # at the cast that forced it — where a timer-resetting one (Darius W,
+    # Jax W, Fiora E) genuinely swings.  A multi-hit empower that resets
+    # nothing (Cho'Gath E's three spiked attacks) therefore stacks its
+    # hits on the cast until its kit declares a rate or a ride.
     times: tuple[float, ...]
 
 
@@ -17684,6 +17754,7 @@ def _empowered_swing_consumers(
         if swings <= 0:
             continue
         declared = burst.by_ability.get(ability_key, ()) if burst is not None else ()
+        declared = declared or state.empowered_ride_times.get(ability_key, ())
         times = declared or tuple(
             float(event["time"])
             for event in cast_events

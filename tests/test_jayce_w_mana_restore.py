@@ -707,9 +707,16 @@ def test_p112_public_restore_row_shape():
 
 def test_p112_damage_pricing_untouched_by_restore():
     """Rule 13: the restore is purely additive to the mana account — it
-    never re-prices damage.  Q/R rows are byte-identical with and without
+    never re-prices damage.  Q's row is byte-identical with and without
     the auto stream (restore active vs absent), and the W entry's own
-    pricing is the module's (3 attacks x the ranked %AD ratio)."""
+    pricing is the module's (3 attacks x the ranked %AD ratio).
+
+    R is compared at the parse instead of the row: Cannon Transform
+    prices no damage of its own in either window, and its ROW differs
+    only because with no stream the cast forces its own basic attack onto
+    it (``rides_scheduled_auto``) — the stream's doing, not the
+    restore's.
+    """
     champ = get_champion("Jayce")
     kw = dict(duration=8.0, champion_options={"hammer_stance": False})
     with_autos = run_fight(champ, 18, [], _params(**kw))
@@ -719,10 +726,6 @@ def test_p112_damage_pricing_untouched_by_restore():
     assert (
         with_autos["breakdown"]["Q"]["total_raw"]
         == no_autos["breakdown"]["Q"]["total_raw"]
-    )
-    assert (
-        with_autos["breakdown"]["R"]["total_raw"]
-        == no_autos["breakdown"]["R"]["total_raw"]
     )
     assert "E" not in with_autos["breakdown"]  # cannon gate emits nothing
     # W's authored pricing: 3 x rank-6 ratio (110% AD) x total AD.  The
@@ -737,6 +740,7 @@ def test_p112_damage_pricing_untouched_by_restore():
     )
     total_ad = with_autos["champion_stats"]["attack_damage"]
     assert parse["W"]["total_raw"] == pytest.approx(3 * 1.10 * total_ad)
+    assert parse["R"]["total_raw"] == pytest.approx(0.0)
     # The restore amount is a MANA number, never a damage part value.
     parts = parse["W"]["parts"]
     assert all(part.amount != pytest.approx(25.0) for part in parts)
