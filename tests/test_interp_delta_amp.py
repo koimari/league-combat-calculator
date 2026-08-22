@@ -630,13 +630,14 @@ def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
 # without a committed population its blast radius would be whatever the tree
 # happened to contain on the day, discovered afterwards rather than declared.
 #
-# Fourteen of the sixteen are holder-side amps the pair engine prices into its
-# own damage rows, which the compiled walk has always consumed already
+# Fifteen of the seventeen are holder-side amps the pair engine prices into
+# its own damage rows, which the compiled walk has always consumed already
 # amplified; two author a cross-participant ``damage_modifier`` packet and are
 # the reason the blanket refusal existed at all.  Both halves move together
 # because one constant answered for both.
 AMP_FLIP_POPULATION = frozenset(
     {
+        "abyssal_mask.magic_amp",
         "actualizer.ability_part_amp",
         "bloodsong.expose_weakness",
         "first_strike.opening_window_amp",

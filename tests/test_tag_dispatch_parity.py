@@ -43,7 +43,8 @@ from src.calculator.item_effects import (
     required_effect_value,
     resolve_damage_effects,
 )
-from src.calculator.interpreters import crit_profile, damage_routing
+from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.interpreters import crit_profile, damage_routing, delta_amp
 from src.calculator.interpreters.crit_profile import (
     CRIT_PAYLOAD_REFERENCES,
     CritProfileInterpretationError,
@@ -277,19 +278,51 @@ def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
 # ---------------------------------------------------------------------------
 
 
-def test_magic_damage_amp_is_the_ladders_alone_and_the_catalog_books_it_so():
-    """The catalog files ``magic_damage_amp`` under DELTA_AMP and compiles no
-    rule for it: the tag is explicitly unmigrated, so the ladder is the only
-    owner of the number and there is nothing to compare it against."""
+def test_magic_damage_amp_agrees():
+    """The tag the catalog had no compiler for now has one.
+
+    Abyssal Mask's curse occupies no chain slot — it multiplies each magic
+    packet where the mitigation prices it — so it is a ``PartAmpRule``,
+    selected by the damage class it restricts rather than by an attack class.
+    Both lanes fold it the same way: 1.0 plus the sourced share."""
     owner = _sole("magic_damage_amp")
     assert TAG_FAMILY["magic_damage_amp"] is RuleFamily.DELTA_AMP
-    assert "magic_damage_amp" in DELTA_AMP_UNMIGRATED_TAGS
-    assert not [
+    assert not DELTA_AMP_UNMIGRATED_TAGS
+    (rule,) = [
         rule for rule in behavior_rules(owner) if rule.family is RuleFamily.DELTA_AMP
     ]
-    assert _ladder(owner).magic_amp == pytest.approx(
-        1.0 + required_effect_value(owner, "magic_amp")
-    )
+    assert rule.mechanic_id == "abyssal_mask.magic_amp"
+    catalog = delta_amp.declared_magic_amp([owner])
+    assert catalog == pytest.approx(1.0 + required_effect_value(owner, "magic_amp"))
+    assert _ladder(owner).magic_amp == pytest.approx(catalog)
+
+
+def test_the_two_part_amp_selectors_are_disjoint_and_total():
+    """Neither reading may drop a declaration or claim the other's.
+
+    The engine multiplies the magic reading by the attack-class one, so a
+    rule both selectors matched would be counted twice and one neither matched
+    would vanish."""
+    every = {
+        rule.mechanic_id
+        for owner in ITEM_EFFECTS
+        for rule in delta_amp._part_amps([owner])  # pylint: disable=protected-access
+    }
+    by_attack = {
+        rule.mechanic_id
+        for owner in ITEM_EFFECTS
+        for attack_class in AttackClass
+        for rule in delta_amp.part_amp_rules([owner], attack_class)
+    }
+    by_damage = {
+        rule.mechanic_id
+        for owner in ITEM_EFFECTS
+        for damage_class in DamageClass
+        for rule in delta_amp.damage_class_amp_rules([owner], damage_class)
+    }
+    assert by_attack and by_damage
+    assert not by_attack & by_damage
+    assert by_attack | by_damage == every
 
 
 def test_secondary_target_is_retired_and_was_always_the_catalogs_alone():

@@ -22,15 +22,16 @@ than relaxing this one: until its flip, every amp rule carries
 ``ReceiptOnly`` and the compiled lane is a named refusal.  The receipt-walk
 half of the family arrives with the amps the coupled walk actually owns.
 
-Two registry schemas amplify each part they price rather than the running
-total, so they are not in the chain at all: :class:`PartAmp` is their
-resolved form, and the engine asks for one by the attack class it is about
-to price rather than by an item's name.
+Three registry schemas amplify each part they price rather than the running
+total, so they are not in the chain at all: :class:`PartAmp` is the resolved
+form of the two the engine asks for by the attack class it is about to price,
+and :func:`declared_magic_amp` reads the third, which restricts the damage
+class instead. Neither selector is asked by an item's name.
 
 Everything the engine takes from a declaration comes through
 :func:`amp_fields` — the fraction, the window bounds — and everything it
-*asks* of one comes through :class:`AmpSlot` or :class:`PartAmp`.  A question a rule does not answer raises; it never
-resolves to a zero.
+*asks* of one comes through :class:`AmpSlot` or :class:`PartAmp`.  A question
+a rule does not answer raises; it never resolves to a zero.
 """
 
 from __future__ import annotations
@@ -39,7 +40,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from ..ability_spec import AttackClass
+from ..ability_spec import AttackClass, DamageClass
 from ..item_behavior import (
     AbsoluteWindow,
     AfterTrigger,
@@ -72,7 +73,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import resolve_damage_effects
-from ..value_ref import resolve
+from ..value_ref import ValueRefError, resolve, resolve_flat
 
 # The field names a delta-amp rule compiles to.  A slot's magnitude is a
 # fraction of the pool it prices, never a multiplier: the multiplier is the
@@ -612,24 +613,81 @@ class PartAmp:
         return self.rules[0].owner
 
 
+EVERY_DAMAGE_CLASS: frozenset[DamageClass] = frozenset(DamageClass)
+EVERY_ATTACK_CLASS: frozenset[AttackClass] = frozenset(AttackClass)
+
+
+def _part_amps(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
+    """Every per-part amp *owners* bring, in build order, whatever it prices."""
+    return tuple(
+        rule
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DELTA_AMP and isinstance(rule.payload, PartAmpRule)
+    )
+
+
 def part_amp_rules(
     owners: Sequence[str], attack_class: AttackClass
 ) -> tuple[BehaviorRule, ...]:
     """Every per-part amp *owners* bring that prices *attack_class*.
 
-    The selector is the damage the engine is about to price, not an item
-    name: "what amplifies a basic attack" is a question the declaration
-    answers through ``typing.attack_classes``, and asking it that way is what
-    takes the two item names out of the engine.
+    The selector is the damage the engine is about to price, never an item
+    name.  A rule restricted to one *damage* class is not one of these — it
+    is :func:`damage_class_amp_rules`', and both readings multiply."""
+    return tuple(
+        rule
+        for rule in _part_amps(owners)
+        if rule.payload.typing.damage_classes == EVERY_DAMAGE_CLASS
+        and attack_class in rule.payload.typing.attack_classes
+    )
+
+
+def damage_class_amp_rules(
+    owners: Sequence[str], damage_class: DamageClass
+) -> tuple[BehaviorRule, ...]:
+    """Every per-part amp *owners* bring that prices *damage_class*.
+
+    Abyssal Mask's curse is the one today: it multiplies every magic packet
+    however it arrived, which is the attack-class selector's dual and never
+    its subset.
     """
     return tuple(
         rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.DELTA_AMP
-        and isinstance(rule.payload, PartAmpRule)
-        and attack_class in rule.payload.typing.attack_classes
+        for rule in _part_amps(owners)
+        if rule.payload.typing.attack_classes == EVERY_ATTACK_CLASS
+        and rule.payload.typing.damage_classes == frozenset({damage_class})
     )
+
+
+def declared_magic_amp(owners: Sequence[str]) -> float:
+    """What this build multiplies every magic packet by, from flat references:
+    ``1.0`` plus each declared magic-class share, summed in build order — the
+    running sum :meth:`PartAmp.multiplier` folds an attack-class amp with.
+    """
+    total = 1.0
+    for rule in damage_class_amp_rules(owners, DamageClass.MAGIC):
+        total += _flat_fraction(rule)
+    return total
+
+
+def _flat_fraction(rule: BehaviorRule) -> float:
+    """One per-part amp's share, resolved with no fight context to resolve at."""
+    magnitude = rule.payload.magnitude
+    if not isinstance(magnitude, Fixed):
+        raise DeltaAmpInterpretationError(
+            f"{rule.mechanic_id} declares a {type(magnitude).__name__} magnitude "
+            "and this accessor has no fight to resolve one against; read it "
+            "through resolve_part_amp, which is handed a build context"
+        )
+    try:
+        (fraction,) = resolve_flat((magnitude.value,))
+    except ValueRefError as exc:
+        raise DeltaAmpInterpretationError(
+            f"{rule.mechanic_id} declares a reference that needs a level or a "
+            "fight fact, and this accessor has neither"
+        ) from exc
+    return fraction
 
 
 def resolve_part_amp(
@@ -860,6 +918,8 @@ __all__ = [
     "StaticHolderAmps",
     "amp_fields",
     "magnitude_fraction",
+    "damage_class_amp_rules",
+    "declared_magic_amp",
     "part_amp_rules",
     "resolve_part_amp",
     "resolve_slot",

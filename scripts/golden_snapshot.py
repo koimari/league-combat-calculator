@@ -72,9 +72,7 @@ from src.calculator.item_behavior import (
     ThresholdDefenseRule,
 )
 from src.calculator.item_behavior_catalog import (
-    DELTA_AMP_UNMIGRATED_TAGS,
     behavior_rules,
-    registry_entries,
     rule_owners,
 )
 from src.calculator.item_support_effects import producer_item
@@ -1453,21 +1451,13 @@ def holder_amp_declarations():
 
     A family re-priced out of the pair engine's rows while no scenario arms an amp
     drops the holder's amplifier from every total that holds it, and a baseline in
-    which every amp is ``1.0`` observes only the case that cannot fail.
-
-    The tree declares these two ways, neither an item name: a per-part amp is a
-    :class:`PartAmpRule` keyed by its mechanic suffix, and the magic amp occupies
-    no chain slot, read as the ``DELTA_AMP_UNMIGRATED_TAGS`` tag it declares.
-    """
+    which every amp is ``1.0`` observes only the case that cannot fail.  Every one
+    is a :class:`PartAmpRule`, keyed by mechanic suffix and never by item name."""
     kinds: dict[str, set[str]] = {}
     for owner in sorted(rule_owners()):
         for rule in behavior_rules(owner):
             if isinstance(rule.payload, PartAmpRule):
                 kinds.setdefault(rule.mechanic_id.rsplit(".", 1)[-1], set()).add(owner)
-        for _registry, _family, entry in registry_entries(owner):
-            tag = str(entry.get("type", "")) if isinstance(entry, Mapping) else ""
-            if tag in DELTA_AMP_UNMIGRATED_TAGS:
-                kinds.setdefault(tag, set()).add(owner)
     return {kind: frozenset(owners) for kind, owners in sorted(kinds.items())}
 
 

@@ -20,7 +20,11 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import golden_snapshot as gs  # noqa: E402  (path is set above)
 
 from src.calculator import pipeline  # noqa: E402
-from src.calculator.interpreters.delta_amp import resolve_part_amp  # noqa: E402
+from src.calculator.interpreters.delta_amp import (  # noqa: E402
+    EVERY_DAMAGE_CLASS,
+    declared_magic_amp,
+    resolve_part_amp,
+)
 from src.calculator.item_behavior import (  # noqa: E402
     Basis,
     DefenseField,
@@ -769,11 +773,12 @@ class TestHolderAmpCoverage:
     def test_every_declared_amp_owner_produces_its_amp_in_the_engine(self):
         """The mapping is read from the declarations, and the engine agrees.
 
-        Each half is checked against the code that *applies* the amp rather
-        than against a second copy of the join: a per-part amp must resolve
-        for the attack class its own declaration types, and a magic amp must
-        reach ``resolve_damage_effects``.  A hand list in the harness, or a
-        declaration that stopped producing an amp, fails here.
+        Each amp is checked against the code that *applies* it rather than
+        against a second copy of the join, and through the selector its own
+        typing restricts: an attack-class amp must resolve for every class it
+        types, a damage-class amp must raise the multiplier its class is
+        priced by.  A hand list in the harness, or a declaration that stopped
+        producing an amp, fails here.
         """
         amps = gs.holder_amp_declarations()
         assert amps
@@ -786,10 +791,11 @@ class TestHolderAmpCoverage:
                     if isinstance(rule.payload, PartAmpRule)
                     and rule.mechanic_id.endswith(kind)
                 ]
-                if not rules:
-                    assert resolve_damage_effects([{"name": owner}]).magic_amp > 1.0
-                    continue
+                assert rules, f"{kind} names no declaration on {owner}"
                 for rule in rules:
+                    if rule.payload.typing.damage_classes != EVERY_DAMAGE_CLASS:
+                        assert declared_magic_amp([owner]) > 1.0
+                        continue
                     for attack_class in rule.payload.typing.attack_classes:
                         resolved = resolve_part_amp(
                             [owner],
