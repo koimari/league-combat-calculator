@@ -110,6 +110,7 @@ from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
 
 from tests import item_probe
+from tests.app_config import app_config
 
 BOOTS = "Ionian Boots of Lucidity"
 ITEM_ID = 3158
@@ -661,11 +662,7 @@ def test_app_boots_slot_fight_stays_green():
     the champion_stats carry the +10 ability haste, and a one-rotation
     fight deals exactly the no-boots total (zero Ionian Insight
     contribution through the app path)."""
-    previous_testing = app_module.app.config.get("TESTING")
-    previous_rate = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["TESTING"] = True
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    try:
+    with app_config(RATE_LIMIT_ENABLED=False):
         client = app_module.app.test_client()
         base = {
             "champion": "Ahri",
@@ -693,6 +690,3 @@ def test_app_boots_slot_fight_stays_green():
         assert with_boots["champion_stats"]["ability_haste"] == pytest.approx(
             plain["champion_stats"]["ability_haste"] + ABILITY_HASTE_FLAT
         )
-    finally:
-        app_module.app.config["TESTING"] = previous_testing
-        app_module.app.config["RATE_LIMIT_ENABLED"] = previous_rate

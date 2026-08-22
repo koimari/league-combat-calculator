@@ -109,7 +109,6 @@ def _fight(
 
 
 def _api(option: dict):
-    app_module.app.config["TESTING"] = True
     return app_module.app.test_client().post(
         "/api/calculate",
         json={

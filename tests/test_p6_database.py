@@ -314,11 +314,11 @@ def test_cache_invalidation_clears_everything(sqlite_database):
     assert db.cache_get(key) is None
 
 
-def test_cache_consulted_by_calculate_when_configured(sqlite_database):
+def test_cache_consulted_by_calculate_when_configured(sqlite_database, monkeypatch):
     """With DATABASE_URL set and TESTING off, /api/calculate serves the
     second identical request from CachedResult (hit) after computing and
     storing on the first (miss)."""
-    app_module.app.config["TESTING"] = False
+    monkeypatch.setitem(app_module.app.config, "TESTING", False)
     client = _client()
     payload = {
         "champion": "Ahri",

@@ -53,24 +53,13 @@ def _parse(champion, *, level=18, stats=None, options=None, ranks=None):
 
 
 def _run_api_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None):
-    # TESTING is scoped to this request and restored afterwards: the flag
-    # is session-global, and a module-level assignment would leak into
-    # every later test file (the rate-limiter short-circuits on TESTING).
-    previous_testing = app.config.get("TESTING")
-    app.config["TESTING"] = True
-    try:
-        return _post_fight(
-            champion,
-            enemy=enemy,
-            duration=duration,
-            allies=allies,
-            ranks=ranks,
-        )
-    finally:
-        if previous_testing is None:
-            app.config.pop("TESTING", None)
-        else:
-            app.config["TESTING"] = previous_testing
+    return _post_fight(
+        champion,
+        enemy=enemy,
+        duration=duration,
+        allies=allies,
+        ranks=ranks,
+    )
 
 
 def _post_fight(champion, *, enemy="Aatrox", duration=6, allies=None, ranks=None):

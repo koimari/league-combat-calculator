@@ -175,14 +175,12 @@ def _kernel_packet(time, amount, attacker, target, source="Q", sequence=0):
 
 
 def _calculate(payload: dict) -> dict:
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()["combat"]
 
 
 def _calculate_status(payload: dict) -> tuple[int, dict]:
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/calculate", json=payload)
     try:
         body = response.get_json()
@@ -1230,7 +1228,6 @@ def test_public_damage_events_carry_true_type_and_exact_precision():
 def test_api_config_exposes_redemption_schema_and_revision():
     """/api/config serves the Intervention active_seconds schema and the
     sourced revision 4015392 for Redemption."""
-    app.config["TESTING"] = True
     response = app.test_client().get("/api/config")
     assert response.status_code == 200
     block = response.get_json()["item_options"][REDEMPTION]

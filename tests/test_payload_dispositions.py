@@ -256,7 +256,6 @@ def _calculate(request: Mapping | None = None) -> Mapping:
     """One live ``/api/calculate`` response, through the app it is served by."""
     from src.app import app
 
-    app.config["TESTING"] = True
     app.config["RATE_LIMIT_ENABLED"] = False
     response = app.test_client().post(
         "/api/calculate", json=dict(request or CALCULATE_REQUEST)
@@ -479,7 +478,6 @@ def _optimize() -> Mapping:
     """One live ``/api/optimize`` response, through the app it is served by."""
     from src.app import app
 
-    app.config["TESTING"] = True
     app.config["RATE_LIMIT_ENABLED"] = False
     response = app.test_client().post("/api/optimize", json=dict(OPTIMIZE_REQUEST))
     assert response.status_code == 200

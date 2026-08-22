@@ -22,7 +22,6 @@ from tests.survival_probe import survival_of
 
 
 def _calculate(payload: dict) -> dict:
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()["combat"]
@@ -41,7 +40,6 @@ def _events(
 
 
 def _reject(payload: dict) -> tuple[int, dict]:
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/calculate", json=payload)
     return response.status_code, response.get_json()
 

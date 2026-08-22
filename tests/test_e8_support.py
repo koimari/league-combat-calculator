@@ -48,7 +48,6 @@ from src.calculator.stats import calculate_total_stats
 
 def _roster_combat(champion: str, *, level: int = 18, ap: int = 0, ally: str = "Jinx"):
     """Run /api/calculate with *champion* as main and one ally in the roster."""
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": champion,
         "level": level,
@@ -301,7 +300,6 @@ def test_seraphine_w_publishes_the_priced_shield_and_no_zero_pulse_row():
     the roster is the sourced caster-and-allies shield, carrying its own atom
     receipt.  Per-recipient pricing is the deferred follow-up.
     """
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -348,7 +346,6 @@ def test_seraphine_w_option_resurrects_no_zero_pulse_row_on_the_roster():
     exists only to drop the shield gate, and dropping a gate must not turn a
     refusal into a published packet.
     """
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -568,7 +565,6 @@ def test_support_caster_in_allies_list_targets_main_ledger():
     The roster path supports enemies + allies lists; the ally side emits its
     sourced support packets toward the main when ally_effects_enabled.
     """
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": "Ahri",
         "level": 18,

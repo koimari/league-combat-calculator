@@ -110,7 +110,6 @@ def test_roster_actor_without_cast_order_uses_module_default_not_main_override()
 
 
 def test_frozen_heart_target_aura_reduces_main_swing_schedule():
-    app.config["TESTING"] = True
     payload = {
         "champion": "Ahri",
         "level": 18,
@@ -686,7 +685,6 @@ def test_warwick_and_irelia_use_explicit_wiki_heal_attributes():
 
 def test_dusk_and_dawn_self_heal_mutates_main_participant_health_ledger():
     """Spellblade self-heal is applied at its authored proc timestamp."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -728,7 +726,6 @@ def test_life_steal_keeps_pair_target_attribution_at_shared_timestamps():
     must retain the target that generated each packet rather than being
     collapsed by a source/time deduplication key.
     """
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -923,7 +920,6 @@ def test_target_unending_multitarget_heals_have_pair_receipts_and_dead_targets_s
     ids and trigger links therefore need pair-local identity; a dead teammate's
     skipped pulse must not still grant the defender a second self-heal.
     """
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -981,7 +977,6 @@ def test_target_unending_multitarget_heals_have_pair_receipts_and_dead_targets_s
 
 
 def test_mundo_regeneration_is_actor_wide_and_deduplicated_in_a_roster():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1025,7 +1020,6 @@ def test_fight_result_promotes_the_same_ordered_damage_ledger_used_by_shields():
 
 
 def test_api_includes_enemy_output_and_main_effective_health():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1054,7 +1048,6 @@ def test_api_includes_enemy_output_and_main_effective_health():
 
 def test_coupled_akali_orianna_receipt_is_bidirectional():
     """The Akali/Orianna regression keeps both outgoing event streams."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1099,7 +1092,6 @@ def test_enemy_hits_off_composes_zero_enemy_damage():
     coupled receipt carries no enemy-authored event at all — pair fights,
     autos, and Thornmail strike-backs included — while the main champion's
     own output is composed exactly as before."""
-    app.config["TESTING"] = True
     payload = {
         "champion": "Akali",
         "level": 12,
@@ -1145,7 +1137,6 @@ def test_enemy_hits_off_composes_zero_enemy_damage():
 
 def _shadowflame_scenario(items):
     """The enemy-hits-off coupled fight this packet is measured on."""
-    app.config["TESTING"] = True
     return app.test_client().post(
         "/api/calculate",
         json={
@@ -1279,7 +1270,6 @@ def test_cinderbloom_preview_keeps_one_packet_per_trigger_time():
 
 
 def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1331,7 +1321,6 @@ def test_syndra_100_stack_r_executes_in_the_coupled_timeline():
 
 def test_coupled_tank_vs_tank_receipt_keeps_both_survival_rows():
     """A tank-vs-tank fight exposes outgoing and incoming state for both sides."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1368,7 +1357,6 @@ def test_coupled_tank_vs_tank_receipt_keeps_both_survival_rows():
 
 def test_five_participant_coupled_receipt_has_every_outgoing_stream():
     """The five-participant regression preserves all selected event streams."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1425,7 +1413,6 @@ def test_five_participant_coupled_receipt_has_every_outgoing_stream():
 
 
 def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1455,7 +1442,6 @@ def test_api_includes_sourced_lulu_ally_shield_in_main_ehp():
 
 
 def test_api_exposes_native_utility_dimensions_without_converting_them_to_tdd():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1487,7 +1473,6 @@ def test_api_exposes_native_utility_dimensions_without_converting_them_to_tdd():
 
 
 def test_api_exposes_stridebreaker_slow_and_movement_receipts():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1513,7 +1498,6 @@ def test_api_exposes_stridebreaker_slow_and_movement_receipts():
 
 
 def test_secondary_packets_use_the_selected_roster_index_and_are_certified():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1550,7 +1534,6 @@ def test_secondary_packets_use_the_selected_roster_index_and_are_certified():
 
 
 def test_redemption_active_emits_sourced_area_true_damage_and_heal_packets():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1594,7 +1577,6 @@ def test_redemption_active_emits_sourced_area_true_damage_and_heal_packets():
 
 
 def test_public_damage_events_follow_ledger_time_order():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1618,7 +1600,6 @@ def test_public_damage_events_follow_ledger_time_order():
 
 
 def test_main_support_targets_selected_ally_and_uses_requested_rank():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1664,7 +1645,6 @@ def test_main_support_targets_selected_ally_and_uses_requested_rank():
 
 def test_sona_aria_supports_sona_and_the_selected_ally():
     """Sona W's self heal/shield and one wounded-ally packet are explicit."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1706,7 +1686,6 @@ def test_sona_aria_supports_sona_and_the_selected_ally():
 
 def test_seraphine_surround_sound_includes_caster_and_all_selected_allies():
     """Area support packets include the caster as well as every ally."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -1752,7 +1731,6 @@ def test_seraphine_surround_sound_includes_caster_and_all_selected_allies():
 
 
 def test_enemy_self_shield_is_present_in_the_coupled_timeline():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -2122,7 +2100,6 @@ def test_aatrox_cast_order_changes_the_authored_cast_sequence():
 
 
 def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -2152,7 +2129,6 @@ def test_coupled_timeline_stops_output_after_main_champion_is_defeated():
 
 def test_coupled_timeline_reprices_current_health_damage_for_each_attacker():
     """A second Mundo Q must see the damage already dealt by the first one."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -2189,7 +2165,6 @@ def test_coupled_timeline_reprices_current_health_damage_for_each_attacker():
 
 
 def test_coupled_timeline_caps_overkill_and_skips_post_death_events():
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -2262,7 +2237,6 @@ def _bis_request(subject_team: str) -> dict:
 
 
 def test_bis_endpoint_scores_main_from_damage_and_effective_health():
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/bis", json=_bis_request("main"))
     assert response.status_code == 200
     body = response.get_json()
@@ -2490,7 +2464,6 @@ def test_bis_excludes_audited_item_timing_before_ranking(monkeypatch):
 
 
 def test_bis_endpoint_keeps_ally_and_enemy_in_the_same_timeline():
-    app.config["TESTING"] = True
     client = app.test_client()
     ally = client.post("/api/bis", json=_bis_request("ally"))
     enemy = client.post("/api/bis", json=_bis_request("enemy"))
@@ -2683,7 +2656,6 @@ def test_enemy_bis_rank_key_is_deterministic_and_event_derived():
 
 
 def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
-    app.config["TESTING"] = True
     payload = _bis_request("enemy")
     payload["enemies"][0].pop("role")
     response = app.test_client().post("/api/bis", json=payload)
@@ -2719,7 +2691,6 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
 
 def test_roster_bis_includes_event_certified_target_defenses():
     """Event-certified target defenses no longer disappear from the BIS pool."""
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
     body = response.get_json()
@@ -2735,7 +2706,6 @@ def test_roster_bis_includes_event_certified_target_defenses():
 
 def test_roster_bis_keeps_supported_mid_boot_target_in_the_candidate_pool():
     """A modeled mid-lane boot must not blank the entire target BIS panel."""
-    app.config["TESTING"] = True
     payload = _bis_request("enemy")
     payload["enemies"][0]["role"] = "mid"
     payload["enemies"][0]["role_quest_complete"] = True
@@ -2756,7 +2726,6 @@ def test_roster_bis_keeps_supported_mid_boot_target_in_the_candidate_pool():
 
 
 def test_bis_never_labels_partial_event_order_as_certified():
-    app.config["TESTING"] = True
     payload = {
         # Ziggs' Short Fuse cadence is now sourced and event-certified.  The
         # assertion below remains an invariant: if any candidate is partial,
@@ -2799,7 +2768,6 @@ def test_bis_never_labels_partial_event_order_as_certified():
 
 
 def test_explicitly_disabled_ally_effects_are_not_injected_into_ehp():
-    app.config["TESTING"] = True
     payload = _bis_request("main")
     payload["allies"][0]["ally_effects_enabled"] = False
     response = app.test_client().post("/api/calculate", json=payload)
@@ -4956,7 +4924,6 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
 def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
     """Main with Bramble Vest: enemy autos generate thorns events attributed
     to main, and the enemy is Grievous-Wounded."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -4992,7 +4959,6 @@ def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
 
 def test_bramble_vest_retaliates_against_forced_basic_attack_casts():
     """Empowered attacks carried by an ability row still trigger Thorns."""
-    app.config["TESTING"] = True
     response = app.test_client().post(
         "/api/calculate",
         json={
@@ -6060,7 +6026,6 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
 
     def test_a_champion_wound_publishes_the_instant_its_window_closes(self) -> None:
         """Varus E is the third arming site, and it now annotates like the others."""
-        app.config["TESTING"] = True
         response = app.test_client().post(
             "/api/calculate",
             json={
@@ -6130,7 +6095,6 @@ class TestSelfStateEventIdsNameTheirOwner:
 
     def test_two_alistars_publish_two_distinct_owner_named_ids(self) -> None:
         """The regression: one panel, two R packets, two ids."""
-        app.config["TESTING"] = True
         response = app.test_client().post(
             "/api/calculate", json=self._duplicate_alistar_roster()
         )
@@ -6157,7 +6121,6 @@ class TestSelfStateEventIdsNameTheirOwner:
 
     def test_every_published_panel_id_is_unique_within_its_panel(self) -> None:
         """The invariant the fold exists to hold, over all three panels."""
-        app.config["TESTING"] = True
         response = app.test_client().post(
             "/api/calculate", json=self._duplicate_alistar_roster()
         )
