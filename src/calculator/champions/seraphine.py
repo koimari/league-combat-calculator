@@ -76,8 +76,14 @@ Roadmap session (2026-08-21): closes both remaining out_of_scope slots
 
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+)
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -117,6 +123,10 @@ _NOTE_CAP = 4
 _W_MOVE_SPEED_PERCENT = 20.0
 _W_MOVE_SPEED_PER_100_AP = 2.0
 
+# The grant's window, read as an atom rather than pinned: the shield and
+# the movement share one sentence and one duration.
+_W_WINDOW_SOURCE = "Seraphine.W[0].effects[0].description"
+
 
 def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: the empowered attack fires every active Note at the target."""
@@ -144,6 +154,30 @@ def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
 _stage_presence.phase = ONHIT
 
 
+def _w_window_seconds(ctx: SlotCtx) -> float:
+    """W's sourced grant window, read as a typed atom.
+
+    The cached sentence shields "for 2.5 seconds. For the same duration,
+    she also gains ... bonus movement speed" — one window, so the
+    movement rides the shield's own ``timing.active_duration`` atom
+    rather than a second number.
+    """
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    atom = required_ability_atom(
+        ctx.champion_name,
+        champion_data,
+        "W",
+        query=AbilityAtomQuery(
+            source=_W_WINDOW_SOURCE,
+            behavior="timing",
+            evidence_prefix="active duration@",
+        ),
+    )
+    if [str(unit).strip().lower() for unit in atom["units"]] != ["s"]:
+        raise ValueError("Seraphine W active-duration atom must use seconds")
+    return ranked_ability_atom_value(atom, 1, source=_W_WINDOW_SOURCE)
+
+
 def _surround_sound(packet_w):
     """W: the shield is the scanner's; the cast's own movement is ours.
 
@@ -160,14 +194,20 @@ def _surround_sound(packet_w):
         granted = _W_MOVE_SPEED_PERCENT + _W_MOVE_SPEED_PER_100_AP * (
             ctx.stat("ability_power") / 100.0
         )
-        entry["stat_buff"] = {"move_speed_percent": granted}
+        # The cast expires, and a stat_buff is one scalar for the whole
+        # fight, so the grant lands time-weighted by the share of the
+        # window it covers (module_helpers.buff_window_share).
+        window = _w_window_seconds(ctx)
+        published = granted * buff_window_share(ctx, window)
+        entry["stat_buff"] = {"move_speed_percent": published}
         entry["detail"] = (
             f"Shield only, priced by the ally-support scanner. The cast's "
             f"own {_W_MOVE_SPEED_PERCENT:g}% "
             f"(+ {_W_MOVE_SPEED_PER_100_AP:g}% per 100 AP) grant "
-            f"({granted:g}% at this build) is published as a "
+            f"({granted:g}% at this build, {published:g}% over the fight "
+            f"window at the sourced {window:g}s) is published as a "
             "move_speed_percent stat buff, a term in the shared "
-            "movement-speed fold; its 2.5s decay, its 2-stack rule and the "
+            "movement-speed fold; its decay, its 2-stack rule and the "
             "ally half of the grant are state."
         )
         return entry

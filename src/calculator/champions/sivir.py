@@ -73,6 +73,7 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -277,11 +278,17 @@ def _on_the_hunt(packet_r):
         duration, _ = required_ranked_attribute_atom(
             "Sivir", champion_data, "R", "Buff Duration", rank, modifier_index=0
         )
-        entry["stat_buff"] = {"move_speed_percent": percent}
+        # The hunt expires, and a stat_buff is one scalar for the whole
+        # fight, so the grant lands time-weighted by the share of the
+        # window its own cached Buff Duration covers.  Reading that row
+        # for the detail string alone left the buff duration-blind: it
+        # published the same number in a 5s fight and a 30s one.
+        published = percent * buff_window_share(ctx, duration)
+        entry["stat_buff"] = {"move_speed_percent": published}
         entry["detail"] = (
             f"On the Hunt grants {percent:g}% bonus movement speed for "
-            f"{duration:g}s, published as a move_speed_percent stat buff at "
-            "the fight-start boundary every stat_buff has. The ally share "
+            f"{duration:g}s ({published:g}% over the fight window), "
+            "published as a move_speed_percent stat buff. The ally share "
             "and the 0.5s basic-ability cooldown refund stay unmodeled."
         )
         return entry
@@ -366,17 +373,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "- only the gitignored binary's ByCharLevelBreakpoints does. (2) The "
     "grant decays to zero across the sourced 1.5 second window and "
     "refreshes on hit, and no cached row carries its uptime or average, "
-    "so a constant full-value buff would over-credit it - and the one "
-    "live consumer of that stat is item_effects' "
-    "adaptive_force_per_total_move_speed (Swiftmarch), where an "
-    "over-credited movement number becomes damage. It stays state.",
+    "so a constant full-value buff would over-credit the one number the "
+    "slot would publish. (An ability stat_buff does NOT become damage "
+    "here: Swiftmarch's adaptive_force_per_total_move_speed is resolved "
+    "inside calculate_total_stats from the BUILD's move speed, before "
+    "any cast, so the over-credit would land on the published "
+    "champion_stats and the end-of-fight item_state_receipts, not on a "
+    "damage row.) It stays state.",
     "R (On the Hunt) publishes its sourced 20/25/30% bonus movement speed "
     "(atom ability.bonus _movement _speed) as a move_speed_percent "
     "stat_buff, the shared channel damage._apply_stat_buff_ultimates "
     "re-folds through stats.resolve_move_speed so the movement soft caps "
-    "are re-applied instead of bypassed (the Teemo-W wiring). The buff "
-    "applies at the same fight-start boundary every stat_buff has; its "
-    "sourced 8/10/12 second duration by rank covers the modeled windows. "
+    "are re-applied instead of bypassed (the Teemo-W wiring). It is "
+    "time-weighted by buff_window_share over its own sourced Buff "
+    "Duration row (8/10/12s by rank): a stat_buff is one scalar for the "
+    "whole fight, and reading that row for the detail string alone left "
+    "the buff duration-blind, publishing the same number in a 5s fight "
+    "and a 30s one. "
     "The slot still stays out_of_scope, NOT no_damage (the Olaf-R rule: "
     "a real, sourced, unmodeled mechanic is out_of_scope). There is no "
     "damage to miss - the binary's SivirR carries an empty "

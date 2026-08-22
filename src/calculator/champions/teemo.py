@@ -42,6 +42,7 @@ import dataclasses
 from typing import Any
 
 from .engine import SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value
 from .module_contract import coverage
@@ -102,6 +103,14 @@ def _noxious_trap(packet_r):
 
 PACKET_SHA256 = "82f4b06f86d7d9d576a27f3e9e4e639261e0bb5f50c969cd0592a0ff8459a2f4"
 
+# HARDCODED: verify on patch updates — the Udyr-E / Singed-R precedent, a
+# window that is cached PROSE rather than an atom.  W's ACTIVE doubles the
+# grant "for 3 seconds" by the second effect's description.  The slot's one
+# ``timing.active_duration`` atom reads 5.0 and must NOT be used: it is the
+# FIRST effect's passive condition ("after 5 seconds without taking ...
+# damage"), an idle requirement rather than the cast's window.
+_W_ACTIVE_SECONDS = 3.0
+
 
 def _move_quick(packet_w):
     """W: movement only — a sourced zero-enemy-damage row.
@@ -126,12 +135,18 @@ def _move_quick(packet_w):
         # fight never satisfies.  It rides the cast like every other
         # steroid the engine prices, so a rotation that never casts W
         # earns none of it.
-        entry["stat_buff"] = {"move_speed_percent": active_ms}
+        # The cast expires, and a stat_buff is one scalar for the whole
+        # fight, so the grant lands time-weighted by the share of the
+        # window it covers (module_helpers.buff_window_share).
+        published_ms = active_ms * buff_window_share(ctx, _W_ACTIVE_SECONDS)
+        entry["stat_buff"] = {"move_speed_percent": published_ms}
         entry["detail"] = (
             f"Movement only: {passive_ms:g}% bonus movement speed after 5s "
-            f"undamaged, doubled to {active_ms:g}% for 3s on cast. The "
-            "cast's grant is published as a move_speed_percent stat buff, "
-            "which is a term in the shared movement-speed fold."
+            f"undamaged, doubled to {active_ms:g}% for "
+            f"{_W_ACTIVE_SECONDS:g}s on cast ({published_ms:g}% over the "
+            "fight window). The cast's grant is published as a "
+            "move_speed_percent stat buff, which is a term in the shared "
+            "movement-speed fold."
         )
         return entry
 
@@ -252,7 +267,13 @@ ASSUMPTIONS.extend(
     [
         "W (Move Quick) deals no damage; its ACTIVE grant "
         "(24/32/40/48/56% for 3s) is published as a move_speed_percent "
-        "stat buff, priced for the fight the way every cast steroid is. "
+        "stat buff, time-weighted by buff_window_share over that 3-second "
+        "window: a stat_buff is one scalar for the whole fight, so an "
+        "unweighted term would read the same in a 5s fight and a 30s one. "
+        "The window is cached PROSE, not an atom (the slot's one "
+        "timing.active_duration atom reads 5.0 and is the PASSIVE's "
+        "idle condition, not the cast's window), so it is a HARDCODED "
+        "module constant — the Udyr-E / Singed-R precedent. "
         "The passive branch is withheld: its 5s-undamaged condition is a "
         "state a fight never enters. Move-speed-reading item passives "
         "(Swiftmarch's adaptive force) are resolved from the build's "

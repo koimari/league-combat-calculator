@@ -149634,7 +149634,7 @@
               "count": null,
               "crit_damage_per_hit": null,
               "damage_per_hit": null,
-              "detail": "Movement only: 28% bonus movement speed after 5s undamaged, doubled to 56% for 3s on cast. The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
+              "detail": "Movement only: 28% bonus movement speed after 5s undamaged, doubled to 56% for 3s on cast (21% over the fight window). The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
               "name": "Move Quick",
               "non_crit_damage_per_hit": null,
               "num_crits": null,
@@ -149768,9 +149768,9 @@
             "magic_penetration_percent": 0.0,
             "magic_resistance": 52,
             "max_mana": 759,
-            "move_speed": 487.4,
+            "move_speed": 399.3,
             "move_speed_flat": 330.0,
-            "move_speed_percent": 56.0,
+            "move_speed_percent": 21.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 3.45,
             "tenacity_percent": 0.0,
@@ -150282,11 +150282,11 @@
       "numeric_leaves": 31647,
       "sections": "coupled_scenarios"
     },
-    "git_head": "8c7d82983302b09b072f2558f195904d918b5f98",
+    "git_head": "07713e7d7ad98d5470abfc1cae136a8db0a1d70c",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 23,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "d537c0a58f1dd40e1c7f1b78129dc74f73c14bbb"
+    "src_tree_sha": "efd776c22d59b5adf1b08edc6e1e8933e4c25be1"
   }
 }

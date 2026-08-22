@@ -19107,7 +19107,7 @@
           "cast_time": 0.75,
           "cooldown": 22.0,
           "damage_type": "physical",
-          "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed, published as a move_speed_percent stat buff \u2014 a term in the shared movement-speed fold.  The untargetability and the Packmate vanish/reappear are state.",
+          "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed (25% over the window), published as a move_speed_percent stat buff \u2014 a term in the shared movement-speed fold.  The untargetability and the Packmate vanish/reappear are state.",
           "name": "The Call of the Pack",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -24549,7 +24549,7 @@
         },
         "passive": {
           "damage_type": "magic",
-          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); no Overheat window is declared (overheat_windows = 0) and no empowered swing implies one, so neither the bonus attack speed nor the ability lockout applies; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
+          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); no Overheat window is declared (overheat_windows = 0), so neither the bonus attack speed nor the ability lockout applies; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
           "name": "Junkyard Titan",
           "parts": [],
           "target_max_health_sensitive": true,
@@ -25631,7 +25631,7 @@
           "cast_time": 0.25,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Shield only, priced by the ally-support scanner. The cast's own 20% (+ 2% per 100 AP) grant (20% at this build) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold; its 2.5s decay, its 2-stack rule and the ally half of the grant are state.",
+          "detail": "Shield only, priced by the ally-support scanner. The cast's own 20% (+ 2% per 100 AP) grant (20% at this build, 20% over the fight window at the sourced 2.5s) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold; its decay, its 2-stack rule and the ally half of the grant are state.",
           "name": "Surround Sound",
           "parts": [],
           "rank": 3,
@@ -27159,7 +27159,7 @@
           "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "On the Hunt grants 25% bonus movement speed for 10s, published as a move_speed_percent stat buff at the fight-start boundary every stat_buff has. The ally share and the 0.5s basic-ability cooldown refund stay unmodeled.",
+          "detail": "On the Hunt grants 25% bonus movement speed for 10s (25% over the fight window), published as a move_speed_percent stat buff. The ally share and the 0.5s basic-ability cooldown refund stay unmodeled.",
           "name": "On the Hunt",
           "parts": [],
           "rank": 2,
@@ -29726,7 +29726,7 @@
         "W": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Movement only: 20% bonus movement speed after 5s undamaged, doubled to 40% for 3s on cast. The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
+          "detail": "Movement only: 20% bonus movement speed after 5s undamaged, doubled to 40% for 3s on cast (40% over the fight window). The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
           "name": "Move Quick",
           "parts": [],
           "rank": 3,
@@ -31198,7 +31198,7 @@
           ],
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The stance's own grant (25% at this build) is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold; the decayed row and the Awaken recast's per-level bonus are not published.",
+          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The stance's own grant (25% at this build, 25% over the fight window) is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold; the decayed row and the Awaken recast's per-level bonus are not published.",
           "name": "Blazing Stampede",
           "parts": [],
           "rank": 1,
@@ -52876,14 +52876,14 @@
       "numeric_leaves": 46179,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "c8e88a404072feb91bc9903e0318e7f679624365",
+    "git_head": "07713e7d7ad98d5470abfc1cae136a8db0a1d70c",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "dc31f169947293372173794fffa692046f9ae4e4"
+    "src_tree_sha": "efd776c22d59b5adf1b08edc6e1e8933e4c25be1"
   },
   "registered_champion_fights": {
     "Aatrox": {

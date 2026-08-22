@@ -57,11 +57,13 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
+from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions.seraphine import (
     ASSUMPTIONS,
     _MAX_NOTES,
     _W_MOVE_SPEED_PER_100_AP,
     _W_MOVE_SPEED_PERCENT,
+    _W_WINDOW_SOURCE,
 )
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
@@ -457,34 +459,59 @@ class TestSurroundSoundMovementSpeedRidesTheSharedFold:
             _W_MOVE_SPEED_PERCENT + _W_MOVE_SPEED_PER_100_AP * 3.0
         )
 
-    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
-        """Abilities, items and runes all land in one term list."""
-        data = copy.deepcopy(_SERAPHINE)
-        build = calculate_total_stats(data, 18, [])
-        result = run_fight(
-            data,
+    @staticmethod
+    def _fight_move_speed(seconds: float) -> float:
+        return run_fight(
+            copy.deepcopy(_SERAPHINE),
             18,
             [],
             FightParams(
                 target_health=2000.0,
                 target_armor=100.0,
                 target_magic_resistance=50.0,
-                fight_duration_seconds=10.0,
+                fight_duration_seconds=seconds,
                 ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
                 deterministic=True,
             ),
-        )
+        )["champion_stats"]["move_speed"]
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        build = calculate_total_stats(copy.deepcopy(_SERAPHINE), 18, [])
         granted = _W_MOVE_SPEED_PERCENT + _W_MOVE_SPEED_PER_100_AP * (
             build["ability_power"] / 100.0
         )
-        buffed = result["champion_stats"]["move_speed"]
+        # The cast lasts the sourced 2.5s, so a 10s fight earns a quarter.
+        share = 2.5 / 10.0
+        buffed = self._fight_move_speed(10.0)
 
         assert buffed == pytest.approx(
             resolve_move_speed(
-                build["move_speed_flat"], build["move_speed_percent"] + granted
+                build["move_speed_flat"],
+                build["move_speed_percent"] + granted * share,
             )
         )
         assert buffed > build["move_speed"]
+
+    def test_the_window_is_the_shields_own_sourced_atom(self):
+        """One sentence, one duration — read, never pinned as a literal."""
+        atoms = [
+            atom
+            for atom in _ability_atoms("Seraphine", _SERAPHINE)["W"]
+            if atom["atom_id"] == "timing.active_duration"
+        ]
+        assert [atom["values"] for atom in atoms] == [[2.5]]
+        assert [atom["units"] for atom in atoms] == [["s"]]
+        assert atoms[0]["source"] == _W_WINDOW_SOURCE
+        description = _WIKI["abilities"]["W"][0]["effects"][0]["description"]
+        assert "for 2.5 seconds" in description
+        assert "For the same duration" in description
+
+    def test_the_grant_is_weighted_by_that_window(self):
+        """A 2.5s cast must not read the same in a 5s fight and a 30s one."""
+        assert self._fight_move_speed(5.0) == pytest.approx(363.0)
+        assert self._fight_move_speed(10.0) == pytest.approx(346.5)
+        assert self._fight_move_speed(30.0) == pytest.approx(335.5)
 
     def test_the_ally_half_stays_withheld(self):
         # Two assumptions mention Surround Sound (the older heal-pulse note

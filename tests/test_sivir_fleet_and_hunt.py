@@ -18,17 +18,18 @@ each of 6/11/16/18 = 75) so the "it is only movement speed" claim is
 measured, not asserted. This is the Vayne-P / Kalista-P / Pyke-P shape:
 sourced, non-damaging, therefore ``no_damage``.
 
-**The movement grant is deliberately not a ``stat_buff``**, and the
-reason is arithmetic rather than editorial.
-``_apply_stat_buff_ultimates`` adds the buff straight onto
-``champion_stats["move_speed"]``, which has ALREADY been through
-``stats.apply_movement_speed_soft_caps``. Above 415 raw movement speed
-the real grant is worth 0.8x what the channel would credit (0.5x above
-490), and the one live consumer of that stat is ``item_effects``'
-``adaptive_force_per_total_move_speed`` (Swiftmarch) — so an
-over-credited movement number turns into DAMAGE.
-``TestMovementSpeedIsNotStatBuffed`` measures the 0.8x/0.5x gap off the
-real soft-cap function so the argument cannot rot into folklore.
+**P's movement grant is still not a ``stat_buff``, but the channel is
+no longer the reason.** The old argument was that
+``_apply_stat_buff_ultimates`` added onto an already-soft-capped
+``champion_stats["move_speed"]``; CF9's fold re-applies the caps, and
+``test_the_channel_itself_is_no_longer_the_blocker`` pins that the
+argument is dead. What survives is the CACHE: P's magnitude is a level
+ladder no cached row can index, and the grant decays to zero over 1.5s
+with no cached uptime. An over-credit would land on the published
+``champion_stats`` and the end-of-fight ``item_state_receipts``, NOT on
+a damage row — Swiftmarch's ``adaptive_force_per_total_move_speed`` is
+resolved inside ``calculate_total_stats`` from the BUILD's move speed,
+before any cast.
 
 **R stays ``out_of_scope``, and that is not laziness.** The Olaf-R rule:
 a real, sourced, unmodeled mechanic is ``out_of_scope``, never
@@ -39,9 +40,9 @@ the kernel rather than by quoting the docstring:
 
 * the rank-scaled bonus movement speed is an additive PERCENT;
   ``calculate_total_stats`` publishes the ``move_speed_flat`` /
-  ``move_speed_percent`` pair — ``TestOnTheHuntKernelGaps`` asserts the
-  decomposition exists to compose against, and the slot is not yet
-  wired onto it;
+  ``move_speed_percent`` pair the slot now composes against, weighted
+  by its own cached ``Buff Duration`` — ``TestOnTheHuntMovementIsWired``
+  pins both the fold and the weighting;
 * ``on_attack_cooldown_refund`` is a field of
   ``item_effects.CooldownProcEffect`` (the item-proc scheduler's
   surface), so there is no ability-cooldown-refund channel a champion
@@ -271,9 +272,12 @@ class TestMovementSpeedIsNotStatBuffed:
         assert "Uptime" not in attributes and attributes == ["Per-Level Scaling"]
 
     def test_the_over_credit_would_become_adaptive_force(self):
-        # Naming the consumer is the whole reason the buff is withheld:
-        # Swiftmarch converts TOTAL movement speed into adaptive force, so
-        # a 12-point over-credit is invented damage, not cosmetics.
+        # Swiftmarch converts TOTAL movement speed into adaptive force,
+        # so an over-credited number is not cosmetic where this accessor
+        # reads it. Scope note: an ABILITY stat_buff never reaches this
+        # call on the damage path — calculate_total_stats resolves it
+        # from the build's move speed before any cast, and the fight's
+        # item_state_receipts re-read it only to publish a receipt.
         items = [{"name": "Swiftmarch"}]
         honest = swiftmarch_adaptive_force(items, total_move_speed=463.0)
         over_credited = swiftmarch_adaptive_force(items, total_move_speed=475.0)
@@ -393,6 +397,8 @@ class TestOnTheHuntMovementIsWired:
         """The channel re-folds instead of adding onto a capped scalar.
 
         335 base flat + the rank-3 30% is 435.5 raw, published as 431.4.
+        The 10s window sits inside the sourced 12s Buff Duration, so the
+        share is 1.0 and the whole grant lands.
         """
         result = _fight_result()
         stats = result["champion_stats"]
@@ -400,6 +406,23 @@ class TestOnTheHuntMovementIsWired:
         assert stats["move_speed_flat"] == pytest.approx(335.0)
         assert stats["move_speed_percent"] == pytest.approx(30.0)
         assert stats["move_speed"] == pytest.approx(431.4)
+
+    @pytest.mark.parametrize(
+        "duration, percent, published",
+        [(5.0, 30.0, 431.4), (10.0, 30.0, 431.4), (30.0, 12.0, 375.2)],
+    )
+    def test_the_grant_is_weighted_by_its_cached_buff_duration(
+        self, duration, percent, published
+    ):
+        """Past 12s the buff must stop reading as if it were permanent.
+
+        Reading Buff Duration for the detail string alone left the slot
+        duration-blind: 431.4 at 5s, 10s AND 30s. Now a 30s window earns
+        12/30 of the rank-3 30%.
+        """
+        stats = _fight_result(duration=duration)["champion_stats"]
+        assert stats["move_speed_percent"] == pytest.approx(percent)
+        assert stats["move_speed"] == pytest.approx(published)
 
     def test_the_detail_names_the_sourced_duration(self):
         _, abilities = _parse()

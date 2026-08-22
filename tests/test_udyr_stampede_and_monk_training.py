@@ -232,35 +232,62 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
             for text in udyr.ASSUMPTIONS
         )
 
-    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
-        """Abilities, items and runes all land in one term list."""
+    @staticmethod
+    def _fight_move_speed(seconds: float) -> float:
         from src.calculator.pipeline import FightParams, run_fight
-        from src.calculator.stats import calculate_total_stats, resolve_move_speed
 
-        data = get_champion("Udyr")
-        build = calculate_total_stats(data, 18, [])
-        result = run_fight(
-            data,
+        return run_fight(
+            get_champion("Udyr"),
             18,
             [],
             FightParams(
                 target_health=2000.0,
                 target_armor=100.0,
                 target_magic_resistance=50.0,
-                fight_duration_seconds=10.0,
+                fight_duration_seconds=seconds,
                 deterministic=True,
             ),
-        )
-        # Level 18 derives E rank 5 (Udyr's ladder runs to 6).
+        )["champion_stats"]["move_speed"]
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        from src.calculator.stats import calculate_total_stats, resolve_move_speed
+
+        build = calculate_total_stats(get_champion("Udyr"), 18, [])
+        # Level 18 derives E rank 5 (Udyr's ladder runs to 6); the stance
+        # lasts _E_MOVE_SPEED_SECONDS, so a 10s fight earns 4/10 of it.
         granted = _e_leveling("Bonus Movement Speed")[4]
-        buffed = result["champion_stats"]["move_speed"]
+        share = udyr._E_MOVE_SPEED_SECONDS / 10.0
+        buffed = self._fight_move_speed(10.0)
 
         assert buffed == pytest.approx(
             resolve_move_speed(
-                build["move_speed_flat"], build["move_speed_percent"] + granted
+                build["move_speed_flat"],
+                build["move_speed_percent"] + granted * share,
             )
         )
         assert buffed > build["move_speed"]
+
+    def test_the_grant_is_weighted_by_the_stances_window(self):
+        """A 4s stance must not read the same in a 5s fight and a 30s one.
+
+        The whole family shares this contract: an unweighted term made
+        the published movement number duration-blind.
+        """
+        assert self._fight_move_speed(5.0) == pytest.approx(472.76)
+        assert self._fight_move_speed(10.0) == pytest.approx(417.88)
+        assert self._fight_move_speed(30.0) == pytest.approx(372.87, abs=0.01)
+
+    def test_the_window_is_prose_because_no_atom_carries_it(self):
+        """Why the constant exists: the only timing atom is the stun's."""
+        assert udyr._E_MOVE_SPEED_SECONDS == 4.0
+        assert "gains bonus movement speed for 4 seconds" in " ".join(_e_descriptions())
+        timings = [
+            atom
+            for atom in _ability_atoms("Udyr", get_champion("Udyr"))["E"]
+            if atom["atom_id"] == "timing.active_duration"
+        ]
+        assert [atom["values"] for atom in timings] == [[0.75]]
 
 
 class TestTheStunIsAuthoredAsASourcedControlEvent:

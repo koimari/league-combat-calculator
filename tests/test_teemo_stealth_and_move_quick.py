@@ -99,32 +99,72 @@ class TestMoveQuickIsASourcedZeroDamageRow:
         """
         assert abilities["W"]["stat_buff"] == {"move_speed_percent": 56.0}
 
-    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
-        """Abilities, items and runes all land in one term list."""
+    @staticmethod
+    def _fight_move_speed(seconds: float) -> float:
         from src.calculator.pipeline import FightParams, run_fight
-        from src.calculator.stats import calculate_total_stats, resolve_move_speed
 
-        data = get_champion("Teemo")
-        build = calculate_total_stats(data, 18, [])
-        result = run_fight(
-            data,
+        return run_fight(
+            get_champion("Teemo"),
             18,
             [],
             FightParams(
                 target_health=2000.0,
                 target_armor=100.0,
                 target_magic_resistance=50.0,
-                fight_duration_seconds=10.0,
+                fight_duration_seconds=seconds,
                 ability_ranks=dict(RANKS),
+                deterministic=True,
             ),
-        )
-        buffed = result["champion_stats"]["move_speed"]
+        )["champion_stats"]["move_speed"]
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        from src.calculator.stats import calculate_total_stats, resolve_move_speed
+
+        build = calculate_total_stats(get_champion("Teemo"), 18, [])
+        # The active lasts _W_ACTIVE_SECONDS, so a 10s fight earns 3/10.
+        share = teemo._W_ACTIVE_SECONDS / 10.0
+        buffed = self._fight_move_speed(10.0)
+
         assert buffed == pytest.approx(
             resolve_move_speed(
-                build["move_speed_flat"], build["move_speed_percent"] + 56.0
+                build["move_speed_flat"],
+                build["move_speed_percent"] + 56.0 * share,
             )
         )
         assert buffed > build["move_speed"]
+
+    def test_the_grant_is_weighted_by_the_casts_window(self):
+        """A 3s cast must not read the same in a 5s fight and a 30s one.
+
+        The whole SC12 family shares this contract; W is its proof, so an
+        unweighted W would be the pattern's one counter-example.
+        """
+        assert self._fight_move_speed(5.0) == pytest.approx(435.704)
+        assert self._fight_move_speed(10.0) == pytest.approx(385.44)
+        assert self._fight_move_speed(30.0) == pytest.approx(348.48)
+
+    def test_the_window_is_prose_and_the_slots_one_atom_is_the_wrong_one(self):
+        """Why the constant exists — and why reading the atom would lie.
+
+        ``timing.active_duration`` on this slot is 5.0: the PASSIVE's
+        "after 5 seconds without taking damage" idle condition, not the
+        cast's 3s window. Using it would over-credit the buff by 5/3.
+        """
+        assert teemo._W_ACTIVE_SECONDS == 3.0
+        active = _WIKI["abilities"]["W"][0]["effects"][1]["description"]
+        assert "doubles the bonus movement speed for 3 seconds" in active
+
+        atoms = [
+            atom
+            for atom in _ability_atoms("Teemo", get_champion("Teemo"))["W"]
+            if atom["atom_id"] == "timing.active_duration"
+        ]
+        assert [atom["values"] for atom in atoms] == [[5.0]]
+        assert atoms[0]["source"] == "Teemo.W[0].effects[0].description"
+        assert (
+            "without taking" in _WIKI["abilities"]["W"][0]["effects"][0]["description"]
+        )
 
 
 class TestGuerrillaWarfareStaysReceiptedOpen:

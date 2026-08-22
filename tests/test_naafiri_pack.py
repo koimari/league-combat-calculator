@@ -429,18 +429,44 @@ class TestPackRowFailsClosed:
         assert "move_speed_percent" not in abilities["W"].get("stat_buff", {})
 
     def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
-        """Abilities, items and runes all land in one term list."""
+        """Abilities, items and runes all land in one term list.
+
+        ``_fight`` runs a 5s window and the hunt lasts ``_HUNT_DURATION``
+        = 5s, so the share is 1.0 and the whole grant lands.
+        """
         build = calculate_total_stats(copy.deepcopy(_NAAFIRI), 18, [])
         result = _fight(18, options={"w_hunt": True})
         granted = _w_movement_ladder()[4]
         buffed = result["champion_stats"]["move_speed"]
 
+        assert _HUNT_DURATION == 5.0
         assert buffed == pytest.approx(
             resolve_move_speed(
                 build["move_speed_flat"], build["move_speed_percent"] + granted
             )
         )
         assert buffed > build["move_speed"]
+
+    @pytest.mark.parametrize(
+        "seconds, expected", [(5.0, 436.6), (10.0, 391.0), (30.0, 357.0)]
+    )
+    def test_the_grant_is_weighted_by_the_hunt_window(self, seconds, expected):
+        """A 5s hunt must not read the same in a 5s fight and a 30s one.
+
+        The movement term takes the same ``buff_window_share`` as the AD
+        term of the same cast; an unweighted one was duration-blind.
+        """
+        params = FightParams(
+            target_health=2000.0,
+            target_bonus_health=0.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            fight_duration_seconds=seconds,
+            champion_options={"w_hunt": True},
+            deterministic=True,
+        )
+        result = run_fight(copy.deepcopy(_NAAFIRI), 18, [], params)
+        assert result["champion_stats"]["move_speed"] == pytest.approx(expected)
 
 
 # ---------------------------------------------------------------------------
