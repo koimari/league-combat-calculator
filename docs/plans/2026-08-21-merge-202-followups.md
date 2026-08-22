@@ -1,37 +1,32 @@
 # Merge #202 follow-ups (2026-08-21)
 
 Open items recorded while merging `command-amp-and-gnar-mega` into `main`
-(five catch-up merges; every gate green at close). Each is a decision or a
-post-merge slice, not a defect the merge left red. Delete a row when it lands.
+(five catch-up merges; every gate green at close). Re-verified against
+b5fe1910 on 2026-08-22: fixed rows deleted, each survivor filed as a GitHub
+issue (the issue is the one home for detail; rows here are pointers).
+Delete a row when it lands.
 
-| Item |
-|---|
-| architecture.md healing paragraph assumes HealAnchor lives in healing_helpers — confirm with HEALING-API.md |
-| scripts/golden_baseline.json resolved to ours; RECAPTURE at end |
-| ASIDE (UI agent): /api/compare passes deterministic=True, /api/calculate does not — crit rolls differ between paths; decide (probably both deterministic for the UI) |
-| ASIDE samira.py rebinds OPTIONS after build_packet_module (pre-existing) — look |
-| champions/__init__.py p_empowered_attacks classification orphaned — drop |
-| aatrox: main's q_variant (default 7) makes ours' sweetspot bool path dead — cleanup pass later |
-| aphelios.py:52 comment cites _Q_ONSLAUGHT_SECONDS_UNAUTHORED (stale name) |
-| docs/plans/utility-axis-census.json pins healing_legacy.py:489 — regenerate |
-| ASIDE (runes): main's keystone regexes leak keys onto unrelated runes (gate by rune name); _RD_* vs _GRASP_*/_DARK_HARVEST parse same sentences into two keys — one home later |
-| data/atoms/manifest.json source_ref pins old champions.json hash — regenerate atoms manifest (find the script: grep scripts for manifest.json) at regeneration time |
-| yasuo/yone `_q3_knockup_duration` duplicated; belongs in module_helpers next to crit rule (cleanup) |
-| Dr. Mundo R-regen mode parity; Aurelion Sol golden parse surface — sweep |
-| compiled walk misses participant[2] cleanse/canister heal (search_context parity, 2) — support staging gap in compiled path (program/compile) |
-| milio: p_procs option + doubled cleanse count (2) — champion module |
-| templates/index.html:132 literal 26.15 rail text — read from served patch field |
-| A3: QSS/Mercurial/Umbral/Tear need AllyProducer members + CAPABILITIES (4-file change) — deferred with guards intact; trigger_stream A3 test red (4) — decide: xfail with issue or do it |
-| e9 steraks: death_time moved 11.858 -> 15.091 with same shield numbers — timeline-side; re-derive corpus entry at end if timeline is right |
-| per-recipient pricing of ally-scaled support rows (one row per recipient with that recipient's stats) - post-merge |
-| repin_corpus.reprobe_failures str(exc).splitlines()[0] IndexError on empty message — tiny fix |
-| ASIDE post-merge: Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) |
-| F-2: four main-new ITEM_EFFECTS entries (Doran's Helm, Gluttonous Greaves, Ionian Boots, Lost Chapter) have no rule compiler — pinned by name UNDECLARED_ON_ARRIVAL; declare post-merge |
-| F-9: cleanse KNOWN_CONTROL_KINDS vs CC_KIND_VOCABULARY disagree (disarm/ground dead; cripple/flee/pull/snare/stasis undeclared for cleanse) — post-merge |
-| F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up |
-| F-5 (strict xfail): Vi Blast Shield rider attaches to first Q even when that cast is attacker_state_blocked; needs walk-side re-anchor to first unblocked cast (damage.py:1864 binding) |
-| ASIDE: ControlEvent has no target field — an enemy-cast control reaches every enemy (Lulu W polymorph); engine change post-merge |
-| PERF DEBT: optimize_build Ahri/18/5 = 2.40 s merged vs 1.58 s main-alone (event-row schema: ~22 fields/row, +22% rows); CI smoke cap raised 5->8 s with the figures in the test docstring; the `lean` row shape is reserved for score-only and requested 0 times — adopting it for the optimizer is a shape decision (~40 ms) |
+| Item | Issue |
+|---|---|
+| ASIDE (UI): /api/compare passes deterministic=True, /api/calculate does not — crit rolls differ between paths; decide (probably both deterministic for the UI) | #218 |
+| ASIDE: samira.py:229 rebinds OPTIONS bare after build_packet_module, discarding packet-derived options (correct shape: milio.py:92) | #219 |
+| champions/__init__.py:509 p_empowered_attacks classification orphaned — drop | #220 |
+| aatrox declares the Q sweetspot axis twice (int q_variant with legacy_keys=["sweetspot"] and bool sweetspot, aatrox.py:258-268); both paths live and tested — collapse onto one option | #221 |
+| aphelios.py:79 comment cites _Q_ONSLAUGHT_SECONDS_UNAUTHORED (stale; constant is _Q_ONSLAUGHT_SECONDS) | #222 |
+| ASIDE (runes): keystone regexes leak keys onto unrelated runes (gate by rune name); _RD_* vs _GRASP_*/_DARK_HARVEST parse same sentences into two keys — one home later | #223 |
+| yasuo/yone `_q3_knockup_duration` duplicated; belongs in module_helpers next to the crit rule (cleanup) | #224 |
+| Dr. Mundo R-regen: dr_mundo.py:405 asserts unmodeled while derive_self_healing (:470) models it; Aurelion Sol hardcoded degraded-parse surface — sweep | #225 |
+| compiled walk misses participant[2] cleanse/canister heal (search_context parity) — support staging gap in compiled path; no test pins it | #226 |
+| milio residual: tests/test_milio_r_cleanse.py:56-59 docstring still claims the R cleanse kernel fails closed — kernel is wired; p_procs and count == 1 landed | #217 |
+| e9 steraks re-derived to death_time 9.702; HANDOVER.md:2513 and scenarios.json:639 still cite the superseded 15.091 — reconcile (corpus via repin, never hand-edit) | #227 |
+| per-recipient pricing of ally-scaled support rows (one row per recipient with that recipient's stats) | #210 |
+| Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
+| F-2: four main-new ITEM_EFFECTS entries (Doran's Helm, Gluttonous Greaves, Ionian Boots, Lost Chapter) have no rule compiler — pinned by name UNDECLARED_ON_ARRIVAL | #211 |
+| F-9: cleanse KNOWN_CONTROL_KINDS vs CC_KIND_VOCABULARY disagree (disarm/ground dead; cripple/flee/pull/snare/stasis/berserk undeclared for cleanse) | #212 |
+| F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up | #228 |
+| F-5: Vi Blast Shield rider binds to a carrier by ordinal before the walk decides (D-VI-1); the strict xfail is retired for a green denial-receipt test (test_w2_sustain.py:313); walk-side re-anchor to first unblocked cast still needed (old damage.py:1864 pin stale) | #229 |
+| ASIDE: ControlEvent has no target field — an enemy-cast control reaches every enemy (Lulu W polymorph); engine change | #209 |
+| PERF DEBT: the lean row shape is now adopted via score_only and the smoke cap recalibrated to 15 s (853c1cf7); the 2.40 s vs 1.58 s merged-vs-main optimize_build gap was never re-measured — benchmark, then close or act | #213 |
 
 ## Coordination note (2026-08-21, from the roadmap-closeout session)
 
@@ -50,3 +45,14 @@ Proposed split to avoid collisions while we both drive the closeout:
   receipt (tests/test_milio_fired_up_blocker.py) - flag before taking it.
 - We push small commits to main frequently; ping via commit notes here
   if you want the split adjusted.
+
+### Reply (2026-08-22, merge-202 side)
+
+Split accepted; the ledger now lives as GitHub issues. Yours: #214 (the
+out_of_scope slots — Shyvana P has since landed as no_damage, 11 remain),
+#215 (verification sweep), #216 (packet gate; the 16.16 wiki sqlite still
+doesn't exist), and #217 (the Milio residual under your overlap flag — only
+a stale test docstring survives). Ours: #209–#213 — except A3, which #208
+already resolved (Umbral got a registry row, Tear/QSS/Mercurial lost their
+name guards; trigger_stream A3 is green), so it got no issue. Unclaimed
+rows are issues #218–#230, unassigned.
