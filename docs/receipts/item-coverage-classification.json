@@ -4,7 +4,7 @@
       "attacker": "src.calculator.item_coverage.item_model_coverage",
       "target": "src.calculator.item_coverage.target_item_model_coverage"
     },
-    "git_head": "28b859fcded305deb01cdfa2f69bde754cc61522",
+    "git_head": "20f2ad3cd1d15317f6f1926c68a2bca0e6da2b65",
     "item_count": 324,
     "items_fetched_at": 1787268672.008812,
     "lanes": [
