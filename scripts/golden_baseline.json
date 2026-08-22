@@ -20865,10 +20865,19 @@
             "DamagePart(magic, amount=175.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, cc_kind='slow')",
             "DamagePart(magic, amount=175.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.25, cc_kind='immobilize')"
           ],
+          "post_hit_proc": {
+            "breakdown_key": "passive_temper_brittle",
+            "detail": "the recast pass immobilises a Brittle target and consumes the debuff for 13.71% of maximum health",
+            "name": "Living Forge (Temper)",
+            "parts": [
+              "DamagePart(magic, amount=274.10526315789474, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.25)"
+            ]
+          },
           "rank": 2,
           "resource_cost": 100.0,
           "resource_type": "MANA",
           "skillshot": true,
+          "target_max_health_sensitive": true,
           "total_raw": 350.0
         },
         "W": {
@@ -51202,18 +51211,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58507,
-      "numeric_leaves": 44857,
+      "leaves": 58530,
+      "numeric_leaves": 44875,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
+    "git_head": "fc0186cdb496149fdaea62533e7d5e7ca4b652da",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
+    "src_tree_sha": "006a37108535d7eab8eb1f3e346885ade8c5d8f1"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -69479,9 +69488,10 @@
             "R": 421.44,
             "W": 224.0,
             "auto_attacks": 0.0,
+            "passive_temper_brittle": 219.28,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1007.47
+          "total_damage": 1226.75
         },
         "no_items": {
           "breakdown_totals": {
@@ -69489,9 +69499,10 @@
             "Q": 153.33,
             "R": 250.0,
             "W": 200.0,
-            "auto_attacks": 0.0
+            "auto_attacks": 0.0,
+            "passive_temper_brittle": 195.79
           },
-          "total_damage": 656.67
+          "total_damage": 852.46
         },
         "physical_build": {
           "breakdown_totals": {
@@ -69499,9 +69510,10 @@
             "Q": 267.0,
             "R": 250.0,
             "W": 200.0,
-            "auto_attacks": 0.0
+            "auto_attacks": 0.0,
+            "passive_temper_brittle": 195.79
           },
-          "total_damage": 770.33
+          "total_damage": 966.12
         },
         "spellblade_build": {
           "breakdown_totals": {
@@ -69509,9 +69521,10 @@
             "Q": 234.73,
             "R": 250.0,
             "W": 200.0,
-            "auto_attacks": 0.0
+            "auto_attacks": 0.0,
+            "passive_temper_brittle": 195.79
           },
-          "total_damage": 738.07
+          "total_damage": 933.86
         },
         "sustained": {
           "magic_build": {
@@ -69521,9 +69534,10 @@
               "R": 421.44,
               "W": 224.0,
               "auto_attacks": 200.0,
+              "passive_temper_brittle": 219.28,
               "proc_Luden's Echo": 155.36
             },
-            "total_damage": 1207.47
+            "total_damage": 1426.75
           },
           "no_items": {
             "breakdown_totals": {
@@ -69531,9 +69545,10 @@
               "Q": 153.33,
               "R": 250.0,
               "W": 200.0,
-              "auto_attacks": 200.0
+              "auto_attacks": 200.0,
+              "passive_temper_brittle": 195.79
             },
-            "total_damage": 856.67
+            "total_damage": 1052.46
           },
           "physical_build": {
             "breakdown_totals": {
@@ -69542,9 +69557,10 @@
               "R": 250.0,
               "W": 200.0,
               "auto_attacks": 1122.0,
-              "on_hit_Kraken Slayer": 133.14
+              "on_hit_Kraken Slayer": 133.14,
+              "passive_temper_brittle": 195.79
             },
-            "total_damage": 2025.47
+            "total_damage": 2221.26
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -69553,9 +69569,10 @@
               "R": 250.0,
               "W": 200.0,
               "auto_attacks": 931.92,
+              "passive_temper_brittle": 195.79,
               "spellblade_Trinity Force": 266.67
             },
-            "total_damage": 1936.65
+            "total_damage": 2132.44
           }
         }
       },
@@ -69567,9 +69584,11 @@
             "R": 501.44,
             "W": 256.0,
             "auto_attacks": 0.0,
-            "proc_Luden's Echo": 155.36
+            "passive_temper_brittle": 271.98,
+            "proc_Luden's Echo": 155.36,
+            "shadowflame_Shadowflame": 54.4
           },
-          "total_damage": 1260.0
+          "total_damage": 1586.38
         },
         "no_items": {
           "breakdown_totals": {
@@ -69577,9 +69596,10 @@
             "Q": 173.87,
             "R": 321.43,
             "W": 228.57,
-            "auto_attacks": 0.0
+            "auto_attacks": 0.0,
+            "passive_temper_brittle": 242.84
           },
-          "total_damage": 897.2
+          "total_damage": 1140.04
         },
         "physical_build": {
           "breakdown_totals": {
@@ -69587,9 +69607,10 @@
             "Q": 288.27,
             "R": 321.43,
             "W": 228.57,
-            "auto_attacks": 0.0
+            "auto_attacks": 0.0,
+            "passive_temper_brittle": 242.84
           },
-          "total_damage": 1011.6
+          "total_damage": 1254.44
         },
         "spellblade_build": {
           "breakdown_totals": {
@@ -69597,9 +69618,10 @@
             "Q": 256.0,
             "R": 321.43,
             "W": 228.57,
-            "auto_attacks": 0.0
+            "auto_attacks": 0.0,
+            "passive_temper_brittle": 242.84
           },
-          "total_damage": 979.33
+          "total_damage": 1222.18
         },
         "sustained": {
           "magic_build": {
@@ -69609,9 +69631,11 @@
               "R": 501.44,
               "W": 256.0,
               "auto_attacks": 341.33,
-              "proc_Luden's Echo": 155.36
+              "passive_temper_brittle": 271.98,
+              "proc_Luden's Echo": 155.36,
+              "shadowflame_Shadowflame": 54.4
             },
-            "total_damage": 1601.33
+            "total_damage": 1927.71
           },
           "no_items": {
             "breakdown_totals": {
@@ -69619,9 +69643,10 @@
               "Q": 173.87,
               "R": 321.43,
               "W": 228.57,
-              "auto_attacks": 341.33
+              "auto_attacks": 341.33,
+              "passive_temper_brittle": 242.84
             },
-            "total_damage": 1238.53
+            "total_damage": 1481.38
           },
           "physical_build": {
             "breakdown_totals": {
@@ -69630,9 +69655,10 @@
               "R": 321.43,
               "W": 228.57,
               "auto_attacks": 1562.0,
-              "on_hit_Kraken Slayer": 164.57
+              "on_hit_Kraken Slayer": 164.57,
+              "passive_temper_brittle": 242.84
             },
-            "total_damage": 2738.17
+            "total_damage": 2981.02
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -69641,9 +69667,10 @@
               "R": 321.43,
               "W": 228.57,
               "auto_attacks": 1272.0,
+              "passive_temper_brittle": 242.84,
               "spellblade_Trinity Force": 341.33
             },
-            "total_damage": 2592.67
+            "total_damage": 2835.51
           }
         }
       }

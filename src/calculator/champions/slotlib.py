@@ -612,6 +612,38 @@ def damage_entry(
     return entry
 
 
+def post_hit_proc_row(
+    *,
+    name: str,
+    breakdown_key: str,
+    parts: tuple[DamagePart, ...],
+    detail: str,
+) -> dict[str, Any]:
+    """Build the row a cast pays *after* its own hit (``post_hit_proc``).
+
+    ``engine._ALLOWED_POST_HIT_PROC_KEYS`` is a four-key shape (plus an
+    optional ``target_debuff``) that :func:`damage_entry`'s richer entry
+    cannot be narrowed to, so the proc row gets its own builder — and a
+    builder rather than a dict literal per module for the reason
+    :data:`MODULE_FORMULA_ZERO` gives: every part it emits is a numeric leaf,
+    and one born here says its zero was computed instead of carrying no
+    disposition at all.  A part that already declares a policy keeps it.
+    """
+    return {
+        "name": name,
+        "breakdown_key": breakdown_key,
+        "parts": tuple(
+            (
+                part
+                if part.zero_policy is not None
+                else replace(part, zero_policy=MODULE_FORMULA_ZERO)
+            )
+            for part in parts
+        ),
+        "detail": detail,
+    }
+
+
 def support_cast(
     *,
     default_name: str,

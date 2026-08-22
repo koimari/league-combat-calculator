@@ -1270,12 +1270,20 @@ def _reads_an_input_block(call: ast.Call) -> bool:
     return False
 
 
+#: The ``slotlib`` builders whose own entry literal stamps a zero policy on
+#: every part it emits.  The ratchet below counts entries that carry *no*
+#: policy, so a body that stamps one is not one of them.
+POLICY_STAMPING_BUILDERS = frozenset({"damage_entry", "post_hit_proc_row"})
+
+
 def _policy_stamping_nodes(tree: ast.AST) -> set[int]:
-    """Every node id inside ``damage_entry``, the one policy-stamping body."""
-    for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name == "damage_entry":
-            return {id(inner) for inner in ast.walk(node)}
-    return set()
+    """Every node id inside a policy-stamping builder body."""
+    return {
+        id(inner)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name in POLICY_STAMPING_BUILDERS
+        for inner in ast.walk(node)
+    }
 
 
 def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
