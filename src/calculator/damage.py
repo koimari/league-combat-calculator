@@ -205,6 +205,7 @@ from .interpreters.sustain import declared_sustain, saturating_stat_percent
 from .item_behavior import (
     ActiveWindowCastEconomyRule,
     AmpChainSlot,
+    Comparison,
     Isolation,
     ManaSpentHealRule,
     PacketKind,
@@ -16815,26 +16816,37 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
 
 
 def _health_gated_events(
-    events: list, effect: "rune_effects.RuneConditionalAmpEffect", max_health: float
+    events: list, slot: "delta_amp.AmpSlot", max_health: float
 ) -> list:
     """The ledger rows that land while a rune's target-health gate holds.
 
     The gate reads the target's *current* health, so the ledger is walked in
-    its own order with health falling by everything already dealt; a row is
-    amplified when the health standing before it satisfies the gate.  Damage
-    the ledger cannot timestamp never appears here, so the row is a floor.
-    Two things the walk does not model, disclosed by its caller: the target
-    starts the fight at full health, and the ledger is read before shields,
-    so a shielded target crosses a falling gate earlier here than in game."""
-    threshold = effect.health_ratio * max_health
-    below = effect.condition is rune_effects.AmpCondition.TARGET_BELOW
+    its own order with health falling by everything already dealt, and each
+    row is offered to the rule's own live predicate. What the walk does not
+    model its caller discloses: untimestamped damage, and shields."""
     amped = []
     remaining = max_health
     for row in events:
-        if (remaining < threshold) if below else (remaining > threshold):
+        if slot.live_predicate_holds(
+            Probe.TARGET_HEALTH_FRACTION, remaining, max_health
+        ):
             amped.append(row)
         remaining -= row[1]
     return amped
+
+
+def _health_gate_disclosure(
+    effect: "rune_effects.RuneConditionalAmpEffect", slot: "delta_amp.AmpSlot"
+) -> str:
+    """What one health-gated rune amplified, in the declaration's own numbers."""
+    side = "below" if slot.live_comparison() is Comparison.LT else "above"
+    share = slot.value(delta_amp.LIVE_THRESHOLD_FIELD) * 100
+    return (
+        f"{effect.rune_name} amplifies exactly the instances that land while "
+        f"the target is {side} {share:g}% of its maximum health, read off the "
+        "fight's own ordered ledger; damage the ledger cannot timestamp is "
+        "never amplified, so the row is a floor."
+    )
 
 
 def _add_rune_conditional_amp_damage(
@@ -16843,8 +16855,9 @@ def _add_rune_conditional_amp_damage(
     """Apply every selected health-gated rune amplifier (Coup de Grace-class).
 
     Runs last among the amplifiers so the ledger it reads is the whole
-    fight. Only gates the walk can evaluate reach here at all — a gate on
-    the holder's own health has no ``AmpCondition`` member, so it is refused
+    fight, which is the ``TARGET_HEALTH_GATE`` chain slot's position.  Only
+    gates the walk can evaluate reach here at all — a gate on the holder's
+    own health declares no live predicate on the target, so it is refused
     where it compiles rather than booking nothing here.
     """
     effects = _page_effects(state, rune_effects.RuneConditionalAmpEffect)
@@ -16859,9 +16872,10 @@ def _add_rune_conditional_amp_damage(
     )
     max_health = max(0.0, state.target_health)
     for effect in effects:
-        state.notes.extend(effect.disclosures)
-        amped = _health_gated_events(events, effect, max_health)
-        bonus = sum(row[1] for row in amped) * effect.amp_ratio
+        slot = _required_amp_slot(state, AmpChainSlot.TARGET_HEALTH_GATE, effect)
+        state.notes.append(_health_gate_disclosure(effect, slot))
+        amped = _health_gated_events(events, slot, max_health)
+        bonus = sum(row[1] for row in amped) * slot.bonus_fraction
         if bonus <= 0.0:
             state.notes.append(
                 f"{effect.rune_name} amplified nothing: no timestamped damage "
@@ -16872,7 +16886,7 @@ def _add_rune_conditional_amp_damage(
             state,
             effect.breakdown_key,
             effect.rune_name,
-            1.0 + effect.amp_ratio,
+            1.0 + slot.bonus_fraction,
             amped,
             bonus,
         )

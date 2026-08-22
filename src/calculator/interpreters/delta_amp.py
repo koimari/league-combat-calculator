@@ -424,15 +424,31 @@ class AmpSlot:
             )
         return activation.isolation
 
+    def live_comparison(self, index: int = 0) -> Comparison:
+        """Which side of its threshold this holder's live predicate arms on.
+
+        What a caller needs when it has to *say* what the rule did, read off
+        the declaration for the same reason :meth:`exclusion` is: a second
+        spelling of the side is a second place it can be wrong.
+        """
+        activation = self.rules[index].payload.activation
+        if not isinstance(activation, LivePredicate):
+            raise DeltaAmpInterpretationError(
+                f"{self.rules[index].mechanic_id} declares no live predicate, "
+                "so it has no side of a threshold to arm on"
+            )
+        return activation.cmp
+
     def live_predicate_holds(
         self, probe: Probe, value: float, scale: float, index: int = 0
     ) -> bool:
         """Whether a live pool satisfies the rule's declared predicate.
 
-        Shadowflame's Cinderbloom is the one amp whose pool cannot be
-        precomputed: it reads the target's health at the instant of the hit,
-        under fire from a whole roster.  So the *threshold* is compiled and
-        the *reading* is passed in here, event by event.
+        Cinderbloom and the rune page's two target-health amplifiers are the
+        amps whose pool cannot be precomputed: they read the target's health
+        at the instant of the hit, under fire from a whole roster.  So the
+        *threshold* is compiled and the *reading* is passed in here, event by
+        event.
 
         ``value`` and ``scale`` are two arguments rather than one ratio on
         purpose: the engine compares ``value < scale * threshold`` and
@@ -440,6 +456,12 @@ class AmpSlot:
         pool the caller believes it is offering, checked against the one the
         rule declares — an engine handing the holder's health to a rule that
         reads the target's would otherwise be a silent wrong answer.
+
+        ``LT`` and ``GT`` are the two comparisons declared: Coup de Grace and
+        Cinderbloom arm under a share of the target's health, Cut Down over
+        one.  ``LE`` and ``GE`` deliberately have no arithmetic — no rule
+        declares which side of the threshold itself is inside, and a branch
+        nothing reaches is an orphan.
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, LivePredicate):
@@ -452,14 +474,17 @@ class AmpSlot:
                 f"{self.rules[index].mechanic_id} reads {activation.probe.value} "
                 f"and the engine offered {probe.value}"
             )
-        if activation.cmp is not Comparison.LT:
+        if activation.cmp not in (Comparison.LT, Comparison.GT):
             raise DeltaAmpInterpretationError(
                 f"{self.rules[index].mechanic_id} declares the "
                 f"{activation.cmp.value} comparison and no rule this "
                 "interpreter serves does; the slice that declares one owns "
                 "the branch"
             )
-        return value < scale * self.value(LIVE_THRESHOLD_FIELD, index)
+        threshold = scale * self.value(LIVE_THRESHOLD_FIELD, index)
+        if activation.cmp is Comparison.GT:
+            return value > threshold
+        return value < threshold
 
     def bonus_damage_type(self, source_type: str, index: int = 0) -> str:
         """What this amp's own bonus lands as, given the event it amplified."""
