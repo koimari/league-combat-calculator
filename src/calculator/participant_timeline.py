@@ -1348,6 +1348,13 @@ def _owned_state_event_id(
     return text if text.startswith(prefix) else f"{prefix}{text}"
 
 
+#: Stamped on a support template whose amount was priced off its RECIPIENT's
+#: build (Taric W's Bastion).  An optimizer candidate changes that build, so
+#: a list carrying one is derived per evaluation instead of being served from
+#: the per-search pair-view cache.
+RECIPIENT_SCALED_KEY = "_recipient_scaled"
+
+
 def _support_effect_templates(
     attacker: Combatant,
     result: Mapping[str, Any],
@@ -1434,6 +1441,24 @@ def _support_effect_templates(
                 if denial_receipts is not None:
                     denial_receipts.append(resolved_template)
                 continue
+            ratio = resolved_template.pop("recipient_max_health_ratio", None)
+            if ratio is not None and ally_target_id != attacker.participant_id:
+                # Taric W's Bastion pays each recipient a share of their OWN
+                # maximum health, and only here is that recipient in hand.
+                # The mark is what keeps the priced packet off the
+                # per-search template cache: an optimizer candidate moves
+                # the recipient's maximum health under it.
+                recipient = next(
+                    actor
+                    for actor in all_actors
+                    if actor.participant_id == ally_target_id
+                )
+                resolved_template["amount"] = max(
+                    0.0, float(ratio) * float(recipient.stats.get("health", 0.0) or 0.0)
+                )
+                resolved_template[RECIPIENT_SCALED_KEY] = True
+                if resolved_template["amount"] <= 0.0:
+                    continue
             templates.append(resolved_template)
     # Fan out champion-owned heal events (authored by the E1 self-heal rule
     # for slots in ``_MODULE_AUTHORED_HEAL_SLOTS``, Taric Q today) to the
@@ -1767,6 +1792,46 @@ def _support_effect_templates(
                 }
             )
     templates.extend(_aery_support_templates(attacker, result, templates))
+    return templates
+
+
+def _attached_support_templates(
+    view: PairView,
+    attacker: Combatant,
+    all_actors: list[Combatant],
+    *,
+    pair_defender_id: str | None,
+    damage_events: Iterable[Mapping[str, Any]] | None = None,
+    target_id: str | None = None,
+    denial_receipts: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """One attacker's support templates, cached on the pair view when they can be.
+
+    The one home of that decision, for all three composition paths.  A list
+    holding a packet priced off a RECIPIENT's build cannot be served from
+    the per-search cache — the next optimizer candidate moves that
+    recipient's maximum health under it — so it is rebuilt per evaluation
+    and everything else keeps riding the pair packet.
+    """
+    if view.support is not None:
+        if denial_receipts is not None:
+            denial_receipts.extend(dict(row) for row in view.support_denials or ())
+        return view.support
+    denials: list[dict[str, Any]] = []
+    templates = _support_effect_templates(
+        attacker,
+        view.result,
+        all_actors,
+        pair_defender_id=pair_defender_id,
+        damage_events=damage_events,
+        target_id=target_id,
+        denial_receipts=denials,
+    )
+    if denial_receipts is not None:
+        denial_receipts.extend(dict(row) for row in denials)
+    if not any(template.get(RECIPIENT_SCALED_KEY) for template in templates):
+        view.support = templates
+        view.support_denials = denials
     return templates
 
 
@@ -3891,10 +3956,10 @@ def _context_setup(
             suppress_actor_wide_heals=attacker.team == "enemy",
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
-            if view.support is None:
-                view.support = _support_effect_templates(
+            base.add_support_templates(
+                _attached_support_templates(
+                    view,
                     attacker,
-                    view.result,
                     all_actors_by_index,
                     # ``support_attached`` admits one pair per attacker, so
                     # this is the first of ``base_pairs``' defenders for it —
@@ -3902,8 +3967,10 @@ def _context_setup(
                     # loop rather than re-derived from the roster.
                     pair_defender_id=defender.participant_id,
                     damage_events=view.events,
-                )
-            base.add_support_templates(view.support, attacker_i, context.index_of)
+                ),
+                attacker_i,
+                context.index_of,
+            )
             support_attached.add(attacker.participant_id)
     for actor in context.roster_actors:
         wearer_i = context.index_of[actor.participant_id]
@@ -4041,18 +4108,20 @@ def _build_signature_panel(
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
         )
-        if view.support is None:
-            view.support = _support_effect_templates(
+        sig.add_support_templates(
+            _attached_support_templates(
+                view,
                 attacker,
-                view.result,
                 all_actors,
                 # The signature panel prices every enemy attacker against the
                 # candidate main and nobody else (the ``"main"`` defender
                 # above), so the pair this result came from is that one.
                 pair_defender_id=main.participant_id,
                 damage_events=view.events,
-            )
-        sig.add_support_templates(view.support, attacker_i, context.index_of)
+            ),
+            attacker_i,
+            context.index_of,
+        )
     # The enemy->main fights live here rather than on the base panel, so the
     # Sacrifice split for a holder whose Worthy ally IS the candidate main
     # has to be staged against this panel's actions.
@@ -5117,22 +5186,16 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                         dict(template) if copy_templates else template
                     )
                 if attacker.participant_id not in support_attached:
-                    if view.support is None:
-                        support_denials: list[dict[str, Any]] = []
-                        view.support = _support_effect_templates(
-                            attacker,
-                            result,
-                            all_actors,
-                            pair_defender_id=defender.participant_id,
-                            damage_events=view.events,
-                            target_id=defender.participant_id,
-                            denial_receipts=support_denials,
-                        )
-                        view.support_denials = support_denials
-                    item_denial_receipts.extend(
-                        dict(row) for row in view.support_denials or ()
+                    support_templates = _attached_support_templates(
+                        view,
+                        attacker,
+                        all_actors,
+                        pair_defender_id=defender.participant_id,
+                        damage_events=view.events,
+                        target_id=defender.participant_id,
+                        denial_receipts=item_denial_receipts,
                     )
-                    for template in view.support:
+                    for template in support_templates:
                         packet_template = dict(template) if copy_templates else template
                         support_effects[template["target"]].append(packet_template)
                         if template.get("kind") == "damage":
