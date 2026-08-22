@@ -84,10 +84,10 @@ fail-closed behavior.  CURRENT RUNTIME FACTS (verified before pinning):
   the EXACT ledger entry — amount must be > 0; a zero-amount shield
   arms nothing), the stat-buff packet kernel (bonus_armor /
   bonus_magic_resistance fields; NO bonus-AD / size / movement fields
-  on the stat-buff action), and the score gates
-  (compiled_support_receipt / unrepresentable_template_receipt:
-  support_kind=cleanse / support_kind=stat_buff / support_kind=
-  movement; crowd_control_resist representable).
+  on the stat-buff action), and the score gate
+  (unrepresentable_template_receipt: support_kind=cleanse /
+  support_kind=stat_buff / support_kind=movement; crowd_control_resist
+  representable).
 - Walk dispatch order (same-time ordering): SHIELD / STAT_BUFF /
   UTILITY kinds dispatch BEFORE the attacker-state gate (the
   QSS/Mercurial/GP/Rengar utility-before-gate carve-out), so a
@@ -190,7 +190,6 @@ from src.calculator.cleanse_eligibility import (
     CHAMPION_CLEANSE_DECLARATIONS,
     ITEM_CLEANSE_DECLARATIONS,
     CleanseEligibility,
-    compiled_support_receipt,
     resolve_cleanse_item,
     truncate_intervals,
 )
@@ -2068,17 +2067,7 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
-        # The cleanse_eligibility MIRROR owns only the cleanse/movement
-        # kinds (stat_buff falls through to the compile module's own
-        # gate); the compile gate itself names support_kind=stat_buff.
-        assert (
-            compiled_support_receipt(
-                {"kind": "stat_buff", "amount": 0.0, "bonus_armor": 20.0}
-            )
-            is None
-        )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "stat_buff", "amount": 0.0, "bonus_armor": 20.0}
@@ -2086,18 +2075,16 @@ class TestScoreFailClosed:
             == "support_kind=stat_buff"
         )
         assert (
-            compiled_support_receipt({"kind": "movement", "amount": 70.0})
+            unrepresentable_template_receipt({"kind": "movement", "amount": 70.0})
             == "support_kind=movement"
         )
         assert (
-            compiled_support_receipt({"kind": "heal", "amount": 100.0, "cleanse": True})
+            unrepresentable_template_receipt(
+                {"kind": "heal", "amount": 100.0, "cleanse": True}
+            )
             == "support_cleanse"
         )
         # The Slice 8 resist arm is representable (it only arms state).
-        assert (
-            compiled_support_receipt({"kind": "crowd_control_resist", "amount": 0.0})
-            is None
-        )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "crowd_control_resist", "amount": 0.0}
@@ -2115,10 +2102,8 @@ class TestScoreFailClosed:
             "source": _R_CLEANSE_SOURCE,
             "time": 0.5,
         }
-        assert compiled_support_receipt(heal_template) is None
         assert unrepresentable_template_receipt(heal_template) is None
         marked = {**heal_template, "cleanse": True}
-        assert compiled_support_receipt(marked) == "support_cleanse"
         assert unrepresentable_template_receipt(marked) == "support_cleanse"
 
     def test_wired_score_models_or_receipts_the_r(self):
@@ -2145,7 +2130,6 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:olaf:r:cleanse:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
 
 

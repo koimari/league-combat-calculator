@@ -81,8 +81,6 @@ from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
     get_champion_module_meta,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
     registered_champion_names,
 )
 from src.calculator.capabilities import public_capability_contract
@@ -1005,22 +1003,11 @@ def api_champions():
             ability_slots[slot] = _public_ability_entry(
                 champ_data.get("abilities", {}).get(slot, []), slot
             )
-        # A module that certifies only a subset of fight modes publishes that
-        # restriction (and its sourced reason) so the interface can request a
-        # supported mode instead of failing closed at calculation time. None
-        # means unrestricted: every public fight mode is certified.
-        supported_modes = get_supported_fight_modes(champ_data["name"])
         result.append(
             {
                 "name": champ_data["name"],
                 "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
                 "engine_registration": registration,
-                "supported_fight_modes": (
-                    list(supported_modes) if supported_modes is not None else None
-                ),
-                "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
-                    champ_data["name"]
-                ),
                 "patch_last_changed": _cached_champion_field(
                     champ_data, "patchLastChanged"
                 ),

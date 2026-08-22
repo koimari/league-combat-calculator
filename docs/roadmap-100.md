@@ -348,7 +348,7 @@ authoritative Riot statement), not more engineering effort.
 
 ## 4. Patch-day pipeline — manual vs. scriptable
 
-Nine steps total: 5 manual, 4 scriptable, per `docs/patch-day-runbook.md`.
+Nine steps total: 6 manual, 3 scriptable, per `docs/patch-day-runbook.md`.
 
 | # | Step | Manual/Scriptable | Inputs | Deps | Fail-closed failure mode |
 |---|---|---|---|---|---|
@@ -359,7 +359,7 @@ Nine steps total: 5 manual, 4 scriptable, per `docs/patch-day-runbook.md`.
 | 5 | Golden re-capture + full gates (pytest, pylint, black, `git diff --check`) | **Scriptable** | `scripts/golden_snapshot.py compare/capture`, `scripts/golden_baseline.json` | Step 4's re-certified values committed to the working tree | Golden diffs are EXPECTED post-patch and do not block by themselves; pytest/pylint/black/`git diff --check` red DOES block |
 | 6 | Explain every golden diff in the commit message | **Manual** | `scripts/patch_update.py detail <name>` per changed module | Step 5's diff output | No script checks diff explanations are *correct*, only that they exist in the commit body — a wrong explanation ships silently |
 | 7 | Commit + push + merge via review | **Manual** | staged data + code + golden together (never split across commits) | Step 6 | Standard review gate; a split commit (data without golden, or vice versa) is a self-inflicted future regression, not caught by CI |
-| 8 | `python scripts/issue_gate.py check --issue <n> --commit <sha>` | **Scriptable** | issue number, merge commit sha, optional deploy sha | `docs/issue-closure-policy.md` (commit-addressed, merged, clean tree, gates green) | Refuses closure when any policy condition is unmet |
+| 8 | Close the tracking issue against `docs/issue-closure-policy.md` | **Manual** | issue number, merge commit sha, deployed sha for a user-visible fix | `docs/issue-closure-policy.md` (commit-addressed, gate-checked, deployment-gated) | No script checks the three conditions — an unchecked closure claim ships silently |
 | 9 | Confirm staleness clears post-deploy (`patch_regression.py check` re-run, `/api/staleness`, badge check) | **Manual** | live `/api/staleness` endpoint, UI badges | Step 7 deployed | No script re-verifies the *deployed* endpoint — this is the one step with no scriptable substitute because "did the badge actually disappear in production" requires observing production |
 
 ---

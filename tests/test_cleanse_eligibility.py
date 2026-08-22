@@ -1988,14 +1988,10 @@ def test_r19_compiled_walk_current_fail_closed_surface():
         )
 
 
-def test_r19_compiled_walk_contract_owned_gate():
-    """Unit, NEW-CONTRACT: the contract owns a compiled-support mirror gate
-    that FAILS CLOSED with a named receipt when a template carries a cleanse
-    marker the compiled kernel cannot reproduce (today's silent drop is the
-    gap).  B-dependent: if the owner instead stages the truncation in the
-    compiled kernel, the alternate (xfailed) variant is pinned — either way
-    the receipt must name the rule."""
-    ce = _require_contract()
+def test_r19_compiled_walk_gate_names_the_cleanse_it_cannot_stage():
+    """Unit: the compiled-support gate FAILS CLOSED with a named receipt
+    when a template carries a cleanse marker the compiled kernel cannot
+    reproduce, and leaves a plain heal representable."""
     template = {
         "kind": "heal",
         "amount": 100.0,
@@ -2005,10 +2001,10 @@ def test_r19_compiled_walk_contract_owned_gate():
         "target": "main",
         "time": 2.5,
     }
-    assert ce.compiled_support_receipt(template) == "support_cleanse"
+    assert unrepresentable_template_receipt(template) == "support_cleanse"
     # A plain heal stays representable.
     assert (
-        ce.compiled_support_receipt(
+        unrepresentable_template_receipt(
             {
                 "kind": "heal",
                 "amount": 100.0,
@@ -2019,18 +2015,6 @@ def test_r19_compiled_walk_contract_owned_gate():
         )
         is None
     )
-
-
-# NOTE: the alternate score-path variant (the compiled kernel stages the
-# cleanse marker so compiled_support_receipt returns None and the compiled
-# walk reproduces the truncation) was removed here — the owner landed the
-# fail-closed gate, not the staged truncation.  The PRIMARY variant directly
-# above (test_r19_compiled_walk_contract_owned_gate) already pins the chosen
-# branch: compiled_support_receipt(cleanse-marked heal template) ==
-# "support_cleanse", and a plain heal template (no cleanse marker) stays
-# representable (returns None).  Nothing about the removed alternate's claim
-# is lost — it is the unchosen, now-unreachable branch of the same decision
-# the primary settles.
 
 
 # ---------------------------------------------------------------------------

@@ -13,9 +13,6 @@ from src.calculator.champions import (
     get_champion_module_contract,
     get_champion_module_meta,
     get_champion_options_meta,
-    get_comparison_curve_unavailable_reason,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
@@ -471,14 +468,10 @@ def test_e_and_r_are_wired_timed_only_zero_damage_rows(kaisa_data):
     assert "E" not in payload["breakdown"]
 
 
-def test_sources_options_and_unrestricted_modes_are_public_receipts():
+def test_sources_and_options_are_public_receipts():
     meta = get_champion_options_meta("Kai'Sa")
 
     assert len(meta["options"]) == 4
-    assert "supported_fight_modes" not in meta
-    assert get_supported_fight_modes("Kai'Sa") is None
-    assert get_unsupported_fight_mode_reason("Kai'Sa") is None
-    assert get_comparison_curve_unavailable_reason("Kai'Sa") is None
     assert {row["revision_id"] for row in meta["sources"]} == {
         4046579,
         4038389,

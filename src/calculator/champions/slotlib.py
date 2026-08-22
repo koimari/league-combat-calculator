@@ -23,7 +23,7 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .engine import BUFF, DAMAGE, ONHIT, SlotCtx, SlotParser
+from .engine import BUFF, DAMAGE, SlotCtx, SlotParser
 from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
@@ -1374,56 +1374,6 @@ def _slot_passive_on_hit(
 
     name = ability.get("name", f"Ability {ctx.slot}")
     return on_hit_entry(name, total, resolved_type)
-
-
-# Keywords marking a champion passive as an on-hit effect.
-_ON_HIT_KEYWORDS = ("on-hit", "on hit", "basic attack", "auto-attack")
-
-
-def on_hit_auto(source: tuple[str, int] | None = None) -> SlotParser:
-    """Auto-detected on-hit champion passive (P slot).
-
-    The old generic-parser behavior: the passive must carry a
-    ``damageType`` and mention an on-hit keyword in its effect
-    descriptions; damage scales per level (not rank). Emits nothing
-    when detection fails or the damage is zero.
-
-    Args:
-        source: (slot, index) of the JSON entry to read; defaults to
-            entry 0 of the parser's own slot.
-
-    Returns:
-        An ONHIT-phase slot parser.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability, _ = _resolve_source(ctx, source)
-        if ability is None:
-            return None
-
-        if not ability.get("damageType"):
-            return None
-
-        desc = ""
-        for effect in ability.get("effects", []):
-            desc += effect.get("description", "").lower()
-        if not any(kw in desc for kw in _ON_HIT_KEYWORDS):
-            return None
-
-        total, resolved_type = extract_auto(
-            ability,
-            ctx.level,
-            ctx.stats,
-            ctx.target,
-            level=ctx.level,
-        )
-        if total <= 0:
-            return None
-
-        return on_hit_entry(ability.get("name", "Passive"), total, resolved_type)
-
-    parse.phase = ONHIT
-    return parse
 
 
 def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):

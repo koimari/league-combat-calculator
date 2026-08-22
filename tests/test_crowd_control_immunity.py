@@ -66,9 +66,6 @@ CONTRACT API THIS MATRIX COMMITS THE OWNER TO (six separation concerns):
    - ``same_hit_ordering() -> (rule_text, SourceReceipt)``; raises
      ``MissingSameHitRuleError`` with ``reason == "missing_same_hit_rule"``
      while RLM-2 A has not verified the in-game ordering (R19).
-   - ``compiled_support_receipt(template) -> str | None``: contract-owned
-     mirror of ``survival.compile.unrepresentable_template_receipt`` for
-     the score path (R13).
 
 Row status conventions (same as the P2 Slice 1/2 matrices):
 - "CURRENT" rows assert behavior the tree already satisfies today.  The
@@ -1470,9 +1467,9 @@ def test_r13_score_path_represents_the_immunity_template_today():
     """The compiled score walk currently stages the Black Shield immunity
     template (unrepresentable_template_receipt -> None) and the compiler
     carries the immunity fields onto the typed SHIELD action — the
-    "reproduces the decision" branch.  The contract owns a mirror gate
-    (compiled_support_receipt): if the score path ever cannot reproduce
-    the immunity decision, it must fail closed with a named receipt."""
+    "reproduces the decision" branch.  If the score path ever cannot
+    reproduce the immunity decision, it must fail closed with a named
+    receipt."""
     template = {
         "target": "main",
         "kind": "shield",
@@ -1494,11 +1491,6 @@ def test_r13_score_path_represents_the_immunity_template_today():
     assert action.crowd_control_immunity_while_shield is True
     assert action.crowd_control_immunity_source == "Black Shield"
     assert action.shield_pool == "magic"
-
-    # NEW-CONTRACT: the contract-owned gate mirrors the representation
-    # decision (None = the compiled walk reproduces the decision).
-    cce = _require_contract()
-    assert cce.compiled_support_receipt(template) is None
 
 
 # ---------------------------------------------------------------------------

@@ -165,7 +165,6 @@ from src.calculator.champions.slotlib import extract_named
 from src.calculator.cleanse_eligibility import (
     CHAMPION_CLEANSE_DECLARATIONS,
     ITEM_CLEANSE_DECLARATIONS,
-    compiled_support_receipt,
     resolve_cleanse_item,
     truncate_intervals,
 )
@@ -1523,14 +1522,7 @@ class TestScoreFailClosed:
         # packets through this gate (never silently re-price the pickup
         # heal as a plain heal or drop the resist).
         resist = _resist_packet(0.0)
-        assert compiled_support_receipt(resist) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(resist) == "support_kind=cleanse"
-        assert (
-            compiled_support_receipt(
-                {"kind": "heal", "amount": 100.0, "cleanse_item": _P_CLEANSE_ITEM}
-            )
-            == "support_cleanse"
-        )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse_item": _P_CLEANSE_ITEM}
@@ -1538,12 +1530,7 @@ class TestScoreFailClosed:
             == "support_cleanse"
         )
         canister = _canister_packet(0.0)
-        # The contract mirror covers cleanse/movement/heal-with-marker;
-        # the compile module's own gate names the canister kind.  The
-        # pinned asymmetry: the completion must extend the mirror or the
-        # canister packet must ride the compile gate.
         assert unrepresentable_template_receipt(canister) == "support_kind=canister"
-        assert compiled_support_receipt({"kind": "heal", "amount": 50.0}) is None
         assert (
             unrepresentable_template_receipt({"kind": "heal", "amount": 50.0}) is None
         )
@@ -1708,7 +1695,10 @@ class TestModeParity:
             assert frow["total_damage"] == srow["total_damage"]
             assert frow["total_raw"] == srow["total_raw"]
             assert frow.get("casts") == srow.get("casts")
-        assert compiled_support_receipt(_resist_packet(0.0)) == "support_kind=cleanse"
+        assert (
+            unrepresentable_template_receipt(_resist_packet(0.0))
+            == "support_kind=cleanse"
+        )
         assert (
             unrepresentable_template_receipt(_canister_packet(0.0))
             == "support_kind=canister"

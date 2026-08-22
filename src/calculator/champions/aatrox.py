@@ -235,9 +235,8 @@ SLOTS = {
 # the same total as three (73.7 + 92.1 + 110.6) at 0/1/2 seconds — the heal
 # rule follows the hits honestly (``HealAnchor.DAMAGING_HIT``), but the
 # corpus scenario is pinned to a src-tree sha and re-pinning it is a
-# baseline re-capture, not a review.  The same split moves
-# docs/receipts/escalated-defects-P4-S9 and the live-amp roster scenarios,
-# which are pinned the same way.
+# baseline re-capture, not a review.  The same split moves the live-amp
+# roster scenarios, which are pinned the same way.
 #
 # W (Infernal Chains) slows on the first hit ("slowing them for 1.5
 # seconds") and pulls on the second, which the cache times exactly ("a

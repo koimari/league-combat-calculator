@@ -11,7 +11,7 @@ from .defensive_effects import StartingDefenses
 from .interpreters.stat_derivation import declared_stat_derivations
 from .interpreters.sustain import SustainSlot, declared_sustain
 from .item_behavior import DerivedStat, ManaSpentHealRule, StatAuraRule
-from .pipeline import FightParams, require_fight_mode_support
+from .pipeline import FightParams
 
 if TYPE_CHECKING:
     from .scenario import ResolvedLoadout
@@ -86,26 +86,6 @@ class Combatant:  # pylint: disable=too-many-instance-attributes
                 f"{self.participant_id}: request must be an ActorRequest, "
                 f"not {type(self.request).__name__}"
             )
-
-
-def require_roster_fight_window_support(
-    params: FightParams,
-    *,
-    enemies: Iterable[ResolvedLoadout] = (),
-    allies: Iterable[ResolvedLoadout] = (),
-) -> None:
-    """Reject a fight window a selected roster member cannot join."""
-    for side, roster in (("Enemy", enemies), ("Ally", allies)):
-        for loadout in roster:
-            if loadout.is_practice_dummy:
-                continue
-            name = str(loadout.champion_data.get("name", ""))
-            try:
-                require_fight_mode_support(params, name)
-            except ValueError as exc:
-                raise ValueError(
-                    f"{side} {name} cannot join this fight window: {exc}"
-                ) from exc
 
 
 def coalesce_darius_q_heals(

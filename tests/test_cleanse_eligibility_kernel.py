@@ -15,6 +15,7 @@ from src.calculator import cleanse_eligibility as ce
 from src.calculator.crowd_control_eligibility import classify_control
 from src.calculator.delivery_eligibility import stable_event_key
 from src.calculator.state_lifecycle import SourceReceipt
+from src.calculator.survival.compile import unrepresentable_template_receipt
 
 
 def _action(
@@ -365,21 +366,23 @@ def test_stable_event_key_is_the_decision_identity():
 # ---------------------------------------------------------------------------
 
 
-def test_compiled_support_receipt_gate():
+def test_unrepresentable_template_receipt_gate():
     assert (
-        ce.compiled_support_receipt({"kind": "heal", "amount": 100.0, "cleanse": True})
+        unrepresentable_template_receipt(
+            {"kind": "heal", "amount": 100.0, "cleanse": True}
+        )
         == "support_cleanse"
     )
     assert (
-        ce.compiled_support_receipt(
+        unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse_item": "Mikael's Blessing"}
         )
         == "support_cleanse"
     )
-    assert ce.compiled_support_receipt({"kind": "heal", "amount": 100.0}) is None
-    assert ce.compiled_support_receipt({"kind": "cleanse", "amount": 1.0}) == (
+    assert unrepresentable_template_receipt({"kind": "heal", "amount": 100.0}) is None
+    assert unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) == (
         "support_kind=cleanse"
     )
-    assert ce.compiled_support_receipt({"kind": "movement", "amount": 50.0}) == (
+    assert unrepresentable_template_receipt({"kind": "movement", "amount": 50.0}) == (
         "support_kind=movement"
     )

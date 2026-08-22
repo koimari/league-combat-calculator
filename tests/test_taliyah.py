@@ -7,10 +7,7 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_options_meta,
-    get_comparison_curve_unavailable_reason,
     get_custom_cast_order_unavailable_reason,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
     taliyah,
 )
 from tests import cc_review
@@ -128,8 +125,7 @@ def test_rotation_is_resource_legal_and_event_order_certified(
     assert result["timeline_coverage"]["exact_sources"] == ["E", "Q"]
 
 
-def test_public_metadata_exposes_state_without_mode_restriction():
-    """Timed support means no restriction constants survive in the module."""
+def test_public_metadata_exposes_state_and_sources():
     meta = get_champion_options_meta("Taliyah")
 
     assert {option["key"] for option in meta["options"]} == {
@@ -137,12 +133,7 @@ def test_public_metadata_exposes_state_without_mode_restriction():
         "e_detonations",
         "q_target_distance",
     }
-    # No SUPPORTED_FIGHT_MODES restriction: the key is absent entirely.
-    assert "supported_fight_modes" not in meta
     assert len(meta["sources"]) == 5
-    assert get_supported_fight_modes("Taliyah") is None
-    assert get_unsupported_fight_mode_reason("Taliyah") is None
-    assert get_comparison_curve_unavailable_reason("Taliyah") is None
     # The certified E -> W -> Q sequence still refuses custom orders.
     assert get_custom_cast_order_unavailable_reason("Taliyah")
 

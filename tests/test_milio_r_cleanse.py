@@ -158,7 +158,6 @@ from src.calculator.cleanse_eligibility import (
     ITEM_CLEANSE_DECLARATIONS,
     CleanseDecision,
     CleanseEligibility,
-    compiled_support_receipt,
     resolve_cleanse_item,
     truncate_intervals,
 )
@@ -1724,14 +1723,20 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
         assert (
-            compiled_support_receipt({"kind": "heal", "amount": 100.0, "cleanse": True})
+            unrepresentable_template_receipt(
+                {"kind": "heal", "amount": 100.0, "cleanse": True}
+            )
             == "support_cleanse"
         )
-        assert compiled_support_receipt({"kind": "heal", "amount": 350.0}) is None
-        assert compiled_support_receipt({"kind": "movement"}) == "support_kind=movement"
+        assert (
+            unrepresentable_template_receipt({"kind": "heal", "amount": 350.0}) is None
+        )
+        assert (
+            unrepresentable_template_receipt({"kind": "movement"})
+            == "support_kind=movement"
+        )
 
     def test_score_gate_never_reprices_the_r_heal(self):
         # PASS: the R heal packet (the E8d fan-out shape) is a plain heal
@@ -1747,10 +1752,8 @@ class TestScoreFailClosed:
             "target": "ally:Jinx",
             "_event_id": "milio:r:3:enemy:Garen:ally:1",
         }
-        assert compiled_support_receipt(heal_template) is None
         assert unrepresentable_template_receipt(heal_template) is None
         marked = {**heal_template, "cleanse": True}
-        assert compiled_support_receipt(marked) == "support_cleanse"
         assert unrepresentable_template_receipt(marked) == "support_cleanse"
 
 
@@ -1820,7 +1823,6 @@ class TestModeParity:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
         combat = _app_combat()
         assert _survival(combat)["cleanse"]["decision"]["reason"] == (
@@ -1927,9 +1929,12 @@ class TestUnchangedBoundaries:
             "intervals_after",
             "use_consumed",
         }
-        assert compiled_support_receipt({"kind": "cleanse"}) == "support_kind=cleanse"
         assert (
-            compiled_support_receipt({"kind": "heal", "cleanse": True})
+            unrepresentable_template_receipt({"kind": "cleanse"})
+            == "support_kind=cleanse"
+        )
+        assert (
+            unrepresentable_template_receipt({"kind": "heal", "cleanse": True})
             == "support_cleanse"
         )
         assert (

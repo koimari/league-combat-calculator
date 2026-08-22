@@ -190,7 +190,7 @@ def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
         match = re.search(r"deals?\s+(\d+)%\s*AD\s+physical damage", desc)
         if match:
             return float(match.group(1)) / 100.0
-    return 0.5  # Fallback
+    raise ValueError("Akshan P double-shot AD ratio is unavailable")
 
 
 def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:

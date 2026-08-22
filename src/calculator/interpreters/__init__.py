@@ -458,15 +458,9 @@ _COMPILED_PACKET_FED_PAIR_ONLY = (
     "own; the receipt walk is owed nothing by this family, whose declarations "
     "author no pair row and fold only into the holder's own"
 )
-_RESOLVER_FED = (
-    "the walks stage what the defence resolver already built, so the "
-    "declaration reaches them through the resolver interpreter; a walk-lane "
-    "interpreter here would be a second producer of one number"
-)
 # For a family that declares no receipt-walk lane: the compiled lane stages
 # what the resolver built, and the receipt walk is not a lane this family
-# declares at all.  It cannot keep the shared sentence, which opens "the
-# walks" and would describe a lane the table does not hold.
+# declares at all, so the sentence names the compiled lane alone.
 _COMPILED_RESOLVER_FED = (
     "the compiled score walk stages what the defence resolver already built, "
     "so the declaration reaches it through the resolver interpreter; a "

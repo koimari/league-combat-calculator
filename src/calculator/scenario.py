@@ -668,14 +668,6 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
         missing = exc.args[0] if exc.args else "requested data"
         raise LookupError(f"Scenario data '{missing}' not found") from exc
 
-    # participant_timeline imports this module, so the roster-window gate is
-    # imported lazily to keep the module graph acyclic.
-    # pylint: disable-next=import-outside-toplevel  # deliberate, see above
-    from .participant_timeline import require_roster_fight_window_support
-
-    require_roster_fight_window_support(
-        request.fight_params, enemies=enemies, allies=allies
-    )
     for enemy in enemies:
         participant = f"Enemy {enemy.champion_data['name']}"
         require_calculation_item_coverage(

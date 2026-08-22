@@ -36,7 +36,7 @@ from .trigger_stream import (
     streams_for,
     tuple_incapable_items,
 )
-from .item_effects import ALLY_ITEM_EFFECTS, ITEM_INPUT_OPTIONS
+from .item_effects import ITEM_INPUT_OPTIONS
 
 # Phase 3's declarations, and the interpreter that resolves them.  A producer
 # is reached through the rule its registry entry declares — "does this holder
@@ -2113,11 +2113,6 @@ def schedule_knights_vow(
             )
 
 
-def has_ordered_item_team_effects(items: Iterable[Mapping[str, Any]]) -> bool:
-    """Whether any build requires the ordered event walk for team packets."""
-    return any(str(item.get("name", "")) in ALLY_ITEM_EFFECTS for item in items)
-
-
 # ---------------------------------------------------------------------------
 # Cross-participant producers
 # ---------------------------------------------------------------------------
@@ -2264,7 +2259,6 @@ def producer_item(source: str) -> str:
 
 __all__ = [
     "derive_item_support_effects",
-    "has_ordered_item_team_effects",
     "producer_item",
     "require_event_view",
     "schedule_knights_vow",

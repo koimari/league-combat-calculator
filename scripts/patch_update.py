@@ -577,6 +577,12 @@ def rebuild_static_artifacts():
         # Writes only gitignored trees; it runs here because it fails closed
         # when the unified item-atom domain disagrees with the Atomizer manifest.
         "build_receipts.py",
+        # Not a UI catalogue: data/onhit-matrix.json is the wiki's own on-hit
+        # application reading, and tests/test_spellblade_on_hit_matrix.py holds
+        # it against each module's declaration.  Re-read from the fresh cache
+        # here so a patch that flips an ability's on-hit phrasing turns that
+        # test red instead of being compared against the previous patch.
+        "build_onhit_matrix.py",
     ):
         result = subprocess.run(
             [sys.executable, f"scripts/{builder}"], cwd=REPO_ROOT, check=False

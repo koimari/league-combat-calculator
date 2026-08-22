@@ -191,28 +191,6 @@ MERCURIAL_MOVEMENT_ATOM: dict[str, Any] = {
     "hash": "5e5f100f08a793f9",
 }
 
-#: Sourced categorical rules (each with its cache receipt).
-CLEANSE_REMOVAL_RULE = (
-    "Each active removes the crowd-control debuffs its own cached wording "
-    "covers: Mikael's Purify removes all except Airborne, Blind, Disarm, "
-    "Nearsight and Suppression (data/items.json id 3222); Quicksilver Sash "
-    "and Mercurial Scimitar remove all except Airborne (ids 3140/3139)."
-)
-CLEANSE_CASTABILITY_RULE = (
-    "The wiki Cleanse atom: castable while disabled, but not under "
-    "suppression/stasis; airborne forced movement and stasis are "
-    "un-cleansable.  Local client binaries: QSS/Mercurial spells carry "
-    "canCastWhileDisabled=true and cannotBeSuppressed=true; Mikael's "
-    "3222Active carries neither flag."
-)
-CLEANSE_COOLDOWN_GAP = (
-    "The wiki-derived cache carries cooldown: null for all three actives; "
-    "the local client binaries carry 120 s (Mikael's), 90 s (Mercurial) "
-    "and 90 s vs 0 s (QSS item vs spell record — conflicting).  Binary-only "
-    "values are receipted, never enforced; the walk uses the per-fight "
-    "one-use latch."
-)
-
 
 def _cache_receipt(
     item: str,
@@ -766,13 +744,6 @@ def movement_entry(declaration: Mapping[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def control_receipt_entries(
-    intervals: Iterable[Mapping[str, Any]],
-) -> list[dict[str, Any]]:
-    """Receipt-shaped control entries: control_kind, source, start, end."""
-    return [_control_entries(interval) for interval in intervals]
-
-
 def truncate_intervals(
     intervals: Iterable[Mapping[str, Any]],
     activation_time: float,
@@ -832,8 +803,9 @@ def truncate_intervals(
 
 
 #: Kinds a cleanse cannot be cast under (self-scope castability rule).
-#: Sourced from the wiki Cleanse atom + client binary flags; see
-#: :data:`CLEANSE_CASTABILITY_RULE`.
+#: Sourced from the wiki Cleanse atom + client binary flags: QSS and
+#: Mercurial carry canCastWhileDisabled and cannotBeSuppressed; Mikael's
+#: 3222Active carries neither.
 CAST_BLOCKING_CONTROL_KINDS: frozenset[str] = frozenset({"suppression"})
 
 
@@ -1182,51 +1154,14 @@ class CleanseDecision:
         }
 
 
-# ---------------------------------------------------------------------------
-# Score-path representation gate (contract-owned mirror)
-# ---------------------------------------------------------------------------
-
-
-def compiled_support_receipt(template: Mapping[str, Any]) -> str | None:
-    """Contract-owned mirror of the score path's representation gate.
-
-    Returns None when a support template can ride the compiled score walk
-    with the cleanse decision intact, else a named receipt.  A heal packet
-    carrying the cleanse marker must fail closed (``support_cleanse``)
-    because the compiled kernel cannot reproduce the interval truncation;
-    cleanse/movement kinds fail closed with ``support_kind=...`` (the
-    compile module's own gate).  Mirrors
-    ``survival.compile.unrepresentable_template_receipt``.
-    """
-    kind = str(template.get("kind", ""))
-    if kind == "crowd_control_resist":
-        # P2 Slice 8: the passive immunity arm is representable (it only
-        # arms the state; the resist gate is the shared kernel).
-        return None
-    if kind == "cleanse":
-        return "support_kind=cleanse"
-    if kind == "movement":
-        return "support_kind=movement"
-    if kind == "heal" and (
-        bool(template.get("cleanse")) or bool(template.get("cleanse_item"))
-    ):
-        return "support_cleanse"
-    return None
-
-
 __all__ = [
     "CAST_BLOCKING_CONTROL_KINDS",
     "CLEANSE_ACTIVE_SOURCES",
-    "CLEANSE_CASTABILITY_RULE",
-    "CLEANSE_COOLDOWN_GAP",
-    "CLEANSE_REMOVAL_RULE",
     "CleanseDecision",
     "CleanseEligibility",
     "ITEM_CLEANSE_DECLARATIONS",
     "MERCURIAL_MOVEMENT_ATOM",
     "MIKAELS_HEAL_ATOM",
-    "compiled_support_receipt",
-    "control_receipt_entries",
     "interval_active",
     "movement_entry",
     "item_declaration",

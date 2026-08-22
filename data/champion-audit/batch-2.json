@@ -261,7 +261,7 @@
       "shield (R Killer Instinct)",
       "attack-reset (R)"
     ],
-    "gap_summary": "All outgoing-damage atoms are covered in the certified W->Q one-rotation model: Q volley (evolved 12 vs 6 missiles), W with Plasma stack applications and 5-stack rupture execute (15% missing health + 0.06%/100 AP), evolution state resolved automatically from item stats (auto/base/evolved options). E stealth/AS and R shield are explicitly withheld with documented reasons (SUPPORTED_FIGHT_MODES/UNSUPPORTED_FIGHT_MODE_REASON) and have no enemy-damage atoms. No missing damage atom.",
+    "gap_summary": "All outgoing-damage atoms are covered in the certified W->Q one-rotation model: Q volley (evolved 12 vs 6 missiles), W with Plasma stack applications and 5-stack rupture execute (15% missing health + 0.06%/100 AP), evolution state resolved automatically from item stats (auto/base/evolved options). E stealth/AS and R shield are outside the modeled rotation and have no enemy-damage atoms. No missing damage atom.",
     "verdict": "ok"
   },
   "Kalista": {

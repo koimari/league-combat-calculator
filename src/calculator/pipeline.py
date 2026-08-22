@@ -16,8 +16,6 @@ from .champions import (
     get_champion_cast_dependencies,
     get_champion_cast_order,
     get_custom_cast_order_unavailable_reason,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
 from .rotation_resolver import (
@@ -1131,7 +1129,6 @@ class FightParams(FightConfig):
         """
         if level > max_champion_level(self.role, self.role_quest_complete):
             raise ValueError(f"Level {level} requires the completed top role quest")
-        require_fight_mode_support(self, champion_name)
 
         custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
         if self.cast_order is not None and custom_order_reason is not None:
@@ -1213,26 +1210,6 @@ class FightParams(FightConfig):
                 f"{champion_name} cannot be told to cast; "
                 f"orderable slots are {', '.join(orderable)}"
             )
-
-
-def require_fight_mode_support(params: "FightParams", champion_name: str) -> None:
-    """Reject a fight mode the champion's certified module cannot run.
-
-    The one home for the mode rule: ``validate_for_champion`` applies it to
-    the main attacker, and the participant timeline applies it to every
-    roster member it will run as an attacker.
-    """
-    supported_modes = get_supported_fight_modes(champion_name)
-    requested_mode = (
-        "one_rotation"
-        if params.one_rotation
-        else ("auto_only" if params.auto_attacks_only else "time_based")
-    )
-    if supported_modes is not None and requested_mode not in supported_modes:
-        reason = get_unsupported_fight_mode_reason(champion_name)
-        raise ValueError(
-            reason or f"{requested_mode} is not certified for {champion_name}"
-        )
 
 
 # The optimizer replays the same frozen FightParams for thousands of

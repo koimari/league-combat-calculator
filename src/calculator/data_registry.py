@@ -1,20 +1,12 @@
 """Data-ownership registry: who may write under data/, and the only
 runtime-cache write API.
 
-Categories:
-  RUNTIME_CACHE    — tracked inputs the calculator reads at runtime
-                     (champions.json, items.json, runes.json).  Only
-                     data_updater may write these, only via
-                     write_runtime_cache().
-  EXTERNAL_EVIDENCE— downloaded game/wiki files (gitignored or sample
-                     tracked): gamefiles/, bin/, wiki/, wiki-raw/.
-  DERIVED_ARTIFACT — regenerable outputs computed from cache/evidence:
-                     economics-sourced.json, staleness.json, atoms/.
-  HAND_AUTHORED    — worklists, audits, receipts: never written by scripts.
-
-WRITERS maps every data/ subtree (or file) to the module(s) allowed to
-write it.  tests/test_data_writer_inventory.py enforces the map with an
-AST scan so a new downloader cannot silently join the boundary.
+The three tracked runtime caches (champions.json, items.json,
+runes.json) have a single writer, data_updater, and reach disk only
+through write_runtime_cache().  tests/test_data_writer_inventory.py
+enforces that boundary with an AST scan, and holds every writer under
+data/ to a repo-anchored path so an import from a foreign cwd cannot
+write somewhere else.
 
 data_version() is the other half of that ownership statement, read from
 the consumer's side: one monotonic counter naming *which* runtime cache a
@@ -34,19 +26,6 @@ from pathlib import Path
 from typing import Any
 
 CACHE_FILES = frozenset({"champions.json", "items.json", "runes.json"})
-
-WRITERS: dict[str, tuple[str, ...]] = {
-    "champions.json|items.json|runes.json": ("src/calculator/data_updater.py",),
-    "staleness.json": ("scripts/patch_regression.py",),
-    "economics-sourced.json": ("scripts/refresh_economics_data.py",),
-    "onhit-matrix.json": ("scripts/build_onhit_matrix.py",),
-    "gamefiles": ("scripts/patch_regression.py",),
-    "bin": ("scripts/decompose_binaries.py",),
-    "wiki": ("scripts/decompose_wiki.py",),
-    "wiki-raw": ("scripts/decompose_wiki.py",),
-    "atoms": ("scripts/atomize.py", "scripts/extract_atoms.py"),
-    "practice-corpus": (),  # hand-authored only
-}
 
 # How many times this process has replaced a runtime cache.  Starts at zero
 # and only ever grows, so "same version" is a sound reason to reuse a value
@@ -361,13 +340,13 @@ def write_runtime_cache(
     fetch's and not the re-parse's.
 
     Refuses filenames outside CACHE_FILES: the three tracked caches have a
-    single writer (data_updater) and every other data/ path has its own
-    documented owner in WRITERS.
+    single writer, data_updater, and no other data/ path reaches disk
+    through this API.
     """
     if filename not in CACHE_FILES:
         raise ValueError(
             f"{filename} is not a runtime-cache file; runtime cache is "
-            f"limited to {sorted(CACHE_FILES)} (see data_registry.WRITERS)"
+            f"limited to {sorted(CACHE_FILES)}"
         )
     data_directory.mkdir(parents=True, exist_ok=True)
     data_path = data_directory / filename

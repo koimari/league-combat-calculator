@@ -45,7 +45,7 @@ def test_capability_contract_exposes_named_participant_and_catalogue_fields() ->
         item_option_count=3,
     )
 
-    assert contract["schema_version"] == 6
+    assert contract["schema_version"] == 7
     assert contract["participants"]["main"]["fields"]["champion"]["supported"]
     assert contract["catalogs"]["champion_options"]["count"] == 2
     assert contract["catalogs"]["item_options"]["count"] == 3
@@ -86,9 +86,10 @@ def test_the_published_list_moved_the_schema_version_with_it() -> None:
     5 for ``minor_runes``/``stat_shards``/``rune_options`` and the rune and
     shard catalogs.  Every value in the chain has exactly one owning commit,
     which is why the phase list is still seven names at version 5; 6 is the
-    survival row's certification fields and touches no phase name.
+    survival row's certification fields and 7 the unsupported fields' null
+    locators, and neither touches a phase name.
     """
-    assert CAPABILITY_SCHEMA_VERSION == 6
+    assert CAPABILITY_SCHEMA_VERSION == 7
     assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7
 
 

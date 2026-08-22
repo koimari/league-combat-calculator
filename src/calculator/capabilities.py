@@ -60,9 +60,13 @@ from .survival.actions import TransitionRank, public_phase
 # receipts, the Guardian and Aftershock blocks, the action-downtime union and
 # the permanent-bonus-health ledger.
 #
+# 7 is the unsupported fields' locators: ``state_path`` and ``frontend_token``
+# are now ``null`` on every field the backend refuses, which is a value change
+# on ten published descriptors and so takes a version.
+#
 # The version moves for a change to the *published payload* and for nothing
 # else, so a derivation edit that comes out byte-identical leaves it alone.
-CAPABILITY_SCHEMA_VERSION = 6
+CAPABILITY_SCHEMA_VERSION = 7
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in
@@ -147,16 +151,32 @@ PARTICIPANT_LEDGER_CONTRACT: dict[str, Any] = {
 def _field(  # pylint: disable=too-many-arguments
     *,
     payload_field: str,
-    state_path: str,
-    frontend_token: str,
+    state_path: str | None = None,
+    frontend_token: str | None = None,
     supported: bool = True,
     reason: str | None = None,
     conditional: bool = False,
     availability: str = "static",
 ) -> dict[str, Any]:
-    """Build one immutable-in-practice public field descriptor."""
-    if not supported and not reason:
-        raise ValueError(f"Unavailable capability {payload_field} needs a reason")
+    """Build one immutable-in-practice public field descriptor.
+
+    A locator is exactly what a *supported* field has: ``state_path`` and
+    ``frontend_token`` name a control the browser mounts, and the contract
+    tests hold every supported field to a token the frontend really carries.
+    An unsupported field mounts nothing, so it publishes neither and carries
+    its reason instead — a locator there names a control that does not exist
+    and no test can catch, which is the one way this contract can lie.
+    """
+    if supported:
+        if not state_path or not frontend_token:
+            raise ValueError(f"Supported capability {payload_field} needs a locator")
+    else:
+        if not reason:
+            raise ValueError(f"Unavailable capability {payload_field} needs a reason")
+        if state_path or frontend_token:
+            raise ValueError(
+                f"Unavailable capability {payload_field} may not name a control"
+            )
     return {
         "supported": supported,
         "reason": reason,
@@ -266,8 +286,6 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
         ),
         "cast_order": _field(
             payload_field="cast_order",
-            state_path=("attacker.castOrder" if is_main else loadout_path("castOrder")),
-            frontend_token="data-cast-order",
             supported=False,
             reason=(
                 "The backend derives the authored cast order; explicit order "
@@ -321,8 +339,6 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
                 ),
                 "ally_effects_enabled": _field(
                     payload_field="ally_effects_enabled",
-                    state_path="attacker.allyEffectsEnabled",
-                    frontend_token="data-ally-effects",
                     supported=False,
                     reason="Only ally participants can opt into modeled ally effects.",
                 ),
@@ -341,8 +357,6 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
         ):
             fields[key] = _field(
                 payload_field=key,
-                state_path=f"allies.*.{key}",
-                frontend_token=f"data-{key}",
                 supported=False,
                 reason=(
                     f"Roster payloads accept ranks and declared champion options, "
@@ -357,8 +371,6 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
         ):
             fields[key] = _field(
                 payload_field=key,
-                state_path=f"targets.*.{key}",
-                frontend_token=f"data-{key}",
                 supported=False,
                 reason=(
                     f"Roster payloads accept ranks and declared champion options, "

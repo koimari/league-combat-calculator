@@ -100,7 +100,7 @@ def test_defile_tick_count_controls_damage_time_and_mana(karthus_data, parse_at)
     assert len(clamped["E"]["parts"]) == 40
 
 
-def test_public_metadata_certifies_every_fight_mode_and_keeps_the_sequence():
+def test_public_metadata_keeps_the_certified_sequence():
     meta = get_champion_options_meta("Karthus")
 
     assert {option["key"] for option in meta["options"]} == {
@@ -108,12 +108,6 @@ def test_public_metadata_certifies_every_fight_mode_and_keeps_the_sequence():
         "q_isolated",
         "e_ticks",
     }
-    # No SUPPORTED_FIGHT_MODES restriction: the API reads its absence as
-    # every public fight mode certified, and the curve reason is gone too.
-    assert "supported_fight_modes" not in meta
-    assert not hasattr(karthus, "SUPPORTED_FIGHT_MODES")
-    assert not hasattr(karthus, "UNSUPPORTED_FIGHT_MODE_REASON")
-    assert not hasattr(karthus, "COMPARISON_CURVE_UNAVAILABLE_REASON")
     # The certified W -> Q -> E -> R sequence itself stays unreorderable.
     assert karthus.CAST_ORDER == ("W", "Q", "E", "R")
     assert karthus.CUSTOM_CAST_ORDER_UNAVAILABLE_REASON

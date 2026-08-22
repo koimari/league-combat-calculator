@@ -235,22 +235,6 @@ def rank_gated_no_damage_parser(
     return parse
 
 
-def source_row(
-    label: str,
-    url: str,
-    revision_id: int,
-    revision_timestamp: str,
-) -> dict[str, Any]:
-    """Create the canonical revision receipt shape used by /api/config."""
-
-    return {
-        "label": label,
-        "url": url,
-        "revision_id": revision_id,
-        "revision_timestamp": revision_timestamp,
-    }
-
-
 # P4: the shared Yasuo/Yone crit-conversion rule.  The cached P prose is
 # verbatim Yasuo's for both ("total critical strike chance is doubled ...
 # every 1% ... converted into 0.5 bonus attack damage ... 90% of the

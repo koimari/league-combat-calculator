@@ -114,8 +114,7 @@ class TestTheLadderIsReachableFromProduction:
     byte-identical; what changed is that the clause above is falsifiable.
     The reason rides on the decision object and is *not* published — the
     counter sink has four counters and no reason field — so no test here
-    claims it is, and the sink field that would carry it is a dated row on
-    ``docs/receipts/escalated-defects-P4-S10.json``.
+    claims it is.
     """
 
     @staticmethod
