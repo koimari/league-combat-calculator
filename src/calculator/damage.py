@@ -3124,7 +3124,9 @@ def _resolve_combat_state(
         roster_target_count=max(1, int(config.roster_target_count)),
         target_class=config.target_class,
         resists=resists,
-        magic_amp=damage_effects.magic_amp,
+        magic_amp=delta_amp.declared_magic_amp(
+            [item_effects.resolved_item_name(item) for item in items]
+        ),
         ability_amp=ability_part_amp[0],
         ability_amp_owner=ability_part_amp[1],
         basic_amp=basic_part_amp[0],

@@ -19,6 +19,7 @@ from src.calculator.interpreters import (
     spellblade,
 )
 from src.calculator.interpreters.crit_profile import declared_crit_profile
+from src.calculator.interpreters.delta_amp import declared_magic_amp
 from src.calculator.interpreters.damage_routing import declared_execution
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
@@ -807,7 +808,7 @@ class TestResolveDamageEffects:
         assert buff.empowered_auto_count == 3
         # The two per-part amps left this registry for their declarations at
         # 3.7-r2; ``tests/test_interp_delta_amp.py`` owns their numbers now.
-        assert effects.magic_amp == pytest.approx(1.12)
+        assert declared_magic_amp(["Abyssal Mask"]) == pytest.approx(1.12)
         # SD9 retired ``execute``: the routing declaration is its one owner.
         execution = declared_execution(["The Collector"])
         assert execution is not None

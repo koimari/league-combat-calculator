@@ -4961,7 +4961,6 @@ class BuildDamageEffects:
     per_ability_hits: tuple[DamageSource, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    magic_amp: float = 1.0
     conditional_notes: tuple[str, ...] = ()
 
 
@@ -5238,7 +5237,6 @@ def _resolve_damage_effects_uncached(
     per_ability_hits: list[DamageSource] = []
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    magic_amp = 1.0
     conditional_notes: list[str] = []
 
     for item in items:
@@ -5279,8 +5277,6 @@ def _resolve_damage_effects_uncached(
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
             )
-        if effect_type == "magic_damage_amp":
-            magic_amp += _RequiredValues(item_name, values).number("magic_amp")
         splash_note = values.get("unmodeled_splash_note")
         if splash_note:
             conditional_notes.append(str(splash_note))
@@ -5309,7 +5305,6 @@ def _resolve_damage_effects_uncached(
         per_ability_hits=tuple(per_ability_hits),
         phantom_hit=phantom_hit,
         stacking_pen=stacking_pen,
-        magic_amp=magic_amp,
         conditional_notes=tuple(conditional_notes),
     )
 

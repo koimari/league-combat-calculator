@@ -113,7 +113,6 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
     assert branches == {
         "ult_empowered_autos",
         "ult_attack_speed_buff",
-        "magic_damage_amp",
     }
     # Every one of them is a tag the catalog also files under a family: the
     # overlap is total, so there is no ladder-only tag to leave alone.
@@ -278,13 +277,13 @@ def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
 # ---------------------------------------------------------------------------
 
 
-def test_magic_damage_amp_agrees():
-    """The tag the catalog had no compiler for now has one.
+def test_magic_damage_amp_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The sixth retirement, and the one that needed a compiler written first.
 
     Abyssal Mask's curse occupies no chain slot — it multiplies each magic
     packet where the mitigation prices it — so it is a ``PartAmpRule``,
     selected by the damage class it restricts rather than by an attack class.
-    Both lanes fold it the same way: 1.0 plus the sourced share."""
+    The ladder's summed field is gone and the declaration is the one owner."""
     owner = _sole("magic_damage_amp")
     assert TAG_FAMILY["magic_damage_amp"] is RuleFamily.DELTA_AMP
     assert not DELTA_AMP_UNMIGRATED_TAGS
@@ -292,9 +291,11 @@ def test_magic_damage_amp_agrees():
         rule for rule in behavior_rules(owner) if rule.family is RuleFamily.DELTA_AMP
     ]
     assert rule.mechanic_id == "abyssal_mask.magic_amp"
-    catalog = delta_amp.declared_magic_amp([owner])
-    assert catalog == pytest.approx(1.0 + required_effect_value(owner, "magic_amp"))
-    assert _ladder(owner).magic_amp == pytest.approx(catalog)
+    assert delta_amp.declared_magic_amp([owner]) == pytest.approx(
+        1.0 + required_effect_value(owner, "magic_amp")
+    )
+    assert delta_amp.declared_magic_amp([]) == 1.0
+    assert not hasattr(_ladder(owner), "magic_amp")
 
 
 def test_the_two_part_amp_selectors_are_disjoint_and_total():

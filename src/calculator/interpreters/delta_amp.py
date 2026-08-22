@@ -72,7 +72,6 @@ from ..item_behavior import (
     chain_rank,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..item_effects import resolve_damage_effects
 from ..value_ref import ValueRefError, resolve, resolve_flat
 
 # The field names a delta-amp rule compiles to.  A slot's magnitude is a
@@ -758,17 +757,13 @@ def _armed_part_multiplier(
 class StaticHolderAmps:
     """The holder's own static, pair-local amplifiers, resolved for one build.
 
-    Three numbers, and the umbrella's Amendment M measured that they come
-    from **two** declaration shapes rather than one, which is why this type
-    exists instead of a bare float per caller.  ``ability`` and ``basic`` are
-    :class:`PartAmpRule` declarations of this family, selected by the attack
-    class they price.  ``magic`` is not: it is Abyssal Mask's Unmake, family
-    ``ALLY_PACKET``, applied by ``damage._mitigate`` on the defender's side
-    and occupying no chain slot — which the catalog says in its own words
-    through ``DELTA_AMP_UNMIGRATED_TAGS``.  A reader who went looking for the
-    magic amp among the ``delta_amp`` declarations would find nothing and
-    drop the term, and dropping it is the exact deletion Amendment M,
-    Ruling 1 exists to forbid; so both readings meet here, once.
+    Three numbers, all three :class:`PartAmpRule` declarations of this family
+    and reached by two selectors, which is why this type exists instead of a
+    bare float per caller.  ``ability`` and ``basic`` are selected by the
+    attack class they price; ``magic`` is Abyssal Mask's Unmake, selected by
+    the damage class it restricts and applied by ``damage._mitigate`` on the
+    defender's side.  Both readings meet here, once, because dropping either
+    term is the exact deletion Amendment M, Ruling 1 forbids.
 
     "Static" and "pair-local" are the scope: these are the amplifiers the
     holder's own build brings to its own damage, resolved at build time and
@@ -841,7 +836,7 @@ def resolve_static_holder_amps(
         build=build,
     )
     return StaticHolderAmps(
-        magic=resolve_damage_effects(items).magic_amp,
+        magic=declared_magic_amp(owners),
         ability=ability,
         basic=basic,
         ability_owner=ability_owner,
