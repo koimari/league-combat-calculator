@@ -51196,24 +51196,342 @@
       }
     }
   },
+  "keystone_fights": {
+    "Master Yi": {
+      "11": {
+        "hail_of_blades_12s": {
+          "breakdown_totals": {
+            "E": 74.25,
+            "Q": 179.6,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 4259.2,
+            "keystone_Hail of Blades": 124.75,
+            "on_hit_Kraken Slayer": 887.66,
+            "on_hit_ability_passive": 430.22
+          },
+          "total_damage": 5955.69
+        },
+        "hail_of_blades_5s": {
+          "breakdown_totals": {
+            "E": 74.25,
+            "Q": 179.6,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 2129.6,
+            "keystone_Hail of Blades": 62.38,
+            "on_hit_Kraken Slayer": 310.16,
+            "on_hit_ability_passive": 215.11
+          },
+          "total_damage": 2971.1
+        },
+        "lethal_tempo_12s": {
+          "breakdown_totals": {
+            "E": 74.25,
+            "Q": 179.6,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 4791.6,
+            "keystone_Lethal Tempo": 622.32,
+            "on_hit_Kraken Slayer": 1080.16,
+            "on_hit_ability_passive": 484.0
+          },
+          "total_damage": 7231.93
+        },
+        "lethal_tempo_5s": {
+          "breakdown_totals": {
+            "E": 74.25,
+            "Q": 179.6,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 2129.6,
+            "keystone_Lethal Tempo": 155.62,
+            "on_hit_Kraken Slayer": 310.16,
+            "on_hit_ability_passive": 215.11
+          },
+          "total_damage": 3064.35
+        },
+        "no_keystone_12s": {
+          "breakdown_totals": {
+            "E": 74.25,
+            "Q": 179.6,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 3993.0,
+            "on_hit_Kraken Slayer": 887.66,
+            "on_hit_ability_passive": 403.33
+          },
+          "total_damage": 5537.85
+        },
+        "no_keystone_5s": {
+          "breakdown_totals": {
+            "E": 74.25,
+            "Q": 179.6,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 1863.4,
+            "on_hit_Kraken Slayer": 310.16,
+            "on_hit_ability_passive": 188.22
+          },
+          "total_damage": 2615.64
+        }
+      },
+      "18": {
+        "hail_of_blades_12s": {
+          "breakdown_totals": {
+            "E": 94.25,
+            "Q": 188.93,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 5475.8,
+            "keystone_Hail of Blades": 154.4,
+            "on_hit_Kraken Slayer": 1319.31,
+            "on_hit_ability_passive": 553.11
+          },
+          "total_damage": 7785.81
+        },
+        "hail_of_blades_5s": {
+          "breakdown_totals": {
+            "E": 94.25,
+            "Q": 188.93,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 2593.8,
+            "keystone_Hail of Blades": 77.2,
+            "on_hit_Kraken Slayer": 619.31,
+            "on_hit_ability_passive": 262.0
+          },
+          "total_damage": 3835.5
+        },
+        "lethal_tempo_12s": {
+          "breakdown_totals": {
+            "E": 94.25,
+            "Q": 188.93,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 6052.2,
+            "keystone_Lethal Tempo": 1230.8,
+            "on_hit_Kraken Slayer": 1552.65,
+            "on_hit_ability_passive": 611.33
+          },
+          "total_damage": 9730.16
+        },
+        "lethal_tempo_5s": {
+          "breakdown_totals": {
+            "E": 94.25,
+            "Q": 188.93,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 2882.0,
+            "keystone_Lethal Tempo": 425.25,
+            "on_hit_Kraken Slayer": 619.31,
+            "on_hit_ability_passive": 291.11
+          },
+          "total_damage": 4500.86
+        },
+        "no_keystone_12s": {
+          "breakdown_totals": {
+            "E": 94.25,
+            "Q": 188.93,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 4899.4,
+            "on_hit_Kraken Slayer": 1085.98,
+            "on_hit_ability_passive": 494.89
+          },
+          "total_damage": 6763.45
+        },
+        "no_keystone_5s": {
+          "breakdown_totals": {
+            "E": 94.25,
+            "Q": 188.93,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 2305.6,
+            "on_hit_Kraken Slayer": 385.98,
+            "on_hit_ability_passive": 232.89
+          },
+          "total_damage": 3207.65
+        }
+      }
+    },
+    "Vayne": {
+      "11": {
+        "hail_of_blades_12s": {
+          "breakdown_totals": {
+            "E": 254.17,
+            "Q": 5872.53,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 943.8,
+            "keystone_Hail of Blades": 111.56,
+            "on_hit_Kraken Slayer": 572.7,
+            "on_hit_ability_W": 746.67
+          },
+          "total_damage": 8501.43
+        },
+        "hail_of_blades_5s": {
+          "breakdown_totals": {
+            "E": 254.17,
+            "Q": 2669.33,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 314.6,
+            "keystone_Hail of Blades": 74.38,
+            "on_hit_Kraken Slayer": 264.7,
+            "on_hit_ability_W": 320.0
+          },
+          "total_damage": 3897.17
+        },
+        "lethal_tempo_12s": {
+          "breakdown_totals": {
+            "E": 254.17,
+            "Q": 5872.53,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 1573.0,
+            "keystone_Lethal Tempo": 301.39,
+            "on_hit_Kraken Slayer": 726.7,
+            "on_hit_ability_W": 853.33
+          },
+          "total_damage": 9581.12
+        },
+        "lethal_tempo_5s": {
+          "breakdown_totals": {
+            "E": 254.17,
+            "Q": 2669.33,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 629.2,
+            "keystone_Lethal Tempo": 54.8,
+            "on_hit_Kraken Slayer": 264.7,
+            "on_hit_ability_W": 373.33
+          },
+          "total_damage": 4245.53
+        },
+        "no_keystone_12s": {
+          "breakdown_totals": {
+            "E": 254.17,
+            "Q": 5872.53,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 629.2,
+            "on_hit_Kraken Slayer": 572.7,
+            "on_hit_ability_W": 693.33
+          },
+          "total_damage": 8021.93
+        },
+        "no_keystone_5s": {
+          "breakdown_totals": {
+            "E": 254.17,
+            "Q": 2669.33,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "on_hit_Kraken Slayer": 112.28,
+            "on_hit_ability_W": 266.67
+          },
+          "total_damage": 3302.45
+        }
+      },
+      "18": {
+        "hail_of_blades_12s": {
+          "breakdown_totals": {
+            "E": 500.0,
+            "Q": 7765.33,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 1056.0,
+            "keystone_Hail of Blades": 185.6,
+            "on_hit_Kraken Slayer": 886.83,
+            "on_hit_ability_W": 1066.67
+          },
+          "total_damage": 11460.43
+        },
+        "hail_of_blades_5s": {
+          "breakdown_totals": {
+            "E": 500.0,
+            "Q": 3584.0,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 352.0,
+            "keystone_Hail of Blades": 92.8,
+            "on_hit_Kraken Slayer": 326.83,
+            "on_hit_ability_W": 466.67
+          },
+          "total_damage": 5322.29
+        },
+        "lethal_tempo_12s": {
+          "breakdown_totals": {
+            "E": 500.0,
+            "Q": 7765.33,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 1760.0,
+            "keystone_Lethal Tempo": 571.79,
+            "on_hit_Kraken Slayer": 1073.49,
+            "on_hit_ability_W": 1200.0
+          },
+          "total_damage": 12870.62
+        },
+        "lethal_tempo_5s": {
+          "breakdown_totals": {
+            "E": 500.0,
+            "Q": 3584.0,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 704.0,
+            "keystone_Lethal Tempo": 131.95,
+            "on_hit_Kraken Slayer": 326.83,
+            "on_hit_ability_W": 533.33
+          },
+          "total_damage": 5780.11
+        },
+        "no_keystone_12s": {
+          "breakdown_totals": {
+            "E": 500.0,
+            "Q": 7765.33,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 704.0,
+            "on_hit_Kraken Slayer": 886.83,
+            "on_hit_ability_W": 1000.0
+          },
+          "total_damage": 10856.16
+        },
+        "no_keystone_5s": {
+          "breakdown_totals": {
+            "E": 500.0,
+            "Q": 3584.0,
+            "R": 0.0,
+            "W": 0.0,
+            "auto_attacks": 0.0,
+            "on_hit_Kraken Slayer": 326.83,
+            "on_hit_ability_W": 400.0
+          },
+          "total_damage": 4810.83
+        }
+      }
+    }
+  },
   "metadata": {
     "build_substitutions": [],
     "champion_count": 173,
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
-      "entries": 670,
-      "leaves": 58507,
-      "numeric_leaves": 44857,
-      "sections": "champion_baselines,item_sweep,registered_champion_fights"
+      "entries": 672,
+      "leaves": 58715,
+      "numeric_leaves": 45065,
+      "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
+    "git_head": "500b1b37db09881311c157b8ac1610daed17d5e2",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
+    "src_tree_sha": "af0db22c35b55fb89f065d285a93468bb32a571d"
   },
   "registered_champion_fights": {
     "Aatrox": {
