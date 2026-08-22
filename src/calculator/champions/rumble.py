@@ -67,6 +67,16 @@ out_of_scope slots (P, W).
         lockout at 4.5s off ~11 phantom casts. Heat is derivable the day
         E's charges are, and ``_heat_mechanics`` already publishes the
         casts-per-window count that derivation needs.
+        The two axes cannot contradict each other, and a clamp is never
+        how that is enforced — a clamp answers an impossible request with
+        a plausible number. A lockout longer than the declared fight is
+        REFUSED, naming its numbers (``_refuse_impossible_heat_state``);
+        clamped, three, four and five windows in a ten-second fight all
+        priced one answer. Empowered swings with no declared window
+        DERIVE the one window that holds them, because a swing is
+        evidence of the window it landed in and because the shared option
+        sweeps arm one option at a time, so no cross-option rule could be
+        satisfied. An autos-only fight drops both: no cast, no Heat.
         Both halves land through primitives that already existed: the
         bonus attack speed as a ``stat_buff`` weighted by
         ``buff_window_share`` (exact for attack speed, which is linear
@@ -270,6 +280,61 @@ def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
 _flamespitter_full_channel.phase = "damage"
 
 
+def _overheat_attack_speed(ability: dict[str, Any], level: int) -> float:
+    """The Overheated bonus attack speed at *level*, or raise.
+
+    ``extract_value`` indexes a row's LAST value when the level exceeds the
+    row's axis, so a shortened cache would silently price the level-20
+    maximum at every level.  The row's own length is checked first (the
+    Aphelios Weapon Master guard).
+    """
+    leveling = find_named_leveling(ability, "Per-Level Scaling")
+    modifiers = leveling.get("modifiers") if isinstance(leveling, dict) else None
+    values = modifiers[0].get("values") if modifiers else None
+    if not isinstance(values, list) or len(values) < level:
+        raise ValueError(
+            "Rumble P: the cached 'Per-Level Scaling' row does not carry the "
+            f"Overheated bonus attack speed at level {level} "
+            f"({0 if not isinstance(values, list) else len(values)} value(s) "
+            "on a per-level axis)"
+        )
+    granted = extract_value(ability, "Per-Level Scaling", level)
+    if granted <= 0:
+        raise ValueError(
+            "Rumble P: the cached 'Per-Level Scaling' row prices the "
+            f"Overheated bonus attack speed at {granted} for level {level}"
+        )
+    return granted
+
+
+def _refuse_impossible_heat_state(
+    ctx: SlotCtx,
+    *,
+    windows: int,
+    locked: float,
+    window: float,
+) -> None:
+    """Refuse a lockout the declared fight cannot hold.
+
+    A CONTRADICTION is refused rather than clamped, because a clamp answers
+    an impossible request with a plausible number: three, four and five
+    windows in a ten-second fight all priced the same attack speed —
+    ``buff_window_share`` capped at 1.0 — while ``self_cast_lockout_seconds``
+    kept growing past a horizon already at zero.
+    """
+    # ``fight_duration_seconds`` is zero in one-rotation mode and in a
+    # direct parse call — no clock, so no horizon to contradict.
+    duration = float(ctx.option("fight_duration_seconds"))
+    if 0.0 < duration < locked:
+        raise ValueError(
+            f"Rumble P: overheat_windows={windows} declares "
+            f"{windows} x {window:g}s = {locked:g}s Overheated, which does "
+            f"not fit in the declared {duration:g}s fight. The mech cannot "
+            "spend longer locked out than the fight lasts; declare at most "
+            f"{int(duration // window)} window(s)"
+        )
+
+
 def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: the Overheated window — its on-hit damage, bonus AS, and lockout.
 
@@ -293,6 +358,10 @@ def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
     withheld entirely at zero windows, because a payload present at a
     magnitude of zero still reads as a priced slot to ``coverage_truth``
     (the phantom-proc rule this module already applies to the rider).
+
+    The two axes cannot contradict each other.  Declared swings derive the
+    window that holds them, an autos-only fight drops both, and a lockout
+    longer than the declared fight is refused outright.
     """
     ability = ctx.ability("P")
     if ability is None:
@@ -315,39 +384,58 @@ def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
     ceiling, per_cast, window = _heat_mechanics(ctx)
     casts_per_window = math.ceil(ceiling / per_cast)
     windows = min(max(int(ctx.option("overheat_windows")), 0), _MAX_OVERHEAT_WINDOWS)
+    # An empowered swing IS evidence of an Overheat window: the row exists
+    # only "during this time".  So declared autos derive the one window that
+    # holds them rather than pricing upside with no window to pay for it —
+    # a derivation and not a refusal, because the shared option sweeps
+    # (cast_dependency_audit.option_states) arm one option at a time and can
+    # never satisfy a cross-option rule.
+    derived_window = bool(autos) and not windows
+    if derived_window:
+        windows = 1
     # A fight that casts nothing builds no Heat, so it never Overheats
-    # whatever the axis says — the mech only heats on a basic ability cast.
-    if ctx.option("auto_attacks_only"):
+    # whatever the axis says — the mech only heats on a basic ability cast,
+    # and with no window there are no empowered swings either.
+    autos_only = bool(ctx.option("auto_attacks_only"))
+    if autos_only:
         windows = 0
+        derived_window = False
+        if autos:
+            autos = 0
+            del entry["on_hit"]
     locked = windows * window
+    _refuse_impossible_heat_state(ctx, windows=windows, locked=locked, window=window)
     detail = (
         f"Overheated: {per_auto:.2f} bonus magic damage on-hit "
         f"(level-{ctx.level} flat + 25% AP + 4% target maximum health) "
         f"x {autos} empowered auto(s)"
     )
     if windows:
-        granted = extract_value(ability, "Per-Level Scaling", ctx.level)
-        if find_named_leveling(ability, "Per-Level Scaling") is None or granted <= 0:
-            raise ValueError(
-                "Rumble P: the cached 'Per-Level Scaling' row no longer "
-                f"carries the Overheated bonus attack speed at level {ctx.level}"
-            )
+        granted = _overheat_attack_speed(ability, ctx.level)
         share = buff_window_share(ctx, locked)
         entry["stat_buff"] = {"bonus_attack_speed": granted * share}
         entry["self_cast_lockout_seconds"] = locked
         detail += (
             f"; {windows} Overheat window(s) of {window:g}s "
-            f"({int(ceiling)} Heat at {int(per_cast)} per basic ability cast "
-            f"= {casts_per_window} casts each): +{granted:g}% bonus attack "
-            f"speed over {locked:g}s of the fight (a {share:.3f} share, exact "
-            "for attack speed, which is linear in the bonus) and the same "
-            "seconds removed from the cast schedule, the self-silence the "
-            "cache states in the same sentence"
+            + ("derived from the declared swings" if derived_window else "declared")
+            + f" ({int(ceiling)} Heat at {int(per_cast)} per basic ability "
+            f"cast = {casts_per_window} casts each): +{granted:g}% bonus "
+            f"attack speed over {locked:g}s of the fight (a {share:.3f} "
+            "share, exact for attack speed, which is linear in the bonus) "
+            "and the same seconds removed from the cast schedule, the "
+            "self-silence the cache states in the same sentence"
+        )
+    elif autos_only:
+        detail += (
+            "; an autos-only fight casts nothing, so the mech builds no Heat "
+            "and never Overheats — neither the empowered swings nor the "
+            "bonus attack speed nor the ability lockout applies"
         )
     else:
         detail += (
-            "; no Overheat window is declared (overheat_windows = 0), so "
-            "neither the bonus attack speed nor the ability lockout applies"
+            "; no Overheat window is declared (overheat_windows = 0) and no "
+            "empowered swing implies one, so neither the bonus attack speed "
+            "nor the ability lockout applies"
         )
     detail += (
         "; the 'Bonus Damage' row is the monster-only cap on the "
@@ -473,7 +561,15 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "cast schedule's horizon. Where inside the fight the lockout sits is "
     "NOT claimed: the model prices how much casting the window costs, not "
     "which casts it eats. An autos-only fight casts nothing, generates no "
-    "Heat and therefore Overheats zero times whatever the axis declares.",
+    "Heat and therefore Overheats zero times whatever the axis declares. "
+    "The two axes cannot contradict each other and neither is clamped into "
+    "agreement, because a clamp answers an impossible request with a "
+    "plausible number: a windows x 4s lockout longer than the declared "
+    "fight is REFUSED naming its numbers (clamped, 3/4/5 windows in a 10s "
+    "fight all priced one answer), overheat_autos with no declared window "
+    "DERIVES the one window that holds the swings, and an autos-only fight "
+    "drops the window and the swings together since it casts nothing and "
+    "builds no Heat.",
     "W (Scrap Shield) is a sourced self-shield with no damage row: 25/55/"
     "85/115/145 + 30% AP + 4% of maximum health for 1.5 seconds. Shield-"
     "only abilities cannot carry attach_self_shield (that payload rides "

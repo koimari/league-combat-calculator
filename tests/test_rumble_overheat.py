@@ -187,7 +187,14 @@ def _rider(level: int, autos: int, **kwargs):
     game actually uses, bounded by ``max_procs``. The per-swing number and
     the count are unchanged; only where they live moved.
     """
-    _, abilities = _parse(level, options={"overheat_autos": autos}, **kwargs)
+    # One window is declared throughout: empowered swings with nowhere to
+    # land are a refused contradiction, so the damage half is only ever
+    # asked about inside a window (``TestImpossibleHeatStatesAreRefused``).
+    _, abilities = _parse(
+        level,
+        options={"overheat_autos": autos, "overheat_windows": 1},
+        **kwargs,
+    )
     entry = abilities["passive"]
     on_hit = entry.get("on_hit")
     if on_hit is None:
@@ -279,7 +286,7 @@ class TestOverheatDamage:
                 "target_current_health": _TARGET_MAX_HEALTH * 2,
                 "target_missing_health": 0.0,
             },
-            champion_options={"overheat_autos": 1},
+            champion_options={"overheat_autos": 1, "overheat_windows": 1},
         )
         gain = doubled["passive"]["on_hit"]["damage_per_hit"] - low_per_swing
         assert gain == pytest.approx(0.04 * _TARGET_MAX_HEALTH)
@@ -413,11 +420,11 @@ class TestOverheatWindowPricesBothHalves:
 
     def test_zero_windows_emit_neither_half(self):
         """A payload present at magnitude zero still reads as priced."""
-        _, abilities = _parse(20, options={"overheat_autos": 3})
+        _, abilities = _parse(20)
         passive = abilities["passive"]
         assert "stat_buff" not in passive
         assert "self_cast_lockout_seconds" not in passive
-        assert passive["on_hit"]["max_procs"] == 3
+        assert "on_hit" not in passive
 
     def test_one_window_emits_both_halves_together(self):
         _, abilities = _parse(20, options={"overheat_windows": 1})
@@ -447,6 +454,116 @@ class TestOverheatWindowPricesBothHalves:
         assert row["default"] == 0
         assert row["min"] == 0
         assert row["max"] == _MAX_OVERHEAT_WINDOWS
+
+    def test_a_shortened_attack_speed_row_raises_instead_of_pricing_the_max(self):
+        """``extract_value`` falls through to the LAST value past its axis.
+
+        A truncated per-level row would otherwise price level 20's 142.54%
+        at every level, silently — the documented Weapon Master trap.
+        """
+        broken = copy.deepcopy(_RUMBLE)
+        row = _leveling_row(
+            broken["abilities"]["P"][0]["effects"][2], "Per-Level Scaling"
+        )
+        row["modifiers"][0]["values"] = row["modifiers"][0]["values"][:5]
+        with pytest.raises(ValueError, match="does not carry the Overheated bonus"):
+            parse_champion_abilities(
+                broken,
+                20,
+                0.0,
+                champion_stats=dict(calculate_total_stats(broken, 20, [])),
+                target_stats=dict(_TARGET),
+                champion_options={"overheat_windows": 1},
+            )
+
+    def test_the_declared_windows_must_fit_the_declared_fight(self):
+        """Saturation is the failure a clamp hides.
+
+        Clamped, windows 3, 4 and 5 all returned one 10-second fight's
+        answer: ``buff_window_share`` capped the attack speed at 1.0 while
+        ``self_cast_lockout_seconds`` kept growing past a horizon that had
+        already hit zero, so three distinct declarations priced alike.
+        """
+        for windows in (3, 4, 5):
+            with pytest.raises(ValueError, match="does not fit in the declared"):
+                _parse(
+                    20,
+                    options={
+                        "overheat_windows": windows,
+                        "fight_duration_seconds": 10.0,
+                    },
+                )
+
+    def test_the_refusal_names_the_numbers_and_the_fitting_count(self):
+        with pytest.raises(ValueError) as excinfo:
+            _parse(
+                20,
+                options={"overheat_windows": 3, "fight_duration_seconds": 10.0},
+            )
+        message = str(excinfo.value)
+        assert "3 x 4s = 12s" in message
+        assert "10s fight" in message
+        assert "declare at most 2 window(s)" in message
+
+    def test_the_windows_that_do_fit_are_untouched(self):
+        for windows in (1, 2):
+            _, abilities = _parse(
+                20,
+                options={
+                    "overheat_windows": windows,
+                    "fight_duration_seconds": 10.0,
+                },
+            )
+            assert abilities["passive"]["self_cast_lockout_seconds"] == pytest.approx(
+                4.0 * windows
+            )
+
+    def test_a_clockless_parse_has_no_horizon_to_contradict(self):
+        """One-rotation mode and direct parses carry no fight duration."""
+        _, abilities = _parse(20, options={"overheat_windows": 5})
+        assert abilities["passive"]["self_cast_lockout_seconds"] == pytest.approx(20.0)
+
+    def test_empowered_autos_derive_the_window_that_holds_them(self):
+        """A swing is evidence of the window it landed in.
+
+        Priced alone, ``overheat_autos`` bought empowered damage during
+        zero declared windows — upside with nothing paying for it. The
+        window is derived rather than refused because the shared option
+        sweeps (``cast_dependency_audit.option_states``) arm one option at
+        a time and can never satisfy a cross-option rule.
+        """
+        _, abilities = _parse(20, options={"overheat_autos": 3})
+        passive = abilities["passive"]
+        assert passive["on_hit"]["max_procs"] == 3
+        assert passive["self_cast_lockout_seconds"] == pytest.approx(4.0)
+        assert passive["stat_buff"] == {"bonus_attack_speed": pytest.approx(142.54)}
+        assert "derived from the declared swings" in passive["detail"]
+
+    def test_a_declared_window_is_not_overridden_by_the_derivation(self):
+        _, abilities = _parse(20, options={"overheat_autos": 3, "overheat_windows": 2})
+        passive = abilities["passive"]
+        assert passive["self_cast_lockout_seconds"] == pytest.approx(8.0)
+        assert "2 Overheat window(s) of 4s declared" in passive["detail"]
+
+    def test_an_autos_only_fight_drops_the_window_and_the_swings(self):
+        """No cast, no Heat — and no empowered swing without the window."""
+        _, abilities = _parse(
+            20,
+            options={
+                "overheat_autos": 3,
+                "overheat_windows": 2,
+                "auto_attacks_only": True,
+            },
+        )
+        passive = abilities["passive"]
+        assert "on_hit" not in passive
+        assert "stat_buff" not in passive
+        assert "self_cast_lockout_seconds" not in passive
+        assert "builds no Heat and never Overheats" in passive["detail"]
+
+    def test_autos_inside_a_declared_window_are_priced(self):
+        _, abilities = _parse(20, options={"overheat_autos": 3, "overheat_windows": 1})
+        assert abilities["passive"]["on_hit"]["max_procs"] == 3
 
     def test_the_assumption_states_the_axis_and_its_refusal(self):
         assumption = next(a for a in ASSUMPTIONS if "heat axis" in a)

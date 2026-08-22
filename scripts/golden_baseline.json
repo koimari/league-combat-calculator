@@ -24549,7 +24549,7 @@
         },
         "passive": {
           "damage_type": "magic",
-          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); no Overheat window is declared (overheat_windows = 0), so neither the bonus attack speed nor the ability lockout applies; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
+          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); no Overheat window is declared (overheat_windows = 0) and no empowered swing implies one, so neither the bonus attack speed nor the ability lockout applies; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
           "name": "Junkyard Titan",
           "parts": [],
           "target_max_health_sensitive": true,
@@ -52876,14 +52876,14 @@
       "numeric_leaves": 46179,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "b9d551c9bd4f43d4a422a0f7873245695530c451",
+    "git_head": "c8e88a404072feb91bc9903e0318e7f679624365",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "6e4ff60d32fb9c9b5d4749947dab12544c69a316"
+    "src_tree_sha": "dc31f169947293372173794fffa692046f9ae4e4"
   },
   "registered_champion_fights": {
     "Aatrox": {

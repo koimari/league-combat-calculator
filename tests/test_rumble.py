@@ -104,7 +104,9 @@ class TestOverheatedOnHit:
         )
         # 40 (level 18) + 25% of 200 AP + 4% of a 2500 HP target.
         assert expected == pytest.approx(40.0 + 50.0 + 100.0)
-        entry = row_review.entry("Rumble", "passive", overheat_autos=3)
+        entry = row_review.entry(
+            "Rumble", "passive", overheat_autos=3, overheat_windows=1
+        )
         assert entry["on_hit"] == {
             "name": "Junkyard Titan (on-hit)",
             "damage_per_hit": pytest.approx(expected),
@@ -121,8 +123,15 @@ class TestOverheatedOnHit:
             "fight_mode": "timed",
             "include_auto_attacks": True,
         }
-        off = calculate_payload({**probe, "champion_options": {}})
-        on = calculate_payload({**probe, "champion_options": {"overheat_autos": 3}})
+        # The window is held constant across both arms so the comparison
+        # isolates the rider: moving it too would move the lockout as well.
+        off = calculate_payload({**probe, "champion_options": {"overheat_windows": 1}})
+        on = calculate_payload(
+            {
+                **probe,
+                "champion_options": {"overheat_autos": 3, "overheat_windows": 1},
+            }
+        )
 
         assert "on_hit_ability_passive" not in off["breakdown"]
         row = on["breakdown"]["on_hit_ability_passive"]
@@ -152,8 +161,12 @@ class TestOverheatedOnHit:
             "fight_mode": "timed",
             "include_auto_attacks": True,
         }
-        one = calculate_payload({**probe, "champion_options": {"overheat_autos": 1}})
-        three = calculate_payload({**probe, "champion_options": {"overheat_autos": 3}})
+        one = calculate_payload(
+            {**probe, "champion_options": {"overheat_autos": 1, "overheat_windows": 1}}
+        )
+        three = calculate_payload(
+            {**probe, "champion_options": {"overheat_autos": 3, "overheat_windows": 1}}
+        )
         autos = one["breakdown"]["auto_attacks"]["count"]
         assert autos > 3, "the probe must outlast the empowered swings"
         assert one["breakdown"]["on_hit_ability_passive"]["count"] == 1
@@ -166,7 +179,7 @@ class TestOverheatedOnHit:
         default request — which declares no window — still emits neither.
         """
         assert "bonus attack speed" in cc_review.slot_text(cc_review.kit("Rumble"), "P")
-        entry = row_review.entry("Rumble", "passive", overheat_autos=1)
+        entry = row_review.entry("Rumble", "passive")
         assert "stat_buff" not in entry
         assert "self_cast_lockout_seconds" not in entry
         assert "no Overheat window is declared" in entry["detail"]
@@ -230,7 +243,9 @@ class TestCoverageMap:
             "R": "modeled",
         }
         # W's shield is not damage, so the damage ledger still reads zero.
-        assert coverage_truth.emitted("Rumble", overheat_autos=1) == {
+        assert coverage_truth.emitted(
+            "Rumble", overheat_autos=1, overheat_windows=1
+        ) == {
             "P": coverage_truth.PRICED,
             "Q": coverage_truth.PRICED,
             "W": coverage_truth.ZERO,
