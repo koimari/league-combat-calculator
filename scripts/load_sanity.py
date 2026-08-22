@@ -308,13 +308,9 @@ async def _run(
         await _fire(client, base_url, "/api/calculate", CALCULATE_PAYLOADS[0])
         await _fire(client, base_url, "/api/bis", BIS_PAYLOADS[0])
 
-        cold, _cold_failures = await _run_pass(
-            client, base_url, plan, concurrency=users
-        )
+        cold, _ = await _run_pass(client, base_url, plan, concurrency=users)
         before = await _cache_counters(client, base_url)
-        warm, warm_failures = await _run_pass(
-            client, base_url, plan, concurrency=warm_concurrency
-        )
+        warm, _ = await _run_pass(client, base_url, plan, concurrency=warm_concurrency)
         after = await _cache_counters(client, base_url)
 
     hits_delta = int(after["hits"]) - int(before["hits"])
@@ -324,7 +320,7 @@ async def _run(
 
     latencies: dict[str, list[float]] = {"calculate": [], "bis": []}
     failures = 0
-    failures_detail = list(warm_failures)
+    failures_detail: list[str] = []
     for endpoint, latency, status in cold + warm:
         latencies["calculate" if endpoint == "/api/calculate" else "bis"].append(
             latency
