@@ -17,7 +17,7 @@
       "sample_author": "Briar"
     },
     "cc_kind": {
-      "authors": 143,
+      "authors": 144,
       "negative_test": "test_withholding_cc_kind_drops_the_cc_setup_fan_out",
       "sample_author": "Ahri"
     },
@@ -32,7 +32,7 @@
       "sample_author": "Alistar"
     },
     "on_hit": {
-      "authors": 53,
+      "authors": 54,
       "negative_test": "test_withholding_on_hit_changes_the_edge_citation",
       "sample_author": "Aatrox"
     },
@@ -284,7 +284,7 @@
       11,
       18
     ],
-    "states_walked": 4672
+    "states_walked": 4680
   },
   "order_override_frontier": {
     "champions": [
