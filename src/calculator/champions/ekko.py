@@ -9,7 +9,13 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    proc_damage,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option, int_option
 
@@ -45,7 +51,7 @@ def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Return Magic Damage", rank, ctx.stats, ctx.target
     )
     return_entry = damage_entry(
-        ability.get("name", "Timewinder"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         initial + returned,
@@ -69,7 +75,7 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
     ready = bool(ctx.options.get("w_passive_ready", False))
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Parallel Convergence"),
+        name=ability_name(ability),
         reason="Active W creates a sourced shield/stun zone; its passive on-hit is opt-in below 30% target health.",
     )
     if entry is None:
@@ -103,7 +109,7 @@ def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Phase Dive"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -126,7 +132,7 @@ def _chronobreak(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Chronobreak"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,

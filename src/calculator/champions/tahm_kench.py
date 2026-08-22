@@ -30,6 +30,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -76,7 +77,7 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
             ctx.target,
         )
     entry = damage_entry(
-        ability.get("name", "Tongue Lash"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -106,7 +107,7 @@ def _regurgitate(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Regurgitate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("R") or ability, rank),
         total,

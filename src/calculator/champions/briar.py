@@ -51,7 +51,13 @@ from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no clean JSON
@@ -99,7 +105,7 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
         + (P_BLEED_BASE_MAX - P_BLEED_BASE_MIN) * (level - 1) / 17.0
         + P_BLEED_BONUS_AD_RATIO * ctx.stat("bonus_attack_damage")
     )
-    name = ability.get("name", "Crimson Curse")
+    name = ability_name(ability)
     return {
         "name": name,
         "damage_type": "physical",
@@ -128,7 +134,7 @@ def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Head Rush"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -174,7 +180,7 @@ def _blood_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     entry = damage_entry(
-        ability.get("name", "Blood Frenzy"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -218,7 +224,7 @@ def _snack_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, target)
 
     entry = damage_entry(
-        ability.get("name", "Snack Attack"),
+        ability_name(ability),
         rank,
         extract_cooldown(frenzy, rank),  # W[1] has no cooldown of its own
         bonus,
@@ -278,7 +284,7 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
             ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target
         )
     entry = damage_entry(
-        ability.get("name", "Chilling Scream"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -342,7 +348,7 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
                 # 35% damage reduction -> take 65% of each incoming packet.
                 "multiplier": 1.0 - reduction_percent / 100.0,
                 "duration": charge_seconds,
-                "source": f"{ability.get('name', 'Chilling Scream')} · damage reduction",
+                "source": f"{ability_name(ability)} · damage reduction",
                 "source_atoms": [
                     _atom_receipt(reduction_atom),
                     _atom_receipt(duration_atom),
@@ -421,7 +427,7 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Certain Death"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

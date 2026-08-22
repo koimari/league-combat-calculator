@@ -29,7 +29,7 @@ from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import find_named_leveling, sum_modifiers
+from .slotlib import ability_name, find_named_leveling, sum_modifiers
 from .module_contract import coverage
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
@@ -71,7 +71,7 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = per_tick * _P_BLEED_TICKS
     return {
-        "name": ability.get("name", "Blade's End"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "physical",

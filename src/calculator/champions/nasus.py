@@ -41,6 +41,7 @@ from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -80,7 +81,7 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         + stacks
     )
     entry = damage_entry(
-        ability.get("name", "Siphoning Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -119,7 +120,7 @@ def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = initial + per_tick * _E_TICKS
     entry = damage_entry(
-        ability.get("name", "Spirit Fire"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -155,7 +156,7 @@ def _fury_of_the_sands(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = per_tick * _R_TICKS
     entry = damage_entry(
-        ability.get("name", "Fury of the Sands"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -184,7 +185,7 @@ def _soul_eater(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     return {
-        "name": ability.get("name", "Soul Eater"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "physical",
@@ -205,7 +206,7 @@ def _wither(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     return {
-        "name": ability.get("name", "Wither"),
+        "name": ability_name(ability),
         "rank": ctx.rank_for(),
         "cooldown": extract_cooldown(ability, ctx.rank_for()),
         "damage_type": "magic",

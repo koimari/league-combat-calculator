@@ -32,7 +32,13 @@ from .inputs import bool_option, champion_stat
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    with_control,
+)
 
 PACKET_SHA256 = "f3732d39aae761199c06bfc606515aee50fa1cc74ea65f28a15b0ef78d02f366"
 
@@ -55,7 +61,7 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
     if not bool(ctx.options.get("sapling_empowered", True)):
         explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         entry = damage_entry(
-            ability.get("name", "Sapling Toss"),
+            ability_name(ability),
             rank,
             cooldown,
             explosion,
@@ -77,7 +83,7 @@ def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
     # Empowered total == 3 x per-instance (explosion 1 instance at 66.7%
     # of the base + 2 burn ticks) == the cache's Total Magic Damage row.
     entry = damage_entry(
-        ability.get("name", "Sapling Toss (Empowered)"),
+        ability_name(ability),
         rank,
         cooldown,
         per_instance * (1 + _ATTACHED_TICKS),

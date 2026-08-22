@@ -45,6 +45,7 @@ from .inputs import bool_option, champion_stat, int_option
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -111,7 +112,7 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         attribute = _Q_VARIANT_ATTRS[variant]
         total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
         entry = damage_entry(
-            ability.get("name", "The Darkin Blade"),
+            ability_name(ability),
             rank,
             extract_cooldown(ability, rank),
             total,
@@ -129,7 +130,7 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         extract_named(ability, attr, rank, ctx.stats, ctx.target) for attr in attrs
     )
     return damage_entry(
-        ability.get("name", "The Darkin Blade"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -150,7 +151,7 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     if per_hit is None:
         return None
-    return on_hit_entry(ability.get("name", "Deathbringer Stance"), per_hit, "magic")
+    return on_hit_entry(ability_name(ability), per_hit, "magic")
 
 
 _deathbringer_stance.phase = ONHIT
@@ -170,7 +171,7 @@ def _umbral_dash(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Umbral Dash"),
+        name=ability_name(ability),
         reason=(
             "Umbral Dash is a self-heal-amp dash with no enemy-damage "
             "attribute of its own (data/champions.json Aatrox E carries "

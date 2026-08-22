@@ -9,7 +9,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option
 from .module_contract import coverage
@@ -27,7 +33,7 @@ def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     return {
-        "name": ability.get("name", "Sigil of Malice"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -83,7 +89,7 @@ def _ethereal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         total = cached_total
     entry = damage_entry(
-        ability.get("name", "Ethereal Chains"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -111,7 +117,7 @@ def _mimic(ctx: SlotCtx) -> dict[str, Any] | None:
     }.get(choice, "Total Magic Damage")
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     return {
-        "name": ability.get("name", "Mimic"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

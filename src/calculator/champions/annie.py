@@ -28,6 +28,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -176,7 +177,7 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.results["tibbers_attacks"] = attacks
 
     return {
-        "name": ability.get("name", "Summon: Tibbers"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": cooldown,
         "damage_type": "magic",
@@ -205,9 +206,7 @@ def _pyromania_placeholder(ctx: SlotCtx) -> None:
     """
     ability = ctx.ability()
     if ability is not None:
-        ctx.results["P"] = damage_entry(
-            ability.get("name", "Pyromania"), 0, 0.0, 0.0, "magic"
-        )
+        ctx.results["P"] = damage_entry(ability_name(ability), 0, 0.0, 0.0, "magic")
 
 
 def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -217,7 +216,7 @@ def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     return damage_entry(
-        ability.get("name", "Molten Shield"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

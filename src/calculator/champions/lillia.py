@@ -14,7 +14,7 @@ from .module_helpers import (
     no_damage,
     typed_damage,
 )
-from .slotlib import extract_cooldown, extract_named, simple_damage
+from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -29,7 +29,7 @@ def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:
     total = max_hp * (0.05 + 0.0125 * ap / 100.0)
     per_tick = total / 6.0
     return {
-        "name": ability.get("name", "Dream-Laden Bough"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",
@@ -53,7 +53,7 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     true_damage = magic if bool(ctx.options.get("q_outer_edge", True)) else 0.0
     entry = mixed_damage(
         ctx,
-        ability.get("name", "Blooming Blows"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         magic,

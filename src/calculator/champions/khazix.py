@@ -9,7 +9,13 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
-from .slotlib import extract_cooldown, extract_named, on_hit_entry, simple_damage
+from .slotlib import (
+    ability_name,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+    simple_damage,
+)
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 from .inputs import bool_option
@@ -46,7 +52,7 @@ def _taste_their_fear(ctx: SlotCtx) -> dict[str, Any] | None:
     attribute = "Isolated Target Physical Damage" if isolated else "Physical Damage"
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     return {
-        "name": ability.get("name", "Taste Their Fear"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",

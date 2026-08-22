@@ -39,6 +39,7 @@ from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_value,
@@ -179,7 +180,7 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = procs * trigger + bonus_autos * bonus_per_auto
     return {
-        "name": ability.get("name", "Concussive Blows"),
+        "name": ability_name(ability),
         "damage_type": "magic",
         "total_raw": total,
         "parts": (
@@ -223,7 +224,7 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     # One shot of ice on "the first enemy hit" — one part and one hit,
     # which carries Q's reviewed slow into the event ledger.
     return damage_entry(
-        ability.get("name", "Winter's Bite"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -240,7 +241,7 @@ def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     entry = damage_entry(
-        ability.get("name", "Stand Behind Me"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -279,7 +280,7 @@ def _unbreakable(ctx: SlotCtx) -> dict[str, Any] | None:
     if selected_duration > 0.0:
         duration = min(duration, selected_duration)
     return {
-        "name": ability.get("name", "Unbreakable"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "total_raw": 0.0,

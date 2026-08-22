@@ -9,6 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -72,7 +73,7 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_ad = ctx.stat("attack_damage") * percent / 100.0
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Whisper"),
+        name=ability_name(ability),
         reason=(
             f"Every Moment Matters adds {percent:.2f}% AD; the fourth-shot "
             "missing-health branch is priced by the final_round row."
@@ -152,7 +153,7 @@ def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Bonus Damage per Target Death", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Dancing Grenade"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value * bounces,
@@ -192,7 +193,7 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         )
     entry = damage_entry(
-        ability.get("name", "Captive Audience"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         full + reduced * (traps - 1),
@@ -250,7 +251,7 @@ def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         total += fourth_max
     entry = damage_entry(
-        ability.get("name", "Curtain Call"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

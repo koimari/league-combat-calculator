@@ -16,6 +16,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     extract_cooldown,
     extract_named,
@@ -57,7 +58,7 @@ def _kayle_e(ctx: SlotCtx) -> dict[str, Any] | None:
     passive = extract_named(ability, "Passive Damage", rank, ctx.stats, ctx.target)
     active = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
-        ability.get("name", "Starfire Spellblade"),
+        ability_name(ability),
         rank,
         "magic",
         {"name": "Starfire passive", "damage_per_hit": passive, "damage_type": "magic"},

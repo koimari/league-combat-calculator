@@ -7,7 +7,13 @@ from typing import Any
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -35,7 +41,7 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = dart + recasts * (spike + (marked_bonus if marked else 0.0))
     entry = damage_entry(
-        ability.get("name", "Hate Spike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -64,7 +70,7 @@ def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Allure"),
+        name=ability_name(ability),
         reason="Charm/slow is selected from the full W entry; champion target is the default branch.",
     )
     if entry is None:
@@ -104,7 +110,7 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Empowered Magic Damage" if empowered else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Whiplash"),
+        ability_name(ability),
         rank,
         extract_cooldown(base_ability, rank),
         value,
@@ -134,7 +140,7 @@ def _last_caress(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Empowered Damage" if execute else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Last Caress"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

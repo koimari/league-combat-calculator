@@ -59,6 +59,7 @@ from .engine import BUFF, CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     with_control_event,
@@ -109,7 +110,7 @@ def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
     ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
-        ability.get("name", "Spiked Shell"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

@@ -28,6 +28,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -50,7 +51,7 @@ def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
     second_hit = bool(ctx.options.get("e_second_hit", True))
     count = 2 if second_hit else 1
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Equinox"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "parts": (

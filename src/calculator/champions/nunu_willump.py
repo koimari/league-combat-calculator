@@ -33,6 +33,7 @@ from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -51,7 +52,7 @@ def _call_of_the_freljord(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     entry = damage_entry(
-        ability.get("name", "Call of the Freljord"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,
@@ -82,7 +83,7 @@ def _consume(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Champion Magic Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Consume"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,

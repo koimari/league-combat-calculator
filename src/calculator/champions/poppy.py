@@ -26,6 +26,7 @@ from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -46,7 +47,7 @@ def _iron_ambassador(ctx: SlotCtx):
     per_hit = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    return on_hit_entry(ability.get("name", "Iron Ambassador"), per_hit, "magic")
+    return on_hit_entry(ability_name(ability), per_hit, "magic")
 
 
 _iron_ambassador.phase = ONHIT
@@ -71,7 +72,7 @@ def _keepers_verdict(packet_r):
         ability, rank = ranked
         total = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
         entry = damage_entry(
-            ability.get("name", "Keeper's Verdict"),
+            ability_name(ability),
             rank,
             extract_cooldown(ability, rank),
             total,

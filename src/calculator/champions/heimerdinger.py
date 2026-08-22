@@ -7,7 +7,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_recharge
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_recharge,
+)
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 
@@ -193,7 +199,7 @@ def _require_row(ability: dict[str, Any], attribute: str) -> None:
             if leveling.get("attribute") == attribute:
                 return
     raise KeyError(
-        f"Heimerdinger {ability.get('name', '?')} has no {attribute!r} " "leveling row"
+        f"Heimerdinger {ability_name(ability)} has no {attribute!r} " "leveling row"
     )
 
 
@@ -223,7 +229,7 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         )
     entry = damage_entry(
-        ability.get("name", "Hextech Micro-Rockets"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         first + later * (rockets - 1),
@@ -251,7 +257,7 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
             "ability_power"
         )
     entry = damage_entry(
-        ability.get("name", "CH-2 Electron Storm Grenade"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("E", 0), rank),
         value,

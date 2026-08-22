@@ -55,6 +55,7 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -197,7 +198,7 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
 
     cooldown = extract_cooldown(ability, rank)
     entry = damage_entry(
-        ability.get("name", "Twilight Assault"),
+        ability_name(ability),
         rank,
         cooldown,
         per_hit * hits,
@@ -269,7 +270,7 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     travel = distance / speed if speed > 0 else 0.0
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Shadow Dash"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank) + travel,
         total,
@@ -311,7 +312,7 @@ def _spirits_refuge(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Spirit's Refuge"),
+        name=ability_name(ability),
         reason=(
             "Spirit's Refuge primes a protective zone that blocks all "
             "non-turret basic attacks (and basic-damage abilities) hitting "

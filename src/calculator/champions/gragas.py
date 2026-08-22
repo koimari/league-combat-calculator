@@ -10,7 +10,7 @@ from .inputs import bool_option, champion_stat
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from ..healing_helpers import ability_json
 
@@ -33,7 +33,7 @@ def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Maximum Magic Damage" if charged else "Minimum Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Barrel Roll"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -53,7 +53,7 @@ def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Drunken Rage"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -76,7 +76,7 @@ def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Body Slam"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -97,7 +97,7 @@ def _explosive_cask(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Explosive Cask"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

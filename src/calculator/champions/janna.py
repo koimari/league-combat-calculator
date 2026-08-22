@@ -19,6 +19,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -35,7 +36,7 @@ def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     bonus_ms = max(0.0, float(ctx.option("bonus_movement_speed")))
     value = 0.30 * bonus_ms
-    entry = on_hit_entry(ability.get("name", "Tailwind"), value, "magic")
+    entry = on_hit_entry(ability_name(ability), value, "magic")
     entry["detail"] = (
         f"30% of the explicit {bonus_ms:g} bonus movement speed is bonus magic damage on attacks and Zephyr."
     )
@@ -52,7 +53,7 @@ def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * charge
     entry = damage_entry(
-        ability.get("name", "Howling Gale"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -72,7 +73,7 @@ def _zephyr(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Zephyr"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

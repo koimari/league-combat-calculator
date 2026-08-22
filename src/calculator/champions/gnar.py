@@ -40,6 +40,7 @@ from ..ability_spec import ControlEvent, DamagePart
 from ..stats import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     by_option,
     damage_entry,
@@ -141,7 +142,7 @@ def _rage_gene(ctx: SlotCtx) -> dict[str, Any] | None:
     ):
         ctx.stats[key] = ctx.stat(key) + value
 
-    entry = damage_entry(ability.get("name", "Rage Gene"), 0, 0.0, 0.0, "physical")
+    entry = damage_entry(ability_name(ability), 0, 0.0, 0.0, "physical")
     entry["stat_buff"] = {
         "base_health": hp,
         "base_attack_damage": ad,
@@ -181,7 +182,7 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
     secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
-        ability.get("name", "Boomerang Throw"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -261,7 +262,7 @@ def _hyper(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_proc = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
-    name = ability.get("name", "Hyper")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         rank,
@@ -296,7 +297,7 @@ def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Hop"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -330,7 +331,7 @@ def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
         leveling, rank, ctx.stats, ctx.target, modifier_override=_own_max_hp
     )
     return damage_entry(
-        ability.get("name", "Crunch"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

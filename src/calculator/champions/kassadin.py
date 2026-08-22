@@ -8,6 +8,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -28,7 +29,7 @@ def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Null Sphere"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -59,7 +60,7 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         else 0.0
     )
     entry = ability_on_hit_entry(
-        ability.get("name", "Nether Blade"),
+        ability_name(ability),
         rank,
         "magic",
         {
@@ -93,7 +94,7 @@ def _riftwalk(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     value = base + bonus * stacks
     entry = damage_entry(
-        ability.get("name", "Riftwalk"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

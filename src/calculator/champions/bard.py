@@ -41,6 +41,7 @@ from typing import Any
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     simple_damage,
     support_cast,
@@ -157,7 +158,7 @@ def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
     fight_duration = ctx.options.get("fight_duration_seconds")
     recharges = int(float(fight_duration) // recharge) if fight_duration else 0
 
-    name = ability.get("name", "Traveler's Call")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         ctx.level,
@@ -181,7 +182,7 @@ def _magical_journey(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Magical Journey"),
+        name=ability_name(ability),
         reason=(
             "Magical Journey opens a one-way terrain portal; every effect "
             "row in the cached entry carries empty leveling and the "
@@ -198,7 +199,7 @@ def _tempered_fate(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Tempered Fate"),
+        name=ability_name(ability),
         reason=(
             "Tempered Fate puts struck units into 2.5s stasis and stuns "
             "enemy champions/minions/turrets for the same duration; the "

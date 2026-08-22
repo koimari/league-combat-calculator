@@ -20,6 +20,7 @@ from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -93,7 +94,7 @@ def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
         parts.append(DamagePart(dtype, amount, time_offset=0.0, hit_interval=0.0))
     total = sum(part.amount for part in parts)
     entry = damage_entry(
-        ability.get("name", "Emberstrike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -204,7 +205,7 @@ def _molten_burst(ctx: SlotCtx) -> dict[str, Any] | None:
         parts.append(DamagePart("magic", second, time_offset=0.0))
         total += second
     entry = damage_entry(
-        ability.get("name", "Molten Burst"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

@@ -24,7 +24,13 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    ability_name,
+    attach_self_shield,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+)
 from .. import healing_helpers as _healing
 from .inputs import bool_option, int_option
 
@@ -88,7 +94,7 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_as = stacks * per_stack
 
     entry: dict[str, Any] = {
-        "name": ability.get("name", "The Relentless Storm"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "damage_type": "magic",
         "total_raw": 0.0,
@@ -126,7 +132,7 @@ def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
 
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
-    name = ability.get("name", "Frenzied Maul")
+    name = ability_name(ability)
 
     if not ctx.options.get("w_wounded", True):
         entry = damage_entry(name, rank, cooldown, base, "physical")

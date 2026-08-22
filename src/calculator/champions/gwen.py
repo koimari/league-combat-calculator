@@ -9,7 +9,7 @@ from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 
@@ -103,7 +103,7 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
     per_snip = tuple([plain] * (len(times) - 1) + [final])
     value = sum(per_snip)
     entry = damage_entry(
-        ability.get("name", "Snip Snip!"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -147,7 +147,7 @@ def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     bonus = 15.0 + 0.20 * ctx.stat("ability_power")
     entry = damage_entry(
-        ability.get("name", "Skip 'n Slash"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -180,7 +180,7 @@ def _needlework(ctx: SlotCtx) -> dict[str, Any] | None:
         total += value
         parts.append(DamagePart("magic", value, time_offset=0.25 + index))
     entry = damage_entry(
-        ability.get("name", "Needlework"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

@@ -39,11 +39,12 @@ from typing import Any, Callable
 from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
+    ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
-    ability_on_hit_entry,
     pct_health_per_hit,
     simple_damage,
 )
@@ -64,7 +65,7 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Caustic Spittle"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -120,7 +121,7 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit is None:
         return None
 
-    name = ability.get("name", "Bio-Arcane Barrage")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         rank,
@@ -148,7 +149,7 @@ def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     entry = damage_entry(
-        ability.get("name", "Icathian Surprise"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

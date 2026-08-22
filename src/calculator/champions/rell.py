@@ -22,7 +22,7 @@ from typing import Any
 
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
-from .slotlib import on_hit_entry
+from .slotlib import ability_name, on_hit_entry
 
 # HARDCODED: verify on patch updates — Break the Mold's on-hit formula
 # ("5% of her total armor and 5% of her total magic resistance") is wiki
@@ -45,7 +45,7 @@ def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
         _BREAK_THE_MOLD_ARMOR_RATIO * armor
         + _BREAK_THE_MOLD_MR_RATIO * magic_resistance
     )
-    return on_hit_entry(ability.get("name", "Break the Mold"), per_hit, "magic")
+    return on_hit_entry(ability_name(ability), per_hit, "magic")
 
 
 _break_the_mold.phase = ONHIT

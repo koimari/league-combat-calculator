@@ -18,7 +18,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import DEBUFF, SlotCtx, build_parser
 from .module_helpers import clamp
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -45,7 +45,7 @@ def _wall_of_pain(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Wall of Pain"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -79,7 +79,7 @@ def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     hit_time = _W_CAST_TIME + _Q_CAST_TIME + _Q_CONSERVATIVE_DETONATION_DELAY
     entry = damage_entry(
-        ability.get("name", "Lay Waste"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         raw,
@@ -135,7 +135,7 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
     # inverse and land back on the fixed one-second beat.
     haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
     entry = damage_entry(
-        ability.get("name", "Defile"),
+        ability_name(ability),
         rank,
         _E_PULSE_SECONDS * (100.0 + haste) / 100.0,
         per_second,
@@ -193,7 +193,7 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     active_seconds = max(0.0, (ticks - 1) * _E_TICK_INTERVAL)
     mana_per_second = _defile_mana_per_second(ability, rank)
     entry = damage_entry(
-        ability.get("name", "Defile"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_tick * ticks,
@@ -218,7 +218,7 @@ def _requiem(ctx: SlotCtx) -> dict[str, Any] | None:
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     hit_time = _R_CAST_START + _R_CAST_TIME + _R_CHANNEL_DURATION
     entry = damage_entry(
-        ability.get("name", "Requiem"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         raw,
@@ -291,7 +291,7 @@ def _death_defied(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     entry = damage_entry(
-        ability.get("name", "Death Defied"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

@@ -24,7 +24,13 @@ Why each slot is non-generic:
 from typing import Any
 
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 
@@ -124,9 +130,7 @@ def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     stacks = min(max(int(ctx.option("passive_stacks")), 0), PASSIVE_MAX_STACKS)
     bonus_as = PASSIVE_AS_PER_STACK * stacks
-    entry = damage_entry(
-        ability.get("name", "Rising Spell Force"), ctx.level, 0.0, 0.0, "physical"
-    )
+    entry = damage_entry(ability_name(ability), ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     entry["detail"] = f"+{bonus_as:.0f}% bonus attack speed ({stacks} stacks)"
     return entry
@@ -152,7 +156,7 @@ def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     period = _q_hasted_period(ctx)
     entry = damage_entry(
-        ability.get("name", "Mystic Shot"),
+        ability_name(ability),
         rank,
         (period if period is not None else 0.0) * _haste_factor(ctx),
         total,

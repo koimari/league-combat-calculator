@@ -9,7 +9,13 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 
@@ -36,7 +42,7 @@ def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
     # told about ``count x proc_count`` damage instances). One Tentacle
     # strike is one part; the tentacle count is the proc count.
     return {
-        "name": ability.get("name", "Prophet of an Elder God"),
+        "name": ability_name(ability),
         "damage_type": "physical",
         "total_raw": value * count,
         "parts": (
@@ -71,7 +77,7 @@ def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
     minimum = extract_value(ability, "Minimum Physical Damage", rank)
     value = max(minimum, pct * target_max + ad_ratio * ctx.stat("attack_damage"))
     entry = damage_entry(
-        ability.get("name", "Harsh Lesson"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -99,7 +105,7 @@ def _leap_of_faith(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Leap of Faith"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

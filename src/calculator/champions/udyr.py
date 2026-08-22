@@ -38,6 +38,7 @@ from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     extract_named,
     extract_value,
@@ -156,7 +157,7 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
         )
 
     entry = ability_on_hit_entry(
-        ability.get("name", "Wilding Claw"),
+        ability_name(ability),
         rank,
         "physical",
         {

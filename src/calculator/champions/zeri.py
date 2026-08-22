@@ -19,7 +19,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+)
 
 # P4: Living Battery (execute range) — the uncharged zap's flat damage
 # + the execute threshold.  The cached P effects[1] "Per-Level Scaling"
@@ -129,7 +135,7 @@ def _living_battery(ctx: SlotCtx):
     # receipt constant, never added twice.
     threshold = extract_named(ability, "Bonus Damage", rank, ctx.stats, ctx.target)
     target_max = ctx.target_stat("target_max_health")
-    entry = on_hit_entry(ability.get("name", "Living Battery"), zap, "magic")
+    entry = on_hit_entry(ability_name(ability), zap, "magic")
     if target_max > 0.0:
         entry["execute_threshold_ratio"] = threshold / target_max
         entry["execute_source"] = "Living Battery"
@@ -178,7 +184,7 @@ def _spark_surge(ctx: SlotCtx):
     per_round *= multiplier
     total = per_round * _E_LIGHTNING_ROUNDS_ROUNDS
     entry = damage_entry(
-        ability.get("name", "Spark Surge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

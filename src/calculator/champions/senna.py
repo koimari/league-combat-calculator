@@ -36,6 +36,7 @@ from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     extract_named,
     extract_value,
@@ -187,7 +188,7 @@ def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
     per_proc = percent / 100.0 * max_health
 
     return {
-        "name": ability.get("name", "Absolution"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "damage_type": "physical",
         "total_raw": 0.0,

@@ -51,6 +51,7 @@ from .inputs import champion_stat, int_option
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -208,7 +209,7 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_shot <= 0:
         return None
 
-    name = ability.get("name", "Heroic Swing")
+    name = ability_name(ability)
     cooldown = extract_cooldown(ability, rank)
     entry = damage_entry(name, rank, cooldown, per_shot * shots, "physical")
     # The swing's shots have a cached beat: "While swinging, he fires at the
@@ -251,7 +252,7 @@ def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     bullets = int(extract_value(ability, "Maximum Bullets Stored", rank))
 
-    name = ability.get("name", "Comeuppance")
+    name = ability_name(ability)
     total = per_bullet * bullets
     entry = damage_entry(name, rank, extract_cooldown(ability, rank), total, "physical")
     # Barrage scales up to +200% with target missing HP; crits amplify
@@ -367,7 +368,7 @@ def _going_rogue(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Going Rogue"),
+        name=ability_name(ability),
         reason=(
             "Going Rogue is stealth/Scoundrel-mark/resurrection utility "
             "with no enemy-damage attribute of its own (data/champions.json "

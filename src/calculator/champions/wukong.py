@@ -30,6 +30,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -75,7 +76,7 @@ def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Crushing Blow"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -113,7 +114,7 @@ def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
     ticks = 8 * casts
     total = per_tick * ticks
     entry = damage_entry(
-        ability.get("name", "Cyclone"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

@@ -8,14 +8,15 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    sum_modifiers,
     simple_damage,
+    sum_modifiers,
     with_control,
 )
 from .source_receipts import load_champion_sources
@@ -32,7 +33,7 @@ def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_as = per_stack * stacks
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Relentless Assault"),
+        name=ability_name(ability),
         reason=f"{stacks} attack-speed stacks; fish/river economy is explicit utility.",
     )
     if entry is not None:
@@ -52,7 +53,7 @@ def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Additional Magic Damage", rank, ctx.stats, ctx.target
     )
     entry = ability_on_hit_entry(
-        ability.get("name", "Empower"),
+        ability_name(ability),
         rank,
         "magic",
         {"name": "Empower", "damage_per_hit": value, "damage_type": "magic"},
@@ -75,7 +76,7 @@ def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * dodged / 5.0
     entry = damage_entry(
-        ability.get("name", "Counter Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -95,7 +96,7 @@ def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Grandmaster-at-Arms"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

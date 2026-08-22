@@ -5,6 +5,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -51,7 +52,7 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Increased Damage" if variant == 2 and low_health else "Physical Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Edge of Ixtal"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("Q", 0) or ability, rank),
         total,
@@ -104,7 +105,7 @@ def _supreme_display(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Supreme Display of Talent"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

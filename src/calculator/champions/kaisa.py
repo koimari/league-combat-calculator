@@ -58,6 +58,7 @@ from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -363,7 +364,7 @@ def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     distance, hit_time = _w_hit_time(ctx)
     entry = damage_entry(
-        ability.get("name", "Void Seeker"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         raw,
@@ -441,7 +442,7 @@ def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
         # its own sourced delay from each cast, with no artificial wait.
         first_hit = _Q_FIRST_HIT_DELAY
     entry = damage_entry(
-        ability.get("name", "Icathian Rain"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -527,7 +528,7 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
     granted = bonus_percent * duty_cycle
     ctx.bump_stat("attack_speed", ctx.stat("attack_speed_ratio") * granted / 100.0)
     return {
-        "name": ability.get("name", "Supercharge"),
+        "name": ability_name(ability),
         "rank": rank,
         "stat_buff": {"bonus_attack_speed": granted},
         # E is not in CAST_ORDER (it deals nothing, so the damage rotation
@@ -566,7 +567,7 @@ def _killer_instinct(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     entry = damage_entry(
-        ability.get("name", "Killer Instinct"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

@@ -61,6 +61,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import delayed_damage, no_damage
 from .slotlib import (
+    ability_name,
     by_option,
     damage_entry,
     extract_cooldown,
@@ -276,9 +277,7 @@ def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
         parts.insert(0, secondary_part)
         total += _secondary_beam_per_second(ctx, ability, rank, ap) * seconds
 
-    entry = damage_entry(
-        ability.get("name", "Breath of Light"), rank, cooldown, total, "magic"
-    )
+    entry = damage_entry(ability_name(ability), rank, cooldown, total, "magic")
     entry["parts"] = tuple(parts)
     entry["detail"] = (
         f"{ticks} sourced beam tick(s) at 0.125s intervals; {bursts} burst(s) "
@@ -397,7 +396,7 @@ def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Singularity"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -440,7 +439,7 @@ def _cosmic_creator(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Cosmic Creator"),
+        name=ability_name(ability),
         reason=(
             "Cosmic Creator grants Aurelion Sol permanent Stardust stacks "
             "from his damaging abilities; the cached entry's own leveling "
@@ -467,7 +466,7 @@ def _astral_flight(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Astral Flight"),
+        name=ability_name(ability),
         reason=(
             "Astral Flight is a damage-less dash; its only cached "
             "leveling row is the 'Breath of Light Flat Damage Modifier' "

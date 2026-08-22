@@ -30,6 +30,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_value,
@@ -72,7 +73,7 @@ def _insanity_potion(ctx: SlotCtx) -> dict[str, Any] | None:
     # parse after this slot, so the ultimate amplifies its own kit.
     ctx.stats["ability_power"] = ctx.stat("ability_power") + bonus
     entry = damage_entry(
-        ability.get("name", "Insanity Potion"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

@@ -8,6 +8,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -46,7 +47,7 @@ def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     value = _marked_attack(ctx, ability)
     return {
-        "name": ability.get("name", "Dauntless Instinct"),
+        "name": ability_name(ability),
         "damage_type": "physical",
         "total_raw": value * count,
         "parts": (
@@ -110,9 +111,7 @@ def _require_row(ability: dict[str, Any], attribute: str) -> None:
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") == attribute:
                 return
-    raise KeyError(
-        f"K'Sante {ability.get('name', '?')} has no {attribute!r} leveling row"
-    )
+    raise KeyError(f"K'Sante {ability_name(ability)} has no {attribute!r} leveling row")
 
 
 class _PathMakerRule:
@@ -224,7 +223,7 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
         parts = (DamagePart("physical", physical, time_offset=charge, cc_kind="stun"),)
         total = physical
     entry = damage_entry(
-        ability.get("name", "Path Maker"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -256,7 +255,7 @@ def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
         parts = (DamagePart("physical", value, time_offset=0.3),)
         total = value
     entry = damage_entry(
-        ability.get("name", "All Out"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

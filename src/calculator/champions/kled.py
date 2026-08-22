@@ -22,6 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -71,7 +72,7 @@ def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         )
     entry = damage_entry(
-        ability.get("name", "Bear Trap on a Rope"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -95,7 +96,7 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
     )
     result = ability_on_hit_entry(
-        ability.get("name", "Violent Tendencies"),
+        ability_name(ability),
         rank,
         "physical",
         {
@@ -128,7 +129,7 @@ def _charge(ctx: SlotCtx) -> dict[str, Any] | None:
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     value = low + (high - low) * fraction
     return {
-        "name": ability.get("name", "Chaaaaaaaarge!!!"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

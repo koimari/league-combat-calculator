@@ -39,6 +39,7 @@ from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -78,7 +79,7 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Infinite Duress"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -116,7 +117,7 @@ def _eternal_hunger(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit <= 0:
         return None
 
-    entry = on_hit_entry(ability.get("name", "Eternal Hunger"), per_hit, "magic")
+    entry = on_hit_entry(ability_name(ability), per_hit, "magic")
     health_percent = min(max(float(ctx.option("p_self_health_percent")), 0.0), 100.0)
     share = _hunger_heal_share(health_percent)
     # ``derive_self_healing`` below pays this share of every post-mitigation

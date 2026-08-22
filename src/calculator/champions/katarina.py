@@ -22,6 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
+    ability_name,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -47,7 +48,7 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     interval = 2.5 / daggers
     return {
-        "name": ability.get("name", "Death Lotus"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "mixed",

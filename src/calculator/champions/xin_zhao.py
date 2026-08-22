@@ -44,7 +44,7 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import ability_on_hit_entry, simple_damage
+from .slotlib import ability_name, ability_on_hit_entry, simple_damage
 
 PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf64"
 
@@ -90,7 +90,7 @@ def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_proc <= 0:
         return None
 
-    name = ability.get("name", "Determination")
+    name = ability_name(ability)
     entry = ability_on_hit_entry(
         name,
         ctx.level,

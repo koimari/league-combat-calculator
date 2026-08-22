@@ -25,6 +25,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -62,7 +63,7 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
     ap = ctx.stat("ability_power")
     total = flat + _PROC_AP_RATIO * ap
     return {
-        "name": ability.get("name", "Organic Deconstruction"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "true",
@@ -137,7 +138,7 @@ def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
     per_tick = extract_named(ability, "Damage Per Tick", rank, ctx.stats, ctx.target)
     total = per_tick * _R_TICKS
     entry = damage_entry(
-        ability.get("name", "Life Form Disintegration Ray"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

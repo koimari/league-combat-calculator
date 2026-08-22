@@ -35,6 +35,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -109,9 +110,7 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
         "attack_speed_ratio"
     ) * (bonus_as / 100.0)
 
-    entry = damage_entry(
-        ability.get("name", "Death in Lavender"), ctx.level, 0.0, 0.0, "physical"
-    )
+    entry = damage_entry(ability_name(ability), ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     entry["auto_attack_override"] = {
         "damage_ratio": PASSIVE_BASIC_ATTACK_RATIO,
@@ -139,7 +138,7 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     cooldown = Q_DIRECTION_COOLDOWNS[min(rank - 1, len(Q_DIRECTION_COOLDOWNS) - 1)]
 
     return {
-        "name": ability.get("name", "Void Surge"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": cooldown,
         "damage_type": "physical",
@@ -192,7 +191,7 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     slashes = E_BASE_SLASHES + math.floor(bonus_as / E_BONUS_AS_PER_EXTRA_SLASH + 1e-9)
 
     return {
-        "name": ability.get("name", "Royal Maelstrom"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -255,7 +254,7 @@ def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     entry = damage_entry(
-        ability.get("name", "Endless Banquet"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

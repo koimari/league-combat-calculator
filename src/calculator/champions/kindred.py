@@ -55,6 +55,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage, typed_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -112,7 +113,7 @@ def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
     marks = _marks(ctx)
     return no_damage(
         ctx,
-        name=ability.get("name", "Mark of the Kindred"),
+        name=ability_name(ability),
         reason=(
             f"{marks} Mark(s) of the Kindred: 75 : 250 (based on marks) "
             "bonus basic-attack range, +5% attack speed per mark on Q, "
@@ -132,7 +133,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     if stacks < _E_STACK_MAX:
         return no_damage(
             ctx,
-            name=ability.get("name", "Mounting Dread"),
+            name=ability_name(ability),
             reason=(
                 f"{stacks}/3 Mounting Dread stacks on the marked target; "
                 "the third stack directs Wolf to pounce (consuming all "
@@ -157,7 +158,7 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
     )
     entry = damage_entry(
-        ability.get("name", "Mounting Dread"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -253,7 +254,7 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
         leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
     )
     entry = damage_entry(
-        ability.get("name", "Wolf's Frenzy"),
+        ability_name(ability),
         rank,
         0.0,
         per * attacks,

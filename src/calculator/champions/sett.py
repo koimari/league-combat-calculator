@@ -29,6 +29,7 @@ from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -64,7 +65,7 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
     if punches <= 0:
         return no_damage(
             ctx,
-            name=ability.get("name", "Pit Grit"),
+            name=ability_name(ability),
             reason=(
                 "Heavy Hands alternates Left and Right punches; the Right "
                 "Punch deals the sourced bonus physical damage — set "
@@ -76,7 +77,7 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
     per_punch = flat + _RIGHT_PUNCH_BONUS_AD_RATIO * bonus_ad
     total = per_punch * punches
     return {
-        "name": ability.get("name", "Pit Grit"),
+        "name": ability_name(ability),
         "damage_type": "physical",
         "total_raw": total,
         "parts": (DamagePart("physical", per_punch, basic_damage=True),),
@@ -135,7 +136,7 @@ def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
             value / 100.0 + per_100_ad / 100.0 * ctx.stat("attack_damage") / 100.0
         ) * float(ctx.target_stat("target_max_health"))
     entry = damage_entry(
-        ability.get("name", "Knuckle Down"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -191,7 +192,7 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
             )
     grit = max(0.0, float(ctx.option(_W_GRIT_OPTION) or 0))
     entry = damage_entry(
-        ability.get("name", "Haymaker"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         flat + grit_ratio * grit,

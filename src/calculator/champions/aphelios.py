@@ -30,7 +30,7 @@ from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import ability_name, damage_entry, extract_cooldown
 from .module_contract import coverage
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
@@ -185,7 +185,7 @@ def _q(packet_q):
         count = max(1, int(6 + 2 * bonus_as / 100.0))
         per_hit = ratio * float(ctx.stat("attack_damage"))
         entry = damage_entry(
-            ability.get("name", "Onslaught"),
+            ability_name(ability),
             rank,
             10.0,
             per_hit * count,

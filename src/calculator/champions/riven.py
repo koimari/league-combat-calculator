@@ -39,7 +39,13 @@ an already-covered slot (the Malzahar/Nasus precedent, roadmap session
 
 from .engine import BUFF, ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, on_hit_entry
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    on_hit_entry,
+)
 
 PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b8"
 
@@ -69,7 +75,7 @@ def _blade_of_the_exile(ctx: SlotCtx):
         float(ctx.stat("bonus_attack_damage") or 0.0) + value
     )
     entry = damage_entry(
-        ability.get("name", "Blade of the Exile"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -96,7 +102,7 @@ def _runic_blade(ctx: SlotCtx):
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )
     per_hit = float(ctx.stat("attack_damage") or 0.0) * percent / 100.0
-    return on_hit_entry(ability.get("name", "Runic Blade"), per_hit, "physical")
+    return on_hit_entry(ability_name(ability), per_hit, "physical")
 
 
 _runic_blade.phase = ONHIT

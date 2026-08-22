@@ -71,6 +71,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -107,7 +108,7 @@ def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = base + per_stack * stacks
     entry = damage_entry(
-        ability.get("name", "Explosive Charge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -156,7 +157,7 @@ def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     window = ranked_ability_atom_value(duration_atom, 1, source=_Q_DURATION_SOURCE)
 
     entry = damage_entry(
-        ability.get("name", "Rapid Fire"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -196,7 +197,7 @@ def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
         "Tristana", champion_data, "P", "Per-Level Scaling", ctx.level
     )
     return {
-        "name": ability.get("name", "Draw a Bead"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "physical",

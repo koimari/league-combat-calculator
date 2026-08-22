@@ -43,6 +43,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -87,7 +88,7 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
         total += sum_modifiers(poison_leveling, rank, ctx.stats, ctx.target)
 
     return damage_entry(
-        ability.get("name", "Twin Fang"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -126,7 +127,7 @@ def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Noxious Blast"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -162,7 +163,7 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Miasma"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

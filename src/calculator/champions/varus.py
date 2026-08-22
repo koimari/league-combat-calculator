@@ -37,14 +37,15 @@ from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
+    find_named_leveling,
     simple_damage,
     sum_modifiers,
-    find_named_leveling,
     with_control,
 )
 from .source_receipts import load_champion_sources
@@ -133,7 +134,7 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     # modifiers), so interpolation is the sourced 0-50% scaling.
     arrow = minimum + (maximum - minimum) * fraction
     entry = damage_entry(
-        ability.get("name", "Piercing Arrow"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         arrow,
@@ -192,7 +193,7 @@ def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
             "ability JSON — cannot compute the on-hit damage"
         )
     per_hit = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
-    name = ability.get("name", "Blighted Quiver")
+    name = ability_name(ability)
     entry = ability_on_hit_entry(
         name,
         rank,
@@ -235,7 +236,7 @@ def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.stats["attack_damage"] = ctx.stat("attack_damage") + derived
         ctx.stats["ability_power"] = ctx.stat("ability_power") + derived
     entry = damage_entry(
-        ability.get("name", "Living Vengeance"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

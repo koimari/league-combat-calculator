@@ -37,7 +37,13 @@ from .engine import SlotCtx
 from .module_helpers import typed_damage
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .. import healing_helpers as _healing
 from .inputs import int_option
 
@@ -101,7 +107,7 @@ def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
             "at 100 Fury the E packet prices the true-damage variant"
         )
     entry = damage_entry(
-        ability.get("name", "Furious Bite"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

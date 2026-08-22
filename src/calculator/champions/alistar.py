@@ -61,6 +61,7 @@ from .inputs import champion_stat, int_option
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     atom_receipt,
     damage_entry,
     extract_cooldown,
@@ -152,7 +153,7 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     # entry.
     empowered = _extract_e_on_hit_damage(ability, ctx.level)
 
-    name = ability.get("name", "Trample")
+    name = ability_name(ability)
     entry = damage_entry(
         name,
         rank,
@@ -210,7 +211,7 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     if stacks <= 0:
         return None
     return {
-        "name": ability.get("name", "Triumphant Roar"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",
@@ -269,7 +270,7 @@ def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
         raise ValueError("Alistar R active-duration atom must use seconds")
     duration = ranked_ability_atom_value(duration_atom, 1, source=_R_DURATION_SOURCE)
 
-    name = ability.get("name", "Unbreakable Will")
+    name = ability_name(ability)
     return {
         "name": name,
         "rank": rank,

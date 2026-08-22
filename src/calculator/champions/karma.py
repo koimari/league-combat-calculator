@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -28,7 +30,7 @@ def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Total Damage" if mantra else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Inner Flame"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("Q", 0), rank),
         value,
@@ -64,7 +66,7 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         )
     entry = damage_entry(
-        ability.get("name", "Focused Resolve"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("W", 0), rank),
         value * (2 if holds else 1),
@@ -144,7 +146,8 @@ def derive_self_healing(
 ):
     """Resolve Karma self-healing events from its authored packet."""
     healing = []
-    if str(ability_damages.get("W", {}).get("name", "")) == "Renewal":
+    w_payload = ability_payload(ability_damages, "W")
+    if w_payload and str(ability_field(w_payload, "name")) == "Renewal":
         ap = champion_stat(champion_stats, "ability_power")
         ratio = 0.17 + ap / 10000.0
 

@@ -7,6 +7,7 @@ from typing import Any
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -94,7 +95,7 @@ def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Volatile Spiderling"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

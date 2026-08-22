@@ -10,7 +10,7 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown, extract_value
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_value
 from .inputs import int_option
 
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
@@ -33,7 +33,7 @@ def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     weapon = str(ctx.options.get("jinx_weapon", "minigun")).lower()
     entry = damage_entry(
-        ability.get("name", "Switcheroo!"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -75,7 +75,7 @@ def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     bonus_total_as = 25.0 * stacks
     entry = damage_entry(
-        ability.get("name", "Get Excited!"),
+        ability_name(ability),
         1,
         0.0,
         0.0,

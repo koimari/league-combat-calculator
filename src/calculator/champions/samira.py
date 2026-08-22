@@ -39,7 +39,7 @@ from .engine import ONHIT, SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .inputs import bool_option, float_option, int_option
-from .slotlib import HitRider, extract_value, with_hit_rider
+from .slotlib import HitRider, ability_name, extract_value, with_hit_rider
 
 PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
 
@@ -84,7 +84,7 @@ def _blade_rider(ctx: SlotCtx) -> HitRider | None:
     if amount <= 0:
         return None
     return HitRider(
-        name=ability.get("name", "Daredevil Impulse"),
+        name=ability_name(ability),
         damage_type="magic",
         amount=amount,
         missing_health_amp=RIDER_MISSING_HEALTH_AMP,
@@ -125,7 +125,7 @@ def _daredevil_impulse(ctx: SlotCtx) -> dict[str, Any] | None:
     if rider is None:
         return no_damage(
             ctx,
-            name=ability.get("name", "Daredevil Impulse"),
+            name=ability_name(ability),
             reason=(
                 "Samira attacks from outside the 200-unit blade zone, so no "
                 f"basic attack carries the rider.  {_style_state(ctx)}."

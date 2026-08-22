@@ -37,6 +37,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -158,7 +159,7 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
         _per_level(ability, _P_BLEED_EFFECT, _P_PER_STACK_TOTAL, ctx.level)
         + P_BLEED_BONUS_AD_RATIO * bonus_ad
     )
-    name = ability.get("name", "Hemorrhage")
+    name = ability_name(ability)
     return {
         "name": name,
         "damage_type": "physical",
@@ -200,7 +201,7 @@ def _decimate(ctx: SlotCtx) -> dict[str, Any] | None:
     attribute = "Physical Damage (Blade)"
     total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Decimate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -237,7 +238,7 @@ def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     attribute = "Bonus Physical Damage"
     bonus = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Crippling Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         bonus,
@@ -365,7 +366,7 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
         total *= 2.0
 
     entry = damage_entry(
-        ability.get("name", "Noxian Guillotine"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

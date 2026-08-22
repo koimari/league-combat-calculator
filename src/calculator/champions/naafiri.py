@@ -140,6 +140,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -208,7 +209,7 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     entry = damage_entry(
-        ability.get("name", "The Call of the Pack"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -257,7 +258,7 @@ def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P", 0)
     if ability is None:
         return None
-    name = ability.get("name", "We Are More")
+    name = ability_name(ability)
     hunt = bool(ctx.option("w_hunt"))
     count = _packmate_count(ctx.level, hunt=hunt)
     r_ability = ctx.ability("R", 0)
@@ -368,7 +369,7 @@ def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
         total += minimum
 
     entry = damage_entry(
-        ability.get("name", "Darkin Daggers"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -402,7 +403,7 @@ def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Flurry Physical Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Eviscerate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         dash + flurry,

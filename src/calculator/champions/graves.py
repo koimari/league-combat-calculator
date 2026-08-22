@@ -8,6 +8,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -65,7 +66,7 @@ def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
     initial = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     detonation = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "End of the Line"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         initial + detonation,
@@ -88,7 +89,7 @@ def _smoke_screen(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Smoke Screen"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -114,7 +115,7 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Quickdraw"),
+        name=ability_name(ability),
         reason=f"{stacks} True Grit stack(s): +{armor:g} armor/+{mr:g} MR; dash/reload are state-only.",
     )
     if entry is not None:
@@ -134,7 +135,7 @@ def _collateral_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Reduced Damage" if secondary else "Physical Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Collateral Damage"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
