@@ -1490,6 +1490,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -1754,6 +1762,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -2011,6 +2027,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -3004,6 +3028,8 @@
               "magic_resistance": 97,
               "max_mana": 1143,
               "move_speed": 349.8,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 6.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -3140,6 +3166,8 @@
               "magic_resistance": 63,
               "max_mana": 844,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.0,
               "tenacity_percent": 0.0,
@@ -3276,6 +3304,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -3909,6 +3939,8 @@
             "magic_resistance": 97,
             "max_mana": 1143,
             "move_speed": 349.8,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 6.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -6775,6 +6807,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -7039,6 +7079,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -7296,6 +7344,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -7588,6 +7644,14 @@
             "view_tag": "applied"
           },
           "participants[3].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -9084,6 +9148,8 @@
               "magic_resistance": 52,
               "max_mana": 1218,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -9220,6 +9286,8 @@
               "magic_resistance": 63,
               "max_mana": 844,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.0,
               "tenacity_percent": 0.0,
@@ -9356,6 +9424,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -9522,6 +9592,8 @@
               "magic_resistance": 63,
               "max_mana": 1300,
               "move_speed": 335.0,
+              "move_speed_flat": 335.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.33,
               "tenacity_percent": 0.0,
@@ -10123,6 +10195,8 @@
             "magic_resistance": 52,
             "max_mana": 1218,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -10777,6 +10851,8 @@
             "magic_resistance": 52,
             "max_mana": 1218,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -16007,6 +16083,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -16287,6 +16371,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -16560,6 +16652,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -20137,6 +20237,8 @@
               "magic_resistance": 67,
               "max_mana": 1223,
               "move_speed": 350.0,
+              "move_speed_flat": 350.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 7.03,
               "tenacity_percent": 0.0,
@@ -20281,6 +20383,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.24,
               "tenacity_percent": 0.0,
@@ -20425,6 +20529,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -21538,6 +21644,8 @@
             "magic_resistance": 67,
             "max_mana": 1223,
             "move_speed": 350.0,
+            "move_speed_flat": 350.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 7.03,
             "tenacity_percent": 0.0,
@@ -27372,6 +27480,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -27636,6 +27752,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -27893,6 +28017,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -28201,6 +28333,14 @@
             "view_tag": "applied"
           },
           "participants[3].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -31851,6 +31991,8 @@
               "magic_resistance": 52,
               "max_mana": 1020,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.37,
               "tenacity_percent": 0.0,
@@ -31987,6 +32129,8 @@
               "magic_resistance": 63,
               "max_mana": 844,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.0,
               "tenacity_percent": 0.0,
@@ -32123,6 +32267,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -32303,6 +32449,8 @@
               "magic_resistance": 54,
               "max_mana": 932,
               "move_speed": 340.0,
+              "move_speed_flat": 340.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -33264,6 +33412,8 @@
             "magic_resistance": 52,
             "max_mana": 1020,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.37,
             "tenacity_percent": 0.0,
@@ -33865,6 +34015,8 @@
             "magic_resistance": 52,
             "max_mana": 1020,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.37,
             "tenacity_percent": 0.0,
@@ -43736,6 +43888,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44032,6 +44192,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44324,6 +44492,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44581,6 +44757,14 @@
             "view_tag": "applied"
           },
           "participants[3].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -50353,6 +50537,8 @@
               "magic_resistance": 52,
               "max_mana": 995,
               "move_speed": 354.25,
+              "move_speed_flat": 325.0,
+              "move_speed_percent": 9.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.86,
               "tenacity_percent": 0.0,
@@ -50512,6 +50698,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.24,
               "tenacity_percent": 0.0,
@@ -50671,6 +50859,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -50807,6 +50997,8 @@
               "magic_resistance": 63,
               "max_mana": 1300,
               "move_speed": 335.0,
+              "move_speed_flat": 335.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.33,
               "tenacity_percent": 0.0,
@@ -51516,6 +51708,8 @@
             "magic_resistance": 52,
             "max_mana": 995,
             "move_speed": 354.25,
+            "move_speed_flat": 325.0,
+            "move_speed_percent": 9.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 3.86,
             "tenacity_percent": 0.0,
@@ -52563,6 +52757,8 @@
             "magic_resistance": 52,
             "max_mana": 995,
             "move_speed": 354.25,
+            "move_speed_flat": 325.0,
+            "move_speed_percent": 9.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 3.86,
             "tenacity_percent": 0.0,
@@ -55373,6 +55569,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -55633,6 +55837,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -55890,6 +56102,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -56969,6 +57189,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 7.42,
               "tenacity_percent": 0.0,
@@ -57105,6 +57327,8 @@
               "magic_resistance": 67,
               "max_mana": 1223,
               "move_speed": 350.0,
+              "move_speed_flat": 350.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.02,
               "tenacity_percent": 0.0,
@@ -57241,6 +57465,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -57828,6 +58054,8 @@
             "magic_resistance": 52,
             "max_mana": 1285,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 7.42,
             "tenacity_percent": 0.0,
@@ -59253,6 +59481,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -59530,6 +59766,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -60464,6 +60708,8 @@
               "magic_resistance": 67,
               "max_mana": 2290,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 2.97,
               "tenacity_percent": 0.0,
@@ -60618,6 +60864,8 @@
               "magic_resistance": 67,
               "max_mana": 1249,
               "move_speed": 340.0,
+              "move_speed_flat": 340.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 2.51,
               "tenacity_percent": 0.0,
@@ -61100,6 +61348,8 @@
             "magic_resistance": 67,
             "max_mana": 2290,
             "move_speed": 345.0,
+            "move_speed_flat": 345.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 2.97,
             "tenacity_percent": 0.0,
@@ -65016,6 +65266,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -65296,6 +65554,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -65569,6 +65835,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -67695,6 +67969,8 @@
               "magic_resistance": 52,
               "max_mana": 995,
               "move_speed": 325.0,
+              "move_speed_flat": 325.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.86,
               "tenacity_percent": 0.0,
@@ -67839,6 +68115,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.24,
               "tenacity_percent": 0.0,
@@ -67983,6 +68261,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -68554,6 +68834,8 @@
             "magic_resistance": 52,
             "max_mana": 995,
             "move_speed": 325.0,
+            "move_speed_flat": 325.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 3.86,
             "tenacity_percent": 0.0,
@@ -74052,6 +74334,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -74313,6 +74603,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -74589,6 +74887,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -77771,6 +78077,8 @@
               "magic_resistance": 67,
               "max_mana": 1249,
               "move_speed": 385.0,
+              "move_speed_flat": 385.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 2.51,
               "tenacity_percent": 0.0,
@@ -77907,6 +78215,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.24,
               "tenacity_percent": 0.0,
@@ -78051,6 +78361,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -78701,6 +79013,8 @@
             "magic_resistance": 67,
             "max_mana": 1249,
             "move_speed": 385.0,
+            "move_speed_flat": 385.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 2.51,
             "tenacity_percent": 0.0,
@@ -82952,6 +83266,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -83232,6 +83554,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -83505,6 +83835,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -85719,6 +86057,8 @@
               "magic_resistance": 64,
               "max_mana": 200,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 10.0,
               "tenacity_percent": 0.0,
@@ -85863,6 +86203,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.24,
               "tenacity_percent": 0.0,
@@ -86007,6 +86349,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -86672,6 +87016,8 @@
             "magic_resistance": 64,
             "max_mana": 200,
             "move_speed": 345.0,
+            "move_speed_flat": 345.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 10.0,
             "tenacity_percent": 0.0,
@@ -88697,6 +89043,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -88961,6 +89315,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -89218,6 +89580,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -90476,6 +90846,8 @@
               "magic_resistance": 52,
               "max_mana": 843,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -90612,6 +90984,8 @@
               "magic_resistance": 63,
               "max_mana": 844,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.0,
               "tenacity_percent": 0.0,
@@ -90750,6 +91124,8 @@
               "magic_resistance": 63,
               "max_mana": 1300,
               "move_speed": 335.0,
+              "move_speed_flat": 335.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.33,
               "tenacity_percent": 0.0,
@@ -91307,6 +91683,8 @@
             "magic_resistance": 52,
             "max_mana": 843,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -93384,6 +93762,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -93648,6 +94034,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -93905,6 +94299,14 @@
             "view_tag": "applied"
           },
           "participants[2].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -95379,6 +95781,8 @@
               "magic_resistance": 97,
               "max_mana": 843,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 10.8,
               "tenacity_percent": 0.0,
@@ -95515,6 +95919,8 @@
               "magic_resistance": 63,
               "max_mana": 844,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.0,
               "tenacity_percent": 0.0,
@@ -95651,6 +96057,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -96522,6 +96930,8 @@
             "magic_resistance": 97,
             "max_mana": 843,
             "move_speed": 330.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 10.8,
             "tenacity_percent": 0.0,
@@ -98312,6 +98722,8 @@
             "magic_resistance": 52,
             "max_mana": 1443,
             "move_speed": 335.0,
+            "move_speed_flat": 335.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -100066,6 +100478,8 @@
             "magic_resistance": 52,
             "max_mana": 1443,
             "move_speed": 335.0,
+            "move_speed_flat": 335.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 10.8,
             "tenacity_percent": 0.0,
@@ -101769,6 +102183,8 @@
             "magic_resistance": 52,
             "max_mana": 1443,
             "move_speed": 335.0,
+            "move_speed_flat": 335.0,
+            "move_speed_percent": 0.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -110702,6 +111118,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -110998,6 +111422,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -111290,6 +111722,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -111551,6 +111991,14 @@
             "view_tag": "applied"
           },
           "participants[3].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -116768,6 +117216,8 @@
               "magic_resistance": 52,
               "max_mana": 995,
               "move_speed": 341.25,
+              "move_speed_flat": 325.0,
+              "move_speed_percent": 5.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.86,
               "tenacity_percent": 0.0,
@@ -116927,6 +117377,8 @@
               "magic_resistance": 52,
               "max_mana": 1285,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.24,
               "tenacity_percent": 0.0,
@@ -117088,6 +117540,8 @@
               "magic_resistance": 67,
               "max_mana": 0,
               "move_speed": 345.0,
+              "move_speed_flat": 345.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 0.0,
               "tenacity_percent": 0.0,
@@ -117227,6 +117681,8 @@
               "magic_resistance": 63,
               "max_mana": 1300,
               "move_speed": 380.0,
+              "move_speed_flat": 380.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 3.33,
               "tenacity_percent": 0.0,
@@ -117927,6 +118383,8 @@
             "magic_resistance": 52,
             "max_mana": 995,
             "move_speed": 341.25,
+            "move_speed_flat": 325.0,
+            "move_speed_percent": 5.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 3.86,
             "tenacity_percent": 0.0,
@@ -118856,6 +119314,8 @@
             "magic_resistance": 52,
             "max_mana": 995,
             "move_speed": 341.25,
+            "move_speed_flat": 325.0,
+            "move_speed_percent": 5.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 3.86,
             "tenacity_percent": 0.0,
@@ -120312,6 +120772,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -120581,6 +121049,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -121079,6 +121555,8 @@
               "magic_resistance": 92,
               "max_mana": 1760,
               "move_speed": 363.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 10.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -121300,6 +121778,8 @@
               "magic_resistance": 52,
               "max_mana": 1160,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -121868,6 +122348,8 @@
             "magic_resistance": 92,
             "max_mana": 1760,
             "move_speed": 363.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 10.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -122848,6 +123330,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -123117,6 +123607,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -123615,6 +124113,8 @@
               "magic_resistance": 92,
               "max_mana": 1760,
               "move_speed": 363.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 10.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -123836,6 +124336,8 @@
               "magic_resistance": 52,
               "max_mana": 1160,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -124379,6 +124881,8 @@
             "magic_resistance": 92,
             "max_mana": 1760,
             "move_speed": 363.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 10.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -125306,6 +125810,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -125575,6 +126087,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -126073,6 +126593,8 @@
               "magic_resistance": 92,
               "max_mana": 1760,
               "move_speed": 363.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 10.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -126294,6 +126816,8 @@
               "magic_resistance": 52,
               "max_mana": 1160,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -126862,6 +127386,8 @@
             "magic_resistance": 92,
             "max_mana": 1760,
             "move_speed": 363.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 10.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -127842,6 +128368,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -128111,6 +128645,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -128609,6 +129151,8 @@
               "magic_resistance": 92,
               "max_mana": 1760,
               "move_speed": 363.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 10.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -128830,6 +129374,8 @@
               "magic_resistance": 52,
               "max_mana": 1160,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -129398,6 +129944,8 @@
             "magic_resistance": 92,
             "max_mana": 1760,
             "move_speed": 363.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 10.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -130405,6 +130953,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -130674,6 +131230,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -131172,6 +131736,8 @@
               "magic_resistance": 92,
               "max_mana": 1760,
               "move_speed": 363.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 10.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -131393,6 +131959,8 @@
               "magic_resistance": 52,
               "max_mana": 1160,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -131936,6 +132504,8 @@
             "magic_resistance": 92,
             "max_mana": 1760,
             "move_speed": 363.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 10.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -132880,6 +133450,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].stats.move_speed_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.omnivamp_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -133149,6 +133727,14 @@
             "view_tag": "applied"
           },
           "participants[1].stats.move_speed": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_flat": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.move_speed_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -133647,6 +134233,8 @@
               "magic_resistance": 92,
               "max_mana": 1760,
               "move_speed": 363.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 10.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -133868,6 +134456,8 @@
               "magic_resistance": 52,
               "max_mana": 1160,
               "move_speed": 330.0,
+              "move_speed_flat": 330.0,
+              "move_speed_percent": 0.0,
               "omnivamp_percent": 0.0,
               "resource_regen_per_second": 4.32,
               "tenacity_percent": 0.0,
@@ -134436,6 +135026,8 @@
             "magic_resistance": 92,
             "max_mana": 1760,
             "move_speed": 363.0,
+            "move_speed_flat": 330.0,
+            "move_speed_percent": 10.0,
             "omnivamp_percent": 0.0,
             "resource_regen_per_second": 4.32,
             "tenacity_percent": 0.0,
@@ -134890,15 +135482,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 22,
-      "leaves": 85704,
-      "numeric_leaves": 28791,
+      "leaves": 86080,
+      "numeric_leaves": 28951,
       "sections": "coupled_scenarios"
     },
-    "git_head": "11b0e9231bad1ea2a117971f92d845140cf396ad",
+    "git_head": "d13d32ff448de2aaa83475f20ce43820d57d7bb8",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 22,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "6b728b8e1bffba66f49eafd7c1dd52f16568fbc3"
+    "src_tree_sha": "e7b27d614ed89985c3da168cc448708d96c0debf"
   }
 }

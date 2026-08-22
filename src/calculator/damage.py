@@ -244,7 +244,7 @@ from .survival.pricing import (
     RoutingProvenance,
 )
 from .survival.transitions import evaluate_live_raw_formula
-from .stats import calculate_attack_speed
+from .stats import calculate_attack_speed, resolve_move_speed
 
 # Critical strikes deal 200% base damage (this changed once before, from
 # 175%). Items add on top via crit_damage_bonus; anything recovering the
@@ -3100,6 +3100,14 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         if "bonus_attack_damage" in stat_buff or "base_attack_damage" in stat_buff:
             stats["attack_damage"] = (
                 stats["base_attack_damage"] + stats["bonus_attack_damage"]
+            )
+        # A movement grant is a term in the ONE move-speed fold, not a
+        # second one: the generic add above moved the component, and the
+        # displayed number is re-folded by the function the build stats,
+        # the runes and the ally bonuses all went through.
+        if "move_speed_percent" in stat_buff or "move_speed_flat" in stat_buff:
+            stats["move_speed"] = resolve_move_speed(
+                stats["move_speed_flat"], stats["move_speed_percent"]
             )
         # Recalculate magic penetration if it was buffed
         if "magic_penetration_percent" in stat_buff:

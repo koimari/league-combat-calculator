@@ -366,6 +366,9 @@ def test_equipping_the_boots_yields_exactly_the_three_sourced_stats(ahri_data):
         "bonus_attack_speed": 45.0,
         "lifesteal_percent": 5.0,
         "move_speed": 45.0,
+        # The flat term the displayed move speed is folded from: one
+        # sourced grant, published as both its component and its total.
+        "move_speed_flat": 45.0,
     }
     assert stats["attack_speed"] - base["attack_speed"] == pytest.approx(
         base["attack_speed_ratio"] * ATTACK_SPEED_FLAT / 100.0
@@ -390,6 +393,7 @@ def test_fights_are_bit_identical_against_a_synthetic_build_with_those_stats(
         ("bonus_attack_speed", 45.0),
         ("lifesteal_percent", 5.0),
         ("move_speed", 45.0),
+        ("move_speed_flat", 45.0),
     ):
         synthetic[key] = synthetic[key] + delta
     assert synthetic == with_boots  # the synthetic bundle IS the boot bundle

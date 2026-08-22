@@ -89,6 +89,11 @@ def calculate_attack_speed(
     return base_attack_speed + attack_speed_ratio * (bonus_percent / 100.0)
 
 
+def resolve_move_speed(flat_total: float, percent_total: float) -> float:
+    """The one fold from movement-speed components to a displayed number."""
+    return apply_movement_speed_soft_caps(flat_total * (1.0 + percent_total / 100.0))
+
+
 def apply_movement_speed_soft_caps(raw_speed: float) -> float:
     """Apply League's displayed movement-speed soft caps."""
     if raw_speed > 490:
@@ -579,18 +584,13 @@ def calculate_total_stats(
     final_magic_pen_percent = (
         total_item_stats["magic_penetration_percent"] + bonuses.bonus_pen_percent
     )
-    raw_move_speed = (
-        base_stats["move_speed"] + total_item_stats["move_speed_flat"]
-    ) * (
-        1
-        + (
-            total_item_stats["move_speed_percent"]
-            + bonuses.bonus_move_speed_percent
-            + runes.move_speed_percent
-        )
-        / 100.0
+    move_speed_flat = base_stats["move_speed"] + total_item_stats["move_speed_flat"]
+    move_speed_percent = (
+        total_item_stats["move_speed_percent"]
+        + bonuses.bonus_move_speed_percent
+        + runes.move_speed_percent
     )
-    final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
+    final_move_speed = resolve_move_speed(move_speed_flat, move_speed_percent)
 
     result = {
         "health": round(total_health),
@@ -663,6 +663,12 @@ def calculate_total_stats(
         "level": level,
         "is_melee": is_melee,
         "move_speed": final_move_speed,
+        # The two terms ``resolve_move_speed`` folded, published so a
+        # mid-fight percent grant (a champion's own ``move_speed_percent``
+        # stat buff) re-folds through the same call instead of trying to
+        # decompose the soft-capped scalar.
+        "move_speed_flat": move_speed_flat,
+        "move_speed_percent": move_speed_percent,
     }
     if champion_data.get("name") == "Kai'Sa":
         result.update(
