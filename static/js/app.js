@@ -3277,7 +3277,7 @@ function renderRunePage() {
   const secondaryRows = runePaths().filter((path) => path !== primary).map((path) =>
     `<div class="rune-path ${secondary === path ? "is-on" : ""}"><b>${escapeHtml(path)}</b>${pathRows(path, [1, 2, 3], "minor")}</div>`).join("");
   const shardRows = (engine.runeShards || []).map((row, index) =>
-    `<div class="rune-row" data-rune-focus="shard-${index + 1}"><b>${escapeHtml(row.name || `Row ${index + 1}`)}</b>${(row.options || []).map((option) =>
+    `<div class="rune-row" data-rune-focus="shard-${index + 1}"><b>${escapeHtml(row.name || `Row ${index + 1}`)}</b>${statShardChoices(index).map((option) =>
       runePickButton("shard", side, { ...option, implemented: option.implemented !== false }, shards[index] === option.name, index)).join("")}</div>`).join("");
   const chosen = [keystoneName, ...minors].filter(Boolean).length + shards.filter(Boolean).length;
   $("runePageTitle").textContent = `Build ${side} runes`;
@@ -3334,30 +3334,6 @@ function copyRunePage(from, to) {
 /** One rune by name from the whole roster the config published. */
 function getRune(name) {
   return name ? (engine.runes || []).find((entry) => entry.name === name) || null : null;
-}
-
-/**
- * The minor runes a slot may legally hold, as an affordance only — the
- * server owns the rules and refuses anything illegal that reaches it.
- * Slots 0-2 are the primary path's three rows in order; slots 3-4 are the
- * secondary path's two.
- */
-function minorRuneChoices(side, index) {
-  const minors = (engine.runes || []).filter((entry) => entry.row > 0);
-  const primary = getKeystone(state.attacker[`keystone${side}`])?.path || "";
-  if (index < 3) {
-    return minors.filter((entry) => entry.row === index + 1 && (!primary || entry.path === primary));
-  }
-  const taken = (state.attacker[`minorRunes${side}`] || [])
-    .filter((name, slot) => slot >= 3 && slot !== index)
-    .map((name) => getRune(name))
-    .filter(Boolean);
-  const secondary = taken[0]?.path || "";
-  return minors.filter((entry) => (
-    entry.path !== primary
-    && (!secondary || entry.path === secondary)
-    && !taken.some((other) => other.row === entry.row)
-  ));
 }
 
 /** The options one shard row offers, from the published shard table. */

@@ -532,6 +532,14 @@ def rune_page_ui(tmp_path_factory):
             "maximum": 10,
             "disclosure": "synthetic",
         },
+        # Replayed through pickMinorRune after every other reading is taken.
+        "picks": [
+            "Manaflow Band",
+            "Triumph",
+            "Legend: Alacrity",
+            "Absorb Life",
+            "Cheap Shot",
+        ],
     }
     path = tmp_path_factory.mktemp("runes") / "fixture.json"
     path.write_text(json.dumps(fixture), encoding="utf-8")
@@ -567,25 +575,60 @@ class TestThePickerBuildsTheRequestTheServerValidates:
         assert page.minor_runes == tuple(payload["minor_runes"])
         assert page.stat_shards == tuple(payload["stat_shards"])
 
-    def test_each_slot_offers_only_what_that_slot_may_legally_hold(self, rune_page_ui):
-        primary, secondary = rune_page_ui["choices"][:3], rune_page_ui["choices"][3:]
-        # Arcane Comet is Sorcery, so the three primary slots are its rows.
-        assert primary == [
-            ["Axiom Arcanist", "Manaflow Band", "Nimbus Cloak"],
-            ["Transcendence", "Celerity", "Absolute Focus"],
-            ["Scorch", "Waterwalking", "Gathering Storm"],
+    def test_picking_can_only_reach_a_page_the_server_accepts(self, rune_page_ui):
+        """Legality is the picker's own state transition, not a filtered list
+        of offers: a primary pick lands in its own row, a secondary pick starts
+        the pair, a same-row pick replaces, and a pick from a third path
+        restarts the pair rather than leaving two paths on the page."""
+        assert rune_page_ui["picks"] == [
+            # Arcane Comet is Sorcery, so a Sorcery rune lands in its own row.
+            [
+                "Manaflow Band",
+                ["Manaflow Band", "Absolute Focus", "Scorch", "Coup de Grace", ""],
+            ],
+            # An off-path pick joins the secondary pair the page already holds.
+            [
+                "Triumph",
+                [
+                    "Manaflow Band",
+                    "Absolute Focus",
+                    "Scorch",
+                    "Coup de Grace",
+                    "Triumph",
+                ],
+            ],
+            # A third, on its own row, drops the oldest of the pair.
+            [
+                "Legend: Alacrity",
+                [
+                    "Manaflow Band",
+                    "Absolute Focus",
+                    "Scorch",
+                    "Triumph",
+                    "Legend: Alacrity",
+                ],
+            ],
+            # Same row as Triumph, so it replaces Triumph, not Alacrity.
+            [
+                "Absorb Life",
+                [
+                    "Manaflow Band",
+                    "Absolute Focus",
+                    "Scorch",
+                    "Legend: Alacrity",
+                    "Absorb Life",
+                ],
+            ],
+            # A third path restarts the pair — two secondary paths never coexist.
+            [
+                "Cheap Shot",
+                ["Manaflow Band", "Absolute Focus", "Scorch", "Cheap Shot", ""],
+            ],
         ]
-        # The first secondary slot may go anywhere but Sorcery; the second is
-        # pinned to the path the first chose, minus the row it took.
-        assert "Scorch" not in secondary[0]
-        assert secondary[1] == [
-            "Absorb Life",
-            "Triumph",
-            "Presence of Mind",
-            "Legend: Alacrity",
-            "Legend: Haste",
-            "Legend: Bloodline",
-        ]
+        for _, page in rune_page_ui["picks"]:
+            minors = [name for name in page if name]
+            if len(minors) == 5:
+                rune_effects.validate_rune_page("Arcane Comet", minors, [])
 
     def test_the_shard_rows_are_the_published_table(self, rune_page_ui):
         assert rune_page_ui["shardChoices"] == [

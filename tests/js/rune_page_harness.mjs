@@ -6,8 +6,8 @@
  * `/api/config` publishes) and `page` (what the user picked). stdout is JSON: `payload` (the rune
  * half of the build the UI would POST), `statCard` (what the stat card asks
  * `/api/loadout-stats` for), `rows` (the rendered slot markup),
- * `choices` (what each minor-rune slot offers) and `copied` (the page after
- * Copy A -> B).
+ * `shardChoices` (what each shard row offers), `picks` (the page after each
+ * replayed minor-rune pick) and `copied` (the page after Copy A -> B).
  */
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -71,6 +71,13 @@ console.log(vm.runInContext(`
   const rows = runePageRows("A");
   const statCard = loadoutStatsPayload();
   copyRunePage("A", "B");
+  // Every pick in \`picks\`, replayed through the production handler, with the
+  // five minor-rune slots as they stand after each one.  Last, because it
+  // moves the page every other reading above is taken from.
+  const picks = (__fixture.picks || []).map((name) => {
+    pickMinorRune("A", name);
+    return [name, [...state.attacker.minorRunesA]];
+  });
   JSON.stringify({
     payload: {
       keystone: build.keystone,
@@ -80,8 +87,8 @@ console.log(vm.runInContext(`
     },
     statCard,
     rows,
-    choices: [0, 1, 2, 3, 4].map((index) => minorRuneChoices("A", index).map((rune) => rune.name)),
     shardChoices: [0, 1, 2].map((index) => statShardChoices(index).map((option) => option.name)),
+    picks,
     sides: ["attacker.keystoneA", "attacker.minorRunesB.3", "attacker.statShardsB.0", "attacker.buildA.2"].map(pickerSide),
     copied: {
       keystone: state.attacker.keystoneB,
