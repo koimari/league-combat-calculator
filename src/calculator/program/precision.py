@@ -180,6 +180,7 @@ _EVENTS_ROUNDING: dict[str, int] = {
     "events.incoming_damage_multiplier": 3,
     "events.incoming_damage_reduction": 1,
     "events.cc_duration": 3,
+    "events.cc_magnitude": 3,
     "events.wound_duration": 3,
     "events.wound_until": 3,
     "events.grey_health_stored": 1,

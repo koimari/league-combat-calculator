@@ -201,6 +201,15 @@ def _damage_event_rows(
                 "cc_duration",
                 round_field("events.cc_duration", float(event["cc_duration"])),
             )
+        if event.get("cc_magnitude"):
+            # The control's sourced strength, in the units its cached row
+            # states -- a slow's percent.  The engine omits the key entirely
+            # for a kind that carries no magnitude, so an absent leaf is that
+            # declaration and not a measured zero.
+            leaf.measured(
+                "cc_magnitude",
+                round_field("events.cc_magnitude", float(event["cc_magnitude"])),
+            )
         if event.get("control_source_atoms"):
             leaf.structure(
                 "control_source_atoms",
