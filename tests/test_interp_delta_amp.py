@@ -46,7 +46,7 @@ from src.calculator.item_behavior_catalog import (
     BehaviorCatalogError,
     COMPILED_KERNEL_CANNOT_AMP,
     COMPILED_KERNEL_CAN_AMP,
-    KEYSTONE_AMPS,
+    RUNE_AMP_SLOTS,
     behavior_rules,
     build_context,
     rule_owners,
@@ -68,10 +68,10 @@ def _slot(*owners: str) -> "delta_amp.AmpSlot | None":
 
 
 def test_amp_chain_order_is_declared() -> None:
-    """The seven slots, frozen: a refactor that reorders them fails here.
+    """The eight slots, frozen: a refactor that reorders them fails here.
 
-    These seven chain slots are **not** Phase 4's seven authority moves; the
-    two sets overlap and neither contains the other.
+    These chain slots are **not** Phase 4's seven authority moves; the two
+    sets overlap and neither contains the other.
     """
     assert AMP_CHAIN_ORDER == (
         AmpChainSlot.CINDERBLOOM,
@@ -81,8 +81,9 @@ def test_amp_chain_order_is_declared() -> None:
         AmpChainSlot.WHOLE_TOTAL,
         AmpChainSlot.POST_IMMOBILIZE,
         AmpChainSlot.HYPERSHOT,
+        AmpChainSlot.TARGET_HEALTH_GATE,
     )
-    assert len(AMP_CHAIN_ORDER) == 7
+    assert len(AMP_CHAIN_ORDER) == 8
     assert frozenset(AMP_CHAIN_ORDER) == frozenset(AmpChainSlot)
 
 
@@ -537,11 +538,17 @@ def test_offering_the_wrong_pool_to_a_live_predicate_is_a_stop() -> None:
 
 
 def test_a_comparison_no_declaration_uses_has_no_branch() -> None:
-    """D-51: three of the four comparisons are unreached and raise."""
+    """D-51: the two boundary comparisons are unreached and raise.
+
+    ``LT`` and ``GT`` are both declared — Cinderbloom and Coup de Grace arm
+    under a share of the target's health, Cut Down over one — and no rule
+    says which side of the threshold *itself* is inside, so ``LE`` and ``GE``
+    have no arithmetic.
+    """
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
     declared = slot.rules[0].payload.activation
-    for cmp_member in (Comparison.LE, Comparison.GT, Comparison.GE):
+    for cmp_member in (Comparison.LE, Comparison.GE):
         mutated = _with_activation(slot, dataclasses.replace(declared, cmp=cmp_member))
         with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="comparison"):
             mutated.live_predicate_holds(Probe.TARGET_HEALTH_FRACTION, 1.0, 1000.0)
@@ -605,9 +612,10 @@ def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
         if rule.family is RuleFamily.DELTA_AMP
     ]
     assert amps, "no delta_amp rule is declared, so this criterion proves nothing"
-    assert {rule.owner for rule in amps} >= set(KEYSTONE_AMPS), (
-        "the keystone amps are delta_amp declarations too (CLAUDE.md rule 5); "
-        "a criterion read over items only would miss two runtime amp producers"
+    assert {rule.owner for rule in amps} >= set(RUNE_AMP_SLOTS), (
+        "the rune amps are delta_amp declarations too (CLAUDE.md rule 5); "
+        "a criterion read over items only would miss four runtime amp "
+        "producers"
     )
     for rule in amps:
         assert (
@@ -622,7 +630,7 @@ def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
 # without a committed population its blast radius would be whatever the tree
 # happened to contain on the day, discovered afterwards rather than declared.
 #
-# Twelve of the fourteen are holder-side amps the pair engine prices into its
+# Fourteen of the sixteen are holder-side amps the pair engine prices into its
 # own damage rows, which the compiled walk has always consumed already
 # amplified; two author a cross-participant ``damage_modifier`` packet and are
 # the reason the blanket refusal existed at all.  Both halves move together
@@ -643,6 +651,8 @@ AMP_FLIP_POPULATION = frozenset(
         "riftmaker.whole_total_amp",
         "shadowflame.cinderbloom",
         "spear_of_shojin.whole_total_amp",
+        "coup_de_grace.target_health_gate",
+        "cut_down.target_health_gate",
     }
 )
 
@@ -653,7 +663,7 @@ def test_the_amp_flip_population_is_the_declared_one() -> None:
     D-98/R-31: a derivation lands beside the legacy declaration with an
     asserted delta, and only then does the flip land as its own revert unit.
     ``AMP_COMPILABILITY`` is that indirection; this is the delta.  A
-    fifteenth amp declared without a line here fails on the commit that adds
+    seventeenth amp declared without a line here fails on the commit that adds
     it, which is what stops the flip from silently taking a mechanic nobody
     scoped with it.
     """

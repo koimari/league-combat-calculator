@@ -81,7 +81,6 @@ def _fight(
     }
     if options is not None:
         payload["champion_options"] = options
-    app.config["TESTING"] = True
     response = app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()["combat"]

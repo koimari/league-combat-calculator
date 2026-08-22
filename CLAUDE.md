@@ -39,7 +39,7 @@ python scripts/coverage_census.py check docs/coverage-census.json        # Cover
 python scripts/prose_lint.py                                            # Docstrings/comments: current state only, none longer than its body
 python scripts/literal_defaults.py src/calculator/damage.py             # Rule-5 lint: literal fallbacks on cached data (tests/test_literal_defaults.py pins it)
 python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/audit/fetch/bis/packets are its other subcommands (see /patch-update skill)
-python scripts/bench_request.py --compare benchmarks.md  # Request-latency gate; benchmarks.md is the one home for perf numbers
+python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
 ```
 
 `pytest` gates every task; `pylint src/` and `black --check` gate any code change.

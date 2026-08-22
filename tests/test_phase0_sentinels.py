@@ -286,7 +286,6 @@ def sentinel_roster(items, enemies, item_options=()):
     cached: three sentinels read the same two rosters and a roster costs a
     full coupled walk.
     """
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": "Ahri",
         "level": 18,

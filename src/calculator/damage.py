@@ -205,6 +205,7 @@ from .interpreters.sustain import declared_sustain, saturating_stat_percent
 from .item_behavior import (
     ActiveWindowCastEconomyRule,
     AmpChainSlot,
+    Comparison,
     Isolation,
     ManaSpentHealRule,
     PacketKind,
@@ -244,7 +245,7 @@ from .survival.pricing import (
     RoutingProvenance,
 )
 from .survival.transitions import evaluate_live_raw_formula
-from .stats import calculate_attack_speed
+from .stats import calculate_attack_speed, resolve_move_speed
 
 # Critical strikes deal 200% base damage (this changed once before, from
 # 175%). Items add on top via crit_damage_bonus; anything recovering the
@@ -591,6 +592,12 @@ class FightConfig:
     include_actives: bool = True
     cast_order: list[str] | None = None
     auto_attacks_only: bool = False
+    # Whether the timed scheduler may recast R on its (hasted) cooldown.
+    # Set from the champion module's reviewed ``ULTIMATE_RECASTS``
+    # certification by ``pipeline.run_fight``; False is the conservative
+    # one-cast rule every uncertified kit keeps, and the default so a
+    # direct engine caller never silently gains extra ultimate casts.
+    ultimate_recasts: bool = False
     deterministic: bool = False
     target_magic_shield: float = 0.0
     target_physical_shield: float = 0.0
@@ -732,6 +739,7 @@ class FightState:
     one_rotation: bool
     include_actives: bool
     auto_attacks_only: bool
+    ultimate_recasts: bool
     deterministic: bool
     is_melee: bool
     level: int
@@ -885,15 +893,10 @@ def _apply_target_champion_damage_reduction(
     """Apply a sourced flat reduction to champion attack or spell packets."""
     if hits <= 0 or post_mitigation_damage <= 0.0:
         return post_mitigation_damage
-    # Spelled through getattr, and only here: as attributes these two join
-    # ``golden_snapshot.swing_term_declarations()``, whose capture then refuses
-    # every coupled baseline until a scenario arms Guardian's Horn against a
-    # basic attack (backlog ER4).  Both fields are declared on FightState, so
-    # neither default is reachable; the shape retires with that scenario.
     reduction = (
-        getattr(state, "target_champion_dot_damage_flat_reduction", 0.0)
+        state.target_champion_dot_damage_flat_reduction
         if damage_over_time
-        else getattr(state, "target_champion_damage_flat_reduction", 0.0)
+        else state.target_champion_damage_flat_reduction
     )
     if reduction <= 0.0:
         return post_mitigation_damage
@@ -1636,12 +1639,9 @@ def _simulate_current_health_on_hit(
     return total_damage, total_hits, hit_damages
 
 
-# A row that authors events is the sum of them, so its total and its ledger
-# have to be the same arithmetic.  A running ``+=`` and a ``sum()`` over the
-# same numbers disagree by an ulp (the builtin compensates, the loop does not),
-# and a row that gave every one of its swings away then reads a crumb instead
-# of exactly 0.0, which ``_event_timeline_coverage`` counts as an active source
-# using coarse ordering.
+# A row's total and its ledger must be the same arithmetic: ``+=`` and
+# ``sum()`` over the same numbers disagree by an ulp, so a row that gave every
+# swing away would read a crumb instead of 0.0 and count as an active source.
 def _ledger_total(events: Sequence[Mapping[str, Any]]) -> float:
     """What an authored event list is worth, summed one way everywhere."""
     return sum(float(event["damage"]) for event in events)
@@ -2411,10 +2411,9 @@ class _ThresholdHealDrip:
                 self.healing_received += received
         shield_ledger.expire_threshold_health(pools, event_time)
 
-    # A declaration that subdivides the window into no ticks at all leaves the
-    # heal's timing unsourced, which is the coverage downgrade the target-side
-    # Lifeline still owes; asking the drip keeps that answer measured rather
-    # than assumed by the reader.
+    # A declaration subdividing the window into no ticks leaves the heal's
+    # timing unsourced — the coverage downgrade the target-side Lifeline owes.
+    # Asking the drip keeps that measured rather than assumed by the reader.
     def cadence_certified(self) -> bool:
         """Whether the heal was delivered on an authored tick schedule."""
         return not self.triggered or self.ticks > 0
@@ -3051,6 +3050,7 @@ def _resolve_combat_state(
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
         auto_attacks_only=config.auto_attacks_only,
+        ultimate_recasts=config.ultimate_recasts,
         deterministic=config.deterministic,
         is_melee=is_melee,
         level=level,
@@ -3093,19 +3093,36 @@ def _resolve_combat_state(
     )
 
 
+# A row keyed to no slot at all (``passive``) resolves to itself, which is
+# never one of Q/W/E/R — the test every caller makes.
+def _base_slot(key: str) -> str:
+    """The cast slot an ability row belongs to (``Q2``/``W_frenzy`` -> ``Q``/``W``)."""
+    return key.split("_", 1)[0].rstrip("0123456789")
+
+
+# Two things are live without a cast of their own: a passive row
+# (``passive``, ``passive_plasma``), and an active row whose payload the module
+# declares ``innate_grant`` — an always-on passive that happens to hang off an
+# active slot (Darius E's armor penetration, Kog'Maw Q's, Nocturne W's, Quinn
+# W's).  Everything else is bought with a cast, so autos-only
+# (``casts_nothing``) earns none of it, including a cast-derived
+# ``off_rotation_grant`` whose window average counts casts the rotation omits
+# (Kai'Sa E).  Outside that mode an ``off_rotation_grant`` is live, and any
+# other active row is live when its key, or the base slot of its variant key
+# (``Q2`` -> ``Q``), is in the cast order; an unknown order casts every slot.
 def _slot_is_cast(
-    key: str, info: Mapping[str, Any], cast_order: "list[str] | None"
+    key: str,
+    info: Mapping[str, Any],
+    cast_order: "list[str] | None",
+    casts_nothing: bool = False,
 ) -> bool:
-    """Whether the ability row *key* belongs to a slot the rotation casts.
-    Passive rows (``passive``, ``passive_plasma``) are always live, as is a row
-    the module declares ``off_rotation_grant`` (a zero-damage cast the rotation
-    omits whose grant is priced across the window, Kai'Sa E).  Any other active
-    row is live when its key, or the base slot of its variant key (``Q2`` ->
-    ``Q``), is in the cast order; an unknown order casts every slot."""
-    base = key.split("_", 1)[0].rstrip("0123456789")
-    if base not in ("Q", "W", "E", "R") or info.get("off_rotation_grant"):
+    """Whether the ability row *key* carries a payload this fight earns."""
+    base = _base_slot(key)
+    if base not in ("Q", "W", "E", "R") or info.get("innate_grant"):
         return True
-    if cast_order is None:
+    if casts_nothing:
+        return False
+    if info.get("off_rotation_grant") or cast_order is None:
         return True
     return key in cast_order or base in cast_order
 
@@ -3123,14 +3140,20 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     """
     stats = state.champion_stats
     resists = state.resists
+    withheld: list[str] = []
 
     for key, ability_info in state.ability_damages.items():
         stat_buff = ability_info.get("stat_buff")
         if not stat_buff:
             continue
-        if not _slot_is_cast(key, ability_info, state.cast_order):
+        if not _slot_is_cast(
+            key, ability_info, state.cast_order, state.auto_attacks_only
+        ):
             # An active's grant rides its cast: a rotation that never casts
-            # the ability earns none of it. A passive's grant is always on.
+            # the ability earns none of it, and autos-only casts nothing at
+            # all. A passive's grant is always on.
+            if state.auto_attacks_only:
+                withheld.append(str(ability_info.get("name", key)))
             continue
         for stat_key, buff_value in stat_buff.items():
             stats[stat_key] = stats.get(stat_key, 0.0) + buff_value
@@ -3151,6 +3174,14 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         if "bonus_attack_damage" in stat_buff or "base_attack_damage" in stat_buff:
             stats["attack_damage"] = (
                 stats["base_attack_damage"] + stats["bonus_attack_damage"]
+            )
+        # A movement grant is a term in the ONE move-speed fold, not a
+        # second one: the generic add above moved the component, and the
+        # displayed number is re-folded by the function the build stats,
+        # the runes and the ally bonuses all went through.
+        if "move_speed_percent" in stat_buff or "move_speed_flat" in stat_buff:
+            stats["move_speed"] = resolve_move_speed(
+                stats["move_speed_flat"], stats["move_speed_percent"]
             )
         # Recalculate magic penetration if it was buffed
         if "magic_penetration_percent" in stat_buff:
@@ -3261,6 +3292,14 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 * state.fight_duration_seconds
                 * state.auto_attack_uptime
             )
+
+    if withheld:
+        state.notes.append(
+            "Autos-only performs no cast, so no ability stat grant applies: "
+            + ", ".join(sorted(set(withheld)))
+            + ". The mode reports the champion's unbuffed attack speed and "
+            "auto damage; pick the timed mode to buy a steroid with a cast."
+        )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.
@@ -3543,15 +3582,11 @@ class _ShredRamp:
         _apply_target_shred(self.resists, self.debuff, 1.0 / self.stacks)
         return self.ability_mr()
 
-    # The stages that already fired did so DURING the ability's own hits, when
-    # the debuff is freshly applied and so at full strength.  ``coverage`` is
-    # the share that outlives the ability (see ``_debuff_coverage``), so this
-    # SETTLES the total at it rather than adding a flat remainder; at full
-    # coverage that is exactly ``(stacks - fired) / stacks``.  The settlement is
-    # signed: a debuff that fully staged during its own ticks but expires
-    # before the fight ends hands part of the reduction back, which is exact
-    # for the flat shreds ramps use (Corki's Gatling Gun is the only one) and
-    # approximate for a percent one.
+    # Stages that already fired did so DURING the ability's own hits, at full
+    # strength.  ``coverage`` is the share outliving the ability, so this
+    # SETTLES the total at it rather than adding a flat remainder — exactly
+    # ``(stacks - fired) / stacks`` at full coverage.  The settlement is signed
+    # and so hands reduction back, exact for a flat shred and not a percent one.
     def apply_remainder(self, coverage: float = 1.0) -> None:
         """Top the shred up to its lasting share of the reduction."""
         _apply_target_shred(
@@ -4035,16 +4070,23 @@ def _effective_timed_cooldown(
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
     immobilizing slot earns (Imperial Mandate's Control), and Navori
-    auto-attack refunds."""
+    auto-attack refunds.
+
+    Which haste applies is a property of the SLOT, so a variant row resolves
+    to its base slot first: Briar's ``W_frenzy`` and Kindred's ``W_vigor`` are
+    basic abilities and Riven's ``R_buff`` is an ultimate, and before this
+    each of them matched neither branch and earned no Shojin-class or
+    ultimate haste at all."""
     base_cd = ability_field(ability_info, "cooldown")
+    slot = _base_slot(ability_key)
     total_haste = state.ability_haste
-    if ability_key in ("Q", "W", "E"):
+    if slot in ("Q", "W", "E"):
         total_haste += basic_ability_haste
-    elif ability_key == "R":
+    elif slot == "R":
         total_haste += float(state.champion_stats["ultimate_haste"])
     total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
-    if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
+    if result.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
     return cd
 
@@ -4076,18 +4118,12 @@ def _cooldown_ready_at(
 _CAST_SCHEDULE_EPS = 1e-9
 
 
-# ``recast_of`` is the one authority for recast parentage, and it is what the
-# cast-order machinery reads.  Riding the parent's cast *count* is a narrower
-# claim: it holds for a recast that declares a cooldown of its own to share
-# with its parent (Camille's Q2 at 5.0, Ambessa's at 10.0), and not for an
-# entry declared with this scheduler's cast-exactly-once idiom, where Syndra's
-# 40-splinter second charge is ONE extra cast whose recharge the module
-# deliberately does not simulate.  The test is a POSITIVE declared cooldown, so
-# a cooldown that is zero, absent, ``None`` or negative all read the same: this
-# row schedules itself once and does not ride.  Absent is deliberately not
-# "unknown, assume it rides" — a module that stamps parentage and declares no
-# cooldown has declared no shared timer either, and the fail-quiet reading
-# would silently multiply its casts.
+# ``recast_of`` is the authority for recast parentage; riding the parent's cast
+# *count* is narrower.  It holds for a recast declaring a cooldown of its own to
+# share (Camille Q2 at 5.0, Ambessa's at 10.0), not for the cast-exactly-once
+# idiom, where Syndra's second charge is ONE extra cast.  The test is a POSITIVE
+# cooldown, so zero, absent, ``None`` and negative all schedule once: a module
+# stamping parentage with no cooldown has declared no shared timer either.
 def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
     """The slot whose cast COUNT this entry rides, or ``None``."""
     parent = info.get("recast_of")
@@ -4107,9 +4143,12 @@ def _schedule_shared_casts(
     ``cast_time`` (stamped from the wiki by the champion engine; absent
     means instant), and an ability recasts when its cooldown — running
     from the END of its cast — is back up and no other cast is in
-    progress. Ties break by cast_order position. R and zero-cooldown
-    entries cast exactly once; recast entries ride their parent's casts
-    and are not scheduled. A cast counts if it STARTS within the fight
+    progress. Ties break by cast_order position. Zero-cooldown entries
+    cast exactly once, and so does an ultimate unless its module certifies
+    ``ULTIMATE_RECASTS`` — a form, a stance, a charge pool or an escalating
+    cost the engine does not simulate is not safe to repeat, so silence
+    keeps the one-cast rule. Recast entries ride their parent's casts and
+    are not scheduled. A cast counts if it STARTS within the fight
     duration. Cassiopeia's 0.75s-cooldown E is the case that pins the
     shared timeline: 3 casts in-game over a 3s fight, where an
     independent timeline schedules 5.
@@ -4145,7 +4184,12 @@ def _schedule_shared_casts(
         )
         for key in keys
     }
-    single_cast = {key for key in keys if key == "R" or cooldowns[key] <= 0}
+    once_only_ultimate = not state.ultimate_recasts
+    single_cast = {
+        key
+        for key in keys
+        if cooldowns[key] <= 0 or (once_only_ultimate and _base_slot(key) == "R")
+    }
 
     times: dict[str, list[float]] = {key: [] for key in keys}
     next_ready = dict.fromkeys(keys, 0.0)
@@ -4175,6 +4219,33 @@ def _schedule_shared_casts(
             )
         now += cast_times[key]
     return times
+
+
+def _disclose_ultimate_cast_rule(state: "FightState", timed_mode: bool) -> None:
+    """State the one-cast rule on the R row when it costs the fight a cast.
+
+    An uncertified ultimate casts once whatever its cooldown, so every
+    source of ultimate haste — Malignance, Ultimate Hunter, Axiom Arcanist's
+    refund — is inert for this kit.  The note is raised only when the rule
+    actually binds: the hasted cooldown fits inside the window, so a
+    certified module would have cast R again.
+    """
+    if timed_mode is False or state.ultimate_recasts:
+        return
+    for key, info in state.ability_damages.items():
+        if _base_slot(key) != "R" or not _slot_is_cast(key, info, state.cast_order):
+            continue
+        cooldown = effective_cooldown(
+            ability_field(info, "cooldown"),
+            state.ability_haste + float(state.champion_stats["ultimate_haste"]),
+        )
+        if 0.0 < cooldown <= state.fight_duration_seconds:
+            state.notes.append(
+                f"{info.get('name', key)} is cast once: the timed scheduler "
+                "recasts an ultimate only for a module that certifies it "
+                "(ULTIMATE_RECASTS), so ultimate haste does not change this "
+                f"fight even though the hasted cooldown is {cooldown:.1f}s."
+            )
 
 
 @dataclass(frozen=True)
@@ -6193,6 +6264,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     schedule = (
         _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
     )
+    _disclose_ultimate_cast_rule(state, timed_mode)
 
     # Resolve WHEN everything casts before pricing anything: the stack
     # timeline (Case 4/5) must exist before the first cast is priced, and
@@ -16962,26 +17034,37 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
 
 
 def _health_gated_events(
-    events: list, effect: "rune_effects.RuneConditionalAmpEffect", max_health: float
+    events: list, slot: "delta_amp.AmpSlot", max_health: float
 ) -> list:
     """The ledger rows that land while a rune's target-health gate holds.
 
     The gate reads the target's *current* health, so the ledger is walked in
-    its own order with health falling by everything already dealt; a row is
-    amplified when the health standing before it satisfies the gate.  Damage
-    the ledger cannot timestamp never appears here, so the row is a floor.
-    Two things the walk does not model, disclosed by its caller: the target
-    starts the fight at full health, and the ledger is read before shields,
-    so a shielded target crosses a falling gate earlier here than in game."""
-    threshold = effect.health_ratio * max_health
-    below = effect.condition is rune_effects.AmpCondition.TARGET_BELOW
+    its own order with health falling by everything already dealt, and each
+    row is offered to the rule's own live predicate. What the walk does not
+    model its caller discloses: untimestamped damage, and shields."""
     amped = []
     remaining = max_health
     for row in events:
-        if (remaining < threshold) if below else (remaining > threshold):
+        if slot.live_predicate_holds(
+            Probe.TARGET_HEALTH_FRACTION, remaining, max_health
+        ):
             amped.append(row)
         remaining -= row[1]
     return amped
+
+
+def _health_gate_disclosure(
+    effect: "rune_effects.RuneConditionalAmpEffect", slot: "delta_amp.AmpSlot"
+) -> str:
+    """What one health-gated rune amplified, in the declaration's own numbers."""
+    side = "below" if slot.live_comparison() is Comparison.LT else "above"
+    share = slot.value(delta_amp.LIVE_THRESHOLD_FIELD) * 100
+    return (
+        f"{effect.rune_name} amplifies exactly the instances that land while "
+        f"the target is {side} {share:g}% of its maximum health, read off the "
+        "fight's own ordered ledger; damage the ledger cannot timestamp is "
+        "never amplified, so the row is a floor."
+    )
 
 
 def _add_rune_conditional_amp_damage(
@@ -16990,8 +17073,9 @@ def _add_rune_conditional_amp_damage(
     """Apply every selected health-gated rune amplifier (Coup de Grace-class).
 
     Runs last among the amplifiers so the ledger it reads is the whole
-    fight. Only gates the walk can evaluate reach here at all — a gate on
-    the holder's own health has no ``AmpCondition`` member, so it is refused
+    fight, which is the ``TARGET_HEALTH_GATE`` chain slot's position.  Only
+    gates the walk can evaluate reach here at all — a gate on the holder's
+    own health declares no live predicate on the target, so it is refused
     where it compiles rather than booking nothing here.
     """
     effects = _page_effects(state, rune_effects.RuneConditionalAmpEffect)
@@ -17006,9 +17090,10 @@ def _add_rune_conditional_amp_damage(
     )
     max_health = max(0.0, state.target_health)
     for effect in effects:
-        state.notes.extend(effect.disclosures)
-        amped = _health_gated_events(events, effect, max_health)
-        bonus = sum(row[1] for row in amped) * effect.amp_ratio
+        slot = _required_amp_slot(state, AmpChainSlot.TARGET_HEALTH_GATE, effect)
+        state.notes.append(_health_gate_disclosure(effect, slot))
+        amped = _health_gated_events(events, slot, max_health)
+        bonus = sum(row[1] for row in amped) * slot.bonus_fraction
         if bonus <= 0.0:
             state.notes.append(
                 f"{effect.rune_name} amplified nothing: no timestamped damage "
@@ -17019,7 +17104,7 @@ def _add_rune_conditional_amp_damage(
             state,
             effect.breakdown_key,
             effect.rune_name,
-            1.0 + effect.amp_ratio,
+            1.0 + slot.bonus_fraction,
             amped,
             bonus,
         )

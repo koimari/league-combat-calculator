@@ -72,7 +72,6 @@ def _fight(
             }
         ],
     }
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()

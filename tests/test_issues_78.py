@@ -20,9 +20,13 @@ source.  Adding a control to the frontend without declaring it in
 fails them too.
 """
 
+import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
+import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
@@ -466,3 +470,66 @@ def test_api_responses_expose_exactly_the_capability_declared_fields():
         "one_rotation_duration_seconds",
     } <= set(defaults)
     assert defaults["auto_attack_uptime_mode"] in {"calculated", "explicit"}
+
+
+# ---------------------------------------------------------------------------
+# The runtime-disable path, driven headlessly through the real app.js
+# ---------------------------------------------------------------------------
+
+GATES_HARNESS = Path(__file__).resolve().parent / "js" / "capability_gates_harness.mjs"
+APP_JS_PATH = Path(__file__).resolve().parent.parent / "static" / "js" / "app.js"
+
+
+def _control_gates(contract: dict, tmp_path) -> dict:
+    """Run app.js's control-family gating over one capability contract."""
+    node = shutil.which("node")
+    if node is None:  # pragma: no cover - toolchain dependent
+        pytest.skip("node is not installed")
+    fixture = tmp_path / "fixture.json"
+    fixture.write_text(json.dumps({"capabilities": contract}), encoding="utf-8")
+    result = subprocess.run(
+        [node, str(GATES_HARNESS), str(APP_JS_PATH), str(fixture)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(result.stdout)
+
+
+def test_every_gated_control_family_is_declared_and_mounted(tmp_path):
+    """Each family the browser can disable must be a published control family
+    whose controls are in the served document when the pass runs."""
+    contract = _contract()
+    soup = BeautifulSoup(
+        app_module.app.test_client().get("/").get_data(as_text=True), "html.parser"
+    )
+    for name, gate in _control_gates(contract, tmp_path)["gates"].items():
+        assert name in contract["controls"]["fields"], name
+        assert soup.select(gate["selector"]), (name, gate["selector"])
+
+
+def test_a_refused_control_family_reaches_the_page_with_its_reason(tmp_path):
+    """The pass matched a refused field by ``frontend_token``, which the
+    contract strips from every unsupported field on purpose — so it could
+    never fire. The family name survives refusal; the reason is the
+    backend's."""
+    contract = _contract()
+    assert contract["controls"]["fields"]["best_in_slot"]["supported"] is True
+    contract["controls"]["fields"]["best_in_slot"] = {
+        "supported": False,
+        "reason": "Best-in-slot is offline for this snapshot.",
+        "payload_field": "best_in_slot",
+        "state_path": None,
+        "frontend_token": None,
+        "conditional": False,
+        "availability": "static",
+    }
+    refusals = _control_gates(contract, tmp_path)["refusals"]
+    assert [refusal["name"] for refusal in refusals] == ["best_in_slot"]
+    assert refusals[0]["reason"] == "Best-in-slot is offline for this snapshot."
+    assert refusals[0]["selector"] == ".bis-trigger, #bisButton"
+    assert refusals[0]["mark"] is True
+
+
+def test_a_fully_supported_contract_refuses_nothing(tmp_path):
+    assert _control_gates(_contract(), tmp_path)["refusals"] == []

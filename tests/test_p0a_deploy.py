@@ -377,23 +377,14 @@ def test_redis_cache_failure_fails_closed(redis_env, monkeypatch):
 
 
 def test_result_cache_uses_redis_when_only_redis_configured(redis_env):
-    previous_testing = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = False
-    try:
+    with app_config(TESTING=False):
         assert app_module._result_cache_enabled() is True
-    finally:
-        if previous_testing is None:
-            app_module.app.config.pop("TESTING", None)
-        else:
-            app_module.app.config["TESTING"] = previous_testing
 
 
 def test_calculate_route_serves_from_redis_cache(redis_env):
     """With REDIS_URL set and TESTING off, /api/calculate stores on the first
     request and serves the second identical request from Redis."""
-    previous_testing = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = False
-    try:
+    with app_config(TESTING=False):
         client = app_module.app.test_client()
         payload = {
             "champion": "Ahri",
@@ -425,11 +416,6 @@ def test_calculate_route_serves_from_redis_cache(redis_env):
         assert checks["cache"]["hits"] == 1
         assert checks["cache"]["misses"] == 1
         assert checks["cache"]["cached_entries"] == 1
-    finally:
-        if previous_testing is None:
-            app_module.app.config.pop("TESTING", None)
-        else:
-            app_module.app.config["TESTING"] = previous_testing
 
 
 # ---------------------------------------------------------------------------

@@ -804,7 +804,6 @@ class TestSourceAndAtomReceipts:
 
 
 def _api(level: int, mega: bool) -> dict:
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -843,6 +842,15 @@ class TestApiFightOutput:
         assert participant["magic_resistance"] == 52
         assert participant["attack_speed"] == pytest.approx(1.2625)
         assert participant["bonus_attack_speed"] == pytest.approx(102.0)
+
+    def test_each_published_stat_block_names_its_fight_state(self) -> None:
+        """The two blocks disagree by design, and each says which it is."""
+        mega = _api(18, True)
+        assert mega["champion_stats_state"] == "fight_effective"
+        assert mega["combat"]["participants"][0]["stats_state"] == "pre_combat"
+        assert mega["champion_stats"]["health"] != (
+            mega["combat"]["participants"][0]["stats"]["health"]
+        )
 
     def test_api_breakdown_rows_both_forms(self) -> None:
         mega = _api(18, True)

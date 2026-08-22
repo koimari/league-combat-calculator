@@ -124,6 +124,7 @@ from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
 
 from tests import item_probe
+from tests.app_config import app_config
 
 BOOTS = "Gunmetal Greaves"
 ITEM_ID = 3172
@@ -366,6 +367,9 @@ def test_equipping_the_boots_yields_exactly_the_three_sourced_stats(ahri_data):
         "bonus_attack_speed": 45.0,
         "lifesteal_percent": 5.0,
         "move_speed": 45.0,
+        # The flat term the displayed move speed is folded from: one
+        # sourced grant, published as both its component and its total.
+        "move_speed_flat": 45.0,
     }
     assert stats["attack_speed"] - base["attack_speed"] == pytest.approx(
         base["attack_speed_ratio"] * ATTACK_SPEED_FLAT / 100.0
@@ -390,6 +394,7 @@ def test_fights_are_bit_identical_against_a_synthetic_build_with_those_stats(
         ("bonus_attack_speed", 45.0),
         ("lifesteal_percent", 5.0),
         ("move_speed", 45.0),
+        ("move_speed_flat", 45.0),
     ):
         synthetic[key] = synthetic[key] + delta
     assert synthetic == with_boots  # the synthetic bundle IS the boot bundle
@@ -788,11 +793,7 @@ def test_app_boots_slot_and_picker_stay_green():
     applied block (event_count 0, speed_percent_seconds 0,
     applied_dimensions empty) with the Noxian Gait boundary reason riding
     the item_coverage row — no movement mechanic is applied anywhere."""
-    previous_testing = app_module.app.config.get("TESTING")
-    previous_rate = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["TESTING"] = True
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    try:
+    with app_config(RATE_LIMIT_ENABLED=False):
         client = app_module.app.test_client()
         assert BOOTS in {item["name"] for item in client.get("/api/boots").get_json()}
         base = {
@@ -853,6 +854,3 @@ def test_app_boots_slot_and_picker_stay_green():
             for event in with_boots["combat"].get("damage_events", [])
             if "movement" in str(event).lower()
         ]
-    finally:
-        app_module.app.config["TESTING"] = previous_testing
-        app_module.app.config["RATE_LIMIT_ENABLED"] = previous_rate

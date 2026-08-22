@@ -83,6 +83,10 @@ def _heightened_senses(ctx: SlotCtx) -> dict[str, Any] | None:
         zero_policy=STEROID_ZERO,
     )
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    # "Passive: Whenever Quinn uses a basic attack ... she gains bonus
+    # attack speed" (cached W effect 0): the trigger is the auto stream, so
+    # autos-only is the mode that keeps it up rather than the one that ends it.
+    entry["innate_grant"] = True
     entry["detail"] = (
         f"+{bonus_as:g}% bonus attack speed for 2s per Harrier auto — the "
         "same auto stream P prices keeps it refreshed; the row's "

@@ -79,7 +79,7 @@ def _state(**overrides: object) -> dict[str, object]:
         "temporary_health_expired_at": None,
         "temporary_health_source": "",
         "healing_reduction_until": 0.0,
-        "healing_reduction_sources": set(),
+        "healing_reduction_window_sources": set(),
         "healing_reduction_events": [],
         "venom_until": 0.0,
         "venom_events": [],

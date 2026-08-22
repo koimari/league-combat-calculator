@@ -210,7 +210,8 @@
    "closed_row": "opening_defense/receipt_walk",
    "covering_coupled_scenarios": [
     "immolate_active_bruiser_roster",
-    "swing_term_armed_carry_roster"
+    "swing_term_armed_carry_roster",
+    "undaunted_armed_swing_roster"
    ],
    "declared_rules": [
     "bloodthirster.ichorshield",

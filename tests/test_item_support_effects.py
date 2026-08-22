@@ -1200,7 +1200,6 @@ class TestAbyssalMaskOwnerHandshake:
         holder, while an ally's damage into the same cursed enemy still
         carries one.
         """
-        app.config["TESTING"] = True
         response = app.test_client().post("/api/calculate", json=_ABYSSAL_ROSTER)
         assert response.status_code == 200
         events = response.get_json()["combat"]["events"]
@@ -1231,7 +1230,6 @@ class TestAbyssalMaskOwnerHandshake:
         and keeping it would hide the class rule on exactly the exchange
         that used to have no rule at all.
         """
-        app.config["TESTING"] = True
         response = app.test_client().post("/api/calculate", json=_ABYSSAL_ROSTER)
         assert response.status_code == 200
         by_type = defaultdict(set)

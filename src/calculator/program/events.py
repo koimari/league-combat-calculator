@@ -35,6 +35,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Union
 
+from ..healing_reduction import amplifies_recovery
 from ..survival.actions import TransitionRank
 from .identity import PIdx, EventId
 from .route import RoutePolicy
@@ -68,6 +69,10 @@ class Recovery:
     amount: float
     healing_category: str = ""
     amount_formula: Any = None
+    #: Whether the caster's heal and shield power reaches it: a
+    #: regeneration tick and the vamp family are drained rather than
+    #: applied, and the game amplifies neither.
+    amplified: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,10 +399,12 @@ def payload_from_packet(  # pylint: disable=too-many-return-statements
             duration=_float(packet, "duration"),
         )
     if kind in _RECOVERY_KINDS or "amount_formula" in packet:
+        healing_category = str(packet.get("healing_category", ""))
         return Recovery(
             amount=_float(packet, "amount"),
-            healing_category=str(packet.get("healing_category", "")),
+            healing_category=healing_category,
             amount_formula=packet.get("amount_formula"),
+            amplified=amplifies_recovery(kind, healing_category),
         )
     if packet.get("damage_type"):
         return Damage(

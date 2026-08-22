@@ -23,7 +23,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value, stat_buff
-from .inputs import int_option
+from .inputs import float_option, int_option
 from .module_contract import coverage
 
 PACKET_SHA256 = "0346556b3577caf70cd1fadf59cbec2eb38d07d723625a473330e5c2618b0d4b"
@@ -93,17 +93,36 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         ),
         # Frozen Domain's cached "Bonus Attack Speed" row (30-90% by rank)
         # through the shared steroid slot, so the fight's auto stream sees
-        # it instead of the packet's no-damage placeholder.
+        # it instead of the packet's no-damage placeholder.  The zone is
+        # ground Trundle has to stand on, so the steroid carries the
+        # uptime option rather than assuming the whole window.
         "W": stat_buff(
             attr="Bonus Attack Speed",
             stat="bonus_attack_speed",
             apply_to=("bonus_attack_speed",),
+            uptime_option="w_zone_uptime",
         ),
     },
     slot_wrappers={"P": _kings_tribute},
 )
 
 OPTIONS = list(OPTIONS) + [
+    float_option(
+        "w_zone_uptime",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Fraction of the fight Trundle stands in W's Frozen Domain",
+        step=0.1,
+        rotation={
+            "role": "self_state",
+            "slot": "W",
+            "note": (
+                "Frozen Domain is ground, not a self-buff: standing on it "
+                "is player state no cast order can express."
+            ),
+        },
+    ),
     int_option(
         "p_nearby_deaths",
         0,
@@ -130,10 +149,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "and the heals ride Trundle's first damaging hits; the dying unit is "
     "priced as the enemy champion this fight targets, so a minion death "
     "would be worth far less than the receipt states",
-    "W (Frozen Domain) applies its 30-90% bonus attack speed for the "
-    "whole fight; in-game the zone lasts 8 seconds and only buffs Trundle "
-    "while he stands inside it. W's bonus movement speed and its 25% "
-    "increased healing from all sources are not modeled",
+    "W (Frozen Domain) is ground, not a self-buff: its 30-90% bonus attack "
+    "speed only applies while Trundle stands inside the zone, so "
+    "w_zone_uptime (default 1.0 — the whole window, which an 8-second zone "
+    "on a recastable cooldown can cover) scales the granted percentage. "
+    "Attack speed is linear in the bonus percent, so a scaled grant is the "
+    "exact fight average rather than an approximation. W's bonus movement "
+    "speed and its 25% increased healing from all sources are not modeled",
     "E (Pillar of Ice) is terrain, a knockback and a 34-50% slow: the "
     "engine has no terrain axis, and cc_kind carries no duration or "
     "magnitude, so the slot prices nothing",
