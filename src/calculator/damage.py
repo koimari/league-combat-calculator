@@ -8238,9 +8238,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         else 0.0
     )
 
-    first_auto_crit = state.damage_effects.first_auto_crit
+    first_auto_crit = _crit_profile(state).forced_crit
     ss_reduced_crit = (
-        first_auto_crit.reduced_crit_ratio if first_auto_crit is not None else 0.0
+        first_auto_crit.reduced_ratio if first_auto_crit is not None else 0.0
     )
 
     sundered_sky_damage_diff = 0.0  # post-target: + = bonus, - = lost damage
@@ -8615,7 +8615,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         else:
             ss_note = "No damage change"
         breakdown["sundered_sky"] = {
-            "name": f"{first_auto_crit.item_name} (Lightshield Strike)",
+            "name": f"{first_auto_crit.owner} (Lightshield Strike)",
             "total_damage": mitigated_diff,
             "detail": ss_note,
             "informational": True,
@@ -16421,7 +16421,7 @@ def _add_on_hit_healing(
 
 def _add_first_auto_healing(state: FightState) -> None:
     """Emit Sundered Sky's first-attack heal with a live missing-HP formula."""
-    effect = state.damage_effects.first_auto_crit
+    effect = _crit_profile(state).forced_crit
     if effect is None or (
         effect.heal_base_ad_ratio <= 0.0 and effect.heal_missing_health_ratio <= 0.0
     ):
@@ -16454,8 +16454,8 @@ def _add_first_auto_healing(state: FightState) -> None:
     ) -> float:
         return base_amount + missing_ratio * max(0.0, maximum_health - current_health)
 
-    state.breakdown[f"heal_{effect.item_name}"] = {
-        "name": f"{effect.item_name} (Lightshield Strike)",
+    state.breakdown[f"heal_{effect.owner}"] = {
+        "name": f"{effect.owner} (Lightshield Strike)",
         "count": 1,
         "amount_per_proc": base_amount,
         "total_amount": base_amount,

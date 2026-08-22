@@ -800,8 +800,8 @@ class TestResolveDamageEffects:
         )
         assert profile.cooldown_refund.fraction == pytest.approx(0.15)
         assert profile.damage_bonus == pytest.approx(0.30)
-        assert effects.first_auto_crit is not None
-        assert effects.first_auto_crit.reduced_crit_ratio == pytest.approx(0.80)
+        assert profile.forced_crit is not None
+        assert profile.forced_crit.reduced_ratio == pytest.approx(0.80)
         buff = _charged_strikes("Fiendhunter Bolts").empowered_auto_buff
         assert buff is not None
         assert buff.empowered_auto_count == 3

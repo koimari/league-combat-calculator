@@ -4949,18 +4949,6 @@ class StackingPenEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class FirstAutoCritEffect:
-    """Forced first-auto crit expressed as a fraction of full crit damage."""
-
-    item_name: str
-    reduced_crit_ratio: float
-    heal_base_ad_ratio: float = 0.0
-    heal_base_ad_ratio_ranged: float = 0.0
-    heal_missing_health_ratio: float = 0.0
-    temporary_health_duration: float = 0.0
-
-
-@dataclass(frozen=True, slots=True)
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
@@ -4973,7 +4961,6 @@ class BuildDamageEffects:
     per_ability_hits: tuple[DamageSource, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp: float = 1.0
     conditional_notes: tuple[str, ...] = ()
 
@@ -5251,7 +5238,6 @@ def _resolve_damage_effects_uncached(
     per_ability_hits: list[DamageSource] = []
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp = 1.0
     conditional_notes: list[str] = []
 
@@ -5321,37 +5307,6 @@ def _resolve_damage_effects_uncached(
                 required.number("dark_pen_per_stack"),
                 int(required.number("dark_max_stacks")),
             )
-        if "reduced_crit_ratio" in values and effect_type == "first_auto_crit":
-            first_auto_crit = FirstAutoCritEffect(
-                item_name,
-                _RequiredValues(item_name, values).number("reduced_crit_ratio"),
-                heal_base_ad_ratio=(
-                    _RequiredValues(item_name, values).number("heal_base_ad_ratio")
-                    if "heal_base_ad_ratio" in values
-                    else 0.0
-                ),
-                heal_base_ad_ratio_ranged=(
-                    _RequiredValues(item_name, values).number(
-                        "heal_base_ad_ratio_ranged"
-                    )
-                    if "heal_base_ad_ratio_ranged" in values
-                    else 0.0
-                ),
-                heal_missing_health_ratio=(
-                    _RequiredValues(item_name, values).number(
-                        "heal_missing_health_ratio"
-                    )
-                    if "heal_missing_health_ratio" in values
-                    else 0.0
-                ),
-                temporary_health_duration=(
-                    _RequiredValues(item_name, values).number(
-                        "temporary_health_duration"
-                    )
-                    if "temporary_health_duration" in values
-                    else 0.0
-                ),
-            )
 
     return BuildDamageEffects(
         class_restricted_per_hits=tuple(class_restricted_per_hits),
@@ -5359,7 +5314,6 @@ def _resolve_damage_effects_uncached(
         per_ability_hits=tuple(per_ability_hits),
         phantom_hit=phantom_hit,
         stacking_pen=stacking_pen,
-        first_auto_crit=first_auto_crit,
         magic_amp=magic_amp,
         conditional_notes=tuple(conditional_notes),
     )

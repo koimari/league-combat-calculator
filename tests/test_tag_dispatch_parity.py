@@ -114,7 +114,6 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
         "ult_attack_speed_buff",
         "secondary_target",
         "magic_damage_amp",
-        "first_auto_crit",
     }
     # Every one of them is a tag the catalog also files under a family: the
     # overlap is total, so there is no ladder-only tag to leave alone.
@@ -177,22 +176,24 @@ def test_a_build_holding_both_crit_items_folds_both_sub_branches():
     assert catalog.cooldown_refund.owner == "Navori Flickerblade"
 
 
-def test_forced_crit_agrees_on_every_number_it_carries():
+def test_first_auto_crit_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The fourth retirement.  Every number the ladder's ``FirstAutoCritEffect``
+    carried is a key of the forced-crit declaration, read here against the
+    registry so a dropped reference fails rather than defaults."""
     owner = _sole("first_auto_crit")
-    ladder = _ladder(owner).first_auto_crit
     catalog = resolve_profile([owner], **CATALOG_CONTEXT).forced_crit
-    assert ladder.item_name == catalog.owner == owner
-    assert ladder.reduced_crit_ratio == pytest.approx(catalog.reduced_ratio)
-    assert ladder.heal_base_ad_ratio == pytest.approx(catalog.heal_base_ad_ratio)
-    assert ladder.heal_base_ad_ratio_ranged == pytest.approx(
-        catalog.heal_base_ad_ratio_ranged
-    )
-    assert ladder.heal_missing_health_ratio == pytest.approx(
-        catalog.heal_missing_health_ratio
-    )
-    assert ladder.temporary_health_duration == pytest.approx(
-        catalog.temporary_health_duration
-    )
+    assert catalog.owner == owner
+    for field, key in (
+        ("reduced_ratio", "reduced_crit_ratio"),
+        ("heal_base_ad_ratio", "heal_base_ad_ratio"),
+        ("heal_base_ad_ratio_ranged", "heal_base_ad_ratio_ranged"),
+        ("heal_missing_health_ratio", "heal_missing_health_ratio"),
+        ("temporary_health_duration", "temporary_health_duration"),
+    ):
+        assert getattr(catalog, field) == pytest.approx(
+            required_effect_value(owner, key)
+        )
+    assert not hasattr(_ladder(owner), "first_auto_crit")
 
 
 def test_on_hit_heal_is_retired_from_the_ladder_and_owned_by_the_catalog():
