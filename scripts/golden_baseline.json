@@ -32475,9 +32475,10 @@
           "cast_time": 0.25,
           "cooldown": 12.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Looming Darkness",
           "parts": [
-            "DamagePart(magic, amount=50.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=50.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='slow')"
           ],
           "rank": 1,
           "resource_cost": 70.0,
@@ -32488,11 +32489,13 @@
         "Q": {
           "area_damage": true,
           "cast_time": 0.15,
+          "cc_reviewed": true,
           "cooldown": 4.0,
           "damage_type": "magic",
+          "event_order_certified": "single_hit",
           "name": "Mistral Bolt",
           "parts": [
-            "DamagePart(magic, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 65.0,
@@ -52830,18 +52833,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59922,
+      "leaves": 59925,
       "numeric_leaves": 46153,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "833c2bc8bf532e09768d6eddb2a32eb152b62c9f",
+    "git_head": "80bdccbf4488c28dad53fd19b2a4b0205dbf1401",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "11fb029f9c94890ec05637fa454600edd14e3711"
+    "src_tree_sha": "2db62b521d1c4854ed8bbb864936cbb33bab497f"
   },
   "registered_champion_fights": {
     "Aatrox": {

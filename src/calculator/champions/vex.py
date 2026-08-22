@@ -117,15 +117,23 @@ _gloom_detonation.phase = ONHIT
 # knock-down empower a basic ability on its own cooldown — fight state this
 # module does not price (see ASSUMPTIONS), so it is not any slot's answer.
 #
-# Q, E and R are read and left undeclared: their packet rows carry neither a
-# sourced hit time nor a single-landing certification, so the ledger cannot
-# carry a kind for them and refuses one rather than accept a no-op.
-MODULE_CC = {"P": "none", "W": "none"}
+# Q and E each land once, at the cast, so they certify and answer.  Mistral
+# Bolt "deals magic damage to enemies hit" and nothing else; Looming
+# Darkness explodes "dealing magic damage to enemies hit and slowing them
+# for 2 seconds".  The slow's magnitude is cached (the "Slow" row,
+# 30-50%) but its 2-second window is prose only, so the marker carries the
+# kind with no interval -- which is what a zero cc_duration states.
+#
+# R stays undeclared, and not for want of a certification: its one part is
+# the cached "Total Magic Damage" row, which sums the Shadow's hit and the
+# recast consume.  Those land at two instants the player chooses inside the
+# 4-second mark, so calling the row one landing would be false.
+MODULE_CC = {"P": "none", "Q": "none", "W": "none", "E": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vex",
     PACKET_SHA256,
-    single_hit_slots=frozenset({"W"}),
+    single_hit_slots=frozenset({"E", "Q", "W"}),
     slot_parsers={
         "P": _gloom_detonation,
     },

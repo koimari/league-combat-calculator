@@ -20,7 +20,12 @@ class TestReviewedCrowdControl:
 
     def test_the_kit_declares_nothing_because_doom_is_state(self):
         data = cc_review.kit("Vex")
-        assert vex.MODULE_CC == {"P": "none", "W": "none"}
+        assert vex.MODULE_CC == {
+            "P": "none",
+            "Q": "none",
+            "W": "none",
+            "E": "slow",
+        }
         assert vex.parse_abilities.cc_kinds == vex.MODULE_CC
         passive = cc_review.slot_text(data, "P")
         assert "empowers her next basic ability to knock down and fear" in passive
@@ -48,7 +53,9 @@ class TestReviewedCrowdControl:
         )
 
     def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Vex") == ["E", "Q", "R"]
+        """R alone stays coarse now: Q and E each land once and certify,
+        and R's one part sums two hits the player spaces out (ER2)."""
+        assert cc_review.unreviewed_ability_slots("Vex") == ["R"]
         coverage = cc_review.fimbulwinter_coverage("Vex")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
