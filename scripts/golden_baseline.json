@@ -51206,14 +51206,14 @@
       "numeric_leaves": 44857,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
+    "git_head": "f5eba8988b34294c3c73e8f08d5da9c2d568d9e3",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
+    "src_tree_sha": "70335fa0da6c6a2b322080748e0d2235c1b03426"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -70049,13 +70049,13 @@
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "E": 140.67,
-            "Q": 255.5,
-            "R": 206.27,
+            "E": 156.67,
+            "Q": 267.5,
+            "R": 212.67,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 602.43
+          "total_damage": 636.83
         },
         "sustained": {
           "magic_build": {
@@ -70092,14 +70092,14 @@
           },
           "spellblade_build": {
             "breakdown_totals": {
-              "E": 140.67,
-              "Q": 255.5,
-              "R": 206.27,
+              "E": 156.67,
+              "Q": 267.5,
+              "R": 212.67,
               "W": 0.0,
-              "auto_attacks": 1012.3,
+              "auto_attacks": 1134.2,
               "spellblade_Trinity Force": 213.33
             },
-            "total_damage": 1828.07
+            "total_damage": 1984.37
           }
         }
       },
@@ -70137,13 +70137,13 @@
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "E": 274.0,
-            "Q": 255.5,
-            "R": 212.93,
+            "E": 290.0,
+            "Q": 267.5,
+            "R": 219.33,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 742.43
+          "total_damage": 776.83
         },
         "sustained": {
           "magic_build": {
@@ -70180,14 +70180,14 @@
           },
           "spellblade_build": {
             "breakdown_totals": {
-              "E": 274.0,
-              "Q": 255.5,
-              "R": 212.93,
+              "E": 290.0,
+              "Q": 267.5,
+              "R": 219.33,
               "W": 0.0,
-              "auto_attacks": 1097.1,
+              "auto_attacks": 1224.3,
               "spellblade_Trinity Force": 256.0
             },
-            "total_damage": 2095.53
+            "total_damage": 2257.13
           }
         }
       }

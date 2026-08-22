@@ -16,6 +16,7 @@ from .data_registry import data_version, store_for_generation
 from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 from .rune_effects import RunePage, compile_rune_page
+from .stat_conversion import BonusHealthConversion
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
@@ -325,6 +326,19 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
     return extracted
 
 
+# Champion modules import this module, so the registry that owns their
+# declarations is reached at call time rather than at import.
+def champion_stat_conversion(
+    champion_data: Mapping[str, Any],
+) -> BonusHealthConversion | None:
+    """This champion's declared stat conversion, or ``None``."""
+    from .champions import (  # pylint: disable=import-outside-toplevel
+        get_champion_stat_conversion,
+    )
+
+    return get_champion_stat_conversion(str(champion_data.get("name", "")))
+
+
 # Only a MANA pool takes an item's mana: an energy pool is a fixed 200
 # (Shen's 400) and no other declared resource grows from items either, so a
 # mana item is a wasted stat line on those kits.  A record declaring no
@@ -567,8 +581,26 @@ def calculate_total_stats(
     lethality = total_item_stats["lethality"] + runes.lethality
     flat_armor_pen = lethality
 
+    effective_bonus_health = (
+        total_item_stats["health"] + bonuses.bonus_health
+    ) * bonuses.item_bonus_health_multiplier + runes.bonus_health
+
+    # A kit that denies itself a stat rewrites it here, where the build's
+    # bonus health is complete: every multiplier and rune grant has landed,
+    # which is the order the wiki states (anything raising the health first
+    # raises the converted attack damage with it).
+    conversion = champion_stat_conversion(champion_data)
+    converted_bonus_ad = 0.0
+    if conversion is not None:
+        converted_bonus_ad = effective_bonus_health * conversion.attack_damage_ratio
+        effective_bonus_health = 0.0
+    total_health = base_stats["health"] + effective_bonus_health
+
     raw_bonus_ad = (
-        total_item_stats["attack_damage"] + bonuses.bonus_ad + runes.bonus_attack_damage
+        total_item_stats["attack_damage"]
+        + bonuses.bonus_ad
+        + runes.bonus_attack_damage
+        + converted_bonus_ad
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier
     total_ad = base_stats["attack_damage"] + final_bonus_ad
@@ -599,11 +631,6 @@ def calculate_total_stats(
     evolution_attack_speed_percent = (
         level_as_bonus + total_item_stats["attack_speed_percent"]
     )
-    effective_bonus_health = (
-        total_item_stats["health"] + bonuses.bonus_health
-    ) * bonuses.item_bonus_health_multiplier + runes.bonus_health
-    total_health = base_stats["health"] + effective_bonus_health
-
     # Terminus max-stack display assumption: bonus resists to both armor
     # and MR, percent pen to both armor and magic.
     final_armor = round(
