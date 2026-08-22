@@ -299,6 +299,17 @@ def get_champion_cast_order(champion_name: str) -> list[str] | None:
     return list(declared) if declared else None
 
 
+# ``False`` — an unregistered name, or a module that stays silent — keeps the
+# scheduler's conservative one-cast rule.  Read off the validated contract,
+# never off the module, whose own constant never passed the import gate.
+def get_champion_ultimate_recasts(champion_name: str) -> bool:
+    """Whether the timed scheduler may recast this champion's R."""
+    try:
+        return get_champion_module_contract(champion_name).ultimate_recasts
+    except KeyError:
+        return False
+
+
 def get_champion_cast_dependencies(champion_name: str) -> tuple[CastDependency, ...]:
     """The validated ``CAST_DEPENDENCIES``, or ``()``; never read off the
     module, whose own copy never passed the import gate.

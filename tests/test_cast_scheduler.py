@@ -6,6 +6,11 @@ name a slot no cached champion emits today.
 """
 
 from src.calculator import damage
+from src.calculator.ability_spec import DamagePart
+from src.calculator.champions import (
+    get_champion_ultimate_recasts,
+    registered_champion_names,
+)
 from src.calculator.damage import FightConfig, calculate_fight_damage
 
 
@@ -33,7 +38,7 @@ def _slot_row(name, cooldown, amount=100.0):
         "cast_time": 0.0,
         "damage_type": "physical",
         "total_raw": amount,
-        "parts": (),
+        "parts": (DamagePart("physical", amount),),
     }
 
 
@@ -62,13 +67,66 @@ class TestVariantSlotHaste:
         assert (plain, hasted) == (3, 5)
 
     def test_ultimate_haste_reaches_a_variant_ultimate_slot(self, attacker_stats):
-        """``R_buff`` is an R: ultimate haste shortens its cooldown."""
+        """``R_buff`` is an R: it obeys the ultimate rule AND earns its haste."""
         abilities = {"R_buff": _slot_row("Ultimate buff", 10.0)}
         order = ["R_buff"]
-        plain = _timed(attacker_stats(), dict(abilities), cast_order=order)[
-            "breakdown"
-        ]["R_buff"]["casts"]
+        # Resolving the variant to its base slot also puts it under the
+        # one-cast rule, which the raw-key branch let it escape.
+        assert (
+            _timed(attacker_stats(), dict(abilities), cast_order=order)["breakdown"][
+                "R_buff"
+            ]["casts"]
+            == 1
+        )
+        certified = {"cast_order": order, "ultimate_recasts": True}
+        plain = _timed(attacker_stats(), dict(abilities), **certified)["breakdown"][
+            "R_buff"
+        ]["casts"]
         hasted = _timed(
-            attacker_stats(ultimate_haste=100.0), dict(abilities), cast_order=order
+            attacker_stats(ultimate_haste=100.0), dict(abilities), **certified
         )["breakdown"]["R_buff"]["casts"]
         assert (plain, hasted) == (3, 5)
+
+
+class TestUltimateRecastCertification:
+    """CF18: an ultimate recasts only for a module that certifies it."""
+
+    def test_an_uncertified_ultimate_casts_once(self, attacker_stats):
+        abilities = {"R": _slot_row("Ultimate", 5.0)}
+        result = _timed(attacker_stats(), abilities, cast_order=["R"])
+        assert result["breakdown"]["R"]["casts"] == 1
+
+    def test_a_certified_ultimate_recasts_on_its_hasted_cooldown(self, attacker_stats):
+        abilities = {"R": _slot_row("Ultimate", 10.0)}
+        certified = {"cast_order": ["R"], "ultimate_recasts": True}
+        plain = _timed(attacker_stats(), dict(abilities), **certified)
+        hasted = _timed(
+            attacker_stats(ultimate_haste=100.0), dict(abilities), **certified
+        )
+        assert plain["breakdown"]["R"]["casts"] == 3
+        assert hasted["breakdown"]["R"]["casts"] == 5
+        assert hasted["total_damage"] > plain["total_damage"]
+
+    def test_the_one_cast_rule_is_disclosed_when_it_binds(self, attacker_stats):
+        """A cooldown that fits the window says so; one that cannot stays quiet."""
+        fits = _timed(
+            attacker_stats(), {"R": _slot_row("Ultimate", 10.0)}, cast_order=["R"]
+        )
+        assert any("is cast once" in note for note in fits["notes"])
+        outlasts = _timed(
+            attacker_stats(), {"R": _slot_row("Ultimate", 120.0)}, cast_order=["R"]
+        )
+        assert not any("is cast once" in note for note in outlasts["notes"])
+
+
+class TestBlitzcrankCertification:
+    """Static Field is the reviewed certification, read off the contract."""
+
+    def test_blitzcrank_certifies_and_the_rest_do_not(self):
+        certified = sorted(
+            name
+            for name in registered_champion_names()
+            if get_champion_ultimate_recasts(name)
+        )
+        assert certified == ["Blitzcrank"]
+        assert get_champion_ultimate_recasts("Nobody") is False

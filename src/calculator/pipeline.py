@@ -15,6 +15,7 @@ from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_dependencies,
     get_champion_cast_order,
+    get_champion_ultimate_recasts,
     get_custom_cast_order_unavailable_reason,
     parse_champion_abilities,
 )
@@ -1451,15 +1452,25 @@ def run_fight(
         )
         is ResultProjection.LIGHT_TUPLE_LEDGER
     )
+    # Whether the timed scheduler may recast R is the champion module's
+    # reviewed answer, not the request's: a silent module and an
+    # unregistered name both keep the conservative one-cast rule (CF18).
+    ultimate_recasts = get_champion_ultimate_recasts(champion_data.get("name", ""))
+    engine_config = (
+        params
+        if params.enforce_resource_limits
+        and params.ultimate_recasts == ultimate_recasts
+        else replace(
+            params,
+            enforce_resource_limits=True,
+            ultimate_recasts=ultimate_recasts,
+        )
+    )
     result = calculate_fight_damage(
         fight_stats,
         ability_damages,
         items,
-        (
-            params
-            if params.enforce_resource_limits
-            else replace(params, enforce_resource_limits=True)
-        ),
+        engine_config,
         score_only=score_only,
         tuple_ledger=tuple_ledger,
         item_options=params.item_options,

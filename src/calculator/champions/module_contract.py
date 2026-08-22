@@ -108,6 +108,7 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     packet_sha256: str | None = None
     cast_dependencies: tuple[CastDependency, ...] = ()
     cc_kinds: dict[str, str] = field(default_factory=dict)
+    ultimate_recasts: bool = False
 
 
 def _present(carriers: tuple[tuple[str, Any, str], ...]) -> list[tuple[str, Any]]:
@@ -413,6 +414,31 @@ def _coverage_channels(
     return channels
 
 
+# The scheduler casts every ultimate exactly once whatever its cooldown — the
+# safe reading for a form, a stance, a charge pool or an escalating resource
+# cost the engine does not simulate, and the reason ultimate haste can move no
+# number at all.  ``ULTIMATE_RECASTS = True`` is a module's review statement
+# that its R is an ordinary repeatable cast gated only by its cooldown;
+# absence is the conservative answer, so silence keeps the one-cast rule.
+def _ultimate_recasts(module: ModuleType, slots: dict[str, Any]) -> bool:
+    """Whether the timed scheduler may recast this kit's R on its cooldown.
+
+    Raises:
+        ChampionModuleContractError: The declaration is not a bool, or a
+            module with no R slot claims its ultimate recasts.
+    """
+    declared = getattr(module, "ULTIMATE_RECASTS", False)
+    if not isinstance(declared, bool):
+        raise ChampionModuleContractError(
+            f"{module.__name__} ULTIMATE_RECASTS must be a bool"
+        )
+    if declared and "R" not in slots:
+        raise ChampionModuleContractError(
+            f"{module.__name__} certifies ULTIMATE_RECASTS but emits no R slot"
+        )
+    return declared
+
+
 def _require_list(module: ModuleType, field_name: str) -> list[Any]:
     value = getattr(module, field_name, None)
     if not isinstance(value, list):
@@ -501,4 +527,5 @@ def contract_from_module(
         packet_sha256=packet_sha256,
         cast_dependencies=cast_dependencies,
         cc_kinds=cc_kinds,
+        ultimate_recasts=_ultimate_recasts(module, slots),
     )
