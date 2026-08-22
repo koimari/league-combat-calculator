@@ -14,8 +14,8 @@ list, because neither reads a named field of cached data:
     python scripts/literal_defaults.py <paths>    # files or directories
 
 The CLI reports; ``tests/test_literal_defaults.py`` gates.  Its ``ROOTS`` is
-the covered set and its ``TAIL`` names every module still outside it, so what
-this prints is a superset of what is pinned.
+the covered set and its ``ER5_TAIL`` records every module that was outside it
+when the pin landed, so what this prints is a superset of what is pinned.
 """
 
 from __future__ import annotations
