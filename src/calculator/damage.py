@@ -184,6 +184,7 @@ from .interpreters import (
     ally_packet,
     cast_proc,
     charged_strike,
+    crit_profile,
     damage_routing,
     delta_amp,
     periodic,
@@ -3350,11 +3351,11 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
-    # auto-attack simulation.
+    # auto-attack simulation.  The item bonus above the game's base multiplier
+    # is read once off the build's crit declarations.
+    crit_damage_bonus = _crit_profile(state).damage_bonus
     state.crit_chance = min(stats["critical_strike_chance"] / 100.0, 1.0)
-    state.crit_multiplier = (
-        BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
-    )
+    state.crit_multiplier = BASE_CRIT_MULTIPLIER + crit_damage_bonus
 
     # Champion-owned crit modifiers (Yasuo/Yone P: "total critical strike
     # chance is doubled from all other sources" and "critical strikes deal
@@ -3383,7 +3384,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             )
         )
         state.crit_multiplier = (
-            BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
+            BASE_CRIT_MULTIPLIER + crit_damage_bonus
         ) * damage_factor
         excess_percent = raw_crit_percent * chance_multiplier - 100.0
         per_percent = float(
@@ -6273,8 +6274,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # (~2% on the first ability) that would require re-parsing ability
     # damages mid-fight to fix properly.
 
-    # Basic attacks may reduce basic ability cooldowns.
-    result.navori_refund = state.damage_effects.navori_refund_percent
+    # Basic attacks may reduce basic ability cooldowns.  A build declaring no
+    # refund gets a zero here rather than a slot, which is what the rest of
+    # the rotation's arithmetic reads.
+    refund = _crit_profile(state).cooldown_refund
+    result.navori_refund = refund.fraction if refund is not None else 0.0
     result.has_navori = result.navori_refund > 0
     result.autos_per_second = (
         state.attack_speed * state.auto_attack_uptime
@@ -16857,6 +16861,11 @@ def _held_owners(state: FightState) -> list[str]:
     return [item_effects.resolved_item_name(item) for item in state.items]
 
 
+def _crit_profile(state: FightState) -> "crit_profile.CritProfile":
+    """What this build's crit declarations say — bonus, forced strike, refund."""
+    return crit_profile.declared_crit_profile(_held_owners(state))
+
+
 def _amp_slot(
     state: FightState, slot: AmpChainSlot, *extra_owners: str
 ) -> "delta_amp.AmpSlot | None":
@@ -17613,10 +17622,10 @@ def _collect_fight_notes(
         and rotation.navori_refund > 0
         and rotation.autos_per_second > 0
     ):
-        cooldown_refund_source = state.damage_effects.cooldown_refund_source
-        assert cooldown_refund_source is not None
+        refund = _crit_profile(state).cooldown_refund
+        assert refund is not None
         notes.append(
-            f"{cooldown_refund_source}: basic ability CDs reduced by "
+            f"{refund.owner}: basic ability CDs reduced by "
             f"{rotation.navori_refund:.0%} per auto attack "
             f"({rotation.autos_per_second:.2f} autos/sec effective)."
         )

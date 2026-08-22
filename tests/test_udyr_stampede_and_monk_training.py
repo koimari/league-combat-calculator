@@ -529,9 +529,10 @@ class TestBridgeBetweenStaysReceiptedOpen:
         """Blocker two, asserted against the engine source.
 
         The engine does have a per-auto cooldown refund — Navori
-        Flickerblade's — but its value is fed exclusively from
-        ``item_effects``.  No champion entry key reaches it, so Monk
-        Training's 5% refund has no channel to publish into.
+        Flickerblade's — but its value is fed exclusively from the item's own
+        crit declaration, whose number is a reference into ``item_effects``.
+        No champion entry key reaches it, so Monk Training's 5% refund has no
+        channel to publish into.
         """
         assignments = {
             line.split("=", 1)[1].strip()
@@ -539,9 +540,10 @@ class TestBridgeBetweenStaysReceiptedOpen:
             if line.strip().startswith("result.navori_refund =")
         }
 
-        assert assignments == {"state.damage_effects.navori_refund_percent"}
+        assert assignments == {"refund.fraction if refund is not None else 0.0"}
+        assert "refund = _crit_profile(state).cooldown_refund" in _DAMAGE_SOURCE
         item_source = Path("src/calculator/item_effects.py").read_text(encoding="utf-8")
-        assert "navori_refund_percent" in item_source
+        assert "cd_refund_percent" in item_source
         assert "navori_refund" not in json.dumps(list(_parse()["passive"].keys()))
 
 

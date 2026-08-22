@@ -112,7 +112,6 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
     assert branches == {
         "ult_empowered_autos",
         "ult_attack_speed_buff",
-        "crit_modifier",
         "secondary_target",
         "magic_damage_amp",
         "first_auto_crit",
@@ -139,46 +138,43 @@ def test_execute_is_retired_from_the_ladder_and_owned_by_the_catalog():
     assert not hasattr(_ladder(owner), "execute")
 
 
-def test_crit_damage_bonus_agrees():
+def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The third retirement.  The ladder carried both sub-branches as three
+    fields — a summed bonus, a refund fraction and the item it came from —
+    beside the crit declarations that already held the same numbers."""
     owner = "Infinity Edge"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    ladder = _ladder(owner)
     catalog = resolve_profile([owner], **CATALOG_CONTEXT)
-    assert ladder.crit_damage_bonus == pytest.approx(catalog.damage_bonus)
-    assert ladder.crit_damage_bonus == pytest.approx(
+    assert catalog.damage_bonus == pytest.approx(
         required_effect_value(owner, "bonus_crit_damage")
     )
-    # The other two crit slots are declared-absent on this build, and the
-    # ladder says the same thing with a zero and a None.
-    assert catalog.forced_crit is None
-    assert catalog.cooldown_refund is None
-    assert ladder.first_auto_crit is None
-    assert ladder.navori_refund_percent == 0.0
+    assert catalog.forced_crit is None and catalog.cooldown_refund is None
+    ladder = _ladder(owner)
+    for retired in ("crit_damage_bonus", "navori_refund_percent"):
+        assert not hasattr(ladder, retired)
+    assert not hasattr(ladder, "cooldown_refund_source")
 
 
-def test_attack_cooldown_refund_agrees():
+def test_attack_cooldown_refund_is_the_catalogs_alone():
     owner = "Navori Flickerblade"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    ladder = _ladder(owner)
     catalog = resolve_profile([owner], **CATALOG_CONTEXT)
-    assert ladder.cooldown_refund_source == catalog.cooldown_refund.owner == owner
-    assert ladder.navori_refund_percent == pytest.approx(
-        catalog.cooldown_refund.fraction
+    assert catalog.cooldown_refund.owner == owner
+    assert catalog.cooldown_refund.fraction == pytest.approx(
+        required_effect_value(owner, "cd_refund_percent")
     )
 
 
-def test_a_build_holding_both_crit_items_agrees():
-    """The two crit_modifier sub-branches compose the same way on both lanes:
-    the bonus sums into one slot and the refund fills another."""
-    ladder = _ladder("Infinity Edge", "Navori Flickerblade")
+def test_a_build_holding_both_crit_items_folds_both_sub_branches():
+    """The two crit_modifier sub-branches compose the way the ladder folded
+    them: the bonus sums into one slot and the refund fills another."""
     catalog = resolve_profile(
         ["Infinity Edge", "Navori Flickerblade"], **CATALOG_CONTEXT
     )
-    assert ladder.crit_damage_bonus == pytest.approx(catalog.damage_bonus)
-    assert ladder.navori_refund_percent == pytest.approx(
-        catalog.cooldown_refund.fraction
+    assert catalog.damage_bonus == pytest.approx(
+        required_effect_value("Infinity Edge", "bonus_crit_damage")
     )
-    assert ladder.cooldown_refund_source == catalog.cooldown_refund.owner
+    assert catalog.cooldown_refund.owner == "Navori Flickerblade"
 
 
 def test_forced_crit_agrees_on_every_number_it_carries():
@@ -301,8 +297,8 @@ def test_secondary_target_is_the_catalogs_alone():
     catalog's SECONDARY_TARGET rule is the only owner of the numbers."""
     owner = _sole("secondary_target")
     ladder = _ladder(owner)
-    assert ladder.crit_damage_bonus == 0.0
     assert ladder.conditional_notes == ()
+    assert declared_crit_profile([owner]) == crit_profile.CritProfile(0.0, None, None)
     assert [rule.family for rule in behavior_rules(owner)] == [
         RuleFamily.SECONDARY_TARGET
     ]

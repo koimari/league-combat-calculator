@@ -40,7 +40,12 @@ from .item_behavior import (
     ResourceDrainRule,
     SustainStat,
 )
-from .item_effects import resolve_damage_effects, validate_item_input_options
+from .interpreters.crit_profile import declared_crit_profile
+from .item_effects import (
+    resolve_damage_effects,
+    resolved_item_name,
+    validate_item_input_options,
+)
 from .healing import derive_self_healing, self_heal_rule_owner
 from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
@@ -1348,13 +1353,15 @@ def run_fight(
 
     # Champion mechanics priced in crit at parse time (Caitlyn's Headshot
     # rider) need the build's bonus crit damage above the 2.0 base
-    # (Infinity Edge's +0.3). It lives in the items' DamageEffects — the
-    # same value the fight engine folds into its crit multiplier — so
+    # (Infinity Edge's +0.3). It comes off the build's crit declarations —
+    # the same reading the fight engine folds into its crit multiplier — so
     # surface it to the parse context only, keeping the reported
     # champion_stats panel item-stats-only.
     parse_stats = dict(champion_stats)
     item_damage_effects = resolve_damage_effects(items)
-    parse_stats["crit_damage_bonus"] = item_damage_effects.crit_damage_bonus
+    parse_stats["crit_damage_bonus"] = declared_crit_profile(
+        [resolved_item_name(item) for item in items]
+    ).damage_bonus
 
     ability_damages = parse_champion_abilities(
         champion_data,

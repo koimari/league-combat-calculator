@@ -4973,11 +4973,8 @@ class BuildDamageEffects:
     per_ability_hits: tuple[DamageSource, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    navori_refund_percent: float = 0.0
-    crit_damage_bonus: float = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp: float = 1.0
-    cooldown_refund_source: str | None = None
     conditional_notes: tuple[str, ...] = ()
 
 
@@ -5254,11 +5251,8 @@ def _resolve_damage_effects_uncached(
     per_ability_hits: list[DamageSource] = []
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    navori_refund_percent = 0.0
-    crit_damage_bonus = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp = 1.0
-    cooldown_refund_source: str | None = None
     conditional_notes: list[str] = []
 
     for item in items:
@@ -5299,13 +5293,6 @@ def _resolve_damage_effects_uncached(
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
             )
-        elif effect_type == "crit_modifier":
-            required = _RequiredValues(item_name, values)
-            if "bonus_crit_damage" in values:
-                crit_damage_bonus += required.number("bonus_crit_damage")
-            if "cd_refund_percent" in values:
-                navori_refund_percent = required.number("cd_refund_percent")
-                cooldown_refund_source = item_name
         elif effect_type == "secondary_target":
             # Wind's Fury is priced by the shared roster event ledger.  Keep
             # the typed effect in the build projection without adding a stale
@@ -5372,11 +5359,8 @@ def _resolve_damage_effects_uncached(
         per_ability_hits=tuple(per_ability_hits),
         phantom_hit=phantom_hit,
         stacking_pen=stacking_pen,
-        navori_refund_percent=navori_refund_percent,
-        crit_damage_bonus=crit_damage_bonus,
         first_auto_crit=first_auto_crit,
         magic_amp=magic_amp,
-        cooldown_refund_source=cooldown_refund_source,
         conditional_notes=tuple(conditional_notes),
     )
 

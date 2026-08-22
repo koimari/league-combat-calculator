@@ -18,6 +18,7 @@ from src.calculator.interpreters import (
     on_hit_strike,
     spellblade,
 )
+from src.calculator.interpreters.crit_profile import declared_crit_profile
 from src.calculator.interpreters.damage_routing import declared_execution
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
@@ -793,8 +794,12 @@ class TestResolveDamageEffects:
         assert effects.stacking_pen is not None
         assert effects.stacking_pen.max_pen == pytest.approx(0.30)
         assert effects.stacking_pen.average_pen(6) == pytest.approx(0.15)
-        assert effects.navori_refund_percent == pytest.approx(0.15)
-        assert effects.crit_damage_bonus == pytest.approx(0.30)
+        # SD9 retired ``crit_modifier``: the crit declarations own both slots.
+        profile = declared_crit_profile(
+            ["Navori Flickerblade", "Infinity Edge", "Sundered Sky"]
+        )
+        assert profile.cooldown_refund.fraction == pytest.approx(0.15)
+        assert profile.damage_bonus == pytest.approx(0.30)
         assert effects.first_auto_crit is not None
         assert effects.first_auto_crit.reduced_crit_ratio == pytest.approx(0.80)
         buff = _charged_strikes("Fiendhunter Bolts").empowered_auto_buff
