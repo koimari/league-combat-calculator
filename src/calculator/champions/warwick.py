@@ -102,7 +102,7 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Infinite Duress"),
+        ability["name"],
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -140,7 +140,7 @@ def _eternal_hunger(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit <= 0:
         return None
 
-    entry = on_hit_entry(ability.get("name", "Eternal Hunger"), per_hit, "magic")
+    entry = on_hit_entry(ability["name"], per_hit, "magic")
     health_percent = min(max(float(ctx.option("p_self_health_percent")), 0.0), 100.0)
     share = _hunger_heal_share(health_percent)
     # ``derive_self_healing`` below pays this share of every post-mitigation
@@ -240,7 +240,7 @@ def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
         raise ValueError("Warwick E active-duration atom must use seconds")
     duration = ranked_ability_atom_value(duration_atom, 1, source=_E_REDUCTION_SOURCE)
 
-    name = ability.get("name", "Primal Howl")
+    name = ability["name"]
     return {
         "name": name,
         "rank": rank,
@@ -430,8 +430,11 @@ def derive_self_healing(
     # owns the threshold and publishes the resulting share on its P entry;
     # this pays that share of every on-hit event the passive authored.  A
     # healthy Warwick publishes 0 and heals none.
-    hunger_share = float(
-        ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
+    passive_entry = ability_damages.get("passive")
+    hunger_share = (
+        0.0
+        if passive_entry is None
+        else float(passive_entry["self_heal_share_of_damage"])
     )
     if hunger_share > 0.0:
         for payment in _healing.payments(

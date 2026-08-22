@@ -1342,13 +1342,6 @@ AUTHORED_DECLARATION = frozenset(
         ("champions/volibear.py", "parse", "dict.get", '"name"', 1),
         ("champions/volibear.py", "parse", "dict.get", '"rank"', 1),
         ("champions/volibear.py", "parse", "or-default", '"rank"', 1),
-        (
-            "champions/warwick.py",
-            "derive_self_healing",
-            "or-default",
-            '"self_heal_share_of_damage"',
-            1,
-        ),
         ("champions/zac.py", "parse", "or-default", '"parts"', 1),
         ("champions/zed.py", "_death_mark", "dict.get", '"total_raw"', 1),
         ("champions/zed.py", "_death_mark", "or-default", '"total_raw"', 1),
