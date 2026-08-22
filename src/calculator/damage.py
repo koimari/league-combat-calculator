@@ -178,6 +178,7 @@ from .ability_spec import (
     ControlEvent,
     DamagePart,
 )
+from .cleanse_eligibility import merged_spans
 from .interpreters import (
     active_cast,
     ally_packet,
@@ -4165,19 +4166,6 @@ class BurstSwingSchedule:
         return len(self.by_ability.get(ability_key, ()))
 
 
-def _merged_spans(
-    spans: list[tuple[float, float]],
-) -> tuple[tuple[float, float], ...]:
-    """Sort ``[start, end)`` spans and fuse any that touch or overlap."""
-    merged: list[list[float]] = []
-    for start, end in sorted(spans):
-        if merged and start <= merged[-1][1]:
-            merged[-1][1] = max(merged[-1][1], end)
-        else:
-            merged.append([start, end])
-    return tuple((start, end) for start, end in merged)
-
-
 def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
     """Re-time the auto stream around empowered bursts that set their rate.
 
@@ -4232,7 +4220,7 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
     if not by_ability:
         return
 
-    schedule = BurstSwingSchedule(by_ability=by_ability, blocks=_merged_spans(spans))
+    schedule = BurstSwingSchedule(by_ability=by_ability, blocks=merged_spans(spans))
     leftover = max(0.0, duration - schedule.seconds)
     state.num_auto_attacks = math.floor(
         state.attack_speed * leftover * state.auto_attack_uptime

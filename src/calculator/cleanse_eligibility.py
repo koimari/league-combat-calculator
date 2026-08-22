@@ -706,9 +706,26 @@ def interval_active(interval: Mapping[str, Any], at: float) -> bool:
     return start <= at + _EPS and end > at + _EPS
 
 
+def merged_spans(
+    spans: Iterable[tuple[float, float]],
+) -> tuple[tuple[float, float], ...]:
+    """Sort ``[start, end)`` spans and fuse any that touch or overlap.
+
+    The ONE interval fold: the union length below is its total length, and
+    the engine's empowered-burst blocks are the same spans read as blocks.
+    """
+    merged: list[list[float]] = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return tuple((start, end) for start, end in merged)
+
+
 def merged_interval_duration(intervals: Sequence[Mapping[str, Any]]) -> float:
-    """The union length of authored inactive intervals -- the ONE fold, which
-    both the truncation below and the survival row's published downtime call.
+    """The union length of authored inactive intervals, which both the
+    truncation below and the survival row's published downtime call.
 
     Union rather than sum: two controls overlapping in time cost the actor one
     window of downtime and not two, so a total that added them would publish
@@ -719,22 +736,18 @@ def merged_interval_duration(intervals: Sequence[Mapping[str, Any]]) -> float:
     # runs this once per participant per walk on the optimizer's hot path.
     if not intervals:
         return 0.0
-    ordered: list[tuple[float, float]] = []
-    for interval in intervals:
-        start, end = _interval_bounds(interval)
-        if end > start:
-            ordered.append((start, end))
-    ordered.sort()
+    spans = merged_spans(
+        bounds
+        for bounds in (_interval_bounds(interval) for interval in intervals)
+        if bounds[1] > bounds[0]
+    )
+    # A window opening before the fight clock is measured from zero, and the
+    # blocks are added one at a time: ``sum()`` compensates and this walk's
+    # published downtime is the uncompensated total.
     total = 0.0
-    current_start = current_end = 0.0
-    for start, end in ordered:
-        if start > current_end:
-            total += current_end - current_start
-            current_start, current_end = start, end
-        else:
-            current_end = max(current_end, end)
-    if ordered:
-        total += current_end - current_start
+    for start, end in spans:
+        if end > 0.0:
+            total += end - max(0.0, start)
     return max(0.0, total)
 
 
@@ -1176,6 +1189,7 @@ __all__ = [
     "movement_entry",
     "item_declaration",
     "merged_interval_duration",
+    "merged_spans",
     "resolve_cleanse_item",
     "truncate_intervals",
 ]
