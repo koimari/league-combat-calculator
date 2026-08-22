@@ -885,15 +885,10 @@ def _apply_target_champion_damage_reduction(
     """Apply a sourced flat reduction to champion attack or spell packets."""
     if hits <= 0 or post_mitigation_damage <= 0.0:
         return post_mitigation_damage
-    # Spelled through getattr, and only here: as attributes these two join
-    # ``golden_snapshot.swing_term_declarations()``, whose capture then refuses
-    # every coupled baseline until a scenario arms Guardian's Horn against a
-    # basic attack (backlog ER4).  Both fields are declared on FightState, so
-    # neither default is reachable; the shape retires with that scenario.
     reduction = (
-        getattr(state, "target_champion_dot_damage_flat_reduction", 0.0)
+        state.target_champion_dot_damage_flat_reduction
         if damage_over_time
-        else getattr(state, "target_champion_damage_flat_reduction", 0.0)
+        else state.target_champion_damage_flat_reduction
     )
     if reduction <= 0.0:
         return post_mitigation_damage

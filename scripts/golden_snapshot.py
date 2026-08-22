@@ -1266,6 +1266,33 @@ COUPLED_SCENARIOS = (
             auto_attack_uptime=1.0,
         ),
     ),
+    # Undaunted's two terms, which a swing meets through `_mitigate` the same
+    # way the three above it do, and which no roster armed while they were
+    # read through ``getattr`` and so invisible to the derivation.
+    #
+    # Teemo arms both from one stream: Toxic Shot rides every basic attack, so
+    # the same autos deliver the flat champion reduction on the swing and the
+    # smaller damage-over-time amount on the poison they apply.  Ornn holds
+    # enough health to end the window alive, which keeps both readings a
+    # subtraction rather than a clamp at zero.
+    #
+    # Guardian's Horn is ARAM-only — ``modes['classic sr 5v5']`` is False, so
+    # `item_source.is_ordinary_sr_item` refuses it — and it is the ONLY item
+    # declaring either field.  A defender card is not a purchase pool, and the
+    # mechanic is modelled and reachable through one, so the alternative to an
+    # ARAM card here is a modelled term no baseline can ever see.
+    CoupledScenario(
+        "undaunted_armed_swing_roster",
+        _roster_request(
+            "Teemo",
+            ("Nashor's Tooth", "Rabadon's Deathcap"),
+            enemies=("Ornn",),
+            allies=(),
+            enemy_cards={"Ornn": {"items": ("Guardian's Horn",)}},
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
     # Everlasting armed by a melee holder's own forced swing in a window with
     # no auto stream.  Cho'Gath's E slows on the attack it forces, which the
     # one-rotation ledger lands at the cast, before Q's knock-up at 1.127 s;

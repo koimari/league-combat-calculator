@@ -122,26 +122,6 @@ ROW_READS = frozenset(
     }
 )
 
-#: Spelled with getattr against rule 5 on purpose, and only here: as plain
-#: attributes these two become visible to `scripts/term_census.py`, whose
-#: Amendment R gates then require a coupled scenario arming Guardian's Horn
-#: and a re-captured golden baseline.  Both fields are declared on FightState,
-#: so neither default is reachable.
-CENSUS_GETATTR = frozenset(
-    {
-        (
-            "_apply_target_champion_damage_reduction",
-            "getattr",
-            '"target_champion_damage_flat_reduction"',
-        ),
-        (
-            "_apply_target_champion_damage_reduction",
-            "getattr",
-            '"target_champion_dot_damage_flat_reduction"',
-        ),
-    }
-)
-
 #: Request-supplied per-item state, not cached data: an absent key is the
 #: item's declared off state, and `ITEM_INPUT_OPTIONS` owns what that is.
 REQUEST_ITEM_STATE = frozenset(
@@ -244,7 +224,7 @@ WIKI_TRAVERSALS = frozenset(
 #: Every scanned file and the survivors frozen for it.  A file joins this map
 #: only once it is clean — that is what "widen one file at a time" means.
 SCANNED = {
-    "damage.py": ROW_READS | CENSUS_GETATTR,
+    "damage.py": ROW_READS,
     "item_effects.py": REQUEST_ITEM_STATE | OPTION_SCHEMA | LOADOUT_NAMES | ATOM_ROWS,
     "ability_atoms.py": WIKI_TRAVERSALS,
 }
