@@ -23,7 +23,7 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .engine import BUFF, DAMAGE, SlotCtx, SlotParser
+from .engine import BUFF, DAMAGE, PENDING_CONTROL_EVENTS, SlotCtx, SlotParser
 from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
@@ -1096,18 +1096,49 @@ def with_control(
     return parse
 
 
+def park_control_interval(
+    entry: dict[str, Any], duration: float, *, time_offset: float | None = 0.0
+) -> None:
+    """Park a sourced control interval for ``MODULE_CC`` to name.
+
+    The counterpart of :func:`with_control_event` for a slot that builds its
+    entry by hand: the module sources the interval, the declaration supplies
+    the kind, and ``engine._apply_module_cc`` joins them.  A module that
+    builds a :class:`ability_spec.ControlEvent` itself is stating the kind a
+    second time, which the engine refuses.
+    """
+    entry[PENDING_CONTROL_EVENTS] = tuple(entry.get(PENDING_CONTROL_EVENTS, ())) + (
+        {"duration": float(duration), "time_offset": time_offset},
+    )
+
+
 def with_control_event(
     parser: SlotParser,
     *,
-    kind: str,
     duration_attr: str,
+    kind: str | None = None,
     source: tuple[str, int] | None = None,
     ranks: str = "rank",
     time_offset: float | None = 0.0,
     effect_index: int = 0,
 ) -> SlotParser:
-    """Add one sourced control event, including to a utility-only slot."""
-    if not kind.strip():
+    """Add one sourced control event, including to a utility-only slot.
+
+    Like :func:`with_control`, the interval is what this helper sources and
+    the kind is the module's ``MODULE_CC`` entry: an event authored with no
+    ``kind`` rides the slot as a pending interval and
+    ``engine._apply_module_cc`` stamps the declared kind onto it after every
+    phase.  A cc-only slot therefore states its control exactly where a
+    damaging slot does, and the two cannot disagree.
+
+    ``kind`` is for the one slot shape ``MODULE_CC`` cannot state: a cast
+    whose control is not one answer (Vayne's Condemn stuns only into a wall,
+    on top of the knockback every cast lands; Lulu's Whimsy polymorphs only
+    the enemy branch).  Such a slot declares :data:`engine.CC_PER_PART` and
+    authors the kind here; the engine refuses this argument on any slot that
+    declared a constant.
+    """
+    if kind is not None and not kind.strip():
         raise ValueError("with_control_event kind must be a non-empty string")
     if ranks not in {"rank", "level"}:
         raise ValueError("with_control_event ranks must be 'rank' or 'level'")
@@ -1139,16 +1170,21 @@ def with_control_event(
                 "total_raw": 0.0,
                 "parts": (),
             }
-        controls = list(entry.get("control_events", ()))
-        controls.append(
-            ControlEvent(
-                kind,
-                duration,
-                time_offset=time_offset,
-                skillshot=False,
+        if kind is None:
+            pending = list(entry.get(PENDING_CONTROL_EVENTS, ()))
+            pending.append({"duration": duration, "time_offset": time_offset})
+            entry[PENDING_CONTROL_EVENTS] = tuple(pending)
+        else:
+            controls = list(entry.get("control_events", ()))
+            controls.append(
+                ControlEvent(
+                    kind,
+                    duration,
+                    time_offset=time_offset,
+                    skillshot=False,
+                )
             )
-        )
-        entry["control_events"] = tuple(controls)
+            entry["control_events"] = tuple(controls)
         entry["control_source_atoms"] = [
             *entry.get("control_source_atoms", []),
             duration_atom,

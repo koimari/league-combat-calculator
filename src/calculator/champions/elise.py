@@ -134,7 +134,6 @@ SLOTS = {
     "W": _volatile_spiderling,
     "E": with_control_event(
         _cocoon,
-        kind="stun",
         duration_attr="Stun Duration",
     ),
     "R": _form_toggle,
