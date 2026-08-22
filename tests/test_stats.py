@@ -10,6 +10,7 @@ from src.calculator.stats import (
     get_champion_base_stats,
     get_item_stats,
     calculate_total_stats,
+    item_mana_reaches_pool,
 )
 
 
@@ -27,6 +28,57 @@ class TestLethality:
         stats = calculate_total_stats(ahri_data, level, [ghostblade])
         assert stats["lethality"] > 0
         assert stats["flat_armor_penetration"] == stats["lethality"]
+
+
+class TestResourcePoolKind:
+    """Item mana reaches a MANA pool and nothing else.
+
+    An energy pool is a fixed 200 (Shen's 400): a mana item on Akali is a
+    wasted stat line, not a bigger pool, faster regeneration or a larger
+    Awe/Muramana conversion.
+    """
+
+    def test_mana_items_do_not_grow_an_energy_pool(self):
+        akali = get_champion("Akali")
+        bare = calculate_total_stats(akali, 18, [])
+        toothed = calculate_total_stats(
+            akali, 18, [get_item_by_name("Tear of the Goddess")]
+        )
+        assert bare["max_mana"] == 200
+        assert toothed["max_mana"] == 200
+        assert toothed["bonus_mana"] == 0
+        assert toothed["resource_regen_per_second"] == pytest.approx(
+            bare["resource_regen_per_second"]
+        )
+
+    def test_awe_converts_nothing_on_an_energy_pool(self):
+        akali = get_champion("Akali")
+        seraphs = get_item_by_name("Archangel's Staff")
+        stats = calculate_total_stats(akali, 18, [seraphs])
+        assert stats["max_mana"] == 200
+        assert stats["ability_power"] == round(get_item_stats(seraphs)["ability_power"])
+
+    def test_mana_items_still_grow_a_mana_pool(self, ahri_data: dict):
+        tear = get_item_by_name("Tear of the Goddess")
+        bare = calculate_total_stats(ahri_data, 18, [])
+        stats = calculate_total_stats(ahri_data, 18, [tear])
+        assert stats["max_mana"] == bare["max_mana"] + round(
+            get_item_stats(tear)["mana"]
+        )
+        assert stats["bonus_mana"] == round(get_item_stats(tear)["mana"])
+
+    @pytest.mark.parametrize(
+        ("record", "expected"),
+        [
+            ({"resource": "MANA"}, True),
+            ({"resource": "ENERGY"}, False),
+            ({"resource": "NONE"}, False),
+            ({"resource": "FURY"}, False),
+            ({}, True),
+        ],
+    )
+    def test_only_a_mana_pool_takes_item_mana(self, record: dict, expected: bool):
+        assert item_mana_reaches_pool(record) is expected
 
 
 class TestStatefulItemStats:

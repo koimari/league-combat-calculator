@@ -325,6 +325,16 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
     return extracted
 
 
+# Only a MANA pool takes an item's mana: an energy pool is a fixed 200
+# (Shen's 400) and no other declared resource grows from items either, so a
+# mana item is a wasted stat line on those kits.  A record declaring no
+# resource is a sparse unit fixture and keeps the mana pool.
+def item_mana_reaches_pool(champion_data: Mapping[str, Any]) -> bool:
+    """Whether an item's mana and mana regeneration reach this pool."""
+    resource = champion_data.get("resource")
+    return resource is None or str(resource) == "MANA"
+
+
 def calculate_total_stats(
     champion_data: dict[str, Any],
     level: int,
@@ -406,14 +416,24 @@ def calculate_total_stats(
     total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
     total_item_stats["ability_haste"] += float(external.get("ability_haste", 0.0))
 
-    # Mana first — stat conversions read it (Awe → AP, Muramana → AD)
+    # Mana first — stat conversions read it (Awe → AP, Muramana → AD).
+    # An item's mana grant lands in a MANA pool only; the item still grants
+    # the stat (Jack Of All Trades counts it above), the kit just has no
+    # pool it can grow. The two reads stay separate from the item totals so
+    # every consumer of the pool — the published card, the conversions and
+    # the fight's resource walk — sees the same one.
+    pool_takes_item_mana = item_mana_reaches_pool(champion_data)
+    pool_item_mana = total_item_stats["mana"] if pool_takes_item_mana else 0.0
+    pool_item_mana_regen_percent = (
+        total_item_stats["mana_regen_percent"] if pool_takes_item_mana else 0.0
+    )
     cdm = champion_data["stats"]
     base_mana = growth_stat(
         cdm.get("mana", {}).get("flat", 0),
         cdm.get("mana", {}).get("perLevel", 0),
         level,
     )
-    total_mana = base_mana + total_item_stats["mana"]
+    total_mana = base_mana + pool_item_mana
     base_resource_regen_per_five = growth_stat(
         cdm.get("manaRegen", {}).get("flat", 0),
         cdm.get("manaRegen", {}).get("perLevel", 0),
@@ -421,7 +441,7 @@ def calculate_total_stats(
     )
     resource_regen_per_second = (
         base_resource_regen_per_five
-        * (1.0 + total_item_stats["mana_regen_percent"] / 100.0)
+        * (1.0 + pool_item_mana_regen_percent / 100.0)
         / 5.0
     )
     base_health_regen_per_five = growth_stat(
@@ -437,12 +457,12 @@ def calculate_total_stats(
     # the per-item knowledge; this function owns the application order.
     bonuses = resolve_stat_effects(
         items,
-        bonus_mana=total_item_stats["mana"],
+        bonus_mana=pool_item_mana,
         max_mana=total_mana,
         bonus_health=total_item_stats["health"],
         base_attack_damage=base_stats["attack_damage"],
         bonus_attack_damage=total_item_stats["attack_damage"],
-        bonus_mana_regen_percent=total_item_stats["mana_regen_percent"],
+        bonus_mana_regen_percent=pool_item_mana_regen_percent,
         is_melee=is_melee,
         level=level,
         item_options=item_options,
@@ -634,7 +654,7 @@ def calculate_total_stats(
         ),
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
-        "bonus_mana": round(total_item_stats["mana"]),
+        "bonus_mana": round(pool_item_mana),
         "resource_regen_per_second": resource_regen_per_second,
         "base_health_regen_per_five": base_health_regen_per_five,
         "health_regen_per_five": health_regen_per_five,
