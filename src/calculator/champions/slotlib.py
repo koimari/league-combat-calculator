@@ -78,6 +78,25 @@ _PROSE_DAMAGE_REDUCTION_RE = re.compile(
 )
 
 
+def effect_description(ability: dict[str, Any], effect_index: int) -> str:
+    """One cached effect's description text, or "" when that effect is gone.
+
+    A mechanic the cache states only in prose (Annie's Pyromania charge,
+    Kennen's Mark of the Storm) is read out of this string by the module
+    that owns it, which then raises if the sentence stopped saying what it
+    priced.  ``""`` is the one quiet answer: a patch that drops an effect
+    row entirely is the same failure, and the caller names it.
+    """
+    effects = ability.get("effects")
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return ""
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return ""
+    description = effect.get("description")
+    return "" if description is None else str(description)
+
+
 def extract_description_duration(
     ability: dict[str, Any], effect_index: int = 0
 ) -> float | None:

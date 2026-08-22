@@ -10,7 +10,7 @@ champion membership or champion-specific formulas.
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any
+from typing import Any, Sequence
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, SlotParser
@@ -151,6 +151,42 @@ def buff_window_share(ctx: SlotCtx, duration: float) -> float:
     if window <= duration:
         return 1.0
     return duration / window
+
+
+def ability_cast_times(
+    ctx: SlotCtx, duration: float, slots: Sequence[str]
+) -> list[tuple[float, str]]:
+    """``(time, slot)`` for each ability cast a timed fight schedules.
+
+    A stack walk that counts *casts* needs the schedule before the fight
+    runs it, so it mirrors the rotation the way Braum's passive does: each
+    learned slot casts at t=0 and again every hasted cooldown, giving the
+    ``1 + duration // cd`` count the rotation computes.  One set of hands,
+    cast times, item cooldown refunds and resource exhaustion are not
+    mirrored — the same approximation the Braum-pattern walks declare —
+    and ties break on ``slots`` order.  An ``auto_attacks_only`` window
+    schedules no casts at all, so the stream is empty.
+    """
+    if ctx.option("auto_attacks_only"):
+        return []
+    # Deferred: damage.py imports champion modules that import this one.
+    # pylint: disable-next=import-outside-toplevel,cyclic-import
+    from ..damage import effective_cooldown
+
+    casts: list[tuple[float, int]] = []
+    for index, slot in enumerate(slots):
+        ability = ctx.ability(slot)
+        slot_rank = ctx.rank_for(slot)
+        if ability is None or slot_rank < 1:
+            continue
+        haste = ctx.stat("ability_haste")
+        if slot != "R":
+            haste += ctx.stat("basic_ability_haste")
+        cooldown = effective_cooldown(extract_cooldown(ability, slot_rank), haste)
+        count = 1 + int(duration / cooldown) if cooldown > 0 else 1
+        casts.extend((step * cooldown, index) for step in range(count))
+    casts.sort()
+    return [(time, slots[index]) for time, index in casts]
 
 
 def no_damage(

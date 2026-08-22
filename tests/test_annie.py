@@ -1,8 +1,30 @@
 """Tests for Annie champion module."""
 
+import copy
+
 import pytest
-from src.calculator.champions import annie
+from src.calculator.champions import annie, parse_champion_abilities
 from tests import cc_review
+
+# The Pyromania walk reads cooldowns, so every walk test parses at zero
+# haste: Q 4s, W 7s, E 10s, R 100s at rank 3 are then the cached numbers
+# themselves and the cast stream is hand-checkable.
+_NO_HASTE = {"ability_haste": 0.0, "basic_ability_haste": 0.0, "ability_power": 0.0}
+_MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
+
+
+def _walk(annie_data, level=18, **options):
+    """Annie's Pyromania row over a timed window at zero haste."""
+    parsed = parse_champion_abilities(
+        annie_data,
+        level,
+        0.0,
+        _MAX_RANKS,
+        champion_stats=dict(_NO_HASTE),
+        champion_options=options or None,
+    )
+    return parsed["P"]
+
 
 # ---------------------------------------------------------------------------
 # P: Pyromania (stun only, no damage)
@@ -21,6 +43,80 @@ class TestPassivePyromania:
     def test_passive_name_from_json(self, annie_data, parse_at) -> None:
         _, abilities = parse_at(annie_data, 5)
         assert abilities["P"]["name"] == "Pyromania"
+
+
+class TestPyromaniaChargeWalk:
+    """P: the cross-slot charge, walked over the fight's own casts.
+
+    At zero haste a 10s window schedules Q at 0/4/8, W at 0/7, E at 0/10
+    and R at 0, in that tie-broken order — so the charge and every cast
+    that spends it are hand-countable.
+    """
+
+    def test_the_opening_charge_stuns_the_first_spender_cast(self, annie_data):
+        """Full at the opening: Q at t=0 spends it, then W at t=7."""
+        row = _walk(annie_data, fight_duration_seconds=10.0)
+        assert "2 Energized stun(s) of 1.75s" in row["detail"]
+        assert "stuns at 0.00s, 7.00s" in row["detail"]
+        assert "charge 4/4 at the opening, 2/4 at the end" in row["detail"]
+
+    def test_an_empty_opening_charge_takes_four_casts_to_fill(self, annie_data):
+        """From 0/4 the four t=0 casts fill it and Q at t=4 spends it."""
+        row = _walk(annie_data, fight_duration_seconds=10.0, pyromania_stacks=0)
+        assert "1 Energized stun(s)" in row["detail"]
+        assert "stuns at 4.00s" in row["detail"]
+        assert "charge 0/4 at the opening, 3/4 at the end" in row["detail"]
+
+    def test_molten_shield_charges_but_never_spends(self, annie_data):
+        """E is absent from the cached Energized sentence, so it cannot stun.
+
+        With only E learned the walk charges on every E cast and reaches
+        the cap without ever spending it.
+        """
+        parsed = parse_champion_abilities(
+            annie_data,
+            18,
+            0.0,
+            {"Q": 0, "W": 0, "E": 5, "R": 0},
+            champion_stats=dict(_NO_HASTE),
+            champion_options={"fight_duration_seconds": 40.0, "pyromania_stacks": 0},
+        )
+        assert "0 Energized stun(s)" in parsed["P"]["detail"]
+        assert "charge 0/4 at the opening, 4/4 at the end" in parsed["P"]["detail"]
+
+    def test_an_autos_only_window_never_moves_the_charge(self, annie_data):
+        row = _walk(
+            annie_data,
+            fight_duration_seconds=10.0,
+            pyromania_stacks=1,
+            auto_attacks_only=True,
+        )
+        assert "charge 1/4 at the opening, 1/4 at the end" in row["detail"]
+
+    @pytest.mark.parametrize(
+        "level,seconds", [(1, "1.25s"), (5, "1.25s"), (6, "1.5s"), (11, "1.75s")]
+    )
+    def test_the_stun_steps_at_the_sourced_level_breakpoints(
+        self, annie_data, level, seconds
+    ):
+        """1.25 / 1.5 / 1.75 (based on level) steps at levels 1, 6 and 11."""
+        assert seconds in _walk(annie_data, level=level)["detail"]
+
+    def test_a_cache_that_stops_stating_the_cap_fails_closed(self, annie_data):
+        data = copy.deepcopy(annie_data)
+        effect = data["abilities"]["P"][0]["effects"][0]
+        effect["description"] = effect["description"].replace("stacking up to 4", "")
+        with pytest.raises(ValueError, match="charge cap has no source"):
+            parse_champion_abilities(data, 18, 0.0, _MAX_RANKS)
+
+    def test_a_cache_that_stops_naming_a_spender_fails_closed(self, annie_data):
+        data = copy.deepcopy(annie_data)
+        data["abilities"]["P"][0]["effects"][1]["description"] = (
+            "Energized: Annie empowers her next cast to stun enemies hit "
+            "for 1.25 / 1.5 / 1.75 (based on level) seconds."
+        )
+        with pytest.raises(ValueError, match="no slot can be said to spend"):
+            parse_champion_abilities(data, 18, 0.0, _MAX_RANKS)
 
 
 # ---------------------------------------------------------------------------
@@ -114,8 +210,47 @@ class TestEMoltenShield:
         assert abilities["E"]["name"] == "Molten Shield"
 
     def test_e_no_damage(self, annie_data, parse_at) -> None:
+        """No declared enemy strikes the shield, so nothing retaliates."""
         _, abilities = parse_at(annie_data, 5)
         assert abilities["E"]["total_raw"] == 0.0
+
+    def test_e_prices_the_cached_retaliation_row_per_declared_enemy(
+        self, annie_data, parse_at
+    ) -> None:
+        """Rank 5 retaliation: 65 + 40% of 100 AP = 105 per enemy struck."""
+        _, abilities = parse_at(
+            annie_data,
+            18,
+            ap=100.0,
+            ability_ranks={"E": 5, "R": 0},
+            champion_options={"e_shield_retaliations": 3},
+        )
+        assert abilities["E"]["total_raw"] == pytest.approx(315.0)
+        (part,) = abilities["E"]["parts"]
+        assert (part.amount, part.count) == (pytest.approx(105.0), 3)
+
+    def test_one_retaliation_is_a_certified_landing(self, annie_data, parse_at) -> None:
+        """One strike is one hit; several are an aggregate with no boundary."""
+        _, one = parse_at(
+            annie_data,
+            18,
+            ability_ranks={"E": 5, "R": 0},
+            champion_options={"e_shield_retaliations": 1},
+        )
+        _, many = parse_at(
+            annie_data,
+            18,
+            ability_ranks={"E": 5, "R": 0},
+            champion_options={"e_shield_retaliations": 4},
+        )
+        assert one["E"]["event_order_certified"] == "single_hit"
+        assert "event_order_certified" not in many["E"]
+
+    def test_a_cache_without_the_retaliation_row_fails_closed(self, annie_data) -> None:
+        data = copy.deepcopy(annie_data)
+        data["abilities"]["E"][0]["effects"][1]["leveling"] = []
+        with pytest.raises(ValueError, match="no longer carries a"):
+            parse_champion_abilities(data, 18, 0.0, _MAX_RANKS)
 
 
 # ---------------------------------------------------------------------------
@@ -273,12 +408,13 @@ class TestPreLevel6:
 
 
 class TestReviewedCrowdControl:
-    """Annie's crowd-control review, and the slot that still withholds.
+    """Annie's crowd-control review, and the slots that still withhold.
 
-    Pyromania's stun is stack state, not slot state: it empowers 'her
-    next cast of Disintegrate, Incinerate, or Summon: Tibbers' at four
-    stacks, so neither a slot-wide stun nor a slot-wide 'none' is true
-    of Q, W or R.
+    Pyromania's stun is stack state, not slot state: the charge is
+    cross-slot, so which casts of Q, W or R are the empowered ones is a
+    property of the fight's cast stream and neither a slot-wide stun nor
+    a slot-wide 'none' is true of any of them.  The walk on P's own row
+    is where the derived stun schedule is published instead.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
