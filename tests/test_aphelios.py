@@ -1,11 +1,26 @@
 """Tests for the Aphelios champion module."""
 
+import re
+
 import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import aphelios, parse_champion_abilities
+from src.calculator.champions.slotlib import effect_description
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+
+# The two prose-sourced weapon innates, read back out of the sentence each
+# constant was reviewed from, so a patch that stops stating the number turns
+# the constant red instead of leaving it asserted against its own restatement.
+_CALIBRUM_MARK_RE = re.compile(
+    r"dealing (?P<flat>\d+(?:\.\d+)?) \(\+ (?P<ratio>\d+(?:\.\d+)?)% bonus AD\) "
+    r"bonus physical damage to the main target for each mark consumed"
+)
+_INFERNUM_BOLT_RE = re.compile(
+    r"fire bolt deals (?P<ratio>\d+(?:\.\d+)?)% AD physical damage to the "
+    r"primary target"
+)
 
 WEAPONS = ("calibrum", "severum", "gravitum", "infernum", "crescendum")
 # The four weapon forms whose Q prices exactly one hit; Severum's Q is
@@ -218,26 +233,32 @@ class TestWeaponBranches:
             entry = _parse(weapon)["passive"]
             assert aphelios._WEAPON_LABELS[weapon] in entry["detail"], weapon
 
-    def test_calibrums_mark_bonus_is_the_cached_sentence(self):
-        _, text = _p_effects("Calibrum")
-        assert (
-            "dealing 15 (+ 15% bonus AD) bonus physical damage to the main "
-            "target for each mark consumed" in text
-        )
-        assert aphelios._CALIBRUM_MARK_FLAT == 15.0
-        assert aphelios._CALIBRUM_MARK_BONUS_AD_RATIO == 0.15
+    def test_calibrums_mark_constants_equal_the_cached_sentence(self):
+        """Both numbers, read back out of the sentence they were reviewed from."""
+        entry, _ = _p_effects("Calibrum")
+        stated = _CALIBRUM_MARK_RE.search(effect_description(entry, 1))
+        assert stated, "the cached Calibrum effect no longer states the mark bonus"
+        assert aphelios._CALIBRUM_MARK_FLAT == float(stated["flat"])
+        assert aphelios._CALIBRUM_MARK_BONUS_AD_RATIO == float(stated["ratio"]) / 100.0
+
+    def test_calibrums_mark_bonus_prices_both_of_its_terms(self):
         assert _parse("calibrum").get("passive", {}).get("on_hit") is None
         on_hit = _parse("calibrum", aphelios_calibrum_marks=3)["passive"]["on_hit"]
-        # No items, so bonus AD is zero and each mark is the flat 15.
+        # No items and no points, so bonus AD is zero and a mark is the flat 15.
         assert on_hit["damage_per_hit"] == pytest.approx(45.0)
         assert on_hit["max_procs"] == 1
+        # Weapon Master's six AD points are +24 bonus AD, which is what makes
+        # the ratio move a published number: 15 + 0.15 x 24 = 18.6 a mark.
+        scaled = _parse(
+            "calibrum", aphelios_calibrum_marks=2, aphelios_bonus_ad_points=6
+        )["passive"]["on_hit"]
+        assert scaled["damage_per_hit"] == pytest.approx(37.2)
 
     def test_infernums_primary_target_bonus_is_the_cached_sentence(self):
-        _, text = _p_effects("Infernum")
-        assert (
-            "The fire bolt deals 110% AD physical damage to the primary target" in text
-        )
-        assert aphelios._INFERNUM_PRIMARY_AD_RATIO == 1.10
+        entry, _ = _p_effects("Infernum")
+        stated = _INFERNUM_BOLT_RE.search(effect_description(entry, 0))
+        assert stated, "the cached Infernum effect no longer states the bolt's AD"
+        assert aphelios._INFERNUM_PRIMARY_AD_RATIO == float(stated["ratio"]) / 100.0
         stats = calculate_total_stats(cc_review.kit("Aphelios"), 18, [])
         on_hit = _parse("infernum")["passive"]["on_hit"]
         assert on_hit["damage_per_hit"] == pytest.approx(0.10 * stats["attack_damage"])
