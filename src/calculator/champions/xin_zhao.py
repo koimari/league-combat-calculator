@@ -41,6 +41,7 @@ healing rule off the same on-hit events.
 
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import champion_stat
@@ -48,6 +49,7 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -99,7 +101,7 @@ def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_proc <= 0:
         return None
 
-    name = ability.get("name", "Determination")
+    name = ability_name(ability)
     entry = ability_on_hit_entry(
         name,
         ctx.level,
@@ -162,7 +164,7 @@ def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
     amplified = thrust * _W_THRUST_CRIT_CHANCE_AMP * crit_chance
     total += amplified
     entry = damage_entry(
-        ability.get("name", "Wind Becomes Lightning"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -293,7 +295,7 @@ def derive_self_healing(
     # ``_determination`` prices the proc as a per-attack share (partial
     # stacks included), so the heal pays the same share on the same on-hit
     # events — three of them are one proc's heal.
-    determination = (ability_damages.get("passive") or {}).get("on_hit") or {}
+    determination = ability_field(ability_payload(ability_damages, "passive"), "on_hit")
     if determination:
         xin_level = max(1, int(champion_stat(champion_stats, "level")))
         health_share, heal_ap_ratio = _determination_heal_ratios(xin_level)
