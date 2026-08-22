@@ -19,6 +19,7 @@ from ..stats import MAX_LEVEL
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_contract import coverage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -39,7 +40,7 @@ def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = per_tick * 5
     entry = damage_entry(
-        ability.get("name", "Bellows Breath"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -49,6 +50,10 @@ def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart("magic", per_tick, count=5, time_offset=0.0, hit_interval=0.15),
     )
     entry["detail"] = "five sourced 0.15-second fire ticks; final gout applies Brittle"
+    # Both cached W rows carry the unit "% of target's maximum health", so
+    # every tick is priced off the target's maximum health — the same stamp
+    # R's Temper consume carries.
+    entry["target_max_health_sensitive"] = True
     return entry
 
 
@@ -170,7 +175,7 @@ def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     per_pass = total / passes
     entry = damage_entry(
-        ability.get("name", "Call of the Forge God"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

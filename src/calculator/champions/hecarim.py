@@ -8,7 +8,13 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .source_receipts import load_champion_sources
 from .inputs import float_option, int_option
 
@@ -24,9 +30,7 @@ def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_ad = percent * bonus_ms / 100.0
     ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
     ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
-    entry = damage_entry(
-        ability.get("name", "Warpath"), ctx.level, 0.0, 0.0, "physical"
-    )
+    entry = damage_entry(ability_name(ability), ctx.level, 0.0, 0.0, "physical")
     entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
     entry["detail"] = (
         f"{percent:g}% of {bonus_ms:g} bonus movement speed grants {bonus_ad:g} bonus AD."
@@ -47,7 +51,7 @@ def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
     multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
     value = base * multiplier
     return {
-        "name": ability.get("name", "Rampage"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": max(0.0, extract_cooldown(ability, rank) - 0.75 * stacks),
         "damage_type": "physical",
@@ -74,7 +78,7 @@ def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Spirit of Dread"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_tick * ticks,
@@ -101,7 +105,7 @@ def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     value = low + (high - low) * distance
     entry = damage_entry(
-        ability.get("name", "Devastating Charge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -137,7 +141,7 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     return damage_entry(
-        ability.get("name", "Onslaught of Shadows"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         extract_named(ability, "Magic damage", rank, ctx.stats, ctx.target),

@@ -33,12 +33,12 @@
   "crossover_unavailable": 0,
   "enemy_item_entries": 0,
   "expiry_refusals": 0,
-  "item_pair_coarse": 100,
+  "item_pair_coarse": 96,
   "item_pair_failures": 0,
   "keystone_failures": 0,
   "keystone_unmodeled": 0,
   "mode_refusals": 0,
-  "total": 100
+  "total": 96
  },
  "frontier": {
   "attacker_kit_coarse": {},
@@ -274,18 +274,6 @@
     "fimbulwinter_everlasting"
    ],
    "Syndra|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vex|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vex|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vex|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Vex|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
    "Xayah|Fimbulwinter|one_rotation|autos=True": [

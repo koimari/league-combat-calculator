@@ -12,7 +12,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import float_option, int_option
 
@@ -44,9 +44,9 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total_ad = float(ctx.stat("attack_damage"))
     return {
-        "name": ability.get("name", "Colossal Smash"),
+        "name": ability_name(ability),
         "auto_attack_conversion": {
-            "name": ability.get("name", "Colossal Smash"),
+            "name": ability_name(ability),
             "count": conversions,
             "bonus_raw": max(0.0, total_modified_raw - total_ad),
             "damage_type": "magic",
@@ -79,7 +79,7 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = gust + per_tick * _Q_TORNADO_TICKS
     entry = damage_entry(
-        ability.get("name", "Winds of War"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -127,7 +127,7 @@ def _shield_of_durand(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = minimum * multiplier
     entry = damage_entry(
-        ability.get("name", "Shield of Durand"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -152,7 +152,7 @@ def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
     hit_delay = _E_CAST_TIME + distance / _E_DASH_SPEED
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Justice Punch"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -172,7 +172,7 @@ def _heros_entrance(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Hero's Entrance"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

@@ -23,6 +23,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_value,
@@ -79,7 +80,7 @@ def _shroud_of_darkness(ctx: SlotCtx) -> dict[str, Any] | None:
     share = buff_window_share(ctx, _W_ENHANCED_SECONDS) if blocked else 0.0
     bonus_as = passive_as + (enhanced_as - passive_as) * share
     entry = damage_entry(
-        ability.get("name", "Shroud of Darkness"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

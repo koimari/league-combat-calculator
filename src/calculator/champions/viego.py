@@ -31,11 +31,12 @@ from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
-    with_item_on_hits,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
+    with_item_on_hits,
 )
 from .inputs import int_option
 from .module_contract import coverage
@@ -69,7 +70,7 @@ def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
         else 0.0
     )
     entry = damage_entry(
-        ability.get("name", "Blade of the Ruined King"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         active + second_damage,
@@ -128,7 +129,7 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
         )
 
     entry = damage_entry(
-        ability.get("name", "Heartbreaker"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         base,
@@ -174,7 +175,7 @@ def _harrowed_path(ctx: SlotCtx) -> dict[str, Any] | None:
     uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0
     bonus_as = granted * uptime
     entry = damage_entry(
-        ability.get("name", "Harrowed Path"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

@@ -45,6 +45,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from ..champions.inputs import champion_stat
 from ..ability_spec import Authority
 from ..item_behavior import (
     BehaviorRule,
@@ -720,7 +721,7 @@ def uncompilable_item_receipt(
                 continue
             if loadout_stats is None:
                 return f"item_mechanic={name}"
-            if float(loadout_stats.get("bonus_health", 0.0) or 0.0) >= threshold:
+            if float(champion_stat(loadout_stats, "bonus_health") or 0.0) >= threshold:
                 return f"item_mechanic={name}"
             continue
         if isinstance(

@@ -4949,26 +4949,6 @@ class StackingPenEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class FirstAutoCritEffect:
-    """Forced first-auto crit expressed as a fraction of full crit damage."""
-
-    item_name: str
-    reduced_crit_ratio: float
-    heal_base_ad_ratio: float = 0.0
-    heal_base_ad_ratio_ranged: float = 0.0
-    heal_missing_health_ratio: float = 0.0
-    temporary_health_duration: float = 0.0
-
-
-@dataclass(frozen=True, slots=True)
-class ExecuteEffect:
-    """Display-only low-health execution threshold."""
-
-    item_name: str
-    threshold: float
-
-
-@dataclass(frozen=True, slots=True)
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
@@ -4981,12 +4961,6 @@ class BuildDamageEffects:
     per_ability_hits: tuple[DamageSource, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    navori_refund_percent: float = 0.0
-    crit_damage_bonus: float = 0.0
-    first_auto_crit: FirstAutoCritEffect | None = None
-    magic_amp: float = 1.0
-    execute: ExecuteEffect | None = None
-    cooldown_refund_source: str | None = None
     conditional_notes: tuple[str, ...] = ()
 
 
@@ -5263,12 +5237,6 @@ def _resolve_damage_effects_uncached(
     per_ability_hits: list[DamageSource] = []
     phantom_hit: PhantomHitEffect | None = None
     stacking_pen: StackingPenEffect | None = None
-    navori_refund_percent = 0.0
-    crit_damage_bonus = 0.0
-    first_auto_crit: FirstAutoCritEffect | None = None
-    magic_amp = 1.0
-    execute: ExecuteEffect | None = None
-    cooldown_refund_source: str | None = None
     conditional_notes: list[str] = []
 
     for item in items:
@@ -5309,25 +5277,6 @@ def _resolve_damage_effects_uncached(
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
             )
-        elif effect_type == "execute":
-            execute = ExecuteEffect(
-                item_name,
-                _RequiredValues(item_name, values).number("threshold"),
-            )
-        elif effect_type == "crit_modifier":
-            required = _RequiredValues(item_name, values)
-            if "bonus_crit_damage" in values:
-                crit_damage_bonus += required.number("bonus_crit_damage")
-            if "cd_refund_percent" in values:
-                navori_refund_percent = required.number("cd_refund_percent")
-                cooldown_refund_source = item_name
-        elif effect_type == "secondary_target":
-            # Wind's Fury is priced by the shared roster event ledger.  Keep
-            # the typed effect in the build projection without adding a stale
-            # conditional note that would contradict its targeting receipt.
-            continue
-        if effect_type == "magic_damage_amp":
-            magic_amp += _RequiredValues(item_name, values).number("magic_amp")
         splash_note = values.get("unmodeled_splash_note")
         if splash_note:
             conditional_notes.append(str(splash_note))
@@ -5349,37 +5298,6 @@ def _resolve_damage_effects_uncached(
                 required.number("dark_pen_per_stack"),
                 int(required.number("dark_max_stacks")),
             )
-        if "reduced_crit_ratio" in values and effect_type == "first_auto_crit":
-            first_auto_crit = FirstAutoCritEffect(
-                item_name,
-                _RequiredValues(item_name, values).number("reduced_crit_ratio"),
-                heal_base_ad_ratio=(
-                    _RequiredValues(item_name, values).number("heal_base_ad_ratio")
-                    if "heal_base_ad_ratio" in values
-                    else 0.0
-                ),
-                heal_base_ad_ratio_ranged=(
-                    _RequiredValues(item_name, values).number(
-                        "heal_base_ad_ratio_ranged"
-                    )
-                    if "heal_base_ad_ratio_ranged" in values
-                    else 0.0
-                ),
-                heal_missing_health_ratio=(
-                    _RequiredValues(item_name, values).number(
-                        "heal_missing_health_ratio"
-                    )
-                    if "heal_missing_health_ratio" in values
-                    else 0.0
-                ),
-                temporary_health_duration=(
-                    _RequiredValues(item_name, values).number(
-                        "temporary_health_duration"
-                    )
-                    if "temporary_health_duration" in values
-                    else 0.0
-                ),
-            )
 
     return BuildDamageEffects(
         class_restricted_per_hits=tuple(class_restricted_per_hits),
@@ -5387,12 +5305,6 @@ def _resolve_damage_effects_uncached(
         per_ability_hits=tuple(per_ability_hits),
         phantom_hit=phantom_hit,
         stacking_pen=stacking_pen,
-        navori_refund_percent=navori_refund_percent,
-        crit_damage_bonus=crit_damage_bonus,
-        first_auto_crit=first_auto_crit,
-        magic_amp=magic_amp,
-        execute=execute,
-        cooldown_refund_source=cooldown_refund_source,
         conditional_notes=tuple(conditional_notes),
     )
 

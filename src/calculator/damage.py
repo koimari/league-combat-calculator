@@ -184,6 +184,7 @@ from .interpreters import (
     ally_packet,
     cast_proc,
     charged_strike,
+    crit_profile,
     damage_routing,
     delta_amp,
     periodic,
@@ -820,6 +821,9 @@ class FightState:
     # Where a self-rated empowered burst (Jayce's Hyper Charge) puts its
     # swings, resolved with the cast plan and read by the swing schedule.
     burst_swings: "BurstSwingSchedule | None" = None
+    # Which scheduled swings an empower that rides the ordinary stream
+    # claimed, ``{slot: times}`` (see ``_resolve_scheduled_auto_rides``).
+    empowered_ride_times: dict[str, tuple[float, ...]] = field(default_factory=dict)
     # Rengar's Ferocity stack walk, built with the cast plan. ``None`` for
     # every champion whose module emits no ``ferocity_parts``.
     ferocity_timeline: "FerocityTimeline | None" = None
@@ -3123,7 +3127,9 @@ def _resolve_combat_state(
         roster_target_count=max(1, int(config.roster_target_count)),
         target_class=config.target_class,
         resists=resists,
-        magic_amp=damage_effects.magic_amp,
+        magic_amp=delta_amp.declared_magic_amp(
+            [item_effects.resolved_item_name(item) for item in items]
+        ),
         ability_amp=ability_part_amp[0],
         ability_amp_owner=ability_part_amp[1],
         basic_amp=basic_part_amp[0],
@@ -3350,11 +3356,11 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
-    # auto-attack simulation.
+    # auto-attack simulation.  The item bonus above the game's base multiplier
+    # is read once off the build's crit declarations.
+    crit_damage_bonus = _crit_profile(state).damage_bonus
     state.crit_chance = min(stats["critical_strike_chance"] / 100.0, 1.0)
-    state.crit_multiplier = (
-        BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
-    )
+    state.crit_multiplier = BASE_CRIT_MULTIPLIER + crit_damage_bonus
 
     # Champion-owned crit modifiers (Yasuo/Yone P: "total critical strike
     # chance is doubled from all other sources" and "critical strikes deal
@@ -3383,7 +3389,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             )
         )
         state.crit_multiplier = (
-            BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
+            BASE_CRIT_MULTIPLIER + crit_damage_bonus
         ) * damage_factor
         excess_percent = raw_crit_percent * chance_multiplier - 100.0
         per_percent = float(
@@ -3493,6 +3499,15 @@ def _empower_burst_attack_speed(empower: Any) -> float:
     if not isinstance(empower, dict):
         return 0.0
     return float(ability_field(empower, "attack_speed", form="empower"))
+
+
+def _empower_rides_scheduled_auto(empower: Any) -> bool:
+    """Whether this empower waits for the stream's next swing to deliver it."""
+    return (
+        bool(empower.get("rides_scheduled_auto"))
+        if isinstance(empower, dict)
+        else False
+    )
 
 
 def _empower_authored_timing(empower: Any) -> tuple[float, float] | None:
@@ -4180,6 +4195,15 @@ def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
     return parent if float(ability_field(info, "cooldown")) > 0 else None
 
 
+def _self_cast_lockout(state: "FightState") -> float:
+    """Seconds this kit spends silencing itself, over every declaring slot."""
+    return sum(
+        float(ability_field(info, "self_cast_lockout_seconds"))
+        for info in state.ability_damages.values()
+        if isinstance(info, Mapping)
+    )
+
+
 def _schedule_shared_casts(
     state: "FightState",
     result: "RotationResult",
@@ -4200,8 +4224,13 @@ def _schedule_shared_casts(
     duration. Cassiopeia's 0.75s-cooldown E is the case that pins the
     shared timeline: 3 casts in-game over a 3s fight, where an
     independent timeline schedules 5.
+
+    A kit that silences ITSELF (Rumble's Overheat) declares the seconds it
+    spends unable to cast, and they come off this horizon.  That prices how
+    much casting the lockout costs without claiming where the span sits —
+    the module declaring it could not source the instant, only the length.
     """
-    duration = state.fight_duration_seconds
+    duration = max(0.0, state.fight_duration_seconds - _self_cast_lockout(state))
     # Mirror the rotation loop's recast pairing exactly: an entry rides
     # its parent's casts only when the parent appears EARLIER in the
     # cast order; otherwise it schedules independently.
@@ -4385,6 +4414,54 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
         state.attack_speed * leftover * state.auto_attack_uptime
     ) + len(schedule.times)
     state.burst_swings = schedule
+
+
+def _resolve_scheduled_auto_rides(state: "FightState", plan: "CastPlan") -> None:
+    """Claim the stream swing each ``rides_scheduled_auto`` cast is delivered by.
+
+    An empower is timed at its cast by default, which is where a kit that
+    resets its attack timer (Darius W, Jax W, Fiora E) genuinely swings, and
+    a burst that sets its own rate re-times the stream and declares its own
+    impacts (``BurstSwingSchedule``).  A rider does neither: the cache gives
+    it no reset, so it is carried by a swing already on the stream — the
+    first at or after its cast that an earlier rider has not taken.
+    Resolving that here, once, is what lets the ability's damage and its
+    ``target_debuff`` window both open at the swing rather than at the cast.
+
+    Casts left without a swing keep nothing: the stream ran out, and the
+    engine already caps such casts by the autos that consume them.
+    """
+    if state.num_auto_attacks <= 0:
+        return
+    rides: dict[str, tuple[float, ...]] = {}
+    # A self-rated burst already owns its impacts, so a rider may not take
+    # one of them: those swings are spoken for (Jayce's R rides an ordinary
+    # swing while his Hyper Charge fires its own three).
+    claimed_by_burst = set(state.burst_swings.times if state.burst_swings else ())
+    available = [
+        time for time in _auto_attack_timestamps(state) if time not in claimed_by_burst
+    ]
+    taken = 0
+    for ability_key in state.cast_order:
+        ability_info = state.ability_damages.get(ability_key)
+        if not ability_info:
+            continue
+        empower = ability_info.get("empowers_next_auto")
+        if not empower or not _empower_rides_scheduled_auto(empower):
+            continue
+        hits = _empower_hits(empower)
+        claimed: list[float] = []
+        for cast_time in plan.times.get(ability_key, ()):
+            for _ in range(hits):
+                while taken < len(available) and available[taken] < cast_time:
+                    taken += 1
+                if taken >= len(available):
+                    break
+                claimed.append(available[taken])
+                taken += 1
+        if claimed:
+            rides[ability_key] = tuple(claimed)
+    state.empowered_ride_times = rides
 
 
 @dataclass(frozen=True)
@@ -6273,8 +6350,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # (~2% on the first ability) that would require re-parsing ability
     # damages mid-fight to fix properly.
 
-    # Basic attacks may reduce basic ability cooldowns.
-    result.navori_refund = state.damage_effects.navori_refund_percent
+    # Basic attacks may reduce basic ability cooldowns.  A build declaring no
+    # refund gets a zero here rather than a slot, which is what the rest of
+    # the rotation's arithmetic reads.
+    refund = _crit_profile(state).cooldown_refund
+    result.navori_refund = refund.fraction if refund is not None else 0.0
     result.has_navori = result.navori_refund > 0
     result.autos_per_second = (
         state.attack_speed * state.auto_attack_uptime
@@ -6339,6 +6419,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     _apply_empowered_burst_autos(state, plan)
     _prepare_hail_attack_schedule(state)
     _prepare_lethal_tempo_attack_schedule(state)
+    # Riders read the finished swing schedule, so they resolve after every
+    # keystone that owns one has installed it.
+    _resolve_scheduled_auto_rides(state, plan)
     state.stack_timeline = _build_stack_timeline(state, plan)
     timeline = state.stack_timeline
     state.ferocity_timeline = _build_ferocity_timeline(state, plan)
@@ -6923,11 +7006,17 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             # One-rotation mode is a burst: the whole combo lands well
             # inside any shred window, and its ``fight_duration_seconds``
             # is only a nominal cap — weighting by it would be arbitrary.
+            # A debuff an empowered swing delivers opens its window at that
+            # swing, not at the cast that armed it (Jayce's Cannon
+            # Transform shreds when the attack lands).
+            debuff_times = state.empowered_ride_times.get(
+                ability_key
+            ) or plan.times.get(ability_key, ())
             coverage = (
                 1.0
                 if state.one_rotation
                 else _debuff_coverage(
-                    plan.times.get(ability_key, ()),
+                    debuff_times,
                     ability_field(target_debuff, "duration", form="target_debuff"),
                     state.fight_duration_seconds,
                 )
@@ -8234,9 +8323,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         else 0.0
     )
 
-    first_auto_crit = state.damage_effects.first_auto_crit
+    first_auto_crit = _crit_profile(state).forced_crit
     ss_reduced_crit = (
-        first_auto_crit.reduced_crit_ratio if first_auto_crit is not None else 0.0
+        first_auto_crit.reduced_ratio if first_auto_crit is not None else 0.0
     )
 
     sundered_sky_damage_diff = 0.0  # post-target: + = bonus, - = lost damage
@@ -8611,7 +8700,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         else:
             ss_note = "No damage change"
         breakdown["sundered_sky"] = {
-            "name": f"{first_auto_crit.item_name} (Lightshield Strike)",
+            "name": f"{first_auto_crit.owner} (Lightshield Strike)",
             "total_damage": mitigated_diff,
             "detail": ss_note,
             "informational": True,
@@ -16417,7 +16506,7 @@ def _add_on_hit_healing(
 
 def _add_first_auto_healing(state: FightState) -> None:
     """Emit Sundered Sky's first-attack heal with a live missing-HP formula."""
-    effect = state.damage_effects.first_auto_crit
+    effect = _crit_profile(state).forced_crit
     if effect is None or (
         effect.heal_base_ad_ratio <= 0.0 and effect.heal_missing_health_ratio <= 0.0
     ):
@@ -16450,8 +16539,8 @@ def _add_first_auto_healing(state: FightState) -> None:
     ) -> float:
         return base_amount + missing_ratio * max(0.0, maximum_health - current_health)
 
-    state.breakdown[f"heal_{effect.item_name}"] = {
-        "name": f"{effect.item_name} (Lightshield Strike)",
+    state.breakdown[f"heal_{effect.owner}"] = {
+        "name": f"{effect.owner} (Lightshield Strike)",
         "count": 1,
         "amount_per_proc": base_amount,
         "total_amount": base_amount,
@@ -16852,13 +16941,23 @@ def _hypershot_delta_events(
     )
 
 
+def _held_owners(state: FightState) -> list[str]:
+    """This build's item names in build order — the order a family's fold sums."""
+    return [item_effects.resolved_item_name(item) for item in state.items]
+
+
+def _crit_profile(state: FightState) -> "crit_profile.CritProfile":
+    """What this build's crit declarations say — bonus, forced strike, refund."""
+    return crit_profile.declared_crit_profile(_held_owners(state))
+
+
 def _amp_slot(
     state: FightState, slot: AmpChainSlot, *extra_owners: str
 ) -> "delta_amp.AmpSlot | None":
     """The declared amp occupying one chain slot for this build.  ``None``
     means nothing the build holds declares the slot, an answer and not a zero.
     ``extra_owners`` carries the keystone, an owner the item list cannot hold."""
-    owners = [item_effects.resolved_item_name(item) for item in state.items]
+    owners = _held_owners(state)
     owners.extend(extra_owners)
     return _amp_slot_for(state, slot, owners)
 
@@ -17547,7 +17646,7 @@ def _add_execute_display(state: FightState) -> None:
     The execute damage is NOT added to the total; the row displays the HP
     threshold at which the target would be executed.
     """
-    execute = state.damage_effects.execute
+    execute = damage_routing.declared_execution(_held_owners(state))
     if execute is not None:
         collector_threshold = state.target_health * execute.threshold
         threshold_pct = (
@@ -17556,12 +17655,12 @@ def _add_execute_display(state: FightState) -> None:
             else 0.0
         )
         state.breakdown["execute"] = {
-            "name": f"{execute.item_name} (Execute)",
+            "name": f"{execute.owner} (Execute)",
             "total_damage": 0.0,
             "damage_type": "true",
             "execution_threshold_hp": collector_threshold,
             "detail": (
-                f"{execute.item_name} Execution Threshold: "
+                f"{execute.owner} Execution Threshold: "
                 f"{collector_threshold:.0f} HP "
                 f"({threshold_pct:.0f}% of {state.target_health:.0f})"
             ),
@@ -17608,10 +17707,10 @@ def _collect_fight_notes(
         and rotation.navori_refund > 0
         and rotation.autos_per_second > 0
     ):
-        cooldown_refund_source = state.damage_effects.cooldown_refund_source
-        assert cooldown_refund_source is not None
+        refund = _crit_profile(state).cooldown_refund
+        assert refund is not None
         notes.append(
-            f"{cooldown_refund_source}: basic ability CDs reduced by "
+            f"{refund.owner}: basic ability CDs reduced by "
             f"{rotation.navori_refund:.0%} per auto attack "
             f"({rotation.autos_per_second:.2f} autos/sec effective)."
         )
@@ -17633,12 +17732,13 @@ class _EmpoweredSwings(NamedTuple):
     row: dict[str, Any]
     count: int
     # When those swings land. A kit that rates its own burst declares the
-    # impacts (``BurstSwingSchedule.by_ability``); every other empower is
-    # timed at the cast that forced it — where a timer-resetting one
-    # (Darius W, Jax W, Fiora E) genuinely swings, and the instant the
-    # reconstruction has always placed this damage at.  A multi-hit
-    # empower that resets nothing (Cho'Gath E's three spiked attacks)
-    # therefore stacks its hits on the cast until its kit declares a rate.
+    # impacts (``BurstSwingSchedule.by_ability``); one that declares
+    # ``rides_scheduled_auto`` lands on the stream swings it claimed
+    # (``FightState.empowered_ride_times``); every other empower is timed
+    # at the cast that forced it — where a timer-resetting one (Darius W,
+    # Jax W, Fiora E) genuinely swings.  A multi-hit empower that resets
+    # nothing (Cho'Gath E's three spiked attacks) therefore stacks its
+    # hits on the cast until its kit declares a rate or a ride.
     times: tuple[float, ...]
 
 
@@ -17668,6 +17768,7 @@ def _empowered_swing_consumers(
         if swings <= 0:
             continue
         declared = burst.by_ability.get(ability_key, ()) if burst is not None else ()
+        declared = declared or state.empowered_ride_times.get(ability_key, ())
         times = declared or tuple(
             float(event["time"])
             for event in cast_events
@@ -18129,7 +18230,7 @@ def calculate_fight_damage(
     # thresholds apply only to their own cast. Item thresholds apply to every
     # authored packet. When both apply, keep the larger threshold.
     if not tuple_ledger:
-        item_execute = state.damage_effects.execute
+        item_execute = damage_routing.declared_execution(_held_owners(state))
         for event in damage_events:
             if not isinstance(event, dict):
                 continue
@@ -18157,7 +18258,7 @@ def calculate_fight_damage(
                 event["execute_declared_by_cast"] = True
             elif item_ratio > 0:
                 event["execute_threshold_ratio"] = item_ratio
-                event["execute_source"] = item_execute.item_name
+                event["execute_source"] = item_execute.owner
     if (
         score_only
         and shield_outcome_projection(shield_outcome_inputs(config, items))

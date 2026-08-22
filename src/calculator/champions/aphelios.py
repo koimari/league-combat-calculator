@@ -1,10 +1,22 @@
 """Aphelios' reviewed weapon-aware damage module.
 
-The weapon choice is explicit input, never inferred from a marksman
-archetype.  Q's Onslaught is represented as an attack event whose count is
-the Wiki's ``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q
-forms use the pinned packet variants.  R's initial blast and the basic-attack
-follow-up are kept separate so resistance and event ordering remain visible.
+``aphelios_main_weapon`` is the module's form axis, the way Kayn's ``form``
+and Jayce's stance are theirs: P, Q and R each branch on it.  The weapon
+choice is explicit input, never inferred from a marksman archetype.  Q's
+Onslaught is represented as an attack event whose count is the Wiki's
+``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q forms use the
+pinned packet variants.  R's initial blast and the basic-attack follow-up
+are kept separate so resistance and event ordering remain visible.
+
+P is where each weapon's innate lives, and the five branches are not alike
+(``_weapon_branch``, ``_P_BRANCH_UNPRICED``): Calibrum's mark bonus and
+Infernum's 110%-AD attack are priced on the basic-attack channel, Severum's
+heal is priced by this module's healing rule, Gravitum's innate is a slow
+that damages nothing, and Crescendum's Chakram bonus is the one the cache
+cannot support — its effect states ``0% : 138.5% (based on number of
+Chakrams)`` in prose over an empty ``leveling`` list, so there is no
+per-Chakram row to read and the branch stays unpriced rather than inventing
+the curve between the endpoints.
 
 E (Weapon Queue System) is the one slot with no damage row, and it emits
 that zero rather than staying absent: ``data/champions.json`` Aphelios E
@@ -24,13 +36,20 @@ weapon form builds (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
 from dataclasses import replace
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_description_duration,
+    extract_value,
+)
 from .module_contract import coverage
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
@@ -93,20 +112,100 @@ _R_CC_BY_WEAPON = dict.fromkeys(_WEAPON_INDEX, "none") | {"gravitum": "slow"}
 
 
 def _main_weapon(ctx: SlotCtx) -> str:
-    value = str(ctx.options.get("aphelios_main_weapon", "calibrum")).lower()
+    value = str(ctx.option("aphelios_main_weapon")).lower()
     return value if value in _WEAPON_INDEX else "calibrum"
+
+
+# HARDCODED: verify on patch updates.  Both weapon innates below state their
+# damage in prose over an empty ``leveling`` list, so the numbers are
+# reviewed constants and ``tests/test_aphelios.py`` pins the cached sentence
+# each one is read from:
+#   Calibrum  "dealing 15 (+ 15% bonus AD) bonus physical damage to the main
+#             target for each mark consumed"
+#   Infernum  "The fire bolt deals 110% AD physical damage to the primary
+#             target" — ten points above the 100% AD the basic attack
+#             already deals, so the branch prices the difference on the same
+#             swing, at the crit effectiveness a basic attack has.
+_CALIBRUM_MARK_FLAT = 15.0
+_CALIBRUM_MARK_BONUS_AD_RATIO = 0.15
+_INFERNUM_PRIMARY_AD_RATIO = 1.10
+
+# The three weapon branches that price no damage row of their own, and why.
+_P_BRANCH_UNPRICED = {
+    "severum": (
+        "attacks heal, and the heal is priced by this module's healing rule "
+        "off the cached Per-Level Scaling rows rather than as damage"
+    ),
+    "gravitum": (
+        "attacks slow and deal no damage of their own; an auto-carried slow "
+        "is not ability control (the Ashe Frost Shot reading)"
+    ),
+    "crescendum": (
+        "UNPRICED — the cached Chakram effect states '0% : 138.5% (based on "
+        "number of Chakrams) AD additional physical damage' in prose with an "
+        "empty leveling list, so no per-Chakram row exists to price"
+    ),
+}
+
+
+def _weapon_branch(ctx: SlotCtx, weapon: str) -> tuple[dict[str, Any] | None, str]:
+    """The main weapon's innate: its on-hit row, and what the branch says.
+
+    Only Calibrum and Infernum put damage on the basic-attack channel; the
+    other three declare their reviewed reason and price nothing.
+    """
+    if weapon == "calibrum":
+        marks = max(int(ctx.option("aphelios_calibrum_marks")), 0)
+        if not marks:
+            return None, "no marks consumed, so the empowered attack is a plain one"
+        per_mark = _CALIBRUM_MARK_FLAT + _CALIBRUM_MARK_BONUS_AD_RATIO * ctx.stat(
+            "bonus_attack_damage"
+        )
+        return (
+            {
+                "name": "Calibrum mark (on-hit)",
+                "damage_per_hit": per_mark * marks,
+                "damage_type": "physical",
+                # "The empowered attack will consume the marks from ALL
+                # targets" — one attack spends the lot, so the row lands once.
+                "max_procs": 1,
+            },
+            f"one empowered attack consumes {marks} mark(s) at {per_mark:.1f} each",
+        )
+    if weapon == "infernum":
+        return (
+            {
+                "name": "Infernum (on-hit)",
+                "damage_per_hit": (_INFERNUM_PRIMARY_AD_RATIO - 1.0)
+                * ctx.stat("attack_damage"),
+                "damage_type": "physical",
+                # The bolt IS the basic attack, so it crits when the attack
+                # does: "Critical strikes instead spray 6 missiles".
+                "crit_effectiveness": 1.0,
+            },
+            f"every attack deals {_INFERNUM_PRIMARY_AD_RATIO:.0%} AD to the "
+            "primary target (the cone's secondary targets need a roster and "
+            "stay unpriced)",
+        )
+    return None, _P_BRANCH_UNPRICED[weapon]
+
+
+def _weapon_master_grant(ability: dict[str, Any], attribute: str, points: int) -> float:
+    """One cached Weapon Master row at the points spent; none spent, none granted."""
+    return extract_value(ability, attribute, points) if points >= 1 else 0.0
 
 
 def _weapon_master(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P")
     if not ability:
         return None
-    ad_points = min(max(int(ctx.option("aphelios_bonus_ad_points")), 0), 6)
-    as_points = min(max(int(ctx.option("aphelios_bonus_as_points")), 0), 6)
-    lethality_points = min(max(int(ctx.option("aphelios_lethality_points")), 0), 6)
-    entry = damage_entry(ability["name"], 1, 0.0, 0.0, "physical")
-    bonus_ad = 4.0 * ad_points
-    bonus_as = 9.0 * as_points
+    ad_points = max(int(ctx.option("aphelios_bonus_ad_points")), 0)
+    as_points = max(int(ctx.option("aphelios_bonus_as_points")), 0)
+    lethality_points = max(int(ctx.option("aphelios_lethality_points")), 0)
+    entry = damage_entry(ability_name(ability), 1, 0.0, 0.0, "physical")
+    bonus_ad = _weapon_master_grant(ability, "Bonus Attack Damage", ad_points)
+    bonus_as = _weapon_master_grant(ability, "Bonus Attack Speed", as_points)
+    lethality = _weapon_master_grant(ability, "Lethality", lethality_points)
     if bonus_ad:
         ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
         ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
@@ -115,14 +214,21 @@ def _weapon_master(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.stats["attack_speed"] = (
             ctx.stat("attack_speed") + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
         )
-    if lethality_points:
-        ctx.stats["lethality"] = ctx.stat("lethality") + 4.5 * lethality_points
+    if lethality:
+        ctx.stats["lethality"] = ctx.stat("lethality") + lethality
     entry["stat_buff"] = {
         "bonus_attack_damage": bonus_ad,
         "bonus_attack_speed": bonus_as,
     }
+    # The branch reads the stats the buff above has already moved, because
+    # Calibrum's mark scales with the bonus AD Weapon Master just granted.
+    weapon = _main_weapon(ctx)
+    on_hit, branch_detail = _weapon_branch(ctx, weapon)
+    if on_hit is not None:
+        entry["on_hit"] = on_hit
     entry["detail"] = (
-        f"Weapon Master: {ad_points} AD / {as_points} AS / {lethality_points} lethality points"
+        f"Weapon Master: {ad_points} AD / {as_points} AS / {lethality_points} "
+        f"lethality points · {_WEAPON_LABELS[weapon]}: {branch_detail}"
     )
     return entry
 
@@ -131,11 +237,30 @@ _weapon_master.phase = BUFF
 
 
 def _phase(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the weapon swap, with each of its two numbers in its own home.
+
+    Phase has a cached cooldown (0.8 s) and a cached swap duration ("switches
+    between his main weapon and off-hand weapon over 0.25 seconds"); both are
+    read here, and neither stands in for the other.  The swap itself is state
+    the module holds fixed — ``aphelios_main_weapon`` is the weapon for the
+    whole fight — so W's row has no weapon branch to price.
+    """
     ability = ctx.ability("W")
     if not ability:
         return None
-    entry = damage_entry(ability["name"], 1, 0.25, 0.0, "physical")
-    entry["detail"] = "Swap main and off-hand weapons"
+    swap_seconds = extract_description_duration(ability)
+    if swap_seconds is None:
+        raise ValueError(
+            "Aphelios W: the cached Phase description states no swap "
+            "duration, so the row has no sourced number to publish"
+        )
+    entry = damage_entry(
+        ability_name(ability), 1, extract_cooldown(ability, 1), 0.0, "physical"
+    )
+    entry["detail"] = (
+        f"Swap main and off-hand weapons over {swap_seconds:g} s; the fight "
+        f"holds one main weapon ({_WEAPON_LABELS[_main_weapon(ctx)]})"
+    )
     return entry
 
 
@@ -154,8 +279,13 @@ def _q(packet_q):
             ctx.options["q_variant"] = _WEAPON_INDEX[weapon]
             try:
                 result = packet_q(ctx)
-                if result is not None and weapon == "calibrum":
-                    # Wiki: Duskwave volleys apply on-hit effects at 100%.
+                if result is not None and weapon == "infernum":
+                    # Duskwave is Infernum's Q, and it is the weapon Q that
+                    # applies on-hits: "Aphelios then fires a volley of
+                    # attacks at each locked-on target from his current
+                    # off-hand weapon ... and applying on-hit effects" (the
+                    # volley's own 100% AD needs the off-hand weapon and
+                    # stays unpriced).  data/onhit-matrix.json says the same.
                     result["applies_item_on_hits"] = {
                         "effectiveness": 1.0,
                         "hits": 1,
@@ -185,7 +315,7 @@ def _q(packet_q):
         count = max(1, int(6 + 2 * bonus_as / 100.0))
         per_hit = ratio * float(ctx.stat("attack_damage"))
         entry = damage_entry(
-            ability.get("name", "Onslaught"),
+            ability_name(ability),
             rank,
             10.0,
             per_hit * count,
@@ -314,9 +444,7 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
         detail += " follow-up is event-ordered separately"
     # The healing rule reads this marker to gate Severum's overheal-to-
     # shield conversion (the Shyvana dragon-form convention).
-    if _main_weapon(ctx) == "severum" and bool(
-        ctx.options.get("aphelios_overheal_shield", True)
-    ):
+    if _main_weapon(ctx) == "severum" and bool(ctx.option("aphelios_overheal_shield")):
         detail += " · overheal shield on"
     entry["detail"] = detail
     return entry
@@ -325,20 +453,36 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 # Reviewed crowd control, read from the cached kit.  Q and R are one slot
 # per weapon and the weapons do not control alike, so both answer per part
 # (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).  P is the Weapon Master
-# skill-point innate (bonus AD/AS/lethality), W "swap[s] main and off-hand
-# weapons" and E is the queue prompt: all three touch no enemy.  P and W
-# are read and left undeclared all the same — each prices an untimed zero
-# part the event ledger cannot carry a kind for, while E's row has no part
-# at all.
+# skill-point innate plus the main weapon's branch, W "swap[s] main and
+# off-hand weapons" and E is the queue prompt.  P and W are read and left
+# undeclared all the same — each prices an untimed zero part the event
+# ledger cannot carry a kind for, and P's weapon branch rides the on-hit
+# channel, which carries no kind either (Gravitum's slow: see
+# ``_P_BRANCH_UNPRICED``).  E's row has no part at all.
 MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Aphelios",
     PACKET_SHA256,
     assumption_overrides=(
-        "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs.",
-        "Onslaught applies wiki-sourced item on-hits at 25% per attack; Duskwave (calibrum Q) at "
-        "100%.",
+        "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs; "
+        "the main weapon is the module's form axis and P, Q and R all branch on it. Weapon "
+        "Master's AD/AS/lethality grants are read from the cached rows, indexed by points spent.",
+        "P prices two of the five weapon innates on the basic-attack channel: Calibrum's mark "
+        "bonus (15 + 15% bonus AD per mark, on one empowered attack, from aphelios_calibrum_marks "
+        "— default 0, because a mark exists only after an ability of his has damaged the target) "
+        "and Infernum's 110% AD primary-target attack (the extra 10% priced on the same swing, at "
+        "a basic attack's crit effectiveness; the cone's secondary targets need a roster and stay "
+        "unpriced). Severum's innate is priced as healing, Gravitum's is a slow that damages "
+        "nothing, and Crescendum's Chakram bonus is unpriced: its cached effect states "
+        "'0% : 138.5% (based on number of Chakrams) AD additional physical damage' in prose over "
+        "an empty leveling list, so no per-Chakram row exists to price.",
+        "Phase (W) is a weapon swap, not a damage cast: its row carries the cached 0.8-second "
+        "cooldown and states the cached 0.25-second swap duration, and the module holds one main "
+        "weapon for the whole fight rather than simulating mid-fight swaps.",
+        "Onslaught (severum Q) applies wiki-sourced item on-hits at 25% per attack; Duskwave "
+        "(infernum Q) at 100% for its locked-on volley, whose own 100% AD is dealt by the "
+        "off-hand weapon and stays unpriced.",
         "Moonlight Vigil models the sourced initial blast; with r_followup_targets (default 0) "
         "selected, each locked-on champion also takes one follow-up attack from the sky: 100% AD "
         "physical basic damage applying on-hit effects at 100% (cached R prose), with the sourced "
@@ -386,6 +530,15 @@ OPTIONS = [
         ],
     },
     int_option(
+        "aphelios_calibrum_marks",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Calibrum marks the next empowered attack consumes "
+        "(each adds 15 + 15% bonus AD physical damage)",
+        rotation={"role": "irrelevant", "slot": "P"},
+    ),
+    int_option(
         "aphelios_bonus_ad_points",
         0,
         minimum=0,
@@ -431,7 +584,7 @@ def derive_self_healing(
 ):
     """Resolve Aphelios self-healing events from its authored packet."""
     healing = []
-    r_detail = str(ability_damages.get("R", {}).get("detail", ""))
+    r_detail = str(ability_field(ability_payload(ability_damages, "R"), "detail"))
     if "Severum" in r_detail:
         severum = next(
             (

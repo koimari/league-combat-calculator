@@ -15,6 +15,7 @@ a declared option.
 
 from typing import Any, Callable, Mapping, NamedTuple
 
+from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition, ZeroPolicy
 from ..item_effects import DamageInputs
 from ..rune_effects import (
@@ -244,7 +245,7 @@ def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
     gold = effects.number("flat_gold")
 
     def amount(inputs: DamageInputs) -> float:
-        return max_health_ratio * inputs.champion_stats.get("health", 0.0)
+        return max_health_ratio * champion_stat(inputs.champion_stats, "health")
 
     return RuneHealEffect(
         rune_name=name,

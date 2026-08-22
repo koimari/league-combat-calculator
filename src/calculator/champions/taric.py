@@ -48,6 +48,7 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     extract_named,
     find_named_leveling,
     on_hit_entry,
@@ -149,7 +150,7 @@ def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
     # armor grant is not applied to ``ctx.stats``, so this reads the
     # build's item/rune bonus armor only — see ASSUMPTIONS.
     per_hit = base + armor_ratio * ctx.stat("bonus_armor")
-    entry = on_hit_entry(ability.get("name", "Bravado"), per_hit, "magic")
+    entry = on_hit_entry(ability_name(ability), per_hit, "magic")
     entry["on_hit"]["empower_window"] = {
         "armed_by": _BRAVADO_ARMED_BY,
         "duration": duration,

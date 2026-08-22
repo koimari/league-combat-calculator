@@ -8,7 +8,8 @@ row (25/55/85, corroborated by the game binary's InsanityPotion
 ability power is fed into the parse context as well as the fight engine,
 because Q's poison ticks and E's fling both carry AP ratios, so the
 ultimate amplifies Singed's own damage exactly as the census said it
-should.  The movement speed rides the same row into
+should.  The movement speed rides the same row into the shared
+``stats.resolve_move_speed`` fold, whose output is
 ``item_state_receipts``' ``total_move_speed`` input.  The health/mana
 regeneration has no stat_buff key — this fixed-window burst engine
 consumes no regen — and the Grievous Wounds R adds to Poison Trail is an
@@ -18,9 +19,10 @@ P (Noxious Slipstream) and W (Mega Adhesive) stay emitted zero rows.
 Neither spell object carries a damage field at all — ``SingedP`` holds
 only ``MSPercent``/``MSDuration``/``PerTargetCD``/``TriggerArea`` and
 ``MegaAdhesive`` only ``SlowPercent``/``WDuration``/``WRadius``/
-``DelayExecute``/``Radius`` — so P's stacking movement speed has no
-channel at all, and W's 50-70% slow and its ground are crowd control the
-engine records only as a kind.
+``DelayExecute``/``Radius`` — and W's 50-70% slow and its ground are
+crowd control the engine records only as a kind.  P's stacking movement
+speed has a channel (the shared ``move_speed_percent`` fold) but no
+cached magnitude to put in it — see the ASSUMPTIONS entry.
 """
 
 from typing import Any
@@ -30,6 +32,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_value,
@@ -47,15 +50,21 @@ _R_DURATION_SECONDS = 25.0
 # once.  Three of them have a consumer here: ability power (Q's poison
 # ticks and E's fling both carry AP ratios), armour and magic resistance
 # (the self-resist keys every other steroid module publishes — Braum,
-# Briar, Gnar, Graves, Jayce, Olaf, Shyvana), and movement speed (read
-# back out of ``champion_stats`` for ``item_state_receipts``'
-# ``total_move_speed`` input).  The row's health/mana regeneration has
-# none, so it carries no key.
+# Briar, Gnar, Graves, Jayce, Olaf, Shyvana), and movement speed.  The
+# row's health/mana regeneration has none, so it carries no key.
+#
+# The movement key is ``move_speed_flat``, the fold's INPUT, never the
+# displayed ``move_speed`` it produces: writing the displayed stat
+# directly skipped ``stats.resolve_move_speed`` and with it the soft
+# caps, publishing an uncapped 430.0 where the fold gives 427.0 — and
+# ``item_state_receipts`` reads that same displayed number as its
+# ``total_move_speed`` input, so the miss reached Swiftmarch's adaptive
+# force.
 _INSANITY_POTION_STATS = (
     "ability_power",
     "armor",
     "magic_resistance",
-    "move_speed",
+    "move_speed_flat",
 )
 
 
@@ -72,7 +81,7 @@ def _insanity_potion(ctx: SlotCtx) -> dict[str, Any] | None:
     # parse after this slot, so the ultimate amplifies its own kit.
     ctx.stats["ability_power"] = ctx.stat("ability_power") + bonus
     entry = damage_entry(
-        ability.get("name", "Insanity Potion"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -132,7 +141,11 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "and movement speed for the sourced 25 seconds, time-weighted by the "
     "share of the fight window the buff covers.  The ability power "
     "reaches the parse context before Q and E, so their AP ratios scale "
-    "off it.  The same row's health/mana regeneration (2.5/5.5/8.5 per "
+    "off it.  The movement key is move_speed_flat, the shared "
+    "resolve_move_speed fold's INPUT, so the grant is soft-capped like "
+    "every other movement term; keying the displayed move_speed directly "
+    "skipped the fold and published an uncapped number.  The same row's "
+    "health/mana regeneration (2.5/5.5/8.5 per "
     "0.5s by rank) has no stat_buff key because nothing in this "
     "fixed-window engine consumes regen, and the Grievous Wounds R adds "
     "to Poison Trail reduces enemy healing, which the one-pair fight "
@@ -144,10 +157,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "root would need a W-field placement the fight does not track.",
     "P (Noxious Slipstream) is stacking movement speed and W (Mega "
     "Adhesive) a slow and a ground: both are emitted zero-damage rows. "
-    "P is not yet wired onto the shared move-speed fold, and W's slow "
-    "magnitude is blocked on the cache (its only seconds atom is the "
-    "0.375 landing delay).  Neither spell object "
-    "carries a damage field in the game binary.",
+    "W's slow magnitude is blocked on the cache (its only seconds atom "
+    "is the 0.375 landing delay).  Neither spell object carries a damage "
+    "field in the game binary.",
+    "P (Noxious Slipstream) is NOT published as a move_speed_percent "
+    "stat_buff, unlike the other percent-movement grants: its magnitude "
+    "has no cached row to read.  All three cached P effects carry an "
+    "empty leveling array, so extract_value would return its "
+    "missing-row 0.0, and the only number anywhere is the v2 atom "
+    "corpus' SingedP MSPercent = 0.25, "
+    "which is ambiguous between per-stack and total: the cached prose "
+    "reads '25% bonus movement speed' per stack 'up to a maximum of "
+    "625%', and 625 == 25 x 25 is the 25-stack cap multiplied into the "
+    "per-stack slot, the signature of a wiki-template substitution.  A "
+    "25x span is not a rounding question, so the slot stays unwired.  "
+    "The stack count is unmodeled state on top: stacks come from moving "
+    "past champions on a sourced 8s per-target cooldown (PerTargetCD), "
+    "which a one-pair fight cannot walk.",
 ]
 
 # P and W are emitted and grant nothing the engine prices.

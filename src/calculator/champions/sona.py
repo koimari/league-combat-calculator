@@ -25,7 +25,7 @@ from ..healing_helpers import ability_json, parsed_rank
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
-from .slotlib import extract_named, on_hit_entry
+from .slotlib import ability_name, extract_named, on_hit_entry
 from .inputs import int_option
 from .module_contract import coverage
 
@@ -52,7 +52,7 @@ def _power_chord(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_chord <= 0:
         return None
     chords = max(0, int(ctx.option("p_power_chords")))
-    entry = on_hit_entry(ability.get("name", "Power Chord"), per_chord, "magic")
+    entry = on_hit_entry(ability_name(ability), per_chord, "magic")
     entry["on_hit"]["max_procs"] = chords
     entry["detail"] = (
         f"{chords} Power Chord(s) of {per_chord:.2f} bonus magic damage "

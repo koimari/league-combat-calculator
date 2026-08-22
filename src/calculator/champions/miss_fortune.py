@@ -41,6 +41,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -127,7 +128,7 @@ def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
     interval = extract_value(ability, "Wave Interval Time", rank)
     total = per_wave * waves
     entry = damage_entry(
-        ability.get("name", "Bullet Time"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -163,7 +164,7 @@ def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     taps = max(0, int(ctx.option("p_procs")))
-    entry = on_hit_entry(ability.get("name", "Love Tap"), per_tap, "physical")
+    entry = on_hit_entry(ability_name(ability), per_tap, "physical")
     entry["on_hit"]["max_procs"] = taps
     entry["detail"] = (
         f"{taps} Love Tap(s) of {per_tap:.2f} physical damage "
@@ -194,7 +195,7 @@ def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)
     entry = damage_entry(
-        ability.get("name", "Strut"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

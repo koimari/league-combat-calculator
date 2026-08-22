@@ -22,6 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
+    ability_name,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -47,7 +48,7 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     interval = 2.5 / daggers
     return {
-        "name": ability.get("name", "Death Lotus"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "mixed",
@@ -68,11 +69,14 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
                 hit_interval=interval,
             ),
         ),
+        # No ``event_order_certified``: the certification vocabulary is a
+        # string ("single_hit" / "auto_stack_proc"), and 15 daggers over a
+        # 2.5-second channel is neither.  The parts author their own
+        # cadence, which is what the ledger reads.
         "detail": (
             f"{daggers} sourced daggers at 0.166-second cadence; "
             "on-hit/Grievous Wounds are ordered state."
         ),
-        "event_order_certified": True,
     }
 
 

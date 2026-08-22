@@ -44,6 +44,8 @@ from types import MappingProxyType
 from typing import Any, NamedTuple, Protocol
 
 from .interpreters import cast_proc, periodic, spellblade, sustain
+from .interpreters.crit_profile import declared_crit_profile
+from .interpreters.damage_routing import declared_execution
 from .interpreters.sustain import declared_sustain
 from .interpreters.threshold_defense import threshold_health_owner
 from .item_behavior import ManaSpentHealRule, OnHitHealRule, SustainStat
@@ -439,9 +441,8 @@ def _item_self_heal_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
     would change the answer for a build carrying two.  That is why this
     condition's owner is the deriving function rather than an item name.
     """
-    effects = inputs.damage_effects
     names = inputs.item_names
-    first_auto_crit = effects.first_auto_crit
+    first_auto_crit = declared_crit_profile(names).forced_crit
     armed = (
         spellblade.declares_self_heal(names)
         or periodic.declares_self_heal(names)
@@ -599,10 +600,10 @@ def _raw_row_stream_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
 
 def _execute_threshold_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
     """The item arming a per-event execute threshold, if the build holds one."""
-    execute = inputs.damage_effects.execute
+    execute = declared_execution(inputs.item_names)
     if execute is None:
         return ()
-    return (ItemOwner(execute.item_name),)
+    return (ItemOwner(execute.owner),)
 
 
 def _pair_outcome_owners(inputs: _HeldItemFacts) -> tuple[MechanicOwner, ...]:

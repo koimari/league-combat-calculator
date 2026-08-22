@@ -327,9 +327,15 @@ def test_pending_stats_stay_visible_rather_than_hidden(css: str):
 
 
 def test_bis_prerequisite_is_evaluated_on_every_render(source: str):
+    """``render()`` reaches the prerequisite pass through the capability
+    refusal pass, which runs first so a refused family stays disabled."""
     assert "function applyPrerequisiteGates()" in source
     render_block = source.split("\nfunction render() {")[1].split("\n}\n")[0]
-    assert "applyPrerequisiteGates()" in render_block
+    assert "applyControlCapabilities();" in render_block
+    capability_block = source.split("function applyControlCapabilities()")[1].split(
+        "\n}\n"
+    )[0]
+    assert "applyPrerequisiteGates();" in capability_block
 
 
 def test_bis_button_disables_without_a_complete_enemy(source: str):

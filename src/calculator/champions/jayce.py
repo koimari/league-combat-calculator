@@ -53,7 +53,10 @@ Why each slot is non-generic:
   armor+MR as a ``target_debuff`` (the Kog'Maw rule: applied after the
   ability's own damage, so it never amplifies itself) and raises attack
   range from 125 to 500 — a range change with no damage effect, noted
-  here and modeled nowhere.
+  here and modeled nowhere. Both branches declare
+  ``empowers_next_auto`` with ``rides_scheduled_auto``: Transform resets
+  no attack timer in the cache, so the swing that carries the bonus (and
+  opens the shred's 5-second window) is the stream's next one.
 - P (Hextech Capacitor) grants movement speed and ghosting on stance
   swap; its one leveling array is empty (``leveling: []``) — pure
   utility state with no combat-damage interaction. Roadmap session 4
@@ -79,6 +82,7 @@ from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     by_option,
     damage_entry,
     extract_cooldown,
@@ -135,7 +139,7 @@ _TRANSFORM_NAMES = {"hammer": "Mercury Hammer", "cannon": "Mercury Cannon"}
 
 def _is_hammer(ctx: SlotCtx) -> bool:
     """True in Hammer stance; Cannon (Jayce's default form) is False."""
-    return bool(ctx.options.get("hammer_stance", False))
+    return bool(ctx.option("hammer_stance"))
 
 
 def _level_tier(level: int) -> int:
@@ -210,7 +214,7 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Lightning Field"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -271,7 +275,7 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     total_ad = ctx.stat("attack_damage")
     delta_ratio = ratio - 1.0
     return {
-        "name": ability.get("name", "Hyper Charge"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -379,7 +383,7 @@ def _transform_ability(ctx: SlotCtx, stance: str) -> dict[str, Any] | None:
     needle = _TRANSFORM_NAMES[stance]
     for index in range(len(ctx.abilities.get("R", []))):
         ability = ctx.ability("R", index)
-        if ability is not None and needle in ability.get("name", ""):
+        if ability is not None and needle in ability_name(ability):
             return ability
     return None
 
@@ -394,27 +398,34 @@ def _transform_hammer(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         + HAMMER_EMPOWERED_AUTO_BONUS_AD_RATIO * bonus_ad
     )
     entry = damage_entry(
-        ability.get("name", "Transform Mercury Hammer"),
+        ability_name(ability),
         _TRANSFORM_RANK,
         extract_cooldown(ability, _TRANSFORM_RANK),
         bonus_damage,
         "magic",
-        cc_kind="none",
-        event_order_certified="single_hit",
     )
     # Self-defensive only — shown in the stats panel, no effect on
     # outgoing damage.
     entry["stat_buff"] = {"armor": resists, "magic_resistance": resists}
-    # "Empowers his next basic attack" — once per transform, not per auto.
-    entry["empowers_next_auto"] = True
+    # "Empowers his next basic attack" — once per transform, not per auto,
+    # and delivered by the swing already on the stream (no timer reset).
+    entry["empowers_next_auto"] = {"rides_scheduled_auto": True}
     return entry
 
 
 def _transform_cannon(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
-    """R Cannon: ONE empowered attack shredding armor/MR; no damage."""
+    """R Cannon: ONE empowered attack shredding armor/MR; no bonus damage.
+
+    The cast "empower[s] his next basic attack to reduce the target's armor
+    and magic resistance", and the cache gives Transform no attack-timer
+    reset, so the swing that carries it is the next one already on the
+    stream — ``empowers_next_auto``'s ``rides_scheduled_auto``.  That swing
+    is both where the attack's damage is shown and where the 5-second shred
+    window opens.
+    """
     shred = CANNON_SHRED_PERCENT[_level_tier(ctx.level)]
     entry = damage_entry(
-        ability.get("name", "Transform Mercury Cannon"),
+        ability_name(ability),
         _TRANSFORM_RANK,
         extract_cooldown(ability, _TRANSFORM_RANK),
         0.0,
@@ -427,8 +438,9 @@ def _transform_cannon(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]:
         "mr_reduction_percent": shred,
         "duration": CANNON_SHRED_DURATION,
     }
+    entry["empowers_next_auto"] = {"rides_scheduled_auto": True}
     entry["detail"] = (
-        f"No direct damage — the next basic attack reduces the target's "
+        f"No bonus damage — the next basic attack reduces the target's "
         f"armor and magic resist by {shred:g}% for 5s"
     )
     return entry
@@ -489,7 +501,11 @@ ASSUMPTIONS = [
     "both JSON entries have empty leveling arrays. They step with "
     "CHAMPION LEVEL at 1/6/11/16, not with rank — R starts at rank 1 and "
     "is never leveled, which is also why Q/W/E have six ranks",
-    "R's empowered basic attack applies ONCE per transform, not on every auto",
+    "R's empowered basic attack applies ONCE per transform, not on every "
+    "auto, and is the fight's next scheduled swing rather than a reset one "
+    "at the cast: Transform states no attack-timer reset, so the bonus and "
+    "Cannon's shred window both open when that swing lands. With no auto "
+    "stream the cast forces its own swing onto R's row",
     "Hammer R's bonus armor and magic resist appear in the champion stats "
     "panel but have no effect on outgoing damage",
     "Cannon R's armor/MR shred applies only to damage dealt after the "
@@ -579,18 +595,15 @@ SLOTS = {
 # "knock[s] them back 600 units" (its root lands over the cast time, before
 # the damage); cannon's gate emits no row at all.
 #
-# R is read (neither transform touches an enemy with anything but the one
-# attack it empowers) and left undeclared: the cannon branch is an untimed
-# zero row that empowers no swing of its own, so the ledger cannot carry a
-# kind for it.
+# R answers for the slot: neither transform touches an enemy with anything
+# but the one attack it empowers, and both branches now ride that swing
+# (``rides_scheduled_auto``), so each has a hit time the ledger can stamp.
 MODULE_CC = {
     "P": "none",
     "Q": CC_PER_PART,
     "W": "none",
     "E": "knockback",
-    # Hammer's empowered swing is reviewed ("none"); Cannon's R row has no hit
-    # time, so the ledger refuses a kind there and the part carries it.
-    "R": CC_PER_PART,
+    "R": "none",
 }
 
 parse_abilities = build_parser(SLOTS, "Jayce", cc_kinds=MODULE_CC)

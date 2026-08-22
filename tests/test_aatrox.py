@@ -94,6 +94,59 @@ class TestQThreeCasts:
         expected = (10 + 0.60 * ad) + (12.5 + 0.75 * ad) + (15 + 0.90 * ad)
         assert abs(q["total_raw"] - expected) < 0.5
 
+    def test_q_authors_one_part_per_strike_a_second_apart(
+        self, aatrox_data, parse_at
+    ) -> None:
+        """The triad is three timed parts, not one aggregate."""
+        stats, abilities = parse_at(
+            aatrox_data,
+            9,
+            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+            champion_options={"sweetspot": False},
+        )
+        parts = abilities["Q"]["parts"]
+        assert [part.time_offset for part in parts] == [0.0, 1.0, 2.0]
+        q_ability = aatrox_data["abilities"]["Q"][0]
+        for part, attribute in zip(
+            parts, ["First Cast Damage", "Second Cast Damage", "Third Cast Damage"]
+        ):
+            assert part.amount == pytest.approx(
+                extract_named(q_ability, attribute, 5, stats)
+            )
+
+    @pytest.mark.parametrize(
+        ("variant", "offset"),
+        [(0, 0.0), (1, 0.0), (2, 1.0), (3, 1.0), (4, 2.0), (5, 2.0)],
+    )
+    def test_a_single_strike_variant_lands_at_its_own_ordinal(
+        self, aatrox_data, parse_at, variant, offset
+    ) -> None:
+        """First/second/third strike land 0 / 1 / 2 seconds after the cast."""
+        _, abilities = parse_at(
+            aatrox_data,
+            9,
+            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+            champion_options={"q_variant": variant},
+        )
+        parts = abilities["Q"]["parts"]
+        assert len(parts) == 1
+        assert parts[0].time_offset == offset
+
+    @pytest.mark.parametrize("variant", [6, 7])
+    def test_an_aggregate_variant_is_priced_from_its_three_components(
+        self, aatrox_data, parse_at, variant
+    ) -> None:
+        """The two "Maximum Non-Minion" rows are the triad's own sum, so they
+        are emitted as the three timed strikes that make them up."""
+        _, abilities = parse_at(
+            aatrox_data,
+            9,
+            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+            champion_options={"q_variant": variant},
+        )
+        parts = abilities["Q"]["parts"]
+        assert [part.time_offset for part in parts] == [0.0, 1.0, 2.0]
+
     def test_q_three_casts_sum(self, aatrox_data, parse_at) -> None:
         """Q total damage equals sum of all three individual casts.
 
@@ -270,7 +323,7 @@ class TestWInfernalChains:
         assert abilities["W"]["cooldown"] > 0
 
     def test_w_uses_total_damage_both_hits(self, aatrox_data, parse_at) -> None:
-        """W should use Total Damage (initial + pull-back), not single hit."""
+        """W should price Total Damage (initial + pull-back), not single hit."""
         stats, abilities = parse_at(aatrox_data, 3)
         w = abilities["W"]
         ad = stats["attack_damage"]
@@ -279,6 +332,28 @@ class TestWInfernalChains:
         single_hit = 30 + 0.40 * ad
         assert abs(w["total_raw"] - expected_total) < 0.5
         assert w["total_raw"] > single_hit * 1.5
+
+    def test_w_hits_twice_a_cached_tether_apart(self, aatrox_data, parse_at) -> None:
+        """The pull-back is the same hit again when the 1.5s tether expires."""
+        stats, abilities = parse_at(aatrox_data, 3)
+        (part,) = abilities["W"]["parts"]
+        assert part.count == 2
+        assert part.time_offset == 0.0
+        assert part.hit_interval == 1.5
+        ad = stats["attack_damage"]
+        assert part.amount == pytest.approx(30 + 0.40 * ad, abs=0.5)
+
+    def test_the_two_w_hits_sum_to_the_cached_total_at_every_rank(
+        self, aatrox_data
+    ) -> None:
+        """ "Total Damage" is exactly twice "Physical Damage" — the identity
+        that lets the split keep the total."""
+        w_ability = aatrox_data["abilities"]["W"][0]
+        stats = calculate_total_stats(aatrox_data, 18, [])
+        for rank in range(1, 6):
+            single = extract_named(w_ability, "Physical Damage", rank, dict(stats))
+            total = extract_named(w_ability, "Total Damage", rank, dict(stats))
+            assert single * 2 == pytest.approx(total)
 
 
 class TestEUmbralDash:
@@ -298,10 +373,9 @@ class TestEUmbralDash:
 class TestReviewedCrowdControl:
     """Aatrox declares nothing, and not for want of a cached cadence.
 
-    Q knocks up only in the Sweetspot - this module's own option - and the
-    cache spaces its three casts by a second; W slows on the chain hit and
-    pulls on the tether hit 1.5 cached seconds later.  Both are refused by
-    a committed receipt, not by the source: see the module comment above
+    Q knocks up only in the Sweetspot - this module's own option - and W
+    applies two different kinds across its two hits, while ``MODULE_CC``
+    carries one kind per slot: see the module comment above
     ``parse_abilities``.
     """
 
@@ -324,19 +398,10 @@ class TestReviewedCrowdControl:
         assert "pulled to the center of the area" in text
 
     def test_the_darkin_blade_states_its_own_cadence(self):
-        """The spacing is cached; what refuses it now is a pinned receipt.
-
-        ``roster_composition.resource_restores`` used to reject the whole
-        incoming packet for any event past the fight duration — Aatrox's
-        last Q in an eight-second roster fight lands its third strike at
-        8.85s — and that check now drops the late event instead
-        (tests/test_roster_composition.py).  What still holds the cadence
-        back is evidence, not the engine: the corpus pins one Umbral Dash
-        payment off a single Q event.
-        """
+        """The module's strike interval is the cached sentence's number."""
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
         assert "with a 1-second static cooldown between casts" in text
-        assert aatrox._Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED == 1.0
+        assert aatrox._Q_STRIKE_INTERVAL_SECONDS == 1.0
 
     def test_infernal_chains_states_when_its_second_hit_lands(self):
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")

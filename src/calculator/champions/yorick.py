@@ -49,7 +49,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import ability_name, damage_entry, extract_cooldown
 from .. import healing_helpers as _healing
 from .module_contract import coverage
 
@@ -156,7 +156,7 @@ def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
     base = _MAIDEN_BASE_BY_RANK[min(rank - 1, len(_MAIDEN_BASE_BY_RANK) - 1)]
     per = base + _MAIDEN_AD_RATIO * ctx.stat("bonus_attack_damage")
     entry = damage_entry(
-        ability.get("name", "Eulogy of the Isles"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per * attacks,

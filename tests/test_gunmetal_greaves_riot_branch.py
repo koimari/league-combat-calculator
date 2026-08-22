@@ -105,6 +105,7 @@ from src.calculator.interpreters import (
     active_cast,
     cast_proc,
     charged_strike,
+    damage_routing,
     on_hit_strike,
 )
 from src.calculator.item_coverage import item_model_coverage
@@ -506,7 +507,7 @@ def test_the_passive_is_not_compiled_into_any_damage_packet():
     assert resolved.class_restricted_per_hits == ()
     assert resolved.per_ability_hits == ()
     assert resolved.phantom_hit is None
-    assert resolved.execute is None
+    assert damage_routing.declared_execution(owners) is None
     assert resolved.conditional_notes == ()
 
 

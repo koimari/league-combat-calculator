@@ -8,6 +8,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -38,7 +39,7 @@ def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
         count_option="p_triggers",
         default_count=1,
-        name=ability.get("name", "Signature of the Visionary"),
+        name=ability_name(ability),
         phase_order_events=True,
     )(ctx)
     if entry is not None:
@@ -102,7 +103,7 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         detail = f"Molten Fissure: {explosions} shockwaves plus one sourced fissure packet per eruption."
     entry = damage_entry(
-        ability.get("name", "Hwei Q"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -122,7 +123,7 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
     if variant == 0:
         return no_damage(
             ctx,
-            name=ability.get("name", "Fleeting Current"),
+            name=ability_name(ability),
             reason="Movement-speed path and ghosting are utility state.",
             slot="W",
         )
@@ -132,7 +133,7 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         return no_damage(
             ctx,
-            name=ability.get("name", "Pool of Reflection"),
+            name=ability_name(ability),
             reason=f"Protective pool; maximum self shield is {shield:g} and ally reduction is source-backed.",
             slot="W",
         )
@@ -140,7 +141,7 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
     hits = min(max(int(ctx.option("we_hits")), 1), 3)
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Stirring Lights"),
+        name=ability_name(ability),
         reason=f"Three empowered hits; {hits} next-hit charges selected.",
         slot="W",
     )
@@ -164,7 +165,7 @@ def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Hwei E"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -212,7 +213,7 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart("magic", explosion, time_offset=3.0, cc_kind="none"),
     )
     entry = damage_entry(
-        ability.get("name", "Spiraling Despair"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         tick * 12 + explosion,

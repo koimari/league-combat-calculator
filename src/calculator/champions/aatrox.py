@@ -5,11 +5,11 @@ Why each slot is non-generic:
   ``stat_buff`` in percent_of mode (BUFF phase, so Q/W scale off the
   buffed AD).
 - Q (The Darkin Blade) is three sequential casts with individually
-  named damage attributes; ``_darkin_blade`` sums the sweetspot or
-  normal triad selected by the ``sweetspot`` option.
-- W (Infernal Chains) hits twice — the "Total Damage" attribute
-  (initial + pull-back combined) instead of the single-hit
-  "Physical Damage" the classifier would find.
+  named damage attributes; ``_darkin_blade`` emits one part per strike,
+  spaced by the cached 1-second static recast cooldown.
+- W (Infernal Chains) hits twice — the chain's "Physical Damage" on
+  impact and the same amount again when the cached 1.5-second tether
+  expires; the two sum to the cached "Total Damage" attribute exactly.
 - P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL
   percentage of target max health — champion-local ``_deathbringer_stance``.
 - E (Umbral Dash) is a dash with healing amp only — no enemy damage of
@@ -40,17 +40,20 @@ staying silently absent, and its heal keeps it ``modeled`` through the
 import re
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
+from ..ability_spec import DamagePart
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
+    extract_description_duration,
     extract_named,
     on_hit_entry,
     pct_health_per_hit,
-    simple_damage,
     stat_buff,
 )
 
@@ -89,19 +92,54 @@ _Q_VARIANT_ATTRS = [
 # activate The Darkin Blade three times before the ability goes on
 # cooldown, with a 1-second static cooldown between casts" (data/
 # champions.json Aatrox Q), and the cache names each strike's damage on its
-# own row, so the triad reads as three strikes at 0, 1 and 2 seconds from
-# the first.  Unauthored for the reason the comment above
-# ``parse_abilities`` gives.
-_Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED = 1.0
+# own row, so the triad lands at 0, 1 and 2 seconds from the first.  The
+# hyphenated "1-second" is why this is a module constant rather than a
+# ``extract_description_duration`` read: that reader wants "1 second", and
+# the next seconds value in the same sentence is the 4-second recast window.
+# ``tests/test_aatrox.py`` pins the constant against the cached sentence.
+_Q_STRIKE_INTERVAL_SECONDS = 1.0
+
+# Which of the three strikes each single-strike attribute prices.  The two
+# "Maximum Non-Minion …" rows are the triad's own sum (per rank, and
+# exactly: 37.5 = 10 + 12.5 + 15, 225% AD = 60 + 75 + 90% AD, and the same
+# for the Sweetspot pair), so they are priced from their three components
+# instead — one aggregate row cannot carry three landing times.
+_Q_STRIKE_ORDINAL = {
+    "First Cast Damage": 0,
+    "First Sweetspot Damage": 0,
+    "Second Cast Damage": 1,
+    "Second Sweetspot Damage": 1,
+    "Third Cast Damage": 2,
+    "Third Sweetspot Damage": 2,
+}
+_Q_TRIAD_COMPONENTS = {
+    "Maximum Non-Minion Non-Sweetspot Damage": _Q_NORMAL_ATTRS,
+    "Maximum Non-Minion Sweetspot Damage": _Q_SWEETSPOT_ATTRS,
+}
+
+
+def _q_strike_parts(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int, attrs: list[str]
+) -> tuple[DamagePart, ...]:
+    """One part per named strike, at the strike's sourced landing time."""
+    return tuple(
+        DamagePart(
+            "physical",
+            extract_named(ability, attr, rank, ctx.stats, ctx.target),
+            time_offset=_Q_STRIKE_ORDINAL[attr] * _Q_STRIKE_INTERVAL_SECONDS,
+        )
+        for attr in attrs
+    )
 
 
 def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: sum all three sweetspot or normal casts into one entry."""
+    """Q: the sweetspot or normal triad, one event per strike."""
     ranked = ctx.ranked()
     if ranked is None:
         return None
     ability, rank = ranked
 
+    detail = None
     if "q_variant" in ctx.options:
         try:
             variant = int(ctx.options["q_variant"])
@@ -109,32 +147,69 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
             variant = len(_Q_VARIANT_ATTRS) - 1
         variant = max(0, min(variant, len(_Q_VARIANT_ATTRS) - 1))
         attribute = _Q_VARIANT_ATTRS[variant]
-        total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-        entry = damage_entry(
-            ability.get("name", "The Darkin Blade"),
-            rank,
-            extract_cooldown(ability, rank),
-            total,
-            "physical",
-        )
-        entry["detail"] = f"Q variant: {attribute}."
-        return entry
+        attrs = _Q_TRIAD_COMPONENTS.get(attribute, [attribute])
+        detail = f"Q variant: {attribute}."
+    else:
+        attrs = _Q_SWEETSPOT_ATTRS if bool(ctx.option("sweetspot")) else _Q_NORMAL_ATTRS
 
-    attrs = (
-        _Q_SWEETSPOT_ATTRS
-        if bool(ctx.options.get("sweetspot", True))
-        else _Q_NORMAL_ATTRS
-    )
-    total = sum(
-        extract_named(ability, attr, rank, ctx.stats, ctx.target) for attr in attrs
-    )
-    return damage_entry(
-        ability.get("name", "The Darkin Blade"),
+    parts = _q_strike_parts(ctx, ability, rank, attrs)
+    entry = damage_entry(
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
-        total,
+        sum(part.amount for part in parts),
         "physical",
     )
+    entry["parts"] = parts
+    if detail is not None:
+        entry["detail"] = detail
+    return entry
+
+
+# Infernal Chains' tether effect is the cached effect row that times the
+# second hit: "a tether is formed between the target and the ground beneath
+# them for 1.5 seconds", and the row after it says that at the tether's end
+# "the target is dealt the same physical damage again".
+_W_TETHER_EFFECT_INDEX = 1
+_W_HITS = 2
+
+
+def _infernal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
+    """W: the chain hit, then the same damage again when the tether expires.
+
+    The cached "Total Damage" row is exactly twice "Physical Damage" at
+    every rank, so pricing the two hits separately keeps the total and buys
+    the tether's cached delay.
+    """
+    ranked = ctx.ranked()
+    if ranked is None:
+        return None
+    ability, rank = ranked
+    tether_seconds = extract_description_duration(ability, _W_TETHER_EFFECT_INDEX)
+    if tether_seconds is None:
+        raise ValueError(
+            "Aatrox W: the cached Infernal Chains effect "
+            f"{_W_TETHER_EFFECT_INDEX} states no tether duration, so the "
+            "pull-back hit has no sourced time"
+        )
+    per_hit = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        per_hit * _W_HITS,
+        "physical",
+    )
+    entry["parts"] = (
+        DamagePart(
+            "physical",
+            per_hit,
+            count=_W_HITS,
+            time_offset=0.0,
+            hit_interval=tether_seconds,
+        ),
+    )
+    return entry
 
 
 def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -150,7 +225,7 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     if per_hit is None:
         return None
-    return on_hit_entry(ability.get("name", "Deathbringer Stance"), per_hit, "magic")
+    return on_hit_entry(ability_name(ability), per_hit, "magic")
 
 
 _deathbringer_stance.phase = ONHIT
@@ -170,7 +245,7 @@ def _umbral_dash(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Umbral Dash"),
+        name=ability_name(ability),
         reason=(
             "Umbral Dash is a self-heal-amp dash with no enemy-damage "
             "attribute of its own (data/champions.json Aatrox E carries "
@@ -194,7 +269,9 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "Assumed R is always active",
-    "W always hits both initial and pull-back damage",
+    "W always hits both initial and pull-back damage: the tether is never "
+    "broken, so the second hit lands 1.5 cached seconds after the first",
+    "Q always lands all three strikes, one second apart",
     "E (Umbral Dash) carries no enemy-damage attribute (damageType: None, "
     "no leveling row on any effect); it emits a sourced no_damage row. Its "
     "heal is priced through derive_self_healing, not this slot.",
@@ -209,43 +286,25 @@ SLOTS = {
         apply_to=("attack_damage", "bonus_attack_damage"),
     ),
     "Q": _darkin_blade,
-    "W": simple_damage(attr="Total Damage", dmg_type="physical"),
+    "W": _infernal_chains,
     "P": _deathbringer_stance,
     "E": _umbral_dash,
 }
 
-# MODULE_CC is empty, and for neither row is the reason a missing cadence — both
-# cadences are cached, and both are refused by a committed receipt rather
-# than by the source.
+# MODULE_CC is empty because neither cast controls unconditionally, not
+# because a cadence is missing: both slots now author their sourced landing
+# times above, so a kind declared here would reach the ledger.
 #
-# Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of
-# the area", which is this module's ``sweetspot`` option, and the cache
-# spaces its three casts ("with a 1-second static cooldown between casts")
-# while naming each strike's damage separately, so the triad reads as three
-# strikes at 0/1/2 seconds.  The engine accepts that: an event past the end
-# of a roster fight (``roster_composition.resource_restores``, and Aatrox's
-# last Q in an eight-second roster fight lands its third strike at 8.85s) is
-# dropped the way the survival walk skips every other post-window action.
-# What is left is evidence:
-# data/practice-corpus/scenarios.json pins e9-e1-aatrox-umbral-dash-heal at
-# one Umbral Dash payment of 276.4 off a single Q event, and the triad pays
-# the same total as three (73.7 + 92.1 + 110.6) at 0/1/2 seconds — the heal
-# rule follows the hits honestly (``HealAnchor.DAMAGING_HIT``), but the
-# corpus scenario is pinned to a src-tree sha and re-pinning it is a
-# baseline re-capture, not a review.  The same split moves the live-amp
-# roster scenarios, which are pinned the same way.
+# Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of the
+# area" — this module's ``sweetspot`` option — so the knockup belongs to a
+# branch of the slot rather than to the slot, and ``MODULE_CC`` is a
+# per-slot map.
 #
-# W (Infernal Chains) slows on the first hit ("slowing them for 1.5
-# seconds") and pulls on the second, which the cache times exactly ("a
-# tether is formed ... for 1.5 seconds", and at its end "the target is
+# W (Infernal Chains) applies two different kinds: the chain hit slows
+# ("slowing them for 1.5 seconds") and the tether hit pulls ("the target is
 # dealt the same physical damage again and pulled to the center of the
-# area").  Splitting the cached Total into those two hits keeps every
-# total, including self-healing, but it splits Umbral Dash's heal from one
-# payment into two — the heal is a share of each hit's damage
-# (``HealAnchor.DAMAGING_HIT``), so two hits are honestly two shares — and
-# docs/receipts/oracle-P4B-leaf29.json pins that single payment
-# ("W 157.5 x 0.16 x 2.0 = 50.4") as corpus evidence.  Re-pinning an oracle
-# receipt is not this review's to do.
+# area").  ``MODULE_CC`` carries one kind per slot, so declaring either
+# would state the other as well.
 #
 # R fears "nearby enemy minions and monsters" only and authors no damage
 # part; P is the on-hit stance row.
@@ -303,7 +362,7 @@ def derive_self_healing(
     e_ratio = base_ratio + per_100 * (
         float(champion_stat(champion_stats, "bonus_health")) / 100.0
     )
-    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    r_rank = int(ability_field(ability_payload(ability_damages, "R"), "rank"))
     r_inc = leveling_value(
         ability_json(champion_data, "R"), "Increased Healing", r_rank
     )

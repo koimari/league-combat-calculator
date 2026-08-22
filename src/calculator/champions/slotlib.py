@@ -24,7 +24,7 @@ from .attribute_classifier import (
     is_primary_damage_attribute,
 )
 from .engine import BUFF, DAMAGE, PENDING_CONTROL_EVENTS, SlotCtx, SlotParser
-from .inputs import target_stat
+from .inputs import ChampionInputError, target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
 # ---------------------------------------------------------------------------
@@ -76,6 +76,25 @@ _PROSE_DAMAGE_REDUCTION_RE = re.compile(
     r"\b(?:gains?|has)\s+(?P<value>\d+(?:\.\d+)?)\s*%\s+" r"damage\s+reduction\b",
     re.IGNORECASE,
 )
+
+
+def effect_description(ability: dict[str, Any], effect_index: int) -> str:
+    """One cached effect's description text, or "" when that effect is gone.
+
+    A mechanic the cache states only in prose (Annie's Pyromania charge,
+    Kennen's Mark of the Storm) is read out of this string by the module
+    that owns it, which then raises if the sentence stopped saying what it
+    priced.  ``""`` is the one quiet answer: a patch that drops an effect
+    row entirely is the same failure, and the caller names it.
+    """
+    effects = ability.get("effects")
+    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
+        return ""
+    effect = effects[effect_index]
+    if not isinstance(effect, dict):
+        return ""
+    description = effect.get("description")
+    return "" if description is None else str(description)
 
 
 def extract_description_duration(
@@ -430,6 +449,23 @@ def pct_health_per_hit(
     return per_proc / stacks_required
 
 
+def ability_name(ability: dict[str, Any]) -> str:
+    """The cached row's own name — the fourth input block read with no literal.
+
+    ``SlotCtx`` refuses a ``.get(key, <literal>)`` on stats, target and
+    options; the ability JSON is the fourth such block, and every cached row
+    carries a name.  A module's own spelling of it would outlive the parse
+    that stopped supplying it.
+    """
+    name = ability.get("name")
+    if not isinstance(name, str) or not name:
+        raise ChampionInputError(
+            f"cached ability row carries no 'name' (data/champions.json, "
+            f"icon {ability.get('icon')!r})"
+        )
+    return name
+
+
 def extract_cooldown(
     ability: dict[str, Any], rank: int, *, level: int | None = None
 ) -> float:
@@ -561,6 +597,7 @@ def damage_entry(
     *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
+    crit_effectiveness: float = 0.0,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -585,6 +622,12 @@ def damage_entry(
     "mixed" entry is two parts, which the engine's certified single-hit export
     cannot carry, so that combination raises rather than silently dropping the
     marker.
+
+    ``crit_effectiveness`` is the same declaration :func:`on_hit_entry` takes,
+    on the cast channel instead of the on-hit one: the crit-probability scale
+    the row's own sourced text states ("affected by critical strike
+    modifiers" is 1.0).  The default 0.0 is the wiki's general rule that
+    ability damage does not crit unless stated.
     """
     if cc_kind is not None and dmg_type == "mixed":
         raise ValueError(
@@ -600,12 +643,28 @@ def damage_entry(
     }
     if dmg_type == "mixed":
         entry["parts"] = (
-            DamagePart("magic", total / 2.0, zero_policy=zero_policy),
-            DamagePart("true", total / 2.0, zero_policy=zero_policy),
+            DamagePart(
+                "magic",
+                total / 2.0,
+                crit_effectiveness=crit_effectiveness,
+                zero_policy=zero_policy,
+            ),
+            DamagePart(
+                "true",
+                total / 2.0,
+                crit_effectiveness=crit_effectiveness,
+                zero_policy=zero_policy,
+            ),
         )
     else:
         entry["parts"] = (
-            DamagePart(dmg_type, total, cc_kind=cc_kind, zero_policy=zero_policy),
+            DamagePart(
+                dmg_type,
+                total,
+                crit_effectiveness=crit_effectiveness,
+                cc_kind=cc_kind,
+                zero_policy=zero_policy,
+            ),
         )
     if event_order_certified is not None:
         entry["event_order_certified"] = event_order_certified
@@ -1109,6 +1168,7 @@ def simple_damage(
     *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
+    crit_effectiveness: float = 0.0,
 ) -> SlotParser:
     """Standard castable damage slot.
 
@@ -1159,6 +1219,10 @@ def simple_damage(
             slot is one landing split into a magic and a true part, which
             certifies too: ``engine._certify_shared_instant`` gives the
             split parts the instant they share.
+        crit_effectiveness: Keyword-only. The crit-probability scale this
+            slot's own sourced text states ("affected by critical strike
+            modifiers" is 1.0, Xin Zhao Q). Default 0.0 is the wiki's
+            general rule that ability damage does not crit unless stated.
 
     Returns:
         A DAMAGE-phase slot parser.
@@ -1216,7 +1280,7 @@ def simple_damage(
             resolved_type = dmg_type
 
         total *= _resolve_casts(casts, ability, rank, ctx.level)
-        name = ability.get("name", f"Ability {ctx.slot}")
+        name = ability_name(ability)
         entry = damage_entry(
             name,
             rank,
@@ -1226,6 +1290,7 @@ def simple_damage(
             cc_kind,
             zero_policy=zero_policy,
             event_order_certified=event_order_certified,
+            crit_effectiveness=crit_effectiveness,
         )
         if dot_duration is not None:
             entry["dot_duration"] = dot_duration
@@ -1439,7 +1504,7 @@ def with_control_event(
                 )
         if entry is None:
             entry = {
-                "name": ability.get("name", f"Ability {ctx.slot}"),
+                "name": ability_name(ability),
                 "rank": rank,
                 "cooldown": extract_cooldown(ability, rank),
                 "damage_type": "magic",
@@ -1555,7 +1620,7 @@ def stat_buff(
                 ability, couple_attr, rank, level=ctx.level
             )
 
-        name = ability.get("name", f"Ability {ctx.slot}")
+        name = ability_name(ability)
         entry = damage_entry(
             name,
             rank,
@@ -1659,7 +1724,7 @@ def proc_damage(
             return None
 
         result = {
-            "name": name or ability.get("name", f"Ability {ctx.slot}"),
+            "name": name or ability_name(ability),
             "damage_type": dmg_type,
             "total_raw": per_proc_damage * count,
             "parts": (DamagePart(dmg_type, per_proc_damage),),
@@ -1700,7 +1765,7 @@ def _slot_passive_on_hit(
     if total <= 0:
         return None
 
-    name = ability.get("name", f"Ability {ctx.slot}")
+    name = ability_name(ability)
     return on_hit_entry(name, total, resolved_type)
 
 

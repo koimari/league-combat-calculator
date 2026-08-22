@@ -58,15 +58,17 @@
       "id": "S7",
       "file": "data/practice-corpus/scenarios.json",
       "locator": "scenario id \"e9-e8-morellonomicon-grievous\" -> expected.healing_events",
-      "quote": "{\"time\": 0.25, \"raw\": 277.8, \"applied\": 166.7, \"factor\": 0.6} ... formula: \"Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut).\"",
-      "why": "Pins the healing-event record shape used by the golden corpus: applied = raw x factor, and the only factor the corpus ever carries is 0.6."
+      "quote": "{\"time\": 0.25, \"raw\": 74.1, \"applied\": 44.5, \"factor\": 0.6} ... formula: \"Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut).\"",
+      "why": "Pins the healing-event record shape used by the golden corpus: applied = raw x factor, and the only factor the corpus ever carries is 0.6.",
+      "repinned": "ER2, the Aatrox Q/W re-timing. The row read 277.8 -> 166.7 when this oracle ran, one heal off one aggregated Q event; the triad's first strike now pays 74.1 -> 44.5 at the same 0.25s. The record shape this source is quoted for is unchanged."
     },
     {
       "id": "S8",
       "file": "data/practice-corpus/scenarios.json",
       "locator": "scenario id \"e9-e1-aatrox-umbral-dash-heal\" -> expected.formula",
-      "quote": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active: Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4",
-      "why": "Canonical example of a damage-proportional heal: raw heal moves 1:1 with post-mitigation damage."
+      "quote": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active, and pays once per damaging hit. Q's three strikes land 1 second apart: 230.3 / 287.9 / 345.5 x 0.16 x 2.0 = 73.7 at t=0, 92.1 at t=1, 110.6 at t=2. W hits twice: 78.8 x 0.16 x 2.0 = 25.2 at t=0 and again at t=1.5.",
+      "why": "Canonical example of a damage-proportional heal: raw heal moves 1:1 with post-mitigation damage.",
+      "repinned": "ER2, the Aatrox Q/W re-timing. The quote read \"Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4\" when this oracle ran -- one heal per slot off one aggregated event. Q still pays 276.4 in all and W still pays 50.4; only the event count and the times moved. The proportionality this source is quoted for is unchanged."
     },
     {
       "id": "S9",
@@ -142,6 +144,13 @@
         "grep for '271.4' / '211.0' across data/ -> single unrelated hit (Skarner attack-speed prose in data/champions.json)"
       ]
     }
+  },
+
+  "repinned": {
+    "by": "ER2 -- Aatrox Q/W event re-timing (surface-area-resolution campaign)",
+    "what_moved": "Aatrox Q now authors one part per strike at 0 / 1 / 2 seconds (data/champions.json Aatrox Q effect 0: 'with a 1-second static cooldown between casts') and W one part twice, 1.5 seconds apart (effect 1: a tether 'for 1.5 seconds'; effect 2: at its end 'the target is dealt the same physical damage again'). No slot total changed.",
+    "effect_on_this_receipt": "cleaver_bloodsong_roster holds Aatrox as its enemy, so its healing_events list grew from 64 to 74 members and the ordinal leaf_path this receipt adjudicated no longer denotes the event it adjudicated: healing_events[39] was Deathbringer Stance 359.4 at t=4.31 and is now Umbral Dash 57.5 at t=3.23. The 271.4 -> 211.0 pair this receipt weighed is therefore unreachable by that path on the current baseline.",
+    "adjudication_still_stands": "The arithmetic in independent_computation rests on S1-S6 and S9-S10 (item text, math-foundations, stat growth); S7 and S8 are cited only for the healing-record shape and for Umbral Dash's damage-proportionality, and both quotes were re-pinned above with those properties intact. Nothing in steps 1-8 reads a number from either corpus quote, so the verdict ('old_value_correct', confidence low, not corroborated) is unchanged."
   },
 
   "what_would_settle_it": [

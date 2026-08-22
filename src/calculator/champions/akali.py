@@ -21,6 +21,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -39,7 +40,7 @@ def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     duration = extract_value(ability, "Shroud Duration", rank)
     return {
-        "name": ability.get("name", "Twilight Shroud"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -81,7 +82,7 @@ def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
     # the engine threads running damage through parts in order.
     span = r2_max - r2_min
     return {
-        "name": ability.get("name", "Perfect Execution"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

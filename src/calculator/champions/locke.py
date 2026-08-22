@@ -21,7 +21,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
-from .slotlib import extract_cooldown, extract_named, on_hit_entry
+from .slotlib import ability_name, extract_cooldown, extract_named, on_hit_entry
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
@@ -70,7 +70,7 @@ def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
     if bonus:
         parts.append(DamagePart("magic", bonus, time_offset=0.5))
     return {
-        "name": ability.get("name", "Ritual Nails"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -86,9 +86,7 @@ def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
 def _ashen_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: blink packet plus the optional empowered dash attack."""
     attribute = (
-        "Total Magic Damage"
-        if bool(ctx.options.get("e_dash", True))
-        else "Blink Magic Damage"
+        "Total Magic Damage" if bool(ctx.option("e_dash")) else "Blink Magic Damage"
     )
     result = typed_damage(ctx, attribute, "magic", time_offset=0.1)
     if result:

@@ -452,6 +452,55 @@ def test_gnar_q_variants_read_their_form_not_the_flat_index(
     assert probe["kit"]["W"][mirrored]["form"] == probe["kit"]["Q"][clicked]["form"]
 
 
+def test_no_jayce_variant_click_can_send_hammer_stance_with_accelerated_q(tmp_path):
+    """Accelerated Shock Blast is a *cannon* packet, so no fight can be in
+    hammer stance and fire it. Q binds ``accelerated_q`` and therefore sat
+    outside the form mirror: clicking hammer on P/W/E left Q on its cannon
+    packet and the payload carried both. Every click on every form-axis slot,
+    not a sample of them — the whole point is that no reachable state exists.
+    """
+    kit = _payload_probe("Jayce", {}, tmp_path)["kit"]
+    seen = []
+    for slot in ("P", "Q", "W", "E"):
+        for index in range(len(kit[slot])):
+            options = _champion_options_payload("Jayce", {slot: index}, tmp_path)
+            assert not (
+                options["hammer_stance"] and options["accelerated_q"]
+            ), f"{slot}={index} sent {options}"
+            seen.append(options["hammer_stance"])
+    # Non-vacuous: the sweep really reaches both stances.
+    assert set(seen) == {True, False}
+
+
+@pytest.mark.parametrize(
+    ("clicked", "index", "hammer_stance", "accelerated_q", "mirrored_q"),
+    [
+        ("W", 0, True, False, 0),  # Lightning Field — hammer, so Q is hammer's
+        ("W", 2, False, False, 1),  # Hyper Charge — cannon, plain Shock Blast
+        ("Q", 0, True, False, 0),  # To the Skies! — a hammer Q means hammer
+        ("Q", 2, False, True, 2),  # accelerated Shock Blast — cannon
+    ],
+)
+def test_jayce_q_rides_the_form_axis_its_option_does_not_name(
+    clicked, index, hammer_stance, accelerated_q, mirrored_q, tmp_path
+):
+    """Membership of the form mirror is the variant's form stamp, not the
+    option the slot's control writes. Before the fix, clicking To the Skies!
+    (Jayce's hammer Q) sent ``hammer_stance: false``, and clicking hammer on
+    W left Q on ``accelerated_q: true``."""
+    probe = _payload_probe("Jayce", {clicked: index}, tmp_path)
+    assert probe["options"]["hammer_stance"] is hammer_stance
+    assert probe["options"]["accelerated_q"] is accelerated_q
+    assert probe["selected"]["Q"] == mirrored_q
+    # Every mirrored slot lands in one form; R renders no Variant control and
+    # the wiki stamps its two forms inverted, so it stays out.
+    forms = {
+        slot: probe["kit"][slot][probe["selected"][slot]]["form"]
+        for slot in ("P", "Q", "W", "E")
+    }
+    assert len(set(forms.values())) == 1, forms
+
+
 @pytest.mark.parametrize("variants", [{"R": 0}, {"R": 1}])
 def test_ziggs_variant_payload_is_accepted_by_the_calculate_route(variants, tmp_path):
     """The bug was only visible at the boundary: both R variants must POST."""

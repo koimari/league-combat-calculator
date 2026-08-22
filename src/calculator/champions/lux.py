@@ -26,6 +26,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     find_named_leveling,
     sum_modifiers,
@@ -59,7 +60,7 @@ def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
     if count <= 0:
         return None
     entry = damage_entry(
-        ability.get("name", "Illumination"),
+        ability_name(ability),
         level,
         0.0,
         per_proc * count,

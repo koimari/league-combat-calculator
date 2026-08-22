@@ -35,7 +35,7 @@ from typing import Any
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import extract_cooldown, extract_value, simple_damage
+from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 from .module_contract import coverage
@@ -108,7 +108,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     events into champion-module parses, so the option is the explicit
     pre-stack state (documented in ASSUMPTIONS).
     """
-    if not bool(ctx.options.get("q_active", True)):
+    if not bool(ctx.option("q_active")):
         return None
     focus = TimedStackState(
         ASHE_FOCUS_STACK_RULE,
@@ -132,7 +132,7 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
     return {
-        "name": ability.get("name", "Ranger's Focus"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -159,7 +159,7 @@ def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Frost Shot"),
+        "name": ability_name(ability),
         "total_raw": 0.0,
         "parts": (),
         "damage_type": "physical",
@@ -186,7 +186,7 @@ def _hawkshot(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Hawkshot"),
+        name=ability_name(ability),
         reason=(
             "Hawkshot is pure vision utility with no enemy-damage "
             "attribute of its own (data/champions.json Ashe E carries "

@@ -36,8 +36,10 @@ from ..ability_spec import DamagePart
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     extract_named,
     extract_value,
@@ -53,6 +55,13 @@ from .module_contract import coverage
 _Q_EMPOWERED_ATTACKS_DEFAULT = 2
 _Q_LIGHTNING_STRIKES_PER_ATTACK = 6
 _Q_LIGHTNING_HIT_INTERVAL = 0.2
+
+# HARDCODED: verify on patch updates — the Singed-R precedent, a window
+# that is cached PROSE rather than an atom.  E's movement grant lasts
+# "4 seconds" by the second effect's description; the slot's only
+# `timing.active_duration` atom is the 0.75s stun from the FIRST effect,
+# so there is no atom to read this window from.
+_E_MOVE_SPEED_SECONDS = 4.0
 
 PACKET_SHA256 = "468fd3bf2d2dd7e836b89c0ae6eff50d844990c0c03442f7f864a2032525dd9c"
 
@@ -102,7 +111,7 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    awaken = bool(ctx.options.get("q_awaken", False))
+    awaken = bool(ctx.option("q_awaken"))
     empowered = min(
         max(
             int(ctx.options.get("q_empowered_attacks", _Q_EMPOWERED_ATTACKS_DEFAULT)), 0
@@ -156,7 +165,7 @@ def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
         )
 
     entry = ability_on_hit_entry(
-        ability.get("name", "Wilding Claw"),
+        ability_name(ability),
         rank,
         "physical",
         {
@@ -182,11 +191,13 @@ def _blazing_stampede(packet_e):
     """E: movement + a sourced stun — a zero-enemy-damage stance row.
 
     Replaces the packet's generic "no enemy-damage formula" stub text
-    with the sourced movement numbers read back out of the cache.  The
-    stun itself is not described here: it is authored as a real
-    ``ControlEvent`` by the ``with_control_event`` wrapper below, so the
-    duration reaches the fight report through the validated atom rather
-    than through this string.
+    with the sourced movement numbers read back out of the cache, and
+    publishes the stance's own grant as a ``move_speed_percent`` stat
+    buff (the Teemo-W wiring).  The stun itself is not described here:
+    it is authored as a real ``ControlEvent`` by the
+    ``with_control_event`` wrapper below, so the duration reaches the
+    fight report through the validated atom rather than through this
+    string.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -199,6 +210,17 @@ def _blazing_stampede(packet_e):
             return entry
         burst_ms = extract_value(ability, "Bonus Movement Speed", rank)
         decayed_ms = extract_value(ability, "Decayed Bonus Movement Speed", rank)
+        # The whole row, scaling included: the cached "Bonus Movement
+        # Speed" entry carries the flat percent AND its "% per 100 bonus
+        # AD" modifier, and ``extract_named`` resolves both.
+        granted_ms = extract_named(
+            ability, "Bonus Movement Speed", rank, ctx.stats, ctx.target
+        )
+        # The stance expires, and a stat_buff is one scalar for the whole
+        # fight, so the grant lands time-weighted by the share of the
+        # window it covers (module_helpers.buff_window_share).
+        published_ms = granted_ms * buff_window_share(ctx, _E_MOVE_SPEED_SECONDS)
+        entry["stat_buff"] = {"move_speed_percent": published_ms}
         entry["detail"] = (
             "Stampede Stance: no damage row exists in the slot. Ghosting "
             f"plus {burst_ms:g}% bonus movement speed (+5% per 100 bonus AD) "
@@ -206,9 +228,12 @@ def _blazing_stampede(packet_e):
             "over 1.5s; the Awaken recast adds 75 bonus attack range, a "
             "per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus "
             "and 1.5s of crowd-control immunity. The empowered attack's "
-            "0.75s stun IS priced, as a sourced control event. The percent "
-            "movement grants are not yet wired onto the shared move-speed "
-            "fold (the named percent-movement boundary)."
+            "0.75s stun IS priced, as a sourced control event. The stance's "
+            f"own grant ({granted_ms:g}% at this build, {published_ms:g}% "
+            f"over the fight window) is published as a move_speed_percent "
+            "stat buff, which is a term in the shared movement-speed fold; "
+            "the decayed row and the Awaken recast's per-level bonus are "
+            "not published."
         )
         return entry
 
@@ -348,9 +373,20 @@ ASSUMPTIONS = ASSUMPTIONS + [
     "(time_offset=None) because the stun rides the next empowered basic "
     "attack and no cast-to-hit delay is sourced, and once per cast "
     "because the sourced on-target cooldown exceeds the window. The "
-    "percent movement grants are not published as a stat_buff (the named "
-    "Naafiri-W / Sivir-R boundary), and nothing damage-relevant is left "
-    "unmodeled once the stun is authored.",
+    "stance's own Bonus Movement Speed row (25/31/37/43/49/55% + 5% per "
+    "100 bonus AD) is published as a move_speed_percent stat_buff, a term "
+    "in the shared resolve_move_speed fold (soft caps included), "
+    "time-weighted by buff_window_share over the stance's 4-second "
+    "window. That window is cached PROSE, not an atom (the slot's only "
+    "timing.active_duration atom is the 0.75s stun from the first "
+    "effect), so it is a HARDCODED module constant, the Singed-R "
+    "precedent. Two "
+    "sourced riders stay withheld: the Decayed Bonus Movement Speed row "
+    "(7.5/9.3/11.1/12.9/14.7/16.5% + 1.5% per 100 bonus AD) would need a "
+    "decay curve the one-scalar stat_buff channel has no shape for, and "
+    "the Awaken recast's per-level 30% : 41.18% (+10% per 100 bonus AD) "
+    "bonus has no recast option on this slot. Nothing damage-relevant is "
+    "left unmodeled once the stun is authored.",
     "P (Bridge Between) stays out_of_scope, not no_damage (the Olaf-R "
     "rule): Monk Training's 30% bonus attack speed on the next two "
     "attacks within 4s is a real sourced steroid that would change "

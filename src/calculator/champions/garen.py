@@ -10,7 +10,7 @@ from .inputs import bool_option, champion_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 
@@ -30,7 +30,7 @@ def _decisive_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Decisive Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -61,13 +61,13 @@ def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    nearest = bool(ctx.options.get("e_nearest_target", True))
+    nearest = bool(ctx.option("e_nearest_target"))
     spins = 7 + int(max(0.0, ctx.stat("bonus_attack_speed")) // 25.0)
     spins = min(max(spins, 7), 15)
     attr = "Increased Damage Per Spin" if nearest else "Physical Damage Per Spin"
     per_spin = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Judgment"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_spin * spins,
@@ -96,7 +96,7 @@ def _demacian_justice(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Demacian Justice"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

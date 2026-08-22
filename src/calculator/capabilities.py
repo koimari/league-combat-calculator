@@ -421,6 +421,15 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
     carries the same stable ``frontend_token`` discipline as participant
     fields so the coverage test can prove one contract owns every mounted
     control.
+
+    Every family here is built ``supported: True`` and there is no condition
+    that would refuse one: each is served by a route this deployment always
+    mounts, and the catalogs that could be empty answer for themselves in
+    ``catalogs``.  The browser's runtime-disable pass over this section
+    (``app.js`` ``applyControlCapabilities``) is therefore contract coverage,
+    driven by tests over synthetic contracts rather than by a served refusal.
+    Publishing the first real refusal is all that pass waits on — it already
+    runs at render time, so it reaches render-created controls too.
     """
     return {
         "game_state": _field(
@@ -438,6 +447,11 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
             state_path="optimization.bis",
             frontend_token="data-bis-path",
         ),
+        # The one locator no control answers: app.js reads
+        # ``data-optimize-roster`` (and ``-all``, ``data-optimize-build``) in
+        # its click delegate, and emits none of them, so the roster and
+        # full-build searches have no entry point on the page.  Named in
+        # ``app.js`` ``CONTROL_FAMILY_EXEMPTIONS``; backlog row SC2.
         "optimize": _field(
             payload_field="optimize",
             state_path="optimization.roster",

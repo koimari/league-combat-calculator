@@ -205,19 +205,89 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
         ]
         assert not [atom for atom in atoms if atom["atom_id"].startswith("damage")]
 
-    def test_e_percent_movement_is_not_published_as_a_stat_buff(self):
-        """The named Naafiri-W / Sivir-R percent-movement boundary.
+    def test_e_publishes_the_burst_grant_as_a_move_speed_stat_buff(self):
+        """The cast's own row, on the shared movement-speed channel.
 
-        Stats publishes the flat/percent pair and the shared
-        ``resolve_move_speed`` fold; Udyr E is not yet wired onto it, and
-        this pin records that absence — an over-credited movement number
-        would become Swiftmarch damage.
+        The magnitude is re-derived from the tracked cache rather than
+        restated: rank 5 of the "Bonus Movement Speed" ladder, with the
+        row's own "% per 100 bonus AD" modifier resolving to zero on a
+        no-item parse.
         """
         row = _parse()["E"]
 
-        assert "stat_buff" not in row
+        assert row["stat_buff"] == {
+            "move_speed_percent": _e_leveling("Bonus Movement Speed")[4]
+        }
         assert "auto_attack_override" not in row
-        assert "the named percent-movement boundary" in row["detail"]
+
+    def test_the_decayed_and_awaken_rows_stay_withheld(self):
+        """One scalar cannot carry a decay curve or an unoptioned recast."""
+        row = _parse()["E"]
+        decayed = _e_leveling("Decayed Bonus Movement Speed")[4]
+
+        assert row["stat_buff"]["move_speed_percent"] != pytest.approx(decayed)
+        assert "not published" in row["detail"]
+        assert any(
+            "Decayed Bonus Movement Speed" in text and "withheld" in text
+            for text in udyr.ASSUMPTIONS
+        )
+
+    @staticmethod
+    def _fight_move_speed(seconds: float) -> float:
+        from src.calculator.pipeline import FightParams, run_fight
+
+        return run_fight(
+            get_champion("Udyr"),
+            18,
+            [],
+            FightParams(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=seconds,
+                deterministic=True,
+            ),
+        )["champion_stats"]["move_speed"]
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        from src.calculator.stats import calculate_total_stats, resolve_move_speed
+
+        build = calculate_total_stats(get_champion("Udyr"), 18, [])
+        # Level 18 derives E rank 5 (Udyr's ladder runs to 6); the stance
+        # lasts _E_MOVE_SPEED_SECONDS, so a 10s fight earns 4/10 of it.
+        granted = _e_leveling("Bonus Movement Speed")[4]
+        share = udyr._E_MOVE_SPEED_SECONDS / 10.0
+        buffed = self._fight_move_speed(10.0)
+
+        assert buffed == pytest.approx(
+            resolve_move_speed(
+                build["move_speed_flat"],
+                build["move_speed_percent"] + granted * share,
+            )
+        )
+        assert buffed > build["move_speed"]
+
+    def test_the_grant_is_weighted_by_the_stances_window(self):
+        """A 4s stance must not read the same in a 5s fight and a 30s one.
+
+        The whole family shares this contract: an unweighted term made
+        the published movement number duration-blind.
+        """
+        assert self._fight_move_speed(5.0) == pytest.approx(472.76)
+        assert self._fight_move_speed(10.0) == pytest.approx(417.88)
+        assert self._fight_move_speed(30.0) == pytest.approx(372.87, abs=0.01)
+
+    def test_the_window_is_prose_because_no_atom_carries_it(self):
+        """Why the constant exists: the only timing atom is the stun's."""
+        assert udyr._E_MOVE_SPEED_SECONDS == 4.0
+        assert "gains bonus movement speed for 4 seconds" in " ".join(_e_descriptions())
+        timings = [
+            atom
+            for atom in _ability_atoms("Udyr", get_champion("Udyr"))["E"]
+            if atom["atom_id"] == "timing.active_duration"
+        ]
+        assert [atom["values"] for atom in timings] == [[0.75]]
 
 
 class TestTheStunIsAuthoredAsASourcedControlEvent:
@@ -529,9 +599,10 @@ class TestBridgeBetweenStaysReceiptedOpen:
         """Blocker two, asserted against the engine source.
 
         The engine does have a per-auto cooldown refund — Navori
-        Flickerblade's — but its value is fed exclusively from
-        ``item_effects``.  No champion entry key reaches it, so Monk
-        Training's 5% refund has no channel to publish into.
+        Flickerblade's — but its value is fed exclusively from the item's own
+        crit declaration, whose number is a reference into ``item_effects``.
+        No champion entry key reaches it, so Monk Training's 5% refund has no
+        channel to publish into.
         """
         assignments = {
             line.split("=", 1)[1].strip()
@@ -539,9 +610,10 @@ class TestBridgeBetweenStaysReceiptedOpen:
             if line.strip().startswith("result.navori_refund =")
         }
 
-        assert assignments == {"state.damage_effects.navori_refund_percent"}
+        assert assignments == {"refund.fraction if refund is not None else 0.0"}
+        assert "refund = _crit_profile(state).cooldown_refund" in _DAMAGE_SOURCE
         item_source = Path("src/calculator/item_effects.py").read_text(encoding="utf-8")
-        assert "navori_refund_percent" in item_source
+        assert "cd_refund_percent" in item_source
         assert "navori_refund" not in json.dumps(list(_parse()["passive"].keys()))
 
 

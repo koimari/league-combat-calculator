@@ -33,6 +33,7 @@ from ..damage import effective_cooldown
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import clamp, no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -168,7 +169,7 @@ def _timed_threaded_volley(
     )
     boulders = len(starts) - 1
     entry = damage_entry(
-        ability.get("name", "Threaded Volley"),
+        ability_name(ability),
         rank,
         0.0,
         sum(part.amount for part in parts),
@@ -194,7 +195,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
 
-    ground = str(ctx.options.get("q_ground", "normal"))
+    ground = str(ctx.option("q_ground"))
     if ground not in {"normal", "worked"}:
         raise ValueError("Taliyah q_ground must be normal or worked")
     distance = clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)
@@ -209,7 +210,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
         raw, primary = _boulder_damage(ctx, ability, rank)
         hit_time = _Q_CAST_START + _Q_CAST_TIME + _worked_travel_time(distance)
         entry = damage_entry(
-            ability.get("name", "Threaded Volley"),
+            ability_name(ability),
             rank,
             max(
                 _Q_WORKED_MINIMUM_COOLDOWN,
@@ -232,7 +233,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     parts = _volley_parts(ctx, ability, rank, distance, _Q_CAST_START)
     total = parts[0].amount + 4.0 * parts[1].amount
     entry = damage_entry(
-        ability.get("name", "Threaded Volley"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -252,7 +253,7 @@ def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     return {
-        "name": ability.get("name", "Seismic Shove"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -291,7 +292,7 @@ def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = sum(part.amount for part in parts)
     entry = damage_entry(
-        ability.get("name", "Unraveled Earth"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -377,7 +378,7 @@ def _rock_surfing(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Rock Surfing"),
+        name=ability_name(ability),
         reason=(
             "Innate: 10% / 15% / 25% / 40% (based on level) bonus movement "
             "speed near terrain — self movement state with no damage "
@@ -405,7 +406,7 @@ def _weavers_wall(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Weaver's Wall"),
+        name=ability_name(ability),
         reason=(
             "Terrain wall plus a knockback on champions hit: no damage row "
             "exists in the slot, and the knockback has no sourced duration "

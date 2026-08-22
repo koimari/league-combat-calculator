@@ -1,182 +1,235 @@
 {
- "audit": "full_coverage_acknowledged_residue",
- "rule": "A frontier entry the campaign cannot close without inventing data is acknowledged here, never left silent. Each row names the champion, the coarse source, the blocking slots, the cached sentence that describes those hits, and precisely what that sentence fails to say. scripts/coverage_census.py fails two ways against this file: on an entry no row acknowledges, and on a row whose entry no longer reproduces - so the list can neither grow in silence nor outlive its cause.",
- "why_these_cannot_close": "The Everlasting scan certifies a timed fight only when every damaging ability event carries a reviewed crowd-control kind, and a slot reaches that ledger when its hits have instants. Each row below is a slot whose hits have no instant the cache states, or whose control belongs to stack state no single cast applies. Authoring a cadence the source does not give would be inventing data, which this campaign's own banned shortcuts forbid.",
- "acknowledged": [
-  {
-   "champion": "Aatrox",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "W"],
-   "cached_sentence": "Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. ... a tether is formed for 1.5 seconds; if the tether is not broken by the end of its duration, the target is dealt the same physical damage again and pulled",
-   "what_it_omits": "nothing - both cadences ARE sourced. Q's three strikes at one-second spacing put the last past the end of a short roster fight, and W's split moves Umbral Dash's single heal payment; both are pinned by practice-corpus receipts that a re-capture must re-pin first."
-  },
-  {
-   "champion": "Ahri",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["W", "R"],
-   "cached_sentence": "the second and third flames deal reduced damage to the same target ... Ahri can cast Spirit Rush up to three times",
-   "what_it_omits": "when the later flames and the second and third dashes land; each is one part that repeats, and a repeat with no interval is a schedule the cache never states"
-  },
-  {
-   "champion": "Akali",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "E"],
-   "cached_sentence": "Targets beyond a certain range are also slowed by 50% for 0.5 seconds. ... The shuriken marks and reveals the enemy for 3 seconds, during which Shuriken Flip can be recast",
-   "what_it_omits": "the range that decides whether Q slows at all, which a single-target model cannot place; and when the recast happens, which is player-chosen inside a window"
-  },
-  {
-   "champion": "Akshan",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q"],
-   "cached_sentence": "Once the boomerang has passed its original range and has not hit a target in the last 500 units of travelling, it homes back to Akshan",
-   "what_it_omits": "the distance to the target; the entry carries speeds but no distance, so neither pass has a derivable arrival"
-  },
-  {
-   "champion": "Ambessa",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["E"],
-   "cached_sentence": "in either case, she will spin a second time at the end of the dash",
-   "what_it_omits": "the dash's length, so the second spin has no instant"
-  },
-  {
-   "champion": "Anivia",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "R"],
-   "cached_sentence": "Flash Frost can be recast while the ice is in flight after its cast time, and does so automatically at maximum range",
-   "what_it_omits": "the target's distance for Q (speed is cached, range is not). R's ticks ARE authored; its chill is held back deliberately, because declaring it would make Anivia the roster's first enhanced_consume producer and answer a ruling reserved for its own slice."
-  },
-  {
-   "champion": "Annie",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "W", "R"],
-   "cached_sentence": "Energized: Annie empowers her next cast of Disintegrate, Incinerate, or Summon: Tibbers to consume all Pyromania stacks to stun enemies hit",
-   "what_it_omits": "which cast stuns; the stun follows a four-stack counter, so no slot-wide kind is true of any of the three"
-  },
-  {
-   "champion": "Bel'Veth",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q"],
-   "cached_sentence": "Void Surge can be cast only within a cardinal direction that is off cooldown, and incurs a cooldown between casts",
-   "what_it_omits": "the length of that cooldown; four dashes sit in one part spaced by an interval the cache never names"
-  },
-  {
-   "champion": "Brand",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "R"],
-   "cached_sentence": "Ablaze Bonus: The target is stunned for 1.75 seconds. ... Ablaze Bonus: The target is slowed for 0.25 seconds.",
-   "what_it_omits": "which cast controls; the opening cast applies Ablaze and controls nothing, every later one does. R's bounce cadence is already authored - the kind alone is unstatable."
-  },
-  {
-   "champion": "Darius",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["R"],
-   "cached_sentence": "Darius attempts to execute the target enemy champion ... increased by 0% : 100% (based on target's Hemorrhage stacks)",
-   "what_it_omits": "nothing about control - it is settled as none. The row models the stack term as a part repeating once per stack, and certification refuses a repeat; the wiki describes one strike whose damage is increased by stacks, which needs a part that scales rather than repeats."
-  },
-  {
-   "champion": "Diana",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["W", "E"],
-   "cached_sentence": "creates three spheres that orbit her ... detonating upon contact with an enemy ... If Moonlight is consumed from the target, Lunar Rush's current cooldown is reduced to 0.25 seconds",
-   "what_it_omits": "when a sphere makes contact (contact-driven, no beat) and when a second dash lands (a cooldown floor is not an arrival)"
-  },
-  {
-   "champion": "Kennen",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "W", "E", "R"],
-   "cached_sentence": "Kennen's abilities apply a stack of Mark of the Storm ... The third stack against a target consumes them all to stun them for 1.25 seconds",
-   "what_it_omits": "which ability lands the third stack. R's own six-bolt cadence is sourced and authored, and still has nothing true to carry."
-  },
-  {
-   "champion": "Kled",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["E"],
-   "cached_sentence": "Jousting can be recast after 0.5 seconds of the first dash ending while the target is marked.",
-   "what_it_omits": "when the first dash ends, and when the recast happens - only when it becomes available"
-  },
-  {
-   "champion": "LeBlanc",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q"],
-   "cached_sentence": "LeBlanc's next damaging ability against the marked target will consume the mark to deal the same magic damage again.",
-   "what_it_omits": "when; the second hit is timed to another cast the entry does not name, inside a mark window"
-  },
-  {
-   "champion": "Master Yi",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["E"],
-   "cached_sentence": "empowers his basic attacks within the next 5 seconds to deal bonus true damage on-hit",
-   "what_it_omits": "any instant; the rider lands on later basic attacks and the row must move onto the on-hit stream before it can carry one"
-  },
-  {
-   "champion": "Sett",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q"],
-   "cached_sentence": "Sett empowers his next two basic attacks within 5 seconds ... Knuckle Down resets Sett's basic attack timer.",
-   "what_it_omits": "when either attack lands; a window and a timer reset are not instants"
-  },
-  {
-   "champion": "Shaco",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["R"],
-   "cached_sentence": "remaining ... as a controllable clone for up to 18 seconds. The clone will explode upon dying or expiring",
-   "what_it_omits": "when the clone dies; 'up to 18 seconds' caps its life rather than timing the explosion"
-  },
-  {
-   "champion": "Sivir",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "W"],
-   "cached_sentence": "Upon reaching maximum range, the crossblade returns to her ... Sivir empowers her crossblade for the next 4 seconds ... causing her basic attacks to bounce",
-   "what_it_omits": "when either pass reaches the target (speed and max range are cached, target distance is not), and any interval for W's bounces, which ride basic attacks"
-  },
-  {
-   "champion": "Syndra",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["R"],
-   "cached_sentence": "each dealing magic damage upon hit",
-   "what_it_omits": "the interval between spheres; the row is one part repeating once per sphere"
-  },
-  {
-   "champion": "Vex",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q", "W", "E", "R"],
-   "cached_sentence": "Periodically, Vex empowers her next basic ability to knock down and fear enemies hit. If Looming Darkness triggers Doom, enemies hit will flee from the epicenter instead.",
-   "what_it_omits": "which cast; Doom replaces even E's own slow, so neither a slot-wide fear nor a slot-wide absence is true. R additionally sums the Shadow hit and the recast arrival."
-  },
-  {
-   "champion": "Xayah",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["E"],
-   "cached_sentence": "Xayah recalls all planted Feathers to shoot back to her, each dealing physical damage. A target hit by at least three Feathers is rooted for 1.25 seconds.",
-   "what_it_omits": "when each feather arrives; the root is a property of the count, not of the slot"
-  },
-  {
-   "champion": "Xin Zhao",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["Q"],
-   "cached_sentence": "empowers his next three basic attacks on-attack within 5 seconds ... The third attack knocks up the target",
-   "what_it_omits": "the interval between the three attacks, which are attack-speed paced and uncached - and the three do not control alike, so no slot-wide kind is true"
-  },
-  {
-   "champion": "Yone",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["E"],
-   "cached_sentence": "Yone dashes back to his body ... consuming the marks ... to deal true damage equal to the total amount of damage stored",
-   "what_it_omits": "nothing about timing - the cache times it and the module prices it there. The event is built by the fight engine from stored damage, so the module authors no part for a kind to ride."
-  },
-  {
-   "champion": "Zoe",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["W"],
-   "cached_sentence": "she shoots one bolt at a time at the nearest non-sleeping enemy in range",
-   "what_it_omits": "the interval between bolts; a ten-second duration without an interval is half a schedule"
-  },
-  {
-   "champion": "Zyra",
-   "source": "fimbulwinter_everlasting",
-   "slots": ["W"],
-   "cached_sentence": "Zyra plants a Seed at the target location that remains for 60 seconds",
-   "what_it_omits": "anything about plant attacks at all - their damage, cadence and control live on the wiki's pets page, and Thorn Spitters control nothing where Vine Lashers slow, which the plant count cannot tell apart"
-  }
- ]
+  "audit": "full_coverage_acknowledged_residue",
+  "rule": "A frontier entry the campaign cannot close without inventing data is acknowledged here, never left silent. Each row names the champion, the coarse source, the blocking slots, the cached sentence that describes those hits, and precisely what that sentence fails to say. scripts/coverage_census.py fails two ways against this file: on an entry no row acknowledges, and on a row whose entry no longer reproduces - so the list can neither grow in silence nor outlive its cause.",
+  "why_these_cannot_close": "The Everlasting scan certifies a timed fight only when every damaging ability event carries a reviewed crowd-control kind, and a slot reaches that ledger when its hits have instants. Each row below is a slot whose hits have no instant the cache states, or whose control belongs to stack state no single cast applies. Authoring a cadence the source does not give would be inventing data, which this campaign's own banned shortcuts forbid.",
+  "acknowledged": [
+    {
+      "champion": "Aatrox",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "W"
+      ],
+      "cached_sentence": "Aatrox can activate The Darkin Blade three times before the ability goes on cooldown, with a 1-second static cooldown between casts. ... a tether is formed for 1.5 seconds; if the tether is not broken by the end of its duration, the target is dealt the same physical damage again and pulled",
+      "what_it_omits": "nothing - both cadences ARE sourced. Q's three strikes at one-second spacing put the last past the end of a short roster fight, and W's split moves Umbral Dash's single heal payment; both are pinned by practice-corpus receipts that a re-capture must re-pin first."
+    },
+    {
+      "champion": "Ahri",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "W",
+        "R"
+      ],
+      "cached_sentence": "the second and third flames deal reduced damage to the same target ... Ahri can cast Spirit Rush up to three times",
+      "what_it_omits": "when the later flames and the second and third dashes land; each is one part that repeats, and a repeat with no interval is a schedule the cache never states"
+    },
+    {
+      "champion": "Akali",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "E"
+      ],
+      "cached_sentence": "Targets beyond a certain range are also slowed by 50% for 0.5 seconds. ... The shuriken marks and reveals the enemy for 3 seconds, during which Shuriken Flip can be recast",
+      "what_it_omits": "the range that decides whether Q slows at all, which a single-target model cannot place; and when the recast happens, which is player-chosen inside a window"
+    },
+    {
+      "champion": "Akshan",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q"
+      ],
+      "cached_sentence": "Once the boomerang has passed its original range and has not hit a target in the last 500 units of travelling, it homes back to Akshan",
+      "what_it_omits": "the distance to the target; the entry carries speeds but no distance, so neither pass has a derivable arrival"
+    },
+    {
+      "champion": "Ambessa",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "E"
+      ],
+      "cached_sentence": "in either case, she will spin a second time at the end of the dash",
+      "what_it_omits": "the dash's length, so the second spin has no instant"
+    },
+    {
+      "champion": "Anivia",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "R"
+      ],
+      "cached_sentence": "Flash Frost can be recast while the ice is in flight after its cast time, and does so automatically at maximum range",
+      "what_it_omits": "the target's distance for Q (speed is cached, range is not). R's ticks ARE authored; its chill is held back deliberately, because declaring it would make Anivia the roster's first enhanced_consume producer and answer a ruling reserved for its own slice."
+    },
+    {
+      "champion": "Annie",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "W",
+        "R"
+      ],
+      "cached_sentence": "Energized: Annie empowers her next cast of Disintegrate, Incinerate, or Summon: Tibbers to consume all Pyromania stacks to stun enemies hit",
+      "what_it_omits": "which cast stuns; the stun follows a four-stack counter, so no slot-wide kind is true of any of the three"
+    },
+    {
+      "champion": "Bel'Veth",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q"
+      ],
+      "cached_sentence": "Void Surge can be cast only within a cardinal direction that is off cooldown, and incurs a cooldown between casts",
+      "what_it_omits": "the length of that cooldown; four dashes sit in one part spaced by an interval the cache never names"
+    },
+    {
+      "champion": "Brand",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "R"
+      ],
+      "cached_sentence": "Ablaze Bonus: The target is stunned for 1.75 seconds. ... Ablaze Bonus: The target is slowed for 0.25 seconds.",
+      "what_it_omits": "which cast controls; the opening cast applies Ablaze and controls nothing, every later one does. R's bounce cadence is already authored - the kind alone is unstatable."
+    },
+    {
+      "champion": "Darius",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "R"
+      ],
+      "cached_sentence": "Darius attempts to execute the target enemy champion ... increased by 0% : 100% (based on target's Hemorrhage stacks)",
+      "what_it_omits": "nothing about control - it is settled as none. The row models the stack term as a part repeating once per stack, and certification refuses a repeat; the wiki describes one strike whose damage is increased by stacks, which needs a part that scales rather than repeats."
+    },
+    {
+      "champion": "Diana",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "W",
+        "E"
+      ],
+      "cached_sentence": "creates three spheres that orbit her ... detonating upon contact with an enemy ... If Moonlight is consumed from the target, Lunar Rush's current cooldown is reduced to 0.25 seconds",
+      "what_it_omits": "when a sphere makes contact (contact-driven, no beat) and when a second dash lands (a cooldown floor is not an arrival)"
+    },
+    {
+      "champion": "Kennen",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "W",
+        "E",
+        "R"
+      ],
+      "cached_sentence": "Kennen's abilities apply a stack of Mark of the Storm ... The third stack against a target consumes them all to stun them for 1.25 seconds",
+      "what_it_omits": "which ability lands the third stack. R's own six-bolt cadence is sourced and authored, and still has nothing true to carry."
+    },
+    {
+      "champion": "Kled",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "E"
+      ],
+      "cached_sentence": "Jousting can be recast after 0.5 seconds of the first dash ending while the target is marked.",
+      "what_it_omits": "when the first dash ends, and when the recast happens - only when it becomes available"
+    },
+    {
+      "champion": "LeBlanc",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q"
+      ],
+      "cached_sentence": "LeBlanc's next damaging ability against the marked target will consume the mark to deal the same magic damage again.",
+      "what_it_omits": "when; the second hit is timed to another cast the entry does not name, inside a mark window"
+    },
+    {
+      "champion": "Master Yi",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "E"
+      ],
+      "cached_sentence": "empowers his basic attacks within the next 5 seconds to deal bonus true damage on-hit",
+      "what_it_omits": "any instant; the rider lands on later basic attacks and the row must move onto the on-hit stream before it can carry one"
+    },
+    {
+      "champion": "Sett",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q"
+      ],
+      "cached_sentence": "Sett empowers his next two basic attacks within 5 seconds ... Knuckle Down resets Sett's basic attack timer.",
+      "what_it_omits": "when either attack lands; a window and a timer reset are not instants"
+    },
+    {
+      "champion": "Shaco",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "R"
+      ],
+      "cached_sentence": "remaining ... as a controllable clone for up to 18 seconds. The clone will explode upon dying or expiring",
+      "what_it_omits": "when the clone dies; 'up to 18 seconds' caps its life rather than timing the explosion"
+    },
+    {
+      "champion": "Sivir",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q",
+        "W"
+      ],
+      "cached_sentence": "Upon reaching maximum range, the crossblade returns to her ... Sivir empowers her crossblade for the next 4 seconds ... causing her basic attacks to bounce",
+      "what_it_omits": "when either pass reaches the target (speed and max range are cached, target distance is not), and any interval for W's bounces, which ride basic attacks"
+    },
+    {
+      "champion": "Syndra",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "R"
+      ],
+      "cached_sentence": "each dealing magic damage upon hit",
+      "what_it_omits": "the interval between spheres; the row is one part repeating once per sphere"
+    },
+    {
+      "champion": "Xayah",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "E"
+      ],
+      "cached_sentence": "Xayah recalls all planted Feathers to shoot back to her, each dealing physical damage. A target hit by at least three Feathers is rooted for 1.25 seconds.",
+      "what_it_omits": "when each feather arrives; the root is a property of the count, not of the slot"
+    },
+    {
+      "champion": "Xin Zhao",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "Q"
+      ],
+      "cached_sentence": "empowers his next three basic attacks on-attack within 5 seconds ... The third attack knocks up the target",
+      "what_it_omits": "the interval between the three attacks, which are attack-speed paced and uncached - and the three do not control alike, so no slot-wide kind is true"
+    },
+    {
+      "champion": "Yone",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "E"
+      ],
+      "cached_sentence": "Yone dashes back to his body ... consuming the marks ... to deal true damage equal to the total amount of damage stored",
+      "what_it_omits": "nothing about timing - the cache times it and the module prices it there. The event is built by the fight engine from stored damage, so the module authors no part for a kind to ride."
+    },
+    {
+      "champion": "Zoe",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "W"
+      ],
+      "cached_sentence": "she shoots one bolt at a time at the nearest non-sleeping enemy in range",
+      "what_it_omits": "the interval between bolts; a ten-second duration without an interval is half a schedule"
+    },
+    {
+      "champion": "Zyra",
+      "source": "fimbulwinter_everlasting",
+      "slots": [
+        "W"
+      ],
+      "cached_sentence": "Zyra plants a Seed at the target location that remains for 60 seconds",
+      "what_it_omits": "anything about plant attacks at all - their damage, cadence and control live on the wiki's pets page, and Thorn Spitters control nothing where Vine Lashers slow, which the plant count cannot tell apart"
+    }
+  ]
 }

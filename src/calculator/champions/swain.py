@@ -33,7 +33,7 @@ from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import STEROID_ZERO, damage_entry
+from .slotlib import STEROID_ZERO, ability_name, damage_entry
 from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
@@ -59,7 +59,7 @@ def _ravenous_flock(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["bonus_health"] = ctx.stat("bonus_health") + bonus_health
     ctx.stats["health"] = ctx.stat("health") + bonus_health
     entry = damage_entry(
-        ability.get("name", "Ravenous Flock"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,

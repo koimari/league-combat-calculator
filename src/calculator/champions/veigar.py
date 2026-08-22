@@ -32,7 +32,13 @@ from typing import Any, Callable
 from .engine import SlotCtx, build_parser
 from .module_helpers import delayed_damage, no_damage_parser
 from .source_receipts import load_champion_sources
-from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
+from .slotlib import (
+    ability_name,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+    simple_damage,
+)
 from ..ability_spec import ControlEvent, DamagePart
 from .module_contract import coverage
 
@@ -52,7 +58,7 @@ def _event_horizon(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     return {
-        "name": ability.get("name", "Event Horizon"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -98,7 +104,7 @@ def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     base = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     entry = {
-        "name": ability.get("name", "Primordial Burst"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

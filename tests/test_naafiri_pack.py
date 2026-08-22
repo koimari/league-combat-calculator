@@ -64,7 +64,7 @@ from src.calculator.champions.naafiri import (
 )
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.stats import calculate_total_stats
+from src.calculator.stats import calculate_total_stats, resolve_move_speed
 from tests import game_binary
 
 _CHAMPIONS = fetch_champion_data()
@@ -100,6 +100,16 @@ def _parse(level: int, *, options: dict | None = None, ranks: dict | None = None
         champion_options=options,
     )
     return stats, abilities
+
+
+def _w_movement_ladder() -> list[float]:
+    """W's movement ladder, read straight out of the tracked cache."""
+    for entry in _WIKI["abilities"]["W"]:
+        for effect in entry.get("effects", []):
+            for row in effect.get("leveling", []):
+                if row.get("attribute") == "Bonus Movement Speed":
+                    return [float(value) for value in row["modifiers"][0]["values"]]
+    raise AssertionError("Naafiri W 'Bonus Movement Speed' leveling row is missing")
 
 
 def _fight(level: int, *, options: dict | None = None, armor: float = 0.0):
@@ -203,9 +213,11 @@ class TestHuntSteroid:
     def test_stat_buff_is_twenty_percent_of_total_ad(self, level):
         stats, abilities = _parse(level)
         expected = _HUNT_AD_PERCENT / 100.0 * stats["attack_damage"]
-        assert abilities["W"]["stat_buff"] == {
-            "bonus_attack_damage": pytest.approx(expected)
-        }
+        stat_buff = abilities["W"]["stat_buff"]
+        # The hunt grants exactly two keys: this AD steroid and the
+        # movement grant pinned in TestPackRowFailsClosed below.
+        assert set(stat_buff) == {"bonus_attack_damage", "move_speed_percent"}
+        assert stat_buff["bonus_attack_damage"] == pytest.approx(expected)
 
     def test_buff_is_granted_as_bonus_ad_off_total_ad(self):
         """'20% AD' means 20% of TOTAL AD granted as BONUS AD.
@@ -395,10 +407,66 @@ class TestPackRowFailsClosed:
         )
         assert any("PackmateTotalDamage" in text for text in ASSUMPTIONS)
 
-    def test_movement_speed_rider_is_documented_not_modeled(self):
+    def test_movement_speed_is_published_on_the_shared_fold(self):
+        """The W row's own leveling ladder, read out of the cache.
+
+        The AD half of this ``stat_buff`` is time-weighted and the
+        movement half is not: movement is not a damage input here, so
+        the cast's own number goes into the fold whole.
+        """
         _, abilities = _parse(18)
-        assert "move_speed" not in abilities["W"].get("stat_buff", {})
-        assert any("bonus movement speed" in text for text in ASSUMPTIONS)
+        ladder = _w_movement_ladder()
+
+        assert ladder == [20.0, 22.5, 25.0, 27.5, 30.0]
+        assert abilities["W"]["stat_buff"]["move_speed_percent"] == pytest.approx(
+            ladder[4]
+        )
+        assert any("move_speed_percent stat_buff" in text for text in ASSUMPTIONS)
+
+    def test_movement_speed_rides_the_hunt_gate(self):
+        """No hunt, no grant — the same gate the AD steroid answers to."""
+        _, abilities = _parse(18, options={"w_hunt": False})
+        assert "move_speed_percent" not in abilities["W"].get("stat_buff", {})
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list.
+
+        ``_fight`` runs a 5s window and the hunt lasts ``_HUNT_DURATION``
+        = 5s, so the share is 1.0 and the whole grant lands.
+        """
+        build = calculate_total_stats(copy.deepcopy(_NAAFIRI), 18, [])
+        result = _fight(18, options={"w_hunt": True})
+        granted = _w_movement_ladder()[4]
+        buffed = result["champion_stats"]["move_speed"]
+
+        assert _HUNT_DURATION == 5.0
+        assert buffed == pytest.approx(
+            resolve_move_speed(
+                build["move_speed_flat"], build["move_speed_percent"] + granted
+            )
+        )
+        assert buffed > build["move_speed"]
+
+    @pytest.mark.parametrize(
+        "seconds, expected", [(5.0, 436.6), (10.0, 391.0), (30.0, 357.0)]
+    )
+    def test_the_grant_is_weighted_by_the_hunt_window(self, seconds, expected):
+        """A 5s hunt must not read the same in a 5s fight and a 30s one.
+
+        The movement term takes the same ``buff_window_share`` as the AD
+        term of the same cast; an unweighted one was duration-blind.
+        """
+        params = FightParams(
+            target_health=2000.0,
+            target_bonus_health=0.0,
+            target_armor=0.0,
+            target_magic_resistance=0.0,
+            fight_duration_seconds=seconds,
+            champion_options={"w_hunt": True},
+            deterministic=True,
+        )
+        result = run_fight(copy.deepcopy(_NAAFIRI), 18, [], params)
+        assert result["champion_stats"]["move_speed"] == pytest.approx(expected)
 
 
 # ---------------------------------------------------------------------------

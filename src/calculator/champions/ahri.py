@@ -30,6 +30,7 @@ from .engine import SlotCtx, build_parser
 from .. import healing_helpers as _healing
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     extract_auto,
     extract_cooldown,
     extract_named,
@@ -56,7 +57,7 @@ def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
     if fragments < 9:
         return None
     return {
-        "name": ability.get("name", "Essence Theft"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",
@@ -82,7 +83,7 @@ def _fox_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     subsequent = extract_named(ability, "Subsequent Magic Damage", rank, ctx.stats)
 
     return {
-        "name": ability.get("name", "Fox-Fire"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "parts": (
@@ -103,7 +104,7 @@ def _spirit_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     per_cast, damage_type = extract_auto(ability, rank, ctx.stats, ctx.target)
     casts = 3
     return {
-        "name": ability.get("name", "Spirit Rush"),
+        "name": ability_name(ability),
         "rank": rank,
         "parts": (DamagePart(damage_type, per_cast, count=casts),),
         "cast_instances": casts,
@@ -120,7 +121,7 @@ def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     damage = extract_auto(ability, rank, ctx.stats, ctx.target)[0]
     return {
-        "name": ability.get("name", "Charm"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         # The charm's KIND is declared once in MODULE_CC and stamped onto

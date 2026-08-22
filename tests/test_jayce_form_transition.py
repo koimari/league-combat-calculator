@@ -468,9 +468,9 @@ class TestP4JParseParity:
         assert "target_debuff" in cannon["R"] and "stat_buff" not in cannon["R"]
 
     def test_p4j_cannon_r_packet_shape(self):
-        """R Cannon: zero damage, the 35% armor/MR shred for 5s, no
-        stat_buff, and NO empowers_next_auto stamp (the shred rides as a
-        fight-wide debuff — the module's modeling choice)."""
+        """R Cannon: no bonus damage, the 35% armor/MR shred for 5s, no
+        stat_buff, and the empowered-attack stamp the shred is delivered
+        by — the stream's next swing, since Transform resets no timer."""
         r = _parse(None)["R"]
         assert r["total_raw"] == pytest.approx(0.0)
         assert r["target_debuff"] == {
@@ -479,7 +479,7 @@ class TestP4JParseParity:
             "duration": pytest.approx(5.0),
         }
         assert "stat_buff" not in r
-        assert "empowers_next_auto" not in r
+        assert r["empowers_next_auto"] == {"rides_scheduled_auto": True}
 
     def test_p4j_hammer_r_packet_shape(self):
         """R Hammer: 175 magic on one empowered auto (130 + 30% x 150
@@ -491,7 +491,7 @@ class TestP4JParseParity:
             "armor": pytest.approx(_HAMMER_RESISTS),
             "magic_resistance": pytest.approx(_HAMMER_RESISTS),
         }
-        assert r["empowers_next_auto"] is True
+        assert r["empowers_next_auto"] == {"rides_scheduled_auto": True}
         assert "target_debuff" not in r
 
     def test_p4j_w_packets_differ_by_shape(self):
@@ -646,9 +646,10 @@ class TestP4JTransitionContract:
     def test_p4j_casts_before_T_use_opening_packets(self):
         """The whole fight plays in the OPENING (hammer_stance-selected)
         packets — there is no T to split on.  The reference Cannon fight:
-        R@0 (0 damage, shred), Q@0 + Q@8 Shock Blast (672 each), W@0 +
-        W@5.999 Hyper Charge (825 each), E never cast; the Cannon-only
-        total is the one-stance bound (the receipt's two-fight model)."""
+        R@0 (no bonus damage, shred, and the 250 AD swing it empowers),
+        Q@0 + Q@8 Shock Blast (672 each), W@0 + W@5.999 Hyper Charge
+        (825 each), E never cast; the Cannon-only total is the one-stance
+        bound (the receipt's two-fight model)."""
         result = _fight(None)
         assert _cast_times(result, "R") == [pytest.approx(0.0)]
         assert _cast_times(result, "Q") == [pytest.approx(0.0), pytest.approx(8.0)]
@@ -663,7 +664,8 @@ class TestP4JTransitionContract:
         assert result["breakdown"]["W"]["total_damage"] == pytest.approx(
             1650.0, abs=1e-6
         )
-        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        # R adds no damage of its own; its row is the swing it empowers.
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(250.0)
 
     def test_p4j_casts_at_and_after_T_use_flipped_packets(self):
         """The mid-fight split is NOT representable (the receipt): a
@@ -687,7 +689,7 @@ class TestP4JTransitionContract:
         (175 magic) rides the first modeled auto at/after T (the t=4.0
         swing)."""
         result = _fight({OPTION_KEY: 4.0})
-        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(250.0)
         auto_row = result["breakdown"]["auto_attacks"]
 
     def test_p4j_reference_fight_total(self):
@@ -813,28 +815,29 @@ class TestP4JOneRotation:
     def test_p4j_one_rotation_today_casts_each_slot_once(self):
         """One-rotation mode today: every slot casts exactly once at t=0
         with the opening stance's packets (R,Q,W,E in Hammer; R,Q,W and
-        no E in Cannon), and the hammer R row carries its forced swing
-        (175 + 250 = 425) while the cannon R row stays 0."""
+        no E in Cannon), and each R row carries the swing it forces —
+        hammer 175 + 250 = 425, cannon the bare 250."""
         hammer = _fight({"hammer_stance": True}, one_rotation=True, uptime=0.0)
         cannon = _fight(None, one_rotation=True, uptime=0.0)
         assert [c["slot"] for c in hammer["cast_timeline"]] == ["R", "Q", "W", "E"]
         assert [c["slot"] for c in cannon["cast_timeline"]] == ["R", "Q", "W"]
         assert hammer["breakdown"]["R"]["total_damage"] == pytest.approx(425.0)
-        assert cannon["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        assert cannon["breakdown"]["R"]["total_damage"] == pytest.approx(250.0)
         assert hammer["breakdown"]["Q"]["total_damage"] == pytest.approx(512.5)
         assert hammer["breakdown"]["W"]["total_damage"] == pytest.approx(440.0)
         assert hammer["breakdown"]["E"]["total_damage"] == pytest.approx(700.0)
 
     def test_p4j_one_rotation_totals_pinned(self):
         """Reference one-rotation totals (0-resist): Hammer 2077.5,
-        Cannon 1497.0 — the cross-stance burst combo is NOT a single
-        rotation (the pinned assumption)."""
+        Cannon 1747.0 (1497.0 plus the 250 swing Cannon R now forces) —
+        the cross-stance burst combo is NOT a single rotation (the
+        pinned assumption)."""
         assert _fight({"hammer_stance": True}, one_rotation=True, uptime=0.0)[
             "total_damage"
         ] == pytest.approx(2077.5)
         assert _fight(None, one_rotation=True, uptime=0.0)[
             "total_damage"
-        ] == pytest.approx(1497.0)
+        ] == pytest.approx(1747.0)
 
     def test_p4j_one_rotation_with_transition_is_the_split_combo(self):
         """One-rotation mode is transition-free by construction: the
@@ -857,13 +860,13 @@ class TestP4JZeroAuto:
     def test_p4j_zero_auto_forced_swings_today(self):
         """With no auto stream the empowered/forced swings land on their
         own rows: hammer R's row carries its forced swing (425 = 175 + a
-        250 basic swing) in timed AND one-rotation mode; the cannon R row
-        stays 0 (no empower stamp — the shred is fight-wide)."""
+        250 basic swing) in timed AND one-rotation mode, and the cannon R
+        row carries the bare 250 swing its shred rides."""
         timed = _fight({"hammer_stance": True}, uptime=0.0)
         assert timed["breakdown"]["R"]["total_damage"] == pytest.approx(425.0)
         assert timed["breakdown"]["auto_attacks"]["count"] == 0
         cannon = _fight(None, uptime=0.0)
-        assert cannon["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        assert cannon["breakdown"]["R"]["total_damage"] == pytest.approx(250.0)
         # Hyper Charge self-supplies its 3 swings per cast even with no
         # auto stream (the burst rule).
         assert cannon["breakdown"]["W"]["total_damage"] == pytest.approx(
@@ -884,9 +887,9 @@ class TestP4JZeroAuto:
             ]
 
     def test_p4j_zero_auto_forced_swing_under_the_flip(self):
-        """Zero-auto mode: the forced-swing rule applies per stance —
-        the hammer R's empower forces one 425 swing onto the R row (no
-        auto stream), the cannon R forces nothing (0 damage).  No flip
+        """Zero-auto mode: the forced-swing rule applies per stance — the
+        hammer R's empower forces one 425 swing onto the R row (no auto
+        stream) and the cannon R's forces the bare 250 one.  No flip
         exists to re-time them."""
         result = _fight({"hammer_stance": True}, uptime=0.0)
         assert result["breakdown"]["R"]["total_damage"] == pytest.approx(
@@ -894,7 +897,7 @@ class TestP4JZeroAuto:
         )
         assert result["breakdown"]["auto_attacks"]["count"] == 0
         cannon = _fight(None, uptime=0.0)
-        assert cannon["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        assert cannon["breakdown"]["R"]["total_damage"] == pytest.approx(250.0)
 
 
 # ---------------------------------------------------------------------------
@@ -1093,7 +1096,10 @@ class TestP4JUnchangedBoundaries:
                 cast_order=list(_CAST_ORDER),
             ),
         )
-        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        # R's row is the swing it empowers, priced against the target's
+        # UNSHREDDED 100 armor: 250 x 100/200 = 125, not the 154 the 35%
+        # shred would buy.
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(125.0)
 
     def test_p4j_other_champions_untouched(self):
         """The transition surface is Jayce-only: the champion registry's

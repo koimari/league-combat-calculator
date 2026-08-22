@@ -18,17 +18,18 @@ each of 6/11/16/18 = 75) so the "it is only movement speed" claim is
 measured, not asserted. This is the Vayne-P / Kalista-P / Pyke-P shape:
 sourced, non-damaging, therefore ``no_damage``.
 
-**The movement grant is deliberately not a ``stat_buff``**, and the
-reason is arithmetic rather than editorial.
-``_apply_stat_buff_ultimates`` adds the buff straight onto
-``champion_stats["move_speed"]``, which has ALREADY been through
-``stats.apply_movement_speed_soft_caps``. Above 415 raw movement speed
-the real grant is worth 0.8x what the channel would credit (0.5x above
-490), and the one live consumer of that stat is ``item_effects``'
-``adaptive_force_per_total_move_speed`` (Swiftmarch) — so an
-over-credited movement number turns into DAMAGE.
-``TestMovementSpeedIsNotStatBuffed`` measures the 0.8x/0.5x gap off the
-real soft-cap function so the argument cannot rot into folklore.
+**P's movement grant is still not a ``stat_buff``, but the channel is
+no longer the reason.** The old argument was that
+``_apply_stat_buff_ultimates`` added onto an already-soft-capped
+``champion_stats["move_speed"]``; CF9's fold re-applies the caps, and
+``test_the_channel_itself_is_no_longer_the_blocker`` pins that the
+argument is dead. What survives is the CACHE: P's magnitude is a level
+ladder no cached row can index, and the grant decays to zero over 1.5s
+with no cached uptime. An over-credit would land on the published
+``champion_stats`` and the end-of-fight ``item_state_receipts``, NOT on
+a damage row — Swiftmarch's ``adaptive_force_per_total_move_speed`` is
+resolved inside ``calculate_total_stats`` from the BUILD's move speed,
+before any cast.
 
 **R stays ``out_of_scope``, and that is not laziness.** The Olaf-R rule:
 a real, sourced, unmodeled mechanic is ``out_of_scope``, never
@@ -39,9 +40,9 @@ the kernel rather than by quoting the docstring:
 
 * the rank-scaled bonus movement speed is an additive PERCENT;
   ``calculate_total_stats`` publishes the ``move_speed_flat`` /
-  ``move_speed_percent`` pair — ``TestOnTheHuntKernelGaps`` asserts the
-  decomposition exists to compose against, and the slot is not yet
-  wired onto it;
+  ``move_speed_percent`` pair the slot now composes against, weighted
+  by its own cached ``Buff Duration`` — ``TestOnTheHuntMovementIsWired``
+  pins both the fold and the weighting;
 * ``on_attack_cooldown_refund`` is a field of
   ``item_effects.CooldownProcEffect`` (the item-proc scheduler's
   surface), so there is no ability-cooldown-refund channel a champion
@@ -69,7 +70,11 @@ from src.calculator.item_effects import (
     required_effect_value,
     swiftmarch_adaptive_force,
 )
-from src.calculator.stats import apply_movement_speed_soft_caps, calculate_total_stats
+from src.calculator.stats import (
+    apply_movement_speed_soft_caps,
+    calculate_total_stats,
+    resolve_move_speed,
+)
 from tests import game_binary
 
 _SIVIR = get_champion("Sivir")
@@ -122,6 +127,31 @@ def _parse(level: int = 18, *, ranks: dict | None = None, stats_override=None):
         target_stats=dict(_TARGET),
     )
     return champion_stats, abilities
+
+
+def _fight_result(
+    *, mode: str = "time_based", duration: float = 10.0, uptime: float = 1.0
+) -> dict:
+    """One /api/calculate fight at level 18, no items — the real boundary."""
+    from src import app as app_module
+
+    payload = {
+        "champion": "Sivir",
+        "level": 18,
+        "items": [],
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "fight_mode": mode,
+        "fight_duration": duration,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": uptime,
+        "target_health": 2500.0,
+        "target_armor": 100.0,
+        "target_mr": 50.0,
+        "deterministic": True,
+    }
+    response = app_module.app.test_client().post("/api/calculate", json=payload)
+    assert response.status_code == 200, response.get_json()
+    return response.get_json()
 
 
 # ---------------------------------------------------------------------------
@@ -197,43 +227,57 @@ class TestFleetOfFootHasNoDamageAnywhere:
 
 
 class TestMovementSpeedIsNotStatBuffed:
-    """The channel would over-credit the grant, and movement becomes damage."""
+    """The cache cannot say the magnitude, and the grant does not hold."""
 
     def test_passive_row_emits_no_stat_buff(self):
         _, abilities = _parse()
         assert "stat_buff" not in abilities["passive"]
 
-    def test_no_slot_emits_a_move_speed_stat_buff(self):
+    def test_only_the_ultimate_emits_a_movement_stat_buff(self):
         _, abilities = _parse()
-        for entry in abilities.values():
-            assert "move_speed" not in entry.get("stat_buff", {})
+        movement = {
+            key: entry["stat_buff"]
+            for key, entry in abilities.items()
+            if any(stat.startswith("move_speed") for stat in entry.get("stat_buff", {}))
+        }
+        assert set(movement) == {"R"}
 
-    def test_soft_cap_discounts_the_level_18_grant(self):
-        # Sivir's level-18 grant is +75 raw. From a 400 raw base the
-        # result crosses into the 0.8x band, so the DISPLAYED gain is 63,
-        # not 75 — the stat_buff channel adds onto the already-capped
-        # scalar and would credit the full 75.
-        base = apply_movement_speed_soft_caps(400.0)
-        buffed = apply_movement_speed_soft_caps(400.0 + 75.0)
-        assert base == pytest.approx(400.0)
-        assert buffed == pytest.approx(463.0)
-        assert buffed - base == pytest.approx(63.0)
-        assert buffed - base < 75.0
+    def test_the_cached_ladder_carries_no_level_breakpoints(self):
+        """Blocker 1: the magnitude is a level ladder the cache cannot index.
 
-    def test_grant_is_worth_exactly_four_fifths_inside_the_415_band(self):
-        base = apply_movement_speed_soft_caps(420.0)
-        buffed = apply_movement_speed_soft_caps(470.0)
-        assert buffed - base == pytest.approx(0.8 * 50.0)
+        Five values with every unit empty, on a slot that has no rank —
+        nothing cached says which level each value starts at.
+        """
+        row = _P_EFFECT["leveling"][0]["modifiers"][0]
+        assert row["values"] == [55, 60, 65, 70, 75]
+        assert row["units"] == ["", "", "", "", ""]
+        assert _WIKI["abilities"]["P"][0]["cooldown"] is None
+        assert "based on level" in _P_EFFECT["description"]
 
-    def test_grant_is_worth_exactly_half_above_490(self):
-        base = apply_movement_speed_soft_caps(500.0)
-        buffed = apply_movement_speed_soft_caps(575.0)
-        assert buffed - base == pytest.approx(0.5 * 75.0)
+    def test_the_breakpoints_live_only_in_the_gitignored_binary(self):
+        record = _spell_record("SivirPassiveAbility/SivirPassive")
+        parts = record["mSpellCalculations"]["FlatMS"]["mFormulaParts"]
+        assert [point["mLevel"] for point in parts[0]["mBreakpoints"]][:4] == [
+            6,
+            11,
+            16,
+            18,
+        ]
+
+    def test_the_grant_decays_and_the_cache_carries_no_uptime(self):
+        """Blocker 2: a constant full-value buff would over-credit it."""
+        assert "decaying over 1.5 seconds" in _P_EFFECT["description"]
+        assert "refreshing on subsequent hits" in _P_EFFECT["description"]
+        attributes = [row["attribute"] for row in _P_EFFECT["leveling"]]
+        assert "Uptime" not in attributes and attributes == ["Per-Level Scaling"]
 
     def test_the_over_credit_would_become_adaptive_force(self):
-        # Naming the consumer is the whole reason the buff is withheld:
-        # Swiftmarch converts TOTAL movement speed into adaptive force, so
-        # the 12-point over-credit above is invented damage, not cosmetics.
+        # Swiftmarch converts TOTAL movement speed into adaptive force,
+        # so an over-credited number is not cosmetic where this accessor
+        # reads it. Scope note: an ABILITY stat_buff never reaches this
+        # call on the damage path — calculate_total_stats resolves it
+        # from the build's move speed before any cast, and the fight's
+        # item_state_receipts re-read it only to publish a receipt.
         items = [{"name": "Swiftmarch"}]
         honest = swiftmarch_adaptive_force(items, total_move_speed=463.0)
         over_credited = swiftmarch_adaptive_force(items, total_move_speed=475.0)
@@ -243,9 +287,20 @@ class TestMovementSpeedIsNotStatBuffed:
             * required_effect_value("Swiftmarch", "adaptive_force_per_total_move_speed")
         )
 
-    def test_withholding_names_the_soft_cap_and_the_consumer(self):
+    def test_the_channel_itself_is_no_longer_the_blocker(self):
+        """The fold re-applies the soft caps, so the old argument is dead.
+
+        335 flat + 30% is 435.5 raw, above the 415 band, and the published
+        number is the capped 431.4 — not a raw add onto a capped scalar.
+        """
+        assert resolve_move_speed(335.0, 30.0) == pytest.approx(431.4)
+        assert apply_movement_speed_soft_caps(435.5) == pytest.approx(431.4)
+
+    def test_withholding_names_the_two_cached_gaps(self):
         assumption = next(a for a in ASSUMPTIONS if "Fleet of Foot) has no" in a)
-        assert "apply_movement_speed_soft_caps" in assumption
+        assert "ability.per-_level _scaling" in assumption
+        assert "ByCharLevelBreakpoints" in assumption
+        assert "decays to zero" in assumption
         assert "adaptive_force_per_total_move_speed" in assumption
         assert "NOT modeled as a stat_buff" in assumption
 
@@ -292,12 +347,12 @@ class TestOnTheHuntStaysOutOfScope:
         assert MODULE_COVERAGE["R"] == "out_of_scope"
 
     def test_olaf_rule_is_stated_explicitly(self):
-        assumption = next(a for a in ASSUMPTIONS if "On the Hunt) stays" in a)
+        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
         assert "out_of_scope, NOT no_damage" in assumption
         assert "Olaf-R rule" in assumption
 
     def test_both_sourced_effects_are_named_in_the_receipt(self):
-        assumption = next(a for a in ASSUMPTIONS if "On the Hunt) stays" in a)
+        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
         assert "20/25/30%" in assumption
         assert "0.5 seconds" in assumption
 
@@ -318,19 +373,65 @@ class TestOnTheHuntStaysOutOfScope:
         )
 
 
-class TestOnTheHuntKernelGaps:
-    """Both blockers are measured against the kernel, not quoted."""
+class TestOnTheHuntMovementIsWired:
+    """The percent grant rides the one shared movement fold."""
 
     def test_the_move_speed_decomposition_exists_to_compose_against(self):
-        """CF9 published the two terms the one movement fold reads.
-
-        On the Hunt's own blocker was the missing decomposition, so this
-        pins that it is gone; what the slot still needs is its own review.
-        """
+        """CF9 published the two terms the one movement fold reads."""
         stats = calculate_total_stats(copy.deepcopy(_SIVIR), 18, [])
         assert stats["move_speed"] == pytest.approx(
             stats["move_speed_flat"] * (1.0 + stats["move_speed_percent"] / 100.0)
         )
+
+    @pytest.mark.parametrize("rank,percent", [(1, 20.0), (2, 25.0), (3, 30.0)])
+    def test_the_buff_is_the_cached_rank_row(self, rank, percent):
+        _, abilities = _parse(ranks={"Q": 5, "W": 5, "E": 5, "R": rank})
+        assert abilities["R"]["stat_buff"] == {"move_speed_percent": percent}
+
+    def test_the_row_still_prices_no_damage(self):
+        _, abilities = _parse()
+        assert abilities["R"]["total_raw"] == pytest.approx(0.0)
+        assert abilities["R"]["parts"] == ()
+
+    def test_the_fight_publishes_the_soft_capped_number(self):
+        """The channel re-folds instead of adding onto a capped scalar.
+
+        335 base flat + the rank-3 30% is 435.5 raw, published as 431.4.
+        The 10s window sits inside the sourced 12s Buff Duration, so the
+        share is 1.0 and the whole grant lands.
+        """
+        result = _fight_result()
+        stats = result["champion_stats"]
+        assert result["champion_stats_state"] == "fight_effective"
+        assert stats["move_speed_flat"] == pytest.approx(335.0)
+        assert stats["move_speed_percent"] == pytest.approx(30.0)
+        assert stats["move_speed"] == pytest.approx(431.4)
+
+    @pytest.mark.parametrize(
+        "duration, percent, published",
+        [(5.0, 30.0, 431.4), (10.0, 30.0, 431.4), (30.0, 12.0, 375.2)],
+    )
+    def test_the_grant_is_weighted_by_its_cached_buff_duration(
+        self, duration, percent, published
+    ):
+        """Past 12s the buff must stop reading as if it were permanent.
+
+        Reading Buff Duration for the detail string alone left the slot
+        duration-blind: 431.4 at 5s, 10s AND 30s. Now a 30s window earns
+        12/30 of the rank-3 30%.
+        """
+        stats = _fight_result(duration=duration)["champion_stats"]
+        assert stats["move_speed_percent"] == pytest.approx(percent)
+        assert stats["move_speed"] == pytest.approx(published)
+
+    def test_the_detail_names_the_sourced_duration(self):
+        _, abilities = _parse()
+        detail = abilities["R"]["detail"]
+        assert "30% bonus movement speed for 12s" in detail
+
+
+class TestOnTheHuntKernelGaps:
+    """The one remaining blocker is measured against the kernel."""
 
     def test_cooldown_refund_channel_is_item_proc_only(self):
         import dataclasses
@@ -343,9 +444,9 @@ class TestOnTheHuntKernelGaps:
         for entry in abilities.values():
             assert "on_attack_cooldown_refund" not in entry
 
-    def test_receipt_names_both_kernel_gaps(self):
-        assumption = next(a for a in ASSUMPTIONS if "On the Hunt) stays" in a)
-        assert "move_speed_flat" in assumption
+    def test_receipt_names_the_remaining_gap(self):
+        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
+        assert "resolve_move_speed" in assumption
         assert "CooldownProcEffect" in assumption
 
 
@@ -368,7 +469,7 @@ class TestHuntAttackSpeedIsAnUnusedSourceConflict:
             assert "bonus_attack_speed" not in buff
 
     def test_conflict_is_recorded_rather_than_used(self):
-        assumption = next(a for a in ASSUMPTIONS if "On the Hunt) stays" in a)
+        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
         assert "SOURCE CONFLICT" in assumption
         assert "HuntAttackSpeed" in assumption
         assert "fail-closed" in assumption

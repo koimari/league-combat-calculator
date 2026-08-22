@@ -18,6 +18,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     find_named_leveling,
@@ -59,7 +60,7 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
         else 0.0
     )
     entry = damage_entry(
-        ability.get("name", "Winter's Wrath"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         swing_one + swing_two,

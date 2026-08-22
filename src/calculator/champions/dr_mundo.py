@@ -42,6 +42,7 @@ from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -145,7 +146,7 @@ def _maximum_dosage(ctx: SlotCtx) -> dict[str, Any] | None:
     ctx.stats["base_health"] = ctx.stat("base_health") + grant
 
     entry = damage_entry(
-        ability.get("name", "Maximum Dosage"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -279,7 +280,7 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
         return max(percent * current, minimum)
 
     entry = damage_entry(
-        ability.get("name", "Infected Bonesaw"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         max(percent * target_max, minimum),
@@ -319,7 +320,7 @@ def _heart_zapper(ctx: SlotCtx) -> dict[str, Any] | None:
     detonation = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
 
     entry = damage_entry(
-        ability.get("name", "Heart Zapper"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_tick * W_CHARGE_TICKS + detonation,

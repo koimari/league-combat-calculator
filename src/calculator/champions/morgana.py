@@ -42,6 +42,7 @@ from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -74,7 +75,7 @@ def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Maximum Damage Per Tick", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Tormented Shadow"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_tick * _W_TICKS,
@@ -106,7 +107,7 @@ def _soul_shackles(ctx: SlotCtx) -> dict[str, Any] | None:
 
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Soul Shackles"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         initial * 2,
@@ -147,7 +148,7 @@ def _soul_siphon(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     return {
-        "name": ability.get("name", "Soul Siphon"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",

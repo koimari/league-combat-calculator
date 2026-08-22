@@ -37,6 +37,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -113,7 +114,7 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
     cone = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     total = on_hit_bonus + cone
     entry = damage_entry(
-        ability.get("name", "Thunderclap"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

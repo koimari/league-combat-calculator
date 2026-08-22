@@ -8,6 +8,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -23,17 +24,17 @@ def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    if not bool(ctx.options.get("w_in_brush", True)):
+    if not bool(ctx.option("w_in_brush")):
         return no_damage(
             ctx,
-            name=ability.get("name", "Brushmaker"),
+            name=ability_name(ability),
             reason="Brushmaker is active utility while not in brush.",
             slot="W",
         )
     value = extract_named(
         ability, "Additional Magic Damage", ctx.rank_for(), ctx.stats, ctx.target
     )
-    entry = on_hit_entry(ability.get("name", "Brushmaker"), value, "magic")
+    entry = on_hit_entry(ability_name(ability), value, "magic")
     entry["detail"] = (
         "Brushmaker bonus attack magic damage; brush duration and allied-brush branch are explicit state."
     )
@@ -50,7 +51,7 @@ def _triggerseed(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Triggerseed"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -110,7 +111,7 @@ def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
     normals = attacks - smashes
     interval = 1.0 / (_DAISY_BASE_AS * (1.0 + _DAISY_AS_BONUS_BY_RANK[index]))
     entry = damage_entry(
-        ability.get("name", "Daisy!"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_attack * normals + per_smash * smashes,

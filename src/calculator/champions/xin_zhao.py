@@ -22,6 +22,9 @@ still reaches the event ledger; the slashes' sourced cadence ("over the
 first 0.15 seconds of the cast time") and the thrust's offset behind the
 remaining cast time are left for the timing wave.
 
+Both rows carry a sourced crit clause, and they are different axes — see
+``_Q_CRIT_EFFECTIVENESS`` and ``_W_THRUST_CRIT_CHANCE_AMP``.
+
 Coverage-frontier rider: P (Determination) is the every-third-attack
 bonus — "Xin Zhao's basic attacks on-hit ... generate a stack of
 Determination, stacking up to 3 times.  The third stack consumes them
@@ -38,13 +41,21 @@ healing rule off the same on-hit events.
 
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
+from ..ability_spec import DamagePart
 from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import ability_on_hit_entry, simple_damage
+from .slotlib import (
+    ability_name,
+    ability_on_hit_entry,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 
 PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf64"
 
@@ -90,7 +101,7 @@ def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_proc <= 0:
         return None
 
-    name = ability.get("name", "Determination")
+    name = ability_name(ability)
     entry = ability_on_hit_entry(
         name,
         ctx.level,
@@ -119,9 +130,53 @@ def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
 _determination.phase = ONHIT
 
 
+# Q's bonus damage "is affected by critical strike modifiers" (cached Q
+# effect 2), which is the crit-PROBABILITY axis ``crit_effectiveness``
+# names: the row crits at the fight's own chance and multiplier.
+_Q_CRIT_EFFECTIVENESS = 1.0
+
+# W's thrust: "dealing physical damage to enemies hit, increased by
+# 0% : 33.3% (based on critical strike chance)".  A deterministic
+# amplifier, not a crit roll — it reaches +33.3% whatever the crit
+# multiplier is, so ``crit_effectiveness`` (which routes through
+# ``state.crit_multiplier``) would misprice an Infinity Edge build.  The
+# repo's key for this axis is the parser-level linear scale between the
+# sourced endpoints (Nilah Q, Smolder Q, Zeri E), on the thrust term
+# alone: the four slashes take no amplifier.
+_W_THRUST_CRIT_CHANCE_AMP = 0.333
+
+
 def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: the whole cast — four slashes plus the thrust — at the cast."""
-    return typed_damage(ctx, "Total Physical Damage", "physical", time_offset=0.0)
+    """W: the whole cast — four slashes plus the crit-scaled thrust."""
+    ability = ctx.ability("W")
+    if ability is None:
+        return None
+    rank = ctx.rank_for("W")
+    if rank < 1:
+        return None
+    total = extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
+    thrust = extract_named(
+        ability, "Thrust Physical Damage", rank, ctx.stats, ctx.target
+    )
+    crit_chance = min(
+        1.0, max(0.0, float(ctx.stat("critical_strike_chance") or 0.0) / 100.0)
+    )
+    amplified = thrust * _W_THRUST_CRIT_CHANCE_AMP * crit_chance
+    total += amplified
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+    )
+    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
+    entry["detail"] = (
+        "four slashes plus the thrust as one hit at the cast; the thrust's "
+        f"sourced 0% : {_W_THRUST_CRIT_CHANCE_AMP:.1%} crit-chance amplifier "
+        f"adds {amplified:.2f} at {crit_chance:.0%} crit chance"
+    )
+    return entry
 
 
 # Wind Becomes Lightning ends in a thrust "dealing physical damage to
@@ -153,6 +208,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": simple_damage(
             attr="Total Bonus Physical Damage",
             dmg_type="physical",
+            crit_effectiveness=_Q_CRIT_EFFECTIVENESS,
         ),
         "W": _wind_becomes_lightning,
     },
@@ -161,14 +217,24 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "cached Total Bonus Physical Damage row (45/90/135/180/225 + 120% "
         "bonus AD), three times the per-attack Bonus Physical Damage row "
         "the generated packet selected.  Their spacing across the "
-        "5-second window is not authored.",
+        "5-second window is not authored.  The row declares "
+        "crit_effectiveness=1.0 — 'Three Talon Strike's bonus damage is "
+        "affected by critical strike modifiers' (cached Q effect 2) — so "
+        "it crits at the fight's own chance and multiplier.",
         "W (Wind Becomes Lightning) prices the whole cast — the cached "
         "Total Physical Damage row (80/125/170/215/260 + 120% AD + 65% "
         "AP), which is the four slashes plus the thrust.  The generated "
         "packet priced Physical Damage per Slash, one slash of four with "
         "no thrust.  The row is declared as one aggregate hit at the cast "
-        "boundary; the thrust's crit-chance increase (0% : 33.3%) and the "
-        "slash cadence remain unpriced.",
+        "boundary; the slash cadence remains unpriced.",
+        "W's thrust is 'increased by 0% : 33.3% (based on critical strike "
+        "chance)' (cached W effect 0) — a deterministic amplifier, not a "
+        "crit roll, so it is NOT crit_effectiveness (that key would route "
+        "through the crit multiplier and misprice an Infinity Edge "
+        "build).  The module scales the cached Thrust Physical Damage row "
+        "alone by 1 + 0.333 x crit chance, exact at both sourced "
+        "endpoints and linear between them (the Nilah Q / Smolder Q / "
+        "Zeri E precedent); the four slashes take no amplifier.",
         "P (Determination) prices the third-stack bonus at the wiki's "
         "15% / 30% / 45% / 60% (based on level) AD + 5% / 10% / 15% / "
         "20% AP (level breakpoints 1/6/11/16) — module constants, "
@@ -229,7 +295,7 @@ def derive_self_healing(
     # ``_determination`` prices the proc as a per-attack share (partial
     # stacks included), so the heal pays the same share on the same on-hit
     # events — three of them are one proc's heal.
-    determination = (ability_damages.get("passive") or {}).get("on_hit") or {}
+    determination = ability_field(ability_payload(ability_damages, "passive"), "on_hit")
     if determination:
         xin_level = max(1, int(champion_stat(champion_stats, "level")))
         health_share, heal_ap_ratio = _determination_heal_ratios(xin_level)

@@ -29,7 +29,7 @@ from .inputs import champion_stat
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .engine import SlotCtx
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .. import healing_helpers as _healing
 from .module_contract import coverage
 
@@ -72,7 +72,7 @@ def _formless_blade(ctx: SlotCtx):
     multiplier = 1.0 + (_Q_CRIT_MULTIPLIER_AT_MAX - 1.0) * crit_chance
     total = min_damage * multiplier
     entry = damage_entry(
-        ability.get("name", "Formless Blade"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

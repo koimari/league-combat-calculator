@@ -34,6 +34,7 @@ from typing import Any
 
 from .engine import BUFF, DEBUFF, ONHIT, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -70,7 +71,7 @@ def _passive_cooldown(level: int) -> float:
 def _martial_cadence(ctx: SlotCtx) -> dict[str, Any]:
     """P: current-HP% on-hit proc on a per-target cooldown (fight-scheduled)."""
     ability = ctx.ability()
-    name = ability.get("name", "Martial Cadence") if ability else "Martial Cadence"
+    name = ability_name(ability) if ability else "Martial Cadence"
     return {
         "name": name,
         "on_hit": {
@@ -95,7 +96,7 @@ def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Dragon Strike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -106,7 +107,7 @@ def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     # Armor REDUCTION (not penetration): damage.py shreds target armor
     # after Q's own damage, so post-Q hits see the reduced armor.
     shred = extract_value(ability, "Armor Reduction", rank)
-    if ctx.options.get("q_armor_shred", True) and shred > 0:
+    if ctx.option("q_armor_shred") and shred > 0:
         entry["target_debuff"] = {
             "armor_reduction_percent": shred,
             "duration": Q_SHRED_DURATION,
@@ -126,7 +127,7 @@ def _demacian_standard(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Demacian Standard"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -137,7 +138,7 @@ def _demacian_standard(ctx: SlotCtx) -> dict[str, Any] | None:
     # Bonus attack speed: the fight engine recalculates the auto count
     # (and therefore the passive's proc schedule) from the stat_buff.
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
-    if ctx.options.get("near_flag", True):
+    if ctx.option("near_flag"):
         bonus_as *= 2.0
     if bonus_as > 0:
         entry["stat_buff"] = {"bonus_attack_speed": bonus_as}

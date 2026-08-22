@@ -65,20 +65,28 @@ Roadmap session (2026-08-21): closes both remaining out_of_scope slots
     Reclassified out_of_scope -> modeled, the Ekko-W / Rumble-W
     precedent for a scanner-priced shield-only slot.
 
-    W's bonus movement speed (20% + 2% per 100 AP decaying on self, 8% +
-    0.8% per 100 AP on allies) is sourced but NOT modeled: it is an
-    additive PERCENT and the only ability-buff channel adds a flat
-    scalar onto ``champion_stats["move_speed"]``, bypassing
-    ``stats.apply_movement_speed_soft_caps`` — the Naafiri-W boundary.
-    The 2-stack shield rule is state and the base row is priced.
+    W's SELF movement grant (20% + 2% per 100 AP, decaying) is published
+    as a ``move_speed_percent`` stat buff, which ``damage.py`` re-folds
+    through ``stats.resolve_move_speed`` (soft caps included).  Its
+    magnitude is prose in the cached description rather than a leveling
+    row, so it is a pinned module constant; the ally half (8% + 0.8% per
+    100 AP) has no 1v1 channel.  The 2-stack shield rule is state and
+    the base row is priced.
 """
 
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+)
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -107,6 +115,18 @@ _Q_MISSING_HEALTH_MAX_BONUS = 0.75
 # one, so a full Q/W/E/R rotation puts the cap on Seraphine — the default.
 _NOTE_CAP = 4
 
+# HARDCODED: verify on patch updates — W's self movement grant is prose in
+# the cached W description ("she also gains 20% (+ 2% per 100 AP) decaying
+# bonus movement speed"), never a leveling row, so no accessor reaches it;
+# tests/test_seraphine_stage_presence.py pins the sentence.  The ally half
+# (8% + 0.8% per 100 AP) has no self channel.
+_W_MOVE_SPEED_PERCENT = 20.0
+_W_MOVE_SPEED_PER_100_AP = 2.0
+
+# The grant's window, read as an atom rather than pinned: the shield and
+# the movement share one sentence and one duration.
+_W_WINDOW_SOURCE = "Seraphine.W[0].effects[0].description"
+
 
 def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: the empowered attack fires every active Note at the target."""
@@ -119,9 +139,7 @@ def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_note <= 0:
         return None
     notes = min(max(0, int(ctx.option("p_notes"))), _NOTE_CAP)
-    entry = on_hit_entry(
-        ability.get("name", "Stage Presence"), per_note * notes, "magic"
-    )
+    entry = on_hit_entry(ability_name(ability), per_note * notes, "magic")
     # One empowered attack fires every Note it holds; the next attack has
     # none until her abilities grant more.
     entry["on_hit"]["max_procs"] = 1 if notes else 0
@@ -136,6 +154,67 @@ def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
 _stage_presence.phase = ONHIT
 
 
+def _w_window_seconds(ctx: SlotCtx) -> float:
+    """W's sourced grant window, read as a typed atom.
+
+    The cached sentence shields "for 2.5 seconds. For the same duration,
+    she also gains ... bonus movement speed" — one window, so the
+    movement rides the shield's own ``timing.active_duration`` atom
+    rather than a second number.
+    """
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    atom = required_ability_atom(
+        ctx.champion_name,
+        champion_data,
+        "W",
+        query=AbilityAtomQuery(
+            source=_W_WINDOW_SOURCE,
+            behavior="timing",
+            evidence_prefix="active duration@",
+        ),
+    )
+    if [str(unit).strip().lower() for unit in atom["units"]] != ["s"]:
+        raise ValueError("Seraphine W active-duration atom must use seconds")
+    return ranked_ability_atom_value(atom, 1, source=_W_WINDOW_SOURCE)
+
+
+def _surround_sound(packet_w):
+    """W: the shield is the scanner's; the cast's own movement is ours.
+
+    Replaces the packet's generic "no enemy-damage formula" stub with
+    the sourced grant, published as a ``move_speed_percent`` stat buff
+    (the Teemo-W wiring).  Only Seraphine's own half is published: the
+    ally half needs allied champions the 1v1 surface has no room for.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_w(ctx)
+        if entry is None:
+            return None
+        granted = _W_MOVE_SPEED_PERCENT + _W_MOVE_SPEED_PER_100_AP * (
+            ctx.stat("ability_power") / 100.0
+        )
+        # The cast expires, and a stat_buff is one scalar for the whole
+        # fight, so the grant lands time-weighted by the share of the
+        # window it covers (module_helpers.buff_window_share).
+        window = _w_window_seconds(ctx)
+        published = granted * buff_window_share(ctx, window)
+        entry["stat_buff"] = {"move_speed_percent": published}
+        entry["detail"] = (
+            f"Shield only, priced by the ally-support scanner. The cast's "
+            f"own {_W_MOVE_SPEED_PERCENT:g}% "
+            f"(+ {_W_MOVE_SPEED_PER_100_AP:g}% per 100 AP) grant "
+            f"({granted:g}% at this build, {published:g}% over the fight "
+            f"window at the sourced {window:g}s) is published as a "
+            "move_speed_percent stat buff, a term in the shared "
+            "movement-speed fold; its decay, its 2-stack rule and the "
+            "ally half of the grant are state."
+        )
+        return entry
+
+    return parse
+
+
 def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: flat base + 0%:75% missing-health amplifier (hp-scaled part)."""
     ranked = ctx.ranked()
@@ -147,7 +226,7 @@ def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Maximum Enhanced Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "High Note"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         base,
@@ -201,6 +280,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "E": lambda parser: with_control(parser, duration_attr="Disable Duration"),
         "R": lambda parser: with_control(parser, duration_attr="Disable Duration"),
+        "W": _surround_sound,
     },
     cc_kinds=MODULE_CC,
 )
@@ -255,13 +335,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "its amount depends on each recipient's live missing health, which the "
     "scanner cannot price per recipient, and w_already_shielded only drops "
     "the caster's shield gate - it must not resurrect a zero-amount pulse "
-    "row (pinned by tests/test_e8_support.py). W's bonus movement speed "
-    "(20% + 2% per 100 AP on self, 8% + "
-    "0.8% per 100 AP on allies) is sourced but NOT modeled: it is an "
-    "additive percent not yet wired onto the shared resolve_move_speed "
-    "fold (soft caps included) that stats publishes the flat/percent "
-    "pair for (the Naafiri-W boundary). The "
-    "2-stack shield rule is state and the base Shield Strength row is "
+    "row (pinned by tests/test_e8_support.py). W's SELF movement grant "
+    "(20% + 2% per 100 AP) is published as a move_speed_percent "
+    "stat_buff, a term in the shared resolve_move_speed fold (soft caps "
+    "included). Its magnitude is prose in the cached W description and "
+    "not a leveling row, so it is a HARDCODED module constant pinned by "
+    "the cached sentence, the way the Q missing-health amplifier and "
+    "Naafiri's 20% AD are. The ALLY half (8% + 0.8% per 100 AP) is not "
+    "published: it needs allied champions in range, which is outside the "
+    "1v1 surface. The 2.5s decay, the 2-stack shield rule and the ally "
+    "shield scope are state and the base Shield Strength row is "
     "priced. Reclassified from out_of_scope to modeled (the Ekko-W / "
     "Rumble-W precedent for a scanner-priced shield-only slot).",
 ]

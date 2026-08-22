@@ -638,19 +638,22 @@ def test_r4_physical_before_control_does_not_consume_magic_pool():
         }
     )
 
-    # CURRENT behavior: physical damage lands on health, shield pool
-    # untouched, polymorph still blocked.
-    (swing,) = [
+    # CURRENT behavior: physical damage never touches the magic pool and
+    # the polymorph is still blocked.  Aatrox's Q is three strikes a second
+    # apart, so the last one lands inside Lux's own Prismatic Barrier
+    # (200 general shield, granted at 1.5s) — a general pool, not Black
+    # Shield's magic one, which the decision below still reads at full.
+    swings = [
         event
         for event in _events(combat, target="ally:Lux")
         if event.get("attacker") == "enemy:Aatrox" and event.get("source") == "Q"
     ]
-    assert swing["damage_type"] == "physical"
-    assert swing["damage"] == pytest.approx(629.6)
-    assert "crowd_control_blocked" not in swing
+    assert [event["damage_type"] for event in swings] == ["physical"] * 3
+    assert sum(event["damage"] for event in swings) == pytest.approx(629.6)
+    assert not any("crowd_control_blocked" in event for event in swings)
     lux = survival_of(combat, "ally:Lux")
-    assert lux["shield_absorbed"] == pytest.approx(0.0)
-    assert lux["health_damage"] == pytest.approx(629.6)
+    assert lux["shield_absorbed"] == pytest.approx(200.0)
+    assert lux["health_damage"] == pytest.approx(429.6)
     (whimsy,) = [
         event
         for event in _events(combat, target="ally:Lux")

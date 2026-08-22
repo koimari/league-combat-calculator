@@ -533,3 +533,53 @@ def test_a_refused_control_family_reaches_the_page_with_its_reason(tmp_path):
 
 def test_a_fully_supported_contract_refuses_nothing(tmp_path):
     assert _control_gates(_contract(), tmp_path)["refusals"] == []
+
+
+def test_the_gate_table_covers_every_declared_control_family(tmp_path):
+    """A family is gated or it is an exemption that says why — never neither.
+
+    ``optimize`` is the exemption: it mounts no control at all, so the pass has
+    nothing to disable. Mounting one means adding its gate row here.
+    """
+    gates = _control_gates(_contract(), tmp_path)
+    declared = set(_contract()["controls"]["fields"])
+    assert set(gates["gates"]) | set(gates["exemptions"]) == declared
+    assert set(gates["gates"]) & set(gates["exemptions"]) == set()
+    assert set(gates["exemptions"]) == {"optimize"}
+    assert gates["exemptions"]["optimize"]
+
+
+def test_the_exempt_family_really_mounts_nothing():
+    """The exemption's stated cause, checked: app.js reads the optimize
+    attributes in its click delegate and emits none of them, so the roster and
+    full-build searches have no entry point on the page."""
+    for attribute in (
+        "data-optimize-roster",
+        "data-optimize-roster-all",
+        "data-optimize-build",
+    ):
+        assert f'closest("[{attribute}]")' in APP_JS, attribute
+        assert f'{attribute}="' not in FRONTEND, attribute
+
+
+def test_the_refusal_pass_runs_at_render_time():
+    """A boot-time sweep cannot see a control a later render creates, so the
+    pass is the last DOM step of ``render()`` and the boot chain no longer
+    calls it. ``.bis-trigger`` and the roster ``[data-picker]`` rows are
+    render-created, and both are gated families."""
+    render_body = APP_JS.split("\nfunction render() {")[1].split("\n}")[0]
+    assert "applyControlCapabilities();" in render_body
+    assert APP_JS.count("applyControlCapabilities();") == 1
+    for emitted in ('class="bis-trigger', 'data-picker="item"'):
+        assert emitted in APP_JS, emitted
+
+
+def test_no_published_control_family_is_refused():
+    """The runtime-disable pass is contract coverage, not a live path: nothing
+    ``_feature_fields`` publishes carries a refusal. Adding the first real one
+    is the change that retires this test and the note in its docstring."""
+    fields = _contract()["controls"]["fields"]
+    assert fields
+    for name, field in fields.items():
+        assert field["supported"] is True, name
+        assert field["reason"] is None, name

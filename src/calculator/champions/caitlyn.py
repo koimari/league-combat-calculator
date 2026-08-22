@@ -45,6 +45,7 @@ from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -218,7 +219,7 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
         if count > 0
     )
     return {
-        "name": ability.get("name", "Headshot"),
+        "name": ability_name(ability),
         "damage_type": "physical",
         "total_raw": sum(part.amount * part.count for part in parts),
         "parts": parts,
@@ -248,7 +249,7 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
     secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
-        ability.get("name", "Piltover Peacemaker"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -316,7 +317,7 @@ def _yordle_snap_trap(ctx: SlotCtx) -> dict[str, Any] | None:
     if traps <= 0:
         return None
     return {
-        "name": ability.get("name", "Yordle Snap Trap"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_recharge(ability, rank),
         "damage_type": "magic",

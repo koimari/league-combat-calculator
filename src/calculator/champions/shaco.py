@@ -49,6 +49,7 @@ from ..ability_spec import ControlEvent, DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -97,7 +98,7 @@ def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
 
     attacks = max(0, int(ctx.option("p_procs")))
     entry = on_hit_entry(
-        ability.get("name", "Backstab"),
+        ability_name(ability),
         per_hit,
         "physical",
         crit_effectiveness=BACKSTAB_CRIT_EFFECTIVENESS,
@@ -127,7 +128,7 @@ def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     per_shot = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Jack in the Box"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_shot * attacks,
@@ -164,11 +165,11 @@ def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    execute = bool(ctx.options.get("e_execute", False))
+    execute = bool(ctx.option("e_execute"))
     attribute = "Increased Damage" if execute else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Two-Shiv Poison"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         raw,
@@ -210,7 +211,7 @@ def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         )
     entry = damage_entry(
-        ability.get("name", "Hallucinate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         explosion + per_clone_hit * clone_attacks,

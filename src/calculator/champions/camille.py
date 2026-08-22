@@ -43,6 +43,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -93,7 +94,7 @@ def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     total_ad = ctx.stat("attack_damage")
     return {
-        "name": ability.get("name", "Precision Protocol"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "physical",
@@ -124,7 +125,7 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
     ratio = _q_true_ratio(ability, ctx.level)
     total_ad = ctx.stat("attack_damage")
     return {
-        "name": f"{ability.get('name', 'Precision Protocol')} (Q2)",
+        "name": f"{ability_name(ability)} (Q2)",
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "true" if ratio >= 1.0 else "mixed",
@@ -153,7 +154,7 @@ def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    if ctx.options.get("w_outer_cone", True):
+    if ctx.option("w_outer_cone"):
         # Modifier 0: base % of target max health; modifier 1: extra %
         # per 100 bonus AD (of max health too — not a flat scaling).
         percent = extract_value(ability, "Outer Cone Additional Damage", rank, 0)
@@ -165,7 +166,7 @@ def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
         total += percent / 100.0 * ctx.target_stat("target_max_health")
 
     return damage_entry(
-        ability.get("name", "Tactical Sweep"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -185,7 +186,7 @@ def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(wall_dive, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        hookshot.get("name", "Hookshot"),
+        ability_name(hookshot),
         rank,
         extract_cooldown(hookshot, rank),
         damage,
@@ -212,7 +213,7 @@ def _hextech_ultimatum(ctx: SlotCtx) -> dict[str, Any] | None:
 
     percent = extract_value(ability, "Bonus Magic Damage", rank)
     window = extract_value(ability, "Zone Duration", rank)
-    name = ability.get("name", "The Hextech Ultimatum")
+    name = ability_name(ability)
     return {
         "name": name,
         "rank": rank,

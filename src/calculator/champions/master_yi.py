@@ -35,6 +35,7 @@ from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
@@ -60,6 +61,11 @@ _Q_REAPPEAR_SECONDS = 1.087
 # leveling for the passive.
 _DOUBLE_STRIKE_STACKS = 3
 _SECOND_STRIKE_AD_RATIO = 0.5
+# "The second strike ... is affected by critical strike modifiers"
+# (cached P effect 1), and the entry's notes add that it "separately
+# rolls a critical strike" — full crit probability on its own roll,
+# which is the axis this key scales.
+_SECOND_STRIKE_CRIT_EFFECTIVENESS = 1.0
 
 # HARDCODED: verify on patch updates — Highlander's window is cached R
 # prose ("For the next 7 seconds, he gains ghosting, bonus attack speed,
@@ -75,7 +81,7 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     ad = ctx.stat("attack_damage")
     per_proc = _SECOND_STRIKE_AD_RATIO * ad
     return ability_on_hit_entry(
-        ability.get("name", "Double Strike"),
+        ability_name(ability),
         ctx.level,
         "physical",
         {
@@ -83,6 +89,7 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": per_proc / _DOUBLE_STRIKE_STACKS,
             "damage_type": "physical",
             "stacks_required": _DOUBLE_STRIKE_STACKS,
+            "crit_effectiveness": _SECOND_STRIKE_CRIT_EFFECTIVENESS,
         },
     )
 
@@ -97,7 +104,7 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     entry = damage_entry(
-        ability.get("name", "Meditate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -124,7 +131,7 @@ def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
     entry = damage_entry(
-        ability.get("name", "Highlander"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -173,6 +180,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Double Strike procs on every 3rd basic attack; the second strike "
     "deals 50% AD physical damage — wiki prose (module constants)",
+    "The second strike 'is affected by critical strike modifiers' and "
+    "'separately rolls a critical strike' (cached P effect 1 and notes), "
+    "so the on-hit row declares crit_effectiveness=1.0 and the engine "
+    "prices it at the fight's own crit chance and multiplier.",
     "Only basic attacks generate stacks (Alpha Strike explicitly does "
     "not; Meditate's channel stacks are not simulated)",
     "The engine prices the proc spread across the 3 stacking hits "

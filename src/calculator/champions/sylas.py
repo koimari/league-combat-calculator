@@ -107,6 +107,7 @@ from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .inputs import int_option
 from .module_contract import coverage
+from .slotlib import ability_name
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 
@@ -175,7 +176,9 @@ def _petricite_burst(packet_passive):
         if entry is None:
             return None
         ability = ctx.ability("P")
-        name = (ability or {}).get("name", "Petricite Burst")
+        if ability is None:
+            return None
+        name = ability_name(ability)
         attacks = min(
             max(int(ctx.option("passive_procs")), 0),
             _MAX_UNSHACKLED_STACKS,

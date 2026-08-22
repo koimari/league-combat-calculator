@@ -4,8 +4,9 @@
  * Usage: node capability_gates_harness.mjs <app.js> <fixture.json>
  * The fixture supplies `capabilities` (what `/api/config` publishes, with any
  * control family the test wants refused). stdout is JSON: `gates` (the
- * declared family -> selector table) and `refusals` (the families the
- * contract refuses, each with the reason the page will show).
+ * declared family -> selector table), `exemptions` (the declared families the
+ * pass cannot gate, each with why) and `refusals` (the families the contract
+ * refuses, each with the reason the page will show).
  */
 import { evaluate, harnessContext, runScript } from "./harness_context.mjs";
 
@@ -17,6 +18,7 @@ console.log(evaluate(context, `
   engine.capabilities = __fixture.capabilities;
   JSON.stringify({
     gates: CONTROL_FAMILY_GATES,
+    exemptions: CONTROL_FAMILY_EXEMPTIONS,
     refusals: refusedControlFamilies(),
   });
 `));

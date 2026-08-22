@@ -47,7 +47,9 @@ PER_PART = {
     "Hwei": {"Q", "E", "R"},
     "Irelia": {"R"},
     "Ivern": {"R"},
-    "Jayce": {"Q", "R"},
+    # R left per_part while Cannon Transform was an untimed zero row; both
+    # branches now ride the swing they empower, so the slot answers "none".
+    "Jayce": {"Q"},
     "K'Sante": {"W"},
     "Karma": {"W"},
     "Kayn": {"W"},

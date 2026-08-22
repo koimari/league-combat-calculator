@@ -797,7 +797,12 @@ def cache_get(cache_key: str) -> dict[str, Any] | None:
 def cache_set(
     cache_key: str, payload: Mapping[str, Any], ttl_seconds: int | None = None
 ) -> None:
-    """Store (or refresh) a cached payload with the configured TTL."""
+    """Store (or refresh) a cached payload with the configured TTL.
+
+    One ``ON CONFLICT DO UPDATE`` decides the row, so two requests computing
+    the same ``cache_key`` concurrently both store their result instead of the
+    loser of a read-then-insert breaking the unique index out of ``commit()``.
+    """
     ttl = int(ttl_seconds) if ttl_seconds is not None else cache_ttl_seconds()
     if ttl <= 0:
         return
@@ -805,23 +810,19 @@ def cache_set(
         _redis_call("set", _redis_entry_key(cache_key), json.dumps(payload), ex=ttl)
         return
     now = _utcnow()
+    entry = {
+        "payload": dict(payload),
+        "created_at": now,
+        "expires_at": now + timedelta(seconds=ttl),
+    }
+    insert_cls = postgres_insert if is_postgres() else sqlite_insert
+    statement = (
+        insert_cls(CachedResult)
+        .values(cache_key=cache_key, **entry)
+        .on_conflict_do_update(index_elements=[CachedResult.cache_key], set_=entry)
+    )
     with session() as db_session:
-        row = db_session.execute(
-            select(CachedResult).where(CachedResult.cache_key == cache_key)
-        ).scalar_one_or_none()
-        if row is None:
-            db_session.add(
-                CachedResult(
-                    cache_key=cache_key,
-                    payload=dict(payload),
-                    created_at=now,
-                    expires_at=now + timedelta(seconds=ttl),
-                )
-            )
-        else:
-            row.payload = dict(payload)
-            row.created_at = now
-            row.expires_at = now + timedelta(seconds=ttl)
+        db_session.execute(statement)
         db_session.commit()
 
 

@@ -230,7 +230,9 @@ def test_nami_bounce_reaches_the_ally_ledger_and_respects_selection():
     ally_row = next(
         row for row in combat["participants"] if row["participant_id"] == "ally:Jinx"
     )
-    assert ally_row["survival"]["healing_received"] == pytest.approx(248.0)
+    # 155.0 + 69.5: at 0.25s Jinx has taken only the first of Aatrox's three
+    # Q strikes, so the 93.0 bounce overheals 23.5 of itself.
+    assert ally_row["survival"]["healing_received"] == pytest.approx(224.5, abs=0.05)
 
     # The return bounce is independently selectable: send it to Ashe.
     combat = _roster_combat(

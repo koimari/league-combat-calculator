@@ -20,7 +20,13 @@ pinned packet declares the slot ``kind: "no_damage"``), so R is
 from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import SlotCtx
-from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 from .inputs import int_option
 from .module_contract import coverage
 
@@ -57,7 +63,7 @@ def _spell_thief(ctx: SlotCtx):
             summoner, "Unknown summoner Spell Shard mimic."
         )
         return {
-            "name": ability.get("name", "Spell Thief"),
+            "name": ability_name(ability),
             "rank": rank,
             "cooldown": extract_cooldown(ability, rank),
             "damage_type": "magic",
@@ -67,7 +73,7 @@ def _spell_thief(ctx: SlotCtx):
         }
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Spell Thief"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

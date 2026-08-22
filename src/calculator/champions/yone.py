@@ -36,6 +36,7 @@ from .module_helpers import (
 )
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_description_control_duration,
@@ -88,7 +89,7 @@ def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     entry = no_damage(
         ctx,
-        name=ability.get("name", "Way of the Hunter"),
+        name=ability_name(ability),
         reason=(
             "Soul Unbound's mark stores 25/27.5/30/32.5/35% of post-"
             "mitigation damage dealt during Spirit Form (E row); the "
@@ -133,7 +134,7 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Mortal Steel"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         damage,
@@ -253,7 +254,7 @@ def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     ratio = extract_value(ability, "Damage Stored", rank, 0) / 100.0
     entry = damage_entry(
-        ability.get("name", "Soul Unbound"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,

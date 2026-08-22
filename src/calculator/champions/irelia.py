@@ -9,6 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -32,7 +33,7 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("p_stacks")), 0), 4)
     as_per_stack = _p_row(ability, 0, ctx)
     bonus_as = as_per_stack * stacks
-    entry = on_hit_entry(ability.get("name", "Ionian Fervor"), 0.0, "magic")
+    entry = on_hit_entry(ability_name(ability), 0.0, "magic")
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     if stacks >= 4:
         damage = _p_row(ability, 2, ctx) + 0.20 * ctx.stat("bonus_attack_damage")
@@ -57,7 +58,7 @@ def _bladesurge(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Bladesurge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -89,7 +90,7 @@ def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     value = low + (high - low) * charge
     entry = damage_entry(
-        ability.get("name", "Defiant Dance"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -109,7 +110,7 @@ def _flawless_duet(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Flawless Duet"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,
@@ -127,7 +128,7 @@ def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Vanguard's Edge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value * passes,

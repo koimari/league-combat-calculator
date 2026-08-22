@@ -33,6 +33,7 @@ from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -133,7 +134,7 @@ def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
         entry,
         amount=amount,
         duration=duration,
-        source=ability.get("name", "Blast Shield"),
+        source=ability_name(ability),
         detail=(
             f"{entry.get('detail', '')}; Blast Shield {percent:g}% of "
             f"maximum health ({amount:.0f}) for {duration:g}s"
@@ -205,7 +206,7 @@ def _w_proc(ctx: SlotCtx, hit_time: float) -> dict[str, Any]:
         return live_max * percent / 100.0
 
     return {
-        "name": ability.get("name", "Denting Blows"),
+        "name": ability_name(ability),
         "breakdown_key": "passive_proc_W",
         "parts": (
             DamagePart(
@@ -350,7 +351,7 @@ def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
     raw = float(ctx.target_stat("target_max_health")) * percent / 100.0
     procs = len(proc_times)
     return {
-        "name": ability.get("name", "Denting Blows"),
+        "name": ability_name(ability),
         "damage_type": "physical",
         "total_raw": raw * procs,
         "parts": (DamagePart("physical", raw),),
@@ -387,7 +388,7 @@ def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
     multiplier = 1.0 + _Q_MAX_BONUS_MULTIPLIER * fraction
     raw = minimum * multiplier
     entry = damage_entry(
-        ability.get("name", "Vault Breaker"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         raw,
@@ -438,7 +439,7 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         # only E's non-basic rider: flat + 10% total AD + 100% AP.
         rider = flat + 0.10 * total_ad + ability_power
         entry = damage_entry(
-            ability.get("name", "Relentless Force"),
+            ability_name(ability),
             rank,
             extract_recharge(ability, rank),
             rider,
@@ -466,7 +467,7 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
         # not gain a Denting Blows stack.
         raw = flat + 1.10 * total_ad + ability_power
         entry = damage_entry(
-            ability.get("name", "Relentless Force"),
+            ability_name(ability),
             rank,
             extract_recharge(ability, rank),
             raw,
@@ -501,7 +502,7 @@ def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
     approach = max(0.0, distance - _R_GRAB_RANGE) / _R_INITIAL_SPEED
     hit_time = sequence_start + _R_CAST_TIME + approach + _R_GRAB_DAMAGE_DELAY
     entry = damage_entry(
-        ability.get("name", "Cease and Desist"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         raw,

@@ -22,6 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -53,7 +54,7 @@ def _purge(ctx: SlotCtx) -> dict[str, Any] | None:
         ability, "Modified Physical Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
-        ability.get("name", "Purge"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_shot * _W_SHOTS,
@@ -94,7 +95,7 @@ def _fear_beyond_death(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Fear Beyond Death"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         value,

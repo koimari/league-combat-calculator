@@ -29,7 +29,7 @@ from ..ability_atoms import (
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import damage_entry, extract_cooldown
+from .slotlib import ability_name, damage_entry, extract_cooldown
 from .inputs import int_option
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
@@ -124,7 +124,7 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     secondary = min(max(int(ctx.option("clean_cuts_secondary_targets")), 0), 5)
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Clean Cuts"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "damage_type": "physical",
         "total_raw": 0.0,
@@ -197,7 +197,7 @@ def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
     feathers = min(max(feathers, 0), _MAX_FEATHERS)
 
     entry = damage_entry(
-        ability.get("name", "Bladecaller"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_feather * feathers,

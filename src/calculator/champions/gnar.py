@@ -40,6 +40,7 @@ from ..ability_spec import ControlEvent, DamagePart
 from ..stats import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     ability_on_hit_entry,
     by_option,
     damage_entry,
@@ -98,7 +99,7 @@ _CRUNCH_OWN_HP_UNIT = "% of his maximum health"
 
 def _form_index(ctx: SlotCtx) -> int:
     """JSON entry index for the current form: 0 = Mini, 1 = Mega."""
-    return 1 if ctx.options.get("mega", False) else 0
+    return 1 if ctx.option("mega") else 0
 
 
 # ---------------------------------------------------------------------------
@@ -141,7 +142,7 @@ def _rage_gene(ctx: SlotCtx) -> dict[str, Any] | None:
     ):
         ctx.stats[key] = ctx.stat(key) + value
 
-    entry = damage_entry(ability.get("name", "Rage Gene"), 0, 0.0, 0.0, "physical")
+    entry = damage_entry(ability_name(ability), 0, 0.0, 0.0, "physical")
     entry["stat_buff"] = {
         "base_health": hp,
         "base_attack_damage": ad,
@@ -181,7 +182,7 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
     secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
     total = primary + reduced * secondary
     entry = damage_entry(
-        ability.get("name", "Boomerang Throw"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -228,7 +229,7 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: form-picked "Physical Damage"; catching it refunds cooldown."""
     form = _form_index(ctx)
     entry = _q_forms[form](ctx)
-    if entry is not None and ctx.options.get("q_pickup", True):
+    if entry is not None and ctx.option("q_pickup"):
         entry["cooldown"] *= _Q_PICKUP_CD_MULT[form]
     return entry
 
@@ -261,7 +262,7 @@ def _hyper(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     per_proc = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
-    name = ability.get("name", "Hyper")
+    name = ability_name(ability)
     return ability_on_hit_entry(
         name,
         rank,
@@ -296,7 +297,7 @@ def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Hop"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -330,7 +331,7 @@ def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
         leveling, rank, ctx.stats, ctx.target, modifier_override=_own_max_hp
     )
     return damage_entry(
-        ability.get("name", "Crunch"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

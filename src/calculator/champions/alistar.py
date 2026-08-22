@@ -48,6 +48,7 @@ hardcoded.
 import re
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_atoms import (
     AbilityAtomQuery,
     ranked_ability_atom_value,
@@ -61,6 +62,7 @@ from .inputs import champion_stat, int_option
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
+    ability_name,
     atom_receipt,
     damage_entry,
     extract_cooldown,
@@ -152,7 +154,7 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     # entry.
     empowered = _extract_e_on_hit_damage(ability, ctx.level)
 
-    name = ability.get("name", "Trample")
+    name = ability_name(ability)
     entry = damage_entry(
         name,
         rank,
@@ -210,7 +212,7 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     if stacks <= 0:
         return None
     return {
-        "name": ability.get("name", "Triumphant Roar"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "magic",
@@ -269,7 +271,7 @@ def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
         raise ValueError("Alistar R active-duration atom must use seconds")
     duration = ranked_ability_atom_value(duration_atom, 1, source=_R_DURATION_SOURCE)
 
-    name = ability.get("name", "Unbreakable Will")
+    name = ability_name(ability)
     return {
         "name": name,
         "rank": rank,
@@ -427,7 +429,7 @@ def derive_self_healing(
         + payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
         key=lambda payment: float(payment.event.get("time", 0.0)),
     )
-    carried = ability_damages.get("passive", {}).get("self_heal_state")
+    carried = ability_payload(ability_damages, "passive").get("self_heal_state")
     qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
     for payment in casts:
         event = payment.event

@@ -437,9 +437,13 @@ class TestRHammer:
             "magic_resistance": pytest.approx(37.25),
         }
 
-    def test_empowers_exactly_one_auto(self, jayce_data) -> None:
-        """ "Empowers his next basic attack" means ONCE per transform."""
-        assert _parse(jayce_data, options=HAMMER)["R"]["empowers_next_auto"] is True
+    def test_empowers_exactly_one_scheduled_auto(self, jayce_data) -> None:
+        """ "Empowers his next basic attack": once per transform, and the
+        swing that carries it is the stream's next — Transform states no
+        attack-timer reset."""
+        empower = _parse(jayce_data, options=HAMMER)["R"]["empowers_next_auto"]
+        assert empower == {"rides_scheduled_auto": True}
+        assert "hits" not in empower  # absent means one
 
     @pytest.mark.parametrize("level", sorted(R_TIERS))
     def test_level_tiers(self, jayce_data, level) -> None:
@@ -574,8 +578,12 @@ class TestFightIntegration:
         assert stats["magic_resistance"] == pytest.approx(50.0)
 
     def test_cannon_shred_does_not_amplify_its_own_row(self, jayce_data) -> None:
-        """The Kog'Maw rule: R's shred lands after R's own damage. R deals
-        none, so its row stays 0 whatever the target's resists."""
+        """The Kog'Maw rule: R's shred lands after R's own damage.
+
+        Cannon R adds no damage of its own, so its row is exactly the
+        basic attack it empowers — priced against the target's UNSHREDDED
+        100 armor (250 AD x 100/200 = 125), never the 65 the shred leaves.
+        """
         stats = dict(STATS_250_AD)
         abilities = _parse(jayce_data, stats=stats)
         result = calculate_fight_damage(
@@ -592,7 +600,7 @@ class TestFightIntegration:
                 deterministic=True,
             ),
         )
-        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(0.0)
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(125.0)
 
     def test_hammer_r_row_includes_its_forced_swing(self, jayce_data) -> None:
         """With no auto stream the empowered attack lands on R's own row:
@@ -659,15 +667,16 @@ class TestHyperChargeBurstAttackSpeed:
         3.003/s occupy only 1.998s. The remaining 8.002s still runs at
         Jayce's ordinary 1.0 AS, so 8 normal autos land ALONGSIDE the 6
         empowered ones -- 14 attacks total, where a flat 1.0 AS over the
-        whole fight would have produced 10.
+        whole fight would have produced 10. One of those 8 is the swing
+        Cannon R rides, which leaves 7 on the auto row.
         """
         stats = dict(STATS_250_AD, critical_strike_chance=0.0)
         abilities = _parse(jayce_data, stats=stats)
         result = _fight(stats, abilities, uptime=1.0, one_rotation=False, duration=10.0)
         breakdown = result["breakdown"]
         assert breakdown["W"]["casts"] == 2
-        # 6 swings are consumed by W's row; the ordinary autos remain.
-        assert breakdown["auto_attacks"]["count"] == 8
+        # 6 swings are consumed by W's row and 1 by R's; the rest remain.
+        assert breakdown["auto_attacks"]["count"] == 7
         assert breakdown["W"]["total_damage"] == pytest.approx(6 * 1.10 * 250.0)
 
     def test_empowered_attacks_crit(self, jayce_data) -> None:
@@ -719,14 +728,17 @@ class TestHyperChargeBurstAttackSpeed:
         charge armed during the burst can only be spent ONCE.
 
         Essence Reaver's 1.5s cooldown plus its 1.5s weave delay outlasts
-        the whole ~1s burst; pricing the procs against the nominal
-        5s rotation instead used to hand out a second one for free.
+        the whole ~1s burst, so the four forced attacks in this rotation
+        cannot yield four procs: a charge is spent per CAST that forces
+        swings, and only R and W do. Pricing the procs against the
+        nominal 5s rotation instead used to hand one out per attack.
         """
         essence_reaver = get_item_by_name("Essence Reaver")
         stats = dict(STATS_250_AD, critical_strike_chance=0.0)
         abilities = _parse(jayce_data, stats=stats)
         result = _fight(stats, abilities, uptime=0.0, items=[essence_reaver])
-        assert result["breakdown"]["spellblade_Essence Reaver"]["count"] == 1
+        # R forces one swing and W's burst three: four attacks, two casts.
+        assert result["breakdown"]["spellblade_Essence Reaver"]["count"] == 2
 
 
 class TestHyperChargeCooldownStart:
@@ -846,9 +858,16 @@ class TestCannonShredDuration:
             ),
         )["effective_armor"]
 
-    def test_five_second_fight_gets_the_full_shred(self, jayce_data) -> None:
-        """Fully covered: 60 armor - 30% = 42."""
-        assert self._armor(jayce_data, 5.0) == pytest.approx(42.0)
+    def test_five_second_fight_is_short_of_the_full_shred(self, jayce_data) -> None:
+        """The window opens at the empowered swing, not at the cast.
+
+        Hyper Charge's three attacks own [0, 0.999) at the 3.003 cap, so
+        the first ordinary swing — the one Cannon R rides — lands at
+        0.999 and its 5s window covers 4.001 of this 5s fight:
+        60 - 30% x 0.80020 = 45.596. Only a fight the whole window fits
+        inside gets the full 42.
+        """
+        assert self._armor(jayce_data, 5.0) == pytest.approx(45.5964035964036)
 
     def test_ten_second_fight_gets_half_the_shred(self, jayce_data) -> None:
         """The 5s window covers half a 10s fight: 60 - 30%*0.5 = 51."""
@@ -912,12 +931,13 @@ class TestReviewedCrowdControl:
     probe below is the reason these declarations exist.
     """
 
-    def test_the_module_declares_no_slot_wide_kinds(self):
-        """Every Jayce slot is a stance dispatcher, so no slot has one kind.
+    def test_only_q_needs_a_per_part_kind(self):
+        """Q is the one slot whose two stances disagree.
 
-        MODULE_CC would have to be true of both stances' spells at once —
         Hammer's To the Skies! slows where Cannon's Shock Blast controls
-        nothing — so each kind rides its own construction instead.
+        nothing, so that kind rides its own construction. R answers for
+        the slot: both transforms touch an enemy only through the one
+        attack they empower, and neither controls.
         """
         from src.calculator.champions import jayce
 
@@ -928,7 +948,7 @@ class TestReviewedCrowdControl:
             "Q": CC_PER_PART,
             "W": "none",
             "E": "knockback",
-            "R": CC_PER_PART,
+            "R": "none",
         }
         assert jayce.parse_abilities.cc_kinds == jayce.MODULE_CC
 
@@ -950,7 +970,7 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(text) == []
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _CC.kinds() == {"Q": ["none"], "W": ["none"]}
+        assert _CC.kinds() == {"Q": ["none"], "W": ["none"], "R": ["none"]}
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """Hammer's To the Skies! slows and Thundering Blow knocks back."""

@@ -11,27 +11,36 @@ Why each slot is non-generic:
   attacks are emitted as a separate ``tibbers_attacks`` proc row (the R
   cast itself stays burst + aura) so the fight prices them once over
   the window instead of per R cast.
-- P (Pyromania) is a stun-only passive shown as a zero-damage row under
-  the literal "P" results key (the pre-engine UI shape), so a custom
-  slot fn writes it into ``ctx.results`` directly instead of using the
-  engine's "P" -> "passive" mapping.
-- E (Molten Shield) is shield/retaliation only — champion-local
-  ``_molten_shield`` preserves its zero-damage display row.
+- P (Pyromania) is a cross-slot charge walk shown as a zero-damage row
+  under the literal "P" results key (the pre-engine UI shape), so a
+  custom slot fn writes it into ``ctx.results`` directly instead of
+  using the engine's "P" -> "passive" mapping.  Every cast charges and
+  the next Q/W/R cast at the cap spends the charge as a stun, so the
+  row reports the charge the walk derives rather than a marker on one
+  cast.
+- E (Molten Shield) shields, and its second cached effect is the
+  retaliation landing: enemies that damage the shield take a sourced
+  25/35/45/55/65 (+40% AP), once per enemy per cast.
 - Q/W are plain "Magic Damage" attribute reads.
 
 All numeric values are read from the champion JSON data except the
 Tibbers aura and auto-attack constants (wiki pets entry).
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .module_helpers import ability_cast_times
 from .slotlib import (
+    ability_name,
     damage_entry,
+    effect_description,
     extract_cooldown,
     extract_named,
     extract_value,
+    find_named_leveling,
     fixed_count_pet_row,
     simple_damage,
 )
@@ -176,7 +185,7 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.results["tibbers_attacks"] = attacks
 
     return {
-        "name": ability.get("name", "Summon: Tibbers"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": cooldown,
         "damage_type": "magic",
@@ -197,32 +206,157 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
 _summon_tibbers.phase = BUFF
 
 
-def _pyromania_placeholder(ctx: SlotCtx) -> None:
-    """P: stun-only passive, a zero-damage display row under key "P".
+# Pyromania is prose only — its cached effects carry no leveling row — so
+# the charge cap, the slots that may spend it and the level-stepped stun
+# are read from the sentences that state them and raise when a patch stops
+# stating them (the Shyvana Scalemail rule).
+_STACK_CAP_RE = re.compile(r"stacking up to (\d+) times")
+_ENERGIZED_STUN_RE = re.compile(
+    r"stun enemies hit for ([\d.]+) / ([\d.]+) / ([\d.]+) \(based on level\)"
+)
+# HARDCODED: verify on patch updates — against the GAME FILES, because the
+# cached entry states "1.25 / 1.5 / 1.75 (based on level)" and names no
+# level at all: https://raw.communitydragon.org/latest/game/data/characters/
+# annie/annie.bin.json, Characters/Annie/Spells/AnniePassiveAbility/
+# AnniePassive -> mSpellCalculations.StunDuration, a
+# ByCharLevelBreakpointsCalculationPart with mLevel1Value 1.25 and
+# mBreakpoints at mLevel 6 and mLevel 11 (+0.25 each).  The same record's
+# MaxStacks 4 corroborates the charge cap the innate's sentence states.
+# Descending, so the walk takes the first breakpoint the level clears.
+_STUN_BREAKPOINT_LEVELS = (11, 6, 1)
+_CHARGE_EFFECT = 0
+_ENERGIZED_EFFECT = 1
+#: Molten Shield retaliates "once per enemy per cast", so a Summoner's Rift
+#: team is the most landings one cast can ever have.
+_MAX_RETALIATIONS = 5
 
-    Written into ``ctx.results`` directly: a returned P-slot entry maps to
-    the "passive" key, and this row's home is the literal "P".
+
+def _charge_cap(ability: dict[str, Any]) -> int:
+    """Pyromania's stack cap, from the sentence that states it."""
+    match = _STACK_CAP_RE.search(effect_description(ability, _CHARGE_EFFECT))
+    if match is None:
+        raise ValueError(
+            "Annie P: the cached Pyromania innate no longer states "
+            "'stacking up to N times', so the charge cap has no source"
+        )
+    return int(match.group(1))
+
+
+def _stun_seconds(ability: dict[str, Any], level: int) -> float:
+    """The Energized stun at a champion level, from the cached sentence."""
+    match = _ENERGIZED_STUN_RE.search(effect_description(ability, _ENERGIZED_EFFECT))
+    if match is None:
+        raise ValueError(
+            "Annie P: the cached Energized effect no longer states "
+            "'stun enemies hit for A / B / C (based on level)'"
+        )
+    steps = [float(value) for value in match.groups()]
+    for seconds, breakpoint_level in zip(reversed(steps), _STUN_BREAKPOINT_LEVELS):
+        if level >= breakpoint_level:
+            return seconds
+    return steps[0]
+
+
+def _energized_spenders(ctx: SlotCtx, ability: dict[str, Any]) -> frozenset[str]:
+    """The slots the Energized sentence names as spenders (Q, W and R).
+
+    Molten Shield charges Pyromania like every other cast but is absent
+    from "her next cast of Disintegrate, Incinerate, or Summon: Tibbers",
+    so the spender set is read off the cached ability names rather than
+    written down a second time.
+    """
+    sentence = effect_description(ability, _ENERGIZED_EFFECT)
+    spenders = frozenset(
+        slot
+        for slot in ("Q", "W", "E", "R")
+        if (named := ctx.ability(slot)) is not None and ability_name(named) in sentence
+    )
+    if not spenders:
+        raise ValueError(
+            "Annie P: the cached Energized effect names no ability this kit "
+            "has, so no slot can be said to spend the charge"
+        )
+    return spenders
+
+
+def _pyromania(ctx: SlotCtx) -> None:
+    """P: walk the fight's own casts through the cross-slot charge.
+
+    Every Q/W/E/R cast adds a stack; at the cap the next cast of a
+    spender slot consumes the whole charge and stuns.  ``pyromania_stacks``
+    is the opening charge — the one thing no walk can derive, because it
+    depends on what Annie cast before the fight (the cached innate opens
+    her at the cap on spawn).  The row is written into ``ctx.results``
+    because its home is the literal "P" key, not the "passive" a return
+    maps to.
     """
     ability = ctx.ability()
-    if ability is not None:
-        ctx.results["P"] = damage_entry(
-            ability.get("name", "Pyromania"), 0, 0.0, 0.0, "magic"
+    if ability is None:
+        return
+    cap = _charge_cap(ability)
+    stun = _stun_seconds(ability, ctx.level)
+    opening = min(max(int(ctx.option("pyromania_stacks")), 0), cap)
+    spenders = _energized_spenders(ctx, ability)
+    window = ctx.options.get("fight_duration_seconds")
+    stacks = opening
+    stun_times: list[float] = []
+    if window is not None:
+        for time, slot in ability_cast_times(ctx, float(window), ("Q", "W", "E", "R")):
+            if stacks >= cap and slot in spenders:
+                stun_times.append(time)
+                stacks = 0
+            else:
+                stacks = min(stacks + 1, cap)
+    entry = damage_entry(ability_name(ability), 0, 0.0, 0.0, "magic")
+    entry["detail"] = (
+        f"{len(stun_times)} Energized stun(s) of {stun:g}s "
+        f"(charge {opening}/{cap} at the opening, {stacks}/{cap} at the end); "
+        + (
+            "stuns at " + ", ".join(f"{time:.2f}s" for time in stun_times)
+            if stun_times
+            else f"the charge is spent by the next {'/'.join(sorted(spenders))} cast"
         )
+    )
+    ctx.results["P"] = entry
 
 
 def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: ranked zero-damage row with the real cooldown."""
+    """E: the shield's sourced retaliation landing.
+
+    "While Molten Shield is active, enemies that deal damage to it take
+    magic damage ... once per enemy per cast" is a real cached leveling
+    row, so the entry prices ``e_shield_retaliations`` landings of it.
+    The default is zero: the pair engine's target deals Annie no damage,
+    the same answer a thorns item gives in a fight with no incoming
+    attacks.  One landing is a certified single hit; several are one
+    aggregate, because nothing sources when each enemy strikes.
+    """
     ranked = ctx.ranked()
     if ranked is None:
         return None
     ability, rank = ranked
-    return damage_entry(
-        ability.get("name", "Molten Shield"),
+    if find_named_leveling(ability, "Magic Damage") is None:
+        raise ValueError(
+            "Annie E: the cached Molten Shield entry no longer carries a "
+            "'Magic Damage' leveling row for its retaliation"
+        )
+    per_enemy = extract_named(ability, "Magic Damage", rank, ctx.stats)
+    hits = min(max(int(ctx.option("e_shield_retaliations")), 0), _MAX_RETALIATIONS)
+    entry = damage_entry(
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
-        0.0,
+        per_enemy * hits,
         "magic",
+        event_order_certified="single_hit" if hits == 1 else None,
     )
+    if hits > 1:
+        entry["parts"] = (DamagePart("magic", per_enemy, count=hits),)
+    entry["detail"] = (
+        f"{hits} retaliation landing(s) at {per_enemy:.2f} magic each "
+        "(once per enemy per cast, while the shield holds)"
+    )
+    return entry
 
 
 OPTIONS = [
@@ -242,6 +376,21 @@ OPTIONS = [
         label="Tibbers auto attacks (0 = none; defaults to the fight "
         "window at the sourced enrage + 0.625 AS cadence)",
     ),
+    int_option(
+        "pyromania_stacks",
+        4,
+        minimum=0,
+        maximum=4,
+        label="Pyromania charge at the opening (4 = Energized, the cached "
+        "innate's state on spawn)",
+    ),
+    int_option(
+        "e_shield_retaliations",
+        0,
+        minimum=0,
+        maximum=_MAX_RETALIATIONS,
+        label="Enemies that damage Molten Shield (once per enemy per cast)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -260,27 +409,35 @@ ASSUMPTIONS = [
     "location', which no basic attack performs. R's magic-penetration "
     "passive is innate and still applies",
     "Tibbers aura defaults to 5 seconds of damage",
-    "E retaliation damage is not modeled (requires enemies to hit Annie)",
+    "The Pyromania charge walks the fight's own cast stream at the "
+    "Braum-pattern schedule (each learned slot at t=0 and every hasted "
+    "cooldown after); the empowered cast consumes the whole charge and "
+    "starts recharging from zero, and an autos-only window casts nothing, "
+    "so the charge never moves",
+    "E retaliation lands only when the scenario declares enemies hitting "
+    "the shield (e_shield_retaliations, default 0): who strikes Annie and "
+    "when is not something the one-pair fight sources",
 ]
 
 SLOTS = {
     "R": _summon_tibbers,
-    "P": _pyromania_placeholder,
+    "P": _pyromania,
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "E": _molten_shield,
 }
 
-# MODULE_CC is empty.  E's retaliation only makes "enemies that deal damage
-# to it take magic damage", but its row is an untimed zero the event ledger
-# cannot carry a kind for.
-#
-# Q, W and R are left unreviewed on purpose.  Pyromania is at maximum
-# stacks "when the game starts and upon respawning", so the first cast of
-# Disintegrate, Incinerate or Summon: Tibbers in a modeled fight consumes
-# them "to stun enemies hit" — a slot-wide "none" would be false of that
-# cast and a slot-wide stun false of every later one.  P is the stun's own
-# zero-damage row.  (Kennen's Mark of the Storm is the same shape.)
+# MODULE_CC is empty, and the Pyromania walk is why rather than an excuse
+# for it.  The charge is cross-slot: every cast adds one and the next
+# Disintegrate, Incinerate or Summon: Tibbers at the cap "consume[s] all
+# Pyromania stacks to stun enemies hit".  Which casts of a slot are the
+# empowered ones is therefore a property of the fight's cast stream, and a
+# slot-level kind is a constant — so neither a slot-wide stun nor a
+# slot-wide "none" is true of Q, W or R, and the walk publishes the derived
+# stun schedule on P's own row instead.  E only makes "enemies that deal
+# damage to it take magic damage", which is no control at all, but its
+# aggregate landing row has no per-hit boundary for a marker to ride.
+# (Kennen's Mark of the Storm is the same shape, per target.)
 MODULE_CC: dict[str, str] = {}
 
 parse_abilities = build_parser(SLOTS, "Annie", cc_kinds=MODULE_CC)

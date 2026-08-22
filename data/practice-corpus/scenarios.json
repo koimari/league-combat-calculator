@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -160,24 +160,42 @@
      {
       "source": "Umbral Dash",
       "time": 0.0,
-      "amount": 276.4,
+      "amount": 73.7,
       "trigger_source": "Q"
      },
      {
       "source": "Umbral Dash",
       "time": 0.0,
-      "amount": 50.4,
+      "amount": 25.2,
       "trigger_source": "W"
+     },
+     {
+      "source": "Umbral Dash",
+      "time": 1.0,
+      "amount": 92.1,
+      "trigger_source": "Q"
+     },
+     {
+      "source": "Umbral Dash",
+      "time": 1.5,
+      "amount": 25.2,
+      "trigger_source": "W"
+     },
+     {
+      "source": "Umbral Dash",
+      "time": 2.0,
+      "amount": 110.6,
+      "trigger_source": "Q"
      }
     ],
-    "formula": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active: Q 863.7 x 0.16 x 2.0 = 276.4; W 157.5 x 0.16 x 2.0 = 50.4"
+    "formula": "E passive heals 16% of post-mitigation ability damage (no bonus health), x2.0 while R (World Ender, rank 3 = +100% increased healing) is active, and pays once per damaging hit. Q's three strikes land 1 second apart (Aatrox Q effect 0: 'with a 1-second static cooldown between casts'): 230.3 / 287.9 / 345.5 x 0.16 x 2.0 = 73.7 at t=0, 92.1 at t=1, 110.6 at t=2. W hits twice (Aatrox W effect 1: a tether 'for 1.5 seconds'; effect 2: at its end 'the target is dealt the same physical damage again'): 78.8 x 0.16 x 2.0 = 25.2 at t=0 and again at t=1.5. Totals are unchanged by the split -- Q still pays 276.4 and W still pays 50.4, 326.8 in all."
    },
-   "practice_tool_steps": "Load Aatrox, buy nothing. Level 18, max Q/W/E and rank 3 R. Practice Tool: cast World Ender, then Q (sweetspot) and W on a practice dummy. Combat log: Umbral Dash passive heals 276.4 on the Q hit and 50.4 on the W hit (16% of post-mitigation damage, doubled by World Ender)."
+   "practice_tool_steps": "Load Aatrox, buy nothing. Level 18, max Q/W/E and rank 3 R. Practice Tool: cast World Ender, then the full three-cast Q (sweetspot) and W on a practice dummy. Combat log: Umbral Dash heals 73.7 / 92.1 / 110.6 on the three Q strikes one second apart, and 25.2 twice on W -- on the chain hit and again 1.5 seconds later when the tether pulls."
   },
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -216,7 +234,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -259,7 +277,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -301,7 +319,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -339,7 +357,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -384,7 +402,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -420,7 +438,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -459,7 +477,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -498,7 +516,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -546,7 +564,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -585,7 +603,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -616,16 +634,16 @@
     "revive_time": 10.312,
     "revive_health_restored": 2114.0,
     "revive_source": "Rebirth",
-    "death_time": 15.091,
+    "death_time": 15.45,
     "revived": true,
-    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (P3 package 3P: death at 4.312 -> revive at 10.312 -> killed again at 15.091)"
+    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (death at 4.312 -> revive at 10.312 -> killed again at 15.45). Aatrox's Q now lands as three strikes a second apart and W as two hits 1.5s apart, which spreads the same incoming total later and pushes the second death out from 15.091."
    },
    "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
   },
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -663,36 +681,60 @@
     "healing_events": [
      {
       "time": 0.25,
-      "raw": 277.8,
-      "applied": 166.7,
+      "raw": 74.1,
+      "applied": 44.5,
       "factor": 0.6
      },
      {
       "time": 0.85,
-      "raw": 50.7,
-      "applied": 30.4,
+      "raw": 25.3,
+      "applied": 15.2,
+      "factor": 0.6
+     },
+     {
+      "time": 1.25,
+      "raw": 92.6,
+      "applied": 55.6,
+      "factor": 0.6
+     },
+     {
+      "time": 2.25,
+      "raw": 111.1,
+      "applied": 66.7,
+      "factor": 0.6
+     },
+     {
+      "time": 2.35,
+      "raw": 25.3,
+      "applied": 15.2,
       "factor": 0.6
      },
      {
       "time": 6.85,
-      "raw": 277.8,
-      "applied": 166.7,
+      "raw": 74.1,
+      "applied": 44.5,
+      "factor": 0.6
+     },
+     {
+      "time": 7.85,
+      "raw": 92.6,
+      "applied": 55.6,
       "factor": 0.6
      }
     ],
-    "healing_received": 363.8,
-    "healing_reduced": 242.5,
+    "healing_received": 297.1,
+    "healing_reduced": 198.1,
     "reduction_sources": [
      "Morellonomicon \u00b7 Grievous Wounds"
     ],
-    "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). F2: both sides now play their optimal rotations, shifting every event +0.25s (Annie opens E->R, Aatrox opens R); the cut amounts are unchanged. Sum of cuts = 242.5"
+    "formula": "Annie's Morellonomicon wounds Aatrox for 3s per hit: every Umbral Dash heal inside the window keeps 60% (40% cut). Both sides play their optimal rotations, so Aatrox's first Q lands at 0.25s. The Q triad is three strikes a cached second apart and W is two hits a cached 1.5s apart, so the eight-second fight pays seven heals inside the window instead of three: Q at 0.25 / 1.25 / 2.25 and 6.85 / 7.85, W at 0.85 and 2.35. The second Q's third strike lands at 8.85s, past the fight window, so the walk drops it and it enters neither total. Sum of the seven cuts = 198.1 on 495.1 raw, 297.1 received."
    },
-   "practice_tool_steps": "Practice Tool: Annie buys Morellonomicon. Aatrox casts spells to heal (Umbral Dash passive) while wounded; combat log heals show the 40% reduction (raw 277.8 -> 166.7, etc.) for 3 seconds after each of Annie's hits."
+   "practice_tool_steps": "Practice Tool: Annie buys Morellonomicon. Aatrox casts spells to heal (Umbral Dash passive) while wounded; combat log heals show the 40% reduction (raw 74.1 -> 44.5 per first Q strike, 25.3 -> 15.2 per W hit, etc.) for 3 seconds after each of Annie's hits."
   },
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -741,7 +783,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -790,7 +832,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -829,7 +871,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -873,15 +915,15 @@
     "bonus_health": 400,
     "max_health": 2990.0,
     "triggered": true,
-    "death_time": 11.858,
-    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 11.858 after the modeled crowd-control downtime (F2: Aatrox and Zed enemies play their optimal rotations). A hostile control is staged at TransitionRank.DEBUFF_ARM (participant_timeline._pair_packet), so it takes effect AFTER everything that landed at its own timestamp: Apprehend's airborne at t=0 does not erase the enemies' opening volley (8 packets, 826.0 post-mitigation), whose casts were already in flight at the landing instant, and the lock runs from there. Which of the two the engine schedules first at t=0 is a rotation-layout artifact rather than a sourced fact, so it must not delete a volley."
+    "death_time": 9.702,
+    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 9.702. A hostile control is staged at TransitionRank.DEBUFF_ARM (participant_timeline._pair_packet), so it takes effect AFTER everything that landed at its own timestamp: Apprehend's airborne at t=0 does not erase the enemies' opening volley (8 packets, 826.0 post-mitigation), whose casts were already in flight at the landing instant, and the lock runs from there. Which of the two the engine schedules first at t=0 is a rotation-layout artifact rather than a sourced fact, so it must not delete a volley. Death moved in from 11.858 because the lock now suppresses only what is really inside it: Aatrox's Q used to be one event at 0.25s and lost all three strikes to the airborne, and W one event at 0.85s. Split, only the first Q strike (0.25s) and the chain hit (0.85s) fall inside; the strikes at 1.25 / 2.25 (245.7 / 294.8) and the tether hit at 2.35 (67.2) land after it and now reach Darius."
    },
    "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
   },
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "35f2ec61cf272181be361119b7763b01f9f21795",
+   "sha": "d00c4fb33172f65294c669efaa6466c99eaa292d",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",

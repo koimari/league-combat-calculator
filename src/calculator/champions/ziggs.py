@@ -26,6 +26,7 @@ from typing import Any
 
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    ability_name,
     by_option,
     damage_entry,
     extract_cooldown,
@@ -115,7 +116,7 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     total = min(full + (mines - 1) * reduced, cap)
     entry = damage_entry(
-        ability.get("name", "Hexplosive Minefield"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

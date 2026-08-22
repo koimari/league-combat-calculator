@@ -27,6 +27,17 @@ def _r_row(level, **options):
     )["R"]
 
 
+def _w_total(target_max_health):
+    """Ornn's priced Bellows Breath total against one dummy's maximum health."""
+    return parse_champion_abilities(
+        get_champion("Ornn"),
+        18,
+        0.0,
+        ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+        target_stats={"target_max_health": target_max_health},
+    )["W"]["total_raw"]
+
+
 class TestReviewedCrowdControl:
     """Ornn's reviewed crowd control, and what declaring it clears.
 
@@ -188,3 +199,25 @@ class TestTemperBrittleConsume:
         w_row = row_review.entry("Ornn", "W")
         assert "post_hit_proc" not in w_row
         assert "final gout applies Brittle" in w_row["detail"]
+
+    def test_bellows_breath_stamps_the_maximum_health_row_it_prices(self):
+        """Both W damage rows are % of the target's maximum health.
+
+        The stamp is the row's own statement that its number moves with
+        the target's maximum health — R carries it for Temper's consume,
+        and W's ticks are the same kind of number.
+        """
+        w_ability = get_champion("Ornn")["abilities"]["W"][0]
+        units = {
+            unit
+            for effect in w_ability["effects"]
+            for leveling in effect.get("leveling") or []
+            if leveling["attribute"] in ("Total Magic Damage", "Magic Damage Per Tick")
+            for modifier in leveling["modifiers"]
+            for unit in modifier["units"]
+        }
+        assert units == {"% of target's maximum health"}
+        assert row_review.entry("Ornn", "W")["target_max_health_sensitive"] is True
+        # The priced total tracks the target: 12% of maximum health per
+        # rank-1 cast, so a 4000-health dummy takes twice a 2000's.
+        assert _w_total(2000.0) == pytest.approx(0.5 * _w_total(4000.0))

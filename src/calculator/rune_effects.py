@@ -30,6 +30,7 @@ from functools import cache
 from types import MappingProxyType
 from typing import Any, Callable, Mapping, Sequence
 
+from .champions.inputs import champion_stat
 from .ability_spec import Disposition, ZeroPolicy
 from .data_fetcher import fetch_rune_data
 from .item_effects import DamageInputs
@@ -703,8 +704,8 @@ class KeystoneAeryEffect:
         stats = inputs.champion_stats
         return (
             at_level(self.damage_by_level, inputs.level)
-            + self.bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + self.ap_ratio * stats.get("ability_power", 0.0)
+            + self.bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + self.ap_ratio * champion_stat(stats, "ability_power")
         )
 
     def raw_shield(self, inputs: DamageInputs) -> float:
@@ -712,8 +713,8 @@ class KeystoneAeryEffect:
         stats = inputs.champion_stats
         return (
             at_level(self.shield_by_level, inputs.level)
-            + self.bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + self.ap_ratio * stats.get("ability_power", 0.0)
+            + self.bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + self.ap_ratio * champion_stat(stats, "ability_power")
         )
 
     def shield_amount(self, level: int, stats: Mapping[str, float]) -> float:
@@ -762,8 +763,8 @@ class KeystoneGuardianEffect:
         """Price both Guardian shields from the holder's stats."""
         return (
             at_level(self.shield_by_level, level)
-            + self.ap_ratio * stats.get("ability_power", 0.0)
-            + self.bonus_health_ratio * stats.get("bonus_health", 0.0)
+            + self.ap_ratio * champion_stat(stats, "ability_power")
+            + self.bonus_health_ratio * champion_stat(stats, "bonus_health")
         )
 
 
@@ -809,7 +810,7 @@ class KeystoneAftershockEffect:
         """Price the delayed magic shockwave from sourced level and health."""
         return at_level(
             self.shockwave_damage_by_level, level
-        ) + self.bonus_health_ratio * stats.get("bonus_health", 0.0)
+        ) + self.bonus_health_ratio * champion_stat(stats, "bonus_health")
 
 
 @dataclass(frozen=True, slots=True)
@@ -852,11 +853,11 @@ class KeystoneGraspEffect:
 
     def raw_damage(self, stats: Mapping[str, float], is_melee: bool) -> float:
         """Price one empowered attack from maximum health."""
-        return self.damage_ratio(is_melee) * stats.get("health", 0.0)
+        return self.damage_ratio(is_melee) * champion_stat(stats, "health")
 
     def heal_amount(self, stats: Mapping[str, float], is_melee: bool) -> float:
         """Price one self-heal from maximum health."""
-        return self.heal_ratio(is_melee) * stats.get("health", 0.0)
+        return self.heal_ratio(is_melee) * champion_stat(stats, "health")
 
 
 @dataclass(frozen=True, slots=True)
@@ -895,8 +896,8 @@ class KeystoneHailOfBladesEffect:
         stats = inputs.champion_stats
         return (
             at_level(self.damage_by_level, inputs.level)
-            + self.bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + self.ap_ratio * stats.get("ability_power", 0.0)
+            + self.bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + self.ap_ratio * champion_stat(stats, "ability_power")
         )
 
 
@@ -939,8 +940,8 @@ class KeystoneLethalTempoEffect:
             else self.bolt_damage_ranged_by_level
         )
         base = at_level(table, inputs.level)
-        total_bonus_attack_speed = inputs.champion_stats.get(
-            "bonus_attack_speed", 0.0
+        total_bonus_attack_speed = champion_stat(
+            inputs.champion_stats, "bonus_attack_speed"
         ) + self.attack_speed_percent(is_melee, stacks)
         increase = self._select(self.bolt_damage_increase_ratio_melee_ranged, is_melee)
         return base * (1.0 + total_bonus_attack_speed * increase)
@@ -977,13 +978,13 @@ class KeystoneGlacialEffect:
         return (
             self.slow_base_ratio
             + self.slow_bonus_ad_ratio_per_100
-            * max(0.0, stats.get("bonus_attack_damage", 0.0))
+            * max(0.0, champion_stat(stats, "bonus_attack_damage"))
             / 100.0
             + self.slow_ap_ratio_per_100
-            * max(0.0, stats.get("ability_power", 0.0))
+            * max(0.0, champion_stat(stats, "ability_power"))
             / 100.0
             + self.slow_heal_shield_ratio_per_10
-            * max(0.0, stats.get("heal_and_shield_power_percent", 0.0))
+            * max(0.0, champion_stat(stats, "heal_and_shield_power_percent"))
             / 10.0
         )
 
@@ -1051,9 +1052,9 @@ class KeystoneFleetEffect:
         amount = (
             base
             + self._select(self.bonus_ad_ratio_melee_ranged, is_melee)
-            * stats.get("bonus_attack_damage", 0.0)
+            * champion_stat(stats, "bonus_attack_damage")
             + self._select(self.ap_ratio_melee_ranged, is_melee)
-            * stats.get("ability_power", 0.0)
+            * champion_stat(stats, "ability_power")
         )
         if against_minion:
             amount *= self.minion_heal_effectiveness
@@ -1186,8 +1187,8 @@ class KeystoneDeathfireEffect:
             0.0,
             base
             + self.bonus_ad_ratios_by_state[state]
-            * stats.get("bonus_attack_damage", 0.0)
-            + self.ap_ratios_by_state[state] * stats.get("ability_power", 0.0),
+            * champion_stat(stats, "bonus_attack_damage")
+            + self.ap_ratios_by_state[state] * champion_stat(stats, "ability_power"),
         )
 
 
@@ -1223,8 +1224,8 @@ class KeystoneDarkHarvestEffect:
         return (
             self.base_damage
             + self.soul_damage * max(0, int(souls))
-            + self.bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + self.ap_ratio * stats.get("ability_power", 0.0)
+            + self.bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+            + self.ap_ratio * champion_stat(stats, "ability_power")
         )
 
 
@@ -1481,8 +1482,8 @@ def required_pair(name: str, effects: RuneValues, key: str) -> tuple[float, floa
 
 def pure_adaptive_type(stats: Mapping[str, float]) -> str:
     """Adaptive damage type for a ratio-less proc; bonus AD wins, a tie is magic."""
-    bonus_ad = stats.get("bonus_attack_damage", 0.0)
-    return "physical" if bonus_ad > stats.get("ability_power", 0.0) else "magic"
+    bonus_ad = champion_stat(stats, "bonus_attack_damage")
+    return "physical" if bonus_ad > champion_stat(stats, "ability_power") else "magic"
 
 
 def stated_type(damage_type: str) -> Callable[[Mapping[str, float]], str]:
@@ -1518,8 +1519,8 @@ def ratio_adaptive_type(
     """
 
     def adaptive_type(stats: Mapping[str, float]) -> str:
-        ad_contribution = bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-        ap_contribution = ap_ratio * stats.get("ability_power", 0.0)
+        ad_contribution = bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+        ap_contribution = ap_ratio * champion_stat(stats, "ability_power")
         return "physical" if ad_contribution > ap_contribution else "magic"
 
     return adaptive_type

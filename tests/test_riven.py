@@ -1,7 +1,9 @@
 """Tests for the Riven champion module."""
 
+import pytest
+
 from src.calculator.champions import riven
-from tests import cc_review
+from tests import cc_review, rider_probe, row_review
 
 
 class TestReviewedCrowdControl:
@@ -43,3 +45,35 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Riven")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+class TestRunicBladeCrits:
+    """P declares the crit clause its own cached sentence states."""
+
+    def test_the_on_hit_row_carries_the_sourced_effectiveness(self):
+        text = cc_review.slot_text(cc_review.kit("Riven"), "P")
+        assert "the bonus damage is affected by critical strike modifiers" in text
+        on_hit = row_review.entry("Riven", "passive")["on_hit"]
+        assert (
+            on_hit["crit_effectiveness"] == riven._RUNIC_BLADE_CRIT_EFFECTIVENESS == 1.0
+        )
+
+    def test_the_rider_crits_in_a_real_fight(self):
+        """Cloak of Agility: 15% crit chance, no other stat moved.
+
+        Full effectiveness at the 200% base multiplier is
+        1 - 0.15 + 0.15 x 2.0 == 1.15 on the rider's own row.
+        """
+        plain = rider_probe.fight("Riven", deterministic=True)
+        crit = rider_probe.fight(
+            "Riven", items=["Cloak of Agility"], deterministic=True
+        )
+        assert crit["champion_stats"]["critical_strike_chance"] == pytest.approx(15.0)
+        assert crit["champion_stats"]["attack_damage"] == pytest.approx(
+            plain["champion_stats"]["attack_damage"]
+        )
+        assert crit["breakdown"][rider_probe.RIDER_ROW][
+            "total_damage"
+        ] == pytest.approx(
+            1.15 * plain["breakdown"][rider_probe.RIDER_ROW]["total_damage"], abs=0.1
+        )

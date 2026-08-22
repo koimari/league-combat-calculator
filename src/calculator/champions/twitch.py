@@ -89,6 +89,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -145,7 +146,7 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
     per_stack = _poison_total_per_stack(ctx.level, ctx.stat("ability_power"))
     total = per_stack * stacks
     return {
-        "name": ability.get("name", "Deadly Venom"),
+        "name": ability_name(ability),
         "rank": ctx.level,
         "cooldown": 0.0,
         "damage_type": "true",
@@ -196,7 +197,7 @@ def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
     magic = _E_MAGIC_AP_RATIO * ctx.stat("ability_power") * stacks
 
     entry = damage_entry(
-        ability.get("name", "Contaminate"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         physical + magic,
@@ -229,7 +230,7 @@ def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     rank = ctx.rank_for()
     entry = damage_entry(
-        ability.get("name", "Ambush"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         0.0,
@@ -280,7 +281,7 @@ def _venom_cask(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     rank = ctx.rank_for()
     entry: dict[str, Any] = {
-        "name": ability.get("name", "Venom Cask"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",

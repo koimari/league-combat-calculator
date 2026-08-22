@@ -30,7 +30,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx, build_parser
-from .slotlib import damage_entry, extract_named, simple_damage, with_control
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_named,
+    simple_damage,
+    with_control,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option
 
@@ -72,7 +78,7 @@ def _apply_curse(result: dict[str, Any]) -> None:
 
 def _cursed_touch_amp(ctx: SlotCtx) -> None:
     """AMP pseudo-slot: apply the curse to every magic-damage ability."""
-    if not ctx.options.get("target_cursed", True):
+    if not ctx.option("target_cursed"):
         return
     for key in ("Q", "W", "E", "R"):
         entry = ctx.results.get(key)
@@ -87,9 +93,7 @@ def _cursed_touch_display(ctx: SlotCtx) -> None:
     """P: zero-damage display row, written under the literal "P" key."""
     ability = ctx.ability()
     if ability is not None:
-        ctx.results["P"] = damage_entry(
-            ability.get("name", "Cursed Touch"), 1, 0.0, 0.0, "true"
-        )
+        ctx.results["P"] = damage_entry(ability_name(ability), 1, 0.0, 0.0, "true")
 
 
 def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -107,7 +111,7 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
     total = per_tick * total_ticks
 
     return {
-        "name": ability.get("name", "Despair"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": 0.0,  # toggle ability, no cooldown
         "damage_type": "magic",

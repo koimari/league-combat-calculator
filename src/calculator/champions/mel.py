@@ -49,6 +49,7 @@ from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -205,7 +206,7 @@ def _searing_brilliance(ctx: SlotCtx):
     per_missile = _searing_brilliance_per_missile(ctx, ability)
     missiles = int(ctx.option("p_searing_brilliance_missiles"))
     missiles = max(0, min(missiles, _P_MAX_MISSILES))
-    name = ability.get("name", "Searing Brilliance")
+    name = ability_name(ability)
     entry = on_hit_entry(name, per_missile * missiles, "magic")
     entry["on_hit"]["empower_window"] = {
         "armed_by": _P_ARMED_BY,
@@ -264,7 +265,7 @@ def _rebuttal(ctx: SlotCtx):
     if rank < 1:
         return None
     return {
-        "name": ability.get("name", "Rebuttal"),
+        "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
@@ -300,7 +301,7 @@ def _golden_eclipse(ctx: SlotCtx):
     stacks = max(0, min(stacks, 50))
     total = flat_share + per_stack * stacks
     entry = damage_entry(
-        ability.get("name", "Golden Eclipse"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -341,7 +342,7 @@ def _radiant_volley(ctx: SlotCtx):
     bolts = max(1, int(extract_value(ability, "Number of Bolts", rank)))
     total = initial + subsequent * (bolts - 1)
     entry = damage_entry(
-        ability.get("name", "Radiant Volley"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -387,7 +388,7 @@ def _solar_snare(ctx: SlotCtx):
     )
     total = orb + per_tick * 4
     entry = damage_entry(
-        ability.get("name", "Solar Snare"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,

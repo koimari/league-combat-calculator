@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -19,7 +21,7 @@ from .source_receipts import load_champion_sources
 
 
 def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
-    mantra = bool(ctx.options.get("q_mantra", False))
+    mantra = bool(ctx.option("q_mantra"))
     ability = ctx.ability("Q", 1 if mantra else 0)
     if ability is None:
         return None
@@ -28,7 +30,7 @@ def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
     attr = "Total Damage" if mantra else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Inner Flame"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("Q", 0), rank),
         value,
@@ -42,14 +44,14 @@ def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
-    renewal = bool(ctx.options.get("w_renewal", False))
+    renewal = bool(ctx.option("w_renewal"))
     ability = ctx.ability("W", 1 if renewal else 0)
     if ability is None:
         return None
     rank = ctx.rank_for("R") if renewal else ctx.rank_for("W")
     rank = max(1, min(rank, 4 if renewal else 5))
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    holds = bool(ctx.options.get("w_tether_holds", True))
+    holds = bool(ctx.option("w_tether_holds"))
     # The opening hit only tethers and reveals; the root arrives with the
     # second hit, "if the tether is not broken by the end of its duration".
     parts = [DamagePart("magic", value, time_offset=0.1, cc_kind="none")]
@@ -64,7 +66,7 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
             )
         )
     entry = damage_entry(
-        ability.get("name", "Focused Resolve"),
+        ability_name(ability),
         rank,
         extract_cooldown(ctx.ability("W", 0), rank),
         value * (2 if holds else 1),
@@ -144,7 +146,8 @@ def derive_self_healing(
 ):
     """Resolve Karma self-healing events from its authored packet."""
     healing = []
-    if str(ability_damages.get("W", {}).get("name", "")) == "Renewal":
+    w_payload = ability_payload(ability_damages, "W")
+    if w_payload and str(ability_field(w_payload, "name")) == "Renewal":
         ap = champion_stat(champion_stats, "ability_power")
         ratio = 0.17 + ap / 10000.0
 

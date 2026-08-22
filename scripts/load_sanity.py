@@ -250,13 +250,8 @@ async def _run_pass(
     plan: list[tuple[str, dict]],
     concurrency: int,
 ) -> tuple[list[tuple[str, float, int]], list[str]]:
-    """Execute the plan with a fixed worker pool.
-
-    Returns ``(results, failures_detail)`` where each detail is a short
-    ``endpoint -> status`` string for every non-200 response.
-    """
+    """Execute the plan with a fixed worker pool; returns the result rows."""
     results: list[tuple[str, float, int]] = []
-    failures_detail: list[str] = []
     queue: asyncio.Queue = asyncio.Queue()
     for item in plan:
         queue.put_nowait(item)
@@ -269,13 +264,11 @@ async def _run_pass(
                 return
             endpoint, latency, status = await _fire(client, base_url, endpoint, payload)
             results.append((endpoint, latency, status))
-            if status != 200:
-                failures_detail.append(f"{endpoint} -> {status}")
             queue.task_done()
 
     workers = [asyncio.create_task(worker()) for _ in range(concurrency)]
     await asyncio.gather(*workers)
-    return results, failures_detail
+    return results
 
 
 async def _cache_counters(client: httpx.AsyncClient, base_url: str) -> dict:
@@ -308,13 +301,9 @@ async def _run(
         await _fire(client, base_url, "/api/calculate", CALCULATE_PAYLOADS[0])
         await _fire(client, base_url, "/api/bis", BIS_PAYLOADS[0])
 
-        cold, _cold_failures = await _run_pass(
-            client, base_url, plan, concurrency=users
-        )
+        cold = await _run_pass(client, base_url, plan, concurrency=users)
         before = await _cache_counters(client, base_url)
-        warm, warm_failures = await _run_pass(
-            client, base_url, plan, concurrency=warm_concurrency
-        )
+        warm, _ = await _run_pass(client, base_url, plan, concurrency=warm_concurrency)
         after = await _cache_counters(client, base_url)
 
     hits_delta = int(after["hits"]) - int(before["hits"])
@@ -324,7 +313,7 @@ async def _run(
 
     latencies: dict[str, list[float]] = {"calculate": [], "bis": []}
     failures = 0
-    failures_detail = list(warm_failures)
+    failures_detail: list[str] = []
     for endpoint, latency, status in cold + warm:
         latencies["calculate" if endpoint == "/api/calculate" else "bis"].append(
             latency

@@ -6,8 +6,10 @@ seconds after the cast starts.  Wuju Style's row prices an on-hit rider
 as one direct hit, so it has no instant a marker could ride.
 """
 
+import pytest
+
 from src.calculator.champions import master_yi, parse_champion_abilities
-from tests import cc_review
+from tests import cc_review, rider_probe, row_review
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -60,3 +62,40 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Master Yi")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+
+
+class TestDoubleStrikeCrits:
+    """P declares the crit clause its own cached sentence states."""
+
+    def test_the_on_hit_row_carries_the_sourced_effectiveness(self):
+        text = cc_review.slot_text(cc_review.kit("Master Yi"), "P")
+        assert "the second strike applies on-hit effects" in text
+        assert "is affected by critical strike modifiers" in text
+        notes = cc_review.kit("Master Yi")["abilities"]["P"][0]["notes"].lower()
+        assert "the second strike separately rolls a" in notes
+        on_hit = row_review.entry("Master Yi", "passive")["on_hit"]
+        assert (
+            on_hit["crit_effectiveness"]
+            == master_yi._SECOND_STRIKE_CRIT_EFFECTIVENESS
+            == 1.0
+        )
+
+    def test_the_second_strike_crits_in_a_real_fight(self):
+        """Cloak of Agility: 15% crit chance, no other stat moved.
+
+        Full effectiveness at the 200% base multiplier is
+        1 - 0.15 + 0.15 x 2.0 == 1.15 on the rider's own row.
+        """
+        plain = rider_probe.fight("Master Yi", deterministic=True)
+        crit = rider_probe.fight(
+            "Master Yi", items=["Cloak of Agility"], deterministic=True
+        )
+        assert crit["champion_stats"]["critical_strike_chance"] == pytest.approx(15.0)
+        assert crit["champion_stats"]["attack_damage"] == pytest.approx(
+            plain["champion_stats"]["attack_damage"]
+        )
+        assert crit["breakdown"][rider_probe.RIDER_ROW][
+            "total_damage"
+        ] == pytest.approx(
+            1.15 * plain["breakdown"][rider_probe.RIDER_ROW]["total_damage"], abs=0.1
+        )
