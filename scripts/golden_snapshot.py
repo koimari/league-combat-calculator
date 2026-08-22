@@ -1717,14 +1717,8 @@ def _refuse_unarmed_swing_terms(scenarios, terms):
 def _coupled_receipt(parsed, resolved, *, score_mode):
     """The coupled participant receipt, mirroring calculate's own composition."""
     params = resolved.fight_params
-    main_stats = calculate_total_stats(
-        resolved.champion_data,
-        parsed.level,
-        list(resolved.items),
-        item_options=params.item_options,
-        role=params.role,
-        role_quest_complete=params.role_quest_complete,
-        external_stat_bonuses=params.ally_stat_bonuses,
+    main_stats = params.pre_combat_stats(
+        resolved.champion_data, parsed.level, list(resolved.items)
     )
     return build_participant_timeline(
         resolved.champion_data,

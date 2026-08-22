@@ -40,7 +40,7 @@ from .request_parsing import (
     request_string as _request_string,
     request_string_list as _request_string_list,
 )
-from .stats import MAX_LEVEL, calculate_total_stats
+from .stats import MAX_LEVEL, resolve_pre_combat_stats
 from .champions.skill_orders import get_ability_rank
 
 MAX_LOADOUT_ITEMS = 6
@@ -376,7 +376,7 @@ class ChampionLoadout:
             role_quest_complete=self.role_quest_complete,
         )
         item_data = (*((boots_data,) if boots_data else ()), *ordinary_items)
-        stats = calculate_total_stats(
+        stats = resolve_pre_combat_stats(
             champion_data,
             self.level,
             list(item_data),
@@ -384,6 +384,11 @@ class ChampionLoadout:
             role=self.role,
             role_quest_complete=self.role_quest_complete,
             rune_page=self.rune_page,
+            # A roster card receives no ally aura: ``ally_stat_bonuses`` is
+            # combined from the *resolved* allies (``resolve_scenario``) and
+            # lands on the selected attacker alone, so nothing this card
+            # could take exists yet when it resolves.
+            external_stat_bonuses=None,
         )
         if self.is_practice_dummy:
             stats = apply_stat_overrides(stats, self.target_stats)

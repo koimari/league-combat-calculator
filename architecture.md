@@ -20,7 +20,7 @@ League Wiki cache
 
 ## Rules and ownership
 
-- `stats.py` applies level growth, item stats, role-quest modifiers, and external ally stat effects.
+- `stats.py` applies level growth, item stats, role-quest modifiers, and external ally stat effects. `resolve_pre_combat_stats` is the one composition every participant's pre-combat stat block resolves through — all five inputs are required keywords, so no surface can drop one by omission — and `FightParams.pre_combat_stats` is the one read of a request into it.
 - `resistance.py` owns armor, magic resistance, and penetration order.
 - `item_effects.py` owns item values and effect formulas. Item-specific numbers do not belong in routes or the interface.
 - `rune_effects.py` owns rune values and effect formulas the same way, reading `data/runes.json` (parsed from the wiki's rune data templates by `rune_parser.py`). It is the public surface — resolve, validate, catalog, and the effect types every compiler produces — over one vocabulary shared by the whole page; every compiler lives under `rune_paths/`: keystones in `rune_paths/keystones.py`, minor runes in one module per path, and stat shards in `rune_paths/shards.py`. `validate_rune_page` enforces the page's rules (one rune per row, three from the primary path and two from a second, the keystone's path as the primary) and names the rule it refused on. Only compiled runes are selectable; the rest are served greyed out and fail closed if requested. A rune needing an input the request does not carry declares it as an option with a disclosed default, never an inferred constant.

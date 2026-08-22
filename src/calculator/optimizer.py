@@ -41,7 +41,6 @@ from .program.views import RankingWriter, name_every_number
 from .pipeline import FightParams, run_fight
 from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
-from .stats import calculate_total_stats
 from .timeline_coverage import (
     applicability_exclusion_sources,
     combine_timeline_coverages,
@@ -258,16 +257,7 @@ def _evaluate_build_uncached(
         # is excluded, so a glass-cannon build cannot win by living only on
         # paper.  No role/archetype weight is introduced here.
         base_params = targets[0]
-        stats = calculate_total_stats(
-            champion_data,
-            level,
-            items,
-            item_options=base_params.item_options,
-            role=base_params.role,
-            role_quest_complete=base_params.role_quest_complete,
-            external_stat_bonuses=base_params.ally_stat_bonuses,
-            rune_page=base_params.rune_page,
-        )
+        stats = base_params.pre_combat_stats(champion_data, level, items)
         defenses = resolve_starting_defenses(
             champion_data["name"],
             level,

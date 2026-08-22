@@ -735,3 +735,33 @@ def calculate_total_stats(
             }
         )
     return result
+
+
+def resolve_pre_combat_stats(  # pylint: disable=too-many-arguments
+    champion_data: dict[str, Any],
+    level: int,
+    items: list[dict[str, Any]],
+    *,
+    item_options: Mapping[str, Mapping[str, int]] | None,
+    role: str,
+    role_quest_complete: bool,
+    rune_page: RunePage | None,
+    external_stat_bonuses: Mapping[str, float] | None,
+) -> dict[str, float]:
+    """The one recipe for a participant's stats as combat begins.
+
+    Every input is a required keyword: a participant that receives none of
+    a grant answers ``None`` here rather than by leaving an argument out.
+    A caller holding a ``FightParams`` asks ``params.pre_combat_stats``,
+    which is the one place a request is read into these five.
+    """
+    return calculate_total_stats(
+        champion_data,
+        level,
+        items,
+        item_options=item_options,
+        role=role,
+        role_quest_complete=role_quest_complete,
+        external_stat_bonuses=external_stat_bonuses,
+        rune_page=rune_page,
+    )
