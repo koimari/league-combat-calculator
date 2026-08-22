@@ -846,7 +846,7 @@ def test_target_unending_despair_self_heal_is_wounded_in_receipt_order():
     )
     assert any(
         "Mortal Reminder" in source
-        for source in enemy_survival["healing_reduction_sources"]
+        for source in enemy_survival["healing_reduction_window_sources"]
     ) or any(
         "Mortal Reminder" in source
         for event in enemy_survival["healing_reduction_events"]
@@ -3335,7 +3335,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
     assert result["source"]["healing_reduction_until"] == 3.0
     assert any(
         "Bramble Vest" in source
-        for source in result["source"]["healing_reduction_sources"]
+        for source in result["source"]["healing_reduction_window_sources"]
     )
     assert result["target"]["damage_taken"] == 50.0
 
@@ -5023,7 +5023,7 @@ def test_bramble_vest_retaliation_flows_through_the_calculate_pipeline():
     )
     assert any(
         "Bramble Vest" in source
-        for source in enemy["survival"]["healing_reduction_sources"]
+        for source in enemy["survival"]["healing_reduction_window_sources"]
     )
 
 

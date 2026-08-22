@@ -289,7 +289,7 @@ def _assert_grievous(data: dict, expected: dict) -> None:
     assert survival["healing_reduced"] == pytest.approx(
         expected["healing_reduced"], abs=AMOUNT_ABS
     )
-    assert survival["healing_reduction_sources"] == expected["reduction_sources"]
+    assert survival["healing_reduction_window_sources"] == expected["reduction_sources"]
 
 
 def _assert_venom_shield(data: dict, expected: dict) -> None:

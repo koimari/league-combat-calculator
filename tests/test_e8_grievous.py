@@ -165,7 +165,7 @@ def test_item_grievous_wounds_morellonomicon_reduces_self_healing():
         assert event["applied_amount"] == pytest.approx(
             event["raw_amount"] * GRIEVOUS_WOUNDS_FACTOR, abs=0.1
         )
-    assert wounded_survival["healing_reduction_sources"] == [
+    assert wounded_survival["healing_reduction_window_sources"] == [
         "Morellonomicon · Grievous Wounds"
     ]
     assert wounded_survival["healing_reduction_until"] > 0.0
@@ -294,7 +294,9 @@ def test_katarina_death_lotus_wounds_enemy_self_healer():
     assert enemy_survival["healing_reduction_events"][0]["factor"] == pytest.approx(
         GRIEVOUS_WOUNDS_FACTOR
     )
-    assert "Katarina · Death Lotus" in enemy_survival["healing_reduction_sources"]
+    assert (
+        "Katarina · Death Lotus" in enemy_survival["healing_reduction_window_sources"]
+    )
     assert enemy_survival["healing_reduced"] > 0.0
     # The heal that lands after the first dagger keeps exactly 60%.
     reduced_heals = [
@@ -340,7 +342,9 @@ def test_varus_hail_of_arrows_wounds_enemy_self_healer():
     assert enemy_survival["healing_reduction_until"] == pytest.approx(
         GRIEVOUS_WOUNDS_DURATION
     )
-    assert "Varus · Hail of Arrows" in enemy_survival["healing_reduction_sources"]
+    assert (
+        "Varus · Hail of Arrows" in enemy_survival["healing_reduction_window_sources"]
+    )
     assert enemy_survival["healing_reduced"] > 0.0
 
 

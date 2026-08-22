@@ -3271,14 +3271,14 @@ def _apply_damage(
             state["healing_reduction_factor"], strongest_factor
         )
         for label in labels:
-            state["healing_reduction_sources"].add(label)
+            state["healing_reduction_window_sources"].add(label)
         if ctx.records_annotations:
             ctx.ledger.annotate(
                 action,
                 healing_reduction={
                     "factor": round(state["healing_reduction_factor"], 6),
                     "until": round(state["healing_reduction_until"], 6),
-                    "sources": sorted(state["healing_reduction_sources"]),
+                    "sources": sorted(state["healing_reduction_window_sources"]),
                 },
             )
         state["healing_reduction_events"].append(
@@ -3286,7 +3286,7 @@ def _apply_damage(
                 "time": round(event_time, 3),
                 "until": round(state["healing_reduction_until"], 3),
                 "factor": round(state["healing_reduction_factor"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
+                "sources": sorted(state["healing_reduction_window_sources"]),
             }
         )
     if action.wound is not None:
@@ -3302,14 +3302,14 @@ def _apply_damage(
             state["healing_reduction_factor"],
             GRIEVOUS_WOUNDS_FACTOR,
         )
-        state["healing_reduction_sources"].add(wound_label)
+        state["healing_reduction_window_sources"].add(wound_label)
         if ctx.records_annotations:
             ctx.ledger.annotate(
                 action,
                 healing_reduction={
                     "factor": round(state["healing_reduction_factor"], 6),
                     "until": round(state["healing_reduction_until"], 6),
-                    "sources": sorted(state["healing_reduction_sources"]),
+                    "sources": sorted(state["healing_reduction_window_sources"]),
                 },
             )
         state["healing_reduction_events"].append(
@@ -3317,7 +3317,7 @@ def _apply_damage(
                 "time": round(event_time, 3),
                 "until": round(state["healing_reduction_until"], 3),
                 "factor": round(state["healing_reduction_factor"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
+                "sources": sorted(state["healing_reduction_window_sources"]),
             }
         )
     if pools.health <= 0.0 and state["death_time"] is None:
@@ -3417,7 +3417,7 @@ def run_survival_walk(
             # A new wound after expiry starts a fresh composition window; do
             # not carry the prior factor or source labels into its receipt.
             state["healing_reduction_factor"] = 1.0
-            state["healing_reduction_sources"].clear()
+            state["healing_reduction_window_sources"].clear()
         if state["venom_until"] > 0.0 and event_time >= state["venom_until"]:
             # A new venom application after expiry starts a fresh window;
             # expired venom must not keep cutting shields.
