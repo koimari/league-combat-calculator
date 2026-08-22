@@ -100,10 +100,9 @@ def _row_target(
     return None
 
 
-# The wiki's ability template names the last unlabelled row of a sentence
-# ``Heal`` whatever it measures: Mordekaiser W's is the Potential Shield decay
-# rate ("decays by 8 : 25 (based on level) every second") and Udyr Q's is the
-# lightning strikes' minimum-damage floor.  Neither sentence heals anyone.
+# The wiki's ability template names the last unlabelled row ``Heal`` whatever
+# it measures: Mordekaiser W's is the Potential Shield decay rate ("decays by
+# 8 : 25 (based on level) every second"), Udyr Q's a minimum-damage floor.
 def _declares_a_heal(prose: str) -> bool:
     """Whether the sentence declaring a ``Heal``-named row states a heal."""
     return bool(_HEAL_PROSE.search(prose))

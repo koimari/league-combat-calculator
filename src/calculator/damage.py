@@ -1585,12 +1585,9 @@ def _simulate_current_health_on_hit(
     return total_damage, total_hits, hit_damages
 
 
-# A row that authors events is the sum of them, so its total and its ledger
-# have to be the same arithmetic.  A running ``+=`` and a ``sum()`` over the
-# same numbers disagree by an ulp (the builtin compensates, the loop does not),
-# and a row that gave every one of its swings away then reads a crumb instead
-# of exactly 0.0, which ``_event_timeline_coverage`` counts as an active source
-# using coarse ordering.
+# A row's total and its ledger must be the same arithmetic: ``+=`` and
+# ``sum()`` over the same numbers disagree by an ulp, so a row that gave every
+# swing away would read a crumb instead of 0.0 and count as an active source.
 def _ledger_total(events: Sequence[Mapping[str, Any]]) -> float:
     """What an authored event list is worth, summed one way everywhere."""
     return sum(float(event["damage"]) for event in events)
@@ -2360,10 +2357,9 @@ class _ThresholdHealDrip:
                 self.healing_received += received
         shield_ledger.expire_threshold_health(pools, event_time)
 
-    # A declaration that subdivides the window into no ticks at all leaves the
-    # heal's timing unsourced, which is the coverage downgrade the target-side
-    # Lifeline still owes; asking the drip keeps that answer measured rather
-    # than assumed by the reader.
+    # A declaration subdividing the window into no ticks leaves the heal's
+    # timing unsourced — the coverage downgrade the target-side Lifeline owes.
+    # Asking the drip keeps that measured rather than assumed by the reader.
     def cadence_certified(self) -> bool:
         """Whether the heal was delivered on an authored tick schedule."""
         return not self.triggered or self.ticks > 0
@@ -3492,15 +3488,11 @@ class _ShredRamp:
         _apply_target_shred(self.resists, self.debuff, 1.0 / self.stacks)
         return self.ability_mr()
 
-    # The stages that already fired did so DURING the ability's own hits, when
-    # the debuff is freshly applied and so at full strength.  ``coverage`` is
-    # the share that outlives the ability (see ``_debuff_coverage``), so this
-    # SETTLES the total at it rather than adding a flat remainder; at full
-    # coverage that is exactly ``(stacks - fired) / stacks``.  The settlement is
-    # signed: a debuff that fully staged during its own ticks but expires
-    # before the fight ends hands part of the reduction back, which is exact
-    # for the flat shreds ramps use (Corki's Gatling Gun is the only one) and
-    # approximate for a percent one.
+    # Stages that already fired did so DURING the ability's own hits, at full
+    # strength.  ``coverage`` is the share outliving the ability, so this
+    # SETTLES the total at it rather than adding a flat remainder — exactly
+    # ``(stacks - fired) / stacks`` at full coverage.  The settlement is signed
+    # and so hands reduction back, exact for a flat shred and not a percent one.
     def apply_remainder(self, coverage: float = 1.0) -> None:
         """Top the shred up to its lasting share of the reduction."""
         _apply_target_shred(
@@ -4035,18 +4027,12 @@ def _cooldown_ready_at(
 _CAST_SCHEDULE_EPS = 1e-9
 
 
-# ``recast_of`` is the one authority for recast parentage, and it is what the
-# cast-order machinery reads.  Riding the parent's cast *count* is a narrower
-# claim: it holds for a recast that declares a cooldown of its own to share
-# with its parent (Camille's Q2 at 5.0, Ambessa's at 10.0), and not for an
-# entry declared with this scheduler's cast-exactly-once idiom, where Syndra's
-# 40-splinter second charge is ONE extra cast whose recharge the module
-# deliberately does not simulate.  The test is a POSITIVE declared cooldown, so
-# a cooldown that is zero, absent, ``None`` or negative all read the same: this
-# row schedules itself once and does not ride.  Absent is deliberately not
-# "unknown, assume it rides" — a module that stamps parentage and declares no
-# cooldown has declared no shared timer either, and the fail-quiet reading
-# would silently multiply its casts.
+# ``recast_of`` is the authority for recast parentage; riding the parent's cast
+# *count* is narrower.  It holds for a recast declaring a cooldown of its own to
+# share (Camille Q2 at 5.0, Ambessa's at 10.0), not for the cast-exactly-once
+# idiom, where Syndra's second charge is ONE extra cast.  The test is a POSITIVE
+# cooldown, so zero, absent, ``None`` and negative all schedule once: a module
+# stamping parentage with no cooldown has declared no shared timer either.
 def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
     """The slot whose cast COUNT this entry rides, or ``None``."""
     parent = info.get("recast_of")
