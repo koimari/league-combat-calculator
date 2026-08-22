@@ -8,7 +8,9 @@ type (:mod:`delivery_eligibility`) and state lifecycle
 - CONTROL CLASSIFICATION — :data:`CONTROL_BLOCKING_KINDS` (the sourced
   hard set that adds action downtime, mirroring
   ``ability_spec.ACTION_BLOCKING_CC_KINDS``) and :data:`CONTROL_SOFT_KINDS`
-  (known non-blocking kinds: blind, disarm, ground, silence, slow).
+  (its complement, ``ability_spec.NON_BLOCKING_CC_KINDS``).  The two
+  partition :data:`KNOWN_CONTROL_KINDS`, which IS the authoring vocabulary
+  ``ability_spec.CC_KIND_VOCABULARY`` — there is no second list of kinds.
   :func:`classify_control` is a deterministic pure function of the
   action's ``cc_kind``; a kind outside the known set is ``unknown`` and
   FAILS CLOSED with the named ``unknown_control`` reason
@@ -60,7 +62,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .ability_spec import ACTION_BLOCKING_CC_KINDS
+from .ability_spec import (
+    ACTION_BLOCKING_CC_KINDS,
+    CC_KIND_VOCABULARY,
+    NON_BLOCKING_CC_KINDS,
+    NO_CONTROL_KIND,
+)
 from .delivery_eligibility import DefenseWindow, stable_event_key
 from .shield_ledger import ShieldPools, TimedShield
 from .state_lifecycle import SourceReceipt
@@ -81,16 +88,20 @@ CONTROL_BLOCKING_KINDS: frozenset[str] = frozenset(ACTION_BLOCKING_CC_KINDS)
 
 #: Known crowd-control kinds the model tracks as control but that do NOT
 #: add action downtime (and are therefore never eligible for a
-#: downtime-blocking immunity decision).  ``silence`` is authored by
-#: champion modules today but excluded from the blocking set, so it must
-#: classify as known-and-non-blocking, never ``unknown``.
-CONTROL_SOFT_KINDS: frozenset[str] = frozenset(
-    {"blind", "disarm", "ground", "silence", "slow"}
-)
+#: downtime-blocking immunity decision).  Mirrors
+#: ``ability_spec.NON_BLOCKING_CC_KINDS`` — the other half of the same
+#: classification, so the two cannot drift apart.
+CONTROL_SOFT_KINDS: frozenset[str] = frozenset(NON_BLOCKING_CC_KINDS)
 
-#: Every kind the contract can classify.  Anything outside this set is
-#: ``unknown`` and fails closed with the named ``unknown_control`` reason.
-KNOWN_CONTROL_KINDS: frozenset[str] = CONTROL_BLOCKING_KINDS | CONTROL_SOFT_KINDS
+#: Every kind the contract can classify: exactly what a champion module can
+#: author (``ability_spec.CC_KIND_VOCABULARY`` less its reviewed "no
+#: control" member, which reaches the classifier as the empty kind).
+#: Derived, never listed — a second hand-written vocabulary here is what
+#: left ``berserk``, ``cripple``, ``pull``, ``snare`` and ``stasis``
+#: classifying ``unknown``, so every cleanse touching one failed closed.
+#: Anything outside it is ``unknown`` and fails closed with the named
+#: ``unknown_control`` reason.
+KNOWN_CONTROL_KINDS: frozenset[str] = frozenset(CC_KIND_VOCABULARY) - {NO_CONTROL_KIND}
 
 
 @dataclass(frozen=True, slots=True)

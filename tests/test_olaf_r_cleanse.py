@@ -1388,10 +1388,12 @@ class TestCastability:
     def test_kernel_suppression_denial_for_self_scope(self):
         # PASS kernel evidence (the brief's contract #5 + #6): the Slice
         # 4 self-scope castability rule — CAST_BLOCKING_CONTROL_KINDS is
-        # exactly {"suppression"} and a suppression ACTIVE at the
-        # activation denies the cleanse with the named
-        # caster_control_blocks_cleanse reason (use NOT consumed).
-        assert CAST_BLOCKING_CONTROL_KINDS == frozenset({"suppression"})
+        # exactly {"stasis", "suppression"} (F-9: the cleanse atom's own
+        # wording is "castable while disabled, but not under suppression/
+        # stasis", and stasis is now a kind the classifier knows) and
+        # either one ACTIVE at the activation denies the cleanse with the
+        # named caster_control_blocks_cleanse reason (use NOT consumed).
+        assert CAST_BLOCKING_CONTROL_KINDS == frozenset({"stasis", "suppression"})
         decision = CleanseEligibility(declaration=_candidate_declaration()).decide(
             SimpleNamespace(
                 time=1.0,
@@ -2255,7 +2257,7 @@ class TestUnchangedBoundaries:
         )
         assert kept[0]["end"] == pytest.approx(0.25)
         assert removed[0]["start"] == pytest.approx(0.25)
-        assert CAST_BLOCKING_CONTROL_KINDS == frozenset({"suppression"})
+        assert CAST_BLOCKING_CONTROL_KINDS == frozenset({"stasis", "suppression"})
         assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
         assert classify_control(SimpleNamespace(cc_kind="stun")).blocking is True
         unknown = classify_control(SimpleNamespace(cc_kind="mystery"))

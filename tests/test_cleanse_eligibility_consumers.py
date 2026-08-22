@@ -310,17 +310,24 @@ def test_mercurial_cleanse_and_movement_are_separate_effects():
     assert result["target"]["action_downtime"] == pytest.approx(0.5)
 
 
-def test_a_control_with_no_cleanse_declaration_fails_closed_at_the_walk():
-    """``pull`` is a real control kind the cleanse table does not carry."""
+def test_a_pull_survives_quicksilver_as_the_displacement_it_is():
+    """F-9: ``pull`` used to fail closed as ``unknown_control``.
+
+    The Wiki files a pull under Airborne, and Quicksilver's tooltip carves
+    Airborne out — so the interval survives for the game's reason, named
+    (``excluded_control_kind``), not because the kernel had never heard of
+    the kind.  An excluded kind still spends the activation.
+    """
     result = _run(
         [_control(1.0, "pull", 2.0)],
         [_cleanse(1.5)],
     )
     receipt = result["target"]["cleanse"]
-    assert receipt["decision"]["reason"] == "unknown_control"
+    assert receipt["decision"]["reason"] == "excluded_control_kind"
+    assert receipt["rejected_controls"][0]["reason"] == "excluded_control_kind"
     assert receipt["removed_controls"] == []
     assert result["target"]["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
-    assert result["target"]["cleanse_use"]["uses_after"] == 1  # not consumed
+    assert result["target"]["cleanse_use"]["uses_after"] == 0  # spent
 
 
 def test_a_kind_outside_the_vocabulary_never_reaches_the_walk():

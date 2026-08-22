@@ -372,12 +372,25 @@ NON_IMMOBILIZING_CC_KINDS = frozenset(
     {"slow", "cripple", "silence", "blind", "polymorph", "berserk"}
 )
 
-# Every value a module may author as a part's ``cc_kind``. "none" is an
-# explicit reviewed no-CC result. Anything else is a typo the engine rejects —
-# a misspelled kind must never author a no-op stun.
+# The reviewed *absence* of control, and the one vocabulary member that is
+# not a control kind: it reaches the classifiers as the empty kind.
+NO_CONTROL_KIND = "none"
+
+# Every value a module may author as a part's ``cc_kind`` — the ONE
+# vocabulary. Every other crowd-control set in the calculator is a
+# classification over this one and must stay closed and total over it
+# (tests/test_cc_kind_vocabulary.py is the guard). Anything outside it is a
+# typo the engine rejects — a misspelled kind must never author a no-op stun.
 CC_KIND_VOCABULARY = (
-    IMMOBILIZING_CC_KINDS | NON_IMMOBILIZING_CC_KINDS | frozenset({"none"})
+    IMMOBILIZING_CC_KINDS | NON_IMMOBILIZING_CC_KINDS | frozenset({NO_CONTROL_KIND})
 )
+
+# The Wiki's Airborne class: one forced displacement, named by the umbrella
+# ("airborne") or by the subtype a module actually authors. An item whose
+# tooltip carves out "Airborne" carves out all four, so the umbrella is
+# resolved here rather than re-spelled at each cleanse declaration.
+# https://wiki.leagueoflegends.com/en-us/Airborne
+DISPLACEMENT_CC_KINDS = frozenset({"airborne", "knockback", "knockup", "pull"})
 
 
 # The predicate that reads a raw row against the two constants above lives
@@ -386,24 +399,39 @@ CC_KIND_VOCABULARY = (
 # vocabulary and nothing that reads an event with it.
 
 # These control types stop a champion from taking a normal action for the
-# authored interval. Slow effects stay outside this set because they change
-# movement, not the ability to act.
+# authored interval: the displacement family, the forced actions (charm,
+# fear/flee, taunt, and Renata's berserk — a berserked champion's actions
+# are the enemy's), the roots (root/snare — the Wiki's two names for one
+# kind), sleep, stasis, stun, suppression and polymorph.
+# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
 ACTION_BLOCKING_CC_KINDS = frozenset(
     {
         "airborne",
+        "berserk",
         "charm",
         "fear",
+        "flee",
         "immobilize",
         "knockback",
         "knockup",
         "polymorph",
+        "pull",
         "root",
         "sleep",
+        "snare",
+        "stasis",
         "stun",
         "suppression",
         "taunt",
     }
 )
+
+# The other half of the same classification: real control the target keeps
+# acting under. Slows change movement, cripple attack speed, blind the
+# outcome of a swing and silence the ability to cast — none of them is
+# action downtime. The two halves must partition the vocabulary
+# (tests/test_cc_kind_vocabulary.py), so a new kind cannot arrive unclassified.
+NON_BLOCKING_CC_KINDS = frozenset({"blind", "cripple", "silence", "slow"})
 
 
 @dataclass(frozen=True)
