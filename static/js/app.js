@@ -414,11 +414,12 @@ function participantKindForPath(path) {
  * Disable the scenario actions whose prerequisites are not met yet, and say
  * why next to the control.
  *
- * Backend capability gating (applyControlCapabilities) is a boot-time fact;
- * these blocks are state-derived and change with every edit, so this runs on
- * every render. Issue #152: "Find best item for a slot" looked actionable
- * with an empty enemy roster and only wrote its warning into the result
- * column, far from the button that appeared to do nothing.
+ * Backend capability gating (applyControlCapabilities) refuses a whole control
+ * family; these blocks are state-derived and change with every edit. Both run
+ * on every render, this one last, so a refused family stays refused.
+ * Issue #152: "Find best item for a slot" looked actionable with an empty
+ * enemy roster and only wrote its warning into the result column, far from
+ * the button that appeared to do nothing.
  */
 function applyPrerequisiteGates() {
   const bisButton = document.getElementById("bisButton");
@@ -470,13 +471,17 @@ function applyPrerequisiteGates() {
  * matching on the token could only ever match a *supported* field — which is
  * why this whole pass had never fired.
  *
- * A family belongs here when its controls are in the served document at boot,
- * which is when this pass runs; the families whose controls a later render
- * creates (`optimize`, and best_in_slot's `.bis-trigger` / roster
- * `[data-picker]` rows) can only be gated by their boot-time selectors.
- * The server's `_feature_fields` currently builds every family with
- * `supported: true`, so this pass is exercised by tests through synthetic
- * contracts and waits on a server-side refusal to fire in production.
+ * The pass is the last step of `render()`, so a selector reaches the controls
+ * a render creates — best_in_slot's `.bis-trigger` on every item slot, the
+ * roster `[data-picker]` rows — as well as the served document's own.  Every
+ * family whose controls the page mounts therefore has a row here;
+ * `CONTROL_FAMILY_EXEMPTIONS` names the one that does not, so the pass's
+ * coverage is checked rather than assumed.
+ *
+ * Nothing published refuses a family: `capabilities._feature_fields` builds
+ * every one `supported: true` and has no refusal condition to publish.  This
+ * pass is therefore contract coverage — driven by tests over synthetic
+ * contracts, correct for every family the day a refusal is published.
  */
 const CONTROL_FAMILY_GATES = {
   // The prerequisite pass re-enables #bisButton on every render, so a gated
@@ -491,6 +496,20 @@ const CONTROL_FAMILY_GATES = {
   picker: { selector: "[data-picker]" },
 };
 
+/**
+ * The declared control families this pass cannot gate, and why.
+ *
+ * `optimize` mounts nothing: `data-optimize-roster`, `data-optimize-roster-all`
+ * and `data-optimize-build` are read by the click delegate and emitted by no
+ * renderer or template, so the roster and full-build searches have no entry
+ * point on the page and no selector to disable.  Its capability descriptor
+ * publishes a locator anyway, which is the contract lying in the one way
+ * `capabilities._field` warns about (backlog SC2).
+ */
+const CONTROL_FAMILY_EXEMPTIONS = {
+  optimize: "No control mounts this family, so there is nothing to disable.",
+};
+
 /** Every declared control family the backend refuses, with its reason. */
 function refusedControlFamilies() {
   const fields = engine.capabilities?.controls?.fields || {};
@@ -502,7 +521,7 @@ function refusedControlFamilies() {
 /**
  * Disable the control families the backend refuses (issue #78 follow-up).
  *
- * `controls` is the only capability section this boot-time pass walks, and
+ * `controls` is the only capability section this pass walks, and
  * deliberately so: its fields name control *families*, while participant and
  * scenario fields name payload fields whose refusal rides on the control
  * itself through `capabilityDescriptorAttributes` at render time, and
@@ -654,6 +673,32 @@ function globalFormToggles() {
   return Object.keys(VARIANT_BOOLEAN_OPTIONS).filter((key) => "form" in VARIANT_BOOLEAN_OPTIONS[key]);
 }
 
+/** The form toggle the champion declares, or null when its kit has one form. */
+function declaredFormToggle(championName = state.attacker.champion) {
+  const declared = new Set((engine.championOptions[championName]?.options || []).map((option) => option.key));
+  return globalFormToggles().find((key) => declared.has(key)) || null;
+}
+
+/**
+ * True when a slot's Variant control moves the champion between forms.
+ *
+ * Membership is the variant stamps, never the option the control writes:
+ * Jayce's Q binds `accelerated_q` — a cannon packet — yet its three variants
+ * span both stances, so it has to ride the form mirror or a hammer W and an
+ * accelerated cannon Q are selectable at once (`hammer_stance` and
+ * `accelerated_q` both true, which no Jayce fight can be).
+ *
+ * A slot with no Variant control is out: Jayce's R renders none, and the wiki
+ * stamps its two forms in the opposite order (Transform Mercury Cannon
+ * first), so its stamp is not the kit's form axis.
+ */
+function ridesFormAxis(ability) {
+  if (!(ability?.variants?.length > 1)) return false;
+  if (!declaredFormToggle()) return false;
+  if (!abilityOptionBinding(ability.slot, "ability_variants")) return false;
+  return new Set(ability.variants.map((variant, index) => variantForm(ability, index))).size > 1;
+}
+
 function abilityOptionBinding(slot, field, championName = state.attacker.champion) {
   const overrideKey = SLOT_OPTION_BINDINGS[`${slot}:${field}`];
   const options = engine.championOptions[championName]?.options || [];
@@ -673,7 +718,7 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   const direct = slotVariantKeys(slot).find((key) => declared.has(key));
   if (direct) return direct;
   if (slot !== "R") {
-    const toggle = globalFormToggles().find((key) => declared.has(key));
+    const toggle = declaredFormToggle(championName);
     if (toggle) return toggle;
     if (declared.has("stance")) return "stance";
   }
@@ -692,46 +737,65 @@ function formVariantIndex(ability, form) {
 /**
  * The variant index a slot starts on: the one matching its bound option's
  * module default.  Variant 0 is Jayce's hammer kit, but his module defaults
- * hammer_stance to false (cannon) — a fresh pick must not flip the form.  A
- * form toggle lands on the first variant of the form its default names; a
- * packet toggle names the index itself; an option whose default is already an
- * index is clamped to the slot's variant list.  Slots without a bound option
- * start on their first variant.
+ * hammer_stance to false (cannon) — a fresh pick must not flip the form.
+ *
+ * A slot on the form axis is seated by form first, whatever option its own
+ * control writes, and only then by that option: Jayce's Q binds a packet
+ * toggle (`accelerated_q`) whose true index is a cannon variant, so a raw
+ * index could seat Q in the form `hammer_stance` did not choose — the
+ * boot-time shape of the contradiction the mirror prevents on click.  Off the
+ * form axis a form toggle lands on the first variant of the form its default
+ * names, a packet toggle names the index itself, and an option whose default
+ * is already an index is clamped to the slot's variant list.  Slots without a
+ * bound option start on their first variant.
  */
 function defaultFormVariantIndex(ability) {
   const count = ability?.variants?.length || 1;
   const binding = abilityOptionBinding(ability?.slot, "ability_variants");
   if (!binding) return 0;
-  const option = (engine.championOptions[state.attacker.champion]?.options || [])
-    .find((entry) => entry.key === binding);
+  const declared = engine.championOptions[state.attacker.champion]?.options || [];
+  const defaultOf = (key) => declared.find((entry) => entry.key === key)?.default;
   const clamp = (index) => Math.max(0, Math.min(count - 1, Math.trunc(index)));
   const axis = VARIANT_BOOLEAN_OPTIONS[binding];
+  if (ridesFormAxis(ability)) {
+    const formToggle = declaredFormToggle();
+    const inForm = (index) =>
+      (variantForm(ability, index) === VARIANT_BOOLEAN_OPTIONS[formToggle].form)
+        === Boolean(defaultOf(formToggle));
+    if (axis && "variant" in axis && Boolean(defaultOf(binding))
+      && axis.variant < count && inForm(axis.variant)) return axis.variant;
+    const first = ability.variants.findIndex((variant, index) => inForm(index));
+    return first >= 0 ? first : 0;
+  }
   if (axis && "form" in axis) {
     const wanted = (ability.variants || []).findIndex((variant, index) =>
-      (variantForm(ability, index) === axis.form) === Boolean(option?.default));
+      (variantForm(ability, index) === axis.form) === Boolean(defaultOf(binding)));
     return wanted >= 0 ? wanted : 0;
   }
-  if (axis) return clamp(option?.default ? axis.variant : 1 - axis.variant);
-  const value = Number(option?.default);
+  if (axis) return clamp(defaultOf(binding) ? axis.variant : 1 - axis.variant);
+  const value = Number(defaultOf(binding));
   return Number.isFinite(value) ? clamp(value) : 0;
 }
 
 /**
- * Mirror one slot's Variant selection onto every slot bound to the same form
- * toggle, by form rather than by index.  Q/W/E all bind Gnar's `mega`, but Q
- * carries three variants to W/E's two — mirroring the raw index put W/E in
- * Mega whenever Q left its first packet, including on Boomerang Throw's
- * reduced packet, which is Mini.
+ * Mirror one slot's Variant selection onto every other slot on the form axis,
+ * by form rather than by index.  Q/W/E all bind Gnar's `mega`, but Q carries
+ * three variants to W/E's two — mirroring the raw index put W/E in Mega
+ * whenever Q left its first packet, including on Boomerang Throw's reduced
+ * packet, which is Mini.
+ *
+ * Membership is `ridesFormAxis`, not "binds the same option": Jayce's Q binds
+ * `accelerated_q` and sat outside the mirror, so a hammer W beside an
+ * accelerated cannon Q sent `hammer_stance` and `accelerated_q` both true.
+ * A packet choice does not survive a form change — the destination form
+ * carries its own packets — which is Gnar's behaviour for the same reason.
  */
 function syncGlobalFormVariants(slot, variantIndex) {
-  const binding = abilityOptionBinding(slot, "ability_variants");
-  const axis = VARIANT_BOOLEAN_OPTIONS[binding];
-  if (!axis || !("form" in axis)) return;
   const source = activeAbilityKit().find((ability) => ability.slot === slot);
+  if (!ridesFormAxis(source)) return;
   const form = variantForm(source, variantIndex);
   activeAbilityKit().forEach((ability) => {
-    if (ability.slot === slot || !(ability.variants?.length > 1)) return;
-    if (abilityOptionBinding(ability.slot, "ability_variants") !== binding) return;
+    if (ability.slot === slot || !ridesFormAxis(ability)) return;
     const match = formVariantIndex(ability, form);
     const input = abilityInput(ability.slot);
     input.variant = match >= 0 ? match : 0;
@@ -4017,7 +4081,10 @@ function render() {
   renderBuyBand();
   renderScenarioRail();
   $("scenarioSentence").innerHTML = scenarioSentence();
-  applyPrerequisiteGates();
+  // Both gating passes, after the DOM they gate: a render-created
+  // .bis-trigger or roster picker is unreachable from a boot-time sweep.
+  // This call ends with applyPrerequisiteGates().
+  applyControlCapabilities();
   scheduleEngineCalculation();
   scheduleLoadoutStats();
   // Announce the pass: trust labels, staleness and share hydration listen.
@@ -5421,7 +5488,6 @@ Promise.all([
       : "";
     servedPatchLabel = servedPatch.public || "";
     engine.capabilities = config.capabilities || { participants: {}, scenario: { fields: {} } };
-    applyControlCapabilities();
     maybeInitConsentAnalytics();
     engine.keystones = config.keystones || [];
     engine.runes = config.runes || [];
