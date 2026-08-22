@@ -396,7 +396,10 @@ def test_singed_insanity_potion_amplifies_his_own_poison():
 def test_naafiri_hunt_grants_twenty_percent_of_attack_damage():
     entry = _slot_entry("Naafiri", "W")
     expected = 0.20 * row_review.STATS["attack_damage"]
-    assert entry["stat_buff"] == {"bonus_attack_damage": pytest.approx(expected)}
+    # The hunt's other key is the SC12 movement grant (30% at rank 5),
+    # pinned in tests/test_naafiri_pack.py.
+    assert entry["stat_buff"]["bonus_attack_damage"] == pytest.approx(expected)
+    assert entry["stat_buff"]["move_speed_percent"] == pytest.approx(30.0)
     build = _build_stats("Naafiri")
     result = _fight("Naafiri")
     assert result["champion_stats"]["attack_damage"] == pytest.approx(

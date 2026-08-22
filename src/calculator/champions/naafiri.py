@@ -83,16 +83,10 @@ slots (P, W).
     payload so the fight engine's autos see it too.
     The same branch's bonus movement speed (20/22.5/25/27.5/30% by W
     rank, a real leveling row, corroborated by the binary's
-    ``MoveSpeedAmount``) is sourced but deliberately NOT modeled: it is
-    an additive PERCENT bonus, and the only ability-buff channel
-    (``_apply_stat_buff_ultimates`` in ``damage.py``) adds a flat
-    number straight onto ``champion_stats["move_speed"]``, bypassing
-    both the additive-percent composition and
-    ``stats.apply_movement_speed_soft_caps``.  Feeding that unclamped
-    scalar to the one live consumer (``item_effects``'
-    ``adaptive_force_per_total_move_speed``, i.e. Swiftmarch's adaptive
-    force) would turn an uncertified movement number into damage, so
-    it stays a documented rider — see ASSUMPTIONS.
+    ``MoveSpeedAmount``) rides the same ``stat_buff`` as a
+    ``move_speed_percent`` key, so ``damage.py`` re-folds it through
+    ``stats.resolve_move_speed`` — the one fold the build stats, the
+    runes and the ally bonuses all go through, soft caps included.
   - P (We Are More) closes as the packmate DAMAGE coupling, the Illaoi-P
     precedent (a passive slot that prices the pet damage other slots
     trigger).  The innate summon itself deals nothing; what the pack
@@ -230,15 +224,22 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus
     ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus
-    entry["stat_buff"] = {"bonus_attack_damage": bonus}
+    entry["stat_buff"] = {
+        "bonus_attack_damage": bonus,
+        # Full magnitude, not the AD term's time-weighted share: the
+        # movement grant is not a damage input (the Teemo-W wiring), so
+        # it publishes the cast's own number into the shared fold.
+        "move_speed_percent": movement,
+    }
     entry["detail"] = (
         f"+{granted:.1f} bonus attack damage for {_HUNT_DURATION:g}s "
         f"({_HUNT_AD_PERCENT:g}% of total AD, wiki W prose corroborated by "
         f"the game binary's NaafiriADPercentBoost); +{bonus:.1f} over the "
         "fight window.  The hunt also raises the Packmate cap (priced on "
         f"the We Are More row) and grants +{movement:g}% movement speed, "
-        "which stays a sourced-but-unmodeled rider — see ASSUMPTIONS.  The "
-        "untargetability and the Packmate vanish/reappear are state."
+        "published as a move_speed_percent stat buff — a term in the "
+        "shared movement-speed fold.  The untargetability and the Packmate "
+        "vanish/reappear are state."
     )
     return entry
 
@@ -495,14 +496,16 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "w_hunt option (default on) withholds the whole hunt when off",
     "W's bonus movement speed (20/22.5/25/27.5/30% by rank, a real "
     "leveling row corroborated by the binary's MoveSpeedAmount) is "
-    "sourced but NOT modeled: stats publishes the move_speed_flat / "
-    "move_speed_percent pair and the shared resolve_move_speed fold "
-    "(soft caps included), and this slot is not yet wired onto it; the "
-    "one live consumer is item_effects' "
-    "adaptive_force_per_total_move_speed (Swiftmarch) — an uncertified "
-    "movement number would become damage.  The hunt's 1s "
-    "untargetability, the Packmate vanish/reappear and the 1.75s "
-    "hunt extension from casting R are state",
+    "published as a move_speed_percent stat_buff on the same w_hunt "
+    "gate as the AD steroid, so it composes through the shared "
+    "resolve_move_speed fold (soft caps included) rather than as a "
+    "second one.  It carries its full magnitude while the AD term is "
+    "time-weighted, because movement is not a damage input here: "
+    "item_effects' adaptive_force_per_total_move_speed (Swiftmarch) "
+    "resolves from the build's stats before any cast, the fight-start "
+    "boundary every stat_buff has.  The hunt's 1s untargetability, the "
+    "Packmate vanish/reappear and the 1.75s hunt extension from casting "
+    "R are state",
     "P (We Are More) prices the pack's sourced share of Hounds' Pursuit: "
     "R's own 'Physical Damage per Packmate' row (12.5/20/27.5 + 10% "
     "bonus AD) times the sourced Packmate count — 2/3/4/5 by level "

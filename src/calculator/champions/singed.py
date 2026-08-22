@@ -18,9 +18,10 @@ P (Noxious Slipstream) and W (Mega Adhesive) stay emitted zero rows.
 Neither spell object carries a damage field at all — ``SingedP`` holds
 only ``MSPercent``/``MSDuration``/``PerTargetCD``/``TriggerArea`` and
 ``MegaAdhesive`` only ``SlowPercent``/``WDuration``/``WRadius``/
-``DelayExecute``/``Radius`` — so P's stacking movement speed has no
-channel at all, and W's 50-70% slow and its ground are crowd control the
-engine records only as a kind.
+``DelayExecute``/``Radius`` — and W's 50-70% slow and its ground are
+crowd control the engine records only as a kind.  P's stacking movement
+speed has a channel (the shared ``move_speed_percent`` fold) but no
+cached magnitude to put in it — see the ASSUMPTIONS entry.
 """
 
 from typing import Any
@@ -144,10 +145,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "root would need a W-field placement the fight does not track.",
     "P (Noxious Slipstream) is stacking movement speed and W (Mega "
     "Adhesive) a slow and a ground: both are emitted zero-damage rows. "
-    "P is not yet wired onto the shared move-speed fold, and W's slow "
-    "magnitude is blocked on the cache (its only seconds atom is the "
-    "0.375 landing delay).  Neither spell object "
-    "carries a damage field in the game binary.",
+    "W's slow magnitude is blocked on the cache (its only seconds atom "
+    "is the 0.375 landing delay).  Neither spell object carries a damage "
+    "field in the game binary.",
+    "P (Noxious Slipstream) is NOT published as a move_speed_percent "
+    "stat_buff, unlike the other percent-movement grants: its magnitude "
+    "has no cached row to read.  All three cached P effects carry an "
+    "empty leveling array, so extract_value would return its "
+    "missing-row 0.0, and the only number anywhere is the atom corpus' "
+    "SingedP MSPercent = 0.25 (data/atoms/v2/singed.atoms.v2.json), "
+    "which is ambiguous between per-stack and total: the cached prose "
+    "reads '25% bonus movement speed' per stack 'up to a maximum of "
+    "625%', and 625 == 25 x 25 is the 25-stack cap multiplied into the "
+    "per-stack slot, the signature of a wiki-template substitution.  A "
+    "25x span is not a rounding question, so the slot stays unwired.  "
+    "The stack count is unmodeled state on top: stacks come from moving "
+    "past champions on a sourced 8s per-target cooldown (PerTargetCD), "
+    "which a one-pair fight cannot walk.",
 ]
 
 # P and W are emitted and grant nothing the engine prices.

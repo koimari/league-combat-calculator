@@ -25,6 +25,9 @@ never says makes the whole timed fight fall back to coarse ordering, so
 ``MODULE_CC`` is asserted here too.
 """
 
+import json
+from pathlib import Path
+
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
@@ -226,6 +229,48 @@ class TestRSourcedButUnmodeledRiders:
         rather than arming an unconditional root."""
         assumptions_text = " ".join(ASSUMPTIONS)
         assert "Mega Adhesive's area of effect" in assumptions_text
+
+
+# ---------------------------------------------------------------------------
+# P: the percent-movement grant the cache cannot source
+# ---------------------------------------------------------------------------
+
+
+class TestNoxiousSlipstreamHasNoSourcedMagnitude:
+    """Why P alone stays off the shared ``resolve_move_speed`` fold.
+
+    Every other percent-movement grant in this repo reads a leveling
+    row. P has none, and the one number that exists is ambiguous by a
+    factor of 25 — so the slot publishes nothing rather than a guess.
+    """
+
+    def test_every_cached_p_effect_has_an_empty_leveling_array(self) -> None:
+        wiki = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
+        for entry in wiki["Singed"]["abilities"]["P"]:
+            for effect in entry["effects"]:
+                assert effect["leveling"] == []
+
+    def test_the_cached_prose_multiplies_the_stack_cap_into_the_magnitude(
+        self,
+    ) -> None:
+        """625 == 25 x 25: the wiki-template substitution, pinned."""
+        wiki = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
+        prose = " ".join(
+            effect["description"]
+            for entry in wiki["Singed"]["abilities"]["P"]
+            for effect in entry["effects"]
+        )
+        assert "stacking up to 25 times" in prose
+        assert "25% bonus movement speed, up to a maximum of 625%" in prose
+
+    def test_no_move_speed_stat_buff_is_published(self, singed_data) -> None:
+        abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
+        assert "stat_buff" not in abilities["passive"]
+
+    def test_the_gap_is_named_in_the_assumptions(self) -> None:
+        assumption = next(text for text in ASSUMPTIONS if "MSPercent" in text)
+        assert "empty leveling array" in assumption
+        assert "ambiguous between per-stack and total" in assumption
 
 
 # ---------------------------------------------------------------------------
