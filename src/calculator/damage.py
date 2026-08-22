@@ -3042,6 +3042,16 @@ def _resolve_combat_state(
     )
 
 
+def _base_slot(key: str) -> str:
+    """The cast slot an ability row belongs to (``Q2``/``W_frenzy`` -> ``Q``/``W``).
+
+    A row keyed to no slot at all (``passive``, ``passive_plasma``) resolves to
+    itself, which is never one of ``Q``/``W``/``E``/``R`` — the test every
+    caller makes.
+    """
+    return key.split("_", 1)[0].rstrip("0123456789")
+
+
 def _slot_is_cast(
     key: str, info: Mapping[str, Any], cast_order: "list[str] | None"
 ) -> bool:
@@ -3051,7 +3061,7 @@ def _slot_is_cast(
     omits whose grant is priced across the window, Kai'Sa E).  Any other active
     row is live when its key, or the base slot of its variant key (``Q2`` ->
     ``Q``), is in the cast order; an unknown order casts every slot."""
-    base = key.split("_", 1)[0].rstrip("0123456789")
+    base = _base_slot(key)
     if base not in ("Q", "W", "E", "R") or info.get("off_rotation_grant"):
         return True
     if cast_order is None:
@@ -3994,16 +4004,23 @@ def _effective_timed_cooldown(
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
     immobilizing slot earns (Imperial Mandate's Control), and Navori
-    auto-attack refunds."""
+    auto-attack refunds.
+
+    Which haste applies is a property of the SLOT, so a variant row resolves
+    to its base slot first: Briar's ``W_frenzy`` and Kindred's ``W_vigor`` are
+    basic abilities and Riven's ``R_buff`` is an ultimate, and before this
+    each of them matched neither branch and earned no Shojin-class or
+    ultimate haste at all."""
     base_cd = ability_field(ability_info, "cooldown")
+    slot = _base_slot(ability_key)
     total_haste = state.ability_haste
-    if ability_key in ("Q", "W", "E"):
+    if slot in ("Q", "W", "E"):
         total_haste += basic_ability_haste
-    elif ability_key == "R":
+    elif slot == "R":
         total_haste += float(state.champion_stats["ultimate_haste"])
     total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
-    if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
+    if result.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
     return cd
 
