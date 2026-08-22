@@ -463,49 +463,61 @@ function applyPrerequisiteGates() {
   }
 }
 
-function applyControlCapabilities() {
-  // P2 (#78 follow-up): consume contract.controls so the backend can
-  // runtime-disable a control family; unsupported families get disabled
-  // with the backend reason instead of silently ignoring input.
+/**
+ * What a refused control family does to the page, keyed by the family's name
+ * in `capabilities.controls.fields`.  Keyed by *name*, not by
+ * `frontend_token`: the contract strips the locator off an unsupported field
+ * on purpose ("a locator there names a control that does not exist"), so
+ * matching on the token could only ever match a *supported* field — which is
+ * why this whole pass had never fired.
+ *
+ * A family belongs here when its controls are in the served document at boot,
+ * which is when this pass runs; the families whose controls a later render
+ * creates (`optimize`) cannot be gated from here at all.
+ */
+const CONTROL_FAMILY_GATES = {
+  // The prerequisite pass re-enables #bisButton on every render, so a gated
+  // one is marked. Deliberately not dataset.capabilityField — that names a
+  // payload field, and this is a control family.
+  best_in_slot: { selector: ".bis-trigger, #bisButton", mark: true },
+  game_state: { selector: "[data-game-state]" },
+  objective: { selector: "[data-objective]" },
+  share: { selector: "#sharePanel, #shareAnalystButton", hide: true },
+  roster_membership: { selector: "#addEnemy, #addAlly" },
+  purchase_optimize: { selector: "#economicsGold, #economicsOptimize" },
+  picker: { selector: "[data-picker]" },
+};
+
+/** Every declared control family the backend refuses, with its reason. */
+function refusedControlFamilies() {
   const fields = engine.capabilities?.controls?.fields || {};
-  const gated = (token) => {
-    const hit = Object.values(fields).find((f) => f.frontend_token === token);
-    return hit && hit.supported === false ? hit : null;
-  };
-  if (gated("data-bis-path")) {
-    document.querySelectorAll(".bis-trigger, #bisButton").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-bis-path").reason || "BIS unavailable";
-      // Marks the control as backend-gated so the per-render prerequisite
-      // pass leaves it disabled instead of re-enabling it. Deliberately not
-      // dataset.capabilityField — that names a payload field, and this is a
-      // control family.
-      b.dataset.capabilityGated = "true";
+  return Object.entries(CONTROL_FAMILY_GATES)
+    .filter(([name]) => fields[name]?.supported === false)
+    .map(([name, gate]) => ({ ...gate, name, reason: capabilityReason(fields[name]) }));
+}
+
+/**
+ * Disable the control families the backend refuses (issue #78 follow-up).
+ *
+ * `controls` is the only capability section this boot-time pass walks, and
+ * deliberately so: its fields name control *families*, while participant and
+ * scenario fields name payload fields whose refusal rides on the control
+ * itself through `capabilityDescriptorAttributes` at render time, and
+ * `catalogs` mounts no control of its own.
+ */
+function applyControlCapabilities() {
+  refusedControlFamilies().forEach((refusal) => {
+    document.querySelectorAll(refusal.selector).forEach((control) => {
+      if (refusal.hide) {
+        control.hidden = true;
+        return;
+      }
+      control.disabled = true;
+      control.title = refusal.reason;
+      if (refusal.mark) control.dataset.capabilityGated = "true";
     });
-  }
+  });
   applyPrerequisiteGates();
-  if (gated("data-game-state")) {
-    document.querySelectorAll("[data-game-state]").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-game-state").reason || "Unavailable";
-    });
-  }
-  if (gated("data-objective")) {
-    document.querySelectorAll("[data-objective]").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-objective").reason || "Unavailable";
-    });
-  }
-  if (gated('id="sharePanel"')) {
-    document.querySelectorAll("#sharePanel, #shareAnalystButton").forEach((b) => {
-      if (b) b.hidden = true;
-    });
-  }
-  if (gated("data-remove-target")) {
-    document.querySelectorAll("#addEnemy, #addAlly").forEach((b) => {
-      if (b) b.disabled = true;
-    });
-  }
 }
 
 function maybeInitConsentAnalytics() {
