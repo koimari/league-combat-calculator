@@ -48,18 +48,18 @@
     "coupled_golden_exact_values": "VERIFIED"
   },
   "golden": {
-    "sections": "champion_baselines,item_sweep,registered_champion_fights",
-    "entries": 670,
-    "leaves": 59562,
-    "numeric_leaves": 45896,
-    "src_tree_sha": "7c400b2639ecedf9ac9de985d5d1da0f3adaa20a"
+    "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
+    "entries": 672,
+    "leaves": 59798,
+    "numeric_leaves": 46122,
+    "src_tree_sha": "2312b4a2a355d401db2716b7233fcf037868cec5"
   },
   "coupled_golden": {
     "sections": "coupled_scenarios",
-    "entries": 22,
-    "leaves": 86080,
-    "numeric_leaves": 28951,
-    "src_tree_sha": "7c400b2639ecedf9ac9de985d5d1da0f3adaa20a"
+    "entries": 23,
+    "leaves": 89241,
+    "numeric_leaves": 30014,
+    "src_tree_sha": "2312b4a2a355d401db2716b7233fcf037868cec5"
   },
   "coupled_golden_exact": {
     "sections": "coupled_scenarios",
