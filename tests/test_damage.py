@@ -18,6 +18,7 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
+    DecayingTarget,
     FightConfig,
     calculate_fight_damage,
     split_auto_vs_ability,
@@ -3367,3 +3368,45 @@ class TestEmpoweredSwingAttribution:
         assert auto_row["count"] > 0
         rows = sum(r.get("total_damage", 0.0) for r in result["breakdown"].values())
         assert rows == pytest.approx(result["total_damage"], rel=1e-6)
+
+
+class TestDecayingTarget:
+    """The one model the per-auto walks read, and its second reading."""
+
+    def test_a_proc_does_not_floor_the_health_the_next_proc_prices_on(self) -> None:
+        target = DecayingTarget.at_full(100.0)
+        target.take_proc(60.0)
+        target.take_proc(60.0)
+        assert target.current_health == pytest.approx(-20.0)
+
+    def test_the_auto_settles_the_walk_at_zero(self) -> None:
+        target = DecayingTarget.at_full(100.0)
+        target.take_proc(60.0)
+        target.settle_auto(60.0)
+        assert target.current_health == 0
+
+    def test_pricing_inputs_carry_max_and_current_health(self) -> None:
+        target = DecayingTarget.at_full(2000.0)
+        target.settle_auto(500.0)
+        inputs = target.inputs(DamageInputs({}, 7, True, 1.0, 1.0))
+        assert inputs.target_max_health == pytest.approx(2000.0)
+        assert inputs.target_current_health == pytest.approx(1500.0)
+        assert inputs.level == 7
+
+    def test_the_ledger_reading_excludes_packets_at_the_instant(self) -> None:
+        """The documented disagreement: strictly before, and timed only."""
+
+        class _State:
+            target_health = 1000.0
+            breakdown = {
+                "Q": {
+                    "damage_events": [
+                        {"time": 1.0, "damage": 100.0},
+                        {"time": 2.0, "damage": 40.0},
+                        {"damage": 500.0},
+                    ]
+                }
+            }
+
+        assert DecayingTarget.ledger_health(_State(), 2.0) == pytest.approx(900.0)
+        assert DecayingTarget.ledger_health(_State(), 3.0) == pytest.approx(860.0)
