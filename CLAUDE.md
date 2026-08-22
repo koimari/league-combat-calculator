@@ -37,7 +37,7 @@ pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, 4 shards; ~1 min on 16 cores)
 python scripts/prose_lint.py                                            # Docstrings/comments: current state only, none longer than its body
-python scripts/literal_defaults.py src/calculator/damage.py             # Rule-5 lint: literal fallbacks on cached data (tests/test_literal_defaults.py pins it)
+python scripts/literal_defaults.py src/calculator/damage.py src/calculator/item_effects.py src/calculator/ability_atoms.py  # Rule-5 lint: literal fallbacks on cached data (tests/test_literal_defaults.py pins all three)
 python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/audit/fetch/bis/packets are its other subcommands (see /patch-update skill)
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
 ```
@@ -65,6 +65,7 @@ baseline with every diff explained in the commit.
 - **`interpreters._threshold_regeneration_thresholds` stops the whole `uncompilable_item_receipt` call on one broken declaration** (request-level, not per-item) — intended since 5055dc5.
 - **`sed -i` in Git-Bash strips CRLF;** use byte-preserving scripts for bulk edits on this tree.
 - **Agent worktrees live under `.claude/worktrees/`:** anything that `rglob`s the checkout (`behavior_frontier.scan()` indexes from `src/`) will see every worker's copy; index from `src/`, `tests/`, `scripts/`, `docs/` roots, never the repo root.
+- **Agent worktrees fork from `main`'s tip, not the session's checked-out branch:** a subagent spawned with worktree isolation while a campaign branch is checked out still starts at `main`. Verify `git merge-base` against the intended base before reconciling delegated work, and have the worker merge the campaign branch itself when the base is stale.
 - **Parallel sessions share one `.git`:** `git checkout -- <dir>` in one worktree discards another session's uncommitted edits in the same worktree (use one worktree per session), `git stash` is one stack across all worktrees (never stash as a base-state check — use a detached checkout of the base commit), and on this case-insensitive filesystem `git rm skill.md` also removes `SKILL.md` from disk.
 - **Crit rolls are random unless `deterministic` is set:** `damage.py` rolls `random.random() < crit_chance` per swing, so two identical `calculate_payload` requests on a crit build return different auto totals (Kai'Sa: 623 / 739 / 854 / …). Every probe, test, and golden capture on a crit-capable build passes `deterministic=True`.
 - **Derived receipts are regenerated, never hand-merged:** `docs/cast-dependency-audit.json` (`scripts/cast_dependency_audit.py --output`), `docs/behavior-frontier.json` (`scripts/behavior_frontier.py --write`) and `data/runes.json` effects (`data_updater.reparse_cached_rune_effects()`) conflict on every parallel merge; take either side, regenerate over the merged tree, and grep for conflict markers before committing — a marker left in a JSON receipt makes its own regenerator fail.
