@@ -40,12 +40,14 @@ staying silently absent, and its heal keeps it ``modeled`` through the
 import re
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
+    ability_name,
     damage_entry,
     extract_cooldown,
     extract_description_duration,
@@ -148,15 +150,11 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         attrs = _Q_TRIAD_COMPONENTS.get(attribute, [attribute])
         detail = f"Q variant: {attribute}."
     else:
-        attrs = (
-            _Q_SWEETSPOT_ATTRS
-            if bool(ctx.options.get("sweetspot", True))
-            else _Q_NORMAL_ATTRS
-        )
+        attrs = _Q_SWEETSPOT_ATTRS if bool(ctx.option("sweetspot")) else _Q_NORMAL_ATTRS
 
     parts = _q_strike_parts(ctx, ability, rank, attrs)
     entry = damage_entry(
-        ability.get("name", "The Darkin Blade"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         sum(part.amount for part in parts),
@@ -196,7 +194,7 @@ def _infernal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
         )
     per_hit = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Infernal Chains"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_hit * _W_HITS,
@@ -227,7 +225,7 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     if per_hit is None:
         return None
-    return on_hit_entry(ability.get("name", "Deathbringer Stance"), per_hit, "magic")
+    return on_hit_entry(ability_name(ability), per_hit, "magic")
 
 
 _deathbringer_stance.phase = ONHIT
@@ -247,7 +245,7 @@ def _umbral_dash(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     return no_damage(
         ctx,
-        name=ability.get("name", "Umbral Dash"),
+        name=ability_name(ability),
         reason=(
             "Umbral Dash is a self-heal-amp dash with no enemy-damage "
             "attribute of its own (data/champions.json Aatrox E carries "
@@ -364,7 +362,7 @@ def derive_self_healing(
     e_ratio = base_ratio + per_100 * (
         float(champion_stat(champion_stats, "bonus_health")) / 100.0
     )
-    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    r_rank = int(ability_field(ability_payload(ability_damages, "R"), "rank"))
     r_inc = leveling_value(
         ability_json(champion_data, "R"), "Increased Healing", r_rank
     )

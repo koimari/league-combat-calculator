@@ -511,6 +511,13 @@ CACHED_SOURCE_ROW = frozenset(
         ("champions/shen.py", "_named_level_rank_damage", "dict.get", '"units"'),
         ("champions/shen.py", "_named_level_rank_damage", "dict.get", '"values"'),
         (
+            "champions/shyvana.py",
+            "_scalemail_per_stack",
+            "or-default",
+            '"description"',
+        ),
+        ("champions/shyvana.py", "_scalemail_per_stack", "or-default", '"effects"'),
+        (
             "champions/slotlib.py",
             "_find_primary_damage_leveling",
             "dict.get",

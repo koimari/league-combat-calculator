@@ -19,6 +19,7 @@ per-stack resists live in the cached effect prose alone, so
 import re
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat, int_option
@@ -26,6 +27,7 @@ from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
     STEROID_ZERO,
+    ability_name,
     attach_self_shield,
     damage_entry,
     extract_cooldown,
@@ -106,7 +108,7 @@ def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_armor = stacks * armor_per_stack
     bonus_mr = stacks * mr_per_stack
     entry = damage_entry(
-        ability.get("name", "Scalemail"),
+        ability_name(ability),
         ctx.level,
         0.0,
         0.0,
@@ -131,7 +133,7 @@ def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     casts = min(max(int(ctx.option("q_casts")), 1), 3)
-    dragon = bool(ctx.options.get("dragon_form", False))
+    dragon = bool(ctx.option("dragon_form"))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
     dragon_third = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
     parts: list[DamagePart] = []
@@ -141,7 +143,7 @@ def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
         parts.append(DamagePart(dtype, amount, time_offset=0.0, hit_interval=0.0))
     total = sum(part.amount for part in parts)
     entry = damage_entry(
-        ability.get("name", "Emberstrike"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -179,8 +181,8 @@ def _inferno_aegis(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for("W")
-    recast = bool(ctx.options.get("w_recast", True))
-    dragon = bool(ctx.options.get("dragon_form", False))
+    recast = bool(ctx.option("w_recast"))
+    dragon = bool(ctx.option("dragon_form"))
     shield = _inferno_aegis_shield(ctx)
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     if recast:
@@ -241,18 +243,18 @@ def _molten_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     rank = ctx.rank_for("E")
-    dragon = bool(ctx.options.get("dragon_form", False))
+    dragon = bool(ctx.option("dragon_form"))
     attr = "Increased/Explosion Magic Damage" if dragon else "Magic Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     parts = [DamagePart("magic", total, time_offset=0.0)]
-    if dragon and bool(ctx.options.get("e_second_explosion", False)):
+    if dragon and bool(ctx.option("e_second_explosion")):
         second = extract_named(
             ability, "Subsequent Explosion Damage", rank, ctx.stats, ctx.target
         )
         parts.append(DamagePart("magic", second, time_offset=0.0))
         total += second
     entry = damage_entry(
-        ability.get("name", "Molten Burst"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -344,7 +346,7 @@ def derive_self_healing(
 ):
     """Resolve Shyvana self-healing events from its authored packet."""
     healing = []
-    w_row = ability_damages.get("W", {})
+    w_row = ability_payload(ability_damages, "W")
     if "dragon form" in str(w_row.get("detail", "")).lower():
         level = max(1, int(champion_stat(champion_stats, "level")))
         w = _healing.ability_json(champion_data, "W")

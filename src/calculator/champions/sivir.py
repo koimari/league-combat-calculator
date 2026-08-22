@@ -155,7 +155,7 @@ def _ricochet(ctx: SlotCtx) -> dict[str, Any] | None:
     per_bounce = ratio / 100.0 * ctx.stat("attack_damage")
     bounces = _empowered_swings(ctx, window)
     entry = damage_entry(
-        ability.get("name", "Ricochet"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         per_bounce * bounces,
