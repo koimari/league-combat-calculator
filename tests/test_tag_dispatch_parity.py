@@ -112,7 +112,6 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
     assert branches == {
         "ult_empowered_autos",
         "ult_attack_speed_buff",
-        "execute",
         "crit_modifier",
         "secondary_target",
         "magic_damage_amp",
@@ -128,13 +127,16 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
 # ---------------------------------------------------------------------------
 
 
-def test_execute_threshold_agrees():
+def test_execute_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The second retirement: the ladder compiled its own ``ExecuteEffect``
+    beside the routing declaration, and the declaration is now the only owner
+    — so the projection carries no field for it and both engines read the
+    threshold through the fight-free reader."""
     owner = _sole("execute")
-    ladder = _ladder(owner).execute
     catalog = resolve_execution([owner], **CATALOG_CONTEXT)
-    assert ladder.item_name == catalog.owner == owner
-    assert ladder.threshold == pytest.approx(catalog.threshold)
-    assert ladder.threshold == pytest.approx(required_effect_value(owner, "threshold"))
+    assert catalog.owner == owner
+    assert catalog.threshold == pytest.approx(required_effect_value(owner, "threshold"))
+    assert not hasattr(_ladder(owner), "execute")
 
 
 def test_crit_damage_bonus_agrees():
@@ -299,7 +301,6 @@ def test_secondary_target_is_the_catalogs_alone():
     catalog's SECONDARY_TARGET rule is the only owner of the numbers."""
     owner = _sole("secondary_target")
     ladder = _ladder(owner)
-    assert ladder.execute is None
     assert ladder.crit_damage_bonus == 0.0
     assert ladder.conditional_notes == ()
     assert [rule.family for rule in behavior_rules(owner)] == [

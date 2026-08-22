@@ -16852,13 +16852,18 @@ def _hypershot_delta_events(
     )
 
 
+def _held_owners(state: FightState) -> list[str]:
+    """This build's item names in build order — the order a family's fold sums."""
+    return [item_effects.resolved_item_name(item) for item in state.items]
+
+
 def _amp_slot(
     state: FightState, slot: AmpChainSlot, *extra_owners: str
 ) -> "delta_amp.AmpSlot | None":
     """The declared amp occupying one chain slot for this build.  ``None``
     means nothing the build holds declares the slot, an answer and not a zero.
     ``extra_owners`` carries the keystone, an owner the item list cannot hold."""
-    owners = [item_effects.resolved_item_name(item) for item in state.items]
+    owners = _held_owners(state)
     owners.extend(extra_owners)
     return _amp_slot_for(state, slot, owners)
 
@@ -17547,7 +17552,7 @@ def _add_execute_display(state: FightState) -> None:
     The execute damage is NOT added to the total; the row displays the HP
     threshold at which the target would be executed.
     """
-    execute = state.damage_effects.execute
+    execute = damage_routing.declared_execution(_held_owners(state))
     if execute is not None:
         collector_threshold = state.target_health * execute.threshold
         threshold_pct = (
@@ -17556,12 +17561,12 @@ def _add_execute_display(state: FightState) -> None:
             else 0.0
         )
         state.breakdown["execute"] = {
-            "name": f"{execute.item_name} (Execute)",
+            "name": f"{execute.owner} (Execute)",
             "total_damage": 0.0,
             "damage_type": "true",
             "execution_threshold_hp": collector_threshold,
             "detail": (
-                f"{execute.item_name} Execution Threshold: "
+                f"{execute.owner} Execution Threshold: "
                 f"{collector_threshold:.0f} HP "
                 f"({threshold_pct:.0f}% of {state.target_health:.0f})"
             ),
@@ -18129,7 +18134,7 @@ def calculate_fight_damage(
     # thresholds apply only to their own cast. Item thresholds apply to every
     # authored packet. When both apply, keep the larger threshold.
     if not tuple_ledger:
-        item_execute = state.damage_effects.execute
+        item_execute = damage_routing.declared_execution(_held_owners(state))
         for event in damage_events:
             if not isinstance(event, dict):
                 continue
@@ -18157,7 +18162,7 @@ def calculate_fight_damage(
                 event["execute_declared_by_cast"] = True
             elif item_ratio > 0:
                 event["execute_threshold_ratio"] = item_ratio
-                event["execute_source"] = item_execute.item_name
+                event["execute_source"] = item_execute.owner
     if (
         score_only
         and shield_outcome_projection(shield_outcome_inputs(config, items))

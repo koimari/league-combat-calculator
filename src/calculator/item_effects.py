@@ -4961,14 +4961,6 @@ class FirstAutoCritEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class ExecuteEffect:
-    """Display-only low-health execution threshold."""
-
-    item_name: str
-    threshold: float
-
-
-@dataclass(frozen=True, slots=True)
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
@@ -4985,7 +4977,6 @@ class BuildDamageEffects:
     crit_damage_bonus: float = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp: float = 1.0
-    execute: ExecuteEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: tuple[str, ...] = ()
 
@@ -5267,7 +5258,6 @@ def _resolve_damage_effects_uncached(
     crit_damage_bonus = 0.0
     first_auto_crit: FirstAutoCritEffect | None = None
     magic_amp = 1.0
-    execute: ExecuteEffect | None = None
     cooldown_refund_source: str | None = None
     conditional_notes: list[str] = []
 
@@ -5308,11 +5298,6 @@ def _resolve_damage_effects_uncached(
                 f"({required.number('bonus_attack_speed_melee'):.0f}% melee / "
                 f"{required.number('bonus_attack_speed_ranged'):.0f}% ranged "
                 "bonus AS) is applied from time 0."
-            )
-        elif effect_type == "execute":
-            execute = ExecuteEffect(
-                item_name,
-                _RequiredValues(item_name, values).number("threshold"),
             )
         elif effect_type == "crit_modifier":
             required = _RequiredValues(item_name, values)
@@ -5391,7 +5376,6 @@ def _resolve_damage_effects_uncached(
         crit_damage_bonus=crit_damage_bonus,
         first_auto_crit=first_auto_crit,
         magic_amp=magic_amp,
-        execute=execute,
         cooldown_refund_source=cooldown_refund_source,
         conditional_notes=tuple(conditional_notes),
     )

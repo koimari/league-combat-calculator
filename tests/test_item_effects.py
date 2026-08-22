@@ -18,6 +18,7 @@ from src.calculator.interpreters import (
     on_hit_strike,
     spellblade,
 )
+from src.calculator.interpreters.damage_routing import declared_execution
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -802,8 +803,10 @@ class TestResolveDamageEffects:
         # The two per-part amps left this registry for their declarations at
         # 3.7-r2; ``tests/test_interp_delta_amp.py`` owns their numbers now.
         assert effects.magic_amp == pytest.approx(1.12)
-        assert effects.execute is not None
-        assert effects.execute.threshold == pytest.approx(0.05)
+        # SD9 retired ``execute``: the routing declaration is its one owner.
+        execution = declared_execution(["The Collector"])
+        assert execution is not None
+        assert execution.threshold == pytest.approx(0.05)
         assert len(effects.conditional_notes) == 2
 
     @pytest.mark.parametrize(

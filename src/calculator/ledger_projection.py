@@ -44,6 +44,7 @@ from types import MappingProxyType
 from typing import Any, NamedTuple, Protocol
 
 from .interpreters import cast_proc, periodic, spellblade, sustain
+from .interpreters.damage_routing import declared_execution
 from .interpreters.sustain import declared_sustain
 from .interpreters.threshold_defense import threshold_health_owner
 from .item_behavior import ManaSpentHealRule, OnHitHealRule, SustainStat
@@ -599,10 +600,10 @@ def _raw_row_stream_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
 
 def _execute_threshold_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
     """The item arming a per-event execute threshold, if the build holds one."""
-    execute = inputs.damage_effects.execute
+    execute = declared_execution(inputs.item_names)
     if execute is None:
         return ()
-    return (ItemOwner(execute.item_name),)
+    return (ItemOwner(execute.owner),)
 
 
 def _pair_outcome_owners(inputs: _HeldItemFacts) -> tuple[MechanicOwner, ...]:

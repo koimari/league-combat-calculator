@@ -819,13 +819,10 @@ def test_the_walk_venom_equals_the_registry_accessor_it_replaced(
 def test_the_walk_execution_equals_the_pair_engines_stamp() -> None:
     """The Collector: the Execute rider, against the ratio the pair engine stamps.
 
-    ``damage.py`` stamps ``execute_threshold_ratio`` from
-    ``item_effects``'s own ``ExecuteEffect``; the walk now reads the
-    declaration.  Equal numbers, one producer.
+    ``damage.py`` stamps ``execute_threshold_ratio`` from the fight-free
+    reader; the walk reads the same declaration.  Equal numbers, one producer.
     """
-    effects = item_effects.resolve_damage_effects(
-        [data_fetcher.get_item_by_name("The Collector")]
-    )
+    stamped = damage_routing.declared_execution(["The Collector"])
     rider = damage_routing.walk_execution(
         ["The Collector"],
         level=13,
@@ -833,9 +830,9 @@ def test_the_walk_execution_equals_the_pair_engines_stamp() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    assert effects.execute is not None and rider is not None
-    assert rider.threshold == effects.execute.threshold
-    assert rider.owner == effects.execute.item_name
+    assert stamped is not None and rider is not None
+    assert rider.threshold == stamped.threshold
+    assert rider.owner == stamped.owner
 
 
 @pytest.mark.parametrize("holder_is_melee", [True, False])
