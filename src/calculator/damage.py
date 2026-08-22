@@ -4183,6 +4183,15 @@ def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
     return parent if float(ability_field(info, "cooldown")) > 0 else None
 
 
+def _self_cast_lockout(state: "FightState") -> float:
+    """Seconds this kit spends silencing itself, over every declaring slot."""
+    return sum(
+        float(ability_field(info, "self_cast_lockout_seconds"))
+        for info in state.ability_damages.values()
+        if isinstance(info, Mapping)
+    )
+
+
 def _schedule_shared_casts(
     state: "FightState",
     result: "RotationResult",
@@ -4203,8 +4212,13 @@ def _schedule_shared_casts(
     duration. Cassiopeia's 0.75s-cooldown E is the case that pins the
     shared timeline: 3 casts in-game over a 3s fight, where an
     independent timeline schedules 5.
+
+    A kit that silences ITSELF (Rumble's Overheat) declares the seconds it
+    spends unable to cast, and they come off this horizon.  That prices how
+    much casting the lockout costs without claiming where the span sits —
+    the module declaring it could not source the instant, only the length.
     """
-    duration = state.fight_duration_seconds
+    duration = max(0.0, state.fight_duration_seconds - _self_cast_lockout(state))
     # Mirror the rotation loop's recast pairing exactly: an entry rides
     # its parent's casts only when the parent appears EARLIER in the
     # cast order; otherwise it schedules independently.

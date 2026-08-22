@@ -47,23 +47,34 @@ out_of_scope slots (P, W).
     ``w_thorns_autos`` template for a proc whose trigger count the
     engine cannot derive.
 
-    Two sourced rows in the same effect are deliberately NOT modeled:
-      * The 50% : 142.54% bonus attack speed. It is inseparable from
-        the very cost the same sentence states — "disabling his
-        abilities as his Heat decays back down to 0 over 4 seconds".
-        Importing the upside without the downside would systematically
-        overstate Rumble, so both halves stay state (see ASSUMPTIONS).
-        The blocker is NOT the lockout primitive — a cast-blocked span
-        is a few lines in the shared cast timeline, which already models
-        one pair of hands. It is the trigger INSTANT: Overheat opens
-        when Heat reaches 100, the engine simulates no heat, and nothing
-        in the request carries a start time. Both halves hang off that
-        one unsourced instant — where the 4-second lockout sits decides
-        which casts the window costs, and an attack-speed grant placed
-        anywhere else than the lockout is the overstatement again. What
-        unblocks it is a heat axis that gives Overheat a start time, not
-        a scheduler feature; until then ``overheat_autos`` prices the
-        one half that needs no clock (a count of empowered swings).
+    The heat axis prices the other two rows of the same effect:
+      * The 50% : 142.54% bonus attack speed and the self-silence stated
+        in the same sentence ("disabling his abilities as his Heat
+        decays back down to 0 over 4 seconds") are priced TOGETHER, off
+        one declared axis, because pricing either alone overstates
+        Rumble in one direction or the other.
+        ``overheat_windows`` declares how many times the mech reaches
+        the ceiling; ``_heat_mechanics`` reads the ceiling (150 Heat),
+        the per-cast gain (20 Heat, and Q/W/E must agree) and the window
+        (4 seconds) out of the cached prose, so the axis prices no
+        constant of its own and a reworked cache raises.
+        Why DECLARED and not derived from the cast plan, which does
+        carry sourced heat amounts: a probe of the real pipeline puts 16
+        basic-ability casts in a 10-second fight — 320 Heat, two
+        Overheats — because E is scheduled on its cached 0.5s
+        inter-charge ``cooldown`` while its ``rechargeRate`` is 6s for
+        two charges. Deriving heat from that plan would place the first
+        lockout at 4.5s off ~11 phantom casts. Heat is derivable the day
+        E's charges are, and ``_heat_mechanics`` already publishes the
+        casts-per-window count that derivation needs.
+        Both halves land through primitives that already existed: the
+        bonus attack speed as a ``stat_buff`` weighted by
+        ``buff_window_share`` (exact for attack speed, which is linear
+        in the bonus percent), and the lockout as
+        ``self_cast_lockout_seconds`` — seconds ``damage.py`` takes off
+        the shared cast schedule's horizon. Placement inside the fight
+        is NOT claimed: the model prices how much casting the window
+        costs, not which casts it eats.
       * The "Bonus Damage" leveling row (65 : 163.32 by level). Read in
         context it is not a damage source at all — it is the cap on the
         %max-health term, "capped at 65 : 163.32 (based on level)
@@ -97,20 +108,107 @@ out_of_scope slots (P, W).
 """
 
 import math
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import ability_name, extract_named, on_hit_entry, simple_damage
+from .slotlib import (
+    ability_name,
+    extract_description_duration,
+    extract_named,
+    extract_value,
+    find_named_leveling,
+    on_hit_entry,
+    simple_damage,
+)
 from .inputs import int_option
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 
-# Upper bound on the explicit Overheated auto count. Overheat lasts a
-# sourced 4 seconds; the bound is a sanity rail on user input, not a
-# modeled game value (the Rammus w_thorns_autos rail).
+# Upper bound on the explicit Overheated auto count; a sanity rail on user
+# input, not a modeled game value (the Rammus w_thorns_autos rail).
 _MAX_OVERHEAT_AUTOS = 30
+
+# Same rail, on the heat axis: how many times one fight may be declared to
+# Overheat.  Not a game bound either — the game's bound is the arithmetic
+# in ``_heat_mechanics`` against the fight window.
+_MAX_OVERHEAT_WINDOWS = 5
+
+# The heat system's three numbers live in cached prose, not in a leveling
+# row, so they are read with these and every miss raises.  Slot casts:
+# "Rumble generates 20 Heat to activate his flamethrower"; the ceiling:
+# "becomes Overheated while at 150 Heat"; the window: "disabling his
+# abilities as his Heat decays back down to 0 over 4 seconds".
+_HEAT_PER_CAST_RE = re.compile(r"generates\s+(?P<value>\d+(?:\.\d+)?)\s+Heat")
+_MAX_HEAT_RE = re.compile(
+    r"becomes\s+Overheated\s+while\s+at\s+(?P<value>\d+(?:\.\d+)?)\s+Heat"
+)
+
+# The slots whose cast the cache says generates Heat.  R is deliberately
+# absent: The Equalizer delays the decay ("or The Equalizer within 2
+# seconds") and generates none.
+_HEAT_GENERATOR_SLOTS = ("Q", "W", "E")
+_OVERHEAT_EFFECT_INDEX = 2
+
+
+def _effect_text(ability: dict[str, Any] | None, index: int) -> str:
+    """One cached effect description, or an empty string when absent."""
+    if ability is None:
+        return ""
+    effects = ability.get("effects")
+    if not isinstance(effects, list) or not 0 <= index < len(effects):
+        return ""
+    effect = effects[index]
+    if not isinstance(effect, dict):
+        return ""
+    description = effect.get("description")
+    return description if isinstance(description, str) else ""
+
+
+def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
+    """The cached Heat ceiling, per-cast gain, and Overheat window.
+
+    Every number is read out of the cached descriptions the sentences above
+    quote, so a reworded or reworked cache raises here instead of pricing a
+    stale constant.
+    """
+    passive = ctx.ability("P")
+    if passive is None:
+        raise ValueError("Rumble P: the cached Junkyard Titan entry is missing")
+    ceiling = _MAX_HEAT_RE.search(_effect_text(passive, 0))
+    if ceiling is None:
+        raise ValueError(
+            "Rumble P: the cached innate no longer states the Overheat "
+            "ceiling ('becomes Overheated while at N Heat')"
+        )
+
+    gains: set[float] = set()
+    for slot in _HEAT_GENERATOR_SLOTS:
+        match = _HEAT_PER_CAST_RE.search(_effect_text(ctx.ability(slot), 0))
+        if match is None:
+            raise ValueError(
+                f"Rumble {slot}: the cached entry no longer states its Heat "
+                "generation ('Rumble generates N Heat')"
+            )
+        gains.add(float(match.group("value")))
+    if len(gains) != 1:
+        raise ValueError(
+            "Rumble: the cached Q/W/E entries disagree on Heat per cast "
+            f"({sorted(gains)}) - the shared per-cast gain priced here has "
+            "changed upstream"
+        )
+
+    window = extract_description_duration(passive, _OVERHEAT_EFFECT_INDEX)
+    if not window:
+        raise ValueError(
+            "Rumble P: the cached Overheated effect no longer states its "
+            "duration ('decays back down to 0 over N seconds')"
+        )
+    return float(ceiling.group("value")), gains.pop(), float(window)
+
 
 # Flamespitter's cadence is the cache's own, and it is stated twice.  The
 # entry reads "Rumble generates 20 Heat to activate his flamethrower for 3
@@ -173,7 +271,7 @@ _flamespitter_full_channel.phase = "damage"
 
 
 def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the Overheated on-hit bonus magic damage, per empowered auto.
+    """P: the Overheated window — its on-hit damage, bonus AS, and lockout.
 
     The "Bonus Magic Damage" leveling row is a per-LEVEL array (20
     entries), so it is read at ``ctx.level``, not at an ability rank —
@@ -181,15 +279,20 @@ def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
     resolves all three modifiers together: the flat per-level term,
     "% AP", and "% of the target's maximum health".
 
-    The row rides the basic-attack stream, because that is where the game
-    puts it and the only channel a passive slot has: ``passive`` is not an
-    orderable cast (``pipeline.validate_cast_order_for_kit`` refuses it),
-    so a ``parts``-priced passive row parses and then never lands.
-    ``max_procs`` is what keeps that channel honest — Overheat is a
-    four-second window the fight engine does not simulate, so riding every
-    swing of the fight would price the window for the fight's whole
-    duration.  ``overheat_autos`` is therefore the explicit count of
-    empowered swings, 0 by default.
+    The damage row rides the basic-attack stream, because that is where the
+    game puts it and the only channel a passive slot has: ``passive`` is
+    not an orderable cast (``pipeline.validate_cast_order_for_kit``
+    refuses it), so a ``parts``-priced passive row parses and then never
+    lands.  ``max_procs`` keeps that channel honest, and ``overheat_autos``
+    is the explicit count of empowered swings.
+
+    ``overheat_windows`` is the heat axis (see the module docstring): the
+    declared number of times the mech reaches the cached Heat ceiling.  It
+    buys the two halves that need a clock — ``windows x window`` seconds of
+    bonus attack speed and the same seconds of self-silence.  Both are
+    withheld entirely at zero windows, because a payload present at a
+    magnitude of zero still reads as a priced slot to ``coverage_truth``
+    (the phantom-proc rule this module already applies to the rider).
     """
     ability = ctx.ability("P")
     if ability is None:
@@ -208,14 +311,49 @@ def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
         # phantom-proc rule this batch applied to Rammus' thorns).
         del entry["on_hit"]
     entry["target_max_health_sensitive"] = True
-    entry["detail"] = (
+
+    ceiling, per_cast, window = _heat_mechanics(ctx)
+    casts_per_window = math.ceil(ceiling / per_cast)
+    windows = min(max(int(ctx.option("overheat_windows")), 0), _MAX_OVERHEAT_WINDOWS)
+    # A fight that casts nothing builds no Heat, so it never Overheats
+    # whatever the axis says — the mech only heats on a basic ability cast.
+    if ctx.option("auto_attacks_only"):
+        windows = 0
+    locked = windows * window
+    detail = (
         f"Overheated: {per_auto:.2f} bonus magic damage on-hit "
         f"(level-{ctx.level} flat + 25% AP + 4% target maximum health) "
-        f"x {autos} empowered auto(s); the 4-second Overheat window's "
-        "attack-speed bonus and its ability lockout are both unmodeled "
-        "state, and the 'Bonus Damage' row is the monster-only cap on "
-        "the %max-health term, not a damage source"
+        f"x {autos} empowered auto(s)"
     )
+    if windows:
+        granted = extract_value(ability, "Per-Level Scaling", ctx.level)
+        if find_named_leveling(ability, "Per-Level Scaling") is None or granted <= 0:
+            raise ValueError(
+                "Rumble P: the cached 'Per-Level Scaling' row no longer "
+                f"carries the Overheated bonus attack speed at level {ctx.level}"
+            )
+        share = buff_window_share(ctx, locked)
+        entry["stat_buff"] = {"bonus_attack_speed": granted * share}
+        entry["self_cast_lockout_seconds"] = locked
+        detail += (
+            f"; {windows} Overheat window(s) of {window:g}s "
+            f"({int(ceiling)} Heat at {int(per_cast)} per basic ability cast "
+            f"= {casts_per_window} casts each): +{granted:g}% bonus attack "
+            f"speed over {locked:g}s of the fight (a {share:.3f} share, exact "
+            "for attack speed, which is linear in the bonus) and the same "
+            "seconds removed from the cast schedule, the self-silence the "
+            "cache states in the same sentence"
+        )
+    else:
+        detail += (
+            "; no Overheat window is declared (overheat_windows = 0), so "
+            "neither the bonus attack speed nor the ability lockout applies"
+        )
+    detail += (
+        "; the 'Bonus Damage' row is the monster-only cap on the "
+        "%max-health term, not a damage source"
+    )
+    entry["detail"] = detail
     return entry
 
 
@@ -261,6 +399,23 @@ OPTIONS = list(OPTIONS) + [
         label="Basic attacks landed while Overheated",
         rotation={"role": "self_state", "slot": "P"},
     ),
+    int_option(
+        "overheat_windows",
+        0,
+        minimum=0,
+        maximum=_MAX_OVERHEAT_WINDOWS,
+        label="Times the mech Overheats during the fight",
+        rotation={
+            "role": "self_state",
+            "slot": "P",
+            "note": (
+                "Heat is a resource this engine does not simulate, and the "
+                "cast plan cannot stand in for it while E is scheduled on "
+                "its 0.5s inter-charge cooldown instead of its 6s recharge. "
+                "How often the mech reaches the ceiling is declared."
+            ),
+        },
+    ),
 ]
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Flamespitter) prices the cached Maximum Magic Damage row "
@@ -278,10 +433,12 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "0.25-second intervals over up to 5 seconds (packet_module "
     "local packet timing declaration). The initial rocket impact has no separate "
     "damage row in the cache.",
-    "The heat/Danger Zone system is state outside the damage model: "
-    "Q/E/R rotation numbers assume no heat state (the CP-era review "
-    "boundary), and W's Danger Zone Bonus (+50% shield strength) is not "
-    "applied - the base Shield Strength row is priced.",
+    "The Danger Zone half of the heat system is state outside the damage "
+    "model: Q/E/R rotation numbers price their base rows and the Enhanced "
+    "(Danger Zone) rows go unread, and W's Danger Zone Bonus (+50% shield "
+    "strength) is not applied - the base Shield Strength row is priced. "
+    "Only the Overheated half of heat is priced, through the "
+    "overheat_windows axis.",
     "P (Junkyard Titan) prices the Overheated on-hit bonus magic damage - "
     "5:44.12 by level + 25% AP + 4% of the target's maximum health per "
     "empowered basic attack (cached P effect 3, leveling attribute 'Bonus "
@@ -289,21 +446,34 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "RumbleHeatSystem TotalBaseDamage / 0.25 AP coefficient / "
     "OverheatPercBonusDamage 0.04). The fight engine does not simulate "
     "heat, so overheat_autos is the explicit count of empowered autos "
-    "(0 = none, the default). The same effect's 50%:142.54% bonus attack "
-    "speed is NOT modeled: it is inseparable from the ability lockout "
-    "stated in the same sentence ('disabling his abilities as his Heat "
-    "decays back down to 0 over 4 seconds'), and what blocks the pair is "
-    "the window's START TIME, not the lockout mechanism — Overheat opens "
-    "at 100 Heat, the engine simulates no heat, and nothing in the "
-    "request carries that instant. Where the 4-second lockout sits "
-    "decides which casts it costs, so pricing the attack speed without "
-    "it would overstate Rumble exactly as before. A heat axis is what "
-    "unblocks this, not a scheduler feature. The 'Bonus Damage' leveling "
-    "row (65:163.32 by level) is the "
+    "(0 = none, the default). The 'Bonus Damage' leveling row "
+    "(65:163.32 by level) is the "
     "monster-only cap on the %max-health term, not a damage source, and "
     "never binds against a champion target. Reclassified from "
     "out_of_scope to modeled; the packet's no_damage label was incomplete, "
     "not stale.",
+    "P (Junkyard Titan) heat axis: overheat_windows declares how many "
+    "times the mech reaches the cached Heat ceiling during the fight "
+    "(0 = never, the default). Every number the axis prices is read from "
+    "the cached prose and nothing is a constant here: the ceiling (150 "
+    "Heat, 'becomes Overheated while at 150 Heat'), the per-cast gain "
+    "(20 Heat, stated identically by Q, W and E, and they must agree) and "
+    "the window (4 seconds, 'decays back down to 0 over 4 seconds') — so "
+    "8 basic-ability casts fill the bar. A declared axis rather than a "
+    "cast-plan derivation because the cast plan is not yet trustworthy "
+    "for heat: E is scheduled on its cached 0.5s inter-charge cooldown "
+    "instead of its 6s rechargeRate, which puts 16 basic casts (320 Heat) "
+    "in a 10-second fight where the kit generates about 140. The window "
+    "buys BOTH remaining rows of the Overheated effect, never one alone: "
+    "the 50%:142.54% (by level) bonus attack speed, applied as a "
+    "stat_buff weighted by the share of the fight the windows cover "
+    "(exact for attack speed, which is linear in the bonus percent), and "
+    "the self-silence stated in the same sentence, applied as "
+    "self_cast_lockout_seconds — windows x 4 seconds taken off the shared "
+    "cast schedule's horizon. Where inside the fight the lockout sits is "
+    "NOT claimed: the model prices how much casting the window costs, not "
+    "which casts it eats. An autos-only fight casts nothing, generates no "
+    "Heat and therefore Overheats zero times whatever the axis declares.",
     "W (Scrap Shield) is a sourced self-shield with no damage row: 25/55/"
     "85/115/145 + 30% AP + 4% of maximum health for 1.5 seconds. Shield-"
     "only abilities cannot carry attach_self_shield (that payload rides "
