@@ -2065,6 +2065,43 @@ def grey_health_heal_action(
     )
 
 
+def grey_health_shield_action(  # pylint: disable=too-many-arguments
+    grant_time: float,
+    source: str,
+    amount: float,
+    duration: float,
+    index: int,
+    aidx: int,
+) -> SurvivalAction:
+    """One main-participant grey-health-to-shield press, as an action.
+
+    The barrier sibling of :func:`grey_health_heal_action`, in the shape
+    the receipt composition's own support template compiles to, so the two
+    walks stage one press identically (Tahm Kench's Thick Skin active).
+    """
+    event_id = f"main:grey:{source}:shield:{index}"
+    return SurvivalAction(
+        sort_key=action_key(
+            float(grant_time),
+            TransitionRank.LATE_BARRIER,
+            "main",
+            {"attacker": "main", "_event_id": event_id, "source": source},
+        ),
+        time=float(grant_time),
+        phase=TransitionRank.LATE_BARRIER,
+        kind=ActionKind.SHIELD,
+        subject=0,
+        attacker=0,
+        aidx=aidx,
+        amount=float(amount),
+        source_key=str(source),
+        source=str(source),
+        event_slot=EVENT_SLOTS.slot(event_id),
+        duration=float(duration),
+        duration_set=True,
+    )
+
+
 # ---------------------------------------------------------------------------
 # The program entry point
 # ---------------------------------------------------------------------------
@@ -2279,6 +2316,7 @@ __all__ = [
     "action_from_event",
     "compile_program",
     "grey_health_heal_action",
+    "grey_health_shield_action",
     "is_authored_ability_event",
     "modifier_delivery_receipt",
     "pair_resistance_baselines",

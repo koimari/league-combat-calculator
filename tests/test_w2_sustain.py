@@ -52,6 +52,15 @@ def _heals(payload, source):
     ]
 
 
+def _grey_shields(payload):
+    """The self-shields Thick Skin's grey-health presses published."""
+    return [
+        event
+        for event in payload["combat"]["support_events"]
+        if event["target"] == "main" and event["source"] == "Thick Skin (grey health)"
+    ]
+
+
 def _main_survival(payload):
     return next(
         participant["survival"]
@@ -366,6 +375,39 @@ class TestViBlastShield:
         assert contract.coverage_channels["P"] == ("self_shield_events",)
 
 
+class TestTheTwoShieldOnlySlotChannels:
+    """A shield with no damage of its own reaches the ledger two ways.
+
+    A PASSIVE is never cast, so its shield rides a damaging cast through
+    ``slotlib.attach_self_shield`` (Shen's Ki Barrier, Rakan's Fey
+    Feathers).  A shield-only CAST is scanned from its own cached row by
+    the ally-support scanner, self-targeted (Jarvan IV's Golden Aegis).
+    Between them no shield-only slot is left unpriced, which is why there
+    is no third zero-damage channel.
+    """
+
+    @pytest.mark.parametrize(
+        "champion, source",
+        [
+            ("Shen", "Ki Barrier"),
+            ("Rakan", "Fey Feathers"),
+            ("Jarvan IV", "Golden Aegis · Shield Strength"),
+        ],
+    )
+    def test_the_slot_publishes_exactly_one_shield_per_activation(
+        self, champion, source
+    ):
+        payload = _fight(champion, duration=6)
+        shields = [
+            event
+            for event in payload["combat"]["support_events"]
+            if event["target"] == "main" and event["source"] == source
+        ]
+        (shield,) = shields
+        assert shield["amount"] > 0.0
+        assert shield["duration"] > 0.0
+
+
 class TestMordekaiserIndestructible:
     """W: the grey-health primitive already routes, so the map says so."""
 
@@ -439,6 +481,33 @@ class TestTahmKenchThickSkin:
         """Four seconds without damage is the wiki's condition, not a bug."""
         survival = _main_survival(_fight("Tahm Kench"))
         assert survival["grey_health_consumed"] == 0.0
+
+    def test_the_active_is_off_by_default_and_grants_no_shield(self):
+        """Pressing E is a player decision, so the default request presses none."""
+        payload = _fight("Tahm Kench")
+        assert _grey_shields(payload) == []
+        assert _main_survival(payload)["shield_absorbed"] == pytest.approx(0.0)
+
+    def test_the_option_converts_each_banked_pool_into_a_timed_shield(self):
+        """Each press pays the grey banked since the last one, for 2.5s."""
+        payload = _fight("Tahm Kench", options={"e_convert_grey_shield": True})
+        shields = _grey_shields(payload)
+        assert shields
+        assert all(shield["duration"] == pytest.approx(2.5) for shield in shields)
+        # E's cached cooldown is a flat 3s at every rank, and no ability
+        # haste is carried, so the presses are exactly three apart.
+        times = [shield["time"] for shield in shields]
+        assert times == sorted(times)
+        assert all(
+            later - earlier == pytest.approx(3.0)
+            for earlier, later in zip(times, times[1:])
+        )
+        # The whole pool is consumed by the presses, and the shields absorb.
+        survival = _main_survival(payload)
+        assert sum(shield["amount"] for shield in shields) == pytest.approx(
+            survival["grey_health_consumed"], rel=1e-3
+        )
+        assert survival["shield_absorbed"] > 0.0
 
 
 class TestPykeGiftOfTheDrownedOnes:

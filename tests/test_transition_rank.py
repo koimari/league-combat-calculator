@@ -663,13 +663,16 @@ def test_every_packet_author_declares_a_named_rank() -> None:
         ("item_support_effects.py", "LATE_BARRIER"),
         # Guardian's reactive shield and Glacial Augment's ally reduction;
         # Glacial's icy zone and Stormraider's surge; Aftershock's
-        # resistances; Grasp's permanent health; Eclipse's self shield.
+        # resistances; Grasp's permanent health; Eclipse's self shield and
+        # Thick Skin's grey-health press (both barriers a packet already
+        # landed pays for, so both arm after the damage).
         ("participant_timeline.py", "AURA_ARM"),
         ("participant_timeline.py", "AURA_ARM"),
         ("participant_timeline.py", "BARRIER_GRANT"),
         ("participant_timeline.py", "BARRIER_GRANT"),
         ("participant_timeline.py", "DAMAGE"),
         ("participant_timeline.py", "DEBUFF_ARM"),
+        ("participant_timeline.py", "LATE_BARRIER"),
         ("participant_timeline.py", "LATE_BARRIER"),
     ]
 
