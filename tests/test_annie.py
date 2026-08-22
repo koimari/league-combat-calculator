@@ -94,12 +94,29 @@ class TestPyromaniaChargeWalk:
         assert "charge 1/4 at the opening, 1/4 at the end" in row["detail"]
 
     @pytest.mark.parametrize(
-        "level,seconds", [(1, "1.25s"), (5, "1.25s"), (6, "1.5s"), (11, "1.75s")]
+        "level,seconds",
+        [
+            (1, "1.25s"),
+            (5, "1.25s"),
+            (6, "1.5s"),
+            (10, "1.5s"),
+            (11, "1.75s"),
+            (18, "1.75s"),
+        ],
     )
-    def test_the_stun_steps_at_the_sourced_level_breakpoints(
+    def test_the_stun_steps_at_the_game_files_breakpoints(
         self, annie_data, level, seconds
     ):
-        """1.25 / 1.5 / 1.75 (based on level) steps at levels 1, 6 and 11."""
+        """The three values come from the cache, the levels from the bin.
+
+        The cached entry says "1.25 / 1.5 / 1.75 (based on level)" and
+        names no level, so the breakpoints are the game record's:
+        AnniePassive's StunDuration is a ByCharLevelBreakpointsCalculation
+        with mLevel1Value 1.25 and +0.25 at mLevel 6 and mLevel 11 (see the
+        HARDCODED marker on ``_STUN_BREAKPOINT_LEVELS``).  Both edges of
+        every step are pinned, so a silent shift to 1/7/13 turns this red.
+        """
+        assert annie._STUN_BREAKPOINT_LEVELS == (11, 6, 1)
         assert seconds in _walk(annie_data, level=level)["detail"]
 
     def test_a_cache_that_stops_stating_the_cap_fails_closed(self, annie_data):

@@ -214,8 +214,15 @@ _STACK_CAP_RE = re.compile(r"stacking up to (\d+) times")
 _ENERGIZED_STUN_RE = re.compile(
     r"stun enemies hit for ([\d.]+) / ([\d.]+) / ([\d.]+) \(based on level\)"
 )
-#: The wiki's standard three-breakpoint level pattern (the Jhin precedent),
-#: confirmed against the Annie entry: 1.25s at 1-5, 1.5s at 6-10, 1.75s at 11+.
+# HARDCODED: verify on patch updates — against the GAME FILES, because the
+# cached entry states "1.25 / 1.5 / 1.75 (based on level)" and names no
+# level at all: https://raw.communitydragon.org/latest/game/data/characters/
+# annie/annie.bin.json, Characters/Annie/Spells/AnniePassiveAbility/
+# AnniePassive -> mSpellCalculations.StunDuration, a
+# ByCharLevelBreakpointsCalculationPart with mLevel1Value 1.25 and
+# mBreakpoints at mLevel 6 and mLevel 11 (+0.25 each).  The same record's
+# MaxStacks 4 corroborates the charge cap the innate's sentence states.
+# Descending, so the walk takes the first breakpoint the level clears.
 _STUN_BREAKPOINT_LEVELS = (11, 6, 1)
 _CHARGE_EFFECT = 0
 _ENERGIZED_EFFECT = 1
