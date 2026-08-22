@@ -345,7 +345,7 @@ def _enemy(
 
 
 def _lulu_qw() -> dict:
-    """Lulu: Q damage (t=0) + W polymorph (t=0.25, 2.0s) — CCs everyone.
+    """Lulu: Q damage (t=0) + W polymorph (t=0.25, 2.0s) on the caster.
 
     Whimsy has two mutually exclusive cached branches ("Self / Ally Cast"
     grants attack speed, "Enemy Cast" polymorphs), and the module prices
@@ -353,6 +353,10 @@ def _lulu_qw() -> dict:
     buff, which authors no control at all.  A fixture that wants the
     polymorph has to say so, which is the point: an enemy Lulu who was
     never told to cast W at anybody no longer polymorphs the board.
+
+    The enemy cast is targeted ("onto the target enemy champion"), so one
+    friendly holds it: the roster's first defender, which is the main
+    champion.  The allies are damaged and never polymorphed.
     """
     return _enemy(
         "Lulu",
@@ -646,14 +650,14 @@ def _eligibility(item: str = "Quicksilver Sash"):
 
 
 def test_r1_mikaels_heals_the_selected_ally_only_and_truncates_nothing_today():
-    """App level, CURRENT surface: the enemy control lands on EVERY friendly
-    (selected ally, unselected ally, caster); Mikael's Purify activates after
-    the caster's own polymorph has ended and heals the SELECTED ally only —
-    the unselected ally and the caster are not healed, and NO interval is
-    truncated anywhere (the cleanse marker is authored but the walk records
-    the heal only).  NEW-CONTRACT: the recipient's survival row carries the
-    cleanse receipt (control_not_active — the polymorph already ended at
-    activation) and the caster's row carries the use-state receipt."""
+    """App level, CURRENT surface: the enemy's targeted polymorph lands on
+    the caster alone; Mikael's Purify activates after that polymorph has
+    ended and heals the SELECTED ally only — the unselected ally and the
+    caster are not healed, and NO interval is truncated anywhere (the
+    cleanse marker is authored but the walk records the heal only).
+    NEW-CONTRACT: the recipient's survival row carries the cleanse receipt
+    (control_not_active — the recipient was never polymorphed) and the
+    caster's row carries the use-state receipt."""
     combat = _calculate(
         {
             **_main(items=["Mikael's Blessing"]),
@@ -680,11 +684,13 @@ def test_r1_mikaels_heals_the_selected_ally_only_and_truncates_nothing_today():
     assert jinx["healing_received"] == pytest.approx(131.6)
     assert ashe["healing_received"] == pytest.approx(0.0)
     assert main["healing_received"] == pytest.approx(0.0)
-    for row in (jinx, ashe, main):
-        assert row["action_downtime"] == pytest.approx(2.0)
-        assert [
-            (i["kind"], i["start"], i["end"]) for i in row["crowd_control_intervals"]
-        ] == [("polymorph", 0.25, 2.25)]
+    assert main["action_downtime"] == pytest.approx(2.0)
+    assert [
+        (i["kind"], i["start"], i["end"]) for i in main["crowd_control_intervals"]
+    ] == [("polymorph", 0.25, 2.25)]
+    for row in (jinx, ashe):
+        assert row["action_downtime"] == pytest.approx(0.0)
+        assert row["crowd_control_intervals"] == []
     # The heal-kind Purify counts as a cleanse utility event (P3 package
     # 3G): the packet carries the ``cleanse`` marker, so the utility panel
     # reports it alongside dedicated kind=="cleanse" packets.
@@ -700,9 +706,9 @@ def test_r1_mikaels_heals_the_selected_ally_only_and_truncates_nothing_today():
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["removed_controls"] == []
     assert receipt["rejected_controls"] == []
-    assert receipt["downtime_before"] == pytest.approx(2.0)
-    assert receipt["downtime_after"] == pytest.approx(2.0)
-    assert [i["kind"] for i in receipt["intervals_after"]] == ["polymorph"]
+    assert receipt["downtime_before"] == pytest.approx(0.0)
+    assert receipt["downtime_after"] == pytest.approx(0.0)
+    assert receipt["intervals_after"] == []
     heal_entry = receipt["heal"]
     assert heal_entry["amount"] == pytest.approx(250.0)
     assert heal_entry["source"] == MIKAELS_SOURCE
@@ -760,8 +766,11 @@ def test_r2_mikaels_target_choice_receipt_follows_the_selection(
     other_row = survival_of(combat, other_ally)
     assert selected_row["healing_received"] == pytest.approx(131.6)
     assert other_row["healing_received"] == pytest.approx(0.0)
-    assert selected_row["action_downtime"] == pytest.approx(2.0)
-    assert other_row["action_downtime"] == pytest.approx(2.0)
+    # Neither ally is polymorphed: the cast is targeted and the caster held
+    # it.  The activation is still gated behind the caster's own window.
+    assert selected_row["action_downtime"] == pytest.approx(0.0)
+    assert other_row["action_downtime"] == pytest.approx(0.0)
+    assert survival_of(combat, "main")["action_downtime"] == pytest.approx(2.0)
 
     # NEW-CONTRACT: the receipt names the selected ally; the other ally has
     # none; the caster consumed exactly one use.
@@ -773,8 +782,8 @@ def test_r2_mikaels_target_choice_receipt_follows_the_selection(
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["removed_controls"] == []
     assert receipt["rejected_controls"] == []
-    assert receipt["downtime_before"] == pytest.approx(2.0)
-    assert receipt["downtime_after"] == pytest.approx(2.0)
+    assert receipt["downtime_before"] == pytest.approx(0.0)
+    assert receipt["downtime_after"] == pytest.approx(0.0)
     assert receipt["heal"]["amount"] == pytest.approx(250.0)
     assert "cleanse" not in other_row
     use = survival_of(combat, "main")["cleanse_use"]
@@ -1852,20 +1861,21 @@ def test_r18_app_parity_today():
             "allies": [_ally("Jinx"), _ally("Ashe")],
         }
     )
+    # Simple parity case: no participant holds more than one interval, and
+    # only the polymorph's own recipient holds any.
     for pid in ("main", "ally:Jinx", "ally:Ashe"):
         row = survival_of(combat, pid)
         intervals = row["crowd_control_intervals"]
-        # Simple parity case: exactly one interval per participant.
-        assert len(intervals) == 1
-        (interval,) = intervals
-        assert row["action_downtime"] == pytest.approx(
-            interval["end"] - interval["start"]
-        )
         applied = _cc_applied(combat, pid)
-        assert len(applied) == 1
-        assert applied[0]["crowd_control"]["duration"] == pytest.approx(
-            interval["end"] - interval["start"]
+        assert len(intervals) == len(applied) <= 1
+        assert row["action_downtime"] == pytest.approx(
+            sum(interval["end"] - interval["start"] for interval in intervals)
         )
+        for event, interval in zip(applied, intervals):
+            assert event["crowd_control"]["duration"] == pytest.approx(
+                interval["end"] - interval["start"]
+            )
+    assert len(survival_of(combat, "main")["crowd_control_intervals"]) == 1
     # The Purify heal restored exactly the recipient's missing health
     # (Lulu Q lands twice; the heal at 2.5 covers the unhealed remainder).
     (purify,) = _support_events(combat, source=MIKAELS_SOURCE)
@@ -2114,9 +2124,9 @@ def test_r21_app_mikaels_heal_blocked_while_caster_is_ccd_today():
     assert purify["time"] == pytest.approx(1.0)
     assert purify["skipped_reason"] == "attacker_state_blocked"
     for pid in ("main", "ally:Jinx", "ally:Ashe"):
-        row = survival_of(combat, pid)
-        assert row["healing_received"] == pytest.approx(0.0)
-        assert row["action_downtime"] == pytest.approx(2.0)
+        assert survival_of(combat, pid)["healing_received"] == pytest.approx(0.0)
+    # The caster is the polymorph's recipient, which is what gates the heal.
+    assert survival_of(combat, "main")["action_downtime"] == pytest.approx(2.0)
 
 
 def test_r21_timeline_self_cast_cleanse_rides_the_gate_today():

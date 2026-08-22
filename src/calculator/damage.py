@@ -6597,14 +6597,25 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
-        control_specs = tuple(ability_field(ability_info, "control_events"))
+        authored_controls = tuple(ability_field(ability_info, "control_events"))
+        for control in authored_controls:
+            if not isinstance(control, ControlEvent):
+                raise TypeError(
+                    f"{ability_key} control_events must contain ControlEvent"
+                )
+        # A targeted cast holds one enemy, so it is allocated to the first
+        # roster index the way a target-limited item proc is; every other
+        # pair fight is scored without it.  The row's declaration is
+        # filtered with its events so the breakdown cannot claim a control
+        # this target never held.
+        control_specs = tuple(
+            control
+            for control in authored_controls
+            if control.scope.reaches(state.roster_target_index)
+        )
         if control_specs:
             serialized_controls: list[dict[str, Any]] = []
             for control in control_specs:
-                if not isinstance(control, ControlEvent):
-                    raise TypeError(
-                        f"{ability_key} control_events must contain ControlEvent"
-                    )
                 serialized_controls.append(
                     {
                         "kind": "crowd_control",

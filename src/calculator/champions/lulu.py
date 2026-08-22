@@ -33,6 +33,7 @@ cache, so it stays named rather than authored.
 
 from typing import Any
 
+from ..ability_spec import ControlScope
 from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -95,8 +96,8 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
     polymorphs them into a harmless critter for a duration" (the Disable
     Duration row).  ``lulu_whimsy_target`` picks which one this cast was,
     and the branch it picks is the only one priced: a self cast that also
-    polymorphed would be one cast modelled twice, and it would broadcast
-    a control nobody cast onto every enemy on the board.
+    polymorphed would be one cast modelled twice, and it would hold an
+    enemy nobody cast it on.
     """
     ranked = ctx.ranked("W")
     if ranked is None:
@@ -136,11 +137,13 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     if target == _ENEMY_CAST:
         # Only the enemy branch authors control, and it reads its own
-        # sourced row rather than restating one here.
+        # sourced row rather than restating one here.  The cached branch is
+        # cast "onto the target enemy champion", so one enemy holds it.
         entry = with_control_event(
             lambda _ctx, built=entry: built,
             kind="polymorph",
             duration_attr="Disable Duration",
+            scope=ControlScope.ONE_TARGET,
         )(ctx)
     return entry
 
@@ -243,10 +246,9 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "lulu_whimsy_target names is priced: a self/ally cast grants the "
     "Bonus Attack Speed row and authors no control, and an enemy cast "
     "authors the sourced Disable Duration polymorph and grants no "
-    "attack speed.  The polymorph reaches every enemy in the fight "
-    "because a control event carries no target of its own; the cached "
-    "cast is single-target, so a multi-enemy roster overstates who it "
-    "holds.",
+    "attack speed.  The cached cast is single-target, so the polymorph "
+    "is allocated to the first roster enemy and the rest of the roster "
+    "is scored without it.",
     "R's 1-second knock-up is real control the cache gives no duration "
     "row for, so it is named rather than authored as an event.",
     "R's bonus health is held for the whole fight rather than for its "
