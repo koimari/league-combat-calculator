@@ -20,19 +20,6 @@
    "cause": "Counter 1 was 0 on this branch: every item behaviour resolved through item_effects/item_behavior_catalog rather than through a name. main's arriving modules dispatch on the item name again -- cleanse_eligibility's CLEANSE_ACTIVE_SOURCES (9) and ITEM_CLEANSE_DECLARATIONS (11) key the cleanse vocabulary by name, item_support_effects names 16 support producers plus _FIMBULWINTER_TRIGGER_RULE, interaction_effects' _ANNUL_ITEM_NAMES names 3, damage.py names 22 at their call sites, and pipeline.py names 1. Each is a real behaviour this branch did not model, so none of them is deleted here: the debt is to move the dispatch onto a declared registry key, which is the same act criterion 1 always named.",
    "follow_up": "One slice per module, in the order the counts run: cleanse_eligibility first (its 20 are one vocabulary and the F-9 follow-up already opens it -- KNOWN_CONTROL_KINDS and CC_KIND_VOCABULARY disagree), then item_support_effects' 17, then damage.py's 22, then the 4 singletons. Each slice moves the counter, regenerates docs/behavior-frontier.json in its own commit (R-36), and edits this row's measured value or removes the row.",
    "blocked_on": ""
-  },
-  {
-   "debt": "counter_3",
-   "owner": "post-merge lane: undeclared registry entries",
-   "measured": 4,
-   "target": 0,
-   "was": 0,
-   "where": {
-    "calculator/item_behavior_catalog.py": "the four ITEM_EFFECTS entries with no rule compiler"
-   },
-   "cause": "Counter 3 is catalog.undeclared_entry_count(): a registry entry that declares neither a rule nor a reviewed NO_RUNTIME_BEHAVIOR reason. The four are main's new ITEM_EFFECTS entries -- Doran's Helm, Gluttonous Greaves, Ionian Boots of Lucidity and Lost Chapter -- which arrive pinned by name as UNDECLARED_ON_ARRIVAL. They fail closed today: an undeclared entry emits nothing rather than guessing, which is why the merge could land with them open.",
-   "follow_up": "Declare each of the four, or review it into item_coverage.NO_RUNTIME_BEHAVIOR with the reason -- the same act, one slice, tracked as F-2 in the merge follow-up list. Doran's Helm additionally carries a stat-derivation family tagged with no signature keys, so its declaration is the one that needs the item_effects accessor first.",
-   "blocked_on": ""
   }
  ]
 }

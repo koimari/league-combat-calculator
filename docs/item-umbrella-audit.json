@@ -1699,7 +1699,7 @@
         "name": "Gluttonous Greaves",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Gluttonous Greaves's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Omnivamp Percent Per Stack is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -2501,7 +2501,7 @@
         "name": "Lost Chapter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Lost Chapter's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Resource Restore is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },

@@ -41,19 +41,14 @@ from src.calculator.item_behavior_catalog import registry_owners
 
 SRC_ROOT = Path(__file__).parents[1] / "src" / "calculator"
 
-# Counter 3's live population: registry entries `main` added whose families no
-# rule compiler reaches yet.  Doran's Helm (Helping Hand minion damage), Ionian
-# Boots of Lucidity (summoner-spell haste) and Lost Chapter (Enlighten) are
-# stat-derivation tags with no signature keys; Gluttonous Greaves' Slay
-# omnivamp is a sustain tag with no compiler.  Declaring them empties this set.
-UNDECLARED_ON_ARRIVAL = frozenset(
-    {
-        "Doran's Helm",
-        "Gluttonous Greaves",
-        "Ionian Boots of Lucidity",
-        "Lost Chapter",
-    }
-)
+# Counter 3's live population, and it is empty: every registry entry compiles
+# at least one rule.  The four `main` brought in undeclared — Doran's Helm and
+# Tear of the Goddess (Helping Hand's minion-class channel), Ionian Boots of
+# Lucidity (Ionian Insight's summoner-spell channel), Lost Chapter (Enlighten's
+# resource restore) and Gluttonous Greaves (Slay's stacked omnivamp) — are
+# declared, so the set is the empty frozenset rather than a deleted assertion:
+# a fifth arriving undeclared entry must still fail here.
+UNDECLARED_ON_ARRIVAL: frozenset[str] = frozenset()
 
 
 def _stub_fields(rule, ctx, lane):  # pragma: no cover - never called here
@@ -120,12 +115,10 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
     that retired itself the moment the population emptied would leave the
     fail-closed branch unproven exactly when nothing else covers it.
 
-    ``UNDECLARED_ON_ARRIVAL`` is the exact live population, named with its
-    cause: the merge brought four ``ITEM_EFFECTS`` entries in from ``main``
-    that no rule compiler reaches yet, which is precisely the "registry tag
-    lands before its declaration" case this branch exists for.  Pinned by
-    name rather than by count so a *fifth* still fails, and so the set
-    empties itself the day those four are declared.
+    ``UNDECLARED_ON_ARRIVAL`` is the exact live population and it is now
+    empty: the four ``ITEM_EFFECTS`` entries the merge brought in from
+    ``main`` are declared.  Pinned as a set rather than as a count so the
+    next registry tag that lands before its declaration fails here.
     """
     owner = "Actualizer"
     assert catalog.registry_entries(owner), "the subject must have a registry entry"
