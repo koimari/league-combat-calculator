@@ -220,26 +220,28 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
     # The hunt expires; a stat_buff is one scalar for the whole fight, so
     # the grant lands time-weighted by the share of the window it covers
     # (Blitzcrank's Overdrive rule, module_helpers.buff_window_share).
+    share = buff_window_share(ctx, _HUNT_DURATION)
     granted = _HUNT_AD_PERCENT / 100.0 * ctx.stat("attack_damage")
-    bonus = granted * buff_window_share(ctx, _HUNT_DURATION)
+    bonus = granted * share
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus
     ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus
     entry["stat_buff"] = {
         "bonus_attack_damage": bonus,
-        # Full magnitude, not the AD term's time-weighted share: the
-        # movement grant is not a damage input (the Teemo-W wiring), so
-        # it publishes the cast's own number into the shared fold.
-        "move_speed_percent": movement,
+        # Both halves of one expiring cast take the same share: a
+        # stat_buff is one scalar for the whole fight, so a term left at
+        # full magnitude reads the same in a 5s fight and a 30s one.
+        "move_speed_percent": movement * share,
     }
     entry["detail"] = (
         f"+{granted:.1f} bonus attack damage for {_HUNT_DURATION:g}s "
         f"({_HUNT_AD_PERCENT:g}% of total AD, wiki W prose corroborated by "
         f"the game binary's NaafiriADPercentBoost); +{bonus:.1f} over the "
         "fight window.  The hunt also raises the Packmate cap (priced on "
-        f"the We Are More row) and grants +{movement:g}% movement speed, "
-        "published as a move_speed_percent stat buff — a term in the "
-        "shared movement-speed fold.  The untargetability and the Packmate "
+        f"the We Are More row) and grants +{movement:g}% movement speed "
+        f"({movement * share:g}% over the window), published as a "
+        "move_speed_percent stat buff — a term in the shared "
+        "movement-speed fold.  The untargetability and the Packmate "
         "vanish/reappear are state."
     )
     return entry
@@ -500,11 +502,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "published as a move_speed_percent stat_buff on the same w_hunt "
     "gate as the AD steroid, so it composes through the shared "
     "resolve_move_speed fold (soft caps included) rather than as a "
-    "second one.  It carries its full magnitude while the AD term is "
-    "time-weighted, because movement is not a damage input here: "
-    "item_effects' adaptive_force_per_total_move_speed (Swiftmarch) "
-    "resolves from the build's stats before any cast, the fight-start "
-    "boundary every stat_buff has.  The hunt's 1s untargetability, the "
+    "second one.  It takes the SAME buff_window_share as the AD term of "
+    "the same cast: the hunt expires at 5s, and a stat_buff is one "
+    "scalar for the whole fight, so an unweighted term would read the "
+    "same in a 5s fight and a 30s one.  The hunt's 1s untargetability, the "
     "Packmate vanish/reappear and the 1.75s hunt extension from casting "
     "R are state",
     "P (We Are More) prices the pack's sourced share of Hounds' Pursuit: "
