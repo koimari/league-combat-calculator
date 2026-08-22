@@ -1788,6 +1788,7 @@
           "area_damage": true,
           "cooldown": 10.0,
           "damage_type": "magic",
+          "detail": "0 retaliation landing(s) at 25.00 magic each (once per enemy per cast, while the shield holds)",
           "name": "Molten Shield",
           "parts": [
             "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -1800,6 +1801,7 @@
         "P": {
           "cooldown": 0.0,
           "damage_type": "magic",
+          "detail": "0 Energized stun(s) of 1.75s (charge 4/4 at the opening, 4/4 at the end); the charge is spent by the next Q/R/W cast",
           "name": "Pyromania",
           "parts": [
             "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -13921,7 +13923,6 @@
           "cooldown": 120.0,
           "damage_type": "magic",
           "detail": "6 ordered bolts; later strikes use the sourced escalating storm packet.",
-          "event_order_certified": true,
           "name": "Slicing Maelstrom",
           "parts": [
             "DamagePart(magic, amount=80.0, count=6, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.5, hit_interval=0.5)"
@@ -13954,7 +13955,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Mark stacks, stun and energy refund are ordered control state.",
+          "detail": "0 third-mark stun(s) (the walk ends at 0/3 marks); marks last 6s, refreshing on each application, and the stun's energy refund stays ordered control state",
           "name": "Mark of the Storm",
           "parts": [],
           "rank": 11,
@@ -52871,18 +52872,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59965,
+      "leaves": 59966,
       "numeric_leaves": 46183,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "e3a5fc65ea1f7032374b0f4a7ae8857cd5969031",
+    "git_head": "8c7d82983302b09b072f2558f195904d918b5f98",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "c9ffdb7b997041804d9390238e58618bf245335f"
+    "src_tree_sha": "d537c0a58f1dd40e1c7f1b78129dc74f73c14bbb"
   },
   "registered_champion_fights": {
     "Aatrox": {

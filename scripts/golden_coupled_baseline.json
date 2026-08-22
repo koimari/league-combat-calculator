@@ -107589,6 +107589,20 @@
             "window_seconds": 8.0
           },
           "breakdown": {
+            "E": {
+              "casts": 2,
+              "count": null,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": null,
+              "detail": "0 retaliation landing(s) at 105.00 magic each (once per enemy per cast, while the shield holds)",
+              "name": "Molten Shield",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 0.0,
+              "unit": null
+            },
             "Q": {
               "casts": 3,
               "count": null,
@@ -109319,6 +109333,20 @@
             "window_seconds": 8.0
           },
           "breakdown": {
+            "E": {
+              "casts": 2,
+              "count": null,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": null,
+              "detail": "0 retaliation landing(s) at 129.00 magic each (once per enemy per cast, while the shield holds)",
+              "name": "Molten Shield",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 0.0,
+              "unit": null
+            },
             "Q": {
               "casts": 3,
               "count": null,
@@ -111049,6 +111077,20 @@
             "window_seconds": 8.0
           },
           "breakdown": {
+            "E": {
+              "casts": 1,
+              "count": null,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": null,
+              "detail": "0 retaliation landing(s) at 105.00 magic each (once per enemy per cast, while the shield holds)",
+              "name": "Molten Shield",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 0.0,
+              "unit": null
+            },
             "Q": {
               "casts": 2,
               "count": null,
@@ -150236,15 +150278,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 23,
-      "leaves": 95563,
-      "numeric_leaves": 31641,
+      "leaves": 95599,
+      "numeric_leaves": 31647,
       "sections": "coupled_scenarios"
     },
-    "git_head": "c6fce5032e97c2187a3907d9d1649ecc7164d800",
+    "git_head": "8c7d82983302b09b072f2558f195904d918b5f98",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 23,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "c8d8de0b38767ad3eb29da391436502ec4fdcbd3"
+    "src_tree_sha": "d537c0a58f1dd40e1c7f1b78129dc74f73c14bbb"
   }
 }
