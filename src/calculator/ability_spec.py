@@ -542,8 +542,29 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
         )
 
 
+class ControlScope(Enum):
+    """How many of the fight's enemies one authored control holds.
+
+    The roster evaluates the same damage package against every selected
+    enemy, so a control with no recipient of its own lands on all of them.
+    That is the area answer, and the wrong one for a targeted cast: Lulu's
+    Whimsy is cast "onto the target enemy champion".
+
+    ``ONE_TARGET`` is allocated exactly as a target-limited item proc is —
+    to the lowest roster index — so one enemy holds the control and the
+    rest of the roster is scored without it.
+    """
+
+    EVERY_TARGET = "every_target"
+    ONE_TARGET = "one_target"
+
+    def reaches(self, roster_target_index: int) -> bool:
+        """Whether the pair fight against this roster index holds the control."""
+        return self is ControlScope.EVERY_TARGET or roster_target_index <= 0
+
+
 @dataclass(frozen=True)
-class ControlEvent:
+class ControlEvent:  # pylint: disable=too-many-instance-attributes
     """One authored control interval without a damage packet.
 
     Damage parts carry control metadata when damage and control land together.
@@ -559,10 +580,15 @@ class ControlEvent:
     count: int = 1
     hit_interval: float | None = None
     skillshot: bool = False
+    #: Who the control lands on.  Unscoped means every enemy the cast hit,
+    #: which is the area cast's reviewed answer.
+    scope: ControlScope = ControlScope.EVERY_TARGET
 
     def __post_init__(self) -> None:
         if not self.kind.strip():
             raise ValueError("ControlEvent kind must be a non-empty string")
+        if not isinstance(self.scope, ControlScope):
+            raise ValueError("ControlEvent scope must be a ControlScope")
         if self.duration <= 0.0:
             raise ValueError("ControlEvent duration must be positive")
         if self.magnitude < 0.0:
@@ -588,4 +614,6 @@ class ControlEvent:
             extras += f", hit_interval={self.hit_interval}"
         if self.skillshot:
             extras += ", skillshot=yes"
+        if self.scope is not ControlScope.EVERY_TARGET:
+            extras += f", scope={self.scope.value}"
         return f"ControlEvent({self.kind!r}, duration={self.duration}" f"{extras})"

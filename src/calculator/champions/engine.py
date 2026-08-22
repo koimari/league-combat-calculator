@@ -768,6 +768,7 @@ def _apply_module_cc(
                 magnitude=float(pending["magnitude"]),
                 time_offset=pending["time_offset"],
                 skillshot=False,
+                scope=pending["scope"],
             )
             for pending in entry.pop(PENDING_CONTROL_EVENTS)
         )
