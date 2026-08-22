@@ -1565,26 +1565,12 @@ def _simulate_hp_scaled_on_hit_procs(
     proc_autos: list[int],
     effectiveness: float = 1.0,
 ) -> list[float]:
-    """Simulate schedule-gated procs that read the target's live health.
+    """Price schedule-gated procs against the target's decayed live health.
 
-    Each proc is priced by :func:`_hp_scaled_on_hit_raw` against the
-    target's decayed current HP. Same decaying-HP walk as the stacking
-    on-hit simulation: the proc lands before that auto's own damage is
-    subtracted.
-
-    Args:
-        on_hit_data: The ability entry's ``on_hit`` payload, carrying
-            the shape's own fields and ``damage_type``.
-        target_health: Target's starting (max) health.
-        num_auto_attacks: Number of auto attacks in the fight.
-        auto_damage_per_hit: Mitigated base auto attack damage per hit.
-        other_on_hit_per_hit: Mitigated per-hit damage from other on-hit
-            effects (static items/abilities plus the BoRK average).
-        proc_autos: Sorted 0-indexed auto indices where the effect procs.
-        effectiveness: On-hit effectiveness multiplier (Azir soldiers).
-
-    Returns:
-        Each proc's mitigated damage, in proc order (sum for the total).
+    :func:`_hp_scaled_on_hit_raw` prices each proc at ``proc_autos``
+    (0-indexed) before that auto's own damage settles — the same order
+    as the stacking on-hit walk. Returns each proc's mitigated damage
+    in proc order.
     """
     if not proc_autos:
         return []
