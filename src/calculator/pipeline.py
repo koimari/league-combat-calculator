@@ -15,6 +15,7 @@ from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_dependencies,
     get_champion_cast_order,
+    get_champion_ultimate_recasts,
     get_custom_cast_order_unavailable_reason,
     parse_champion_abilities,
 )
@@ -952,6 +953,12 @@ class FightParams(FightConfig):
         # says, so it sets it.  Validating the name and then dropping it served
         # a full rotation — abilities, summons and all — to anyone who asked
         # for autos alone, and made the mode indistinguishable from time_based.
+        # No cast means no cast: an ability stat grant (Tristana Q, Olaf R,
+        # Lulu W/R, Warwick W) is bought with the cast that grants it, so
+        # autos-only earns none of them and reports the unbuffed attack speed.
+        # The full rotation stays in ``cast_order`` for the breakdown's slot
+        # rows; ``damage._apply_stat_buff_ultimates`` is what reads the mode,
+        # and it names every grant it withheld in the fight notes.
         auto_attacks_only = (
             _request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
         )
@@ -1451,15 +1458,25 @@ def run_fight(
         )
         is ResultProjection.LIGHT_TUPLE_LEDGER
     )
+    # Whether the timed scheduler may recast R is the champion module's
+    # reviewed answer, not the request's: a silent module and an
+    # unregistered name both keep the conservative one-cast rule (CF18).
+    ultimate_recasts = get_champion_ultimate_recasts(champion_data.get("name", ""))
+    engine_config = (
+        params
+        if params.enforce_resource_limits
+        and params.ultimate_recasts == ultimate_recasts
+        else replace(
+            params,
+            enforce_resource_limits=True,
+            ultimate_recasts=ultimate_recasts,
+        )
+    )
     result = calculate_fight_damage(
         fight_stats,
         ability_damages,
         items,
-        (
-            params
-            if params.enforce_resource_limits
-            else replace(params, enforce_resource_limits=True)
-        ),
+        engine_config,
         score_only=score_only,
         tuple_ledger=tuple_ledger,
         item_options=params.item_options,

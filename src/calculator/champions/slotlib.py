@@ -1200,6 +1200,7 @@ def stat_buff(
     damage_attr: str | None = None,
     dmg_type: str = "physical",
     couples: tuple[str, str] | None = None,
+    uptime_option: str | None = None,
 ) -> SlotParser:
     """BUFF-phase stat steroid (Vayne/Aatrox/Ambessa R pattern).
 
@@ -1227,6 +1228,14 @@ def stat_buff(
             value into ``ctx.stats`` under ``stats_key`` for a dependent
             slot listed later (Vayne R's Tumble cooldown reduction,
             read by Q). The key never leaves the parse context.
+        uptime_option: A 0..1 champion option scaling the buff, for a
+            steroid the champion only holds part of the fight — a zone he
+            has to stand in (Trundle W's Frozen Domain). The scaled value
+            is the buff's fight average, which for a bonus-attack-speed
+            steroid is exact: attack speed is linear in the bonus percent,
+            so ``AS(b x f)`` equals ``f`` seconds at ``AS(b)`` plus
+            ``1 - f`` at ``AS(0)``. None applies the buff for the whole
+            fight, the reading with no option to dial.
 
     Returns:
         A BUFF-phase slot parser.
@@ -1245,6 +1254,10 @@ def stat_buff(
         value = extract_value(ability, attr, rank, level=ctx.level)
         if mode == "percent_of":
             value = value / 100.0 * ctx.stat(percent_of)
+        uptime = 1.0
+        if uptime_option is not None:
+            uptime = min(max(float(ctx.option(uptime_option)), 0.0), 1.0)
+            value *= uptime
 
         damage = 0.0
         if damage_attr is not None:
@@ -1272,6 +1285,11 @@ def stat_buff(
             ),
         )
         entry["stat_buff"] = {stat: value}
+        if uptime_option is not None:
+            entry["detail"] = (
+                f"{attr} priced at {uptime:.0%} uptime ({value:g} applied "
+                "across the fight window)"
+            )
         return entry
 
     parse.phase = BUFF

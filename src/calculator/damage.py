@@ -592,6 +592,12 @@ class FightConfig:
     include_actives: bool = True
     cast_order: list[str] | None = None
     auto_attacks_only: bool = False
+    # Whether the timed scheduler may recast R on its (hasted) cooldown.
+    # Set from the champion module's reviewed ``ULTIMATE_RECASTS``
+    # certification by ``pipeline.run_fight``; False is the conservative
+    # one-cast rule every uncertified kit keeps, and the default so a
+    # direct engine caller never silently gains extra ultimate casts.
+    ultimate_recasts: bool = False
     deterministic: bool = False
     target_magic_shield: float = 0.0
     target_physical_shield: float = 0.0
@@ -733,6 +739,7 @@ class FightState:
     one_rotation: bool
     include_actives: bool
     auto_attacks_only: bool
+    ultimate_recasts: bool
     deterministic: bool
     is_melee: bool
     level: int
@@ -2992,6 +2999,7 @@ def _resolve_combat_state(
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
         auto_attacks_only=config.auto_attacks_only,
+        ultimate_recasts=config.ultimate_recasts,
         deterministic=config.deterministic,
         is_melee=is_melee,
         level=level,
@@ -3034,19 +3042,36 @@ def _resolve_combat_state(
     )
 
 
+# A row keyed to no slot at all (``passive``) resolves to itself, which is
+# never one of Q/W/E/R — the test every caller makes.
+def _base_slot(key: str) -> str:
+    """The cast slot an ability row belongs to (``Q2``/``W_frenzy`` -> ``Q``/``W``)."""
+    return key.split("_", 1)[0].rstrip("0123456789")
+
+
+# Two things are live without a cast of their own: a passive row
+# (``passive``, ``passive_plasma``), and an active row whose payload the module
+# declares ``innate_grant`` — an always-on passive that happens to hang off an
+# active slot (Darius E's armor penetration, Kog'Maw Q's, Nocturne W's, Quinn
+# W's).  Everything else is bought with a cast, so autos-only
+# (``casts_nothing``) earns none of it, including a cast-derived
+# ``off_rotation_grant`` whose window average counts casts the rotation omits
+# (Kai'Sa E).  Outside that mode an ``off_rotation_grant`` is live, and any
+# other active row is live when its key, or the base slot of its variant key
+# (``Q2`` -> ``Q``), is in the cast order; an unknown order casts every slot.
 def _slot_is_cast(
-    key: str, info: Mapping[str, Any], cast_order: "list[str] | None"
+    key: str,
+    info: Mapping[str, Any],
+    cast_order: "list[str] | None",
+    casts_nothing: bool = False,
 ) -> bool:
-    """Whether the ability row *key* belongs to a slot the rotation casts.
-    Passive rows (``passive``, ``passive_plasma``) are always live, as is a row
-    the module declares ``off_rotation_grant`` (a zero-damage cast the rotation
-    omits whose grant is priced across the window, Kai'Sa E).  Any other active
-    row is live when its key, or the base slot of its variant key (``Q2`` ->
-    ``Q``), is in the cast order; an unknown order casts every slot."""
-    base = key.split("_", 1)[0].rstrip("0123456789")
-    if base not in ("Q", "W", "E", "R") or info.get("off_rotation_grant"):
+    """Whether the ability row *key* carries a payload this fight earns."""
+    base = _base_slot(key)
+    if base not in ("Q", "W", "E", "R") or info.get("innate_grant"):
         return True
-    if cast_order is None:
+    if casts_nothing:
+        return False
+    if info.get("off_rotation_grant") or cast_order is None:
         return True
     return key in cast_order or base in cast_order
 
@@ -3064,14 +3089,20 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     """
     stats = state.champion_stats
     resists = state.resists
+    withheld: list[str] = []
 
     for key, ability_info in state.ability_damages.items():
         stat_buff = ability_info.get("stat_buff")
         if not stat_buff:
             continue
-        if not _slot_is_cast(key, ability_info, state.cast_order):
+        if not _slot_is_cast(
+            key, ability_info, state.cast_order, state.auto_attacks_only
+        ):
             # An active's grant rides its cast: a rotation that never casts
-            # the ability earns none of it. A passive's grant is always on.
+            # the ability earns none of it, and autos-only casts nothing at
+            # all. A passive's grant is always on.
+            if state.auto_attacks_only:
+                withheld.append(str(ability_info.get("name", key)))
             continue
         for stat_key, buff_value in stat_buff.items():
             stats[stat_key] = stats.get(stat_key, 0.0) + buff_value
@@ -3202,6 +3233,14 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 * state.fight_duration_seconds
                 * state.auto_attack_uptime
             )
+
+    if withheld:
+        state.notes.append(
+            "Autos-only performs no cast, so no ability stat grant applies: "
+            + ", ".join(sorted(set(withheld)))
+            + ". The mode reports the champion's unbuffed attack speed and "
+            "auto damage; pick the timed mode to buy a steroid with a cast."
+        )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.
@@ -3982,16 +4021,23 @@ def _effective_timed_cooldown(
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
     immobilizing slot earns (Imperial Mandate's Control), and Navori
-    auto-attack refunds."""
+    auto-attack refunds.
+
+    Which haste applies is a property of the SLOT, so a variant row resolves
+    to its base slot first: Briar's ``W_frenzy`` and Kindred's ``W_vigor`` are
+    basic abilities and Riven's ``R_buff`` is an ultimate, and before this
+    each of them matched neither branch and earned no Shojin-class or
+    ultimate haste at all."""
     base_cd = ability_field(ability_info, "cooldown")
+    slot = _base_slot(ability_key)
     total_haste = state.ability_haste
-    if ability_key in ("Q", "W", "E"):
+    if slot in ("Q", "W", "E"):
         total_haste += basic_ability_haste
-    elif ability_key == "R":
+    elif slot == "R":
         total_haste += float(state.champion_stats["ultimate_haste"])
     total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
-    if result.navori_refund > 0 and cd > 0 and ability_key in ("Q", "W", "E"):
+    if result.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
     return cd
 
@@ -4048,9 +4094,12 @@ def _schedule_shared_casts(
     ``cast_time`` (stamped from the wiki by the champion engine; absent
     means instant), and an ability recasts when its cooldown — running
     from the END of its cast — is back up and no other cast is in
-    progress. Ties break by cast_order position. R and zero-cooldown
-    entries cast exactly once; recast entries ride their parent's casts
-    and are not scheduled. A cast counts if it STARTS within the fight
+    progress. Ties break by cast_order position. Zero-cooldown entries
+    cast exactly once, and so does an ultimate unless its module certifies
+    ``ULTIMATE_RECASTS`` — a form, a stance, a charge pool or an escalating
+    cost the engine does not simulate is not safe to repeat, so silence
+    keeps the one-cast rule. Recast entries ride their parent's casts and
+    are not scheduled. A cast counts if it STARTS within the fight
     duration. Cassiopeia's 0.75s-cooldown E is the case that pins the
     shared timeline: 3 casts in-game over a 3s fight, where an
     independent timeline schedules 5.
@@ -4086,7 +4135,12 @@ def _schedule_shared_casts(
         )
         for key in keys
     }
-    single_cast = {key for key in keys if key == "R" or cooldowns[key] <= 0}
+    once_only_ultimate = not state.ultimate_recasts
+    single_cast = {
+        key
+        for key in keys
+        if cooldowns[key] <= 0 or (once_only_ultimate and _base_slot(key) == "R")
+    }
 
     times: dict[str, list[float]] = {key: [] for key in keys}
     next_ready = dict.fromkeys(keys, 0.0)
@@ -4116,6 +4170,33 @@ def _schedule_shared_casts(
             )
         now += cast_times[key]
     return times
+
+
+def _disclose_ultimate_cast_rule(state: "FightState", timed_mode: bool) -> None:
+    """State the one-cast rule on the R row when it costs the fight a cast.
+
+    An uncertified ultimate casts once whatever its cooldown, so every
+    source of ultimate haste — Malignance, Ultimate Hunter, Axiom Arcanist's
+    refund — is inert for this kit.  The note is raised only when the rule
+    actually binds: the hasted cooldown fits inside the window, so a
+    certified module would have cast R again.
+    """
+    if timed_mode is False or state.ultimate_recasts:
+        return
+    for key, info in state.ability_damages.items():
+        if _base_slot(key) != "R" or not _slot_is_cast(key, info, state.cast_order):
+            continue
+        cooldown = effective_cooldown(
+            ability_field(info, "cooldown"),
+            state.ability_haste + float(state.champion_stats["ultimate_haste"]),
+        )
+        if 0.0 < cooldown <= state.fight_duration_seconds:
+            state.notes.append(
+                f"{info.get('name', key)} is cast once: the timed scheduler "
+                "recasts an ultimate only for a module that certifies it "
+                "(ULTIMATE_RECASTS), so ultimate haste does not change this "
+                f"fight even though the hasted cooldown is {cooldown:.1f}s."
+            )
 
 
 @dataclass(frozen=True)
@@ -6134,6 +6215,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     schedule = (
         _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
     )
+    _disclose_ultimate_cast_rule(state, timed_mode)
 
     # Resolve WHEN everything casts before pricing anything: the stack
     # timeline (Case 4/5) must exist before the first cast is priced, and

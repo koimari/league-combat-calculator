@@ -51,9 +51,19 @@ out_of_scope slots (P, W).
       * The 50% : 142.54% bonus attack speed. It is inseparable from
         the very cost the same sentence states — "disabling his
         abilities as his Heat decays back down to 0 over 4 seconds".
-        This engine has no ability-lockout channel, so importing the
-        upside without the downside would systematically overstate
-        Rumble. Both halves stay state (see ASSUMPTIONS).
+        Importing the upside without the downside would systematically
+        overstate Rumble, so both halves stay state (see ASSUMPTIONS).
+        The blocker is NOT the lockout primitive — a cast-blocked span
+        is a few lines in the shared cast timeline, which already models
+        one pair of hands. It is the trigger INSTANT: Overheat opens
+        when Heat reaches 100, the engine simulates no heat, and nothing
+        in the request carries a start time. Both halves hang off that
+        one unsourced instant — where the 4-second lockout sits decides
+        which casts the window costs, and an attack-speed grant placed
+        anywhere else than the lockout is the overstatement again. What
+        unblocks it is a heat axis that gives Overheat a start time, not
+        a scheduler feature; until then ``overheat_autos`` prices the
+        one half that needs no clock (a count of empowered swings).
       * The "Bonus Damage" leveling row (65 : 163.32 by level). Read in
         context it is not a damage source at all — it is the cap on the
         %max-health term, "capped at 65 : 163.32 (based on level)
@@ -282,9 +292,14 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "(0 = none, the default). The same effect's 50%:142.54% bonus attack "
     "speed is NOT modeled: it is inseparable from the ability lockout "
     "stated in the same sentence ('disabling his abilities as his Heat "
-    "decays back down to 0 over 4 seconds') and this engine has no "
-    "ability-lockout channel, so pricing the upside alone would overstate "
-    "Rumble. The 'Bonus Damage' leveling row (65:163.32 by level) is the "
+    "decays back down to 0 over 4 seconds'), and what blocks the pair is "
+    "the window's START TIME, not the lockout mechanism — Overheat opens "
+    "at 100 Heat, the engine simulates no heat, and nothing in the "
+    "request carries that instant. Where the 4-second lockout sits "
+    "decides which casts it costs, so pricing the attack speed without "
+    "it would overstate Rumble exactly as before. A heat axis is what "
+    "unblocks this, not a scheduler feature. The 'Bonus Damage' leveling "
+    "row (65:163.32 by level) is the "
     "monster-only cap on the %max-health term, not a damage source, and "
     "never binds against a champion target. Reclassified from "
     "out_of_scope to modeled; the packet's no_damage label was incomplete, "

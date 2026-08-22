@@ -387,6 +387,27 @@ class TestModuleCcDeclaration:
         ):
             self._contract(MODULE_CC={"Q": "none"})
 
+    def test_silence_keeps_the_one_cast_ultimate_rule(self):
+        """CF18: ``ULTIMATE_RECASTS`` is opt-in, and its absence is the
+        conservative answer — a form, stance or charge pool the engine does
+        not simulate must not be repeated on a cooldown."""
+        assert self._contract().ultimate_recasts is False
+
+    def test_a_certification_survives_onto_the_contract(self):
+        contract = self._contract(
+            ULTIMATE_RECASTS=True,
+            SLOTS={"Q": lambda ctx: None, "R": lambda ctx: None},
+        )
+        assert contract.ultimate_recasts is True
+
+    def test_certifying_an_ultimate_the_module_does_not_emit_is_refused(self):
+        with pytest.raises(ChampionModuleContractError, match="emits no R slot"):
+            self._contract(ULTIMATE_RECASTS=True)
+
+    def test_a_non_boolean_certification_is_refused(self):
+        with pytest.raises(ChampionModuleContractError, match="must be a bool"):
+            self._contract(ULTIMATE_RECASTS="yes")
+
     def test_a_packet_module_is_told_to_wire_through_the_compiler(self):
         """A packet module never calls ``build_parser`` itself, so the
         instruction it gets names ``build_packet_module`` instead."""
