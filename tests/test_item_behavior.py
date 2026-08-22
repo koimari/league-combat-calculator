@@ -359,3 +359,50 @@ def test_every_utility_member_is_spelled_the_way_it_serializes() -> None:
     """
     for dimension in UtilityDimension:
         assert dimension.name == dimension.value.upper()
+
+
+def test_the_packet_kind_enum_covers_every_kind_the_utility_census_reads() -> None:
+    """ER1: the census's eight reads resolve to members, not to bare strings.
+
+    ``participant_timeline._utility_outcome_receipt`` classified seven
+    dimensions and the denial split by comparing ``event["kind"]`` against
+    string literals, so a kind could be authored in one spelling and read in
+    another with nothing to notice.  Both sides now go through
+    :class:`PacketKind`; this pins that the enum actually spans the census.
+    """
+    from src.calculator.item_behavior import PacketKind, is_denial_receipt
+
+    census_reads = {
+        "movement",
+        "cleanse",
+        "slow",
+        "economy",
+        "vision",
+        "damage_modifier",
+        "resource",
+        "item_denial",
+    }
+    assert census_reads <= {kind.value for kind in PacketKind}
+    for kind in PacketKind:
+        assert kind.name == kind.value.upper()
+
+    assert is_denial_receipt({"kind": "item_denial"})
+    assert not is_denial_receipt({"kind": "movement"})
+    assert not is_denial_receipt({})
+
+
+def test_no_utility_census_read_is_a_bare_string_literal() -> None:
+    """The refactor's own guard: the census reads through the enum only."""
+    import re
+    from pathlib import Path
+
+    from src.calculator import participant_timeline
+
+    body = Path(participant_timeline.__file__).read_text(encoding="utf-8")
+    census = body.split("def _utility_outcome_receipt(")[1].split("\ndef ")[0]
+    bare = re.findall(
+        r'\.get\("kind"\)\s*==\s*"(?:movement|cleanse|slow|economy|vision'
+        r'|damage_modifier|resource|item_denial)"',
+        census,
+    )
+    assert bare == []

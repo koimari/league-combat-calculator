@@ -32,9 +32,9 @@ class TestReviewedCrowdControl:
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Zilean")
         # Q's kind depends on the second-bomb state, so it is authored PER
-        # PART by ``_time_bomb`` rather than declared per slot; the module
-        # therefore declares no slot kind of its own.
-        assert zilean.MODULE_CC == {"Q": CC_PER_PART}
+        # PART by ``_time_bomb`` rather than declared per slot.  E prices no
+        # damage, so its slow rides the entry as a sourced ControlEvent.
+        assert zilean.MODULE_CC == {"Q": CC_PER_PART, "E": "slow"}
         assert zilean.parse_abilities.cc_kinds == zilean.MODULE_CC
         lone = parse_champion_abilities(
             data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -65,18 +65,20 @@ class TestReviewedCrowdControl:
         (part,) = parsed["Q"]["parts"]
         assert part.time_offset == 3.0
 
-    def test_the_damageless_slots_stay_absent_from_the_review(self):
-        """E holds the enemy slow, but Time Warp deals no damage.
+    def test_the_damageless_slots_publish_what_they_can_source(self):
+        """E holds the enemy slow, and Time Warp deals no damage.
 
-        MERGE: a slot that emits a declared zero-damage row is
-        ``no_damage``, not ``out_of_scope`` -- "we looked and it prices
-        nothing" is a different answer from "nothing looked".  Either way
-        it authors no damage event, so it carries no reviewable control.
+        A slot that emits a declared zero-damage row is ``no_damage``,
+        not ``out_of_scope`` -- "we looked and it prices nothing" is a
+        different answer from "nothing looked".  It authors no damage
+        event, so its reviewed control rides the entry as a sourced
+        ControlEvent instead of on a part (CF8).
         """
         data = cc_review.kit("Zilean")
         coverage = get_champion_module_contract("Zilean").coverage
+        assert zilean.MODULE_CC["E"] == "slow"
+        assert "W" not in zilean.MODULE_CC
         for slot in ("W", "E"):
-            assert slot not in zilean.MODULE_CC, slot
             assert coverage[slot] == "no_damage", slot
         assert "if the target is an enemy, they are slowed" in (
             cc_review.slot_text(data, "E")

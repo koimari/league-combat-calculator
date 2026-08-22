@@ -44,6 +44,7 @@ from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
+    with_control_event,
 )
 from .source_receipts import load_champion_sources
 from .module_contract import coverage
@@ -262,7 +263,17 @@ ASSUMPTIONS = [
 
 SLOTS = {
     "Q": _siphoning_strike,
-    "W": _wither,
+    # Wither prices no damage; its slow is the effect's own window
+    # ("ages the target enemy champion for 5 seconds"), carried by the
+    # slot's active-duration atom, and its strength is the cached
+    # "Maximum Slow" row (47/59/71/83/95%) at the end of that window.
+    # The initial 35% and the cripple half are prose only and stay
+    # unpriced: one slot carries one kind.
+    "W": with_control_event(
+        _wither,
+        duration_source="active",
+        magnitude_attr="Maximum Slow",
+    ),
     "E": _spirit_fire,
     "R": _fury_of_the_sands,
     "P": _soul_eater,
@@ -272,11 +283,11 @@ SLOTS = {
 # empowers a basic attack to "deal bonus physical damage", E's fire deals
 # magic damage and "inflict[s] them with armor reduction" (a resistance
 # shred, not a control class), and R "deals magic damage every 0.5 seconds
-# to nearby enemies" while buffing his own stats.  W is absent rather than
-# "none" — Wither is the kit's one control ("slowing them by 35% and
-# crippling them"), but it deals no damage, so no event of its own could
-# carry an answer.  P (lifesteal) likewise damages nothing.
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+# to nearby enemies" while buffing his own stats.  W is the kit's one
+# control ("slowing them by 35% and crippling them"); it deals no damage,
+# so the answer rides its entry as a sourced ControlEvent rather than on
+# a part.  P (lifesteal) damages nothing and applies none.
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
 

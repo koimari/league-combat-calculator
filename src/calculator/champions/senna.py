@@ -269,7 +269,6 @@ def _dawning_shadow(packet_r):
         shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
         stacks = int(ctx.option("senna_mist_stacks"))
         shield += _DAWNING_SHADOW_MIST_RATIO * stacks
-        entry["event_order_certified"] = "single_hit"
         return attach_self_shield(
             entry,
             amount=shield,
@@ -302,7 +301,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # deal their packet once, like Dawning Shadow already did — the
     # boundary claim that carries MODULE_CC's reviewed answers into
     # the event ledger.
-    single_hit_slots=frozenset({"Q", "W"}),
+    single_hit_slots=frozenset({"Q", "R", "W"}),
     slot_parsers={
         "P": _absolution,
         # The Relic Cannon rider rides a SECOND BUFF-phase slot (P2) so

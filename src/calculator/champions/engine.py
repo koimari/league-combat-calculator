@@ -25,6 +25,7 @@ from typing import Any, Callable, Mapping
 
 from ..ability_spec import (
     CC_KIND_VOCABULARY,
+    ControlEvent,
     DamagePart,
     Disposition,
     ZeroPolicy,
@@ -677,6 +678,15 @@ def _empower_marker_part(
 #: (:func:`_refuse_undeclared_part_cc`), so the pointer cannot go stale.
 CC_PER_PART = "per_part"
 
+#: Where ``slotlib.with_control_event`` parks a sourced control interval
+#: whose kind it did not author.  :func:`_apply_module_cc` turns each into a
+#: :class:`ability_spec.ControlEvent` carrying the module's declared kind, and
+#: :func:`_resolve_pending_control_events` refuses whatever is left — so an
+#: interval on a slot ``MODULE_CC`` does not declare stops the parse instead
+#: of publishing a control the kit never listed.  Private to this pair: it
+#: never survives one parse, and no reader outside sees it.
+PENDING_CONTROL_EVENTS = "_pending_control_events"
+
 
 def _apply_module_cc(
     entry: dict[str, Any],
@@ -709,18 +719,50 @@ def _apply_module_cc(
     if kind == CC_PER_PART:
         # The parts already carry the answer, and a branch that reviewed
         # its way to *no* answer (Rammus' aggregated thorns row) leaves
-        # them bare on purpose.  Stamping here would overwrite both.
+        # them bare on purpose.  Stamping here would overwrite both.  A
+        # control event on such a slot authors its own kind for the same
+        # reason, so an unstamped interval here is half a declaration.
+        if entry.get(PENDING_CONTROL_EVENTS):
+            raise ValueError(
+                f"{champion_name} slot {slot!r}: declares {CC_PER_PART!r} but a "
+                "control event authored no kind — a slot whose control is not "
+                "one answer names each one where it is built"
+            )
         return
     parts = entry.get("parts") or ()
     if kind == "none":
         # The reviewed no-CC statement: the fight engine's event rows read
         # it as ``cc_reviewed`` (a row with no kind at all is unreviewed).
-        if entry.get("control_events"):
+        if entry.get("control_events") or entry.get(PENDING_CONTROL_EVENTS):
             raise ValueError(
                 f"{champion_name} slot {slot!r}: MODULE_CC declares no crowd "
                 "control but the entry authors control_events"
             )
         entry["cc_reviewed"] = True
+    elif any(event.kind == kind for event in entry.get("control_events") or ()):
+        # A control event naming a DIFFERENT kind is a second control the
+        # cast applies (Vayne's Condemn stuns into a wall on top of the
+        # knockback every cast lands, Shaco's box fears on sight), which the
+        # one-kind declaration cannot hold and which is therefore authored
+        # where it is built.  A control event naming the SAME kind is the
+        # declaration said twice.
+        raise ValueError(
+            f"{champion_name} slot {slot!r}: MODULE_CC declares {kind!r} and a "
+            "control event restates it — one cast's crowd control has one "
+            "home; drop the event's kind and the declared one is stamped onto "
+            "the sourced interval"
+        )
+    elif entry.get(PENDING_CONTROL_EVENTS):
+        entry["control_events"] = tuple(
+            ControlEvent(
+                kind,
+                float(pending["duration"]),
+                magnitude=float(pending.get("magnitude", 0.0)),
+                time_offset=pending["time_offset"],
+                skillshot=False,
+            )
+            for pending in entry.pop(PENDING_CONTROL_EVENTS)
+        )
     if not parts:
         marker = _empower_marker_part(entry, kind, champion_name, slot)
         if marker is not None:
@@ -769,6 +811,24 @@ def _refuse_undeclared_part_cc(
             f"{authored} for a slot MODULE_CC does not declare — declare the "
             f"slot (the constant kind, or {CC_PER_PART!r} when the kind "
             "varies within the cast)"
+        )
+
+
+def _resolve_pending_control_events(
+    champion_name: str, result_key: str, entry: dict[str, Any]
+) -> None:
+    """Refuse a sourced control interval no ``MODULE_CC`` entry gave a kind.
+
+    Raises:
+        ValueError: The entry still carries an unstamped control interval,
+            so its slot is one the module never declared.
+    """
+    if entry.pop(PENDING_CONTROL_EVENTS, ()):
+        raise ValueError(
+            f"{champion_name} entry {result_key!r}: a control event carries a "
+            "sourced duration but no kind, because MODULE_CC does not declare "
+            "the slot — declare it there, which is where a kit's crowd control "
+            "is stated once"
         )
 
 
@@ -939,6 +999,7 @@ def build_parser(
             if entry is not None:
                 _apply_module_cc(entry, declared_cc, champion_name, slot)
         for result_key, entry in results.items():
+            _resolve_pending_control_events(champion_name, result_key, entry)
             _certify_shared_instant(champion_name, result_key, entry)
             _validate_entry_keys(champion_name, result_key, entry)
             _refuse_undeclared_part_cc(

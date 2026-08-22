@@ -30,7 +30,14 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rammus")
-        assert rammus.MODULE_CC == {"Q": "immobilize", "W": CC_PER_PART, "R": "slow"}
+        # A cc-only slot states its kind in MODULE_CC like any other and
+        # publishes the sourced interval as a ControlEvent (CF8).
+        assert rammus.MODULE_CC == {
+            "Q": "immobilize",
+            "W": CC_PER_PART,
+            "E": "taunt",
+            "R": "slow",
+        }
         # Q applies two immobilize kinds in one cast, which is what the
         # un-narrowed "immobilize" states.
         q_text = cc_review.slot_text(data, "Q")
@@ -41,9 +48,9 @@ class TestReviewedCrowdControl:
         r_text = cc_review.slot_text(data, "R")
         assert "slows them for 1.5 seconds" in r_text
         assert "if soaring slam was cast during powerball" in r_text
-        # E taunts, but its only damage row is against monsters, so it
-        # emits nothing in a champion fight; P is a stat innate.
-        assert "E" not in rammus.MODULE_CC
+        # E taunts, and its only damage row is against monsters, so the
+        # taunt rides the entry as a sourced ControlEvent rather than on
+        # a part; P is a stat innate.
         assert "monsters are additionally dealt magic damage" in cc_review.slot_text(
             data, "E"
         )

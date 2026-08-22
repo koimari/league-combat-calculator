@@ -23,7 +23,7 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .engine import BUFF, DAMAGE, SlotCtx, SlotParser
+from .engine import BUFF, DAMAGE, PENDING_CONTROL_EVENTS, SlotCtx, SlotParser
 from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
@@ -961,6 +961,106 @@ def _control_duration_atom(
             query=query,
         )
         value = ranked_ability_atom_value(atom, 1, source=source_path)
+    _require_seconds(ctx, src_slot, atom)
+    return value, _atom_receipt(atom)
+
+
+_ATOM_RECEIPT_KEYS = (
+    "atom_id",
+    "behavior",
+    "source",
+    "values",
+    "units",
+    "evidence",
+    "hash",
+)
+
+
+def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+    """The provenance fields a sourced control number publishes."""
+    return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
+
+
+_PROSE_CONTROL_PREFIXES = {
+    "prose": "control duration@",
+    "active": "active duration@",
+}
+
+
+def _prose_control_atom(
+    ctx: SlotCtx,
+    source: tuple[str, int] | None,
+    effect_index: int,
+    duration_source: str,
+) -> tuple[float, dict[str, Any]]:
+    """Read a control window the cache states in a sentence, not a row.
+
+    Two evidence prefixes, because the catalog files two different readings
+    of one description and a slot can carry both.  ``control duration@`` is
+    a control verb followed by an interval (Udyr's pounce "stun them for
+    0.75 seconds"); ``active duration@`` is the effect's own window (Bard's
+    Tempered Fate "puts all units within into stasis for 2.5 seconds",
+    Nasus ages his target "for 5 seconds"), which is the control's window
+    exactly when the control lasts as long as the effect.  The caller says
+    which it means rather than the reader guessing.
+    """
+    src_slot, src_index = source if source else (ctx.slot, 0)
+    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
+    from ..ability_atoms import (
+        AbilityAtomQuery,
+        ranked_ability_atom_value,
+        required_ability_atom,
+    )
+
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    source_path = (
+        f"{ctx.champion_name}.{src_slot}[{src_index}].effects[{effect_index}]"
+        ".description"
+    )
+    atom = required_ability_atom(
+        ctx.champion_name,
+        champion_data,
+        src_slot,
+        query=AbilityAtomQuery(
+            source=source_path,
+            behavior="timing",
+            evidence_prefix=_PROSE_CONTROL_PREFIXES[duration_source],
+        ),
+    )
+    value = ranked_ability_atom_value(atom, 1, source=source_path)
+    _require_seconds(ctx, src_slot, atom)
+    return value, _atom_receipt(atom)
+
+
+def _control_magnitude_atom(
+    ctx: SlotCtx,
+    source: tuple[str, int] | None,
+    attribute: str,
+    rank: int,
+) -> tuple[float, dict[str, Any]]:
+    """Read a control's strength off the named cached leveling attribute.
+
+    Tier one only, and deliberately: a magnitude is a ranked number the
+    cache either carries under a name or does not carry at all, and a prose
+    fallback here would be the literal-default shape rule 5 refuses.
+    """
+    src_slot, src_index = source if source else (ctx.slot, 0)
+    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
+    from ..ability_atoms import required_ranked_attribute_atom
+
+    value, atom = required_ranked_attribute_atom(
+        ctx.champion_name,
+        {"name": ctx.champion_name, "abilities": ctx.abilities},
+        src_slot,
+        attribute,
+        rank,
+        entry_index=src_index,
+    )
+    return value, _atom_receipt(atom)
+
+
+def _require_seconds(ctx: SlotCtx, src_slot: str, atom: dict[str, Any]) -> None:
+    """A control window is an interval; anything else is the wrong atom."""
     units = atom.get("units", [])
     allowed_units = {"seconds", "s"}
     if not isinstance(units, list) or any(
@@ -969,19 +1069,6 @@ def _control_duration_atom(
         raise ValueError(
             f"{ctx.champion_name} {src_slot} control duration atom must use seconds"
         )
-    receipt = {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
-    return value, receipt
 
 
 def _resolve_casts(
@@ -1238,21 +1325,87 @@ def with_control(
     return parse
 
 
+def park_control_interval(
+    entry: dict[str, Any],
+    duration: float,
+    *,
+    time_offset: float | None = 0.0,
+    magnitude: float = 0.0,
+) -> None:
+    """Park a sourced control interval for ``MODULE_CC`` to name.
+
+    :func:`with_control_event` for a slot that builds its entry by hand.
+    """
+    entry[PENDING_CONTROL_EVENTS] = tuple(entry.get(PENDING_CONTROL_EVENTS, ())) + (
+        {
+            "duration": float(duration),
+            "time_offset": time_offset,
+            "magnitude": float(magnitude),
+        },
+    )
+
+
 def with_control_event(
     parser: SlotParser,
     *,
-    kind: str,
-    duration_attr: str,
+    duration_attr: str | None = None,
+    duration_source: str = "attribute",
+    magnitude_attr: str | None = None,
+    kind: str | None = None,
     source: tuple[str, int] | None = None,
     ranks: str = "rank",
     time_offset: float | None = 0.0,
     effect_index: int = 0,
 ) -> SlotParser:
-    """Add one sourced control event, including to a utility-only slot."""
-    if not kind.strip():
+    """Add one sourced control event, including to a utility-only slot.
+
+    Like :func:`with_control`, the interval is what this helper sources and
+    the kind is the module's ``MODULE_CC`` entry: an event authored with no
+    ``kind`` rides the slot as a pending interval and
+    ``engine._apply_module_cc`` stamps the declared kind onto it after every
+    phase.  A cc-only slot therefore states its control exactly where a
+    damaging slot does, and the two cannot disagree.
+
+    ``kind`` is for the one slot shape ``MODULE_CC`` cannot state: a cast
+    whose control is not one answer (Vayne's Condemn stuns only into a wall,
+    on top of the knockback every cast lands; Lulu's Whimsy polymorphs only
+    the enemy branch).  Such a slot declares :data:`engine.CC_PER_PART` and
+    authors the kind here; the engine refuses this argument on any slot that
+    declared a constant.
+
+    ``duration_source`` names which cached window the control occupies:
+
+    * ``"attribute"`` reads ``duration_attr`` off the ability's leveling
+      rows, falling back to the ``control duration@`` prose atom;
+    * ``"prose"`` reads that prose atom directly, for a control the cache
+      states in a sentence and in no leveling row (Udyr's 0.75s pounce stun,
+      Viktor's 1s refreshing slow window);
+    * ``"active"`` reads the effect's own ``active duration@`` window, for a
+      control that lasts exactly as long as the effect applying it (Bard's
+      2.5s stasis, Nasus' 5s Wither).
+
+    Naming the source at the call site is the point: a slot can carry more
+    than one seconds atom and only a reviewer knows which is the control
+    (Singed's Mega Adhesive carries the 0.375s landing delay, not its 3s
+    field, which is why that slot stays undeclared).
+
+    ``magnitude_attr`` sources the control's strength -- a slow's percent --
+    off a named leveling attribute, through the same validated catalog.
+    """
+    if kind is not None and not kind.strip():
         raise ValueError("with_control_event kind must be a non-empty string")
     if ranks not in {"rank", "level"}:
         raise ValueError("with_control_event ranks must be 'rank' or 'level'")
+    if duration_source not in {"attribute", "prose", "active"}:
+        raise ValueError(
+            "with_control_event duration_source must be 'attribute', 'prose' "
+            "or 'active'"
+        )
+    if (duration_source == "attribute") != (duration_attr is not None):
+        raise ValueError(
+            "with_control_event names duration_attr for an attribute source "
+            "and omits it for a prose or active one"
+        )
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
@@ -1264,14 +1417,30 @@ def with_control_event(
         rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
         if rank < 1:
             return entry
-        duration, duration_atom = _control_duration_atom(
-            ctx, source, duration_attr, rank, effect_index
-        )
+        if duration_source != "attribute":
+            duration, duration_atom = _prose_control_atom(
+                ctx, source, effect_index, duration_source
+            )
+        else:
+            duration, duration_atom = _control_duration_atom(
+                ctx, source, duration_attr, rank, effect_index
+            )
         if duration <= 0.0:
             raise ValueError(
                 f"{ctx.champion_name} {ctx.slot}: sourced control duration "
-                f"{duration_attr!r} is missing or zero"
+                f"{duration_attr or duration_source!r} is missing or zero"
             )
+        magnitude = 0.0
+        magnitude_atom = None
+        if magnitude_attr is not None:
+            magnitude, magnitude_atom = _control_magnitude_atom(
+                ctx, source, magnitude_attr, rank
+            )
+            if magnitude <= 0.0:
+                raise ValueError(
+                    f"{ctx.champion_name} {ctx.slot}: sourced control magnitude "
+                    f"{magnitude_attr!r} is missing or zero"
+                )
         if entry is None:
             entry = {
                 "name": ability.get("name", f"Ability {ctx.slot}"),
@@ -1281,19 +1450,26 @@ def with_control_event(
                 "total_raw": 0.0,
                 "parts": (),
             }
-        controls = list(entry.get("control_events", ()))
-        controls.append(
-            ControlEvent(
-                kind,
-                duration,
-                time_offset=time_offset,
-                skillshot=False,
+        if kind is None:
+            park_control_interval(
+                entry, duration, time_offset=time_offset, magnitude=magnitude
             )
-        )
-        entry["control_events"] = tuple(controls)
+        else:
+            controls = list(entry.get("control_events", ()))
+            controls.append(
+                ControlEvent(
+                    kind,
+                    duration,
+                    magnitude=magnitude,
+                    time_offset=time_offset,
+                    skillshot=False,
+                )
+            )
+            entry["control_events"] = tuple(controls)
         entry["control_source_atoms"] = [
             *entry.get("control_source_atoms", []),
             duration_atom,
+            *([magnitude_atom] if magnitude_atom is not None else []),
         ]
         return entry
 

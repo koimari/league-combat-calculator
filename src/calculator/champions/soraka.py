@@ -24,13 +24,14 @@ so the module documents it and does not author a mana resource cost.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
+    park_control_interval,
     simple_damage,
     support_cast,
 )
@@ -68,12 +69,10 @@ def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
     if second_hit:
         # The eruption refreshes ability-triggered item burns 1.5s later.
         entry["dot_duration"] = 1.5
-        entry["control_events"] = (
-            ControlEvent(
-                "root",
-                extract_value(ability, "Root Duration", rank),
-                time_offset=1.5,
-            ),
+        park_control_interval(
+            entry,
+            extract_value(ability, "Root Duration", rank),
+            time_offset=1.5,
         )
     return entry
 

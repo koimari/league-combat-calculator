@@ -16,13 +16,19 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Nasus")
-        assert nasus.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
+        # A cc-only slot states its kind in MODULE_CC like any other and
+        # publishes the sourced interval as a ControlEvent (CF8).
+        assert nasus.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "none",
+            "R": "none",
+        }
         for slot in ("Q", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
-        # W is absent rather than "none": Wither is the kit's one control,
-        # but it deals no damage, so no event of its own could carry an
-        # answer.  P is lifesteal and damages nothing.
-        assert "W" not in nasus.MODULE_CC
+        # Wither is the kit's one control and deals no damage, so the
+        # answer rides its entry as a sourced ControlEvent.  P is
+        # lifesteal and damages nothing.
         assert "slowing them by 35%" in cc_review.slot_text(data, "W")
         assert "P" not in nasus.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "P")) == []

@@ -978,6 +978,10 @@ class TestRegressionSurface:
             "test_e3_stacks_1.py",
             # ci-evidence scanner names gnar bin paths as calibration fixtures
             "test_ci_evidence_parity.py",
+            # CF7's coverage-truth sweep names Gnar P and R in its
+            # option-gated table (both rows exist only in Mega form).  A
+            # declaration of what an option produces, not Gnar coupling.
+            "test_coverage_truth_sweep.py",
             "test_f0_frontend.py",
             "test_gnar.py",
             "test_gnar_mega_gamefile.py",

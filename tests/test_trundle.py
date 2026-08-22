@@ -20,7 +20,9 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Trundle")
-        assert trundle.MODULE_CC == {"Q": "slow", "R": "none"}
+        # A cc-only slot states its kind in MODULE_CC like any other and
+        # publishes the sourced interval as a ControlEvent (CF8).
+        assert trundle.MODULE_CC == {"Q": "slow", "E": "slow", "R": "none"}
         assert "slow the target by 75% for 0.1 seconds" in cc_review.slot_text(
             data, "Q"
         )

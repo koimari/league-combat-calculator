@@ -35,6 +35,7 @@ from .slotlib import (
     extract_named,
     find_named_leveling,
     with_control,
+    with_control_event,
 )
 from .module_contract import coverage
 
@@ -95,12 +96,24 @@ def _time_bomb(compiled):
 
 # Q's kind depends on the second-bomb state, so the slot names itself
 # per-part and ``_time_bomb`` authors the answer.  P/W/E/R price no damage.
-MODULE_CC = {"Q": CC_PER_PART}
+MODULE_CC = {"Q": CC_PER_PART, "E": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zilean",
     PACKET_SHA256,
-    slot_wrappers={"Q": _time_bomb},
+    slot_wrappers={
+        "Q": _time_bomb,
+        # Time Warp prices no damage; cast on an enemy it slows for the
+        # effect's own window ("lasts for 2.5 seconds", the slot's
+        # active-duration atom) by the cached "Movement Speed Modifier"
+        # row (40/55/70/85/99%) — one row for both branches, so the
+        # enemy branch is what the enemy-facing ledger reads.
+        "E": lambda parser: with_control_event(
+            parser,
+            duration_source="active",
+            magnitude_attr="Movement Speed Modifier",
+        ),
+    },
     cc_kinds=MODULE_CC,
 )
 

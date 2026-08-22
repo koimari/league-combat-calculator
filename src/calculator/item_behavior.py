@@ -2351,6 +2351,24 @@ class PacketKind(Enum):
     DAMAGE = "damage"
     DAMAGE_MODIFIER = "damage_modifier"
     ON_HIT_MAGIC = "on_hit_magic"
+    # The three the emitters built but the enum did not name until the
+    # utility census stopped reading its eight kinds as bare strings.
+    # ``ITEM_DENIAL`` is a packet the same way the others are — it is
+    # built by the same emitter, in the same list — but it says a mechanic
+    # was *withheld*, so it leaves the applied stream for a receipt.
+    CLEANSE = "cleanse"
+    RESOURCE = "resource"
+    ITEM_DENIAL = "item_denial"
+
+
+def is_packet_kind(packet: Mapping[str, object], kind: PacketKind) -> bool:
+    """Whether *packet* was built with *kind*, read through the one vocabulary."""
+    return packet.get("kind") == kind.value
+
+
+def is_denial_receipt(packet: Mapping[str, object]) -> bool:
+    """Whether *packet* is the fail-closed item-denial receipt."""
+    return is_packet_kind(packet, PacketKind.ITEM_DENIAL)
 
 
 class PacketTrigger(Enum):
@@ -3826,6 +3844,8 @@ __all__ = [
     "WindowMerge",
     "ZeroPolicy",
     "chain_rank",
+    "is_denial_receipt",
+    "is_packet_kind",
     "is_value_reference",
     "policy_values",
     "policy_walk",

@@ -33,6 +33,7 @@ from .slotlib import (
     find_named_leveling,
     is_flat_unit,
     resolve_scaling,
+    with_control_event,
 )
 from .module_contract import coverage
 
@@ -100,11 +101,6 @@ def _siphon_power(packet_q):
                 "on-hit"
             ),
         )
-        # One projectile hit at the cast boundary: certifying the packet lets
-        # the damage engine declare its event ledger, which is what carries
-        # the module-authored self-shield payload onto the event row (the
-        # Ambessa W convention).
-        entry["event_order_certified"] = "single_hit"
         if bool(ctx.options.get("q_discharge", True)):
             ability = ctx.ability()
             discharge = extract_named(
@@ -138,7 +134,7 @@ def _siphon_power(packet_q):
 # control-armed item passive keys on; and the W augment Magnetize would
 # make "Viktor's other abilities ... slow enemies hit by 20%", which the
 # Hex Fragment augments (out of scope here) are the only way to buy.
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Viktor",
@@ -149,8 +145,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     ),
     # One beam, one hit: "fires an energy beam along the target path that
     # deals magic damage to enemies hit" — the packet has no travel or tick
-    # phase to place, so the hit lands at the cast.
-    single_hit_slots=frozenset({"E"}),
+    # phase to place, so the hit lands at the cast.  Q is one projectile hit
+    # at the same boundary, and certifying it is what carries the
+    # module-authored self-shield payload onto the event row.
+    single_hit_slots=frozenset({"E", "Q"}),
     slot_parsers={
         "R": initial_plus_ticks_parser(
             initial_attr="Magic Damage",
@@ -164,6 +162,18 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
     slot_wrappers={
         "Q": _siphon_power,
+        # Gravity Field prices no damage; it "activates to slow enemies
+        # within for 1 second, refreshing every 0.25 seconds", which the
+        # cache carries as the slot's control-duration atom (the 4.5s
+        # active-duration atom is the field's own lifetime, not the
+        # slow's window), and the cached "Slow" row (33/36/39/42/45%) is
+        # how hard.  The fifth-stack 1.5s stun has no atom at all and
+        # stays unpriced.
+        "W": lambda parser: with_control_event(
+            parser,
+            duration_source="prose",
+            magnitude_attr="Slow",
+        ),
     },
     cc_kinds=MODULE_CC,
 )

@@ -28,6 +28,7 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from .module_contract import coverage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the shield window and the recast
@@ -253,9 +254,17 @@ OPTIONS = [
     bool_option("e_second_explosion", False, label="Dragon E second explosion"),
 ]
 
+MODULE_COVERAGE = coverage(out_of_scope="P")
+
 ASSUMPTIONS = [
-    "Scalemail armor and magic resistance use explicit stack state; the "
-    "passive has no direct damage.",
+    "P (Fury of the Dragonborn) is out_of_scope, not modeled: Scalemail "
+    "is a real, sourced mechanic -- 'For each stack, Shyvana gains 0.3 "
+    "bonus armor and 0.3 bonus magic resistance' -- but that 0.3 lives "
+    "in the effect prose alone.  The slot parser reads a "
+    "'Per-Level Scaling' leveling row, and the cached entry carries no "
+    "leveling row at all, so it returns None at every vantage and the "
+    "scalemail_stacks option changes nothing.  Declaring the slot "
+    "modeled claimed a row that cannot exist (coverage-truth sweep).",
     "Inferno Aegis grants the sourced self-shield ('Shield Strength' 60-140 "
     "by rank + 12% bonus health, plus 'Increased shield per champion' "
     "18-42 by rank + 3.6% bonus health per nearby enemy champion, "

@@ -119,6 +119,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "W (Mega Adhesive) stays out of MODULE_CC: its slow is sourced "
+    "(the cached 'Slow' row, 50/55/60/65/70%) but its window is not. "
+    "The field lasts 3 seconds by the effect description alone, and the "
+    "only seconds atom the slot carries is the 0.375s landing delay -- "
+    "reading that one as the control window would understate the slow "
+    "eightfold, so the slot is left unreviewed rather than declared "
+    "against the wrong number.",
     "R (Insanity Potion) grants the cached Bonus Stats row (25/55/85, "
     "corroborated by the game binary's InsanityPotion StatAmount "
     "DataValue) as ability power, bonus armour, bonus magic resistance "

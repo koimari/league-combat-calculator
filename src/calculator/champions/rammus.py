@@ -196,7 +196,9 @@ def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
 # for a marker to ride: its sourced taunt is authored as a typed
 # ``control_events`` interval by the slot wrapper below, which is why E is
 # absent here.  P is a stat innate.
-MODULE_CC = {"Q": "immobilize", "W": CC_PER_PART, "R": "slow"}
+# E (Frenzying Taunt) prices no damage against a champion, so its reviewed
+# control rides the entry as a sourced ControlEvent rather than on a part.
+MODULE_CC = {"Q": "immobilize", "W": CC_PER_PART, "E": "taunt", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rammus",
@@ -212,7 +214,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "E": lambda parser: with_control_event(
             parser,
-            kind="taunt",
             duration_attr="Taunt Duration",
         ),
     },

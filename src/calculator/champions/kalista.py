@@ -43,7 +43,12 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named
+from .slotlib import (
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    with_control_event,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 from .module_contract import coverage
@@ -165,15 +170,20 @@ SLOTS = {
     "Q": _pierce,
     "W": _soul_marked,
     "E": _rend,
-    "R": _fates_call,
+    # Fate's Call prices no damage; its airborne is the cached
+    # "Airborne Duration" row (1/1.5/2s) on the enemy-side effect.
+    "R": with_control_event(
+        _fates_call,
+        duration_attr="Airborne Duration",
+    ),
 }
 
 # Pierce's spear and the Soul-Mark consumption only damage; Rend rips the
-# spears out "to deal physical damage and slow them for 2 seconds".  P and
-# R are absent — unreviewed rather than reviewed-no-CC: R's knockback and
-# airborne are real control, but its row prices no damage part for an
-# event to carry the kind, and P applies none at all.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+# spears out "to deal physical damage and slow them for 2 seconds".  R
+# prices no damage part, so its airborne rides the entry as a sourced
+# ControlEvent instead.  P stays absent — unreviewed rather than
+# reviewed-no-CC.
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "airborne"}
 
 parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
 

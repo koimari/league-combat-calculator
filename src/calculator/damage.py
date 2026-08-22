@@ -14361,7 +14361,7 @@ def _add_keystone_fleet_footwork(state: FightState, rotation: RotationResult) ->
     move_speed = effect.bonus_move_speed_percent(state.is_melee)
     movement_event = {
         "time": event_time,
-        "kind": "movement",
+        "kind": PacketKind.MOVEMENT.value,
         "amount": move_speed,
         "bonus_move_speed_percent": move_speed,
         "duration": effect.move_speed_duration_seconds,

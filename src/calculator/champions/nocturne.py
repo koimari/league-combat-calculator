@@ -55,7 +55,6 @@ def _tether_fear(compiled):
     """
     armed = with_control_event(
         compiled,
-        kind="fear",
         duration_attr="Disable Duration",
         time_offset=_E_TETHER_SECONDS,
     )
