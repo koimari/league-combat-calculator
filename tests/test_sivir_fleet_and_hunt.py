@@ -321,11 +321,16 @@ class TestOnTheHuntStaysOutOfScope:
 class TestOnTheHuntKernelGaps:
     """Both blockers are measured against the kernel, not quoted."""
 
-    def test_no_move_speed_decomposition_exists_to_compose_against(self):
+    def test_the_move_speed_decomposition_now_exists_to_compose_against(self):
+        """CF9 published the two terms the one movement fold reads.
+
+        On the Hunt's own blocker was the missing decomposition, so this
+        pins that it is gone; what the slot still needs is its own review.
+        """
         stats = calculate_total_stats(copy.deepcopy(_SIVIR), 18, [])
-        assert "move_speed" in stats
-        assert "move_speed_flat" not in stats
-        assert "move_speed_percent" not in stats
+        assert stats["move_speed"] == pytest.approx(
+            stats["move_speed_flat"] * (1.0 + stats["move_speed_percent"] / 100.0)
+        )
 
     def test_cooldown_refund_channel_is_item_proc_only(self):
         import dataclasses

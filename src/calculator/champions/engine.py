@@ -96,6 +96,10 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # prices its grant across the window anyway (Kai'Sa E's Supercharge,
         # a duration-weighted average) says so with this flag.
         "off_rotation_grant",
+        # A grant that needs NO cast at all: an always-on passive hanging off
+        # an active slot's row (Darius E's armor penetration). Autos-only
+        # withholds every cast-bought grant and keeps these.
+        "innate_grant",
         "target_debuff",
         "post_hit_proc",
         "on_hit",

@@ -4731,6 +4731,20 @@ class DamageInputs:
     target_max_health: float
     target_current_health: float
 
+    def stat(self, item_name: str, key: str) -> float:
+        """One champion stat by name; the stat layer always writes it.
+
+        Rule 5: a formula that reads a stat gets the stat or an error naming
+        who wanted what — never a zero that silently deletes the item's damage.
+        """
+        try:
+            return float(self.champion_stats[key])
+        except KeyError:
+            raise KeyError(
+                f"{item_name!r} needs champion stat {key!r}; the stat block "
+                f"carries {sorted(self.champion_stats)!r}"
+            ) from None
+
 
 @dataclass(frozen=True, slots=True)
 class DamageSource:
@@ -5097,7 +5111,7 @@ def _compile_auto_cooldown(
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.champion_stats.get("health", 0.0)
+        return ratio * inputs.stat(item_name, "health")
 
     source = damage_source(
         item_name,
@@ -5125,7 +5139,7 @@ def _compile_per_ability_hit(
 
     def raw(inputs: DamageInputs) -> float:
         ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.champion_stats.get("max_mana", 0.0)
+        return ratio * inputs.stat(item_name, "max_mana")
 
     return damage_source(
         item_name,
@@ -5955,7 +5969,6 @@ class StatBonuses:
     ultimate_haste: float  # Scorn/Hexcharged/Night Vigil/Cryocombustion
     bonus_omnivamp: float  # Endless Hunger Feast's explicit takedown window
     bonus_heal_shield_power: float  # Harmony's bonus-mana conversion
-    bonus_move_speed_percent: float  # Mejai's 10+ Glory
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
     # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
     # exclude temporary combat effects (Blackfire, Rapids, AS windows).
@@ -5988,9 +6001,10 @@ def resolve_stat_effects(
     a new import or call site.
     """
     terminus_resists, terminus_pen = terminus_max_stack_bonuses(items, level)
-    input_bonus_ap, input_move_speed, _, _ = _input_option_stat_bonuses(
-        items, item_options
-    )
+    # Movement speed from item state (Mejai's 10+ Glory) is already in the
+    # caller's ``total_move_speed``; handing it back would be a second home
+    # for one number.
+    input_bonus_ap, _, _, _ = _input_option_stat_bonuses(items, item_options)
     health_multiplier = item_bonus_health_multiplier(items)
     mana_bonus_ap = mana_to_ap_bonus(items, bonus_mana)
     mana_bonus_health = mana_to_health_bonus(items, bonus_mana)
@@ -6067,7 +6081,6 @@ def resolve_stat_effects(
             + gluttonous_greaves_slay_omnivamp(items, item_options)
         ),
         bonus_heal_shield_power=harmony_power,
-        bonus_move_speed_percent=input_move_speed,
         item_bonus_health_multiplier=health_multiplier,
         permanent_bonus_ap=permanent_bonus_ap,
         permanent_ap_multiplier=permanent_ap_multiplier(items),

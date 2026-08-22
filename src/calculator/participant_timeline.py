@@ -53,6 +53,7 @@ from .trigger_stream import (
     holders_in,
     is_immobilizing_event,
 )
+from .champions.inputs import declared_option_defaults
 from .champions.skill_orders import get_ability_rank
 from .champions.slotlib import extract_named
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
@@ -160,6 +161,7 @@ from .program.compile import (
     ability_instance_for_event,
     action_from_event,
     grey_health_heal_action,
+    grey_health_shield_action,
     is_authored_ability_event,
     modifier_delivery_receipt,
     pair_view,
@@ -1353,6 +1355,13 @@ def _owned_state_event_id(
     return text if text.startswith(prefix) else f"{prefix}{text}"
 
 
+#: Stamped on a support template whose amount was priced off its RECIPIENT's
+#: build (Taric W's Bastion).  An optimizer candidate changes that build, so
+#: a list carrying one is derived per evaluation instead of being served from
+#: the per-search pair-view cache.
+RECIPIENT_SCALED_KEY = "_recipient_scaled"
+
+
 def _support_effect_templates(
     attacker: Combatant,
     result: Mapping[str, Any],
@@ -1439,6 +1448,24 @@ def _support_effect_templates(
                 if denial_receipts is not None:
                     denial_receipts.append(resolved_template)
                 continue
+            ratio = resolved_template.pop("recipient_max_health_ratio", None)
+            if ratio is not None and ally_target_id != attacker.participant_id:
+                # Taric W's Bastion pays each recipient a share of their OWN
+                # maximum health, and only here is that recipient in hand.
+                # The mark is what keeps the priced packet off the
+                # per-search template cache: an optimizer candidate moves
+                # the recipient's maximum health under it.
+                recipient = next(
+                    actor
+                    for actor in all_actors
+                    if actor.participant_id == ally_target_id
+                )
+                resolved_template["amount"] = max(
+                    0.0, float(ratio) * float(recipient.stats.get("health", 0.0) or 0.0)
+                )
+                resolved_template[RECIPIENT_SCALED_KEY] = True
+                if resolved_template["amount"] <= 0.0:
+                    continue
             templates.append(resolved_template)
     # Fan out champion-owned heal events (authored by the E1 self-heal rule
     # for slots in ``_MODULE_AUTHORED_HEAL_SLOTS``, Taric Q today) to the
@@ -1772,6 +1799,46 @@ def _support_effect_templates(
                 }
             )
     templates.extend(_aery_support_templates(attacker, result, templates))
+    return templates
+
+
+def _attached_support_templates(
+    view: PairView,
+    attacker: Combatant,
+    all_actors: list[Combatant],
+    *,
+    pair_defender_id: str | None,
+    damage_events: Iterable[Mapping[str, Any]] | None = None,
+    target_id: str | None = None,
+    denial_receipts: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """One attacker's support templates, cached on the pair view when they can be.
+
+    The one home of that decision, for all three composition paths.  A list
+    holding a packet priced off a RECIPIENT's build cannot be served from
+    the per-search cache — the next optimizer candidate moves that
+    recipient's maximum health under it — so it is rebuilt per evaluation
+    and everything else keeps riding the pair packet.
+    """
+    if view.support is not None:
+        if denial_receipts is not None:
+            denial_receipts.extend(dict(row) for row in view.support_denials or ())
+        return view.support
+    denials: list[dict[str, Any]] = []
+    templates = _support_effect_templates(
+        attacker,
+        view.result,
+        all_actors,
+        pair_defender_id=pair_defender_id,
+        damage_events=damage_events,
+        target_id=target_id,
+        denial_receipts=denials,
+    )
+    if denial_receipts is not None:
+        denial_receipts.extend(dict(row) for row in denials)
+    if not any(template.get(RECIPIENT_SCALED_KEY) for template in templates):
+        view.support = templates
+        view.support_denials = denials
     return templates
 
 
@@ -2372,15 +2439,21 @@ _RENGAR_W_CONSUME_HEAL_RATIO = 1.0
 #   the out-of-combat consume ("after 4 seconds without taking damage ...
 #   restore 60% : 100% (based on level) of the amount") whose level row
 #   "Max Health Damage" carries 60 : 100 (based on level).  The E ACTIVE
-#   converts grey into a 2.5 s shield — a shield, not a heal — and stays
-#   out of this primitive's scope (the module documents Thick Skin as
-#   shield state).  The consume is modeled as one lump heal at the 4 s
-#   boundary; the wiki's 10%-max-health-per-0.264 s tick delivery is a
-#   rate detail with the same total, documented here.
+#   ("Tahm Kench converts his current grey health into a shield that lasts
+#   for 2.5 seconds") pays the pool as a SHIELD instead, on E's own cached
+#   3 s haste-scaled cooldown.  It is a player decision, so the module
+#   declares it as the ``e_convert_grey_shield`` option and the press
+#   schedule is the earliest-available convention Mordekaiser's recast
+#   already uses; with the option off nothing presses and the pool pays
+#   the out-of-combat heal exactly as before.  The consume is modeled as
+#   one lump heal at the 4 s boundary; the wiki's 10%-max-health-per-
+#   0.264 s tick delivery is a rate detail with the same total.
 _TAHM_E_STORE_RANK = (0.15, 0.23, 0.31, 0.39, 0.47)
 _TAHM_E_STORE_MULTI_RANK = (0.42, 0.44, 0.46, 0.48, 0.50)
 _TAHM_E_STORE_CAP_RATIO = 3.0
 _TAHM_E_OUT_OF_COMBAT_SECONDS = 4.0
+_TAHM_E_SHIELD_DURATION_SECONDS = 2.5
+_TAHM_E_ACTIVE_OPTION = "e_convert_grey_shield"
 # Mordekaiser W (Indestructible) — data/champions.json W prose:
 #   "stores 45% of the post-mitigation damage he deals and 7.5% of the
 #   pre-mitigation damage he takes ... up to 30% of his maximum health."
@@ -2454,21 +2527,29 @@ def _grey_health_receipts(
     duration: float,
     enemy_count: int,
     ability_ranks: Mapping[str, int] | None = None,
-) -> tuple[list[tuple[float, str, float]], dict[str, float]]:
-    """Author grey-health consume heals for one grey-health main champion.
+    champion_options: Mapping[str, Any] | None = None,
+) -> tuple[
+    list[tuple[float, str, float]],
+    list[tuple[float, str, float, float]],
+    dict[str, float],
+]:
+    """Author the grey-health consumes for one grey-health main champion.
 
     ``incoming``/``outgoing`` are ``(time, post_mitigation,
     pre_mitigation)`` damage records for damage the main TAKES (its
     defenders' pair packets) and DEALS within the fight window.  Returns
-    ``(consume_heals, summary)`` where each heal is ``(time, source,
-    amount)`` and the summary carries the ``grey_health_stored`` pool,
-    the ``grey_health_consumed`` total, and a ``source`` label for the
-    receipt.  The pool accumulates the sourced ratio of post-mitigation
-    incoming damage (Mordekaiser also stores from pre-mitigation damage
-    taken and from post-mitigation damage dealt), capped per champion.
+    ``(consume_heals, consume_shields, summary)`` — a heal is ``(time,
+    source, amount)``, a shield adds its duration — and the summary
+    carries the ``grey_health_stored`` pool, the ``grey_health_consumed``
+    total, and a ``source`` label for the receipt.  The pool accumulates
+    the sourced ratio of post-mitigation incoming damage (Mordekaiser also
+    stores from pre-mitigation damage taken and from post-mitigation
+    damage dealt), capped per champion.  Only Tahm Kench's E active pays a
+    pool as a shield, and only when its option is on.
     """
     name = str(champion_name)
     heals: list[tuple[float, str, float]] = []
+    shields: list[tuple[float, str, float, float]] = []
 
     def _slot_rank(slot: str) -> int:
         if ability_ranks and slot in ability_ranks:
@@ -2492,15 +2573,19 @@ def _grey_health_receipts(
         pool = min(cap, ratio * sum(post for _t, post, _pre in incoming))
         # Out-of-vision consume: vision is a boundary the 1v1 ledger does
         # not model, so the 100% heal is documented, not authored.
-        return heals, {
-            "grey_health_stored": pool,
-            "grey_health_consumed": 0.0,
-            "source": (
-                "Gift of the Drowned Ones (9% + 0.2% per Lethality of "
-                "post-mitigation damage taken; out-of-vision consume is a "
-                "vision boundary, not modeled in-window)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": pool,
+                "grey_health_consumed": 0.0,
+                "source": (
+                    "Gift of the Drowned Ones (9% + 0.2% per Lethality of "
+                    "post-mitigation damage taken; out-of-vision consume is a "
+                    "vision boundary, not modeled in-window)"
+                ),
+            },
+        )
     if name == "Rengar":
         w_casts = sorted(
             float(cast.get("time", 0.0))
@@ -2519,45 +2604,79 @@ def _grey_health_receipts(
                 heals.append((cast_time, "Battle Roar (grey health)", amount))
                 consumed += amount
         stored = _RENGAR_W_STORE_RATIO * sum(post for _t, post, _pre in incoming)
-        return heals, {
-            "grey_health_stored": stored,
-            "grey_health_consumed": consumed,
-            "source": (
-                "Battle Roar (50% of post-mitigation damage taken in the "
-                "last 1.5 seconds stored as grey health; the active heals "
-                "the stored pool)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": stored,
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Battle Roar (50% of post-mitigation damage taken in the "
+                    "last 1.5 seconds stored as grey health; the active heals "
+                    "the stored pool)"
+                ),
+            },
+        )
     if name == "Tahm Kench":
         e_rank = max(1, _slot_rank("E"))
         rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
         ratio = rank_row[min(e_rank, len(rank_row)) - 1]
         max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
+        ability = _grey_ability(champion_data, "E")
         pool = min(
             _TAHM_E_STORE_CAP_RATIO * max_health,
             ratio * sum(post for _t, post, _pre in incoming),
         )
         consumed = 0.0
-        if pool > 0.0 and incoming:
+        # The E ACTIVE, when the module's option turns it on: each press
+        # converts the grey banked since the previous one into a 2.5 s
+        # shield, on E's own haste-scaled cooldown.
+        residual, last_press = pool, None
+        cooldown = _grey_cooldown(ability, e_rank, stats)
+        if _declared_option(name, champion_options, _TAHM_E_ACTIVE_OPTION):
+            banked, press_time = 0.0, None
+            for event_time, post, _pre in sorted(incoming):
+                if press_time is not None and event_time >= press_time:
+                    banked = _press_thick_skin(shields, press_time, banked, duration)
+                    last_press, press_time = press_time, press_time + cooldown
+                banked = min(
+                    _TAHM_E_STORE_CAP_RATIO * max_health, banked + ratio * post
+                )
+                if press_time is None:
+                    press_time = event_time
+            if press_time is not None:
+                banked = _press_thick_skin(shields, press_time, banked, duration)
+                last_press = press_time
+            residual = banked
+            consumed = pool - residual
+        if residual > 0.0 and incoming:
             last_damage_time = max(event_time for event_time, _post, _pre in incoming)
             consume_time = last_damage_time + _TAHM_E_OUT_OF_COMBAT_SECONDS
-            if consume_time <= duration:
-                ability = _grey_ability(champion_data, "E")
+            # "While Thick Skin is not on cooldown, and after 4 seconds
+            # without taking damage": a press inside the window blocks the
+            # heal until its own cooldown has run out.
+            ready = last_press is None or last_press + cooldown <= consume_time
+            if consume_time <= duration and ready:
                 restore = _grey_level_ratio(ability, "Max Health Damage", level)
-                amount = restore * pool
+                amount = restore * residual
                 if amount > 0.0:
                     heals.append((consume_time, "Thick Skin (grey health)", amount))
-                    consumed = amount
-        return heals, {
-            "grey_health_stored": pool,
-            "grey_health_consumed": consumed,
-            "source": (
-                "Thick Skin (E-rank % of post-mitigation damage taken "
-                "stored as grey health; the out-of-combat consume restores "
-                "60% : 100% based on level of the pool after 4 seconds "
-                "without damage)"
-            ),
-        }
+                    consumed += amount
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": pool,
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Thick Skin (E-rank % of post-mitigation damage taken "
+                    "stored as grey health; the out-of-combat consume restores "
+                    "60% : 100% based on level of the pool after 4 seconds "
+                    "without damage, and the active converts the pool into a "
+                    "2.5s shield when its option is on)"
+                ),
+            },
+        )
     if name == "Mordekaiser":
         w_rank = max(1, _slot_rank("W"))
         heal_ratio = _MORDE_W_SHIELD_TO_HEALING_RANK[
@@ -2592,18 +2711,22 @@ def _grey_health_receipts(
             if amount > 0.0 and recast_time <= duration:
                 heals.append((recast_time, "Indestructible (grey health)", amount))
                 consumed = amount
-        return heals, {
-            "grey_health_stored": pool,
-            "grey_health_consumed": consumed,
-            "source": (
-                "Indestructible (45% of post-mitigation damage dealt + "
-                "7.5% of pre-mitigation damage taken stored as Potential "
-                "Shield, capped at 30% of maximum health; the W recast "
-                "heals the Shield-to-Healing % of the stored shield — the "
-                "recast is modeled at its earliest available time, shield "
-                "decay is state)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": pool,
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Indestructible (45% of post-mitigation damage dealt + "
+                    "7.5% of pre-mitigation damage taken stored as Potential "
+                    "Shield, capped at 30% of maximum health; the W recast "
+                    "heals the Shield-to-Healing % of the stored shield — the "
+                    "recast is modeled at its earliest available time, shield "
+                    "decay is state)"
+                ),
+            },
+        )
     if name == "Locke":
         # Soul Ignition (W): each W cast opens a 6-second storage window
         # during which 100% of the post-mitigation champion damage taken
@@ -2644,40 +2767,98 @@ def _grey_health_receipts(
             if amount > 0.0 and consume_time <= duration:
                 heals.append((consume_time, "Soul Ignition (grey health)", amount))
                 consumed += amount
-        return heals, {
-            "grey_health_stored": min(
-                cap,
-                _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
-            ),
-            "grey_health_consumed": consumed,
-            "source": (
-                "Soul Ignition (100% of post-mitigation damage taken from "
-                "enemy champions during the 6s active stored as grey "
-                "health, capped by the 'Damage taken grey health cap' row; "
-                "the automatic recast at 6s heals the stored pool; the "
-                "health-cost add and missing-health bonus remain dynamic "
-                "self-state boundaries)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": min(
+                    cap,
+                    _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
+                ),
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Soul Ignition (100% of post-mitigation damage taken from "
+                    "enemy champions during the 6s active stored as grey "
+                    "health, capped by the 'Damage taken grey health cap' row; "
+                    "the automatic recast at 6s heals the stored pool; the "
+                    "health-cost add and missing-health bonus remain dynamic "
+                    "self-state boundaries)"
+                ),
+            },
+        )
     if name == "Kled":
         # Skaarl's 400 : 1400 (based on level) health pool is the mounted
         # duo's damage sink; dismount at zero and the remount restore are a
         # revive-boundary pattern (like Aatrox's ghost atom) and are NOT
         # implemented.  No heal is authored; the module documents it.
-        return heals, {
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": 0.0,
+                "grey_health_consumed": 0.0,
+                "source": (
+                    "Skaarl the Cowardly Lizard (the mounted duo's damage pool "
+                    "is a revive-boundary pattern; dismount/remount are not "
+                    "modeled)"
+                ),
+            },
+        )
+    return (
+        heals,
+        shields,
+        {
             "grey_health_stored": 0.0,
             "grey_health_consumed": 0.0,
-            "source": (
-                "Skaarl the Cowardly Lizard (the mounted duo's damage pool "
-                "is a revive-boundary pattern; dismount/remount are not "
-                "modeled)"
-            ),
-        }
-    return heals, {
-        "grey_health_stored": 0.0,
-        "grey_health_consumed": 0.0,
-        "source": "",
-    }
+            "source": "",
+        },
+    )
+
+
+def _declared_option(
+    champion: str, options: Mapping[str, Any] | None, key: str
+) -> bool:
+    """One champion option, falling back to the module's own declared row."""
+    if options is not None and key in options:
+        return bool(options[key])
+    return bool(declared_option_defaults(champion)[key])
+
+
+def _grey_cooldown(
+    ability: Mapping[str, Any], rank: int, stats: Mapping[str, float]
+) -> float:
+    """One cached ability cooldown at a rank, after ability haste."""
+    modifiers = (ability.get("cooldown") or {}).get("modifiers") or [{}]
+    values = modifiers[0].get("values") or []
+    if not values:
+        return 0.0
+    base = float(values[min(max(int(rank), 1), len(values)) - 1])
+    haste = max(0.0, float(stats.get("ability_haste", 0.0) or 0.0))
+    return base * 100.0 / (100.0 + haste)
+
+
+def _press_thick_skin(
+    shields: list[tuple[float, str, float, float]],
+    press_time: float,
+    banked: float,
+    duration: float,
+) -> float:
+    """One Thick Skin press: the bank becomes a shield, or stays banked.
+
+    Returns the grey health still on the bar afterwards, so a press the
+    fight window never reaches consumes nothing.
+    """
+    if banked <= 0.0 or press_time > duration:
+        return banked
+    shields.append(
+        (
+            press_time,
+            "Thick Skin (grey health)",
+            banked,
+            _TAHM_E_SHIELD_DURATION_SECONDS,
+        )
+    )
+    return 0.0
 
 
 def _grey_ability(champion_data: Mapping[str, Any], slot: str) -> dict[str, Any]:
@@ -3786,10 +3967,10 @@ def _context_setup(
             suppress_actor_wide_heals=attacker.team == "enemy",
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
-            if view.support is None:
-                view.support = _support_effect_templates(
+            base.add_support_templates(
+                _attached_support_templates(
+                    view,
                     attacker,
-                    view.result,
                     all_actors_by_index,
                     # ``support_attached`` admits one pair per attacker, so
                     # this is the first of ``base_pairs``' defenders for it —
@@ -3797,8 +3978,10 @@ def _context_setup(
                     # loop rather than re-derived from the roster.
                     pair_defender_id=defender.participant_id,
                     damage_events=view.events,
-                )
-            base.add_support_templates(view.support, attacker_i, context.index_of)
+                ),
+                attacker_i,
+                context.index_of,
+            )
             support_attached.add(attacker.participant_id)
     for actor in context.roster_actors:
         wearer_i = context.index_of[actor.participant_id]
@@ -3936,18 +4119,20 @@ def _build_signature_panel(
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
         )
-        if view.support is None:
-            view.support = _support_effect_templates(
+        sig.add_support_templates(
+            _attached_support_templates(
+                view,
                 attacker,
-                view.result,
                 all_actors,
                 # The signature panel prices every enemy attacker against the
                 # candidate main and nobody else (the ``"main"`` defender
                 # above), so the pair this result came from is that one.
                 pair_defender_id=main.participant_id,
                 damage_events=view.events,
-            )
-        sig.add_support_templates(view.support, attacker_i, context.index_of)
+            ),
+            attacker_i,
+            context.index_of,
+        )
     # The enemy->main fights live here rather than on the base panel, so the
     # Sacrifice split for a holder whose Worthy ally IS the candidate main
     # has to be staged against this panel's actions.
@@ -4279,7 +4464,7 @@ def _score_with_search_context(
             if first_result is not None
             else []
         )
-        grey_heals, grey_summary = _grey_health_receipts(
+        grey_heals, grey_shields, grey_summary = _grey_health_receipts(
             str(champion_data.get("name", "")),
             champion_data,
             level,
@@ -4290,12 +4475,21 @@ def _score_with_search_context(
             duration,
             len(enemy_actors),
             params.ability_ranks,
+            params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
                 grey_health_heal_action(heal_time, source, amount, index, aidx)
+            )
+        for index, (grant_time, source, amount, window) in enumerate(grey_shields):
+            aidx = fresh.next_aidx
+            fresh.next_aidx += 1
+            fresh.actions.append(
+                grey_health_shield_action(
+                    grant_time, source, amount, window, index, aidx
+                )
             )
 
     # An armed damage modifier restricts itself by attack class, and the
@@ -4792,6 +4986,11 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
     item_denial_receipts: list[dict[str, Any]] = []
     ordered_item_support_ids: set[str] = set()
+    # One activation, one shield: an ``actor_wide`` self-shield payload is
+    # authored once per rotation but replayed by every enemy pair, so the
+    # first pair to carry it keeps it and the rest are dropped here.  Keyed
+    # the way actor-wide heals are keyed below -- holder, source, timestamp.
+    actor_wide_shield_keys: set[tuple[str, str, float]] = set()
     support_attached: set[str] = set()
     # The main champion's own cast timeline (from its first outgoing pair
     # fight) drives grey-health consume timing (Rengar W, Mordekaiser W).
@@ -4903,10 +5102,21 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                     defender_incoming.append(enriched)
                     shield_payload = enriched.get("self_shield")
                     shield_event_id = str(enriched.get("_event_id", ""))
+                    shield_key = (
+                        (
+                            attacker.participant_id,
+                            str(shield_payload.get("source", "")),
+                            float(enriched.get("time", 0.0) or 0.0),
+                        )
+                        if isinstance(shield_payload, Mapping)
+                        and shield_payload.get("actor_wide")
+                        else None
+                    )
                     if (
                         isinstance(shield_payload, Mapping)
                         and shield_event_id
                         and shield_event_id not in ordered_item_support_ids
+                        and shield_key not in actor_wide_shield_keys
                     ):
                         try:
                             shield_amount = max(0.0, float(shield_payload["amount"]))
@@ -4969,6 +5179,8 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                 }
                             )
                             ordered_item_support_ids.add(shield_event_id)
+                            if shield_key is not None:
+                                actor_wide_shield_keys.add(shield_key)
                 attacker_healing = healing[attacker.participant_id]
                 for template in view.heals:
                     if template.get("actor_wide"):
@@ -4985,22 +5197,16 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                         dict(template) if copy_templates else template
                     )
                 if attacker.participant_id not in support_attached:
-                    if view.support is None:
-                        support_denials: list[dict[str, Any]] = []
-                        view.support = _support_effect_templates(
-                            attacker,
-                            result,
-                            all_actors,
-                            pair_defender_id=defender.participant_id,
-                            damage_events=view.events,
-                            target_id=defender.participant_id,
-                            denial_receipts=support_denials,
-                        )
-                        view.support_denials = support_denials
-                    item_denial_receipts.extend(
-                        dict(row) for row in view.support_denials or ()
+                    support_templates = _attached_support_templates(
+                        view,
+                        attacker,
+                        all_actors,
+                        pair_defender_id=defender.participant_id,
+                        damage_events=view.events,
+                        target_id=defender.participant_id,
+                        denial_receipts=item_denial_receipts,
                     )
-                    for template in view.support:
+                    for template in support_templates:
                         packet_template = dict(template) if copy_templates else template
                         support_effects[template["target"]].append(packet_template)
                         if template.get("kind") == "damage":
@@ -5182,7 +5388,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             )
             for event in main_outgoing
         ]
-        grey_heals, grey_summary = _grey_health_receipts(
+        grey_heals, grey_shields, grey_summary = _grey_health_receipts(
             main_name,
             champion_data,
             level,
@@ -5193,6 +5399,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             duration,
             len(enemy_actors),
             params.ability_ranks,
+            params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             heal_event: dict[str, Any] = {
@@ -5211,6 +5418,25 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 heal_event,
             )
             healing["main"].append(heal_event)
+        for index, (grant_time, source, amount, window) in enumerate(grey_shields):
+            support_effects["main"].append(
+                {
+                    "time": float(grant_time),
+                    "kind": "shield",
+                    "amount": float(amount),
+                    "duration": float(window),
+                    "source": source,
+                    "source_key": source,
+                    "attacker": "main",
+                    "target": "main",
+                    "target_scope": "self",
+                    "target_policy": "self",
+                    "_event_id": f"main:grey:{source}:shield:{index}",
+                    # Grey health is banked by damage already taken, so the
+                    # barrier this press raises arms after it.
+                    SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
+                }
+            )
         for event in main_incoming:
             receipt = _grey_health_event_receipt(
                 main_name,

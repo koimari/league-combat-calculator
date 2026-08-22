@@ -18,7 +18,6 @@ from typing import Any, Callable, Mapping, NamedTuple
 from ..ability_spec import Disposition, ZeroPolicy
 from ..item_effects import DamageInputs
 from ..rune_effects import (
-    AmpCondition,
     RuneAmpContext,
     RuneConditionalAmpEffect,
     RuneEffect,
@@ -38,7 +37,7 @@ from ..rune_effects import (
     display_name,
     no_damage_compiler,
     required_leveling,
-    rune_effect_value,
+    stack_count_option,
 )
 
 #: ``Legend`` stacks are earned across a whole game — takedowns, epic
@@ -55,18 +54,12 @@ def _legend_stack_option(rune_name: str) -> RuneOption:
     ten, Bloodline at fifteen — so the control refuses a count the rune could
     never reach instead of accepting one and quietly clamping it.
     """
-    ceiling = rune_effect_value(rune_name, "max_stacks")
-    return RuneOption(
-        key=_LEGEND_STACKS,
-        label="Legend stacks",
-        kind=RuneOptionKind.COUNT,
-        default=0.0,
-        bounds=(0.0, ceiling),
-        disclosure=(
-            f"How many Legend stacks {rune_name} has banked when the fight "
-            f"opens, 0 to {ceiling:g}. 0 is the un-stacked default: the "
-            "engine simulates one fight and earns no stacks during it."
-        ),
+    return stack_count_option(
+        rune_name,
+        _LEGEND_STACKS,
+        "Legend stacks",
+        f"How many Legend stacks {rune_name} has banked when the fight "
+        "opens; the engine simulates one fight and earns no stacks during it.",
     )
 
 
@@ -170,42 +163,17 @@ def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
-def _target_health_amp(
-    name: str, entry: Mapping[str, Any], condition: AmpCondition
-) -> RuneConditionalAmpEffect:
-    """Compile one target-health-gated amplifier from its three cached keys.
+def _target_health_amp(name: str, entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
+    """Compile one target-health-gated amplifier: the rune's identity, no more.
 
-    The gate is the target's *current* health against its maximum, so the
-    engine decides per damage instance, walking its ordered ledger with the
-    target's health falling by everything already dealt. Nothing about the
-    gate is assumed here: the share, the amplifier, and which side of the
-    threshold arms it all come out of the cached description, and a
-    description stating the other side is refused rather than priced as the
-    one the rune is known for.
+    Its share, its amplifier and which side of the threshold arms it are the
+    amp chain's ``TARGET_HEALTH_GATE`` declaration.
     """
-    effects = RuneValues(name, entry.get("effects", {}))
-    stated = AmpCondition(str(effects.value("damage_amp_health_gate")))
-    if stated is not condition:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] states a {stated.value!r} gate and this "
-            f"compiler prices the {condition.value!r} one — wiki description "
-            "reordered"
-        )
-    health_ratio = effects.number("damage_amp_health_ratio")
-    side = "below" if condition is AmpCondition.TARGET_BELOW else "above"
+    del entry  # every number this rune prices is the chain's declaration
     return RuneConditionalAmpEffect(
         rune_name=name,
         breakdown_key=breakdown_key(name),
         display_name=display_name(name),
-        condition=condition,
-        health_ratio=health_ratio,
-        amp_ratio=effects.number("damage_amp_ratio"),
-        disclosures=(
-            f"{name} amplifies exactly the instances that land while the "
-            f"target is {side} {health_ratio * 100:g}% of its maximum health, "
-            "read off the fight's own ordered ledger; damage the ledger "
-            "cannot timestamp is never amplified, so the row is a floor.",
-        ),
     )
 
 
@@ -302,12 +270,12 @@ def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
 
 def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
     """Compile Coup de Grace: more damage to a champion below a health share."""
-    return _target_health_amp("Coup de Grace", entry, AmpCondition.TARGET_BELOW)
+    return _target_health_amp("Coup de Grace", entry)
 
 
 def _compile_cut_down(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
     """Compile Cut Down: more damage to a champion above a health share."""
-    return _target_health_amp("Cut Down", entry, AmpCondition.TARGET_ABOVE)
+    return _target_health_amp("Cut Down", entry)
 
 
 #: Last Stand's gate is the holder's own health, and the pair engine prices

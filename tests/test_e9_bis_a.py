@@ -60,7 +60,6 @@ def _calculate(
     include_auto_attacks: bool = False,
 ) -> dict:
     """One /api/calculate fight; level 18, no items, 0 target resists."""
-    app_module.app.config["TESTING"] = True
     payload: dict = {
         "champion": champion,
         "level": 18,
@@ -83,7 +82,6 @@ def _calculate(
 
 def _bis(champion: str, *, role: str) -> dict:
     """One focused /api/bis request with a roster target (mid/bottom, 18)."""
-    app_module.app.config["TESTING"] = True
     payload: dict = {
         "champion": champion,
         "level": 18,

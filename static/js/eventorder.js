@@ -5,12 +5,12 @@
  * plus the combo rationale from the /api/calculate "rotation" receipt, so
  * the UI can show WHY the order is optimal ("Q poisons, E consumes").
  *
- * The module never depends on app.js internals.  It installs a read-only
- * wrapper around window.fetch BEFORE app.js fires its first request, so it
- * captures each /api/calculate response the app already makes — no extra
- * API calls, no response mutation, and the app's own promise chain is
- * untouched.  It renders into the optional #eventOrderPanel mount point
- * (templates/index.html) and stays hidden when no rotation receipt exists.
+ * The module never depends on app.js internals.  It listens for the
+ * "scryglass:result" event app.js publishes whenever it displays a result,
+ * whose detail is that receipt — no extra API calls, no wrapper around the
+ * app's own request, and no load-order constraint.  It renders into the
+ * optional #eventOrderPanel mount point (templates/index.html) and stays
+ * hidden when no rotation receipt exists.
  */
 (function () {
   "use strict";
@@ -127,7 +127,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Capture: read-only wrapper around the app's own fetch.
+   * Capture: the receipt app.js publishes with every displayed result.
    * ------------------------------------------------------------------ */
 
   function capturePayload(payload) {
@@ -136,30 +136,10 @@
     render(payload);
   }
 
-  function installFetchCapture() {
-    if (!window.fetch || window.__scryglassEventOrderCapture) return;
-    window.__scryglassEventOrderCapture = true;
-    var originalFetch = window.fetch;
-    window.fetch = function () {
-      var promise = originalFetch.apply(this, arguments);
-      try {
-        var url = arguments[0];
-        if (typeof url === "string" && url.indexOf("/api/calculate") !== -1) {
-          promise.then(function (response) {
-            try {
-              response.clone().json().then(capturePayload);
-            } catch {
-              // Non-JSON or already-consumed body — ignore, never break the app.
-            }
-          }).catch(function () {
-            // Capture failures are invisible to the app's own promise chain.
-          });
-        }
-      } catch {
-        // Never let the capture break the app's own request.
-      }
-      return promise;
-    };
+  function installResultListener() {
+    document.addEventListener("scryglass:result", function (event) {
+      capturePayload(event.detail);
+    });
   }
 
   /* ------------------------------------------------------------------ *
@@ -184,7 +164,7 @@
     observer.observe(target, { childList: true, subtree: true });
   }
 
-  installFetchCapture();
+  installResultListener();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       installObserver();

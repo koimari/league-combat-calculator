@@ -136,7 +136,6 @@ class TestTheAuraPricesItsOwnTimestamp:
     """C4's observable, end to end: damage at exactly ``t = 0`` gains the curse."""
 
     def _events(self):
-        app_module.app.config["TESTING"] = True
         response = app_module.app.test_client().post(
             "/api/calculate", json=_ABYSSAL_ROSTER
         )
@@ -200,6 +199,6 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         # are still C4's and the version has moved past it (5 is the
         # rune page's request fields and catalogs, 6 the survival row's
         # certification fields, 7 nulled the locators on unsupported
-        # capability fields).
-        assert CAPABILITY_SCHEMA_VERSION == 7
+        # capability fields, 8 the stat-surface labels).
+        assert CAPABILITY_SCHEMA_VERSION == 8
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

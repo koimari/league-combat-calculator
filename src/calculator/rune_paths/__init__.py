@@ -1,8 +1,9 @@
 """How a rune path registers the runes it compiles.
 
 One module per path — ``precision``, ``domination``, ``sorcery``, ``resolve``,
-``inspiration`` — plus ``shards`` for the three stat-shard rows, which belong
-to no path. Each module declares exactly two mappings and nothing else:
+``inspiration`` — plus ``shards`` for the three stat-shard rows and
+``keystones`` for row 0, neither of which belongs to one path. Each module
+declares exactly two mappings and nothing else:
 
 ``COMPILERS``
     ``{rune name: compiler}``, where a compiler takes that rune's cached
@@ -19,15 +20,23 @@ to no path. Each module declares exactly two mappings and nothing else:
     explicit option with a disclosed default, never an inferred constant.
     A rune that needs no input declares nothing here.
 
-``rune_effects`` merges the six modules into one resolver and one catalog, so
-nothing downstream distinguishes a keystone from a minor rune except where
+``rune_effects`` merges the seven modules into one resolver and one catalog,
+so nothing downstream distinguishes a keystone from a minor rune except where
 the roster says its slot is.
 """
 
 from typing import Any, Callable, Mapping
 
 from ..rune_effects import RuneEffect, RuneOption
-from . import domination, inspiration, precision, resolve, shards, sorcery
+from . import (
+    domination,
+    inspiration,
+    keystones,
+    precision,
+    resolve,
+    shards,
+    sorcery,
+)
 
 #: What every entry of a path module's ``COMPILERS`` is.
 RuneCompiler = Callable[[Mapping[str, Any]], RuneEffect]
@@ -71,6 +80,11 @@ def path_options() -> dict[str, tuple[RuneOption, ...]]:
                 )
             merged[name] = options
     return merged
+
+
+def keystone_compilers() -> dict[str, RuneCompiler]:
+    """Every keystone compiler — row 0, which belongs to no one path."""
+    return dict(keystones.COMPILERS)
 
 
 def shard_compilers() -> dict[tuple[int, str], RuneCompiler]:

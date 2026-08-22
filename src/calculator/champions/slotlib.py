@@ -612,6 +612,38 @@ def damage_entry(
     return entry
 
 
+def post_hit_proc_row(
+    *,
+    name: str,
+    breakdown_key: str,
+    parts: tuple[DamagePart, ...],
+    detail: str,
+) -> dict[str, Any]:
+    """Build the row a cast pays *after* its own hit (``post_hit_proc``).
+
+    ``engine._ALLOWED_POST_HIT_PROC_KEYS`` is a four-key shape (plus an
+    optional ``target_debuff``) that :func:`damage_entry`'s richer entry
+    cannot be narrowed to, so the proc row gets its own builder — and a
+    builder rather than a dict literal per module for the reason
+    :data:`MODULE_FORMULA_ZERO` gives: every part it emits is a numeric leaf,
+    and one born here says its zero was computed instead of carrying no
+    disposition at all.  A part that already declares a policy keeps it.
+    """
+    return {
+        "name": name,
+        "breakdown_key": breakdown_key,
+        "parts": tuple(
+            (
+                part
+                if part.zero_policy is not None
+                else replace(part, zero_policy=MODULE_FORMULA_ZERO)
+            )
+            for part in parts
+        ),
+        "detail": detail,
+    }
+
+
 def support_cast(
     *,
     default_name: str,
@@ -663,18 +695,20 @@ def attach_self_shield(
     """Attach a module-authored self-shield payload to an ability entry.
 
     The payload shape mirrors the Eclipse item's ``self_shield_events``
-    breakdown receipt: the fight engine copies the list onto the
-    ability's damage-event rows (aligned by event ordinal), and the
-    participant ledger turns the first event's payload into a timed
-    self-shield at that event's timestamp.  Only abilities that emit
-    damage events can carry the payload (the ledger has no zero-damage
-    channel), so shield-only abilities stay on the ally-support scanner.
+    receipt: the engine copies the list onto the ability's damage-event
+    rows by ordinal, and the participant ledger grants a timed self-shield
+    at that event's timestamp.  Only an ability emitting damage events can
+    carry it, so a shield-only slot stays on the ally-support scanner.
+    ``actor_wide`` is the flag actor-wide heals carry -- one activation is
+    one shield, de-duplicated across enemy pairs in ``participant_timeline``
+    rather than by a per-module roster-index gate.
     """
     entry["self_shield_events"] = [
         {
             "amount": round(float(amount), 6),
             "duration": float(duration),
             "source": str(source),
+            "actor_wide": True,
         }
     ]
     if detail:
@@ -1344,6 +1378,7 @@ def stat_buff(
     damage_attr: str | None = None,
     dmg_type: str = "physical",
     couples: tuple[str, str] | None = None,
+    uptime_option: str | None = None,
 ) -> SlotParser:
     """BUFF-phase stat steroid (Vayne/Aatrox/Ambessa R pattern).
 
@@ -1371,6 +1406,14 @@ def stat_buff(
             value into ``ctx.stats`` under ``stats_key`` for a dependent
             slot listed later (Vayne R's Tumble cooldown reduction,
             read by Q). The key never leaves the parse context.
+        uptime_option: A 0..1 champion option scaling the buff, for a
+            steroid the champion only holds part of the fight — a zone he
+            has to stand in (Trundle W's Frozen Domain). The scaled value
+            is the buff's fight average, which for a bonus-attack-speed
+            steroid is exact: attack speed is linear in the bonus percent,
+            so ``AS(b x f)`` equals ``f`` seconds at ``AS(b)`` plus
+            ``1 - f`` at ``AS(0)``. None applies the buff for the whole
+            fight, the reading with no option to dial.
 
     Returns:
         A BUFF-phase slot parser.
@@ -1389,6 +1432,10 @@ def stat_buff(
         value = extract_value(ability, attr, rank, level=ctx.level)
         if mode == "percent_of":
             value = value / 100.0 * ctx.stat(percent_of)
+        uptime = 1.0
+        if uptime_option is not None:
+            uptime = min(max(float(ctx.option(uptime_option)), 0.0), 1.0)
+            value *= uptime
 
         damage = 0.0
         if damage_attr is not None:
@@ -1416,6 +1463,11 @@ def stat_buff(
             ),
         )
         entry["stat_buff"] = {stat: value}
+        if uptime_option is not None:
+            entry["detail"] = (
+                f"{attr} priced at {uptime:.0%} uptime ({value:g} applied "
+                "across the fight window)"
+            )
         return entry
 
     parse.phase = BUFF

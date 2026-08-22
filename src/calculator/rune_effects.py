@@ -6,11 +6,11 @@ templates) through typed accessors that raise, naming the rune and key, when
 the parse degraded. No literal fallbacks.
 
 This module is the public surface — resolve, validate, catalog, and the
-effect types every compiler produces. The compilers themselves live in two
-places: keystones here in ``_KEYSTONE_COMPILERS``, and one module per path
-under ``rune_paths``, each exporting its own ``COMPILERS``. :func:`resolve_rune`
-merges them into one vocabulary, so a minor rune and a keystone are the same
-kind of thing to everything downstream.
+effect types every compiler produces. Every compiler itself lives under
+``rune_paths``, each module exporting its own ``COMPILERS``: one per path for
+the minor runes, ``keystones`` for row 0 and ``shards`` for the stat rows.
+:func:`resolve_rune` merges them into one vocabulary, so a minor rune and a
+keystone are the same kind of thing to everything downstream.
 
 Only a rune with a compile function is modeled; selecting any other rune
 fails closed with a clear error, and :func:`rune_catalog` publishes the whole
@@ -546,6 +546,38 @@ def armed_by_option(
         return bool(_option_value(options, rune_name, key, default))
 
     return armed
+
+
+def stack_count_option(
+    rune_name: str,
+    key: str,
+    label: str,
+    disclosure: str,
+    ceiling_key: str = "max_stacks",
+) -> RuneOption:
+    """One rune's stack-count option, bounded by the ceiling its cache states.
+
+    Every stacking rune declares the same option shape — a count from zero to
+    the ceiling the rune itself names — and differs only in what a stack *is*.
+    *disclosure* says that, and the range sentence is composed here off the
+    cached ceiling, so the bound and the sentence describing it cannot drift.
+    ``ceiling_key`` is the cached key that states the ceiling: ``max_stacks``
+    for a rune that caps, the rune's own threshold key for one that does not.
+    """
+    ceiling = rune_effect_value(rune_name, ceiling_key)
+    if ceiling < 1.0:
+        raise KeyError(
+            f"RUNE_EFFECTS[{rune_name!r}] {ceiling_key} is {ceiling:g} and "
+            "bounds nothing — wiki parse degraded"
+        )
+    return RuneOption(
+        key=key,
+        label=label,
+        kind=RuneOptionKind.COUNT,
+        default=0.0,
+        bounds=(0.0, ceiling),
+        disclosure=f"{disclosure} The count runs 0 to {ceiling:g}, 0 by default.",
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1196,43 +1228,26 @@ class KeystoneDarkHarvestEffect:
         )
 
 
-class AmpCondition(Enum):
-    """When a conditional amplifier is live, in the cache's own spelling.
-
-    The values are what ``rune_parser`` records under
-    ``damage_amp_health_gate``, so a compiler reads the condition instead of
-    translating it — one fact, one spelling, no mapping table to drift.
-
-    Only the gates the ledger walk can *evaluate* are members. The cache also
-    records ``self_below`` (Last Stand's gate on the holder's own health),
-    and it is deliberately absent: the pair engine prices outgoing damage
-    and carries no holder-health track, so a compiler naming it fails here
-    rather than compiling into a walker branch that would book nothing. That
-    rune is a :class:`RuneFlatAmpEffect` instead, where the holder's health
-    is a declared option rather than a track the fight does not have.
-    """
-
-    TARGET_BELOW = "target_below"
-    TARGET_ABOVE = "target_above"
-
-
 @dataclass(frozen=True, slots=True)
 class RuneConditionalAmpEffect:
-    """A damage amplifier gated on a health share (Coup de Grace-class).
+    """A damage amplifier gated on the target's health (Coup de Grace-class).
 
     The engine walks its ordered damage ledger and amplifies exactly the
-    instances that land while the condition holds, so the row is the real
-    share of the fight the rune reached rather than a flat multiplier over
-    the total.
+    instances that land while the gate holds, so the row is the real share of
+    the fight the rune reached rather than a flat multiplier over the total.
+
+    **The gate and the ratio are not here.** They are the amp chain's
+    ``TARGET_HEALTH_GATE`` slot, declared as a ``BehaviorRule`` whose
+    ``LivePredicate`` names the threshold, the pool it reads and which side
+    arms — the same move First Strike and Press the Attack already made, and
+    for the same reason: one number with two homes is drift waiting to
+    happen. What is left is the rune's identity, which is what tells the
+    engine a slot on the page is asking for the slot on the chain.
     """
 
     rune_name: str
     breakdown_key: str
     display_name: str
-    condition: AmpCondition
-    health_ratio: float
-    amp_ratio: float
-    disclosures: tuple[str, ...] = ()
 
 
 #: The cast-order key of the ultimate slot — the one slot a rune's filter
@@ -1510,644 +1525,6 @@ def ratio_adaptive_type(
     return adaptive_type
 
 
-#: What a dedicated keystone publishes when a fight books it no row: the
-#: disposition, the reason that becomes the receipt, and any further half
-#: this engine refuses.  Their values are all sourced and compiled — this
-#: says only what *this* fight could not do with them, which is why it
-#: lives beside the compilers rather than in ``_NO_DAMAGE_KEYSTONES``.
-_UNPRICED_KEYSTONES: Mapping[str, tuple[Disposition, str, tuple[str, ...]]] = (
-    MappingProxyType(
-        {
-            "Glacial Augment": (
-                Disposition.STRUCTURAL_ZERO,
-                "its zones slow, and the damage reduction they apply protects "
-                "the holder's allies while explicitly excluding the holder",
-                (),
-            ),
-            "Stormraider's Surge": (
-                Disposition.STRUCTURAL_ZERO,
-                "it grants movement speed and slow resist, neither of which "
-                "the engine's damage model reads",
-                (
-                    "Stormraider's Surge's zero is exact only while the "
-                    "holder owns no Swiftmarch, whose passive converts "
-                    "movement speed into adaptive force "
-                    "(item_effects.swiftmarch_adaptive_force); that coupling "
-                    "is disclosed, not modeled.",
-                ),
-            ),
-            "Guardian": (
-                Disposition.WITHHELD,
-                "it shields the holder or a guarded ally against incoming "
-                "damage, and this fight priced no shield for it",
-                (),
-            ),
-            "Aftershock": (
-                Disposition.WITHHELD,
-                "its shockwave fires only after the holder immobilizes a "
-                "champion, and no reviewed crowd-control event landed in "
-                "this fight",
-                (
-                    "Aftershock's bonus resistances are withheld with it and "
-                    "are defensive besides: the pair engine prices outgoing "
-                    "damage.",
-                ),
-            ),
-            "Dark Harvest": (
-                Disposition.WITHHELD,
-                "its reap fires only against a champion below a share of "
-                "maximum health, and the target never fell below it in this "
-                "fight",
-                (
-                    "Dark Harvest's soul count is unknowable in one fight and "
-                    "is priced at the souls the request declares.",
-                ),
-            ),
-        }
-    )
-)
-
-
-def _unpriced_receipts(name: str) -> tuple[str, ...]:
-    """One keystone's no-row receipt, or none when it always books."""
-    declaration = _UNPRICED_KEYSTONES.get(name)
-    if declaration is None:
-        return ()
-    disposition, reason, disclosures = declaration
-    return zero_receipts(name, ZeroPolicy(disposition, reason), disclosures)
-
-
-def _compile_electrocute(entry: Mapping[str, Any]) -> RuneProcEffect:
-    """Compile Electrocute: 3 stacks in 3s strike for leveled adaptive damage."""
-    name = "Electrocute"
-    effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
-    top = RuneValues(name, entry)
-
-    def raw(inputs: DamageInputs) -> float:
-        stats = inputs.champion_stats
-        return (
-            at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + ap_ratio * stats.get("ability_power", 0.0)
-        )
-
-    return RuneProcEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        stacks_required=int(effects.number("stacks_required")),
-        stack_window_seconds=effects.number("stack_window_seconds"),
-        cooldown_seconds=top.number("cooldown"),
-        proc_delay_seconds=effects.number("proc_delay_seconds"),
-        raw_damage=raw,
-        damage_type=ratio_adaptive_type(bonus_ad_ratio, ap_ratio),
-    )
-
-
-def _compile_first_strike(entry: Mapping[str, Any]) -> RuneWindowAmpEffect:
-    """Compile First Strike: 7% bonus true damage in a 3s opening window."""
-    name = "First Strike"
-    effects = RuneValues(name, entry.get("effects", {}))
-    melee_ratio, ranged_ratio = required_pair(name, effects, "gold_conversion_ratios")
-    return RuneWindowAmpEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        activation_gold=effects.number("flat_gold"),
-        gold_conversion_melee=melee_ratio,
-        gold_conversion_ranged=ranged_ratio,
-    )
-
-
-def _compile_press_the_attack(entry: Mapping[str, Any]) -> RuneProcAmpEffect:
-    """Compile Press the Attack: 3 autos proc leveled damage plus a lasting amp."""
-    name = "Press the Attack"
-    effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
-    top = RuneValues(name, entry)
-
-    def raw(inputs: DamageInputs) -> float:
-        return at_level(base_by_level, inputs.level)
-
-    return RuneProcAmpEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        stacks_required=int(effects.number("max_stacks")),
-        stack_duration_seconds=effects.number("stack_duration_seconds"),
-        cooldown_seconds=top.number("cooldown"),
-        raw_damage=raw,
-        damage_type=pure_adaptive_type,
-    )
-
-
-# Modeling assumption, not a wiki value: how far the average comet flies
-# before landing. The wiki's damage table spans 0-750 units; 375 is a
-# mid-range poke distance and sits exactly halfway up the table (+50%).
-ARCANE_COMET_ASSUMED_TRAVEL_DISTANCE = 375.0
-
-
-def _distance_amp_ratio(
-    name: str, scaling: Mapping[str, Any], distance: float
-) -> float:
-    """Interpolate a distance-keyed percent table at one travel distance.
-
-    The table's values are evenly spaced across ``distance_range``;
-    distances beyond the span clamp to its ends.
-    """
-    values = [float(value) for value in scaling["values"]]
-    span_start, span_end = (float(value) for value in scaling["distance_range"])
-    if len(values) < 2 or span_end <= span_start:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] distance_scaling is degenerate — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    fraction = min(1.0, max(0.0, (distance - span_start) / (span_end - span_start)))
-    position = fraction * (len(values) - 1)
-    lower = int(position)
-    upper = min(lower + 1, len(values) - 1)
-    percent = values[lower] + (values[upper] - values[lower]) * (position - lower)
-    return percent / 100.0
-
-
-def _certify_comet_leveling_order(
-    name: str,
-    effects: "RuneValues",
-    base_by_level: list[float],
-    scaling: Mapping[str, Any],
-) -> None:
-    """Certify leveling[0] is the minimum-damage table, not the max-range one.
-
-    The comet is the first rune with two level tables, chosen by sentence
-    order — a reworded wiki description leading with the max-range table
-    would silently double every proc. The wiki prices maximum-range damage
-    at exactly (1 + full amp) × minimum, which also certifies folding one
-    multiplier over base and ratios together.
-    """
-    leveling = effects.value("leveling")
-    span_end = float(scaling["distance_range"][1])
-    full_amp = _distance_amp_ratio(name, scaling, span_end)
-    max_by_level = [float(value) for value in leveling[1]] if len(leveling) > 1 else []
-    if len(max_by_level) != len(base_by_level) or any(
-        abs(max_value - base_value * (1.0 + full_amp)) > 1e-6
-        for base_value, max_value in zip(base_by_level, max_by_level)
-    ):
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables are not minimum then "
-            "maximum-range damage (max = min × (1 + full amp)) — wiki parse "
-            "degraded or description reordered; check data/runes.json"
-        )
-
-
-def _compile_arcane_comet(entry: Mapping[str, Any]) -> RuneAbilityProcEffect:
-    """Compile Arcane Comet: ability casts hurl a leveled adaptive comet.
-
-    The wiki prices the comet as a minimum-damage formula amplified by
-    travel distance (up to +100% at 750 units); base and ratios grow
-    together, so one multiplier at the assumed distance covers both.
-    """
-    name = "Arcane Comet"
-    effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
-    scaling = effects.value("distance_scaling")
-    amp_ratio = _distance_amp_ratio(name, scaling, ARCANE_COMET_ASSUMED_TRAVEL_DISTANCE)
-    _certify_comet_leveling_order(name, effects, base_by_level, scaling)
-
-    def raw(inputs: DamageInputs) -> float:
-        stats = inputs.champion_stats
-        return (
-            at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * stats.get("bonus_attack_damage", 0.0)
-            + ap_ratio * stats.get("ability_power", 0.0)
-        ) * (1.0 + amp_ratio)
-
-    return RuneAbilityProcEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        cooldown_by_level=required_cooldown_by_level(name, entry),
-        proc_delay_seconds=effects.number("proc_delay_seconds"),
-        assumed_travel_distance=ARCANE_COMET_ASSUMED_TRAVEL_DISTANCE,
-        distance_amp_ratio=amp_ratio,
-        raw_damage=raw,
-        damage_type=ratio_adaptive_type(bonus_ad_ratio, ap_ratio),
-    )
-
-
-def _compile_summon_aery(entry: Mapping[str, Any]) -> KeystoneAeryEffect:
-    """Compile Summon Aery's sourced damage and shielding tables."""
-    name = "Summon Aery"
-    effects = RuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling must contain damage and shield "
-            "tables — wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    damage_by_level = tuple(float(value) for value in leveling[0])
-    shield_by_level = tuple(float(value) for value in leveling[1])
-    if len(damage_by_level) < 20 or len(shield_by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
-
-    return KeystoneAeryEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        damage_by_level=damage_by_level,
-        shield_by_level=shield_by_level,
-        bonus_ad_ratio=bonus_ad_ratio,
-        ap_ratio=ap_ratio,
-        damage_flight_seconds=effects.number("damage_flight_seconds"),
-        shield_flight_seconds=effects.number("shield_flight_seconds"),
-        shield_duration_seconds=effects.number("shield_duration_seconds"),
-        linger_seconds=effects.number("linger_seconds"),
-        damage_type=ratio_adaptive_type(bonus_ad_ratio, ap_ratio),
-    )
-
-
-def _compile_guardian(entry: Mapping[str, Any]) -> KeystoneGuardianEffect:
-    """Compile Guardian's threshold, paired shield, and cooldown tables."""
-    name = "Guardian"
-    effects = RuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling must contain threshold and shield "
-            "tables — wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    threshold_by_level = tuple(float(value) for value in leveling[0])
-    shield_by_level = tuple(float(value) for value in leveling[1])
-    if len(threshold_by_level) < 20 or len(shield_by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    return KeystoneGuardianEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        threshold_by_level=threshold_by_level,
-        shield_by_level=shield_by_level,
-        cooldown_by_level=required_cooldown_by_level(name, entry),
-        ap_ratio=effects.number("ap_ratio"),
-        bonus_health_ratio=effects.number("bonus_health_ratio"),
-        trigger_window_seconds=effects.number("trigger_window_seconds"),
-        unpriced_receipts=_unpriced_receipts(name),
-        shield_duration_seconds=effects.number("shield_duration_seconds"),
-    )
-
-
-def _compile_aftershock(entry: Mapping[str, Any]) -> KeystoneAftershockEffect:
-    """Compile Aftershock's resistance cap and delayed shockwave tables."""
-    name = "Aftershock"
-    effects = RuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling must contain resistance cap and "
-            "shockwave tables — wiki parse degraded; check rune_parser and "
-            "data/runes.json"
-        )
-    cap_by_level = tuple(float(value) for value in leveling[0])
-    shockwave_by_level = tuple(float(value) for value in leveling[1])
-    if len(cap_by_level) < 20 or len(shockwave_by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    return KeystoneAftershockEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        resistance_cap_by_level=cap_by_level,
-        shockwave_damage_by_level=shockwave_by_level,
-        cooldown_seconds=RuneValues(name, entry).number("cooldown"),
-        flat_armor=effects.number("flat_armor"),
-        flat_magic_resistance=effects.number("flat_magic_resistance"),
-        bonus_armor_ratio=effects.number("bonus_armor_ratio"),
-        bonus_magic_resistance_ratio=effects.number("bonus_magic_resistance_ratio"),
-        bonus_health_ratio=effects.number("bonus_health_ratio"),
-        duration_seconds=effects.number("resistance_duration_seconds"),
-        shockwave_radius=effects.number("shockwave_radius"),
-        unpriced_receipts=_unpriced_receipts(name),
-    )
-
-
-def _compile_grasp(entry: Mapping[str, Any]) -> KeystoneGraspEffect:
-    """Compile Grasp's timed stacks and maximum-health attack rider."""
-    name = "Grasp of the Undying"
-    effects = RuneValues(name, entry.get("effects", {}))
-    return KeystoneGraspEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        damage_melee_ranged_ratios=required_pair(
-            name, effects, "grasp_damage_melee_ranged_ratios"
-        ),
-        heal_melee_ranged_ratios=required_pair(
-            name, effects, "grasp_heal_melee_ranged_ratios"
-        ),
-        bonus_health_melee_ranged=required_pair(
-            name, effects, "grasp_bonus_health_melee_ranged"
-        ),
-        stack_cadence_seconds=effects.number("combat_stack_cadence_seconds"),
-        stack_generation_seconds=effects.number("combat_stack_generation_seconds"),
-        max_stacks=int(effects.number("max_stacks")),
-        ready_window_seconds=effects.number("ready_window_seconds"),
-    )
-
-
-def _compile_hail_of_blades(entry: Mapping[str, Any]) -> KeystoneHailOfBladesEffect:
-    """Compile Hail of Blades' sourced temporary swing window."""
-    name = "Hail of Blades"
-    effects = RuneValues(name, entry.get("effects", {}))
-    return KeystoneHailOfBladesEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        damage_by_level=tuple(required_leveling(name, effects)),
-        bonus_ad_ratio=effects.number("bonus_ad_ratio"),
-        ap_ratio=effects.number("ap_ratio"),
-        bonus_attack_speed_melee_ranged=required_pair(
-            name, effects, "hail_bonus_attack_speed_melee_ranged"
-        ),
-        initial_stacks=int(effects.number("hail_initial_stacks")),
-        stack_duration_seconds=effects.number("hail_stack_duration_seconds"),
-        reset_stack_limit=int(effects.number("hail_reset_stack_limit")),
-        cooldown_seconds=RuneValues(name, entry).number("cooldown"),
-    )
-
-
-def _compile_lethal_tempo(entry: Mapping[str, Any]) -> KeystoneLethalTempoEffect:
-    """Compile Lethal Tempo's stacked attack schedule and bolt tables."""
-    name = "Lethal Tempo"
-    effects = RuneValues(name, entry.get("effects", {}))
-
-    def level_table(key: str) -> tuple[float, ...]:
-        values = effects.value(key)
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] {key!r} must cover 20 levels — "
-                "wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        return tuple(float(value) for value in values)
-
-    def adaptive_type(stats: Mapping[str, float]) -> str:
-        return (
-            "physical"
-            if stats.get("bonus_attack_damage", 0.0) > stats.get("ability_power", 0.0)
-            else "magic"
-        )
-
-    return KeystoneLethalTempoEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        bolt_damage_melee_by_level=level_table(
-            "lethal_tempo_bolt_damage_melee_by_level"
-        ),
-        bolt_damage_ranged_by_level=level_table(
-            "lethal_tempo_bolt_damage_ranged_by_level"
-        ),
-        attack_speed_percent_melee_ranged=required_pair(
-            name, effects, "lethal_tempo_attack_speed_percent_melee_ranged"
-        ),
-        bolt_damage_increase_ratio_melee_ranged=required_pair(
-            name, effects, "lethal_tempo_bolt_damage_increase_ratio_melee_ranged"
-        ),
-        max_stacks=int(effects.number("max_stacks")),
-        stack_duration_seconds=effects.number("lethal_tempo_stack_duration_seconds"),
-        expiry_step_seconds=effects.number("lethal_tempo_expiry_step_seconds"),
-        damage_type=adaptive_type,
-    )
-
-
-def _compile_glacial(entry: Mapping[str, Any]) -> KeystoneGlacialEffect:
-    """Compile Glacial Augment's sourced zone and reduction values."""
-    name = "Glacial Augment"
-    effects = RuneValues(name, entry.get("effects", {}))
-    return KeystoneGlacialEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        cooldown_seconds=RuneValues(name, entry).number("cooldown"),
-        ray_count=int(effects.number("glacial_ray_count")),
-        zone_radius_units=effects.number("glacial_zone_radius_units"),
-        zone_width_units=effects.number("glacial_zone_width_units"),
-        zone_base_duration_seconds=effects.number("glacial_zone_base_duration_seconds"),
-        zone_duration_cc_ratio=effects.number("glacial_zone_duration_cc_ratio"),
-        slow_base_ratio=effects.number("glacial_slow_base_ratio"),
-        slow_bonus_ad_ratio_per_100=effects.number(
-            "glacial_slow_bonus_ad_ratio_per_100"
-        ),
-        slow_ap_ratio_per_100=effects.number("glacial_slow_ap_ratio_per_100"),
-        slow_heal_shield_ratio_per_10=effects.number(
-            "glacial_slow_heal_shield_ratio_per_10"
-        ),
-        damage_reduction_ratio=effects.number("glacial_damage_reduction_ratio"),
-        unpriced_receipts=_unpriced_receipts(name),
-    )
-
-
-def _compile_stormraider(entry: Mapping[str, Any]) -> KeystoneStormraiderEffect:
-    """Compile Stormraider's sourced threshold and movement burst."""
-    name = "Stormraider's Surge"
-    effects = RuneValues(name, entry.get("effects", {}))
-    return KeystoneStormraiderEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        cooldown_by_level=required_cooldown_by_level(name, entry),
-        damage_threshold_ratio=effects.number("stormraider_damage_threshold_ratio"),
-        damage_window_seconds=effects.number("stormraider_damage_window_seconds"),
-        bonus_move_speed_melee_ranged=required_pair(
-            name, effects, "stormraider_bonus_move_speed_melee_ranged"
-        ),
-        slow_resist_ratio=effects.number("stormraider_slow_resist_ratio"),
-        unpriced_receipts=_unpriced_receipts(name),
-        duration_seconds=effects.number("stormraider_duration_seconds"),
-    )
-
-
-def _compile_fleet(entry: Mapping[str, Any]) -> KeystoneFleetEffect:
-    """Compile Fleet Footwork's sourced heal and Energized window."""
-    name = "Fleet Footwork"
-    effects = RuneValues(name, entry.get("effects", {}))
-
-    def level_table(key: str) -> tuple[float, ...]:
-        values = effects.value(key)
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] {key!r} must cover 20 levels — "
-                "wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        return tuple(float(value) for value in values)
-
-    return KeystoneFleetEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        heal_melee_by_level=level_table("fleet_heal_melee_by_level"),
-        heal_ranged_by_level=level_table("fleet_heal_ranged_by_level"),
-        bonus_ad_ratio_melee_ranged=required_pair(
-            name, effects, "fleet_bonus_ad_ratio_melee_ranged"
-        ),
-        ap_ratio_melee_ranged=required_pair(
-            name, effects, "fleet_ap_ratio_melee_ranged"
-        ),
-        bonus_move_speed_melee_ranged=required_pair(
-            name, effects, "fleet_bonus_move_speed_melee_ranged"
-        ),
-        minion_heal_effectiveness=effects.number("fleet_minion_heal_effectiveness"),
-        charge_cap=int(effects.number("fleet_charge_cap")),
-        move_speed_duration_seconds=effects.number("fleet_move_speed_duration_seconds"),
-    )
-
-
-def _compile_conqueror(entry: Mapping[str, Any]) -> KeystoneConquerorEffect:
-    """Compile Conqueror's adaptive-force stack and healing receipts."""
-    name = "Conqueror"
-    effects = RuneValues(name, entry.get("effects", {}))
-
-    def level_table(key: str) -> tuple[float, ...]:
-        values = effects.value(key)
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] {key!r} must cover 20 levels — "
-                "wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        return tuple(float(value) for value in values)
-
-    return KeystoneConquerorEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        adaptive_force_by_level=level_table("conqueror_adaptive_force_by_level"),
-        adaptive_force_max_by_level=level_table(
-            "conqueror_adaptive_force_max_by_level"
-        ),
-        max_stacks=int(effects.number("max_stacks")),
-        stacks_per_application=int(effects.number("conqueror_stacks_per_application")),
-        stack_duration_seconds=effects.number("conqueror_stack_duration_seconds"),
-        cast_instance_interval_seconds=effects.number(
-            "conqueror_cast_instance_interval_seconds"
-        ),
-        heal_melee_ranged_ratios=required_pair(
-            name, effects, "conqueror_heal_melee_ranged_ratios"
-        ),
-    )
-
-
-def _compile_deathfire(entry: Mapping[str, Any]) -> KeystoneDeathfireEffect:
-    """Compile Deathfire Touch's typed burn tables and durations."""
-    name = "Deathfire Touch"
-    effects = RuneValues(name, entry.get("effects", {}))
-
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] 'leveling' must contain base and amplified "
-            "20-level burn tables — wiki parse degraded; check rune_parser and "
-            "data/runes.json"
-        )
-    tables: list[tuple[float, ...]] = []
-    for index, values in enumerate(leveling[:2]):
-        if not isinstance(values, list) or len(values) < 20:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] 'leveling[{index}]' must cover 20 levels "
-                "— wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        tables.append(tuple(float(value) for value in values))
-
-    duration_values = effects.value("deathfire_duration_seconds")
-    if not isinstance(duration_values, Mapping):
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] is missing typed burn duration categories "
-            "— wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    required_categories = (
-        "spell_damage",
-        "area_damage",
-        "persistent_damage",
-        "persistent_area_damage",
-        "pet_damage",
-    )
-    durations: dict[str, float] = {}
-    for category in required_categories:
-        if category not in duration_values:
-            raise KeyError(
-                f"RUNE_EFFECTS[{name!r}] is missing burn duration {category!r} "
-                "— wiki parse degraded; check rune_parser and data/runes.json"
-            )
-        durations[category] = float(duration_values[category])
-
-    return KeystoneDeathfireEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        damage_by_level=tables[0],
-        amplified_damage_by_level=tables[1],
-        bonus_ad_ratios_by_state=required_pair(
-            name, effects, "deathfire_bonus_ad_ratios_by_state"
-        ),
-        ap_ratios_by_state=required_pair(name, effects, "deathfire_ap_ratios_by_state"),
-        tick_interval_seconds=effects.number("deathfire_tick_interval_seconds"),
-        amp_delay_seconds=effects.number("deathfire_amp_delay_seconds"),
-        amp_ratio=effects.number("deathfire_amp_ratio"),
-        duration_by_category=durations,
-    )
-
-
-def _compile_dark_harvest(entry: Mapping[str, Any]) -> KeystoneDarkHarvestEffect:
-    """Compile Dark Harvest's sourced threshold and Soul damage formula."""
-    name = "Dark Harvest"
-    effects = RuneValues(name, entry.get("effects", {}))
-    top = RuneValues(name, entry)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
-    return KeystoneDarkHarvestEffect(
-        rune_name=name,
-        breakdown_key=breakdown_key(name),
-        display_name=display_name(name),
-        cooldown_seconds=top.number("cooldown"),
-        health_threshold_ratio=effects.number("health_threshold_ratio"),
-        base_damage=effects.number("base_damage"),
-        soul_damage=effects.number("soul_damage"),
-        bonus_ad_ratio=bonus_ad_ratio,
-        ap_ratio=ap_ratio,
-        proc_delay_seconds=effects.number("proc_delay_seconds"),
-        takedown_reset_seconds=effects.number("takedown_reset_seconds"),
-        unpriced_receipts=_unpriced_receipts(name),
-        damage_type=ratio_adaptive_type(bonus_ad_ratio, ap_ratio),
-    )
-
-
-# The keystones that book no damage: disposition, the reason that becomes
-# the receipt, and any further half this engine refuses. A table rather than
-# a compiler each, because these differ only in their words — and a
-# difference that is only words belongs in a table beside its reader, which
-# is what ``_KEYSTONE_COMPILERS`` itself is.
-_NO_DAMAGE_KEYSTONES: Mapping[str, tuple[Disposition, str, tuple[str, ...]]] = {
-    "Unsealed Spellbook": (
-        Disposition.STRUCTURAL_ZERO,
-        "it swaps summoner spells out of combat: the holder picks the "
-        "equipped and swapped spells, each summoner spell has its own "
-        "effect, and no source states a combat number for the rune itself",
-        (),
-    ),
-}
-
-
 def no_damage_compiler(
     name: str,
     disposition: Disposition,
@@ -2173,47 +1550,25 @@ def no_damage_compiler(
     return compile_declared
 
 
-# The compiled keystone roster. Every name in ``data/runes.json`` not listed
-# here fails closed in :func:`resolve_rune` with a named reason.
-_KEYSTONE_COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
-    "Electrocute": _compile_electrocute,
-    "First Strike": _compile_first_strike,
-    "Press the Attack": _compile_press_the_attack,
-    "Arcane Comet": _compile_arcane_comet,
-    "Summon Aery": _compile_summon_aery,
-    "Guardian": _compile_guardian,
-    "Aftershock": _compile_aftershock,
-    "Grasp of the Undying": _compile_grasp,
-    "Hail of Blades": _compile_hail_of_blades,
-    "Lethal Tempo": _compile_lethal_tempo,
-    "Glacial Augment": _compile_glacial,
-    "Stormraider's Surge": _compile_stormraider,
-    "Fleet Footwork": _compile_fleet,
-    "Conqueror": _compile_conqueror,
-    "Deathfire Touch": _compile_deathfire,
-    "Dark Harvest": _compile_dark_harvest,
-    **{
-        name: no_damage_compiler(name, *declaration)
-        for name, declaration in _NO_DAMAGE_KEYSTONES.items()
-    },
-}
-
-
 @cache
 def _compilers() -> Mapping[str, Callable[[Mapping[str, Any]], RuneEffect]]:
-    """Every rune compiler: the keystones here, the minor runes per path.
+    """Every rune compiler: the keystones in one table, the minors per path.
 
-    Built once, on first use rather than at import, because the path modules
-    import this one for the vocabulary they compile into. The result is
-    compiler *functions*, which no data refresh can invalidate — the numbers
-    they read are looked up when a rune resolves, not when it registers.
+    Built once, on first use rather than at import, because the compiler
+    modules import this one for the vocabulary they compile into. The result
+    is compiler *functions*, which no data refresh can invalidate — the
+    numbers they read are looked up when a rune resolves, not when it
+    registers.
     """
     # Local import: rune_paths compiles into this module's vocabulary, so it
     # cannot be imported while this module is still executing.
-    from .rune_paths import path_compilers  # pylint: disable=import-outside-toplevel
+    from .rune_paths import (  # pylint: disable=import-outside-toplevel
+        keystone_compilers,
+        path_compilers,
+    )
 
     merged: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = dict(
-        _KEYSTONE_COMPILERS
+        keystone_compilers()
     )
     for name, compiler in path_compilers().items():
         if name in merged:
@@ -2718,33 +2073,51 @@ def resolve_stat_grants(
     return RuneStatGrants(**totals)
 
 
-def rune_page_stat_grants(
-    page: RunePage,
-    *,
-    level: int,
-    is_melee: bool,
-    bonus_attack_damage: float,
-    ability_power: float,
-    item_stat_types: int = 0,
-) -> RuneStatGrants:
-    """Compile one page and total the stats it grants, in one call.
+@dataclass(frozen=True, slots=True)
+class CompiledRunePage:
+    """One validated page compiled once, ready to be totalled.
 
-    The door ``stats.py`` uses: it holds the build's bonus attack damage and
-    ability power (which decide every adaptive grant), the count of stat
-    types the build's items grant (which is Jack Of All Trades' whole stack
-    rule), and nothing else about runes.
+    The stat fold asks the page two questions at two points: what movement
+    speed it grants, before an item converts the build's total movement
+    speed into adaptive force (Swiftmarch), and everything else after those
+    conversions have decided which of bonus attack damage and ability power
+    is larger. Compiling once and totalling twice is what makes one request
+    see one rune page.
     """
-    return resolve_stat_grants(
-        resolve_rune_page(page),
-        RuneStatContext(
-            level=level,
-            is_melee=is_melee,
-            bonus_attack_damage=bonus_attack_damage,
-            ability_power=ability_power,
-            options=page.options,
-            item_stat_types=item_stat_types,
-        ),
-    )
+
+    effects: tuple[RuneEffect, ...] = ()
+    options: Mapping[str, Mapping[str, float]] = MappingProxyType({})
+
+    def grants(
+        self,
+        *,
+        level: int,
+        is_melee: bool,
+        bonus_attack_damage: float,
+        ability_power: float,
+        item_stat_types: int = 0,
+    ) -> RuneStatGrants:
+        """Total this page against one build state."""
+        return resolve_stat_grants(
+            self.effects,
+            RuneStatContext(
+                level=level,
+                is_melee=is_melee,
+                bonus_attack_damage=bonus_attack_damage,
+                ability_power=ability_power,
+                options=self.options,
+                item_stat_types=item_stat_types,
+            ),
+        )
+
+
+# The door ``stats.py`` uses: it knows the build's stats and nothing else
+# about runes.
+def compile_rune_page(page: RunePage | None) -> CompiledRunePage:
+    """Compile a validated page; ``None`` grants nothing."""
+    if page is None:
+        return CompiledRunePage()
+    return CompiledRunePage(resolve_rune_page(page), page.options)
 
 
 def rune_catalog() -> list[dict[str, Any]]:

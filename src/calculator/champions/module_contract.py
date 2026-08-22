@@ -18,6 +18,7 @@ from ..cast_dependency import (
     validate_cast_dependencies,
     validate_cast_order_declaration,
 )
+from ..stat_conversion import BonusHealthConversion
 from .engine import CC_PER_PART
 
 REQUIRED_CHAMPION_SLOTS = ("P", "Q", "W", "E", "R")
@@ -108,6 +109,8 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     packet_sha256: str | None = None
     cast_dependencies: tuple[CastDependency, ...] = ()
     cc_kinds: dict[str, str] = field(default_factory=dict)
+    ultimate_recasts: bool = False
+    stat_conversion: BonusHealthConversion | None = None
 
 
 def _present(carriers: tuple[tuple[str, Any, str], ...]) -> list[tuple[str, Any]]:
@@ -120,6 +123,31 @@ def _present(carriers: tuple[tuple[str, Any, str], ...]) -> list[tuple[str, Any]
         for label, carrier, attribute in carriers
         if getattr(carrier, attribute, None)
     ]
+
+
+# A kit that rewrites a stat items grant it declares that at one name.
+# Optional and rare: only a passive that DENIES a stat outright needs it,
+# because a stat the champion keeps needs no declaration at all.
+def _stat_conversion(module: ModuleType) -> BonusHealthConversion | None:
+    """The module's validated ``MODULE_STAT_CONVERSION``, or ``None``."""
+    declared = getattr(module, "MODULE_STAT_CONVERSION", None)
+    if declared is None:
+        return None
+    if not isinstance(declared, BonusHealthConversion):
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_STAT_CONVERSION must be a "
+            "stat_conversion.BonusHealthConversion"
+        )
+    if not declared.source.strip():
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_STAT_CONVERSION must name its source"
+        )
+    if not 0.0 < declared.attack_damage_ratio < 1.0:
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_STAT_CONVERSION attack_damage_ratio "
+            f"{declared.attack_damage_ratio!r} is not a share of the denied health"
+        )
+    return declared
 
 
 def _agreeing(module: ModuleType, declared: list[tuple[str, Any]], what: str) -> Any:
@@ -413,6 +441,31 @@ def _coverage_channels(
     return channels
 
 
+# The scheduler casts every ultimate exactly once whatever its cooldown — the
+# safe reading for a form, a stance, a charge pool or an escalating resource
+# cost the engine does not simulate, and the reason ultimate haste can move no
+# number at all.  ``ULTIMATE_RECASTS = True`` is a module's review statement
+# that its R is an ordinary repeatable cast gated only by its cooldown;
+# absence is the conservative answer, so silence keeps the one-cast rule.
+def _ultimate_recasts(module: ModuleType, slots: dict[str, Any]) -> bool:
+    """Whether the timed scheduler may recast this kit's R on its cooldown.
+
+    Raises:
+        ChampionModuleContractError: The declaration is not a bool, or a
+            module with no R slot claims its ultimate recasts.
+    """
+    declared = getattr(module, "ULTIMATE_RECASTS", False)
+    if not isinstance(declared, bool):
+        raise ChampionModuleContractError(
+            f"{module.__name__} ULTIMATE_RECASTS must be a bool"
+        )
+    if declared and "R" not in slots:
+        raise ChampionModuleContractError(
+            f"{module.__name__} certifies ULTIMATE_RECASTS but emits no R slot"
+        )
+    return declared
+
+
 def _require_list(module: ModuleType, field_name: str) -> list[Any]:
     value = getattr(module, field_name, None)
     if not isinstance(value, list):
@@ -485,6 +538,7 @@ def contract_from_module(
     packet_spec, packet_sha256 = _packet_declaration(module, parser, slots)
     cast_dependencies = _cast_dependencies(module, parser, slots)
     cc_kinds = _module_cc(module, parser, slots)
+    stat_conversion = _stat_conversion(module)
 
     return ChampionModuleContract(
         name=name,
@@ -501,4 +555,6 @@ def contract_from_module(
         packet_sha256=packet_sha256,
         cast_dependencies=cast_dependencies,
         cc_kinds=cc_kinds,
+        ultimate_recasts=_ultimate_recasts(module, slots),
+        stat_conversion=stat_conversion,
     )

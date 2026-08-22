@@ -248,7 +248,7 @@ def _build_state_uncached(
         "permanent_bonus_health_events": [],
         "healing_reduction_until": 0.0,
         "healing_reduction_factor": 1.0,
-        "healing_reduction_sources": set(),
+        "healing_reduction_window_sources": set(),
         "healing_reduction_events": [],
         # Serpent's Fang venom: shields the target gains are cut by the
         # sourced fraction while a venom window is active.  The factor is

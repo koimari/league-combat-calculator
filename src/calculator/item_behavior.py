@@ -653,21 +653,22 @@ class Typing:
 
 
 class AmpChainSlot(Enum):
-    """The seven ordered positions of the damage-amplifier chain.
+    """The eight ordered positions of the damage-amplifier chain.
 
     Amplification is not commutative: each slot multiplies a total the
     slots before it already moved, so the order *is* part of every mixed
     build's number.  Today that order is an accident of the call sequence in
-    ``damage.py`` and nothing stops a refactor changing it.  Naming the seven
+    ``damage.py`` and nothing stops a refactor changing it.  Naming the
     positions makes the order a declaration, and
     :func:`chain_rank` is the only place a rule's ``lane_chain_rank`` comes
     from.
 
     A slot is a *position*, not a mechanic: several mechanics share
     ``WHOLE_TOTAL``, which is the one slot whose occupants are additive among
-    themselves before the chain multiplies.  These seven are also **not**
-    Phase 4's seven authority moves — the two sets overlap and neither
-    contains the other.
+    themselves before the chain multiplies, and ``TARGET_HEALTH_GATE`` holds
+    the rune page's two target-health amplifiers, of which a legal page can
+    select at most one.  These are also **not** Phase 4's seven authority
+    moves — the two sets overlap and neither contains the other.
     """
 
     CINDERBLOOM = "cinderbloom"
@@ -677,6 +678,7 @@ class AmpChainSlot(Enum):
     WHOLE_TOTAL = "whole_total"
     POST_IMMOBILIZE = "post_immobilize"
     HYPERSHOT = "hypershot"
+    TARGET_HEALTH_GATE = "target_health_gate"
 
 
 # The compiled sequence, frozen.  Declared as its own tuple rather than
@@ -691,6 +693,7 @@ AMP_CHAIN_ORDER: tuple[AmpChainSlot, ...] = (
     AmpChainSlot.WHOLE_TOTAL,
     AmpChainSlot.POST_IMMOBILIZE,
     AmpChainSlot.HYPERSHOT,
+    AmpChainSlot.TARGET_HEALTH_GATE,
 )
 
 
@@ -1297,7 +1300,7 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
     One field per independent question the amp chain asks; collapsing any
     two of them is what let a pair-side preview and a coupled number both
     call themselves the answer.  ``lane_chain_rank`` is an
-    explicit integer: the seven chain slots are ordered, nothing in the
+    explicit integer: the chain slots are ordered, nothing in the
     engine stops a refactor reordering them, and every mixed build's number
     moves when they do.  It is :func:`chain_rank` of the rule's
     :class:`AmpChainSlot` and is validated against the chain's length.
@@ -1319,7 +1322,7 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
 class PartAmpRule:  # pylint: disable=too-many-instance-attributes
     """An amplifier that multiplies each part it prices, not the fight's total.
 
-    The seven :class:`AmpChainSlot` positions all act on one running total,
+    Every :class:`AmpChainSlot` position acts on one running total,
     in an order that is part of every mixed build's number.  Two registry
     schemas are not in that chain at all: Actualizer amplifies each ability's
     own damage where the rotation prices it, and Hexoptics C44 amplifies each

@@ -69,6 +69,7 @@ import pytest
 
 import src.app as app_module
 import src.calculator.item_effects as item_effects_module
+from tests.app_config import app_config
 from src.calculator.item_coverage import ATTACKER_LANES
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
@@ -626,11 +627,7 @@ def test_app_item_picker_and_calculate_stay_green():
     selectable, a Doran's Blade fight still resolves, and an API fight with
     Doran's Helm deals exactly the champion-only total (zero Helping Hand
     contribution through the app path)."""
-    previous_testing = app_module.app.config.get("TESTING")
-    previous_rate = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["TESTING"] = True
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    try:
+    with app_config(RATE_LIMIT_ENABLED=False):
         client = app_module.app.test_client()
         names = {item["name"] for item in client.get("/api/items").get_json()}
 
@@ -656,9 +653,6 @@ def test_app_item_picker_and_calculate_stay_green():
 
         assert _total([HELM]) == pytest.approx(_total([]))
         assert _total(["Doran's Blade"]) > 0.0
-    finally:
-        app_module.app.config["TESTING"] = previous_testing
-        app_module.app.config["RATE_LIMIT_ENABLED"] = previous_rate
 
 
 # ---------------------------------------------------------------------------
@@ -669,15 +663,8 @@ def test_app_item_picker_and_calculate_stay_green():
 @pytest.fixture(name="api_client")
 def _api_client():
     """A rate-limit-free test client for the public calculate endpoint."""
-    previous_testing = app_module.app.config.get("TESTING")
-    previous_rate = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["TESTING"] = True
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    try:
+    with app_config(RATE_LIMIT_ENABLED=False):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous_testing
-        app_module.app.config["RATE_LIMIT_ENABLED"] = previous_rate
 
 
 def _calculate(client, **extra):

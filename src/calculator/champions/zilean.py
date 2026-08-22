@@ -28,7 +28,15 @@ from .inputs import bool_option, champion_stat
 from .packet_module import build_packet_module
 
 from ..champions.skill_orders import get_ability_rank
-from .slotlib import with_control, with_control_event
+from ..data_fetcher import get_champion
+from .slotlib import (
+    build_stats_context,
+    extract_cooldown,
+    extract_named,
+    find_named_leveling,
+    with_control,
+    with_control_event,
+)
 from .module_contract import coverage
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
@@ -126,29 +134,43 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-# E8d: sourced Chronoshift revive values.  Cached R leveling (data/
-# champions.json, Zilean R Chronoshift) Heal row: 600 / 850 / 1100 (+ 200% AP)
-# by R rank; prose: "If the target takes fatal damage within the duration,
-# they enter resurrection for 3 seconds ... Afterwards, they revive while
-# being healed."  Cooldown is 120 / 90 / 60 by rank.  The engine's revive
-# state transition consumes ``StartingDefenses.revive_*`` fields; the shared
-# defense resolver wires these per champion.
+# E8d: sourced Chronoshift revive values.  The cached R leveling row
+# ``Heal`` (600 / 850 / 1100 + 200% AP by rank) and the cached R cooldown
+# row (120 / 90 / 60) are read below rather than copied; only the
+# resurrection window is prose, from the same effect's description: "If the
+# target takes fatal damage within the duration, they enter resurrection for
+# 3 seconds ... Afterwards, they revive while being healed."  The engine's
+# revive state transition consumes ``StartingDefenses.revive_*`` fields; the
+# shared defense resolver wires these per champion.
 REVIVE_DELAY_SECONDS = 3.0
-_REVIVE_HEAL_BASE = (600.0, 850.0, 1100.0)
-_REVIVE_HEAL_AP_RATIO = 2.0  # "+ 200% AP"
-_REVIVE_COOLDOWN = (120.0, 90.0, 60.0)
+_REVIVE_HEAL_ATTRIBUTE = "Heal"
+_REVIVE_MAX_RANK = 3
 
 
 def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, float]:
     """Return Zilean's sourced Chronoshift revive fields for StartingDefenses."""
-    rank = max(1, min(3, get_ability_rank("R", level, "Zilean")))
-    amount = _REVIVE_HEAL_BASE[rank - 1] + _REVIVE_HEAL_AP_RATIO * float(
-        champion_stat(stats, "ability_power")
-    )
+    rank = max(1, min(_REVIVE_MAX_RANK, get_ability_rank("R", level, "Zilean")))
+    ability = get_champion("Zilean")["abilities"]["R"][0]
+    if find_named_leveling(ability, _REVIVE_HEAL_ATTRIBUTE) is None:
+        raise KeyError(
+            "Zilean R (Chronoshift): cached leveling row "
+            f"{_REVIVE_HEAL_ATTRIBUTE!r} is missing from data/champions.json"
+        )
+    cooldown = extract_cooldown(ability, rank)
+    if cooldown <= 0.0:
+        raise KeyError(
+            "Zilean R (Chronoshift): cached cooldown row is missing from "
+            "data/champions.json"
+        )
+    # ``champion_stat`` is what fails closed on an unwired stat block; the
+    # scaling resolver reads ``ability_power`` off the same dict.
+    stats_context = build_stats_context(stats, champion_stat(stats, "ability_power"))
     return {
-        "revive_health_amount": amount,
+        "revive_health_amount": extract_named(
+            ability, _REVIVE_HEAL_ATTRIBUTE, rank, stats_context
+        ),
         "revive_delay": REVIVE_DELAY_SECONDS,
-        "revive_cooldown": _REVIVE_COOLDOWN[rank - 1],
+        "revive_cooldown": cooldown,
     }
 
 

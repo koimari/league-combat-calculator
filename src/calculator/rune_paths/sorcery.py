@@ -166,10 +166,9 @@ def _compile_celerity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
         amount=amount,
         disclosures=(
             f"{name}'s {percent:g}% bonus movement speed reaches the stat "
-            "card; no damage row reads movement speed, and Swiftmarch's "
-            "conversion of it into adaptive force is priced from the build's "
-            "own movement speed before rune grants resolve, so this share "
-            "moves no damage.",
+            "card and Swiftmarch's conversion of movement speed into "
+            "adaptive force, which prices the build's one published "
+            "movement speed; no damage row reads movement speed itself.",
             f"{name}'s other half — every other movement-speed bonus made "
             "more effective — is withheld: it multiplies sources the rune "
             "stat block does not own, and the cache carries no share for it.",

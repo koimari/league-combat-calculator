@@ -12,6 +12,7 @@ import math
 from collections.abc import Mapping
 from urllib.parse import urlsplit
 
+from .capabilities import FIGHT_EFFECTIVE_STATS
 from .champions import engine_registration_kind
 
 from .timeline_coverage import combine_timeline_coverages
@@ -73,6 +74,7 @@ def public_loadout_summary(loadout) -> dict:
 # overstating precision.
 _PUBLIC_FIELD_POLICIES: dict[str, str] = {
     "champion_stats": "primary",
+    "champion_stats_state": "primary",
     "total_damage": "sum",
     "health_damage": "sum",
     "shield_absorbed": "sum",
@@ -253,6 +255,7 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict:
 
     return {
         "champion_stats": result["champion_stats"],
+        "champion_stats_state": FIGHT_EFFECTIVE_STATS,
         "total_damage": round(result.get("total_damage", 0.0), 1),
         "health_damage": round(result.get("health_damage", 0.0), 1),
         "shield_absorbed": round(result.get("shield_absorbed", 0.0), 1),

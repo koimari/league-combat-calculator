@@ -218,7 +218,7 @@ def test_metrics_event_rate_limited(sqlite_database, monkeypatch):
             return True, 0.0
 
     monkeypatch.setattr(app_module, "_rate_limiter", Denied())
-    app_module.app.config["TESTING"] = False
+    monkeypatch.setitem(app_module.app.config, "TESTING", False)
     app_module.app.config["RATE_LIMIT_ENABLED"] = True
     client = _client()
     denied = client.post(
