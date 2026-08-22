@@ -32,6 +32,7 @@ replaces that slot with the priced burrow heal.
 
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import typed_damage
@@ -225,7 +226,7 @@ def derive_self_healing(
     is paid there.
     """
     healing: list[dict[str, Any]] = []
-    burrow = ability_damages.get("passive", {}).get("self_heal_state")
+    burrow = ability_payload(ability_damages, "passive").get("self_heal_state")
     w_casts = _healing.cast_slot_times(cast_timeline, "W")
     if isinstance(burrow, dict) and w_casts:
         amount = float(burrow.get("amount", 0.0) or 0.0)

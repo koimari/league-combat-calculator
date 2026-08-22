@@ -14,6 +14,7 @@ defers both (see ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS`` and
 
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat, int_option
@@ -297,7 +298,7 @@ def derive_self_healing(
 ):
     """Resolve Shyvana self-healing events from its authored packet."""
     healing = []
-    w_row = ability_damages.get("W", {})
+    w_row = ability_payload(ability_damages, "W")
     if "dragon form" in str(w_row.get("detail", "")).lower():
         level = max(1, int(champion_stat(champion_stats, "level")))
         w = _healing.ability_json(champion_data, "W")

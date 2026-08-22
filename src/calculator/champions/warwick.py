@@ -33,6 +33,7 @@ from functools import partial
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
@@ -298,7 +299,8 @@ def derive_self_healing(
     # this pays that share of every on-hit event the passive authored.  A
     # healthy Warwick publishes 0 and heals none.
     hunger_share = float(
-        ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
+        ability_payload(ability_damages, "passive").get("self_heal_share_of_damage")
+        or 0.0
     )
     if hunger_share > 0.0:
         for payment in _healing.payments(

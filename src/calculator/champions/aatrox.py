@@ -40,6 +40,7 @@ staying silently absent, and its heal keeps it ``modeled`` through the
 import re
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .engine import ONHIT, SlotCtx, build_parser
@@ -300,7 +301,7 @@ def derive_self_healing(
     e_ratio = base_ratio + per_100 * (
         float(champion_stat(champion_stats, "bonus_health")) / 100.0
     )
-    r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
+    r_rank = int(ability_field(ability_payload(ability_damages, "R"), "rank"))
     r_inc = leveling_value(
         ability_json(champion_data, "R"), "Increased Healing", r_rank
     )

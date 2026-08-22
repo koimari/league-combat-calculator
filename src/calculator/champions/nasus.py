@@ -35,6 +35,7 @@ unpriced; its kind rides ``MODULE_CC``.
 
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .inputs import bool_option, champion_stat, int_option
@@ -334,7 +335,7 @@ def derive_self_healing(
     ratio = next(
         share for breakpoint, share in _SOUL_EATER_BREAKPOINTS if level >= breakpoint
     )
-    empowered = bool(ability_damages.get("Q", {}).get("empowers_next_auto"))
+    empowered = bool(ability_payload(ability_damages, "Q").get("empowers_next_auto"))
 
     def is_swing(source: str) -> bool:
         if source == "auto_attacks" or source.startswith("on_hit_"):

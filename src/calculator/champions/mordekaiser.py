@@ -22,6 +22,7 @@ to Mordekaiser for 7 seconds) has no engine axis and stays documented.
 import re
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
@@ -167,7 +168,7 @@ def derive_self_healing(
     the grey-health primitive's, not this rule's.
     """
     healing: list[dict[str, Any]] = []
-    realm = ability_damages.get("R", {}).get("self_heal_state")
+    realm = ability_payload(ability_damages, "R").get("self_heal_state")
     if isinstance(realm, dict):
         amount = float(realm.get("amount", 0.0) or 0.0)
         for cast_time in _healing.cast_slot_times(cast_timeline, "R"):

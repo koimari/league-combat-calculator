@@ -31,6 +31,7 @@ Why each slot is non-generic:
 import re
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
@@ -296,7 +297,7 @@ def derive_self_healing(
     damaging hits.
     """
     healing: list[dict[str, Any]] = []
-    carnivore = ability_damages.get("passive", {}).get("self_heal_state")
+    carnivore = ability_payload(ability_damages, "passive").get("self_heal_state")
     if isinstance(carnivore, dict):
         amount = float(carnivore.get("amount", 0.0) or 0.0)
         for payment in _healing.takedown_payments(

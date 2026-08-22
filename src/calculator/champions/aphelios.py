@@ -24,6 +24,7 @@ weapon form builds (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
 from dataclasses import replace
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .inputs import bool_option, champion_stat, int_option
@@ -429,7 +430,7 @@ def derive_self_healing(
 ):
     """Resolve Aphelios self-healing events from its authored packet."""
     healing = []
-    r_detail = str(ability_damages.get("R", {}).get("detail", ""))
+    r_detail = str(ability_field(ability_payload(ability_damages, "R"), "detail"))
     if "Severum" in r_detail:
         severum = next(
             (

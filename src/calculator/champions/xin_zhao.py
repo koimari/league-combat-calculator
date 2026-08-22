@@ -38,6 +38,7 @@ healing rule off the same on-hit events.
 
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
 from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
@@ -229,7 +230,7 @@ def derive_self_healing(
     # ``_determination`` prices the proc as a per-attack share (partial
     # stacks included), so the heal pays the same share on the same on-hit
     # events — three of them are one proc's heal.
-    determination = (ability_damages.get("passive") or {}).get("on_hit") or {}
+    determination = ability_field(ability_payload(ability_damages, "passive"), "on_hit")
     if determination:
         xin_level = max(1, int(champion_stat(champion_stats, "level")))
         health_share, heal_ap_ratio = _determination_heal_ratios(xin_level)

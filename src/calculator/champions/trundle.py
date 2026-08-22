@@ -17,6 +17,7 @@ and the creation knockback have no engine axis.
 
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from .. import healing_helpers as _healing
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -204,7 +205,7 @@ def derive_self_healing(
     # carried it on the P row with the user's declared death count.  A heal a
     # takedown pays has neither a cast nor a damage row, so each death rides
     # one of the fight's first damaging hits, in order.
-    tribute = ability_damages.get("passive", {}).get("self_heal_state")
+    tribute = ability_payload(ability_damages, "passive").get("self_heal_state")
     if isinstance(tribute, dict):
         amount = float(tribute.get("amount", 0.0) or 0.0)
         for payment in _healing.takedown_payments(

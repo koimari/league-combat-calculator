@@ -48,6 +48,7 @@ hardcoded.
 import re
 from typing import Any
 
+from ..ability_atoms import ability_payload
 from ..ability_atoms import (
     AbilityAtomQuery,
     ranked_ability_atom_value,
@@ -428,7 +429,7 @@ def derive_self_healing(
         + payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
         key=lambda payment: float(payment.event.get("time", 0.0)),
     )
-    carried = ability_damages.get("passive", {}).get("self_heal_state")
+    carried = ability_payload(ability_damages, "passive").get("self_heal_state")
     qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
     for payment in casts:
         event = payment.event
