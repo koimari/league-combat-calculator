@@ -18,7 +18,9 @@
           "damage_type": "physical",
           "name": "The Darkin Blade",
           "parts": [
-            "DamagePart(physical, amount=1257.8999999999999, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=335.43999999999994, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
+            "DamagePart(physical, amount=419.29999999999995, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.0)",
+            "DamagePart(physical, amount=503.15999999999997, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.0)"
           ],
           "rank": 5,
           "total_raw": 1257.9
@@ -43,7 +45,7 @@
           "damage_type": "physical",
           "name": "Infernal Chains",
           "parts": [
-            "DamagePart(physical, amount=208.16, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=104.08, count=2, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=1.5)"
           ],
           "rank": 3,
           "skillshot": true,
@@ -52840,18 +52842,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59946,
+      "leaves": 59948,
       "numeric_leaves": 46172,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "35f2ec61cf272181be361119b7763b01f9f21795",
+    "git_head": "c6fce5032e97c2187a3907d9d1649ecc7164d800",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "70db4bd0797ec3900fa4761ec045f7218ea9207c"
+    "src_tree_sha": "c8d8de0b38767ad3eb29da391436502ec4fdcbd3"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -52907,9 +52909,9 @@
               "auto_attacks": 270.4,
               "on_hit_ability_passive": 361.44,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 48.19
+              "shadowflame_Shadowflame": 24.1
             },
-            "total_damage": 1812.77
+            "total_damage": 1788.67
           },
           "no_items": {
             "breakdown_totals": {
@@ -53000,9 +53002,9 @@
               "auto_attacks": 541.33,
               "on_hit_ability_passive": 640.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 127.07
+              "shadowflame_Shadowflame": 64.0
             },
-            "total_damage": 2770.93
+            "total_damage": 2707.86
           },
           "no_items": {
             "breakdown_totals": {
