@@ -264,7 +264,6 @@ UNMAKE = "Abyssal Mask — Unmake"
 
 def _two_abyssal_holders():
     """One roster where the main champion and an ally both hold Abyssal Mask."""
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": "Ahri",
         "level": 18,

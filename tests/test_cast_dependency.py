@@ -1279,7 +1279,6 @@ class TestTheRequestBoundaryRefusesAnImpossibleOrder:
 
     def test_the_api_refuses_with_a_400_carrying_the_declaration(self) -> None:
         """D-86's body clause: the reason and source reach the response."""
-        app_module.app.config["TESTING"] = True
         response = app_module.app.test_client().post(
             "/api/calculate",
             json={

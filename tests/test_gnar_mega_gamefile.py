@@ -804,7 +804,6 @@ class TestSourceAndAtomReceipts:
 
 
 def _api(level: int, mega: bool) -> dict:
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={

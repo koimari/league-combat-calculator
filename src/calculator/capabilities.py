@@ -123,11 +123,9 @@ def _target_policy_label(scope: str) -> str:
     }[scope]
 
 
-# Deriving the phase list from :class:`TransitionRank` keeps the published
-# vocabulary and the walk's ordering one fact, so a rank added, split or
-# renamed shows up here.  ``CAPABILITY_SCHEMA_VERSION`` moves when the
-# resulting list changes, never when this derivation is edited and the
-# payload comes out identical.
+# Derived from :class:`TransitionRank` so the published vocabulary and the
+# walk's ordering stay one fact.  ``CAPABILITY_SCHEMA_VERSION`` moves when the
+# resulting list changes, never when this derivation is edited to no effect.
 def _ledger_phases() -> list[str]:
     """``PARTICIPANT_LEDGER_CONTRACT['phases']``, in declaration order."""
     return list(dict.fromkeys(public_phase(rank) for rank in TransitionRank))

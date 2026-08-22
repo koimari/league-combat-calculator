@@ -80,7 +80,6 @@ def _fight(
         payload["auto_attacks_only"] = True
     if options:
         payload["champion_options"] = options
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_json()
     return response.get_json()

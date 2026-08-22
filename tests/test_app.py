@@ -923,13 +923,14 @@ def test_optimizer_global_bucket_returns_json_429(monkeypatch, tmp_path):
         TokenBucketStore(tmp_path / "rate-limits.sqlite3"),
         raising=False,
     )
-    app_module.app.config["RATE_LIMIT_ENABLED"] = True
-    client = app_module.app.test_client()
-
-    responses = [
-        client.post("/api/optimize", json={"champion": "Ahri", "level": 18})
-        for _ in range(3)
-    ]
+    # The limiter no-ops under TESTING, which the session holds on, so a test
+    # of the limiter itself borrows both keys.
+    with app_config(TESTING=False, RATE_LIMIT_ENABLED=True):
+        client = app_module.app.test_client()
+        responses = [
+            client.post("/api/optimize", json={"champion": "Ahri", "level": 18})
+            for _ in range(3)
+        ]
 
     assert [response.status_code for response in responses] == [200, 200, 429]
     assert responses[-1].get_json() == {"error": "Optimizer is busy; retry shortly"}
@@ -949,11 +950,11 @@ def test_rate_limit_store_failure_fails_closed(monkeypatch):
             raise sqlite3.OperationalError("disk unavailable")
 
     monkeypatch.setattr(app_module, "_rate_limiter", BrokenLimiter())
-    app_module.app.config["RATE_LIMIT_ENABLED"] = True
 
-    response = app_module.app.test_client().post(
-        "/api/calculate", json={"champion": "Aatrox"}
-    )
+    with app_config(TESTING=False, RATE_LIMIT_ENABLED=True):
+        response = app_module.app.test_client().post(
+            "/api/calculate", json={"champion": "Aatrox"}
+        )
 
     assert response.status_code == 503
     assert response.get_json() == {"error": "Rate-limit service unavailable"}

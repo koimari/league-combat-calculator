@@ -136,7 +136,6 @@ class TestTheAuraPricesItsOwnTimestamp:
     """C4's observable, end to end: damage at exactly ``t = 0`` gains the curse."""
 
     def _events(self):
-        app_module.app.config["TESTING"] = True
         response = app_module.app.test_client().post(
             "/api/calculate", json=_ABYSSAL_ROSTER
         )

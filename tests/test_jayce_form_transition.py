@@ -903,7 +903,6 @@ class TestP4JZeroAuto:
 
 
 def _api_calculate(champion_options):
-    app_module.app.config["TESTING"] = True
     client = app_module.app.test_client()
     return client.post(
         "/api/calculate",

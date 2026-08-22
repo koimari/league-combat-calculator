@@ -98,7 +98,7 @@ def test_sentry_lazy_init_uses_dsn(monkeypatch, fake_sentry):
 
 def test_sentry_captures_route_500(monkeypatch, fake_sentry):
     monkeypatch.setattr(app_module, "_sentry", fake_sentry)
-    app_module.app.config["TESTING"] = False
+    monkeypatch.setitem(app_module.app.config, "TESTING", False)
     app_module.app.config["PROPAGATE_EXCEPTIONS"] = False
 
     def _broken_loader(_champion_name):
@@ -155,9 +155,9 @@ def test_sentry_excludes_token_bucket_429_response(monkeypatch, fake_sentry):
             return False, 7.0
 
     monkeypatch.setattr(app_module, "_rate_limiter", Denied())
-    # Other suites leave TESTING=True on the shared app; the limiter no-ops
-    # under TESTING, so this test pins it off explicitly.
-    app_module.app.config["TESTING"] = False
+    # The session holds TESTING on and the limiter no-ops under it, so this
+    # test borrows it off.
+    monkeypatch.setitem(app_module.app.config, "TESTING", False)
     app_module.app.config["RATE_LIMIT_ENABLED"] = True
     with app_module.app.test_request_context("/"):
         response = app_module._spend_rate_limit("calculate")

@@ -38,17 +38,20 @@ from pathlib import Path
 
 import pytest
 
+import scripts.patch_mechanics as patch_mechanics
 import scripts.patch_regression as patch_regression
 import scripts.patch_update as patch_update
+from scripts.patch_mechanics import (
+    drop_noise,
+    is_numeric_diff,
+    leaf_diffs,
+    name_delta,
+)
 from scripts.patch_update import (
     ECONOMICS_TABLES,
     ally_effect_lines,
     economics_lines,
     item_source_lines,
-    drop_noise,
-    is_numeric_diff,
-    leaf_diffs,
-    name_delta,
 )
 from src.calculator import item_effects
 from src.calculator.champions import registered_champion_names
@@ -358,8 +361,8 @@ class TestImportHygiene:
                 reloaded.build_reviewed_packets.__module__
                 == "scripts.build_reviewed_modules"
             )
-            assert reloaded.leaf_diffs.__module__ == "scripts.patch_update"
-            assert reloaded.source_sha256.__module__ == "scripts.source_receipt"
+            assert reloaded.leaf_diffs.__module__ == "scripts.patch_mechanics"
+            assert reloaded.source_receipt.__module__ == "scripts.source_receipt"
         finally:
             if not had_impostor:
                 sys.modules.pop("patch_regression", None)
@@ -574,19 +577,19 @@ class TestJqValidate:
     def test_valid_json_passes(self, tmp_path):
         path = tmp_path / "ok.json"
         path.write_text('{"a": 1}', encoding="utf-8")
-        patch_update.jq_validate(path)  # must not raise
+        patch_mechanics.jq_validate(path)  # must not raise
 
     def test_malformed_json_fails_closed(self, tmp_path):
         path = tmp_path / "bad.json"
         path.write_text("{not valid json", encoding="utf-8")
         with pytest.raises(RuntimeError, match="jq validation failed"):
-            patch_update.jq_validate(path)
+            patch_mechanics.jq_validate(path)
 
     def test_missing_jq_binary_fails_closed_with_actionable_message(self, tmp_path):
         path = tmp_path / "ok.json"
         path.write_text('{"a": 1}', encoding="utf-8")
         with pytest.raises(RuntimeError, match="jq is not installed"):
-            patch_update.jq_validate(path, jq_bin="definitely-not-a-real-binary-xyz")
+            patch_mechanics.jq_validate(path, jq_bin="definitely-not-a-real-binary-xyz")
 
 
 @requires_jq
@@ -605,7 +608,7 @@ class TestRefreshAuthorityFiles:
                     return payloads[name]
             raise AssertionError(f"unexpected url: {url}")
 
-        report = patch_update.refresh_authority_files(
+        report = patch_mechanics.refresh_authority_files(
             "16.16", dest_dir=tmp_path, downloader=downloader
         )
         assert report["ok"] is True
@@ -613,7 +616,7 @@ class TestRefreshAuthorityFiles:
         for name, payload in payloads.items():
             entry = report["files"][name]
             assert entry["sha256_before_fetch"] is None
-            assert entry["sha256_after_fetch"] == patch_update._sha256_bytes(payload)
+            assert entry["sha256_after_fetch"] == patch_mechanics._sha256_bytes(payload)
             assert entry["changed_locally"] is True
         assert report["files"]["gnar"]["tracked"] is True
         assert report["files"]["renata"]["tracked"] is False
@@ -622,10 +625,10 @@ class TestRefreshAuthorityFiles:
         def downloader(_url):
             return b'{"stable": 1}'
 
-        patch_update.refresh_authority_files(
+        patch_mechanics.refresh_authority_files(
             "16.16", dest_dir=tmp_path, downloader=downloader
         )
-        second = patch_update.refresh_authority_files(
+        second = patch_mechanics.refresh_authority_files(
             "16.16", dest_dir=tmp_path, downloader=downloader
         )
         for entry in second["files"].values():
@@ -637,7 +640,7 @@ class TestRefreshAuthorityFiles:
                 raise _HTTPErrorFactory.make(code=404, reason="Not Found", url=url)
             return b'{"ok": 1}'
 
-        report = patch_update.refresh_authority_files(
+        report = patch_mechanics.refresh_authority_files(
             "16.16", dest_dir=tmp_path, downloader=downloader
         )
         assert report["ok"] is False
@@ -651,7 +654,7 @@ class TestRefreshAuthorityFiles:
         def downloader(_url):
             return b"{not json"
 
-        report = patch_update.refresh_authority_files(
+        report = patch_mechanics.refresh_authority_files(
             "16.16", dest_dir=tmp_path, downloader=downloader
         )
         assert report["ok"] is False
@@ -670,7 +673,7 @@ class TestRefreshAuthorityFiles:
                 return b'{"renata": 1}'
             return head_bytes
 
-        report = patch_update.refresh_authority_files(
+        report = patch_mechanics.refresh_authority_files(
             "16.16", dest_dir=tmp_path, downloader=downloader
         )
         assert report["files"]["gnar"]["changed_vs_git_head"] is False
@@ -686,13 +689,13 @@ class TestRefreshAuthorityFiles:
 @requires_jq
 class TestAuthorityDirtyGuard:
     def test_no_paths_is_clean(self):
-        assert patch_update._git_dirty_paths([]) == []
+        assert patch_mechanics._git_dirty_paths([]) == []
 
     def test_clean_tracked_pair_reports_no_conflict(self, tmp_path):
         repo = _scratch_git_repo(tmp_path)
         characters = repo / "data" / "bin" / "characters"
         assert (
-            patch_update.authority_dirty_conflicts(
+            patch_mechanics.authority_dirty_conflicts(
                 characters, repo_root=repo, tracked_dir=characters
             )
             == []
@@ -702,7 +705,7 @@ class TestAuthorityDirtyGuard:
         repo = _scratch_git_repo(tmp_path)
         characters = repo / "data" / "bin" / "characters"
         (characters / "gnarbig.bin.json").write_text('{"v": 2}', encoding="utf-8")
-        assert patch_update.authority_dirty_conflicts(
+        assert patch_mechanics.authority_dirty_conflicts(
             characters, repo_root=repo, tracked_dir=characters
         ) == ["data/bin/characters/gnarbig.bin.json"]
 
@@ -712,7 +715,7 @@ class TestAuthorityDirtyGuard:
         characters = repo / "data" / "bin" / "characters"
         (characters / "gnarbig.bin.json").write_text('{"v": 2}', encoding="utf-8")
         assert (
-            patch_update.authority_dirty_conflicts(
+            patch_mechanics.authority_dirty_conflicts(
                 tmp_path / "elsewhere", repo_root=repo, tracked_dir=characters
             )
             == []
@@ -730,12 +733,12 @@ class TestAuthorityDirtyGuard:
         if probe.returncode == 0:
             pytest.skip("tmp_path lives inside a git repository on this machine")
         with pytest.raises(RuntimeError, match="cannot determine whether"):
-            patch_update._git_dirty_paths(
+            patch_mechanics._git_dirty_paths(
                 ["data/bin/characters/gnar.bin.json"], repo_root=outside
             )
 
     def test_run_fetch_refuses_before_touching_anything(self, tmp_path):
-        report, code = patch_update.run_fetch(
+        report, code = patch_mechanics.run_fetch(
             patch="16.16",
             champions_path=_write_champions(tmp_path, ("Ahri",)),
             game_dir=tmp_path / "gamefiles",
@@ -753,7 +756,7 @@ class TestAuthorityDirtyGuard:
         assert not (tmp_path / "bin").exists()
 
     def test_force_overrides_the_refusal(self, tmp_path):
-        report, code = patch_update.run_fetch(
+        report, code = patch_mechanics.run_fetch(
             patch="16.16",
             champions_path=_write_champions(tmp_path, ("Ahri",)),
             game_dir=tmp_path / "gamefiles",
@@ -770,7 +773,7 @@ class TestAuthorityDirtyGuard:
         def boom(_dest):
             raise RuntimeError("git status failed")
 
-        report, code = patch_update.run_fetch(
+        report, code = patch_mechanics.run_fetch(
             patch="16.16",
             champions_path=_write_champions(tmp_path, ("Ahri",)),
             game_dir=tmp_path / "gamefiles",
@@ -786,18 +789,18 @@ class TestAuthorityDirtyGuard:
 class TestChampionNames:
     def test_reads_keys_from_the_cache(self, tmp_path):
         path = _write_champions(tmp_path, ("Ahri", "Zed"))
-        assert set(patch_update._champion_names(path)) == {"ahri", "zed"}
+        assert set(patch_mechanics._champion_names(path)) == {"ahri", "zed"}
 
     def test_missing_cache_fails_closed(self, tmp_path):
         with pytest.raises(RuntimeError, match="unreadable"):
-            patch_update._champion_names(tmp_path / "absent.json")
+            patch_mechanics._champion_names(tmp_path / "absent.json")
 
 
 @requires_jq
 class TestRefreshGamefiles:
     def test_delegates_to_the_injected_downloader_and_reports_changes(self, tmp_path):
         champions = _write_champions(tmp_path, ("Ahri", "Zed"))
-        report = patch_update.refresh_gamefiles(
+        report = patch_mechanics.refresh_gamefiles(
             "16.16",
             game_dir=tmp_path / "gamefiles",
             champions_path=champions,
@@ -829,7 +832,7 @@ class TestRefreshGamefiles:
             (target_dir / "items.bin.json").write_text(json.dumps({}))
             return target_dir
 
-        patch_update.refresh_gamefiles(
+        patch_mechanics.refresh_gamefiles(
             "16.16",
             game_dir=game_dir,
             champions_path=champions,
@@ -841,7 +844,7 @@ class TestRefreshGamefiles:
     def test_empty_roster_fails_closed(self, tmp_path):
         champions = _write_champions(tmp_path, ())
         with pytest.raises(RuntimeError, match="no champions to fetch"):
-            patch_update.refresh_gamefiles(
+            patch_mechanics.refresh_gamefiles(
                 "16.16",
                 game_dir=tmp_path / "gamefiles",
                 champions_path=champions,
@@ -855,7 +858,7 @@ class TestRefreshGamefiles:
             raise _HTTPErrorFactory.make(code=404, reason="Not Found")
 
         with pytest.raises(RuntimeError, match="game-file fetch failed"):
-            patch_update.refresh_gamefiles(
+            patch_mechanics.refresh_gamefiles(
                 "16.16",
                 game_dir=tmp_path / "gamefiles",
                 champions_path=champions,
@@ -890,7 +893,7 @@ class TestRunGamefileRefresh:
 @requires_jq
 class TestRunFetch:
     def test_hard_failure_in_gamefiles_returns_exit_2(self, tmp_path):
-        report, code = patch_update.run_fetch(
+        report, code = patch_mechanics.run_fetch(
             patch="16.16",
             champions_path=tmp_path / "absent.json",
             game_dir=tmp_path / "gamefiles",
@@ -907,7 +910,7 @@ class TestRunFetch:
                 raise _HTTPErrorFactory.make(code=404)
             return b"{}"
 
-        report, code = patch_update.run_fetch(
+        report, code = patch_mechanics.run_fetch(
             patch="16.16",
             champions_path=_write_champions(tmp_path, ("Ahri",)),
             game_dir=tmp_path / "gamefiles",
@@ -919,7 +922,7 @@ class TestRunFetch:
         assert report["status"] == "partial"
 
     def test_clean_run_returns_exit_0(self, tmp_path):
-        report, code = patch_update.run_fetch(
+        report, code = patch_mechanics.run_fetch(
             patch="16.16",
             champions_path=_write_champions(tmp_path, ("Ahri",)),
             game_dir=tmp_path / "gamefiles",

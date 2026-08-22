@@ -1,0 +1,41 @@
+{
+  "slice": "ER4-undaunted-swing-term",
+  "what_landed": "damage._apply_target_champion_damage_reduction reads its two declared FightState fields as attributes instead of through getattr with a literal default. The getattr spelling hid them from golden_snapshot.swing_target_terms(), whose AST walk sees an ast.Attribute and not a Call with a string argument, so Undaunted's two target-side swing terms were outside the derivation that refuses an unarmed capture. undaunted_armed_swing_roster arms them: Teemo's Toxic Shot rides every basic attack, so one auto stream meets the flat champion reduction on the swing and the damage-over-time amount on the poison it applies.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17 -- no committed leaf moves inside this commit; the coupled baseline gains one scenario and moves none of the twenty-two it held"
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_exact": {},
+    "coupled_exact_new_scenarios": [
+      "undaunted_armed_swing_roster"
+    ]
+  },
+  "what_did_not_move": {
+    "claim": "No number the engine computed moved, in either jurisdiction.",
+    "evidence": [
+      "scripts/golden_baseline.json: `compare` reports 'snapshot identical'.",
+      "scripts/golden_coupled_baseline.json: the re-capture's diff against the committed file removes exactly six lines -- three /metadata/fingerprint counters and the two provenance stamps -- and adds the new scenario's block. Every leaf of the twenty-two committed scenarios is byte-identical.",
+      "Both fields are declared on FightState with a 0.0 default and written from scenario.resolve_scenario, so no getattr default was ever reachable and the attribute read cannot return anything else."
+    ]
+  },
+  "why_the_exact_baseline_is_declared_and_not_captured": "scripts/golden_coupled_exact.json is re-captured once per phase boundary (R-17), and it carries standing declared moves on bench-roster totals that a re-capture here would silently bless. A covering scenario the committed capture predates has no old total to allowlist per key, which is the shape coupled_exact_new_scenarios exists for: the name is declared, the capture is the integration agent's own commit.",
+  "arming_measurement": {
+    "request": "Teemo 18 / Nashor's Tooth + Rabadon's Deathcap / time_based 8s / autos at full uptime, into Ornn 18 holding Guardian's Horn",
+    "with_the_card": {
+      "auto_attack_damage": 726.2,
+      "ability_damage": 1052.9,
+      "target_ending_health": 883.9
+    },
+    "without_the_card": {
+      "auto_attack_damage": 891.2,
+      "ability_damage": 1116.6,
+      "target_ending_health": 505.2
+    },
+    "reading": "The auto delta is 165.0 = 15.0 x 11 swings, which is champion_damage_flat_reduction on the swing itself. The ability delta of 63.7 mixes the same 15.0 on Teemo's non-DoT casts with the 3.75 damage-over-time amount on the Toxic Shot ticks, so both fields are met and neither is clamped -- the defender ends the window alive."
+  },
+  "source_availability_note": "Guardian's Horn is the only item declaring either field and it is ARAM-only: data/items.json gives it modes {'classic sr 5v5': false, 'aram': true, 'nb': false, 'ar': true}, so item_source.is_ordinary_sr_item refuses it. A defender card is not a purchase pool and the mechanic is modelled and reachable through one, so the alternative to an ARAM card in this fixture is a modelled term no baseline can ever see."
+}
