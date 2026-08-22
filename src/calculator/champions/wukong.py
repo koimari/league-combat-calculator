@@ -15,14 +15,32 @@ Why the Q slot is non-generic:
 Coverage:
 - P (Stone Skin) is ``modeled``: the bonus armor is a ``stat_buff`` row the
   holder's survival side reads; the health regeneration is not priced.
-- W (Warrior Trickster) is ``out_of_scope``, and the missing axis is a
-  pet timeline.  The clone's damage is not a W row at all: it basic
-  attacks autonomously for 4 seconds, takes Crushing Blow and Nimbus
-  Strike's attack speed, and casts Cyclone whenever Wukong does, all at
-  the cached "Clone Outgoing Damage" ratio (40/45/50/55/60%).  Pricing it
-  means running a second attacker's swing and cast stream at a scaled
-  output; the engine prices one attacker's timeline, and the cache states
-  no clone attack rate to author one from.
+- W (Warrior Trickster) is ``out_of_scope``.  The missing axis is the
+  clone's SWING COUNT, not its per-hit output, and the two are sourced
+  differently.  The clone's damage is not a W row at all: the cached
+  slot says it "can basic attack autonomously" for 4 seconds, "can also
+  gain the effects of Crushing Blow and Nimbus Strike's bonus attack
+  speed" (Crushing Blow's effects; Nimbus Strike's bonus attack speed —
+  Crushing Blow grants no attack speed), and "casts Cyclone whenever
+  Wukong does", with everything it deals scaled by the cached "Clone
+  Outgoing Damage" ratio (40/45/50/55/60%).
+  So the RATIO is sourced twice over — it is the entry's only leveling
+  row, and monkeyking.bin.json's MonkeyKingDecoy carries the same
+  numbers as ``CloneDamageMod`` (0.40 : 0.60 over ranks 1-5) — while the
+  RATE is sourced nowhere.  That bin has no clone CharacterRecord at all
+  (only ``Characters/MonkeyKing/CharacterRecords/Root``), MonkeyKingDecoy's
+  DataValues are CloneDamageMod / StealthDuration / CloneDuration /
+  DashSpeed / RangeClamp / MinRange, and every attack-speed node in the
+  file is Wukong's own (the Root record's ``attackSpeed*`` fields and
+  MonkeyKingNimbus's ``AttackSpeed``), so there is no clone base attack
+  speed for E's bonus to even apply to.
+  The one in-repo route past a missing rate does not transfer.  Shaco R
+  prices its clone by making the swing count an explicit player input
+  (``r_clone_attacks``, default 0), which is honest there because that
+  clone is COMMANDED — the count is something the player states.  Wukong's
+  attacks on its own, so the same option would not be reading an input,
+  it would be inventing the number the game decides.  The copied Cyclone
+  has no home either: the engine prices one attacker's cast timeline.
 """
 
 from typing import Any
@@ -132,8 +150,9 @@ def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
 SLOTS = {
     "P": _stone_skin,
     "Q": _crushing_blow,
-    # The W clone's attacks are a separate pet timeline; it is not a direct
-    # cast packet and therefore is intentionally omitted here.
+    # The W clone's attacks are not a direct cast packet, and their COUNT
+    # has no cached rate behind it (see the module docstring), so the slot
+    # is intentionally omitted here rather than estimated.
     # One strike on the dash target (the two clone strikes land on *other*
     # enemies), so the single-target row is one hit at the cast.
     "E": simple_damage(
@@ -167,7 +186,15 @@ ASSUMPTIONS = [
     "Q's armor reduction (10-30% of target's armor by rank, 3s) applies "
     "to damage dealt after the empowered attack lands, not to the attack "
     "itself.",
-    "Warrior Trickster clone attacks are a separate pet timeline and are not invented as direct W spell damage.",
+    "Warrior Trickster's clone is out_of_scope on its SWING COUNT, not on "
+    "its output: the 'Clone Outgoing Damage' ratio (40/45/50/55/60%) is the "
+    "slot's only cached leveling row, but no clone attack rate is stated "
+    "anywhere in the cache, so the number of autonomous attacks over the "
+    "clone's 4 seconds cannot be sourced. The Shaco-R route (make the count "
+    "an explicit player option) does not apply, because that clone is "
+    "commanded and this one is not, so a count would be invented rather "
+    "than read; the copied Cyclone would need a second attacker's cast "
+    "timeline, which the engine does not have.",
     "Cyclone uses eight sourced 0.25-second ticks per cast; the second cast is explicit.",
 ]
 

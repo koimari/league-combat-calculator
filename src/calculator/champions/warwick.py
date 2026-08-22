@@ -52,6 +52,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_atoms import (
     AbilityAtomQuery,
+    ability_payload,
     ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
@@ -63,6 +64,7 @@ from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction
 from .packet_module import build_packet_module
 from .slotlib import (
+    ability_name,
     atom_receipt,
     damage_entry,
     extract_cooldown,
@@ -102,7 +104,7 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability.get("name", "Infinite Duress"),
+        ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -140,7 +142,7 @@ def _eternal_hunger(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit <= 0:
         return None
 
-    entry = on_hit_entry(ability.get("name", "Eternal Hunger"), per_hit, "magic")
+    entry = on_hit_entry(ability_name(ability), per_hit, "magic")
     health_percent = min(max(float(ctx.option("p_self_health_percent")), 0.0), 100.0)
     share = _hunger_heal_share(health_percent)
     # ``derive_self_healing`` below pays this share of every post-mitigation
@@ -240,7 +242,7 @@ def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
         raise ValueError("Warwick E active-duration atom must use seconds")
     duration = ranked_ability_atom_value(duration_atom, 1, source=_E_REDUCTION_SOURCE)
 
-    name = ability.get("name", "Primal Howl")
+    name = ability_name(ability)
     return {
         "name": name,
         "rank": rank,
@@ -430,9 +432,16 @@ def derive_self_healing(
     # owns the threshold and publishes the resulting share on its P entry;
     # this pays that share of every on-hit event the passive authored.  A
     # healthy Warwick publishes 0 and heals none.
-    hunger_share = float(
-        ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
-    )
+    # Warwick's own _eternal_hunger always publishes the share (0.0 when
+    # healthy), but the shared healing harness also routes synthetic
+    # payloads through this function — an explicit membership check keeps
+    # the distinction honest: absence means "not Warwick's P payload",
+    # never a silently-defaulted number.
+    _p_payload = ability_payload(ability_damages, "passive")
+    if "self_heal_share_of_damage" in _p_payload:
+        hunger_share = float(_p_payload["self_heal_share_of_damage"])
+    else:
+        hunger_share = 0.0
     if hunger_share > 0.0:
         for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,

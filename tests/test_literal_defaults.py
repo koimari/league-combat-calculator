@@ -869,6 +869,8 @@ CACHED_SOURCE_ROW = frozenset(
         ("champions/slotlib.py", "sum_modifiers", "dict.get", '"modifiers"', 1),
         ("champions/slotlib.py", "sum_modifiers", "dict.get", '"units"', 1),
         ("champions/slotlib.py", "sum_modifiers", "dict.get", '"values"', 1),
+        # Sona E's traversal defaults retired 2026-08-21: _celerity_grant
+        # now indexes directly (KeyError is the fail-closed path).
         (
             "champions/syndra.py",
             "_dark_sphere_second_charge",
@@ -1342,13 +1344,8 @@ AUTHORED_DECLARATION = frozenset(
         ("champions/volibear.py", "parse", "dict.get", '"name"', 1),
         ("champions/volibear.py", "parse", "dict.get", '"rank"', 1),
         ("champions/volibear.py", "parse", "or-default", '"rank"', 1),
-        (
-            "champions/warwick.py",
-            "derive_self_healing",
-            "or-default",
-            '"self_heal_share_of_damage"',
-            1,
-        ),
+        # Warwick's hunger-share default retired 2026-08-21: the producer
+        # always publishes the key, so absence now raises.
         ("champions/zac.py", "parse", "or-default", '"parts"', 1),
         ("champions/zed.py", "_death_mark", "dict.get", '"total_raw"', 1),
         ("champions/zed.py", "_death_mark", "or-default", '"total_raw"', 1),

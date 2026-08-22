@@ -14,7 +14,13 @@ defers both (see ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS`` and
 
 P (Scalemail) is the ``scalemail_stacks`` option's one consumer: the
 per-stack resists live in the cached effect prose alone, so
-``_scalemail_per_stack`` reads them out of that sentence."""
+``_scalemail_per_stack`` reads them out of that sentence.  Its
+``no_damage`` disposition is sourced on both sides of the cache — the
+entry's two effects are the stack-generation rule and the resist grant
+with ``damageType`` null and ``affects`` "Self", and the game data's
+``ShyvanaPassiveAbility/ShyvanaPassive`` carries only the DataValues
+``BonusArmor``/``BonusMagicResist``/``PassiveScale`` (0.3 each) and the
+four ``Stacks_Per_*`` counts, with no damage node of any kind."""
 
 import re
 from typing import Any
@@ -313,7 +319,7 @@ OPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="P")
 
 ASSUMPTIONS = [
-    "P (Fury of the Dragonborn) prices Scalemail: the cached effect "
+    "P (Scalemail) prices the stack resists: the cached effect "
     "sentence 'For each stack, Shyvana gains 0.3 bonus armor and 0.3 "
     "bonus magic resistance' is read out of the description (there is no "
     "leveling row anywhere in the entry) and multiplied by the "
