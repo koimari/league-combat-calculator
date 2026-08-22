@@ -1019,12 +1019,14 @@ class TestImmobilizingTrigger:
 
 
 class TestNonTriggerControls:
-    def test_slow_ground_silence_classify_soft(self):
-        # Pinned kernel evidence (the brief's contract #4): slow / ground
-        # / silence are known SOFT kinds — never blocking, never
+    def test_slow_cripple_silence_classify_soft(self):
+        # Pinned kernel evidence (the brief's contract #4): slow / cripple
+        # / silence / blind are known SOFT kinds — never blocking, never
         # immobilizing — so the passive's "hostile immobilizing effect"
-        # trigger can never fire on them.
-        for kind in ("slow", "ground", "silence", "blind", "disarm"):
+        # trigger can never fire on them.  F-9 retired "ground" and
+        # "disarm" from this list: no champion module can author either,
+        # so the soft set carried two kinds that could never be classified.
+        for kind in ("slow", "cripple", "silence", "blind"):
             assert kind in CONTROL_SOFT_KINDS
             assert kind in KNOWN_CONTROL_KINDS
             assert kind not in CONTROL_BLOCKING_KINDS

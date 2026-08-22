@@ -1017,11 +1017,13 @@ class TestCrowdControlAndSuppression:
         assert result["main"]["action_downtime"] == pytest.approx(2.0)
         assert result["main"]["cleanse_use"]["uses_after"] == 1
 
-    def test_w_a_control_with_no_cleanse_declaration_fails_closed(self):
-        # P2-5 contract: a control kind the cleanse table does not carry
-        # fails closed with the named unknown_control denial and nothing is
-        # truncated.  ``pull`` is such a kind; a *misspelled* kind never
-        # reaches this layer at all (see the test below).
+    def test_w_a_pull_is_the_declared_displacement_carve_out(self):
+        # F-9 correction to the P2-5 contract: ``pull`` used to read
+        # ``unknown_control`` because the cleanse carried its own kind
+        # vocabulary.  It is an Airborne subtype, and Remove Scurvy's
+        # declaration carves the displacement family out, so the interval
+        # survives with the named excluded_control_kind denial instead.
+        # A *misspelled* kind never reaches this layer at all (next test).
         combatants = [
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
@@ -1049,10 +1051,10 @@ class TestCrowdControlAndSuppression:
             10.0,
         )
         cleanse = result["main"]["cleanse"]
-        assert cleanse["decision"]["reason"] == "unknown_control"
+        assert cleanse["decision"]["reason"] == "excluded_control_kind"
         assert cleanse["removed_controls"] == []
         assert result["main"]["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
-        assert result["main"]["cleanse_use"]["uses_after"] == 1
+        assert result["main"]["cleanse_use"]["uses_after"] == 0
 
     def test_w_a_kind_outside_the_vocabulary_is_refused_at_the_seam(self):
         # ``cc_kind`` is a closed vocabulary: a misspelling is a raise at

@@ -22,7 +22,6 @@ Delete a row when it lands.
 | per-recipient pricing of ally-scaled support rows (one row per recipient with that recipient's stats) | #210 |
 | Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
 | F-2: four main-new ITEM_EFFECTS entries (Doran's Helm, Gluttonous Greaves, Ionian Boots, Lost Chapter) have no rule compiler — pinned by name UNDECLARED_ON_ARRIVAL | #211 |
-| F-9: cleanse KNOWN_CONTROL_KINDS vs CC_KIND_VOCABULARY disagree (disarm/ground dead; cripple/flee/pull/snare/stasis/berserk undeclared for cleanse) | #212 |
 | F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up | #228 |
 | F-5: Vi Blast Shield rider binds to a carrier by ordinal before the walk decides (D-VI-1); the strict xfail is retired for a green denial-receipt test (test_w2_sustain.py:313); walk-side re-anchor to first unblocked cast still needed (old damage.py:1864 pin stale) | #229 |
 | ASIDE: ControlEvent has no target field — an enemy-cast control reaches every enemy (Lulu W polymorph); engine change | #209 |

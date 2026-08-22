@@ -57,7 +57,7 @@ import pytest
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
-from src.calculator.ability_spec import ACTION_BLOCKING_CC_KINDS
+from src.calculator.ability_spec import IMMOBILIZING_CC_KINDS
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -236,10 +236,13 @@ class TestTypedContract:
         assert receipt["name"] == "Fimbulwinter — Everlasting crowd-control trigger"
         assert receipt["slow_kind"] == "slow"
         assert receipt["slow_melee_only"] is True
-        assert receipt["immobilize_kinds"] == sorted(ACTION_BLOCKING_CC_KINDS)
-        # The declaration is source-backed: immobilize kinds are the sourced
-        # action-blocking vocabulary, and the rule carries the item source.
-        assert set(receipt["immobilize_kinds"]) == set(ACTION_BLOCKING_CC_KINDS)
+        assert receipt["immobilize_kinds"] == sorted(IMMOBILIZING_CC_KINDS)
+        # The declaration is source-backed: Everlasting's trigger is the
+        # Wiki's Immobilizing class (F-9 — the rule used to borrow the
+        # action-blocking set, which holds polymorph, an action block that
+        # is not an immobilize, and missed flee/pull/snare/stasis, which
+        # are).  The rule carries the item source.
+        assert set(receipt["immobilize_kinds"]) == set(IMMOBILIZING_CC_KINDS)
         assert receipt["source"]["url"] == shield["source_url"]
         assert receipt["source"]["revision_id"] == shield["source_revision_id"]
 
@@ -273,8 +276,8 @@ class TestImmobilizeEligibility:
         assert len(shields) == 1
         assert shields[0]["trigger_kind"] == "immobilize"
 
-    @pytest.mark.parametrize("kind", sorted(ACTION_BLOCKING_CC_KINDS))
-    def test_every_action_blocking_kind_fires_immobilize(self, kind: str):
+    @pytest.mark.parametrize("kind", sorted(IMMOBILIZING_CC_KINDS))
+    def test_every_immobilizing_kind_fires_immobilize(self, kind: str):
         packets = _run(
             [_cc_event(1.0, cc_kind=kind, event_id="e1")],
             cast_timeline=[{"time": 1.0, "resource_after": 900.0}],
@@ -282,6 +285,19 @@ class TestImmobilizeEligibility:
         shields = _shields(packets)
         assert len(shields) == 1
         assert shields[0]["trigger_kind"] == "immobilize"
+
+    @pytest.mark.parametrize("kind", ["polymorph", "berserk"])
+    def test_an_action_block_that_is_not_an_immobilize_never_fires(self, kind: str):
+        # F-9: both stop the target acting, and neither is Immobilizing —
+        # a polymorphed champion keeps moving and a berserked one keeps
+        # moving AND attacking.  Everlasting reads the Immobilizing class,
+        # so neither arms it.  Borrowing ACTION_BLOCKING_CC_KINDS used to
+        # arm it on polymorph.
+        packets = _run(
+            [_cc_event(1.0, cc_kind=kind, event_id="e1")],
+            cast_timeline=[{"time": 1.0, "resource_after": 900.0}],
+        )
+        assert _shields(packets) == []
 
     def test_explicit_hard_cc_flag_fires_immobilize(self):
         packets = _run(
