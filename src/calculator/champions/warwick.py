@@ -24,23 +24,46 @@ The coverage-frontier riders close P and W:
   ``target_missing_hp_pct`` option.  Blood Hunt's movement speed has no
   engine channel and stays unpriced.
 
-E (Primal Howl) stays ``out_of_scope``: its 35-55% Damage Reduction is
-damage *taken*, an axis the fight engine does not model at all (and the
-recast's fear plus 90% slow are crowd control the model does not price).
+E (Primal Howl) closes as ``modeled``.  Its 35-55% Damage Reduction is
+damage *taken* — an axis this engine did not carry when the slot was
+first reviewed, and does carry now: PR 202's champion-authored
+``self_state_events`` packet of ``kind: "damage_modifier"`` (precedent:
+Briar E, ``briar.py``'s ``_chilling_scream``; Alistar R, ``alistar.py``'s
+``_unbreakable_will``), folded by
+``participant_timeline._support_effect_templates`` and armed by
+``survival.transitions._apply_damage_modifier``.  E is a zero-damage
+row: the cast total is 0.0 and the whole mechanic is the self-state
+window.  The ranked "Damage Reduction" leveling row (35/40/45/50/55%)
+is read through the typed ``required_ranked_attribute_atom`` accessor
+and the "for up to 2.75 seconds" window is the same description's prose
+``timing.active_duration`` atom.  The declared classes are the full
+``DamageClass`` set — the Briar-E convention, because the cached E
+description and notes name NO damage-type carve-out (Alistar's
+true-damage exclusion is declared there only because his cached note
+states it outright).  The recast's fear plus 90% slow are crowd control
+the model still does not price, and a *manual* recast (available after
+1 second) would end the window early — the module prices the automatic
+recast the cache describes, which fires "after the duration".
 """
 
 from functools import partial
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_atoms import ability_payload
-from ..ability_spec import DamagePart
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+    required_ranked_attribute_atom,
+)
+from ..ability_spec import AttackClass, DamageClass, DamagePart
+from ..survival.actions import TransitionRank
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction
 from .packet_module import build_packet_module
 from .slotlib import (
-    ability_name,
+    atom_receipt,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -48,7 +71,6 @@ from .slotlib import (
     stat_buff,
     with_item_on_hits,
 )
-from .module_contract import coverage
 
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
 # the up-to-1.5s suppress; "applies on-hit effects and triggers
@@ -80,7 +102,7 @@ def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        ability_name(ability),
+        ability.get("name", "Infinite Duress"),
         rank,
         extract_cooldown(ability, rank),
         total,
@@ -118,7 +140,7 @@ def _eternal_hunger(ctx: SlotCtx) -> dict[str, Any] | None:
     if per_hit <= 0:
         return None
 
-    entry = on_hit_entry(ability_name(ability), per_hit, "magic")
+    entry = on_hit_entry(ability.get("name", "Eternal Hunger"), per_hit, "magic")
     health_percent = min(max(float(ctx.option("p_self_health_percent")), 0.0), 100.0)
     share = _hunger_heal_share(health_percent)
     # ``derive_self_healing`` below pays this share of every post-mitigation
@@ -172,6 +194,95 @@ def _blood_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
 _blood_hunt.phase = BUFF
 
 
+_E_REDUCTION_SOURCE = "Warwick.E[0].effects[0].description"
+
+
+def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E: zero damage, a sourced incoming-damage-reduction self-state window.
+
+    "Active: Warwick gains damage reduction for up to 2.75 seconds. Primal
+    Howl can be recast after 1 second, and does so automatically after the
+    duration." (cached E[0].effects[0].description).  The percent is a normal
+    ranked leveling row ("Damage Reduction": 35/40/45/50/55%), read through
+    the typed ``required_ranked_attribute_atom`` accessor; the window is the
+    same description's prose ``timing.active_duration`` atom (the Briar E /
+    Alistar R helper).  Every damage class is declared: unlike Alistar's
+    Unbreakable Will, no cached sentence in this kit carves true damage — or
+    any other type — out, so the un-narrowed declaration is the sourced one.
+    """
+    ranked = ctx.ranked()
+    if ranked is None:
+        return None
+    ability, rank = ranked
+
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    reduction_percent, reduction_atom = required_ranked_attribute_atom(
+        ctx.champion_name, champion_data, "E", "Damage Reduction", rank
+    )
+    # The wiki row carries one unit entry per rank (five '%'); require every
+    # entry to be percent (fail-closed on any non-percent unit) rather than
+    # pinning the list shape.
+    reduction_units = {str(unit).strip().lower() for unit in reduction_atom["units"]}
+    if not reduction_units or reduction_units != {"%"}:
+        raise ValueError("Warwick E damage-reduction atom must use percent")
+
+    duration_atom = required_ability_atom(
+        ctx.champion_name,
+        champion_data,
+        "E",
+        query=AbilityAtomQuery(
+            source=_E_REDUCTION_SOURCE,
+            behavior="timing",
+            evidence_prefix="active duration@",
+        ),
+    )
+    if [str(unit).strip().lower() for unit in duration_atom["units"]] != ["s"]:
+        raise ValueError("Warwick E active-duration atom must use seconds")
+    duration = ranked_ability_atom_value(duration_atom, 1, source=_E_REDUCTION_SOURCE)
+
+    name = ability.get("name", "Primal Howl")
+    return {
+        "name": name,
+        "rank": rank,
+        "cooldown": extract_cooldown(ability, rank),
+        "damage_type": "magic",
+        "total_raw": 0.0,
+        "parts": (),
+        "self_state_events": [
+            {
+                "kind": "damage_modifier",
+                # 35..55% damage reduction -> take (1 - pct/100) of each
+                # incoming packet.
+                "multiplier": 1.0 - reduction_percent / 100.0,
+                "duration": duration,
+                "source": f"{name} · damage reduction",
+                "source_atoms": [
+                    atom_receipt(reduction_atom),
+                    atom_receipt(duration_atom),
+                ],
+                # The cached prose grants "damage reduction" with no
+                # attack/spell-only carve-out, so the modifier gates no
+                # source kind (the Briar-E / Glacial-Augment convention).
+                "all_sources": True,
+                # D-04: a modifier names its classes; this kit's cache names
+                # no excluded type, so the full enum IS the declaration —
+                # never an empty one, and never Alistar's narrowed pair,
+                # which his own cached note sources and this one does not.
+                "damage_classes": frozenset(DamageClass),
+                "attack_classes": frozenset(AttackClass),
+                # An amplification already in force at its own timestamp
+                # must price the hit landing at that timestamp.
+                "_rank": TransitionRank.AURA_ARM,
+            }
+        ],
+        "detail": (
+            f"Primal Howl reduces incoming damage by {reduction_percent:g}% for "
+            f"{duration:g}s (the automatic recast ends it at the duration; a "
+            "manual recast — and its fear plus 90% slow — is not modeled)"
+        ),
+    }
+
+
 PACKET_SHA256 = "2c91dcf27a641c6a177969744e204b672765d8fc7291214c069ecacc64511a19"
 
 # Jaws of the Beast only bites ("dealing magic damage, healing himself...");
@@ -179,9 +290,10 @@ PACKET_SHA256 = "2c91dcf27a641c6a177969744e204b672765d8fc7291214c069ecacc64511a1
 # down and channels for up to 1.5 seconds to suppress, reveal, and deal
 # magic damage every 0.25 seconds" — the suppression is the control the
 # damaged target is under for the whole priced channel.  E (Primal Howl,
-# where the fear and 90% slow live) is out_of_scope with no damage row; W
-# is a pure stat buff and P an on-hit rider on basic attacks, so neither
-# authors a part a review could reach.
+# where the fear and 90% slow live) is modeled but authors no damage part:
+# its fear rides the *recast*, which this module does not price, so there
+# is no event a control review could reach.  W is a pure stat buff and P an
+# on-hit rider on basic attacks, so neither authors a part either.
 MODULE_CC = {"Q": "none", "R": "suppression"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -196,6 +308,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "P": _eternal_hunger,
         "W": _blood_hunt,
+        # The packet compiles E as ``no_damage`` (it carries no enemy-damage
+        # formula, which is true); this override keeps that zero and adds the
+        # self-state window the packet has no vocabulary for.
+        "E": _primal_howl,
         "R": _infinite_duress,
     },
     slot_wrappers={
@@ -256,8 +372,24 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "target_missing_hp_pct exceeds 75 (the target below 25% maximum "
     "health).  Blood Hunt's bonus movement speed and its 8-second mark "
     "duration are not modeled — stat_buff has no movement-speed key.",
+    "E (Primal Howl) is modeled as a zero-damage self-state window: the "
+    "ranked Damage Reduction row (35/40/45/50/55%, required_ranked_"
+    "attribute_atom) prices the multiplier and the description's prose "
+    "'for up to 2.75 seconds' (timing.active_duration atom) prices the "
+    "window, armed through self_state_events kind=damage_modifier "
+    "(Briar-E / Alistar-R precedent). Every DamageClass is declared: the "
+    "cached E description and notes name no excluded damage type, so "
+    "narrowing the set would be the invented reading rather than the "
+    "conservative one. The window priced is the automatic recast's — the "
+    "cache says Primal Howl 'does so automatically after the duration' — "
+    "so a manual recast (legal after 1 second) shortening it is not "
+    "modeled, and neither is that recast's 1-second fear or its 90% slow "
+    "(crowd control this model does not price on a recast it never "
+    "issues).",
 ]
-MODULE_COVERAGE = coverage(out_of_scope="E")
+# No MODULE_COVERAGE: with E closed, every slot this module emits is
+# ``modeled``, which is exactly what ``default_coverage`` derives from
+# SLOTS — and the contract refuses a declaration that only restates it.
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
@@ -299,8 +431,7 @@ def derive_self_healing(
     # this pays that share of every on-hit event the passive authored.  A
     # healthy Warwick publishes 0 and heals none.
     hunger_share = float(
-        ability_payload(ability_damages, "passive").get("self_heal_share_of_damage")
-        or 0.0
+        ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
     )
     if hunger_share > 0.0:
         for payment in _healing.payments(

@@ -33846,14 +33846,74 @@
     "Warwick": {
       "abilities_level_11": {
         "E": {
-          "cooldown": 0.0,
+          "cooldown": 15.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Primal Howl reduces incoming damage by 35% for 2.75s (the automatic recast ends it at the duration; a manual recast \u2014 and its fear plus 90% slow \u2014 is not modeled)",
           "name": "Primal Howl",
           "parts": [],
           "rank": 1,
           "resource_cost": 40.0,
           "resource_type": "MANA",
+          "self_state_events": [
+            {
+              "_rank": 2,
+              "all_sources": true,
+              "attack_classes": [
+                "<AttackClass.ABILITY: 'ability'>",
+                "<AttackClass.BASIC_ATTACK: 'basic_attack'>",
+                "<AttackClass.OTHER: 'other'>"
+              ],
+              "damage_classes": [
+                "<DamageClass.MAGIC: 'magic'>",
+                "<DamageClass.PHYSICAL: 'physical'>",
+                "<DamageClass.TRUE: 'true'>"
+              ],
+              "duration": 2.75,
+              "kind": "damage_modifier",
+              "multiplier": 0.65,
+              "source": "Primal Howl \u00b7 damage reduction",
+              "source_atoms": [
+                {
+                  "atom_id": "ability.damage _reduction",
+                  "behavior": "ability",
+                  "evidence": [
+                    "Damage Reduction@effects[0]"
+                  ],
+                  "hash": "c42c740cfa230508",
+                  "source": "Warwick.E[0].effects[0].leveling[0].modifiers[0]",
+                  "units": [
+                    "%",
+                    "%",
+                    "%",
+                    "%",
+                    "%"
+                  ],
+                  "values": [
+                    35.0,
+                    40.0,
+                    45.0,
+                    50.0,
+                    55.0
+                  ]
+                },
+                {
+                  "atom_id": "timing.active_duration",
+                  "behavior": "timing",
+                  "evidence": [
+                    "active duration@effects[0].description"
+                  ],
+                  "hash": "fdbc96dfbbb19a53",
+                  "source": "Warwick.E[0].effects[0].description",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    2.75
+                  ]
+                }
+              ]
+            }
+          ],
           "total_raw": 0.0
         },
         "Q": {
@@ -52872,18 +52932,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59966,
-      "numeric_leaves": 46179,
+      "leaves": 60000,
+      "numeric_leaves": 46188,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "0bca45123fce997bc18c2c9b73bba7b16d934865",
+    "git_head": "fc5e0d6a1a52e57b5f858d4b679e043a4ed2b854",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "7ae40c12fe834724431d21e25843541c0e54f314"
+    "src_tree_sha": "fea8a83f1021346982670a0d554e1e9fc1d07db2"
   },
   "registered_champion_fights": {
     "Aatrox": {

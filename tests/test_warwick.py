@@ -8,9 +8,17 @@ campaign: five autos were 270.0 physical and 0.0 magic.  The rider tests
 below hold both to the cached rows they read.
 """
 
+import copy
+
 import pytest
 
-from src.calculator.champions import get_champion_module_contract, warwick
+from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
+    warwick,
+)
+from src.calculator.scenario import load_public_champion
 from tests import cc_review, rider_probe, row_review
 
 
@@ -43,12 +51,19 @@ class TestReviewedCrowdControl:
         assert "channels for up to 1.5 seconds to suppress" in r_text
         assert "he then knocks them down" in r_text
 
-    def test_the_out_of_scope_slots_stay_absent(self):
-        """E holds the fear and the 90% slow, but prices no damage."""
+    def test_the_partless_slots_stay_absent(self):
+        """E holds the fear and the 90% slow, but authors no damage part.
+
+        E is ``modeled`` now (its damage-reduction window has a channel),
+        yet it stays out of ``MODULE_CC``: the fear rides the *recast*,
+        which this module does not price, so there is no event a control
+        review could reach.  W is a pure stat buff.
+        """
         data = cc_review.kit("Warwick")
         assert "W" not in warwick.MODULE_CC and "E" not in warwick.MODULE_CC
-        assert get_champion_module_contract("Warwick").coverage["E"] == "out_of_scope"
+        assert get_champion_module_contract("Warwick").coverage["E"] == "modeled"
         assert "fearing nearby enemies for 1 second" in cc_review.slot_text(data, "E")
+        assert row_review.parts("Warwick", "E") == ()
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Warwick") == []
@@ -135,16 +150,87 @@ class TestBloodHunt:
         assert doubled["total_damage"] > base["total_damage"]
 
 
-class TestTheSlotThatStaysOutOfScope:
-    """E (Primal Howl) reduces damage TAKEN — an axis the engine lacks."""
+class TestPrimalHowl:
+    """E (Primal Howl) reduces damage TAKEN — the axis the engine grew.
 
-    def test_the_module_names_the_missing_axis(self):
+    The slot was ``out_of_scope`` because this engine had no incoming-
+    damage-reduction hook.  PR 202's ``self_state_events`` /
+    ``damage_modifier`` seam is that hook (Briar E, Alistar R), so the
+    slot closes on its two cached numbers and nothing invented.
+    """
+
+    def test_the_whole_kit_is_modeled_now(self):
         assert get_champion_module_contract("Warwick").coverage == {
             "P": "modeled",
             "Q": "modeled",
             "W": "modeled",
-            "E": "out_of_scope",
+            "E": "modeled",
             "R": "modeled",
         }
-        assert "damage *taken*" in warwick.__doc__
-        assert "Damage Reduction" in warwick.__doc__
+
+    def test_it_prices_no_enemy_damage(self):
+        assert row_review.priced("Warwick", "E") == 0.0
+
+    def test_the_multiplier_is_the_cached_damage_reduction_row(self):
+        """Rank 5 (row_review's ladder): 55% off -> 0.45 of each packet."""
+        values = _cached_leveling("E", "Damage Reduction")
+        assert values == [35, 40, 45, 50, 55]
+        event = row_review.entry("Warwick", "E")["self_state_events"][0]
+        assert event["kind"] == "damage_modifier"
+        assert event["multiplier"] == pytest.approx(1.0 - values[4] / 100.0)
+        assert event["source"].startswith("Primal Howl")
+
+    def test_the_window_is_the_cached_prose_duration(self):
+        data = cc_review.kit("Warwick")
+        assert "for up to 2.75 seconds" in cc_review.slot_text(data, "E")
+        event = row_review.entry("Warwick", "E")["self_state_events"][0]
+        assert event["duration"] == pytest.approx(2.75)
+
+    def test_both_numbers_carry_their_source_atoms(self):
+        event = row_review.entry("Warwick", "E")["self_state_events"][0]
+        assert [atom["source"] for atom in event["source_atoms"]] == [
+            "Warwick.E[0].effects[0].leveling[0].modifiers[0]",
+            "Warwick.E[0].effects[0].description",
+        ]
+
+    def test_no_damage_type_is_carved_out(self):
+        """The cache names no excluded type, so the full enum is declared.
+
+        Alistar's Unbreakable Will narrows to physical+magic because his
+        cached note says true damage cannot be reduced.  Warwick's E text
+        and notes say no such thing, so narrowing here would be invented.
+        """
+        data = cc_review.kit("Warwick")
+        text = cc_review.slot_text(data, "E").lower()
+        assert "true damage" not in text
+        event = row_review.entry("Warwick", "E")["self_state_events"][0]
+        assert event["damage_classes"] == frozenset(DamageClass)
+        assert event["attack_classes"] == frozenset(AttackClass)
+        assert event["all_sources"] is True
+
+    def test_a_non_percent_reduction_unit_fails_closed(self, monkeypatch):
+        """The unit guard refuses a drifted row rather than pricing it.
+
+        The atom catalog memoizes on ``(data_version(), champion_name)``, so
+        a mutated copy of the cache is still served the real rows — the
+        guard is reached by handing the module a drifted atom directly,
+        which is exactly the shape a patch-day unit change would produce.
+        """
+        real = copy.deepcopy(
+            warwick.required_ranked_attribute_atom(
+                "Warwick",
+                {
+                    "name": "Warwick",
+                    "abilities": load_public_champion("Warwick")["abilities"],
+                },
+                "E",
+                "Damage Reduction",
+                5,
+            )[1]
+        )
+        real["units"] = ["s"] * 5
+        monkeypatch.setattr(
+            warwick, "required_ranked_attribute_atom", lambda *a, **k: (55.0, real)
+        )
+        with pytest.raises(ValueError, match="must use percent"):
+            row_review.entry("Warwick", "E")
