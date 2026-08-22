@@ -342,7 +342,6 @@ function wikiFallbackVariant(form, packet = null, formIndex = 0) {
     // flat index over two axes — which form, and which packet inside it — so
     // the form must survive the flattening or a form toggle has to guess.
     form: formIndex,
-    formName: form?.name || "",
     levelBase: levelScaled ? source.base : undefined,
     base: levelScaled ? undefined : (source?.base || []),
     ap: ratios.ap,
