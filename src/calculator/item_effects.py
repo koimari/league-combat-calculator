@@ -5955,7 +5955,6 @@ class StatBonuses:
     ultimate_haste: float  # Scorn/Hexcharged/Night Vigil/Cryocombustion
     bonus_omnivamp: float  # Endless Hunger Feast's explicit takedown window
     bonus_heal_shield_power: float  # Harmony's bonus-mana conversion
-    bonus_move_speed_percent: float  # Mejai's 10+ Glory
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
     # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
     # exclude temporary combat effects (Blackfire, Rapids, AS windows).
@@ -5988,9 +5987,10 @@ def resolve_stat_effects(
     a new import or call site.
     """
     terminus_resists, terminus_pen = terminus_max_stack_bonuses(items, level)
-    input_bonus_ap, input_move_speed, _, _ = _input_option_stat_bonuses(
-        items, item_options
-    )
+    # Movement speed from item state (Mejai's 10+ Glory) is already in the
+    # caller's ``total_move_speed``; handing it back would be a second home
+    # for one number.
+    input_bonus_ap, _, _, _ = _input_option_stat_bonuses(items, item_options)
     health_multiplier = item_bonus_health_multiplier(items)
     mana_bonus_ap = mana_to_ap_bonus(items, bonus_mana)
     mana_bonus_health = mana_to_health_bonus(items, bonus_mana)
@@ -6067,7 +6067,6 @@ def resolve_stat_effects(
             + gluttonous_greaves_slay_omnivamp(items, item_options)
         ),
         bonus_heal_shield_power=harmony_power,
-        bonus_move_speed_percent=input_move_speed,
         item_bonus_health_multiplier=health_multiplier,
         permanent_bonus_ap=permanent_bonus_ap,
         permanent_ap_multiplier=permanent_ap_multiplier(items),

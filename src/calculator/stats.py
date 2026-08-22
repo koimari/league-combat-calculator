@@ -15,7 +15,7 @@ from .item_effects import (
 from .data_registry import data_version, store_for_generation
 from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
-from .rune_effects import RunePage, RuneStatGrants, rune_page_stat_grants
+from .rune_effects import RunePage, compile_rune_page
 
 # Level cap — 20 is top-lane-only as of this season, so this is
 # season-volatile. Single source of truth: the API guards and the UI
@@ -453,6 +453,40 @@ def calculate_total_stats(
         base_health_regen_per_five + total_item_stats["health_regen_flat"]
     ) * (1.0 + total_item_stats["health_regen_percent"] / 100.0)
     health_regen_per_second = health_regen_per_five / 5.0
+
+    # The page compiles once and is totalled twice, because the fold needs
+    # two of its answers at two different points.
+    page = compile_rune_page(rune_page)
+    item_stat_types = item_stat_type_count(total_item_stats)
+
+    # Movement speed is the first of those two points, and it is settled
+    # here: every source of it — items, item state, rune grants — is
+    # already known, and the soft caps are what the champion actually
+    # moves at. Swiftmarch converts that one number into adaptive force,
+    # and the fight's ``item_state_receipts`` read the same published
+    # ``move_speed``, so the item sees one movement speed rather than an
+    # uncapped pre-rune one here and the real one there. No rune's
+    # movement-speed grant reads the adaptive comparison, which is why
+    # this total can be taken before the conversions that decide it.
+    final_move_speed = apply_movement_speed_soft_caps(
+        (base_stats["move_speed"] + total_item_stats["move_speed_flat"])
+        * (
+            1.0
+            + (
+                total_item_stats["move_speed_percent"]
+                + input_move_speed_percent
+                + page.grants(
+                    level=level,
+                    is_melee=is_melee,
+                    bonus_attack_damage=total_item_stats["attack_damage"],
+                    ability_power=total_item_stats["ability_power"],
+                    item_stat_types=item_stat_types,
+                ).move_speed_percent
+            )
+            / 100.0
+        )
+    )
+
     # Every stat-granting item passive, compiled once. item_effects owns
     # the per-item knowledge; this function owns the application order.
     bonuses = resolve_stat_effects(
@@ -466,14 +500,7 @@ def calculate_total_stats(
         is_melee=is_melee,
         level=level,
         item_options=item_options,
-        total_move_speed=(
-            base_stats["move_speed"] + total_item_stats["move_speed_flat"]
-        )
-        * (
-            1.0
-            + (total_item_stats["move_speed_percent"] + input_move_speed_percent)
-            / 100.0
-        ),
+        total_move_speed=final_move_speed,
         adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
@@ -495,23 +522,18 @@ def calculate_total_stats(
     # is added below where that stat belongs, because a rune's adaptive
     # force is not an item stat (Kai'Sa's evolutions exclude it) even though
     # it lands in the same total.
-    runes = (
-        rune_page_stat_grants(
-            rune_page,
-            level=level,
-            is_melee=is_melee,
-            bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
-            * quest_bonus_ad_multiplier,
-            ability_power=(
-                base_stats["ability_power"]
-                + total_item_stats["ability_power"]
-                + bonuses.bonus_ap
-            )
-            * (bonuses.ap_multiplier + quest_ap_multiplier),
-            item_stat_types=item_stat_type_count(total_item_stats),
+    runes = page.grants(
+        level=level,
+        is_melee=is_melee,
+        bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
+        * quest_bonus_ad_multiplier,
+        ability_power=(
+            base_stats["ability_power"]
+            + total_item_stats["ability_power"]
+            + bonuses.bonus_ap
         )
-        if rune_page is not None
-        else RuneStatGrants()
+        * (bonuses.ap_multiplier + quest_ap_multiplier),
+        item_stat_types=item_stat_types,
     )
 
     # Ability power: base + items + converted AP, then the additive %AP
@@ -599,19 +621,6 @@ def calculate_total_stats(
     final_magic_pen_percent = (
         total_item_stats["magic_penetration_percent"] + bonuses.bonus_pen_percent
     )
-    raw_move_speed = (
-        base_stats["move_speed"] + total_item_stats["move_speed_flat"]
-    ) * (
-        1
-        + (
-            total_item_stats["move_speed_percent"]
-            + bonuses.bonus_move_speed_percent
-            + runes.move_speed_percent
-        )
-        / 100.0
-    )
-    final_move_speed = apply_movement_speed_soft_caps(raw_move_speed)
-
     result = {
         "health": round(total_health),
         "attack_damage": round(total_ad),

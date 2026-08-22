@@ -3,6 +3,8 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.item_effects import swiftmarch_adaptive_force
+from src.calculator.rune_effects import validate_rune_page
 from src.calculator.stats import (
     apply_movement_speed_soft_caps,
     growth_stat,
@@ -28,6 +30,40 @@ class TestLethality:
         stats = calculate_total_stats(ahri_data, level, [ghostblade])
         assert stats["lethality"] > 0
         assert stats["flat_armor_penetration"] == stats["lethality"]
+
+
+class TestOneMovementSpeed:
+    """Swiftmarch converts the one movement speed the build publishes.
+
+    Its adaptive force is priced from the same soft-capped, post-rune
+    number the stat card and the fight's item state receipts report, not
+    from a raw pre-rune total only this fold could see.
+    """
+
+    def _page(self):
+        return validate_rune_page("Arcane Comet", ["Celerity"], None)
+
+    @pytest.mark.parametrize("with_runes", [False, True])
+    def test_the_conversion_reads_the_published_speed(
+        self, ahri_data: dict, with_runes: bool
+    ):
+        swiftmarch = [get_item_by_name("Swiftmarch")]
+        stats = calculate_total_stats(
+            ahri_data, 18, swiftmarch, rune_page=self._page() if with_runes else None
+        )
+        assert stats["ability_power"] == round(
+            swiftmarch_adaptive_force(swiftmarch, total_move_speed=stats["move_speed"])
+        )
+
+    def test_a_rune_movement_speed_grant_moves_the_conversion(self, ahri_data: dict):
+        swiftmarch = [get_item_by_name("Swiftmarch")]
+        quest = {"role": "mid", "role_quest_complete": True}
+        bare = calculate_total_stats(ahri_data, 18, swiftmarch, **quest)
+        celerity = calculate_total_stats(
+            ahri_data, 18, swiftmarch, rune_page=self._page(), **quest
+        )
+        assert (bare["move_speed"], bare["ability_power"]) == (395.0, 21)
+        assert (celerity["move_speed"], celerity["ability_power"]) == (398.95, 22)
 
 
 class TestResourcePoolKind:
