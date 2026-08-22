@@ -390,3 +390,39 @@ def test_energy_admission_keeps_the_legacy_walk():
     result = run_fight(champ, 18, [], _params(duration=6.0))
     assert result["resource_ledger"] is None  # ENERGY: legacy path
     assert result["resource_spent"] > 0.0
+
+
+def test_both_walks_price_a_cast_against_the_one_actualizer_multiplier():
+    """Mana and energy read the same open-window trade (the sourced 2x).
+
+    The number is resolved once onto the fight state from the item's own
+    ``ActiveWindowCastEconomyRule``; neither walk holds a second source for
+    it, so a build that opens the window spends double on either lane.
+    """
+    items = [get_item_by_name("Actualizer")]
+    window = {"Actualizer": {"mana_made_real_active": 1}}
+
+    def paid(result):
+        # What each cast actually took out of the pool: the published
+        # ``resource_cost`` row is the ability's undiscounted number.
+        return {
+            (row["slot"], row["ordinal"]): (
+                row["resource_before"]
+                - row["resource_after"]
+                + row["resource_restored"]
+            )
+            for row in result["cast_timeline"]
+        }
+
+    for champion in ("Ahri", "Akali"):
+        champ = get_champion(champion)
+        closed = paid(
+            run_fight(get_champion(champion), 18, items, _params(duration=3.0))
+        )
+        open_window = paid(
+            run_fight(champ, 18, items, _params(duration=3.0, item_options=window))
+        )
+        priced = {key: amount for key, amount in closed.items() if amount > 0.0}
+        assert priced
+        for key, amount in priced.items():
+            assert open_window[key] == pytest.approx(2.0 * amount)

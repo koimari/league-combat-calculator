@@ -63,17 +63,14 @@ _harrier.phase = ONHIT
 # gate).  If a pinned source ever states the empowered attack crits,
 # the engine's on_hit crit_effectiveness wiring is the pre-specified
 # flip-switch.
-_HARRIER_CRIT_BOUNDARY = "non_crit"
 
 
 def _heightened_senses(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the Harrier-auto attack-speed buff (28-80%), refreshed per auto."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
@@ -142,9 +139,8 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "4009372 and the live wiki carry no crit sentence; the wiki's "
     "general rule is on-hit damage does not crit unless stated; the "
     "historical 'can critically strike' note was removed 2020-08-30; "
-    "the binary has no crit coefficient).  _HARRIER_CRIT_BOUNDARY = "
-    "'non_crit' pins it; a future sourced statement flips the engine's "
-    "pre-specified on_hit crit_effectiveness wiring.",
+    "the binary has no crit coefficient).  A future sourced statement "
+    "flips the engine's pre-specified on_hit crit_effectiveness wiring.",
     "The degraded P cooldown row (values [0,0,0], units '7 : 2.56 "
     "(based on critical strike chance)') is the mark-interval scaling "
     "(7s at 0% crit -> 2.56s at 100%), a mark-COOLDOWN mechanic not "

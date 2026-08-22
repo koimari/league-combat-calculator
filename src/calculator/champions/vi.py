@@ -41,6 +41,8 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
+from .module_contract import coverage
 
 _Q_MAX_CHARGE_SECONDS = 1.25
 _Q_MIN_RANGE = 250.0
@@ -375,12 +377,10 @@ def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     minimum = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
@@ -424,12 +424,10 @@ def _e_hit_time(ctx: SlotCtx) -> float:
 
 
 def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     flat = extract_value(ability, "Physical Damage", rank)
     total_ad = float(ctx.stat("attack_damage"))
@@ -486,12 +484,10 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     raw = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     sequence_start = (
@@ -527,51 +523,46 @@ CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
 )
 
 OPTIONS = [
-    {
-        "key": "q_charge_seconds",
-        "type": "float",
-        "default": 1.25,
-        "min": 0.0,
-        "max": 1.25,
-        "step": 0.125,
-        "label": "Q charge time (seconds)",
-    },
-    {
-        "key": "q_dash_distance",
-        "type": "float",
-        "default": 725.0,
-        "min": 0.0,
-        "max": 725.0,
-        "step": 25.0,
-        "label": "Q distance to target",
-    },
-    {
-        "key": "denting_blows_starting_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "step": 1,
-        "label": "W stacks already on each target",
-    },
-    {
-        "key": "e_attack_delay",
-        "type": "float",
-        "default": 0.25,
-        "min": 0.0,
-        "max": 2.0,
-        "step": 0.05,
-        "label": "Delay from Q hit to E attack",
-    },
-    {
-        "key": "r_start_distance",
-        "type": "float",
-        "default": 800.0,
-        "min": 300.0,
-        "max": 800.0,
-        "step": 25.0,
-        "label": "R starting distance",
-    },
+    float_option(
+        "q_charge_seconds",
+        1.25,
+        minimum=0.0,
+        maximum=1.25,
+        label="Q charge time (seconds)",
+        step=0.125,
+    ),
+    float_option(
+        "q_dash_distance",
+        725.0,
+        minimum=0.0,
+        maximum=725.0,
+        label="Q distance to target",
+        step=25.0,
+    ),
+    int_option(
+        "denting_blows_starting_stacks",
+        0,
+        minimum=0,
+        maximum=2,
+        label="W stacks already on each target",
+        step=1,
+    ),
+    float_option(
+        "e_attack_delay",
+        0.25,
+        minimum=0.0,
+        maximum=2.0,
+        label="Delay from Q hit to E attack",
+        step=0.05,
+    ),
+    float_option(
+        "r_start_distance",
+        800.0,
+        minimum=300.0,
+        maximum=800.0,
+        label="R starting distance",
+        step=25.0,
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -631,5 +622,5 @@ parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
 
 # P emits no row of its own — Blast Shield has no cast and no damage — so
 # the map names the channel that pays it instead.
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

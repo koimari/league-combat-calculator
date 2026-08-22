@@ -47,8 +47,8 @@ from ..ability_atoms import (
 )
 from ..ability_spec import AttackClass, ControlEvent, DamageClass, DamagePart
 from ..survival.actions import TransitionRank
-from .healing_contract import declare_healing_rule
-from .inputs import champion_stat, target_stat
+from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
@@ -121,12 +121,10 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: physical hit + item on-hit application + armor/MR shred."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -170,12 +168,10 @@ def _blood_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     """
     if not ctx.options.get("blood_frenzy_active", True):
         return None
-    ability = ctx.ability("W", 0)
-    if ability is None:
+    ranked = ctx.ranked("W", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     entry = damage_entry(
         ability.get("name", "Blood Frenzy"),
@@ -271,12 +267,10 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
     stun that land on the primary target (control-only events, like the
     other reviewed control packets).
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     if ctx.options.get("e_wall_collision", False):
@@ -420,12 +414,10 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
     re-triggers Blood Frenzy — covered by the ``blood_frenzy_active``
     toggle's default.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -455,43 +447,33 @@ _certain_death.phase = BUFF
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "blood_frenzy_active",
-        "type": "bool",
-        "default": True,
-        "label": (
-            "Blood Frenzy / Hematomania frenzy active (W attack & move "
-            "speed; enables Snack Attack; R maintains it)"
-        ),
-    },
-    {
-        "key": "e_wall_collision",
-        "type": "bool",
-        "default": False,
-        "label": (
-            "E fully-charged knockback collides with terrain " "(bonus magic damage)"
-        ),
-    },
-    {
-        "key": "e_charge_seconds",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "label": (
-            "E charge seconds — the damage-reduction window while charging "
-            "(35% less damage taken), capped at the sourced 1s active duration"
-        ),
-        "rotation": {"role": "self_state", "slot": "E"},
-    },
-    {
-        "key": "target_missing_hp_pct",
-        "type": "int",
-        "default": 50,
-        "min": 0,
-        "max": 100,
-        "label": "Target missing health %",
-    },
+    bool_option(
+        "blood_frenzy_active",
+        True,
+        label="Blood Frenzy / Hematomania frenzy active (W attack & move "
+        "speed; enables Snack Attack; R maintains it)",
+    ),
+    bool_option(
+        "e_wall_collision",
+        False,
+        label="E fully-charged knockback collides with terrain " "(bonus magic damage)",
+    ),
+    float_option(
+        "e_charge_seconds",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="E charge seconds — the damage-reduction window while charging "
+        "(35% less damage taken), capped at the sourced 1s active duration",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
+    int_option(
+        "target_missing_hp_pct",
+        50,
+        minimum=0,
+        maximum=100,
+        label="Target missing health %",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -559,7 +541,7 @@ parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Briar")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -570,8 +552,8 @@ def derive_self_healing(
 ):
     """Resolve Briar self-healing events from its authored packet."""
     healing = []
-    ability = _healing._ability(champion_data, "E")
-    rank = _healing._rank(ability_damages, "E")
+    ability = _healing.ability_json(champion_data, "E")
+    rank = _healing.parsed_rank(ability_damages, "E")
     per_tick = _healing.extract_named(
         ability, "Heal Per Tick", rank, champion_stats, {}
     )
@@ -587,7 +569,7 @@ def derive_self_healing(
         # tick on a hit that lands at 1.0s would drop three quarters of the
         # charge.  An E event is still what proves the cast happened; it is
         # not what the heal is paid for.
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.CAST_SCHEDULE, "E", damage_events, cast_timeline
         ):
             ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
@@ -610,7 +592,7 @@ def derive_self_healing(
     # pre-mitigation bleed damage at every stack level, so one sourced
     # rule prices the whole stream.  The wiki's missing-health healing
     # amplifier (0% : 40%) is a live-state boundary, not priced here.
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.DAMAGING_HIT,
         lambda source: source.startswith("stacking_dot_"),
         damage_events,
@@ -625,7 +607,7 @@ def derive_self_healing(
                     "amount": amount,
                     "source": "Crimson Curse",
                     "kind": "champion_passive",
-                    **_healing._trigger_fields(event),
+                    **_healing.trigger_fields(event),
                 }
             )
     # W[1] (Snack Attack): "healing her for 5% of her maximum health
@@ -634,16 +616,16 @@ def derive_self_healing(
     # 36 / 40% by rank).  The heal pays once per activation, at the
     # bite's hit event; the CAST anchor keeps that one payment even if a
     # future W is priced as several hits.
-    w_rank = _healing._rank(ability_damages, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     heal_percent = _healing.extract_named(
-        _healing._ability(champion_data, "W", 1),
+        _healing.ability_json(champion_data, "W", 1),
         "Heal Percentage",
         w_rank,
         champion_stats,
         {},
     )
     max_health = champion_stat(champion_stats, "health")
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
         event = payment.event
@@ -651,26 +633,30 @@ def derive_self_healing(
             0.05 * max_health
             + float(event.get("damage", 0.0) or 0.0) * heal_percent / 100.0
         )
-        _healing._heal_from_damage(healing, event, snack_heal, "Snack Attack")
+        _healing.heal_from_damage(healing, event, snack_heal, "Snack Attack")
     # R (Certain Death) grants life steal (10 / 15 / 20% by rank) while
     # Hematomania lasts; life steal heals for the sourced percentage of
     # the post-mitigation damage dealt by basic attacks.
-    r_rank = _healing._rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     life_steal = _healing.extract_named(
-        _healing._ability(champion_data, "R"), "Life Steal", r_rank, champion_stats, {}
+        _healing.ability_json(champion_data, "R"),
+        "Life Steal",
+        r_rank,
+        champion_stats,
+        {},
     )
     if life_steal > 0.0:
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT, "auto_attacks", damage_events
         ):
             event = payment.event
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing,
                 event,
                 float(event.get("damage", 0.0) or 0.0) * life_steal / 100.0,
                 "Certain Death",
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Briar", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Briar")(derive_self_healing)

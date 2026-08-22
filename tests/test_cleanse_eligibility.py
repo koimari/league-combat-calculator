@@ -179,15 +179,9 @@ from typing import Any
 import pytest
 
 from src.app import app
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import delivery_eligibility as de
-from src.calculator.participant_timeline import (
-    Combatant,
-    _WalkCompiler,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import (
     ActionKind,
@@ -196,18 +190,8 @@ from src.calculator.survival.actions import (
 )
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
 
 try:  # P2 Slice 4 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import cleanse_eligibility as ce
@@ -307,14 +291,6 @@ def _events(combat: dict, *, target: str, source: str | None = None) -> list[dic
         if event.get("target") == target
         and (source is None or event.get("source") == source)
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _support_events(combat: dict, *, source: str | None = None) -> list[dict]:
@@ -590,7 +566,7 @@ def _simulate(
             _dummy_combatant("target", "main"),
             _dummy_combatant("caster", "main"),
         ]
-    result = _simulate_survival(
+    result = simulate_survival(
         combatants,
         {"target": packets},
         {},
@@ -700,9 +676,9 @@ def test_r1_mikaels_heals_the_selected_ally_only_and_truncates_nothing_today():
     assert purify["cleanse"] is True
     assert purify["target_selection_key"] == "heal:Mikael's Blessing \u2014 Purify"
 
-    jinx = _survival(combat, "ally:Jinx")
-    ashe = _survival(combat, "ally:Ashe")
-    main = _survival(combat, "main")
+    jinx = survival_of(combat, "ally:Jinx")
+    ashe = survival_of(combat, "ally:Ashe")
+    main = survival_of(combat, "main")
     assert jinx["healing_received"] == pytest.approx(131.6)
     assert ashe["healing_received"] == pytest.approx(0.0)
     assert main["healing_received"] == pytest.approx(0.0)
@@ -782,8 +758,8 @@ def test_r2_mikaels_target_choice_receipt_follows_the_selection(
     assert purify["target"] == selected_ally
     assert purify["amount"] == pytest.approx(250.0)
     assert purify.get("skipped_reason") is None
-    selected_row = _survival(combat, selected_ally)
-    other_row = _survival(combat, other_ally)
+    selected_row = survival_of(combat, selected_ally)
+    other_row = survival_of(combat, other_ally)
     assert selected_row["healing_received"] == pytest.approx(131.6)
     assert other_row["healing_received"] == pytest.approx(0.0)
     assert selected_row["action_downtime"] == pytest.approx(2.0)
@@ -803,7 +779,7 @@ def test_r2_mikaels_target_choice_receipt_follows_the_selection(
     assert receipt["downtime_after"] == pytest.approx(2.0)
     assert receipt["heal"]["amount"] == pytest.approx(250.0)
     assert "cleanse" not in other_row
-    use = _survival(combat, "main")["cleanse_use"]
+    use = survival_of(combat, "main")["cleanse_use"]
     assert use["item"] == "Mikael's Blessing"
     assert use["uses_before"] == 1
     assert use["uses_after"] == 0
@@ -838,7 +814,7 @@ def test_r3_mikaels_truncates_only_the_selected_allys_interval():
             _purify_packet(1.5, target="ally:one", attacker="caster", amount=100.0)
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
 
     # CURRENT behavior: the heal applies to the CC'd recipient; the cleanse
     # marker truncates nothing.
@@ -1012,7 +988,7 @@ def test_r6_mikaels_does_not_cleanse_suppression():
     support_effects = {
         "target": [_purify_packet(2.0, target="target", attacker="caster")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: no truncation anywhere.
     assert result["target"]["action_downtime"] == pytest.approx(2.5)
 
@@ -1082,7 +1058,7 @@ def test_r7_qss_and_mercurial_self_cast_denied_while_suppressed(item, source):
             _cleanse_packet(1.5, source=source, target="target", attacker="target")
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: the packet rides the gate today (applied as utility) and the
     # interval stands.
     (cleanse,) = support_effects["target"]
@@ -1166,7 +1142,7 @@ def test_r8_airborne_is_never_cleansed(item, packet_builder):
             ),
         )
     support_effects = {"target": [activation]}
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     assert result["target"]["action_downtime"] == pytest.approx(2.0)
 
     ce = _require_contract()
@@ -1205,7 +1181,7 @@ def test_r9_soft_slow_never_creates_downtime_and_blocking_kinds_are_removed():
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: the slow-only control adds no interval and no downtime.
     assert result["target"]["crowd_control_intervals"] == []
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
@@ -1253,7 +1229,7 @@ def test_r10_no_active_control_qss_use_consumed_receipt_names_the_rule():
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
-    result = _simulate_survival(combatants, {}, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, {}, {}, support_effects, 10.0)
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
     ce = _require_contract()
@@ -1288,7 +1264,7 @@ def test_r10_no_active_control_mikaels_heal_still_fires():
             _purify_packet(1.5, target="target", attacker="caster", amount=100.0)
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: the heal applies with no control present.
     assert result["target"]["healing_received"] == pytest.approx(100.0)
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
@@ -1318,7 +1294,7 @@ def test_r10_no_active_control_mercurial_movement_still_grants():
             _movement_packet(1.5, target="target", attacker="target"),
         ]
     }
-    result = _simulate_survival(combatants, {}, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, {}, {}, support_effects, 10.0)
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
     ce = _require_contract()
@@ -1363,7 +1339,7 @@ def test_r11_control_before_at_and_after_activation():
     support_effects = {
         "target": [_cleanse_packet(2.0, target="target", attacker="target")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # NEW-CONTRACT: A remains [0.5,1.5]; B clamped [1.0,2.0]; C removed;
     # D applies [3.0,4.0].
     ce = _require_contract()
@@ -1417,7 +1393,7 @@ def test_r12_overlapping_stun_and_suppression_only_stun_truncated():
     support_effects = {
         "target": [_purify_packet(2.5, target="target", attacker="caster")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     ce = _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == ""
@@ -1475,7 +1451,7 @@ def test_r13_two_controls_ending_at_different_times_each_tail_removed():
     support_effects = {
         "target": [_purify_packet(2.5, target="target", attacker="caster")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
 
     ce = _require_contract()
     receipt = result["target"]["cleanse"]
@@ -1527,7 +1503,7 @@ def test_r14_repeated_use_second_activation_fails_closed():
             _cleanse_packet(2.0, target="target", attacker="target", sequence=1),
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
 
     ce = _require_contract()
     # First activation truncates; the second is denied and truncates nothing.
@@ -1605,7 +1581,7 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
 
     # 1. The closed vocabulary refuses the kind, by name, before the walk.
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-        _simulate_survival(
+        simulate_survival(
             combatants,
             {"target": [_control_packet(1.0, duration=2.0, source="?", kind="dance")]},
             {},
@@ -1635,7 +1611,7 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
     #    known and non-blocking, so it authors no downtime interval and the
     #    activation names control_not_active with nothing removed.
     assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
-    result = _simulate_survival(
+    result = simulate_survival(
         combatants,
         {"target": [_control_packet(1.0, duration=2.0, source="?", kind="slow")]},
         {},
@@ -1672,7 +1648,7 @@ def test_r16_spell_shield_blocked_control_not_present_at_cleanse():
             _cleanse_packet(2.0, target="target", attacker="target"),
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     (control,) = incoming["target"]
     assert control["skipped_reason"] == "spell_shield"
     assert "crowd_control" not in control
@@ -1700,7 +1676,7 @@ def test_r16_immunity_blocked_control_not_present_at_cleanse():
             _cleanse_packet(2.0, target="target", attacker="target"),
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     (control,) = incoming["target"]
     assert control["crowd_control_blocked"]["source"] == "Black Shield"
     assert "crowd_control" not in control
@@ -1739,15 +1715,15 @@ def test_r16_app_spell_shield_blocks_control_mikaels_heal_still_fires():
         "Banshee's Veil \u2014 Annul",
     }
     assert "crowd_control" not in blocked[0]
-    sivir = _survival(combat, "ally:Sivir")
+    sivir = survival_of(combat, "ally:Sivir")
     assert sivir["action_downtime"] == pytest.approx(0.0)
     assert sivir["spell_shield_used"] is True
     (purify,) = _support_events(combat, source=MIKAELS_SOURCE)
     assert purify["target"] == "ally:Sivir"
     assert purify.get("skipped_reason") is None
     # The unshielded allies take the charm (the order stays pinned).
-    assert _survival(combat, "main")["action_downtime"] == pytest.approx(1.8)
-    assert _survival(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
+    assert survival_of(combat, "main")["action_downtime"] == pytest.approx(1.8)
+    assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
 
     ce = _require_contract()
     assert sivir["cleanse"]["decision"]["reason"] == "control_not_active"
@@ -1775,7 +1751,7 @@ def test_r17_same_timestamp_control_and_cleanse_total_order():
     }
 
     def run():
-        return _simulate_survival(
+        return simulate_survival(
             combatants,
             {"target": [dict(incoming["target"][0])]},
             {},
@@ -1844,7 +1820,7 @@ def test_r18_parity_downtime_equals_removed_intervals():
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     ce = _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["downtime_before"] == pytest.approx(1.0)
@@ -1879,7 +1855,7 @@ def test_r18_app_parity_today():
         }
     )
     for pid in ("main", "ally:Jinx", "ally:Ashe"):
-        row = _survival(combat, pid)
+        row = survival_of(combat, pid)
         intervals = row["crowd_control_intervals"]
         # Simple parity case: exactly one interval per participant.
         assert len(intervals) == 1
@@ -1895,7 +1871,7 @@ def test_r18_app_parity_today():
     # The Purify heal restored exactly the recipient's missing health
     # (Lulu Q lands twice; the heal at 2.5 covers the unhealed remainder).
     (purify,) = _support_events(combat, source=MIKAELS_SOURCE)
-    jinx = _survival(combat, "ally:Jinx")
+    jinx = survival_of(combat, "ally:Jinx")
     assert purify["applied_amount"] == pytest.approx(jinx["healing_received"], abs=0.05)
 
     ce = _require_contract()
@@ -1988,14 +1964,10 @@ def test_r19_compiled_walk_current_fail_closed_surface():
         )
 
 
-def test_r19_compiled_walk_contract_owned_gate():
-    """Unit, NEW-CONTRACT: the contract owns a compiled-support mirror gate
-    that FAILS CLOSED with a named receipt when a template carries a cleanse
-    marker the compiled kernel cannot reproduce (today's silent drop is the
-    gap).  B-dependent: if the owner instead stages the truncation in the
-    compiled kernel, the alternate (xfailed) variant is pinned — either way
-    the receipt must name the rule."""
-    ce = _require_contract()
+def test_r19_compiled_walk_gate_names_the_cleanse_it_cannot_stage():
+    """Unit: the compiled-support gate FAILS CLOSED with a named receipt
+    when a template carries a cleanse marker the compiled kernel cannot
+    reproduce, and leaves a plain heal representable."""
     template = {
         "kind": "heal",
         "amount": 100.0,
@@ -2005,10 +1977,10 @@ def test_r19_compiled_walk_contract_owned_gate():
         "target": "main",
         "time": 2.5,
     }
-    assert ce.compiled_support_receipt(template) == "support_cleanse"
+    assert unrepresentable_template_receipt(template) == "support_cleanse"
     # A plain heal stays representable.
     assert (
-        ce.compiled_support_receipt(
+        unrepresentable_template_receipt(
             {
                 "kind": "heal",
                 "amount": 100.0,
@@ -2019,18 +1991,6 @@ def test_r19_compiled_walk_contract_owned_gate():
         )
         is None
     )
-
-
-# NOTE: the alternate score-path variant (the compiled kernel stages the
-# cleanse marker so compiled_support_receipt returns None and the compiled
-# walk reproduces the truncation) was removed here — the owner landed the
-# fail-closed gate, not the staged truncation.  The PRIMARY variant directly
-# above (test_r19_compiled_walk_contract_owned_gate) already pins the chosen
-# branch: compiled_support_receipt(cleanse-marked heal template) ==
-# "support_cleanse", and a plain heal template (no cleanse marker) stays
-# representable (returns None).  Nothing about the removed alternate's claim
-# is lost — it is the unchosen, now-unreachable branch of the same decision
-# the primary settles.
 
 
 # ---------------------------------------------------------------------------
@@ -2156,7 +2116,7 @@ def test_r21_app_mikaels_heal_blocked_while_caster_is_ccd_today():
     assert purify["time"] == pytest.approx(1.0)
     assert purify["skipped_reason"] == "attacker_state_blocked"
     for pid in ("main", "ally:Jinx", "ally:Ashe"):
-        row = _survival(combat, pid)
+        row = survival_of(combat, pid)
         assert row["healing_received"] == pytest.approx(0.0)
         assert row["action_downtime"] == pytest.approx(2.0)
 
@@ -2176,7 +2136,7 @@ def test_r21_timeline_self_cast_cleanse_rides_the_gate_today():
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     (cleanse,) = support_effects["target"]
     # CURRENT: rides the gate (stays true after integration — the cast
     # fires, it is never skipped).
@@ -2242,7 +2202,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
             _purify_packet(1.5, target="target", attacker="caster", amount=100.0)
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: the heal is blocked while the caster is crowd-controlled.
     assert result["target"]["healing_received"] == pytest.approx(0.0)
     assert result["target"]["action_downtime"] == pytest.approx(2.0)
@@ -2332,7 +2292,7 @@ def test_r23_new_self_cleanse_option_accepted_and_applied(item, source):
     assert status == 200, body
     combat = body["combat"]
 
-    main = _survival(combat, "main")
+    main = survival_of(combat, "main")
     receipt = main["cleanse"]
     assert receipt["item"] == item
     assert receipt["target"] == "main"
@@ -2386,7 +2346,7 @@ def test_r24_mercurial_movement_is_a_separate_utility_effect():
             _movement_packet(1.5, target="target", attacker="target"),
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: the movement utility is recorded in native units (50% / 2s);
     # the cleanse truncates nothing.
     cleanse, movement = support_effects["target"]
@@ -2498,7 +2458,7 @@ def test_r27_self_cast_fires_while_caster_is_stunned_or_charmed(item, source, ki
             _cleanse_packet(1.5, source=source, target="target", attacker="target")
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     (cleanse,) = support_effects["target"]
     # CURRENT: the self-cast is never skipped by the attacker gate.
     assert cleanse.get("skipped_reason") is None

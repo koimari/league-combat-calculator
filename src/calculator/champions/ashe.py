@@ -37,6 +37,9 @@ from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import extract_cooldown, extract_value, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
+from .module_contract import coverage
+from ..stats import calculate_attack_speed
 
 # Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers
 # are prose in the reviewed cache entry (Ashe Q effect 0: "basic attacks
@@ -113,12 +116,10 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     if focus.stacks < focus.rule.max_stacks:
         return None
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     _require_q_rows(ability)
 
     bonus_as_pct = extract_value(ability, "Bonus Attack Speed", rank)
@@ -126,9 +127,8 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     flurry_ratio = extract_value(ability, "Total Damage Per Flurry", rank) / 100.0
 
     # Apply the bonus AS to the shared stats context (BUFF phase).
-    as_ratio = ctx.stats["attack_speed_ratio"]
-    ctx.stats["attack_speed"] = ctx.stat("attack_speed") + as_ratio * (
-        bonus_as_pct / 100.0
+    ctx.stats["attack_speed"] = calculate_attack_speed(
+        ctx.stat("attack_speed"), ctx.stats["attack_speed_ratio"], bonus_as_pct
     )
 
     return {
@@ -196,24 +196,15 @@ def _hawkshot(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "q_active",
-        "type": "bool",
-        "default": True,
-        "label": "Ranger's Focus active",
-    },
-    {
-        "key": "q_focus_stacks",
-        "type": "int",
-        "default": 4,
-        "min": 0,
-        "max": 4,
-        "label": "Focus stacks (4 = Ranger's Focus ready)",
-        # Public kernel receipt for the user decision: the option seeds
-        # the typed Focus stack state (state_lifecycle) whose rule carries
-        # the cap, 4-second refresh window, and 1-stack-per-second decay.
-        "state": ASHE_FOCUS_STACK_RULE.public_receipt(),
-    },
+    bool_option("q_active", True, label="Ranger's Focus active"),
+    int_option(
+        "q_focus_stacks",
+        4,
+        minimum=0,
+        maximum=4,
+        label="Focus stacks (4 = Ranger's Focus ready)",
+        state=ASHE_FOCUS_STACK_RULE.public_receipt(),
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -264,10 +255,4 @@ parse_abilities = build_parser(SLOTS, "Ashe", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Ashe")
 
 # E is emitted, but its row is a sourced zero — not a fact SLOTS derives.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="E")

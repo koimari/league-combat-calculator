@@ -19,6 +19,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option, int_option
 
 
 def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -43,12 +44,10 @@ _assault.phase = BUFF
 
 
 def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(
         ability, "Additional Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -67,12 +66,10 @@ def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     dodged = min(max(int(ctx.option("e_dodged_attacks")), 0), 5)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
@@ -92,12 +89,10 @@ def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Grandmaster-at-Arms"),
@@ -163,50 +158,30 @@ MODULE_CC = {"Q": "none", "W": "none", "R": "none", "E": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Jax", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "p_stacks",
-        "type": "int",
-        "default": 8,
-        "min": 0,
-        "max": 8,
-        "label": "Relentless Assault stacks",
-    },
-    {
-        "key": "e_dodged_attacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": "Counter Strike attacks dodged",
-    },
-    {
-        "key": "e_active",
-        "type": "bool",
-        "default": False,
-        "label": "E (Counter Strike) evasion active",
-    },
-    {
-        "key": "e_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "E evasion start time in seconds",
-    },
-    {
-        "key": "e_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 2.0,
-        "label": "E evasion seconds; zero uses the sourced duration",
-    },
-    {
-        "key": "r_passive_ready",
-        "type": "bool",
-        "default": False,
-        "label": "Grandmaster passive hit ready",
-    },
+    int_option("p_stacks", 8, minimum=0, maximum=8, label="Relentless Assault stacks"),
+    int_option(
+        "e_dodged_attacks",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Counter Strike attacks dodged",
+    ),
+    bool_option("e_active", False, label="E (Counter Strike) evasion active"),
+    float_option(
+        "e_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="E evasion start time in seconds",
+    ),
+    float_option(
+        "e_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=2.0,
+        label="E evasion seconds; zero uses the sourced duration",
+    ),
+    bool_option("r_passive_ready", False, label="Grandmaster passive hit ready"),
 ]
 ASSUMPTIONS = [
     "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied before later casts and autos.",

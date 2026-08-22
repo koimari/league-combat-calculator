@@ -51,6 +51,8 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .inputs import bool_option, float_option, int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
 
@@ -118,12 +120,10 @@ def _q3_knockup_duration(ability: dict[str, Any]) -> float:
 
 def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Steel Tempest, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -226,12 +226,10 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     once per its per-target lockout (``onTargetCdStatic``, 10/9/8/7/6 by
     rank); that lockout is the cast-rate limiter here.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("e_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(
@@ -304,44 +302,31 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "q_gathering_storm",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Gathering Storm stacks (2 = Q3 ready)",
-    },
-    {
-        "key": "e_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 4,
-        "label": "Ride the Wind stacks",
-    },
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": False,
-        "label": "W (Wind Wall) active against selected skillshots",
-    },
-    {
-        "key": "w_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "W active start time in seconds",
-    },
-    {
-        "key": "w_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 4.0,
-        "label": "W active seconds; zero uses the source duration",
-    },
+    int_option(
+        "q_gathering_storm",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Gathering Storm stacks (2 = Q3 ready)",
+    ),
+    int_option("e_stacks", 0, minimum=0, maximum=4, label="Ride the Wind stacks"),
+    bool_option(
+        "w_active", False, label="W (Wind Wall) active against selected skillshots"
+    ),
+    float_option(
+        "w_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="W active start time in seconds",
+    ),
+    float_option(
+        "w_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=4.0,
+        label="W active seconds; zero uses the source duration",
+    ),
     {
         "key": "w_blocked_skillshots",
         "type": "string_list",
@@ -366,6 +351,4 @@ OPTIONS = [
 ]
 
 
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot in {"P", "W"} else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="PW")

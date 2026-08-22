@@ -41,6 +41,7 @@ axis, which the label does not close:
 from .packet_module import build_packet_module
 from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, find_named_leveling, sum_modifiers
+from .module_contract import coverage
 
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
 
@@ -141,10 +142,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "change): the slot was previously mislabeled out_of_scope despite "
     "the packet layer already carrying no enemy-damage formula for it.",
 ]
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="PW")

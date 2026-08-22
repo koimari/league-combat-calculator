@@ -37,12 +37,10 @@ PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133b
 
 def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: initial impact plus the 4 lingering-bead ticks (or Arc of Ruin)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     transcendent = bool(ctx.options.get("r_transcendent", False))
     if transcendent:
         r_rank = ctx.rank_for("R")
@@ -105,12 +103,10 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _transcend_one_self(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the Transcendent State buff shell (zero direct damage)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     entry = damage_entry(
         ability.get("name", "Transcend One's Self"),
         rank,

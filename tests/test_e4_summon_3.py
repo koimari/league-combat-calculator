@@ -30,6 +30,7 @@ import pytest
 from src import app as app_module
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.slotlib import find_named_leveling
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _CACHE_KEY_BY_DISPLAY = {
@@ -81,11 +82,12 @@ def _fight(
 def _leveling(champion: str, slot: str, attribute: str) -> dict:
     """Return one leveling entry from data/champions.json, failing loudly."""
     ability = _CHAMPION_DATA[_CACHE_KEY_BY_DISPLAY[champion]]["abilities"][slot][0]
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return leveling
-    raise AssertionError(f"{champion} {slot} has no leveling attribute {attribute!r}")
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        raise AssertionError(
+            f"{champion} {slot} has no leveling attribute {attribute!r}"
+        )
+    return leveling
 
 
 def _normalize_unit(unit: str) -> str:

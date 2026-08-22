@@ -41,7 +41,7 @@ scanner:
    text must start at a watched prefix and end in a dotted extension
    (``_CONCRETE_RE``). This drops bare directory
    references (``data/gamefiles``, ``data/bin/characters`` -- used in
-   ``test_weekly_ingest.py`` for tree-wide stat fingerprinting, not to
+   ``test_patch_update.py`` for tree-wide stat fingerprinting, not to
    open one named file) and receipt-tag fragments that merely *mention*
    the prefix without naming a file (``test_vladimir_e_charge_time.py``
    and ``test_zeri_p_execute_range.py`` embed
@@ -106,7 +106,7 @@ each is a documented, low-risk trade-off)
 - Does not distinguish a real repo-rooted path (``ROOT / "data" / ...``,
   ``Path(__file__).resolve().parent.parent / "data" / ...``) from a
   synthetic path built under a ``tmp_path``-derived variable
-  (``test_weekly_ingest.py`` builds ``repo / "data" / "bin" /
+  (``test_patch_update.py`` builds ``repo / "data" / "bin" /
   "characters"`` against a scratch git repo in several tests). This is
   harmless today: the only synthetic-repo literal that also names a
   concrete file (``"data/bin/characters/gnarbig.bin.json"``, asserted as
@@ -418,7 +418,7 @@ def test_scanner_excludes_pure_docstring_citations() -> None:
 def test_scanner_drops_directory_references_and_receipt_tag_fragments() -> None:
     """Bare directories and truncated receipt tags name no concrete file."""
     weekly_paths = {
-        ref.path for ref in ALL_REFERENCES if ref.file == "tests/test_weekly_ingest.py"
+        ref.path for ref in ALL_REFERENCES if ref.file == "tests/test_patch_update.py"
     }
     assert "data/gamefiles" not in weekly_paths
     assert "data/bin/characters" not in weekly_paths

@@ -92,12 +92,10 @@ def repeat_damage_parser(
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
+        ability, rank = ranked
         per_tick = extract_named(
             ability, attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
@@ -145,12 +143,10 @@ def initial_plus_ticks_parser(
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
+        ability, rank = ranked
         initial = extract_named(
             ability, initial_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
@@ -201,12 +197,10 @@ def full_plus_reduced_parser(
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
+        ability, rank = ranked
         full = extract_named(
             ability, full_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )

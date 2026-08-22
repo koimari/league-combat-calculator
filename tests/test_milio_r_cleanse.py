@@ -145,8 +145,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
@@ -158,30 +156,17 @@ from src.calculator.cleanse_eligibility import (
     ITEM_CLEANSE_DECLARATIONS,
     CleanseDecision,
     CleanseEligibility,
-    compiled_support_receipt,
     resolve_cleanse_item,
     truncate_intervals,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
+from tests.app_config import app_config
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MILIO_DATA = _CHAMPION_DATA["Milio"]
@@ -289,12 +274,8 @@ def _testing_client():
     rely on ``TESTING`` being False (the limiter is bypassed under
     TESTING), so this file must never leave the flag set.
     """
-    previous = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
+    with app_config(TESTING=True):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous
 
 
 def _app_combat(
@@ -348,14 +329,6 @@ def _app_combat(
         )
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()["combat"]
-
-
-def _survival(combat: dict, participant_id: str = "main") -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _main_heals(combat: dict) -> list[dict]:
@@ -502,7 +475,7 @@ def _kernel_survival(
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
     ]
-    return _simulate_survival(
+    return simulate_survival(
         combatants,
         {"main": list(controls or [])},
         {"main": list(heals or [])},
@@ -751,7 +724,7 @@ class TestNoR:
         # implicitly.  Flips when the P2-7 authoring lands.
         combat = _app_combat(ranks={**_RANKS, "R": 0})
         for participant_id in ("main", "ally:Jinx"):
-            survival = _survival(combat, participant_id)
+            survival = survival_of(combat, participant_id)
             assert "cleanse" not in survival
             assert "cleanse_use" not in survival
             assert "cleanse_denied" not in survival
@@ -816,7 +789,7 @@ class TestRTiming:
         # one_rotation — with no explicit-time option (the cast IS the
         # activation, the GP/Rengar precedent).
         combat = _app_combat()
-        cleanse = _survival(combat)["cleanse"]
+        cleanse = survival_of(combat)["cleanse"]
         assert cleanse["activation_time"] == pytest.approx(0.25)
         # The no-CC Garen fight: the cast fires, the decision names
         # control_not_active and the one use is consumed.
@@ -869,7 +842,7 @@ class TestHealAndCleanseSeparate:
         combat = _app_combat()
         assert _main_heals(combat)  # the separate heal receipts still land
         assert _breath_support(combat)
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["cleanse"]["decision"]["reason"] == "control_not_active"
         assert survival["cleanse"]["use_consumed"] is True
         assert survival["cleanse_use"]["uses_after"] == 0
@@ -947,7 +920,7 @@ class TestScope:
         # the pin is kernel-shaped: ONLY ally:Jinx is charmed, the cast
         # fires at 1.5, the self decision names control_not_active (use
         # consumed once) and the ally decision truncates her own charm.
-        result = _simulate_survival(
+        result = simulate_survival(
             [
                 _dummy_combatant("enemy", "enemy"),
                 _dummy_combatant("main", "main"),
@@ -1059,7 +1032,7 @@ class TestControlExclusions:
         # The caster must not be CC'd for the cast to fire, so the
         # recipient-side pins ride the ally packet (the caster is clean).
         def _run(ally_kind: str):
-            return _simulate_survival(
+            return simulate_survival(
                 [
                     _dummy_combatant("enemy", "enemy"),
                     _dummy_combatant("main", "main"),
@@ -1125,7 +1098,7 @@ class TestCastabilityGate:
         # The R heal contributes ZERO to the ledger (the Cozy Campfire
         # self ticks are a separate stream and still land — they are not
         # part of the R cast).
-        assert _survival(combat, "main")["healing_received"] > 0.0
+        assert survival_of(combat, "main")["healing_received"] > 0.0
 
     def test_kernel_suppression_blocks_self_cast_use_not_consumed(self):
         # Kernel evidence (PASS): the Slice 4 kernel already implements
@@ -1174,7 +1147,7 @@ class TestCastabilityGate:
         # stays blocked (the cast never happens).  Absent today — no
         # cleanse receipts exist at all.
         combat = _app_combat(enemy="Ahri")
-        main = _survival(combat, "main")
+        main = survival_of(combat, "main")
         # The gated path (the Slice 4 R22 contract): the whole cast is
         # blocked by the attacker crowd-control gate — NO cleanse row on
         # the blocked targets, the use receipt names the gate (NOT
@@ -1195,7 +1168,7 @@ class TestCastabilityGate:
             e.get("skipped_reason") == "attacker_state_blocked" for e in r_heals
         )
         # The ally's charm is untouched too (the whole cast is denied).
-        ally = _survival(combat, "ally:Jinx")
+        ally = survival_of(combat, "ally:Jinx")
         assert ally["crowd_control_intervals"][0]["end"] == pytest.approx(1.8)
         assert "cleanse" not in ally
 
@@ -1342,7 +1315,7 @@ class TestOneUseAndCooldown:
         # packet, so the completion must key the latch per cast (shared
         # decision) — a second R cast then denies every one of its
         # recipients.
-        result = _simulate_survival(
+        result = simulate_survival(
             [
                 _dummy_combatant("enemy", "enemy"),
                 _dummy_combatant("main", "main"),
@@ -1443,7 +1416,7 @@ class TestSameTimeOrdering:
         # consumes the use with the control_not_active reason.
         combat = _app_combat()
         (self_heal,) = _main_heals(combat)
-        cleanse = _survival(combat)["cleanse"]
+        cleanse = survival_of(combat)["cleanse"]
         assert self_heal["time"] == pytest.approx(0.25)
         assert cleanse["activation_time"] == pytest.approx(0.25)
         assert cleanse["decision"]["reason"] == "control_not_active"
@@ -1601,7 +1574,7 @@ class TestTruncation:
         # ends at 1.5 (downtime_before 1.8, downtime_after 1.0) while
         # the main's ledger is untouched; historical downtime remains
         # and later controls are untouched (S10 pins that half).
-        result = _simulate_survival(
+        result = simulate_survival(
             [
                 _dummy_combatant("enemy", "enemy"),
                 _dummy_combatant("main", "main"),
@@ -1724,14 +1697,20 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
         assert (
-            compiled_support_receipt({"kind": "heal", "amount": 100.0, "cleanse": True})
+            unrepresentable_template_receipt(
+                {"kind": "heal", "amount": 100.0, "cleanse": True}
+            )
             == "support_cleanse"
         )
-        assert compiled_support_receipt({"kind": "heal", "amount": 350.0}) is None
-        assert compiled_support_receipt({"kind": "movement"}) == "support_kind=movement"
+        assert (
+            unrepresentable_template_receipt({"kind": "heal", "amount": 350.0}) is None
+        )
+        assert (
+            unrepresentable_template_receipt({"kind": "movement"})
+            == "support_kind=movement"
+        )
 
     def test_score_gate_never_reprices_the_r_heal(self):
         # PASS: the R heal packet (the E8d fan-out shape) is a plain heal
@@ -1747,10 +1726,8 @@ class TestScoreFailClosed:
             "target": "ally:Jinx",
             "_event_id": "milio:r:3:enemy:Garen:ally:1",
         }
-        assert compiled_support_receipt(heal_template) is None
         assert unrepresentable_template_receipt(heal_template) is None
         marked = {**heal_template, "cleanse": True}
-        assert compiled_support_receipt(marked) == "support_cleanse"
         assert unrepresentable_template_receipt(marked) == "support_cleanse"
 
 
@@ -1820,13 +1797,12 @@ class TestModeParity:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
         combat = _app_combat()
-        assert _survival(combat)["cleanse"]["decision"]["reason"] == (
+        assert survival_of(combat)["cleanse"]["decision"]["reason"] == (
             "control_not_active"
         )
-        assert _survival(combat)["cleanse"]["item"] == _R_CLEANSE_ITEM
+        assert survival_of(combat)["cleanse"]["item"] == _R_CLEANSE_ITEM
 
 
 # ---------------------------------------------------------------------------
@@ -1927,9 +1903,12 @@ class TestUnchangedBoundaries:
             "intervals_after",
             "use_consumed",
         }
-        assert compiled_support_receipt({"kind": "cleanse"}) == "support_kind=cleanse"
         assert (
-            compiled_support_receipt({"kind": "heal", "cleanse": True})
+            unrepresentable_template_receipt({"kind": "cleanse"})
+            == "support_kind=cleanse"
+        )
+        assert (
+            unrepresentable_template_receipt({"kind": "heal", "cleanse": True})
             == "support_cleanse"
         )
         assert (

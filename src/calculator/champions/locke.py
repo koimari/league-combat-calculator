@@ -23,6 +23,7 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import extract_cooldown, extract_named, on_hit_entry
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -123,28 +124,9 @@ SLOTS = {
 }
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "q_casts",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 3,
-        "label": "Ritual Nails casts",
-    },
-    {
-        "key": "soul_nails",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 3,
-        "label": "Soul Nails stacks",
-    },
-    {
-        "key": "e_dash",
-        "type": "bool",
-        "default": True,
-        "label": "Ashen Pursuit dash",
-    },
+    int_option("q_casts", 3, minimum=1, maximum=3, label="Ritual Nails casts"),
+    int_option("soul_nails", 0, minimum=0, maximum=3, label="Soul Nails stacks"),
+    bool_option("e_dash", True, label="Ashen Pursuit dash"),
 ]
 
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)

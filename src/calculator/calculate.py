@@ -9,10 +9,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import replace
 
-from .champions import (
-    engine_registration_kind,
-    get_comparison_curve_unavailable_reason,
-)
+from .champions import engine_registration_kind
 from .defensive_effects import resolve_starting_defenses
 from .item_coverage import require_certified_target_timeline
 from .participant_timeline import build_participant_timeline
@@ -92,11 +89,6 @@ def _add_comparison_curve(
     response: dict, request: ScenarioRequest, resolved: ResolvedScenario
 ) -> None:
     """Attach crossover windows or an explicit fail-closed receipt."""
-    reason = get_comparison_curve_unavailable_reason(resolved.champion_data["name"])
-    if reason:
-        response["comparison_curve"] = []
-        response["comparison_curve_status"] = {"available": False, "reason": reason}
-        return
     try:
         response["comparison_curve"] = _comparison_curve(request, resolved)
     except ValueError as exc:
@@ -315,3 +307,28 @@ def calculate_payload(
     response["headline_total"] = displayed_prediction(response)[0]
     _name_the_response(response)
     return response
+
+
+def compare_payload(data: Mapping[str, object]) -> dict[str, object]:
+    """Calculate exactly two complete builds from one request body.
+
+    The browser needs two complete results for a build comparison. Keeping
+    both calculations behind one application boundary removes the client-side
+    request fan-out and gives the server one cache and rate-limit decision.
+    """
+    raw_builds = data.get("builds")
+    if not isinstance(raw_builds, list) or len(raw_builds) != 2:
+        raise ValueError("builds must contain exactly 2 calculation objects")
+
+    results: list[dict] = []
+    for index, build in enumerate(raw_builds):
+        if not isinstance(build, Mapping):
+            raise ValueError(f"builds[{index}] must be an object")
+        results.append(calculate_payload(build, deterministic=True))
+
+    return {
+        "results": results,
+        "build_count": len(results),
+        "request_count": 1,
+        "mode": "deterministic",
+    }

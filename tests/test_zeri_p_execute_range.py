@@ -198,7 +198,7 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slotlib import extract_named, find_named_leveling
 from src.calculator.champions.zeri import PACKET_SHA256
 
 # Coverage has one home now: the validated module contract (a module only
@@ -427,11 +427,10 @@ def _api(champion_options: dict | None = None):
 
 
 def _leveling(ability: dict, attribute: str) -> dict:
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return leveling
-    raise AssertionError(f"no leveling {attribute!r} in {ability.get('name')}")
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        raise AssertionError(f"no leveling {attribute!r} in {ability.get('name')}")
+    return leveling
 
 
 def _atom(atom_id: str, name: str | None = None) -> dict:

@@ -656,18 +656,6 @@ def defense_composition(defense: ProjectileDefense | None) -> DefenseComposition
     )
 
 
-def defense_matches(
-    defense: ProjectileDefense | None,
-    action: Any,
-    attacker: Any,
-) -> bool:
-    """Return whether one authored event is selected by the defense atom."""
-    eligibility = defense_eligibility(defense)
-    if eligibility is None:
-        return False
-    return eligibility.decide(action, attacker).eligible
-
-
 def public_defense(defense: ProjectileDefense | None) -> dict[str, Any] | None:
     """Return a JSON-safe interaction atom for the survival receipt."""
 
@@ -704,7 +692,6 @@ __all__ = [
     "TargetPhysicalDamageReduction",
     "defense_composition",
     "defense_eligibility",
-    "defense_matches",
     "public_defense",
     "public_physical_damage_reduction",
     "resolve_physical_damage_reduction",

@@ -13,14 +13,12 @@ from src.calculator.champions import (
     get_champion_module_contract,
     get_champion_module_meta,
     get_champion_options_meta,
-    get_comparison_curve_unavailable_reason,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.optimizer import _evaluate_build
 from src.calculator.pipeline import DEFAULT_AUTO_ATTACK_UPTIME, FightParams, run_fight
+from tests import cc_review
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -471,14 +469,10 @@ def test_e_and_r_are_wired_timed_only_zero_damage_rows(kaisa_data):
     assert "E" not in payload["breakdown"]
 
 
-def test_sources_options_and_unrestricted_modes_are_public_receipts():
+def test_sources_and_options_are_public_receipts():
     meta = get_champion_options_meta("Kai'Sa")
 
     assert len(meta["options"]) == 4
-    assert "supported_fight_modes" not in meta
-    assert get_supported_fight_modes("Kai'Sa") is None
-    assert get_unsupported_fight_mode_reason("Kai'Sa") is None
-    assert get_comparison_curve_unavailable_reason("Kai'Sa") is None
     assert {row["revision_id"] for row in meta["sources"]} == {
         4046579,
         4038389,
@@ -496,78 +490,9 @@ def test_sources_options_and_unrestricted_modes_are_public_receipts():
 # Reviewed crowd control (MODULE_CC, wave 4B)
 # ---------------------------------------------------------------------------
 
-# The Wiki's crowd-control vocabulary, as this module's review read it:
-# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
-_CC_CONTROL_WORDS = (
-    "airborne",
-    "charm",
-    "fear",
-    "flee",
-    "immobiliz",
-    "knock",
-    "pull",
-    "root",
-    "sleep",
-    "slow",
-    "snare",
-    "stasis",
-    "stun",
-    "suppress",
-    "taunt",
-)
 _CC_CHAMPION = "Kai'Sa"
 _CC_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
-
-
-def _cc_slot_text(slot):
-    """Every cached description of one slot, lowercased."""
-    from src.calculator.data_fetcher import get_champion
-
-    return " ".join(
-        effect.get("description") or ""
-        for ability in get_champion(_CC_CHAMPION)["abilities"].get(slot, [])
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
-def _cc_control_hits(slot):
-    """The control vocabulary one slot's cached text actually uses."""
-    text = _cc_slot_text(slot)
-    return [word for word in _CC_CONTROL_WORDS if word in text]
-
-
-def _cc_kinds(**options):
-    """Result key -> the reviewed kinds the slot's parts actually carry."""
-    from src.calculator.champions import parse_champion_abilities
-    from src.calculator.data_fetcher import get_champion
-
-    parsed = parse_champion_abilities(
-        get_champion(_CC_CHAMPION),
-        18,
-        100.0,
-        _CC_RANKS,
-        champion_options=options or None,
-    )
-    carried = {
-        key: sorted({part.cc_kind for part in entry.get("parts") or () if part.cc_kind})
-        for key, entry in parsed.items()
-    }
-    return {key: kinds for key, kinds in carried.items() if kinds}
-
-
-def _cc_timeline_coverage():
-    """The campaign's control-token probe, through the public entry."""
-    from src.calculator.calculate import calculate_payload
-
-    return calculate_payload(
-        {
-            "champion": _CC_CHAMPION,
-            "level": 18,
-            "items": ["Fimbulwinter"],
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-        }
-    )["timeline_coverage"]
+_CC = cc_review.ChampionReview(_CC_CHAMPION, _CC_RANKS)
 
 
 class TestReviewedCrowdControl:
@@ -587,13 +512,13 @@ class TestReviewedCrowdControl:
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
         for slot, expected in [["Q", []], ["W", []]]:
-            assert _cc_control_hits(slot) == list(expected), slot
+            assert _CC.control_hits(slot) == list(expected), slot
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _cc_kinds() == {"Q": ["none"], "W": ["none"]}
+        assert _CC.kinds() == {"Q": ["none"], "W": ["none"]}
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _cc_timeline_coverage()
+        coverage = _CC.coverage()
 
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"

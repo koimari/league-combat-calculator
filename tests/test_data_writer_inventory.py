@@ -1,8 +1,8 @@
 """Enforce the data-ownership registry (issue #141).
 
-Every writer under data/ must be declared in data_registry.WRITERS, no
-cwd-relative Path("data literals may remain, and the three tracked runtime
-caches may only be written by data_updater through write_runtime_cache.
+No cwd-relative Path("data literals may remain, and the three tracked
+runtime caches may only be written by data_updater through
+write_runtime_cache.
 """
 
 import ast
@@ -66,8 +66,8 @@ def _data_writes(tree: ast.AST) -> list[str]:
     return hits
 
 
-def test_every_data_write_site_maps_to_the_registry_allowlist():
-    """Every literal data/ path belongs to a declared writer module."""
+def test_no_data_write_site_uses_a_cwd_relative_literal():
+    """No write under data/ is addressed by a bare "data/..." literal."""
     problems = []
     for path in _iter_python_files():
         rel = path.relative_to(ROOT).as_posix()
@@ -75,7 +75,7 @@ def test_every_data_write_site_maps_to_the_registry_allowlist():
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for hit in _data_writes(tree):
-            # scripts declaring their own writes must appear in WRITERS
+            # a data/ write must be repo-anchored, never cwd-relative
             if hit.startswith("data/") and "tests/" not in rel:
                 problems.append(f"{rel}: {hit}")
     assert not problems, "\n".join(problems[:20])

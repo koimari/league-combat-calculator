@@ -31,15 +31,14 @@ from src.calculator.item_effects import (
 from src.calculator.interpreters import charged_strike
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests.app_config import app_config
 
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits_between_route_tests():
     """Only dedicated tests spend the production abuse-control budget."""
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _calculate(items, *, champion="Ahri", enemies=(), duration=6, **extra):

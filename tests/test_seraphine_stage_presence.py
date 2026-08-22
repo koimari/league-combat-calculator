@@ -61,6 +61,7 @@ from src.calculator.champions.seraphine import (
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
 from src.calculator.support_effects import derive_ally_effects
+from tests import game_binary
 
 _SERAPHINE = get_champion("Seraphine")
 _WIKI = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Seraphine"]
@@ -94,14 +95,6 @@ _TARGET = {
     "target_current_health": 2500.0,
     "target_missing_health": 0.0,
 }
-
-
-def _data_value(record: dict, name: str) -> list[float]:
-    """One named ``DataValues`` row out of a binary spell record."""
-    for entry in record.get("DataValues", []):
-        if entry.get("name") == name:
-            return list(entry.get("values") or [])
-    raise AssertionError(f"binary record has no DataValues row {name!r}")
 
 
 def _leveling_row(effect: dict, attribute: str) -> dict:
@@ -185,7 +178,7 @@ class TestNoteDamageIsBinaryCorroborated:
     def test_binary_ap_ratio_matches_the_wiki(self):
         row = _leveling_row(_P_EFFECT, "Bonus Magic Damage")
         assert row["modifiers"][1]["values"][0] == pytest.approx(4.0)
-        values = _data_value(_passive_record(), "NoteAPRatio")
+        values = game_binary.data_value(_passive_record(), "NoteAPRatio")
         assert all(value == pytest.approx(0.04, abs=1e-6) for value in values)
 
     def test_binary_ap_ratio_is_wired_into_the_damage_formula(self):
@@ -250,7 +243,7 @@ class TestNoteCapIsSourced:
         assert "stacks up to 4 times on each unit" in _HARMONY_EFFECT["description"]
 
     def test_module_cap_matches_the_binary(self):
-        values = _data_value(_passive_record(), "MaxNotes")
+        values = game_binary.data_value(_passive_record(), "MaxNotes")
         assert all(value == pytest.approx(4.0) for value in values)
 
     def test_note_count_is_clamped_to_the_cap(self):
@@ -298,7 +291,7 @@ class TestAllyNotesAreWithheld:
         assert "reduced by 75% for Notes from allies" in _P_EFFECT["description"]
 
     def test_binary_ally_percent_exists_but_is_not_priced(self):
-        values = _data_value(_passive_record(), "AllyNoteDamagePercent")
+        values = game_binary.data_value(_passive_record(), "AllyNoteDamagePercent")
         assert all(value == pytest.approx(0.25) for value in values)
         # Four self Notes at level 18 / 200 AP: 4 x (25 + 8). An ally Note
         # would add a fifth quarter-strength hit; the total must be exactly

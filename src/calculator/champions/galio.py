@@ -14,6 +14,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
 
 _Q_CAST_TIME = 0.25
 _Q_TORNADO_FIRST_TICK = 0.75
@@ -55,12 +56,10 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: gust at cast end, then four max-health tornado ticks."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     gust = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     ap = float(ctx.stat("ability_power"))
@@ -105,12 +104,10 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _shield_of_durand(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: damage grows in eight 25% steps over the first 1.25 seconds."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     charge = min(
         _W_MAX_CHARGE,
@@ -144,12 +141,10 @@ def _shield_of_durand(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: champion damage at cast time plus the selected dash travel."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     distance = min(
         650.0,
         max(250.0, float(ctx.option("e_dash_distance"))),
@@ -171,12 +166,10 @@ def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _heros_entrance(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: impact damage after the sourced 2.75-second channel."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Hero's Entrance"),
@@ -192,32 +185,29 @@ def _heros_entrance(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 1,
-        "label": "Colossal Smash attacks available",
-        "min": 0,
-        "max": 10,
-    },
-    {
-        "key": "w_charge_seconds",
-        "type": "float",
-        "default": 1.25,
-        "label": "W charge time (seconds)",
-        "min": 0.0,
-        "max": 2.0,
-        "step": 0.16,
-    },
-    {
-        "key": "e_dash_distance",
-        "type": "float",
-        "default": 650.0,
-        "label": "E travel distance",
-        "min": 250.0,
-        "max": 650.0,
-        "step": 50.0,
-    },
+    int_option(
+        "passive_procs",
+        1,
+        minimum=0,
+        maximum=10,
+        label="Colossal Smash attacks available",
+    ),
+    float_option(
+        "w_charge_seconds",
+        1.25,
+        minimum=0.0,
+        maximum=2.0,
+        label="W charge time (seconds)",
+        step=0.16,
+    ),
+    float_option(
+        "e_dash_distance",
+        650.0,
+        minimum=250.0,
+        maximum=650.0,
+        label="E travel distance",
+        step=50.0,
+    ),
 ]
 
 ASSUMPTIONS = [

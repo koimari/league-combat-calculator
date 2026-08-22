@@ -31,18 +31,19 @@ import dataclasses
 from typing import Any
 
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import extract_named
 
 from ..healing_helpers import (
     HealAnchor,
-    _ability,
-    _missing_health_scaled_heal,
-    _payments,
-    _rank,
-    _trigger_fields,
+    ability_json,
+    missing_health_scaled_heal,
+    payments,
+    parsed_rank,
+    trigger_fields,
 )
+from .module_contract import coverage
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
 # active at once" — 10 at level 18 (the test level).
@@ -142,13 +143,7 @@ OPTIONS.append(
         "label": "Sprung Bushwhack traps",
     }
 )
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="PR")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
@@ -167,22 +162,22 @@ def derive_self_healing(
     not the damage ledger's row count.
     """
     healing: list[dict] = []
-    ability = _ability(champion_data, "E")
-    e_rank = _rank(ability_damages, "E")
+    ability = ability_json(champion_data, "E")
+    e_rank = parsed_rank(ability_damages, "E")
     min_heal = extract_named(ability, "Minimum Heal", e_rank, champion_stats)
     max_heal = extract_named(ability, "Maximum Heal", e_rank, champion_stats)
-    for payment in _payments(HealAnchor.CAST, "E", damage_events, cast_timeline):
+    for payment in payments(HealAnchor.CAST, "E", damage_events, cast_timeline):
         healing.append(
             {
                 "time": float(payment.event.get("time", 0.0)),
                 "amount": 0.0,
-                "amount_formula": _missing_health_scaled_heal(min_heal, max_heal),
+                "amount_formula": missing_health_scaled_heal(min_heal, max_heal),
                 "source": "Primal Surge",
                 "kind": "champion_ability",
-                **_trigger_fields(payment.event),
+                **trigger_fields(payment.event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Nidalee", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Nidalee")(derive_self_healing)

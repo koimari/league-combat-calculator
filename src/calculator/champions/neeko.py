@@ -37,6 +37,7 @@ from .slotlib import (
     extract_named,
     with_control,
 )
+from .module_contract import coverage
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
 
@@ -54,12 +55,10 @@ _R_SHIELD_DURATION = 2.0  # ShieldDuration, seconds
 
 def _blooming_burst(ctx: SlotCtx):
     """Q: initial burst + up to 2 re-blooms (Total Maximum Magic Damage)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     initial = extract_named(
         ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -94,12 +93,10 @@ def _blooming_burst(ctx: SlotCtx):
 
 def _pop_blossom(ctx: SlotCtx):
     """R: magic damage + the 2s self-shield (1 nearby enemy champion)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Pop Blossom"),
@@ -176,7 +173,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "slot in this module (never overridden from build_packet_module's "
     "no_damage branch).",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

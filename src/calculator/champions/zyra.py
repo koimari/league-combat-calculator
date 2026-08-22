@@ -43,6 +43,8 @@ from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import with_control
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
 
@@ -188,26 +190,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "plant_count",
-        "type": "int",
-        "default": 1,
-        "label": "Plants attacking the target",
-        "min": 0,
-        "max": 8,
-    },
-    {
-        "key": "plant_attacks",
-        "type": "int",
-        "default": 4,
-        "label": "Plant attacks per plant (5s window)",
-        "min": 0,
-        "max": 20,
-    },
+    int_option(
+        "plant_count", 1, minimum=0, maximum=8, label="Plants attacking the target"
+    ),
+    int_option(
+        "plant_attacks",
+        4,
+        minimum=0,
+        maximum=20,
+        label="Plant attacks per plant (5s window)",
+    ),
 ]
 
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

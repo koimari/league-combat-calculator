@@ -21,6 +21,8 @@ from ..ability_spec import DamagePart
 from .packet_module import build_packet_module
 from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 
@@ -120,14 +122,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "w_summoner",
-        "type": "int",
-        "default": 0,
-        "label": "W Spell Shard mimic (0 Spell Thief bolts / 1 Heal / 2 Barrier / 3 Smite)",
-        "min": 0,
-        "max": 3,
-    },
+    int_option(
+        "w_summoner",
+        0,
+        minimum=0,
+        maximum=3,
+        label="W Spell Shard mimic (0 Spell Thief bolts / 1 Heal / 2 Barrier / 3 Smite)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -151,7 +152,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "no-damage classification rather than an unmodeled gap (no_damage, "
     "not out_of_scope).",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "E"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="R")

@@ -5,17 +5,17 @@ contains post-mitigation, ordered damage events; a champion module's
 ``derive_self_healing`` applies its own Wiki rules to those events and
 returns another ordered ledger for the participant simulator.  This module
 is the one home for what those resolvers share: the sourced readers, and
-the payment machinery (:class:`HealAnchor`, :func:`_payments`) that decides
+the payment machinery (:class:`HealAnchor`, :func:`payments`) that decides
 *how many times* a rule pays — the occasion the Wiki names, never the shape
 of the ledger the module happened to author.
 """
 
-# These names form the compatibility helper surface used by champion modules.
+# The slotlib readers are re-exported here so a champion module reaches one
+# healing surface, and a resolver's parameter list is the shared rule interface.
 # pylint: disable=too-many-arguments,unused-import
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Iterable
@@ -23,7 +23,7 @@ from typing import Any, Iterable
 from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
 
 
-def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
+def leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
     """Read one sourced leveling attribute without inventing a fallback."""
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
@@ -39,7 +39,7 @@ def _leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float
     return 0.0
 
 
-def _leveling_modifier(
+def leveling_modifier(
     ability: dict[str, Any], attribute: str, rank: int, modifier_index: int = 0
 ) -> float:
     """Read one sourced leveling modifier at rank without scaling resolution.
@@ -65,7 +65,7 @@ def _leveling_modifier(
     return 0.0
 
 
-def _ability(
+def ability_json(
     champion_data: dict[str, Any], slot: str, index: int = 0
 ) -> dict[str, Any]:
     entries = champion_data.get("abilities", {}).get(slot, [])
@@ -74,7 +74,7 @@ def _ability(
     return entries[index] if isinstance(entries[index], dict) else {}
 
 
-def _leveling_ratio(
+def leveling_ratio(
     ability: dict[str, Any], attribute: str, unit_substring: str, rank: int
 ) -> float:
     """Read one sourced modifier whose unit contains a substring at rank.
@@ -99,126 +99,18 @@ def _leveling_ratio(
     return 0.0
 
 
-def _leveling_flat_at_level(
-    ability: dict[str, Any], attribute: str, level: int
-) -> float:
-    """Read the flat (unit-less) modifier of one attribute at champion level."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") != attribute:
-                continue
-            for modifier in leveling.get("modifiers", []):
-                values = modifier.get("values", [])
-                units = modifier.get("units", [])
-                if not values:
-                    continue
-                if units and str(units[0]).strip():
-                    continue
-                return float(values[min(max(level, 1) - 1, len(values) - 1)])
-    return 0.0
-
-
-def _level_breakpoint_value(values: list[Any], level: int) -> float:
-    """Read a six-value Wiki row at levels 1, 6, 11, 16, 17, and 18."""
-    if not values:
-        return 0.0
-    if len(values) == 6:
-        breakpoints = (1, 6, 11, 16, 17, 18)
-        for index in range(len(breakpoints) - 1, -1, -1):
-            if level >= breakpoints[index]:
-                return float(values[index])
-        return float(values[0])
-    return float(values[min(max(level, 1) - 1, len(values) - 1)])
-
-
-def _event_source(event: dict[str, Any]) -> str:
+def event_source(event: dict[str, Any]) -> str:
     return str(event.get("source_key", ""))
 
 
-def _taric_starlights_touch(
-    q_ability: dict[str, Any],
-    q_rank: int,
-    champion_stats: dict[str, float],
-) -> tuple[float, int]:
-    """Price one Taric Q (Starlight's Touch) cast from the cached data.
-
-    The per-charge and maximum formulas are wiki description text in
-    ``data/champions.json``; the stock is the rank-scaled "Maximum Charges"
-    leveling attribute.  Returns ``(heal_amount, charges_used)`` — the
-    amount at the sourced stock, capped at the "maximum of ... at 5
-    charges" row, with zero when no per-charge formula or stock exists.
-    This is the single formula source for the Q heal; the support scanner
-    never re-prices the slot.
-    """
-    charges = extract_named(q_ability, "Maximum Charges", q_rank, champion_stats, {})
-    descriptions = [
-        effect.get("description", "") for effect in q_ability.get("effects", [])
-    ]
-    per_charge_match = re.search(
-        r"for\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
-        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)\s*per charge",
-        " ".join(descriptions),
-        flags=re.IGNORECASE,
-    )
-    maximum_match = re.search(
-        r"maximum of\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
-        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)",
-        " ".join(descriptions),
-        flags=re.IGNORECASE,
-    )
-    if per_charge_match is None or charges <= 0.0:
-        return 0.0, max(0, int(round(charges)))
-    maximum_health = float(champion_stats.get("health", 0.0) or 0.0)
-    ability_power = float(champion_stats.get("ability_power", 0.0) or 0.0)
-
-    def _charge_heal(flat: float, ap_percent: float, hp_percent: float) -> float:
-        return (
-            flat
-            + ability_power * ap_percent / 100.0
-            + maximum_health * hp_percent / 100.0
-        )
-
-    per_charge = _charge_heal(
-        float(per_charge_match.group(1)),
-        float(per_charge_match.group(2)),
-        float(per_charge_match.group(3)),
-    )
-    heal = charges * per_charge
-    if maximum_match is not None:
-        heal = min(
-            heal,
-            _charge_heal(
-                float(maximum_match.group(1)),
-                float(maximum_match.group(2)),
-                float(maximum_match.group(3)),
-            ),
-        )
-    return max(0.0, heal), max(0, int(round(charges)))
-
-
-def _is_persistent(event: dict[str, Any]) -> bool:
-    """Return the source-certified persistent/periodic damage boundary.
-
-    The engine's own source keys are stable public receipts for these rows;
-    no damage amount or champion archetype is guessed here.
-    """
-    source = _event_source(event).lower()
-    return (
-        source.startswith("burn_")
-        or source.startswith("stacking_dot_")
-        or "tibbers_aura" in source
-        or source.startswith("immolate_")
-    )
-
-
-def _attributed_events(
+def attributed_events(
     events: Iterable[dict[str, Any]],
     predicate,
 ) -> list[dict[str, Any]]:
-    return [event for event in events if predicate(_event_source(event), event)]
+    return [event for event in events if predicate(event_source(event), event)]
 
 
-def _rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
+def parsed_rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
     """Use the parser's sourced rank; omitted ranks are already level-derived."""
     try:
         return max(0, int(ability_damages.get(slot, {}).get("rank", 0) or 0))
@@ -226,10 +118,10 @@ def _rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
         return 0
 
 
-def _trigger_fields(event: dict[str, Any]) -> dict[str, Any]:
+def trigger_fields(event: dict[str, Any]) -> dict[str, Any]:
     """Carry a stable internal receipt for the damage that caused a heal."""
     fields: dict[str, Any] = {
-        "_trigger_source": _event_source(event),
+        "_trigger_source": event_source(event),
         "_trigger_time": float(event.get("time", 0.0)),
     }
     if event.get("sequence") is not None:
@@ -237,7 +129,7 @@ def _trigger_fields(event: dict[str, Any]) -> dict[str, Any]:
     return fields
 
 
-def _heal_from_damage(
+def heal_from_damage(
     healing: list[dict[str, Any]],
     event: dict[str, Any],
     amount: float,
@@ -269,14 +161,14 @@ def _heal_from_damage(
         "amount": amount,
         "source": source,
         "kind": "champion_ability",
-        **_trigger_fields(event),
+        **trigger_fields(event),
     }
     if later_target_amount is not None:
         heal["_later_target_amount"] = max(0.0, float(later_target_amount))
     healing.append(heal)
 
 
-def _missing_health_scaled_heal(minimum: float, maximum: float):
+def missing_health_scaled_heal(minimum: float, maximum: float):
     """Build a live missing-health interpolation between two sourced bounds.
 
     Wiki "0% : 100% (based on missing health)" means the heal pays the
@@ -297,7 +189,7 @@ def _missing_health_scaled_heal(minimum: float, maximum: float):
     return amount_formula
 
 
-def _cast_slot_times(
+def cast_slot_times(
     cast_timeline: list[dict[str, Any]] | None, slot: str
 ) -> list[float]:
     """Ordered cast times for one slot from the engine's cast timeline."""
@@ -316,7 +208,7 @@ class HealAnchor(Enum):
     hit cadence turns one row into several events, and a rule that counted
     events would turn one heal into several with it.  So every rule that
     reads the ledger names the occasion it pays on here, and the resolver
-    (``healing_helpers._payments``) turns that answer into the payments.
+    (``healing_helpers.payments``) turns that answer into the payments.
 
     ``CAST``
         One payment per activation, however many hits the cast authors —
@@ -364,10 +256,10 @@ class _Payment:
 def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
     """Damage events whose source key the rule claims."""
     if callable(source):
-        return [event for event in damage_events if source(_event_source(event))]
+        return [event for event in damage_events if source(event_source(event))]
     if isinstance(source, str):
-        return [event for event in damage_events if _event_source(event) == source]
-    return [event for event in damage_events if _event_source(event) in source]
+        return [event for event in damage_events if event_source(event) == source]
+    return [event for event in damage_events if event_source(event) in source]
 
 
 def _attributing_cast(cast_times: list[float], event_time: float) -> float | None:
@@ -381,7 +273,7 @@ def _attributing_cast(cast_times: list[float], event_time: float) -> float | Non
     return attributed
 
 
-def _takedown_payments(
+def takedown_payments(
     count: int, damage_events: list[dict[str, Any]]
 ) -> list[_Payment]:
     """The first *count* hits a takedown-paid rule can honestly ride.
@@ -391,12 +283,12 @@ def _takedown_payments(
     count and the fight supplies the times."""
     if count <= 0:
         return []
-    payments = _payments(HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events)
-    payments.sort(key=lambda payment: payment.cast_time)
-    return payments[: int(count)]
+    hits = payments(HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events)
+    hits.sort(key=lambda payment: payment.cast_time)
+    return hits[: int(count)]
 
 
-def _payments(
+def payments(
     anchor: HealAnchor,
     source,
     damage_events: list[dict[str, Any]],
@@ -427,7 +319,7 @@ def _payments(
         ]
     if not isinstance(source, str):
         raise ValueError(f"{anchor} needs one slot to match casts, got {source!r}")
-    cast_times = _cast_slot_times(cast_timeline, source)
+    cast_times = cast_slot_times(cast_timeline, source)
     activations: dict[float, dict[str, Any]] = {}
     for event in events:
         event_time = float(event.get("time", 0.0))

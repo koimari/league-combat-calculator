@@ -6,6 +6,10 @@ Taric case here gives the shared healing module an obvious first file.
 
 import pytest
 
+from src.calculator.champions.healing_contract import (
+    heal_receipt_order,
+    self_healing_rule,
+)
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
 
@@ -146,10 +150,10 @@ class TestTheAnchorIsDeclaredNotInferred:
         """A predicate cannot be matched against the cast timeline, so a
         rule asking for a cast anchor over one fails closed rather than
         quietly counting events."""
-        from src.calculator.healing_helpers import HealAnchor, _payments
+        from src.calculator.healing_helpers import HealAnchor, payments
 
         with pytest.raises(ValueError, match="one slot"):
-            _payments(HealAnchor.CAST, lambda source: True, [], None)
+            payments(HealAnchor.CAST, lambda source: True, [], None)
 
     def test_an_event_no_cast_names_stands_in_for_its_own_activation(self):
         """Without a cast to point at, one instant is one activation.
@@ -194,3 +198,44 @@ class TestTheDeclarationAndTheRegistryAgreeBothWays:
             )
         }
         assert declared == set(healing.HEALING_RULE_CHAMPIONS)
+
+
+class TestSelfHealingRuleDeclaration:
+    """``self_healing_rule`` owns the receipt order every module hands back."""
+
+    @staticmethod
+    def _events() -> list[dict]:
+        return [
+            {"time": 2.0, "amount": 5.0, "source": "W"},
+            {"time": 1.0, "amount": 5.0, "source": "R"},
+            {"time": 1.0, "amount": 5.0, "source": "Q"},
+        ]
+
+    def _rule(self):
+        return self_healing_rule("Taric")(lambda *args: self._events())
+
+    def test_it_declares_the_named_champion(self) -> None:
+        assert self._rule().champion_name == "Taric"
+
+    def test_the_ledger_comes_back_ordered_by_time_then_source(self) -> None:
+        ordered = self._rule().derive({}, {}, {}, [])
+        assert [(e["time"], e["source"]) for e in ordered] == [
+            (1.0, "Q"),
+            (1.0, "R"),
+            (2.0, "W"),
+        ]
+
+    def test_the_resolver_keeps_its_own_module_for_the_audit(self) -> None:
+        """The contract audit reads ``resolver.__module__`` to prove a rule
+        is champion-owned, so the ordering wrapper must not claim it."""
+
+        def derive_self_healing(*args):
+            return []
+
+        rule = self_healing_rule("Taric")(derive_self_healing)
+        assert rule.resolver.__module__ == derive_self_healing.__module__
+        assert rule.resolver.__name__ == "derive_self_healing"
+
+    def test_one_key_orders_both_the_declaration_and_the_entrypoint(self) -> None:
+        event = {"time": 1.5, "amount": 1.0, "source": "Q"}
+        assert heal_receipt_order(event) == (1.5, "Q")

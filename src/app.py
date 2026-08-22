@@ -16,7 +16,7 @@ import sys
 import tempfile
 import time
 from datetime import datetime, timezone
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -39,8 +39,7 @@ from flask import (
     url_for,
 )
 
-from src.calculator.calculate import calculate_payload
-from src.calculator.comparison import compare_payload
+from src.calculator.calculate import calculate_payload, compare_payload
 from src.calculator.application_errors import ApplicationError
 
 # The sys.path bootstrap above forces every first-party import below it;
@@ -81,8 +80,6 @@ from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
     get_champion_module_meta,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
     registered_champion_names,
 )
 from src.calculator.capabilities import public_capability_contract
@@ -129,7 +126,9 @@ from src.calculator.pipeline import (
     rank_allocation_contract,
 )
 from src.calculator.request_parsing import (
+    request_bool as _request_bool,
     request_int as _request_int,
+    request_optional_int as _request_optional_int,
     request_string as _request_string,
     request_string_list as _request_string_list,
 )
@@ -1005,22 +1004,11 @@ def api_champions():
             ability_slots[slot] = _public_ability_entry(
                 champ_data.get("abilities", {}).get(slot, []), slot
             )
-        # A module that certifies only a subset of fight modes publishes that
-        # restriction (and its sourced reason) so the interface can request a
-        # supported mode instead of failing closed at calculation time. None
-        # means unrestricted: every public fight mode is certified.
-        supported_modes = get_supported_fight_modes(champ_data["name"])
         result.append(
             {
                 "name": champ_data["name"],
                 "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
                 "engine_registration": registration,
-                "supported_fight_modes": (
-                    list(supported_modes) if supported_modes is not None else None
-                ),
-                "unsupported_fight_mode_reason": get_unsupported_fight_mode_reason(
-                    champ_data["name"]
-                ),
                 "patch_last_changed": _cached_champion_field(
                     champ_data, "patchLastChanged"
                 ),
@@ -1246,149 +1234,89 @@ def api_loadout_stats():
     return jsonify(public_loadout_summary(loadout))
 
 
+def _pure_payload_response(
+    policy_key: str,
+    payload_fn: Callable[[dict], dict],
+    *,
+    missing_data_message: str | None = None,
+):
+    """Serve one deterministic payload under its ``_OPERATION_POLICY`` entry.
+
+    Every pure JSON operation runs the same ladder: decode the body, answer
+    from the result cache, spend the operation's rate-limit budget, call the
+    payload function, translate its typed failures, and cache what it
+    returned.  ``missing_data_message`` is the one difference between them --
+    an operation that resolves a named scenario reports a missing name with
+    its own sentence, and one that does not lets ``KeyError`` read as the
+    ``LookupError`` it is.
+    """
+    try:
+        data = _json_object()
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    policy = _OPERATION_POLICY[policy_key]
+    cache_key = None
+    if _result_cache_enabled():
+        cache_key = stable_cache_key(policy["cache_namespace"], data)
+        cached_payload = cache_get(cache_key)
+        if cached_payload is not None:
+            return jsonify(cached_payload)
+
+    rate_limit_response = _spend_rate_limit(policy["rate_limit_scope"])
+    if rate_limit_response is not None:
+        return rate_limit_response
+
+    try:
+        payload = payload_fn(data)
+    except LookupError as exc:
+        if missing_data_message is not None and isinstance(exc, KeyError):
+            missing = exc.args[0] if exc.args else "requested data"
+            reason = missing_data_message.format(missing)
+        else:
+            reason = str(exc)
+        return jsonify({"error": reason}), 404
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if cache_key is not None:
+        cache_set(cache_key, payload)
+    return jsonify(payload)
+
+
+#: The sentence the scenario-resolving operations report a missing name with.
+_MISSING_SCENARIO_DATA = "Scenario data '{}' not found"
+
+
 @app.route("/api/calculate", methods=["POST"])
 def api_calculate():
     """Run the damage calculation and return results."""
-    try:
-        data = _json_object()
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    cache_key = None
-    if _result_cache_enabled():
-        cache_key = stable_cache_key(
-            _OPERATION_POLICY["calculate"]["cache_namespace"], data
-        )
-        cached_payload = cache_get(cache_key)
-        if cached_payload is not None:
-            return jsonify(cached_payload)
-
-    rate_limit_response = _spend_rate_limit(
-        _OPERATION_POLICY["calculate"]["rate_limit_scope"]
-    )
-    if rate_limit_response is not None:
-        return rate_limit_response
-
-    try:
-        payload = calculate_payload(data)
-    except LookupError as exc:
-        return jsonify({"error": str(exc)}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    if cache_key is not None:
-        cache_set(cache_key, payload)
-    return jsonify(payload)
+    return _pure_payload_response("calculate", calculate_payload)
 
 
 @app.route("/api/compare", methods=["POST"])
-# pylint: disable=too-many-return-statements
 def api_compare():
     """Calculate Build A and Build B behind one request boundary."""
-    try:
-        data = _json_object()
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    cache_key = None
-    if _result_cache_enabled():
-        cache_key = stable_cache_key(
-            _OPERATION_POLICY["compare"]["cache_namespace"], data
-        )
-        cached_payload = cache_get(cache_key)
-        if cached_payload is not None:
-            return jsonify(cached_payload)
-
-    rate_limit_response = _spend_rate_limit(
-        _OPERATION_POLICY["compare"]["rate_limit_scope"]
-    )
-    if rate_limit_response is not None:
-        return rate_limit_response
-
-    try:
-        payload = compare_payload(data)
-    except LookupError as exc:
-        return jsonify({"error": str(exc)}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    if cache_key is not None:
-        cache_set(cache_key, payload)
-    return jsonify(payload)
+    return _pure_payload_response("compare", compare_payload)
 
 
 @app.route("/api/bis", methods=["POST"])
 def api_bis():
     """Rank one slot through the pure BIS application boundary."""
-    try:
-        data = _json_object()
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    cache_key = None
-    if _result_cache_enabled():
-        cache_key = stable_cache_key(_OPERATION_POLICY["bis"]["cache_namespace"], data)
-        cached_payload = cache_get(cache_key)
-        if cached_payload is not None:
-            return jsonify(cached_payload)
-
-    rate_limit_response = _spend_rate_limit(
-        _OPERATION_POLICY["bis"]["rate_limit_scope"]
+    return _pure_payload_response(
+        "bis", bis_payload, missing_data_message=_MISSING_SCENARIO_DATA
     )
-    if rate_limit_response is not None:
-        return rate_limit_response
-
-    try:
-        payload = bis_payload(data)
-    except KeyError as exc:
-        missing = exc.args[0] if exc.args else "requested data"
-        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
-    except LookupError as exc:
-        return jsonify({"error": str(exc)}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    if cache_key is not None:
-        cache_set(cache_key, payload)
-    return jsonify(payload)
 
 
 @app.route("/api/bis/batch", methods=["POST"])
-# pylint: disable=too-many-return-statements
 def api_bis_batch():
     """Score dependent BIS slots with one shared timeline cache."""
-    try:
-        data = _json_object()
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    cache_key = None
-    if _result_cache_enabled():
-        cache_key = stable_cache_key(
-            _OPERATION_POLICY["bis_batch"]["cache_namespace"], data
-        )
-        cached_payload = cache_get(cache_key)
-        if cached_payload is not None:
-            return jsonify(cached_payload)
-
-    rate_limit_response = _spend_rate_limit(
-        _OPERATION_POLICY["bis_batch"]["rate_limit_scope"]
+    return _pure_payload_response(
+        "bis_batch", bis_batch_payload, missing_data_message=_MISSING_SCENARIO_DATA
     )
-    if rate_limit_response is not None:
-        return rate_limit_response
-
-    try:
-        payload = bis_batch_payload(data)
-    except KeyError as exc:
-        missing = exc.args[0] if exc.args else "requested data"
-        return jsonify({"error": f"Scenario data '{missing}' not found"}), 404
-    except LookupError as exc:
-        return jsonify({"error": str(exc)}), 404
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    if cache_key is not None:
-        cache_set(cache_key, payload)
-    return jsonify(payload)
 
 
 @app.route("/api/optimize", methods=["POST"])
-def api_optimize():
+def api_optimize():  # pylint: disable=too-many-return-statements
     """Find the optimal item build for a champion.
 
     Request parsing and validation run through the shared scenario boundary
@@ -1406,42 +1334,24 @@ def api_optimize():
         objective = _request_string(data, "objective", "total_damage")
         locked_items = _request_string_list(data, "locked_items", maximum=6)
         locked_boots = _request_string(data, "locked_boots")
-        include_boots = data.get("include_boots", True)
-        if not isinstance(include_boots, bool):
-            raise ValueError("include_boots must be true or false")
+        include_boots = _request_bool(data, "include_boots", True)
         max_legendary_slots = _request_int(data, "max_legendary_slots", 5, 1, 6)
-        gold_budget = (
-            _request_int(data, "gold_budget", 0, 1, 30_000)
-            if data.get("gold_budget") not in (None, "")
-            else None
-        )
+        gold_budget = _request_optional_int(data, "gold_budget", 1, 30_000)
         optimization_scope = _request_string(data, "optimization_scope", "build")
         if optimization_scope not in {"build", "purchase"}:
             raise ValueError("optimization_scope must be 'build' or 'purchase'")
-        available_gold = (
-            _request_int(data, "available_gold", 0, 1, 30_000)
-            if data.get("available_gold") not in (None, "")
-            else None
-        )
+        available_gold = _request_optional_int(data, "available_gold", 1, 30_000)
         if optimization_scope == "purchase" and available_gold is None:
             raise ValueError("available_gold is required for purchase optimization")
-        max_purchase_items = (
-            _request_int(data, "max_purchase_items", 0, 1, 7)
-            if data.get("max_purchase_items") not in (None, "")
-            else None
-        )
-        allow_sell = data.get("allow_sell", False)
-        if not isinstance(allow_sell, bool):
-            raise ValueError("allow_sell must be true or false")
+        max_purchase_items = _request_optional_int(data, "max_purchase_items", 1, 7)
+        allow_sell = _request_bool(data, "allow_sell", False)
         max_sell_items = _request_int(data, "max_sell_items", 1, 0, 1)
         combine_policy = _request_string(data, "combine_policy", "shop_combine")
         if combine_policy not in {"shop_combine", "component_accumulate"}:
             raise ValueError(
                 "combine_policy must be 'shop_combine' or 'component_accumulate'"
             )
-        include_starters = data.get("include_starters", False)
-        if not isinstance(include_starters, bool):
-            raise ValueError("include_starters must be true or false")
+        include_starters = _request_bool(data, "include_starters", False)
         time_budget_ms = _request_int(data, "time_budget_ms", 12_000, 100, 60_000)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1699,7 +1609,7 @@ def api_list_feedback():
 
 @app.route("/api/receipts", methods=["POST"])
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
-def api_receipts():
+def api_receipts():  # pylint: disable=too-many-return-statements
     """Record one game-receipt validation observation.
 
     Body: ``{"champion", "loadout" (mirror of the /api/calculate payload),

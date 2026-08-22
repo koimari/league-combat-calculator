@@ -17,6 +17,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Whisper's final round "always critically strikes ... and deals bonus
@@ -139,12 +140,10 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bounces = min(max(int(ctx.option("q_bounces")), 1), 4)
     deaths = min(max(int(ctx.option("q_target_deaths")), 0), 3)
     value = extract_named(
@@ -178,12 +177,10 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
     (default 1, max 2 — the charge cap) prices the first trap full and
     each further trap at the reduced row.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     traps = min(max(int(ctx.option("e_traps")), 1), 2)
     full = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -211,12 +208,10 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     shots = min(max(int(ctx.option("r_shots")), 1), 4)
     minimum = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target
@@ -294,61 +289,24 @@ MODULE_CC = {"Q": "none", "W": "root", "E": "slow", "R": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Jhin", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "p_final_shot",
-        "type": "bool",
-        "default": False,
-        "label": "Whisper fourth shot",
-    },
-    {
-        "key": "p_shot_number",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 4,
-        "label": "Shots into the 4-round clip",
-    },
-    {
-        "key": "p_missing_health",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.05,
-        "label": "Target missing-health ratio on the final round",
-    },
-    {
-        "key": "q_bounces",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 4,
-        "label": "Dancing Grenade bounces",
-    },
-    {
-        "key": "q_target_deaths",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 3,
-        "label": "Deaths after grenade hit",
-    },
-    {
-        "key": "e_traps",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 2,
-        "label": "Lotus Trap detonations",
-    },
-    {
-        "key": "r_shots",
-        "type": "int",
-        "default": 4,
-        "min": 1,
-        "max": 4,
-        "label": "Curtain Call bullets",
-    },
+    bool_option("p_final_shot", False, label="Whisper fourth shot"),
+    int_option(
+        "p_shot_number", 1, minimum=1, maximum=4, label="Shots into the 4-round clip"
+    ),
+    float_option(
+        "p_missing_health",
+        0.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Target missing-health ratio on the final round",
+        step=0.05,
+    ),
+    int_option("q_bounces", 1, minimum=1, maximum=4, label="Dancing Grenade bounces"),
+    int_option(
+        "q_target_deaths", 0, minimum=0, maximum=3, label="Deaths after grenade hit"
+    ),
+    int_option("e_traps", 1, minimum=1, maximum=2, label="Lotus Trap detonations"),
+    int_option("r_shots", 4, minimum=1, maximum=4, label="Curtain Call bullets"),
 ]
 ASSUMPTIONS = [
     "Every Moment Matters uses the cached level scaling plus explicit "

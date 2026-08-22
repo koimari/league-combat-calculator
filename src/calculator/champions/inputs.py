@@ -47,6 +47,9 @@ __all__ = [
     "target_stat",
     "scaling_input",
     "declared_option_defaults",
+    "bool_option",
+    "int_option",
+    "float_option",
 ]
 
 
@@ -275,3 +278,73 @@ def declared_option_defaults(champion: str) -> dict[str, Any]:
         if isinstance(key, str):
             defaults[key] = option.get("default")
     return defaults
+
+
+# ---------------------------------------------------------------------------
+# Option row constructors
+# ---------------------------------------------------------------------------
+
+#: The keys a row may carry beyond the canonical five, in the order they are
+#: written.  One declared order means a row's shape is the same wherever it
+#: was authored, so a reader compares rows instead of re-reading key names.
+_EXTRA_ORDER = (
+    "step",
+    "choices",
+    "max_items",
+    "state",
+    "rotation",
+    "legacy_bool",
+    "legacy_keys",
+)
+
+
+def _option(
+    kind: str,
+    key: str,
+    default: Any,
+    label: str,
+    minimum: float | None,
+    maximum: float | None,
+    extra: dict[str, Any],
+) -> dict[str, Any]:
+    """One OPTIONS row in the canonical key order."""
+    row: dict[str, Any] = {"key": key, "type": kind, "default": default}
+    if minimum is not None:
+        row["min"] = minimum
+    if maximum is not None:
+        row["max"] = maximum
+    row["label"] = label
+    for name in _EXTRA_ORDER:
+        if name in extra:
+            row[name] = extra.pop(name)
+    row.update(extra)
+    return row
+
+
+def bool_option(key: str, default: bool, label: str, **extra: Any) -> dict[str, Any]:
+    """A checkbox row: a piece of fight state the user turns on or off."""
+    return _option("bool", key, default, label, None, None, extra)
+
+
+def int_option(
+    key: str,
+    default: int,
+    minimum: int,
+    maximum: int,
+    label: str,
+    **extra: Any,
+) -> dict[str, Any]:
+    """A whole-count row (stacks, casts, targets) and the range it accepts."""
+    return _option("int", key, default, label, minimum, maximum, extra)
+
+
+def float_option(
+    key: str,
+    default: float,
+    minimum: float,
+    maximum: float,
+    label: str,
+    **extra: Any,
+) -> dict[str, Any]:
+    """A fractional row (shares, seconds, uptimes) and the range it accepts."""
+    return _option("float", key, default, label, minimum, maximum, extra)

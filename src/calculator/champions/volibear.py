@@ -22,10 +22,11 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, damage_entry, extract_cooldown, extract_named
 from .. import healing_helpers as _healing
+from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
@@ -118,12 +119,10 @@ _relentless_storm.phase = BUFF
 def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: base physical damage; the Wounded 2nd bite adds the sourced
     increased-damage part (50% + 25% per 100 bonus AD of the base)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
@@ -218,20 +217,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "relentless_storm_stacks",
-        "type": "int",
-        "default": _RELENTLESS_STORM_MAX_STACKS,
-        "min": 0,
-        "max": _RELENTLESS_STORM_MAX_STACKS,
-        "label": "The Relentless Storm stacks",
-    },
-    {
-        "key": "w_wounded",
-        "type": "bool",
-        "default": True,
-        "label": "W hits an already-Wounded target (2nd bite)",
-    },
+    int_option(
+        "relentless_storm_stacks",
+        _RELENTLESS_STORM_MAX_STACKS,
+        minimum=0,
+        maximum=_RELENTLESS_STORM_MAX_STACKS,
+        label="The Relentless Storm stacks",
+    ),
+    bool_option("w_wounded", True, label="W hits an already-Wounded target (2nd bite)"),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -253,7 +246,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -264,10 +257,10 @@ def derive_self_healing(
 ):
     """Resolve Volibear self-healing events from its authored packet."""
     healing = []
-    w = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
+    w = _healing.ability_json(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats, {})
-    w_missing_pct = _healing._leveling_modifier(w, "Heal", w_rank, 1)
+    w_missing_pct = _healing.leveling_modifier(w, "Heal", w_rank, 1)
 
     def frenzied_maul_heal(
         current_health: float,
@@ -283,7 +276,7 @@ def derive_self_healing(
     # with (base slash + Wounded surplus).  The first W applies the Wound;
     # the heal lands on every later W.
     for index, payment in enumerate(
-        _healing._payments(_healing.HealAnchor.CAST, "W", damage_events, cast_timeline)
+        _healing.payments(_healing.HealAnchor.CAST, "W", damage_events, cast_timeline)
     ):
         if index < 1:
             continue
@@ -294,10 +287,10 @@ def derive_self_healing(
                 "amount_formula": frenzied_maul_heal,
                 "source": "Frenzied Maul",
                 "kind": "champion_ability",
-                **_healing._trigger_fields(payment.event),
+                **_healing.trigger_fields(payment.event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Volibear", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Volibear")(derive_self_healing)

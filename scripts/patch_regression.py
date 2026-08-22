@@ -229,7 +229,7 @@ def _download(url, dest):
     return dest
 
 
-def _champion_dir(name):
+def champion_dir(name):
     """A cache champion key as its CommunityDragon dir: lowercase alphanumeric."""
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
@@ -333,8 +333,8 @@ def download_game_files(patch, game_dir, champion_names, concurrency=8):
     champions_dir = game_dir / "characters"
     targets = [
         (
-            CDRAGON_RAW.format(patch=patch, name=_champion_dir(name)),
-            champions_dir / f"{_champion_dir(name)}.bin.json",
+            CDRAGON_RAW.format(patch=patch, name=champion_dir(name)),
+            champions_dir / f"{champion_dir(name)}.bin.json",
         )
         for name in champion_names
     ]
@@ -360,7 +360,7 @@ def _character_record_key(bin_data, champion_name):
     keys = [key for key in bin_data if "CharacterRecords" in key]
     if not keys:
         return None
-    wanted = _champion_dir(champion_name)
+    wanted = champion_dir(champion_name)
     for key in keys:
         segments = [re.sub(r"[^a-z0-9]", "", s.lower()) for s in key.split("/")]
         if wanted in segments:
@@ -844,7 +844,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
     champions = {}
     pending = {}
     for name, cache_entry in champions_cache.items():
-        bin_path = game_dir / "characters" / f"{_champion_dir(name)}.bin.json"
+        bin_path = game_dir / "characters" / f"{champion_dir(name)}.bin.json"
         try:
             with open(bin_path, encoding="utf-8") as handle:
                 bin_data = json.load(handle)
@@ -937,7 +937,7 @@ def verify_wads(patch, champion_names, game_dir, storage=None):
     storage = storage or str(Path(os.environ.get("TMPDIR", "/tmp")) / "lcc-p3-cdtb")
     report = {}
     for name in champion_names:
-        champ_dir = _champion_dir(name)
+        champ_dir = champion_dir(name)
         wad_path = extract_champion_bin_via_cdtb(patch, name, storage, CDTB_PYTHON)
         if wad_path is None:
             report[name] = {"error": "cdtb extraction failed"}
@@ -977,7 +977,7 @@ def extract_champion_bin_via_cdtb(patch, name, storage, python_bin):
 
     Returns the path of the extracted champion bin, or None on failure.
     """
-    champ_dir = _champion_dir(name)
+    champ_dir = champion_dir(name)
     helper = r"""
 import json, os, sys
 from cdtb.patcher import PatcherStorage

@@ -13,6 +13,7 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
 _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
@@ -56,12 +57,10 @@ _spider_queen.phase = ONHIT
 def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     form = int(ctx.option("q_form"))
     form = min(max(form, 0), 1)
-    ability = ctx.ability("Q", form)
-    if ability is None:
+    ranked = ctx.ranked("Q", form)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     name = "Neurotoxin" if form == 0 else "Venomous Bite"
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -89,12 +88,10 @@ def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Volatile Spiderling"),
@@ -153,15 +150,8 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
 parse_abilities = build_parser(SLOTS, "Elise", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {"key": "spider_form", "type": "bool", "default": False, "label": "Spider Form"},
-    {
-        "key": "q_form",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 1,
-        "label": "Q form (0 human, 1 spider)",
-    },
+    bool_option("spider_form", False, label="Spider Form"),
+    int_option("q_form", 0, minimum=0, maximum=1, label="Q form (0 human, 1 spider)"),
 ]
 
 ASSUMPTIONS = [

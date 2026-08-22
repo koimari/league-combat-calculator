@@ -75,7 +75,7 @@ from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
-from ..stats import ATTACK_SPEED_CAP
+from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -87,6 +87,8 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — against the GAME FILES, not the
 # wiki (a stale wiki transform box is exactly what burned Gnar):
@@ -202,12 +204,10 @@ def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
     Tick" row at every rank (140/35 .. 440/110), so the field is priced
     as four per-second ticks over its 4-second duration.
     """
-    ability = ctx.ability("W", _HAMMER)
-    if ability is None:
+    ranked = ctx.ranked("W", _HAMMER)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Lightning Field"),
@@ -236,9 +236,11 @@ def _burst_attack_speed(ctx: SlotCtx) -> float:
     """Attacks per second while Hyper Charge's 3 attacks fire.  +360% on the
     0.658 ratio reaches 3.027, past the 3.003 clamp, so the burst sits at the
     cap for any build and item attack speed is wasted during it."""
-    attack_speed = ctx.stat("attack_speed")
-    as_ratio = ctx.stat("attack_speed_ratio")
-    burst = attack_speed + as_ratio * (HYPER_CHARGE_BONUS_ATTACK_SPEED / 100.0)
+    burst = calculate_attack_speed(
+        ctx.stat("attack_speed"),
+        ctx.stat("attack_speed_ratio"),
+        HYPER_CHARGE_BONUS_ATTACK_SPEED,
+    )
     return min(burst, ATTACK_SPEED_CAP)
 
 
@@ -260,12 +262,10 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     The attacks crit normally ("Hyper Charge's total damage is affected
     by critical strike modifiers"), so the delta crits with them.
     """
-    ability = ctx.ability("W", _CANNON)
-    if ability is None:
+    ranked = ctx.ranked("W", _CANNON)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     ratio = extract_value(ability, "Physical Damage", rank) / 100.0
     total_ad = ctx.stat("attack_damage")
@@ -452,18 +452,10 @@ def _transform(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "hammer_stance",
-        "type": "bool",
-        "default": False,
-        "label": "Hammer stance (Cannon when off)",
-    },
-    {
-        "key": "accelerated_q",
-        "type": "bool",
-        "default": True,
-        "label": "Shock Blast through Acceleration Gate (+40%)",
-    },
+    bool_option("hammer_stance", False, label="Hammer stance (Cannon when off)"),
+    bool_option(
+        "accelerated_q", True, label="Shock Blast through Acceleration Gate (+40%)"
+    ),
 ]
 
 # Jayce transforms INTO a stance and only then uses its abilities, so R
@@ -607,10 +599,4 @@ parse_abilities = build_parser(SLOTS, "Jayce", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Jayce")
 
 # P is emitted, but its row is a sourced zero — not a fact SLOTS derives.
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="P")

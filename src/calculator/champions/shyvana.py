@@ -16,9 +16,9 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -77,12 +77,10 @@ _scalemail.phase = BUFF
 
 
 def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     casts = min(max(int(ctx.option("q_casts")), 1), 3)
     dragon = bool(ctx.options.get("dragon_form", False))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
@@ -241,43 +239,18 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear"}
 parse_abilities = build_parser(SLOTS, "Shyvana", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "scalemail_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 100,
-        "label": "Scalemail stacks",
-    },
-    {"key": "dragon_form", "type": "bool", "default": False, "label": "Dragon Form"},
-    {
-        "key": "q_casts",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 3,
-        "label": "Emberstrike casts",
-    },
-    {
-        "key": "w_recast",
-        "type": "bool",
-        "default": True,
-        "label": "Inferno Aegis recast hits",
-    },
-    {
-        "key": "w_nearby_champions",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 5,
-        "label": "Nearby enemy champions (W shield increment)",
-    },
-    {
-        "key": "e_second_explosion",
-        "type": "bool",
-        "default": False,
-        "label": "Dragon E second explosion",
-    },
+    int_option("scalemail_stacks", 0, minimum=0, maximum=100, label="Scalemail stacks"),
+    bool_option("dragon_form", False, label="Dragon Form"),
+    int_option("q_casts", 1, minimum=1, maximum=3, label="Emberstrike casts"),
+    bool_option("w_recast", True, label="Inferno Aegis recast hits"),
+    int_option(
+        "w_nearby_champions",
+        1,
+        minimum=0,
+        maximum=5,
+        label="Nearby enemy champions (W shield increment)",
+    ),
+    bool_option("e_second_explosion", False, label="Dragon E second explosion"),
 ]
 
 ASSUMPTIONS = [
@@ -303,7 +276,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Shyvana")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -317,9 +290,9 @@ def derive_self_healing(
     w_row = ability_damages.get("W", {})
     if "dragon form" in str(w_row.get("detail", "")).lower():
         level = max(1, int(champion_stat(champion_stats, "level")))
-        w = _healing._ability(champion_data, "W")
+        w = _healing.ability_json(champion_data, "W")
         flat = _healing.extract_named(w, "Heal", level, champion_stats, {})
-        missing_pct = _healing._leveling_modifier(w, "Missing Health Damage", level, 0)
+        missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
         def inferno_aegis_heal(
             current_health: float,
@@ -331,7 +304,7 @@ def derive_self_healing(
                 flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
             )
 
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
         ):
             event = payment.event
@@ -344,10 +317,10 @@ def derive_self_healing(
                     "amount_formula": inferno_aegis_heal,
                     "source": "Inferno Aegis",
                     "kind": "champion_ability",
-                    **_healing._trigger_fields(event),
+                    **_healing.trigger_fields(event),
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Shyvana", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Shyvana")(derive_self_healing)

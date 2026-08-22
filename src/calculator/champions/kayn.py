@@ -11,15 +11,14 @@ from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .module_contract import coverage
 
 
 def _reaping_slash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     hits = 2
     form = str(ctx.options.get("form", "base"))
     value = extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)
@@ -133,6 +132,4 @@ MODULE_CC = {"Q": "none", "W": CC_PER_PART, "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kayn", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "R"} else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="PE")

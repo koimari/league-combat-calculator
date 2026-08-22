@@ -13,7 +13,7 @@ import importlib
 from typing import Any
 
 from .champions import _CHAMPION_MODULES
-from .champions.healing_contract import ChampionHealingRule
+from .champions.healing_contract import ChampionHealingRule, heal_receipt_order
 from .trigger_stream import ChampionSlotOwner
 
 # Grey-health champions whose self-heals are sourced from damage TAKEN
@@ -98,4 +98,4 @@ def derive_self_healing(  # pylint: disable=too-many-arguments,too-many-position
         cast_timeline,
         fight_duration_seconds,
     )
-    return sorted(events, key=lambda event: (event["time"], event["source"]))
+    return sorted(events, key=heal_receipt_order)

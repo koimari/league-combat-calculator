@@ -21,6 +21,9 @@ from scripts.source_receipt import source_receipt
 
 ROOT = Path(__file__).resolve().parents[1]
 
+#: A ``reviewed_packet_report`` verdict with nothing to report.
+_CLEAN_PACKETS = {"clean": True, "problems": []}
+
 PATCH_DAY_SCRIPTS = (
     "build_reviewed_modules.py",
     "full_entry_audit.py",
@@ -237,6 +240,22 @@ def test_patch_regression_main_exits_2_when_cdtb_missing(monkeypatch, tmp_path):
 # ---------------------------------------------------------------------------
 
 
+def _receipt_half(asset_path, champions, axword, wiki_db) -> list[str]:
+    """The source-receipt half of the packet gate, on a hand-built asset.
+
+    ``rebuild=False`` because these fixtures are hand-written rather than
+    builder output: the rebuild half would report drift for every one of them
+    and say nothing about the receipts under test.
+    """
+    return patch_update.reviewed_packet_report(
+        asset_path=asset_path,
+        champions_source=champions,
+        axword_source=axword,
+        wiki_db=wiki_db,
+        rebuild=False,
+    )["receipt_problems"]
+
+
 def _fresh_sources(tmp_path):
     champions = _write_champions(tmp_path, ("Fixture",))
     axword = _write_axword(tmp_path)
@@ -251,12 +270,7 @@ def _fresh_sources(tmp_path):
 
 def test_packet_freshness_gate_passes_when_asset_matches_sources(tmp_path):
     asset_path, champions, axword, db = _fresh_sources(tmp_path)
-    problems = patch_update.check_reviewed_packets_current(
-        asset_path=asset_path,
-        champions_source=champions,
-        axword_source=axword,
-        wiki_db=db,
-    )
+    problems = _receipt_half(asset_path, champions, axword, db)
     assert problems == []
 
 
@@ -270,24 +284,14 @@ def test_packet_freshness_gate_detects_changed_champion_data(tmp_path):
     }  # the patch moved a number
     mutated.write_text(json.dumps(payload), encoding="utf-8")
 
-    problems = patch_update.check_reviewed_packets_current(
-        asset_path=asset_path,
-        champions_source=mutated,
-        axword_source=axword,
-        wiki_db=db,
-    )
+    problems = _receipt_half(asset_path, mutated, axword, db)
     assert any("data/champions.json changed" in problem for problem in problems)
 
 
 def test_packet_freshness_gate_detects_stale_wiki_revision(tmp_path):
     asset_path, champions, axword, db = _fresh_sources(tmp_path)
     moved = _write_wiki_db(tmp_path, {"Fixture": 999})  # wiki page was re-edited
-    problems = patch_update.check_reviewed_packets_current(
-        asset_path=asset_path,
-        champions_source=champions,
-        axword_source=axword,
-        wiki_db=moved,
-    )
+    problems = _receipt_half(asset_path, champions, axword, moved)
     assert any("not current" in problem for problem in problems)
 
 
@@ -318,12 +322,7 @@ def test_packet_freshness_gate_detects_receiptless_asset(tmp_path):
         ),
         encoding="utf-8",
     )
-    problems = patch_update.check_reviewed_packets_current(
-        asset_path=asset_path,
-        champions_source=champions,
-        axword_source=axword,
-        wiki_db=db,
-    )
+    problems = _receipt_half(asset_path, champions, axword, db)
     assert any("no source receipts" in problem for problem in problems)
 
 
@@ -340,13 +339,16 @@ def test_patch_update_run_aborts_before_capture_on_stale_packet(monkeypatch):
     monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
     monkeypatch.setattr(patch_update, "refresh_economics", lambda: 0)
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
-    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda: 0)
+    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda patch=None: 0)
     monkeypatch.setattr(
         patch_update,
-        "check_reviewed_packets_current",
-        lambda **kwargs: [
-            "data/champions.json changed since the packet asset was reviewed"
-        ],
+        "reviewed_packet_report",
+        lambda **kwargs: {
+            "clean": False,
+            "problems": [
+                "data/champions.json changed since the packet asset was reviewed"
+            ],
+        },
     )
 
     def run_gates():
@@ -367,8 +369,10 @@ def test_patch_update_run_aborts_before_capture_on_review_pending(monkeypatch):
     monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
     monkeypatch.setattr(patch_update, "refresh_economics", lambda: 0)
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
-    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda: 0)
-    monkeypatch.setattr(patch_update, "check_reviewed_packets_current", lambda **kw: [])
+    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda patch=None: 0)
+    monkeypatch.setattr(
+        patch_update, "reviewed_packet_report", lambda **kw: _CLEAN_PACKETS
+    )
     monkeypatch.setattr(patch_update, "run_full_entry_audit", lambda output=None: 1)
 
     def run_gates():
@@ -408,9 +412,14 @@ def test_patch_update_run_aborts_before_capture_on_census_frontier(monkeypatch):
     monkeypatch.setattr(patch_update, "run_pull", lambda: "26.16")
     monkeypatch.setattr(patch_update, "refresh_economics", lambda: 0)
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
-    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda: 0)
-    monkeypatch.setattr(patch_update, "check_reviewed_packets_current", lambda **kw: [])
+    monkeypatch.setattr(patch_update, "rebuild_static_artifacts", lambda patch=None: 0)
+    monkeypatch.setattr(
+        patch_update, "reviewed_packet_report", lambda **kw: _CLEAN_PACKETS
+    )
     monkeypatch.setattr(patch_update, "run_full_entry_audit", lambda output=None: 0)
+    monkeypatch.setattr(
+        patch_update, "run_gamefile_refresh", lambda patch, force=False: 0
+    )
     monkeypatch.setattr(
         patch_update, "run_staleness_gate", lambda out=None, patch=None: 0
     )
@@ -433,17 +442,24 @@ def test_patch_update_run_green_path_invokes_all_gates_then_capture(monkeypatch)
     )
     monkeypatch.setattr(patch_update, "print_audit", lambda: True)
     monkeypatch.setattr(
-        patch_update, "rebuild_static_artifacts", lambda: order.append("rebuild") or 0
+        patch_update,
+        "rebuild_static_artifacts",
+        lambda patch=None: order.append("rebuild") or 0,
     )
     monkeypatch.setattr(
         patch_update,
-        "check_reviewed_packets_current",
-        lambda **kwargs: order.append("packets") or [],
+        "reviewed_packet_report",
+        lambda **kwargs: order.append("packets") or _CLEAN_PACKETS,
     )
     monkeypatch.setattr(
         patch_update,
         "run_full_entry_audit",
         lambda output=None: order.append("audit") or 0,
+    )
+    monkeypatch.setattr(
+        patch_update,
+        "run_gamefile_refresh",
+        lambda patch, force=False: order.append("gamefiles") or 0,
     )
     monkeypatch.setattr(
         patch_update,
@@ -464,6 +480,7 @@ def test_patch_update_run_green_path_invokes_all_gates_then_capture(monkeypatch)
         "rebuild",
         "packets",
         "audit",
+        "gamefiles",
         "staleness",
         "census",
         "capture",

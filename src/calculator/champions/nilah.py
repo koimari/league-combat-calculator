@@ -26,11 +26,12 @@ in ASSUMPTIONS.
 """
 
 from .inputs import champion_stat
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .engine import SlotCtx
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .. import healing_helpers as _healing
+from .module_contract import coverage
 
 PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
 
@@ -157,16 +158,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "despite the packet layer already carrying no enemy-damage formula "
     "for them.",
 ]
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="PW")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -193,28 +188,28 @@ def derive_self_healing(
     )
     q_ratio = 0.20 * crit / 100.0
     r_ratio = 0.20 + 0.30 * crit / 100.0
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.DAMAGING_HIT,
         lambda source: source in {"Q", "auto_attacks", "R"},
         damage_events,
     ):
         event = payment.event
-        source = _healing._event_source(event)
+        source = _healing.event_source(event)
         if source in ("Q", "auto_attacks") and q_ratio > 0.0:
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing,
                 event,
                 float(event.get("damage", 0.0)) * q_ratio,
                 "Formless Blade",
             )
         elif source == "R" and r_ratio > 0.0:
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing,
                 event,
                 float(event.get("damage", 0.0)) * r_ratio,
                 "Apotheosis",
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Nilah", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Nilah")(derive_self_healing)

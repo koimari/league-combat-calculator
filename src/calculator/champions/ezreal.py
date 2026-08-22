@@ -26,6 +26,7 @@ from typing import Any
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON
 # home (P has no leveling data; the refund is prose on Q).
@@ -67,19 +68,16 @@ def _haste_factor(ctx: SlotCtx) -> float:
 
 
 def _q_hasted_period(ctx: SlotCtx) -> float | None:
-    """Q's modeled cast period in real (post-haste) seconds.
+    """Q's modeled cast period in real (post-haste) seconds, None unranked.
 
-    Assuming every Q hits, each cast refunds ``Q_REFUND_SECONDS`` off
-    Q's own cooldown exactly once per cycle, so the period is the
-    hasted cooldown minus the refund, floored at ``Q_MIN_PERIOD``.
-    Returns None when Q is unranked (no refund stream exists).
+    Assuming every Q hits, each cast refunds ``Q_REFUND_SECONDS`` off Q's
+    own cooldown once per cycle, so the period is the hasted cooldown minus
+    the refund, floored at ``Q_MIN_PERIOD``.
     """
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     hasted = extract_cooldown(ability, rank) / _haste_factor(ctx)
     return max(Q_MIN_PERIOD, hasted - Q_REFUND_SECONDS)
 
@@ -146,12 +144,10 @@ def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     and the two never stack on one ability hit (item taxonomy:
     ``superseded_by_ability_proc``).
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     period = _q_hasted_period(ctx)
@@ -224,14 +220,13 @@ OPTIONS: list[dict[str, Any]] = [
             {"value": "basic_attack", "label": "Basic attack (no mana refund)"},
         ],
     },
-    {
-        "key": "passive_stacks",
-        "type": "int",
-        "default": 5,
-        "min": 0,
-        "max": 5,
-        "label": "Passive stacks (Rising Spell Force)",
-    },
+    int_option(
+        "passive_stacks",
+        5,
+        minimum=0,
+        maximum=5,
+        label="Passive stacks (Rising Spell Force)",
+    ),
 ]
 
 ASSUMPTIONS = [

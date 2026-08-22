@@ -96,6 +96,8 @@ from src.calculator.champions import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.champions.slotlib import find_named_leveling
+from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 # The exact cached champion name (dispatcher and data-file key agree here).
@@ -117,39 +119,8 @@ _E_UPGRADED_VALUES = (100.0, 200.0, 300.0)
 _E_UPGRADED_AP_RATIO = 0.60
 
 
-def _stats() -> dict:
-    return {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "armor_penetration_percent": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "critical_strike_chance": 0.0,
-        "flat_armor_penetration": 0.0,
-        "health": 0.0,
-        "is_melee": True,
-        "lethality": 0.0,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "ultimate_haste": 0.0,
-        "attack_damage": 100.0,
-        "ability_power": 0.0,
-        "base_attack_damage": 60.0,
-        "bonus_attack_damage": 40.0,
-        "attack_speed": 0.8,
-        "attack_speed_ratio": 0.625,
-        "bonus_attack_speed": 0.0,
-        "max_mana": 300.0,
-        "resource_regen_per_second": 0.0,
-        "level": _LEVEL,
-    }
-
-
 def _parse(option: dict | None, *, ap: float = 0.0, ranks: dict | None = None):
-    stats = dict(_stats(), ability_power=ap)
+    stats = dict(parse_stats(_LEVEL), ability_power=ap)
     return stats, parse_champion_abilities(
         get_champion("Heimerdinger"),
         _LEVEL,
@@ -219,11 +190,12 @@ def _api(option: dict):
 def _leveling(slot: str, attribute: str, index: int = 0) -> dict:
     """The first leveling row named *attribute* in one ability entry."""
     ability = _HEIMER_DATA["abilities"][slot][index]
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return leveling
-    raise AssertionError(f"Heimerdinger {slot}[{index}] has no leveling {attribute!r}")
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        raise AssertionError(
+            f"Heimerdinger {slot}[{index}] has no leveling {attribute!r}"
+        )
+    return leveling
 
 
 def _resolve(
@@ -263,7 +235,7 @@ def _parse_with_stripped_rows(slot: str, option: dict | None = None) -> dict:
         _LEVEL,
         0.0,
         ability_ranks=_RANKS,
-        champion_stats=_stats(),
+        champion_stats=parse_stats(_LEVEL),
         target_stats={"target_max_health": _TARGET_MAX_HP},
         champion_options=option or {},
     )
@@ -593,7 +565,7 @@ class TestGrenadeVariants:
         e = abilities["E"]
         assert e["name"] == "CH-2 Electron Storm Grenade"
         assert e["total_raw"] == pytest.approx(
-            _resolve("E", "Magic Damage", 5, _stats())
+            _resolve("E", "Magic Damage", 5, parse_stats(_LEVEL))
         )
         assert len(e["parts"]) == 1
         result = _fight({"e_upgrade": 0}, one_rotation=True)

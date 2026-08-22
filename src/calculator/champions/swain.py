@@ -28,9 +28,9 @@ per Tick row carries a "% of his bonus health" ratio.
 from dataclasses import replace
 from typing import Any
 
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import BUFF, CC_PER_PART, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import STEROID_ZERO, damage_entry
@@ -148,14 +148,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_soul_fragments",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": _P_MAX_FRAGMENTS,
-        "label": "Soul Fragments held (15 permanent bonus health each)",
-        "rotation": {
+    int_option(
+        "p_soul_fragments",
+        0,
+        minimum=0,
+        maximum=_P_MAX_FRAGMENTS,
+        label="Soul Fragments held (15 permanent bonus health each)",
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -163,7 +162,7 @@ OPTIONS = list(OPTIONS) + [
                 "self-state, not a consumed setup."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -179,7 +178,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -201,8 +200,8 @@ def derive_self_healing(
     dropped.
     """
     healing = []
-    r_ability = _healing._ability(champion_data, "R")
-    r_rank = _healing._rank(ability_damages, "R")
+    r_ability = _healing.ability_json(champion_data, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     heal_leveling = _healing.find_named_leveling(r_ability, "Heal per Tick")
 
     def swain_bonus_health(unit: str, value: float) -> float | None:
@@ -221,17 +220,17 @@ def derive_self_healing(
         if heal_leveling is not None
         else 0.0
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.DAMAGING_HIT, "R", damage_events
     ):
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing,
             payment.event,
             heal_per_tick,
             "Demonic Ascension",
             link_to_damage=False,
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Swain", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Swain")(derive_self_healing)

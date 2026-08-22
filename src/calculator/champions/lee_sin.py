@@ -23,6 +23,8 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the recast lands ~0.5s after the
 # wave (Sonic Wave's 0.25s cast time plus the recast reaction); the
@@ -38,12 +40,10 @@ def _sonic_wave_and_resonating_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     Q[1] and interpolates by the target's missing-health fraction at each
     cast, so the fight prices the two-stage combo honestly.
     """
-    wave = ctx.ability("Q", 0)
-    if wave is None:
+    ranked = ctx.ranked("Q", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    wave, rank = ranked
 
     sonic = extract_named(wave, "Physical Damage", rank, ctx.stats, ctx.target)
     parts = [DamagePart("physical", sonic, time_offset=0.0)]
@@ -119,12 +119,7 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "knockback"}
 parse_abilities = build_parser(SLOTS, "Lee Sin", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "q_recast",
-        "type": "bool",
-        "default": True,
-        "label": "Resonating Strike recast follows Sonic Wave",
-    },
+    bool_option("q_recast", True, label="Resonating Strike recast follows Sonic Wave"),
 ]
 
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS) + [
@@ -142,6 +137,4 @@ ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS) + [
 ]
 
 SOURCES = load_champion_sources("Lee Sin")
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="PW")

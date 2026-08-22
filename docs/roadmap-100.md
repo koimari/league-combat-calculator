@@ -348,18 +348,18 @@ authoritative Riot statement), not more engineering effort.
 
 ## 4. Patch-day pipeline — manual vs. scriptable
 
-Nine steps total: 5 manual, 4 scriptable, per `docs/patch-day-runbook.md`.
+Nine steps total: 5 manual, 3 scriptable, 1 partly scripted (detect), per `docs/patch-day-runbook.md`.
 
 | # | Step | Manual/Scriptable | Inputs | Deps | Fail-closed failure mode |
 |---|---|---|---|---|---|
-| 1 | Detect patch + read patch notes + open tracking issue | **Manual** | `cdtb versions game -a`, `data/staleness.json`, Riot patch notes page | `cdtb` binary on PATH (or `CDTB_BIN`) | None automated — a missed patch silently serves stale data until Step 2 next runs; this is why Step 0 has its own <4h SLA |
+| 1 | Detect patch + read patch notes + open tracking issue | **Partly scripted** | `python scripts/patch_update.py detect` (live CDragon vs cached patch; exit 1 = new patch), Riot patch notes page | `cdtb` binary on PATH (or `CDTB_BIN`) | None automated — a missed patch silently serves stale data until Step 2 next runs; this is why Step 0 has its own <4h SLA |
 | 2 | `scripts/patch_update.py run` — re-pull wiki cache, rebuild catalogues, run gates | **Scriptable** | live wiki pages via `vendor/lolstaticdata`, `git HEAD` (for the audit diff) | cleared `vendor/lolstaticdata/__cache__`/`__wiki__`; network access | Stops the run on: a vanished effect branch not in `APPROVED_BRANCH_REMOVALS`; an unreviewed Riot-declared effect missing from the wiki not in `ACKNOWLEDGED_SOURCE_CONFLICTS`/`OPEN_SOURCE_CONFLICTS`; a removed item still `IMPLEMENTED` in code; pytest red |
 | 3 | `scripts/patch_regression.py check` — game-file ground-truth diff | **Scriptable** | `raw.communitydragon.org` per-champion bins + `items.cdtb.bin.json`, live patch string | Step 2's refreshed cache; network access to CommunityDragon | Exits 1 on any stale champion/item; unmappable stats/rows are `unchecked`, never silently passed as fresh |
 | 4 | Triage every stale flag: re-certify or boundary-document | **Manual** (human-by-design — this is a judgment call, not a comparison) | Step 3's stale list, patch notes, `data/gamefiles/` | Step 3's output | No automated fallback — an untriaged stale flag blocks Step 5 by design (the STALE badge stays up) |
 | 5 | Golden re-capture + full gates (pytest, pylint, black, `git diff --check`) | **Scriptable** | `scripts/golden_snapshot.py compare/capture`, `scripts/golden_baseline.json` | Step 4's re-certified values committed to the working tree | Golden diffs are EXPECTED post-patch and do not block by themselves; pytest/pylint/black/`git diff --check` red DOES block |
 | 6 | Explain every golden diff in the commit message | **Manual** | `scripts/patch_update.py detail <name>` per changed module | Step 5's diff output | No script checks diff explanations are *correct*, only that they exist in the commit body — a wrong explanation ships silently |
 | 7 | Commit + push + merge via review | **Manual** | staged data + code + golden together (never split across commits) | Step 6 | Standard review gate; a split commit (data without golden, or vice versa) is a self-inflicted future regression, not caught by CI |
-| 8 | `python scripts/issue_gate.py check --issue <n> --commit <sha>` | **Scriptable** | issue number, merge commit sha, optional deploy sha | `docs/issue-closure-policy.md` (commit-addressed, merged, clean tree, gates green) | Refuses closure when any policy condition is unmet |
+| 8 | Close the tracking issue against `docs/issue-closure-policy.md` | **Manual** | issue number, merge commit sha, deployed sha for a user-visible fix | `docs/issue-closure-policy.md` (commit-addressed, gate-checked, deployment-gated) | No script checks the three conditions — an unchecked closure claim ships silently |
 | 9 | Confirm staleness clears post-deploy (`patch_regression.py check` re-run, `/api/staleness`, badge check) | **Manual** | live `/api/staleness` endpoint, UI badges | Step 7 deployed | No script re-verifies the *deployed* endpoint — this is the one step with no scriptable substitute because "did the badge actually disappear in production" requires observing production |
 
 ---

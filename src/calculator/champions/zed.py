@@ -40,6 +40,7 @@ from .slotlib import (
     simple_damage,
 )
 from ..ability_spec import DamagePart
+from .module_contract import coverage
 
 # Death Mark detonates at the end of its 3-second mark (wiki prose:
 # "renders the target Marked for Death for 3 seconds", "detonating at
@@ -49,12 +50,10 @@ _DEATH_MARK_DETONATION_DELAY = 3.0
 
 def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: 100% AD + 25/40/55% of the mark's stored pre-mitigation damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     # Leveling row "Physical Damage": modifier 0 = 100 (% AD), modifier 1
     # = 25 / 40 / 55 (% of damage stored).  Read each modifier's raw value
@@ -138,13 +137,7 @@ SLOTS = {
     "R": _death_mark,
 }
 
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="PW")
 
 OPTIONS: list[dict[str, Any]] = []
 

@@ -26,7 +26,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     extract_cooldown,
     extract_named,
@@ -35,16 +35,15 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
 
 
 def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: initial hit plus the optional equal-damage eruption."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     second_hit = bool(ctx.options.get("e_second_hit", True))
@@ -80,12 +79,7 @@ def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "e_second_hit",
-        "type": "bool",
-        "default": True,
-        "label": "Target remains for E eruption",
-    },
+    bool_option("e_second_hit", True, label="Target remains for E eruption"),
 ]
 
 ASSUMPTIONS = [
@@ -155,7 +149,7 @@ MODULE_CC = {"Q": "slow", "E": "root"}
 parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -166,8 +160,8 @@ def derive_self_healing(
 ):
     """Resolve Soraka self-healing events from its authored packet."""
     healing = []
-    ability = _healing._ability(champion_data, "Q")
-    rank = _healing._rank(ability_damages, "Q")
+    ability = _healing.ability_json(champion_data, "Q")
+    rank = _healing.parsed_rank(ability_damages, "Q")
     per_tick = _healing.extract_named(
         ability, "Heal per Tick", rank, champion_stats, {}
     )
@@ -178,9 +172,9 @@ def derive_self_healing(
         else 0
     )
     for event in damage_events:
-        if _healing._event_source(event) != "Q" or tick_count <= 0:
+        if _healing.event_source(event) != "Q" or tick_count <= 0:
             continue
-        trigger = _healing._trigger_fields(event)
+        trigger = _healing.trigger_fields(event)
         for index in range(1, tick_count + 1):
             healing.append(
                 {
@@ -191,7 +185,7 @@ def derive_self_healing(
                     **trigger,
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Soraka", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Soraka")(derive_self_healing)

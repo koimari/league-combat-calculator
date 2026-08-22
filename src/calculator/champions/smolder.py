@@ -44,11 +44,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import with_item_on_hits
 from .. import healing_helpers as _healing
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
@@ -189,14 +191,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
-    {
-        "key": "p_stacks",
-        "type": "int",
-        "default": _TIER3_STACKS,
-        "min": 0,
-        "max": 400,
-        "label": ("Dragon Practice stacks (225+ = tier-3 true-damage burn on Q)"),
-    },
+    int_option(
+        "p_stacks",
+        _TIER3_STACKS,
+        minimum=0,
+        maximum=400,
+        label="Dragon Practice stacks (225+ = tier-3 true-damage burn on Q)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -226,16 +227,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "cadence across the 1.25-second flight are not priced.",
 ]
 
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -246,18 +241,18 @@ def derive_self_healing(
 ):
     """Resolve Smolder self-healing events from its authored packet."""
     healing = []
-    r = _healing._ability(champion_data, "R")
-    r_rank = _healing._rank(ability_damages, "R")
+    r = _healing.ability_json(champion_data, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     r_heal = _healing.extract_named(r, "Self Heal", r_rank, champion_stats)
     # The flat self heal is paid once per cast, so a wave the module prices
     # as several hits still heals once.
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
     ):
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing, payment.event, r_heal, "MMOOOMMMM!", link_to_damage=False
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Smolder", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Smolder")(derive_self_healing)

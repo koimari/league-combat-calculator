@@ -471,9 +471,6 @@ def test_sources_and_options_are_public_revision_receipts():
     meta = get_champion_options_meta("Vi")
 
     assert len(meta["options"]) == 5
-    # No SUPPORTED_FIGHT_MODES restriction: absence means every public
-    # fight mode is certified (app publishes None = unrestricted).
-    assert "supported_fight_modes" not in meta
     assert {row["revision_id"] for row in meta["sources"]} == {
         3986701,
         3921391,

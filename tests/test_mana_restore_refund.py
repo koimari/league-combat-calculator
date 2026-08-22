@@ -1044,3 +1044,22 @@ def test_s2_jayce_restore_applies_in_both_stances():
         ]
         assert all(r["amount"] == pytest.approx(25.0) for r in restores)
         assert all(r["tier"] == 0.0 for r in restores)
+
+
+def test_mana_temporary_maximum_bonus_fails_closed(monkeypatch):
+    # Only the energy walk models a temporary resource maximum (Akali W).
+    # A future MANA kit declaring one must stop the fight, not silently
+    # lose the mechanic: the mana account's maximum grows and never falls.
+    from src.calculator import damage as damage_module
+
+    champ = get_champion("Jayce")
+    real = damage_module.ability_field
+
+    def patched(info, key, **kwargs):
+        if key == "resource_maximum_bonus":
+            return 100.0
+        return real(info, key, **kwargs)
+
+    monkeypatch.setattr(damage_module, "ability_field", patched)
+    with pytest.raises(ValueError, match="temporary resource maximum"):
+        run_fight(champ, 6, [], _params(champion_options={"hammer_stance": True}))

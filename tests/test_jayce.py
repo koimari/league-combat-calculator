@@ -900,30 +900,7 @@ class TestCannonShredDuration:
 
 _CC_CHAMPION = "Jayce"
 _CC_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
-
-
-def _cc_slot_text(slot):
-    """Every cached description of one slot, lowercased."""
-    return cc_review.slot_text(cc_review.kit(_CC_CHAMPION), slot)
-
-
-def _cc_kinds(**options):
-    """Result key -> the reviewed kinds the slot's parts actually carry."""
-    from src.calculator.champions import parse_champion_abilities
-    from src.calculator.data_fetcher import get_champion
-
-    parsed = parse_champion_abilities(
-        get_champion(_CC_CHAMPION),
-        18,
-        100.0,
-        _CC_RANKS,
-        champion_options=options or None,
-    )
-    carried = {
-        key: sorted({part.cc_kind for part in entry.get("parts") or () if part.cc_kind})
-        for key, entry in parsed.items()
-    }
-    return {key: kinds for key, kinds in carried.items() if kinds}
+_CC = cc_review.ChampionReview(_CC_CHAMPION, _CC_RANKS)
 
 
 class TestReviewedCrowdControl:
@@ -957,11 +934,11 @@ class TestReviewedCrowdControl:
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["Q", "slow"], ["E", "knock"]]:
-            assert word in _cc_slot_text(slot), slot
+            assert word in _CC.slot_text(slot), slot
 
     def test_hyper_charge_only_empowers_the_swings_it_forces(self):
         """Cannon's W is the reviewed-control-free half of the W slot."""
-        text = " ".join(_cc_slot_text("W").split())
+        text = " ".join(_CC.slot_text("W").split())
         assert (
             "active: jayce empowers his next 3 basic attacks within 4 seconds "
             "to deal modified physical damage and gain 360% bonus attack speed" in text
@@ -973,11 +950,11 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(text) == []
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _cc_kinds() == {"Q": ["none"], "W": ["none"]}
+        assert _CC.kinds() == {"Q": ["none"], "W": ["none"]}
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """Hammer's To the Skies! slows and Thundering Blow knocks back."""
-        assert _cc_kinds(**{"hammer_stance": True}) == {
+        assert _CC.kinds(**{"hammer_stance": True}) == {
             "Q": ["slow"],
             "W": ["none"],
             "E": ["knockback"],

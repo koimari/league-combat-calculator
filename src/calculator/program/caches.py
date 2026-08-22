@@ -139,11 +139,6 @@ def actor_fingerprint(actor: Any, fields: Iterable[str]) -> tuple:
     )
 
 
-def params_fingerprint(params: Any, fields: Iterable[str]) -> tuple:
-    """The request parameters a cached program depends on, as a value key."""
-    return tuple((field, getattr(params, field, None)) for field in sorted(fields))
-
-
 def patch_fingerprint(patch: Any) -> tuple:
     """A per-pass parameter patch as a value key; ``()`` means no patch.
 
@@ -260,7 +255,6 @@ __all__ = [
     "Invalidator",
     "every_declaration",
     "actor_fingerprint",
-    "params_fingerprint",
     "patch_fingerprint",
     "program_fingerprint",
     "program_inputs_fingerprint",

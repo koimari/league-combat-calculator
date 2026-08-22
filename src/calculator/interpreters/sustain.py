@@ -50,9 +50,6 @@ from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
-# The one field the received-healing multiplier compiles to on its own lane.
-RECEIVED_HEALING_MULTIPLIER_FIELD = "healing_received_multiplier"
-
 
 class SustainInterpretationError(ValueError):
     """A sustain rule was asked something its payload does not answer."""
@@ -344,7 +341,6 @@ def _split_share(percent: object, holder_is_melee: bool) -> float:
 
 
 __all__ = [
-    "RECEIVED_HEALING_MULTIPLIER_FIELD",
     "SustainInterpretationError",
     "SustainSlot",
     "declared_sustain",

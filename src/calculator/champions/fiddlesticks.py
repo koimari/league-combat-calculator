@@ -6,11 +6,12 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .inputs import bool_option, int_option
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -23,12 +24,10 @@ def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     feared = bool(ctx.options.get("q_target_already_feared", False))
     attr = "Increased Magic Damage" if feared else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -77,12 +76,10 @@ def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     ticks = min(max(int(ctx.option("w_ticks")), 1), 8)
     per_instance = extract_named(
         ability, "Damage per Instance", rank, ctx.stats, ctx.target
@@ -109,12 +106,10 @@ def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _reap(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Reap"),
@@ -128,12 +123,10 @@ def _reap(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     ticks = min(max(int(ctx.option("r_ticks")), 1), 20)
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
@@ -168,12 +161,11 @@ MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Fiddlesticks", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "q_target_already_feared",
-        "type": "bool",
-        "default": False,
-        "label": "Terrify target already feared",
-        "rotation": {
+    bool_option(
+        "q_target_already_feared",
+        False,
+        label="Terrify target already feared",
+        rotation={
             "role": "irrelevant",
             "slot": "Q",
             "note": (
@@ -182,23 +174,9 @@ OPTIONS = [
                 "constraint."
             ),
         },
-    },
-    {
-        "key": "w_ticks",
-        "type": "int",
-        "default": 8,
-        "min": 1,
-        "max": 8,
-        "label": "Bountiful Harvest ticks",
-    },
-    {
-        "key": "r_ticks",
-        "type": "int",
-        "default": 20,
-        "min": 1,
-        "max": 20,
-        "label": "Crowstorm ticks",
-    },
+    ),
+    int_option("w_ticks", 8, minimum=1, maximum=8, label="Bountiful Harvest ticks"),
+    int_option("r_ticks", 20, minimum=1, maximum=20, label="Crowstorm ticks"),
 ]
 
 ASSUMPTIONS = [
@@ -210,7 +188,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Fiddlesticks")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -221,20 +199,20 @@ def derive_self_healing(
 ):
     """Resolve Fiddlesticks self-healing events from its authored packet."""
     healing = []
-    w_ability = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
+    w_ability = _healing.ability_json(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     portion = (
         _healing.extract_named(
             w_ability, "Champion Heal Portion", w_rank, champion_stats, {}
         )
         / 100.0
     )
-    for event in _healing._attributed_events(
+    for event in _healing.attributed_events(
         damage_events, lambda source, _event: source == "W"
     ):
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
-        _healing._heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        _healing.heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Fiddlesticks", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Fiddlesticks")(derive_self_healing)

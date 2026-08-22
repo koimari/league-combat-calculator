@@ -53,20 +53,16 @@ Definitions:
 
 ## Step 0 — Detect the patch (< 4h SLA)
 
-1. Confirm the live game patch:
+1. Ask the orchestrator — it resolves the live patch (cdtb first, the
+   CommunityDragon `content-metadata.json` endpoint as the fallback) and
+   compares it against the committed `data/staleness.json`:
    ```bash
-   cdtb versions game -a          # live patch, e.g. "16.16"
+   python scripts/patch_update.py detect     # read-only, one JSON report
    ```
-   (`CDTB_BIN=/path/to/cdtb cdtb versions game -a` when cdtb is not on PATH —
-   the regression script itself resolves the same way.)
-2. Compare against the committed staleness report:
-   ```bash
-   python -c "import json; print(json.load(open('data/staleness.json'))['patch'])"
-   ```
-   If `staleness.json.patch !=` the live patch, a new patch has landed;
-   proceed. Also check the wiki's `patchLastChanged` fields in
-   `data/champions.json` / `data/items.json` to see what the wiki thinks
-   moved.
+   Exit 0 = current, 1 = a new patch is live, 2 = neither patch source could
+   answer. Cron form: `detect; [ $? -eq 1 ] && python scripts/patch_update.py run`.
+2. Also check the wiki's `patchLastChanged` fields in `data/champions.json` /
+   `data/items.json` to see what the wiki thinks moved.
 3. Read the Riot patch notes
    (https://www.leagueoflegends.com/en-us/news/tags/patch-notes/) and note
    which registered champions / configured items are touched.
@@ -117,12 +113,15 @@ What `run` does:
      DDragon lagging the patch fails the run: re-run once it has published.)
 4. **Rebuilds the static catalogues** the UI fetches at runtime
    (`scripts/build_ability_catalog.py`, `scripts/build_effect_catalog.py`,
-   `scripts/build_receipts.py`).
-   `static/bis-profiles.json` is NOT rebuilt by the script — it needs the
-   Axword Meraki sibling repo (`lol-strength-analysis`); rebuild by hand
-   (`python scripts/build_bis_profiles.py`) if its wiki inputs moved.
-5. **Runs the gates**: reviewed-packet freshness, the full-entry audit, the
-   staleness gate (`patch_regression check`), and the coverage census
+   `scripts/build_receipts.py`, `scripts/build_onhit_matrix.py`) **and `static/bis-profiles.json`**. The
+   bis rebuild needs the Axword Meraki sibling repo (`lol-strength-analysis`,
+   `LCC_AXWORD_SOURCE`) and refuses to write without it — an absent kit
+   source, zero champions, zero merged Meraki packets, or a merged count
+   below the checked-in asset each abort the run rather than silently
+   dropping the damage packets the wiki parser cannot read.
+5. **Runs the gates**: reviewed-packet currency, the full-entry audit, a
+   game-file refresh, the staleness gate (`patch_regression check`), and the
+   coverage census
    (`coverage_census.py run --output docs/coverage-census.json`, ~1 min on 16 cores; it
    refreshes its receipt and fails on a frontier entry no
    `docs/coverage-residue.json` row acknowledges or a row that no longer
@@ -150,6 +149,13 @@ Then read the report against the `/patch-update` skill's triage guidance.
 ```bash
 python scripts/patch_regression.py check
 ```
+
+Step 1's `run` already did this, with `data/gamefiles/` cleared first — the
+downloader skips any file that already exists and its filenames are not
+patch-versioned, so an un-cleared cache silently compares the new wiki data
+against the *previous* patch's game files. Re-run it standalone only after
+fixing a cache value; to re-fetch the evidence by hand use
+`python scripts/patch_update.py fetch --patch 16.16`.
 
 What it does:
 
@@ -339,53 +345,57 @@ as "re-cert in progress" and the STALE badge stays visible until the re-cert
 completes — the badge is the point; it tells users not to trust those
 numbers yet. The < 72h full re-cert SLA still applies.
 
-## Automation wrapper — `scripts/weekly_ingest.py`
+## The one orchestrator — `scripts/patch_update.py`
 
-A cron-able orchestrator over four of this runbook's steps. It never
-supersedes the manual judgment calls (Steps 0/3/4/6/7/8/9 stay manual) — it
-exists to make the mechanical, no-judgment parts of a weekly check
-one command instead of several by-hand ones.
+Every scriptable step above is a subcommand of this one script; there is no
+second orchestrator. `run` is the whole day-0 pipeline (Steps 1-2 plus the
+gates); the rest are the same work in isolation, for a re-run or a spot check.
+Nothing here commits, stages, or splices a diff into a tracked file — that
+stays Steps 3/4/5, i.e. human triage.
 
 ```bash
-# Module form, from the repo root. `python scripts/weekly_ingest.py` is NOT
-# supported: the script imports siblings as `scripts.X` and never edits
-# sys.path (see its "Import contract" docstring).
-python -m scripts.weekly_ingest detect     # Step 0.2, read-only
-python -m scripts.weekly_ingest fetch --patch 16.16 [--limit 20] [--force]
-python -m scripts.weekly_ingest bis --patch 16.16
-python -m scripts.weekly_ingest packets
-python -m scripts.weekly_ingest all        # detect, then fetch -> bis -> packets
-                                           # only if a new patch is live
+python scripts/patch_update.py run                   # the full day-0 pipeline
+python scripts/patch_update.py detect                # Step 0.1, read-only
+python scripts/patch_update.py audit                 # re-print the audit, no pull
+python scripts/patch_update.py detail <name>...      # full leaf diff vs HEAD
+python scripts/patch_update.py fetch --patch 16.16 [--limit 20] [--force]
+python scripts/patch_update.py bis [--patch 16.16]
+python scripts/patch_update.py packets [--no-rebuild]
 ```
 
 | Subcommand | Covers | Exit codes | Fails closed on |
 |---|---|---|---|
-| `detect` | Step 0.2 (live vs. cached patch comparison). Read-only, no side effects. | 0 current, 1 new patch available, 2 infra failure | `cdtb` and the CommunityDragon `content-metadata.json` fallback both unreachable; `data/staleness.json` missing/unreadable/no `patch` field; unparseable patch labels |
-| `fetch` | Refreshes `data/gamefiles/` (the exact cache `patch_regression.py check` reads, Step 2) plus the tracked Gnar/GnarBig/Renata game-file authority pair (`data/bin/characters/`, commit 58ce29e) | 0 clean, 1 partial (an authority file failed), 2 hard error | empty/unreadable champion roster; HTTP/network errors per file; malformed JSON (`jq empty`); always clears a prior patch's cached bin before fetching so a stale copy can't be silently re-served |
-| `bis` | Rebuilds `static/bis-profiles.json` — the by-hand step Step 1 and the Non-goals section below describe (`build_bis_profiles.py` wrapper) | 0 ok, raises `RuntimeError` (script exit 2) on any invariant failure | missing `LCC_AXWORD_SOURCE` sibling-repo file; missing champion cache; zero champions produced; zero merged Meraki damage packets; a merged-packet count that regresses below the checked-in baseline (the Axword invariant, `tests/test_bis_profiles.py`) |
-| `packets` | Regenerates reviewed packets to a scratch path and reports **drift only** against `static/reviewed-packets.json` — it never writes that file | 0 clean, 1 drift found, 2 hard error | missing checked-in asset; missing `LCC_WIKI_DB` / wiki sqlite cache; missing Axword source; zero wiki revision receipts |
-| `all` | `detect`, then — only if a new patch is live — `fetch` → `bis` → `packets` in order, short-circuiting on the first failure | 0 no action needed / ready for triage, 1/2 per the failing subcommand | same as above; propagates the first `RuntimeError` verbatim with the failing step named |
+| `run` | Steps 1-2 end to end: pull, economics refresh, audit, catalogue + bis rebuild, packet currency, full-entry audit, game-file refresh, staleness, coverage census, pytest, golden compare, conditional re-capture | 0 green (baseline re-captured), non-zero per the failing step | every gate below, in order; the golden baseline is re-captured only after pytest is green |
+| `detect` | Step 0.1 (live vs. cached patch comparison). Read-only, no side effects. | 0 current, 1 new patch available, 2 infra failure | `cdtb` and the CommunityDragon `content-metadata.json` fallback both unreachable; `data/staleness.json` missing/unreadable/no `patch` field; unparseable patch labels |
+| `audit` / `detail` | Step 1's report without re-pulling | 0 clear, 1 BLOCKING entries (`audit`) | a vanished effect branch, an unreviewed source conflict, a removed-but-implemented item, a stale economics table |
+| `fetch` | Refreshes `data/gamefiles/` (the exact cache `patch_regression.py check` reads, Step 2) plus the tracked Gnar/GnarBig/Renata game-file authority pair (`data/bin/characters/`, commit 58ce29e) | 0 clean, 1 partial (an authority file failed), 2 hard error | empty/unreadable champion roster; HTTP/network errors per file; malformed JSON (`jq empty`); always clears a prior patch's cached bin before fetching so a stale copy can't be silently re-served; refuses to overwrite an uncommitted tracked authority file without `--force` |
+| `bis` | Rebuilds `static/bis-profiles.json` (`build_bis_profiles.py` wrapper). Also runs inside `run`'s catalogue rebuild — it is not a by-hand step any more. | 0 ok, 2 on any invariant failure | missing `LCC_AXWORD_SOURCE` sibling-repo file; missing champion cache; zero champions produced; zero merged Meraki damage packets; a merged-packet count that regresses below the checked-in baseline (the Axword invariant, `tests/test_bis_profiles.py`) |
+| `packets` | One currency verdict on `static/reviewed-packets.json` from two checks that catch disjoint drift: the **source receipts** (champions.json / Axword sha256, per-champion wiki revision, roster membership — a changed *source*) and a **rebuild diff** (regenerate to a scratch path and compare `slots` / `review_status` — a changed *builder*, which no receipt can see). It never writes that file. `--no-rebuild` runs the receipt half alone. | 0 clean, 1 not current | missing checked-in asset; missing `LCC_WIKI_DB` / wiki sqlite cache; missing Axword source; zero wiki revision receipts |
 
-Every subcommand prints a single JSON report to stdout (`--indent 2,
-sort_keys`), so it composes with `jq` in a cron wrapper or CI step.
+`detect`, `fetch`, `bis` and `packets` each print one JSON report to stdout
+(`--indent 2, sort_keys`), so they compose with `jq` in a cron wrapper or CI
+step; `run`, `audit` and `detail` print for a human.
 
-What it explicitly does **not** do, by design (these stay the human steps in
-Steps 1/3/4/6/7/8/9 above):
+Neither the import-time `PACKET_SHA256` pin nor either half of `packets`
+replaces the others: the pin proves only that the 76 packet-backed champion
+modules accepted *this* asset (the other 97 modules are hand-authored and
+never import-fail on it), and says nothing about whether the asset itself is
+current.
 
-- Re-pull the wiki cache (`patch_update.py run` — Step 1) or run its gates.
+What the orchestrator explicitly does **not** do, by design (these stay the
+human steps in Steps 3/4/5 above):
+
 - Splice a drifted champion's reviewed-packet sub-object back into
   `static/reviewed-packets.json` — `packets` only reports the diff; the
   splice remains a by-hand `build_reviewed_modules.py` edit (the Poppy
   16.16.1 precedent, commit 3137da9).
-- Triage stale flags, re-capture the golden baseline, commit, push, or gate
-  issue closures.
+- Triage stale flags, explain golden diffs, commit, push, or gate issue
+  closures.
 
 ## Non-goals (this runbook does not cover)
 
 - Mid-patch hotfix data (between patches): re-run Steps 2-5 on the pinned
   patch if a hotfix changes game files.
-- `bis-profiles.json` rebuilds (needs the Meraki sibling repo) — manual,
-  documented in Step 1.
 - Public launch / auth operations — see `docs/deploy-runbook.md`.
 - Issue-closure policy details — see `docs/issue-closure-policy.md`.
 

@@ -22,6 +22,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
+from tests.app_config import app_config
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_JS = ROOT / "static" / "js" / "app.js"
@@ -30,10 +31,8 @@ CSS = ROOT / "static" / "css" / "style.css"
 
 @pytest.fixture(autouse=True)
 def _isolate_app_config():
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(TESTING=True, RATE_LIMIT_ENABLED=False):
+        yield
 
 
 @pytest.fixture(scope="module")

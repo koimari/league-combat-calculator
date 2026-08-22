@@ -53,6 +53,8 @@ from .slotlib import (
     extract_value,
     proc_damage,
 )
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "384ce3a01847e53d1b8cdaaa0d444174ecfba6cfb31d913a020a45fab7d189fa"
 
@@ -365,12 +367,10 @@ _leverage = proc_damage(
 
 def _bailout(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the self cast's ramping attack speed, at the ramp's mean."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     on_self = str(ctx.option("w_bailout_target")) == _W_SELF_CAST
     start = extract_named(ability, "Bonus Attack Speed", rank, ctx.stats, {})
@@ -484,17 +484,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
-    {
-        "key": "p_leverage_procs",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 10,
-        "label": (
-            "Leverage on-hit procs (unmarked first-hits; the mark lasts 6s "
-            "and refreshes, so a 1v1 prices one per target)"
-        ),
-        "rotation": {
+    int_option(
+        "p_leverage_procs",
+        1,
+        minimum=0,
+        maximum=10,
+        label="Leverage on-hit procs (unmarked first-hits; the mark lasts 6s "
+        "and refreshes, so a 1v1 prices one per target)",
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -502,7 +499,7 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
                 "stream — self-state, no cross-slot cast edge."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -567,10 +564,4 @@ OPTIONS = list(OPTIONS) + [
 
 # R is emitted and grants nothing the engine prices: berserk is a
 # crowd-control kind, and the engine has no magnitude field for it.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="R")

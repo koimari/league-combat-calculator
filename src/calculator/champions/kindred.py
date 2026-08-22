@@ -50,9 +50,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage, typed_damage
 from .slotlib import (
     damage_entry,
@@ -63,6 +63,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .module_contract import coverage
 
 
 def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -123,12 +124,10 @@ def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: Mounting Dread — third-stack Wolf pounce."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("e_stacks")), 1), _E_STACK_MAX)
     if stacks < _E_STACK_MAX:
         return no_damage(
@@ -232,12 +231,10 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     through the same modifier override Mounting Dread uses, so the
     sourced formula prices exactly.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     attacks = min(max(int(ctx.option("w_attacks")), 1), 8)
     marks = _marks(ctx)
     leveling = find_named_leveling(ability, "Magic Damage")
@@ -293,38 +290,18 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
 parse_abilities = build_parser(SLOTS, "Kindred", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "marks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 25,
-        "label": "Mark of the Kindred stacks",
-    },
-    {
-        "key": "w_attacks",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 8,
-        "label": "Wolf attacks (W)",
-    },
-    {
-        "key": "w_hunters_vigor_stacks",
-        "type": "int",
-        "default": 100,
-        "min": 0,
-        "max": 100,
-        "label": ("Hunter's Vigor stacks (100 = the next basic attack heals)"),
-    },
-    {
-        "key": "e_stacks",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 3,
-        "label": "Mounting Dread stacks (3 = pounce)",
-    },
+    int_option("marks", 0, minimum=0, maximum=25, label="Mark of the Kindred stacks"),
+    int_option("w_attacks", 3, minimum=1, maximum=8, label="Wolf attacks (W)"),
+    int_option(
+        "w_hunters_vigor_stacks",
+        100,
+        minimum=0,
+        maximum=100,
+        label="Hunter's Vigor stacks (100 = the next basic attack heals)",
+    ),
+    int_option(
+        "e_stacks", 3, minimum=1, maximum=3, label="Mounting Dread stacks (3 = pounce)"
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -355,12 +332,10 @@ ASSUMPTIONS = [
 ]
 
 SOURCES = load_champion_sources("Kindred")
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot in {"P", "R"} else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="PR")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -371,11 +346,11 @@ def derive_self_healing(
 ):
     """Resolve Kindred self-healing events from its authored packet."""
     healing = []
-    r = _healing._ability(champion_data, "R")
-    r_rank = _healing._rank(ability_damages, "R")
+    r = _healing.ability_json(champion_data, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     r_heal = _healing.extract_named(r, "Heal", r_rank, champion_stats)
     duration = max(0.0, float(fight_duration_seconds or 0.0))
-    for cast_time in _healing._cast_slot_times(cast_timeline, "R"):
+    for cast_time in _healing.cast_slot_times(cast_timeline, "R"):
         heal_time = cast_time + 4.0
         if heal_time > duration + 1e-9:
             continue
@@ -398,23 +373,23 @@ def derive_self_healing(
     if "W_vigor" in ability_damages:
         level = int(champion_stat(champion_stats, "level"))
         heal = _healing.extract_named(
-            _healing._ability(champion_data, "W"), "Heal", level, champion_stats, {}
+            _healing.ability_json(champion_data, "W"), "Heal", level, champion_stats, {}
         )
-        for event in _healing._attributed_events(
+        for event in _healing.attributed_events(
             damage_events, lambda source, _event: source == "auto_attacks"
         ):
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),
                     "amount": 0.0,
-                    "amount_formula": _healing._missing_health_scaled_heal(0.0, heal),
+                    "amount_formula": _healing.missing_health_scaled_heal(0.0, heal),
                     "source": "Hunter's Vigor",
                     "kind": "champion_passive",
-                    **_healing._trigger_fields(event),
+                    **_healing.trigger_fields(event),
                 }
             )
             break
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Kindred", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Kindred")(derive_self_healing)

@@ -7,10 +7,11 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -44,12 +45,10 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Parrrley"),
@@ -189,12 +188,10 @@ def _remove_scurvy(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bonus = extract_named(ability, "Bonus Champion Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Powder Keg"),
@@ -212,12 +209,10 @@ def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     fire_at_will = bool(ctx.options.get("r_fire_at_will", False))
     deaths_daughter = bool(ctx.options.get("r_deaths_daughter", False))
     waves = 18 if fire_at_will else 12
@@ -262,26 +257,11 @@ MODULE_CC = {"P": "none", "Q": "none", "E": "slow", "R": "slow"}
 parse_abilities = build_parser(SLOTS, "Gangplank", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "p_procs",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 10,
-        "label": "Trial by Fire procs",
-    },
-    {
-        "key": "r_fire_at_will",
-        "type": "bool",
-        "default": False,
-        "label": "Cannon Barrage Fire at Will upgrade",
-    },
-    {
-        "key": "r_deaths_daughter",
-        "type": "bool",
-        "default": False,
-        "label": "Cannon Barrage Death's Daughter upgrade",
-    },
+    int_option("p_procs", 0, minimum=0, maximum=10, label="Trial by Fire procs"),
+    bool_option("r_fire_at_will", False, label="Cannon Barrage Fire at Will upgrade"),
+    bool_option(
+        "r_deaths_daughter", False, label="Cannon Barrage Death's Daughter upgrade"
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -293,7 +273,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Gangplank")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -304,11 +284,11 @@ def derive_self_healing(
 ):
     """Resolve Gangplank self-healing events from its authored packet."""
     healing = []
-    w = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
+    w = _healing.ability_json(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats)
     w_missing_ratio = (
-        _healing._leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+        _healing.leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
     )
 
     def remove_scurvy_heal(
@@ -340,7 +320,7 @@ def derive_self_healing(
                 "cast_while_disabled": True,
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Gangplank", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Gangplank")(derive_self_healing)

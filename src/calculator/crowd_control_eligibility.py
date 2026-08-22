@@ -209,15 +209,6 @@ def active_until(entry: TimedShield | None) -> float:
 # Immunity eligibility
 # ---------------------------------------------------------------------------
 
-#: The sourced categorical rule of the Black Shield immunity lifecycle.
-BLACK_SHIELD_IMMUNITY_RULE = (
-    "The shield 'absorbs incoming magic damage and grants crowd control "
-    "immunity while it holds'; immunity ends when that exact shield "
-    "expires or its pool is depleted.  The wiki notes add: it will not "
-    "resist self nor allied crowd control, and it will not resist "
-    "nearsight.  Spell shields take priority over Black Shield."
-)
-
 
 @dataclass(frozen=True, slots=True)
 class CrowdControlEligibility:
@@ -375,82 +366,7 @@ def same_hit_ordering() -> tuple[str, SourceReceipt]:
     )
 
 
-# ---------------------------------------------------------------------------
-# Score-path representation gate (contract-owned mirror)
-# ---------------------------------------------------------------------------
-
-
-def compiled_support_receipt(template: Any) -> str | None:
-    """Contract-owned mirror of the score path's representation gate.
-
-    Returns None when a support template can ride the compiled score walk
-    with the immunity decision intact, else a named receipt.  Mirrors
-    ``survival.compile.unrepresentable_template_receipt`` for shield
-    templates and adds the immunity staging gate: an immunity-carrying
-    shield must name its holder source (the exact ledger entry identity
-    the compiled walk stages), or the score path fails closed.
-    """
-    kind = str(getattr(template, "get", lambda key, default=None: default)("kind", ""))
-    if kind == "shield":
-        if bool(
-            getattr(template, "get", lambda key, default=None: default)(
-                "_guardian_reactive", False
-            )
-        ):
-            return "guardian_reactive_shield"
-        if bool(
-            getattr(template, "get", lambda key, default=None: default)(
-                "overheal_to_shield", False
-            )
-        ):
-            return "overheal_to_shield"
-        try:
-            duration = max(
-                0.0,
-                float(
-                    getattr(template, "get", lambda key, default=None: default)(
-                        "duration", 0.0
-                    )
-                    or 0.0
-                ),
-            )
-        except (TypeError, ValueError):
-            return "support_duration=nonfinite"
-        if duration <= 0.0:
-            return "support_duration=0"
-        if bool(
-            getattr(template, "get", lambda key, default=None: default)(
-                "crowd_control_immunity_while_shield", False
-            )
-        ) and not str(
-            getattr(template, "get", lambda key, default=None: default)(
-                "crowd_control_immunity_source", ""
-            )
-            or ""
-        ):
-            return "support_cc_immunity_source=missing"
-        return None
-    if kind in {"spell_shield", "stasis", "invulnerability", "untargetable"}:
-        try:
-            duration = max(
-                0.0,
-                float(
-                    getattr(template, "get", lambda key, default=None: default)(
-                        "duration", 0.0
-                    )
-                    or 0.0
-                ),
-            )
-        except (TypeError, ValueError):
-            return "support_duration=nonfinite"
-        return None if duration > 0.0 else "support_duration=0"
-    if kind not in {"heal", "damage_modifier"}:
-        return f"support_kind={kind}"
-    return None
-
-
 __all__ = [
-    "BLACK_SHIELD_IMMUNITY_RULE",
     "CONTROL_BLOCKING_KINDS",
     "CONTROL_SOFT_KINDS",
     "CrowdControlDecision",
@@ -461,7 +377,6 @@ __all__ = [
     "UnknownControlError",
     "active_until",
     "classify_control",
-    "compiled_support_receipt",
     "immunity_holder",
     "required_control_class",
     "same_hit_ordering",

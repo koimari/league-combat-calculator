@@ -46,8 +46,8 @@ CURRENT RUNTIME FACTS (verified before pinning):
   ``resolve_cleanse_item("Remove Scurvy")`` FAILS CLOSED today with a
   KeyError naming the source (the "unavailable source" denial) — the
   completion must declare the champion cleanse source.
-- Score fail-closed gate (already generic): ``compiled_support_receipt``
-  / ``unrepresentable_template_receipt`` return ``support_kind=cleanse``
+- Score fail-closed gate (already generic):
+  ``unrepresentable_template_receipt`` returns ``support_kind=cleanse``
   for cleanse-kind templates and ``support_cleanse`` for heal packets
   carrying the cleanse marker — the compiled score path can never
   silently re-price a cleanse (HANDOVER section 9 rule).
@@ -99,8 +99,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
@@ -109,7 +107,6 @@ from src.calculator.champions import (
 from src.calculator.champions.slotlib import extract_named
 from src.calculator.cleanse_eligibility import (
     CleanseEligibility,
-    compiled_support_receipt,
     resolve_cleanse_item,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
@@ -119,24 +116,11 @@ from src.calculator.healing import derive_self_healing
 # MERGE: the shared healing readers moved out of ``healing.py`` into
 # ``healing_helpers.py`` (HEALING-API); ``healing.py`` only loads
 # declarations and sorts receipts now.
-from src.calculator.healing_helpers import _leveling_ratio
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.healing_helpers import leveling_ratio
+from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.app_config import app_config
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _GANPLANK_DATA = _CHAMPION_DATA["Gangplank"]
@@ -271,12 +255,8 @@ def _testing_client():
     rely on ``TESTING`` being False (the limiter is bypassed under
     TESTING), so this file must never leave the flag set.
     """
-    previous = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
+    with app_config(TESTING=True):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous
 
 
 def _app_combat(
@@ -421,7 +401,7 @@ class TestSourceAndTypedValues:
             assert extract_named(w, "Heal", rank, {"ability_power": 100.0}) == (
                 _w_flat(rank) + _W_HEAL_AP_PERCENT
             )
-            assert _leveling_ratio(w, "Heal", "missing health", rank) == (
+            assert leveling_ratio(w, "Heal", "missing health", rank) == (
                 _W_HEAL_MISSING_PERCENT
             )
         # The full formula the declaration must publish.
@@ -961,7 +941,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {
                 "main": [
@@ -1009,7 +989,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {"main": [_control_packet(1.0, "suppression", 2.0, source="R")]},
             {},
@@ -1046,7 +1026,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {"main": [_control_packet(1.0, "pull", 2.0, source="E")]},
             {},
@@ -1083,7 +1063,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("main", "main"),
         ]
         with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-            _simulate_survival(
+            simulate_survival(
                 combatants,
                 {"main": [_control_packet(1.0, "dance", 2.0, source="E")]},
                 {},
@@ -1108,7 +1088,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {"main": [_control_packet(1.0, "airborne", 2.0, source="R")]},
             {},
@@ -1210,9 +1190,12 @@ class TestNamedDenials:
             resolve_cleanse_item("Bogus Cleanse")
         assert "Bogus Cleanse" in str(excinfo.value)
         # Score fail-closed receipts.
-        assert compiled_support_receipt({"kind": "cleanse"}) == "support_kind=cleanse"
         assert (
-            compiled_support_receipt({"kind": "heal", "cleanse": True})
+            unrepresentable_template_receipt({"kind": "cleanse"})
+            == "support_kind=cleanse"
+        )
+        assert (
+            unrepresentable_template_receipt({"kind": "heal", "cleanse": True})
             == "support_cleanse"
         )
         assert (
@@ -1261,13 +1244,23 @@ class TestScoreFailClosed:
         # are unrepresentable; a plain heal stays representable.  The
         # P2-5 wiring must route the W through this gate (never silently
         # re-price the heal as a plain heal or drop the cleanse).
-        assert compiled_support_receipt({"kind": "cleanse"}) == "support_kind=cleanse"
         assert (
-            compiled_support_receipt({"kind": "heal", "amount": 100.0, "cleanse": True})
+            unrepresentable_template_receipt({"kind": "cleanse"})
+            == "support_kind=cleanse"
+        )
+        assert (
+            unrepresentable_template_receipt(
+                {"kind": "heal", "amount": 100.0, "cleanse": True}
+            )
             == "support_cleanse"
         )
-        assert compiled_support_receipt({"kind": "movement"}) == "support_kind=movement"
-        assert compiled_support_receipt({"kind": "heal", "amount": 100.0}) is None
+        assert (
+            unrepresentable_template_receipt({"kind": "movement"})
+            == "support_kind=movement"
+        )
+        assert (
+            unrepresentable_template_receipt({"kind": "heal", "amount": 100.0}) is None
+        )
 
     def test_w_score_only_never_silently_reprices(self):
         # P2-5 contract (the completion rule): the score adapter cannot
@@ -1288,7 +1281,6 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:W:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
         # The receipt walk prices the fight (the app-level couple payload
         # shows the full cleanse decision).
@@ -1347,7 +1339,6 @@ class TestModeParity:
             "target": "main",
             "_event_id": "main:cleanse:W:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
 
 

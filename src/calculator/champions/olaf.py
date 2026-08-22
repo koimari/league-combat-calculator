@@ -43,6 +43,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .inputs import int_option
 
 PACKET_SHA256 = "abc0765ed94d66999d26bc7fe98c41c49c3d5e3631c4cca2a96a59de1ba776eb"
 
@@ -106,12 +107,10 @@ _berserker_rage.phase = BUFF
 
 def _tough_it_out(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the 40-80% attack speed beside the scanner-owned shield."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _W_DURATION_SECONDS)
@@ -137,12 +136,10 @@ _tough_it_out.phase = BUFF
 
 def _ragnarok(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: bonus attack damage (10-30 + 25% AD) and resistances for 3s."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     share = buff_window_share(ctx, _R_DURATION_SECONDS)
     granted_ad = extract_named(
@@ -225,14 +222,13 @@ TOUGH_IT_OUT_MISSING_HEALTH_RATIO = 0.175
 TOUGH_IT_OUT_MISSING_HEALTH_CAP = 0.70
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "olaf_missing_health_percent",
-        "type": "int",
-        "default": _DEFAULT_MISSING_HEALTH_PERCENT,
-        "min": 0,
-        "max": 100,
-        "label": "Olaf's missing health (%) — scales Berserker Rage",
-        "rotation": {
+    int_option(
+        "olaf_missing_health_percent",
+        _DEFAULT_MISSING_HEALTH_PERCENT,
+        minimum=0,
+        maximum=100,
+        label="Olaf's missing health (%) — scales Berserker Rage",
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -240,7 +236,7 @@ OPTIONS = list(OPTIONS) + [
                 "it scales P alone."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

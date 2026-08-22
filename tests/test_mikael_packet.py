@@ -79,8 +79,6 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import app
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_effects import (
@@ -99,7 +97,6 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     _WalkCompiler,
-    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
@@ -110,26 +107,9 @@ from src.calculator.survival.compile import (
     unrepresentable_template_receipt,
 )
 
-from src.calculator.item_coverage import ATTACKER_LANES, item_model_coverage
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
+from tests import item_probe
 
 MIKAELS = "Mikael's Blessing"
 MIKAELS_SOURCE = "Mikael's Blessing \u2014 Purify"
@@ -202,14 +182,6 @@ def _ahri_e() -> dict:
     """Ahri: E charm only (t=0, 1.8s).  Skillshots hit every roster member,
     so the caster is charmed too unless shielded."""
     return _enemy("Ahri", ranks={"Q": 0, "W": 0, "E": 5, "R": 0})
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _purify_events(combat: dict) -> list[dict]:
@@ -312,7 +284,7 @@ def _simulate(
             _combatant("target", "main"),
             _combatant("caster", "main"),
         ]
-    return _simulate_survival(
+    return simulate_survival(
         combatants,
         {"target": [dict(packet) for packet in incoming]},
         {},
@@ -430,11 +402,11 @@ def test_active_seconds_zero_no_cast_no_receipts():
         combat = _calculate(payload)
         assert _purify_events(combat) == []
         for pid in ("main", "ally:Jinx"):
-            row = _survival(combat, pid)
+            row = survival_of(combat, pid)
             assert row.get("cleanse") is None
             assert row.get("cleanse_use") is None
         # The enemy control still lands (the roster is unchanged).
-        assert _survival(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
+        assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
 
 
 # ---------------------------------------------------------------------------
@@ -618,8 +590,8 @@ def test_max_boundary_30_seconds_is_schema_valid_and_skipped_outside_window():
     assert purify["time"] == pytest.approx(30.0)
     assert purify["skipped_reason"] == "outside_window"
     for pid in ("main", "ally:Jinx"):
-        assert _survival(combat, pid).get("cleanse_use") is None
-        assert _survival(combat, pid).get("cleanse") is None
+        assert survival_of(combat, pid).get("cleanse_use") is None
+        assert survival_of(combat, pid).get("cleanse") is None
 
 
 # ---------------------------------------------------------------------------
@@ -655,8 +627,8 @@ def test_packet_targets_the_selected_ally_and_override_is_honored():
     assert purify["target_policy"] == "selected_teammate"
     # The heal follows the selection onto the chosen ally only: Ashe is
     # damaged by the charm and restored; Jinx receives nothing.
-    assert _survival(overridden, "ally:Ashe")["healing_received"] > 0.0
-    assert _survival(overridden, "ally:Jinx")["healing_received"] == 0.0
+    assert survival_of(overridden, "ally:Ashe")["healing_received"] > 0.0
+    assert survival_of(overridden, "ally:Jinx")["healing_received"] == 0.0
 
 
 def test_no_teammates_fails_closed():
@@ -665,8 +637,8 @@ def test_no_teammates_fails_closed():
     but there is no selected ally to target."""
     combat = _calculate(_main(enemies=[_enemy()]))
     assert _purify_events(combat) == []
-    assert _survival(combat, "main").get("cleanse_use") is None
-    assert _survival(combat, "main").get("cleanse") is None
+    assert survival_of(combat, "main").get("cleanse_use") is None
+    assert survival_of(combat, "main").get("cleanse") is None
 
 
 # ---------------------------------------------------------------------------
@@ -711,13 +683,13 @@ def test_heal_fires_even_with_no_active_control():
     (purify,) = _purify_events(combat)
     assert purify["amount"] == pytest.approx(250.0)
     assert purify.get("skipped_reason") is None
-    jinx = _survival(combat, "ally:Jinx")
+    jinx = survival_of(combat, "ally:Jinx")
     assert jinx["healing_received"] > 0.0
     assert purify["applied_amount"] == pytest.approx(jinx["healing_received"], abs=0.05)
     assert jinx["cleanse"]["decision"]["reason"] == "control_not_active"
     assert jinx["cleanse"]["heal"]["amount"] == pytest.approx(250.0)
     assert jinx["cleanse"]["heal"]["source"] == MIKAELS_SOURCE
-    use = _survival(combat, "main")["cleanse_use"]
+    use = survival_of(combat, "main")["cleanse_use"]
     assert use["uses_before"] == 1
     assert use["uses_after"] == 0
 
@@ -752,11 +724,11 @@ def test_app_level_cleanse_removes_the_allied_control():
             allies=[_ally("Jinx")],
         )
     )
-    assert _survival(combat, "main")["spell_shield_used"] is True
+    assert survival_of(combat, "main")["spell_shield_used"] is True
     (purify,) = _purify_events(combat)
     assert purify.get("skipped_reason") is None
 
-    jinx = _survival(combat, "ally:Jinx")
+    jinx = survival_of(combat, "ally:Jinx")
     assert jinx["action_downtime"] == pytest.approx(1.0)
     assert [
         (i["kind"], i["start"], i["end"]) for i in jinx["crowd_control_intervals"]
@@ -775,7 +747,7 @@ def test_app_level_cleanse_removes_the_allied_control():
     assert receipt["downtime_before"] == pytest.approx(1.8)
     assert receipt["downtime_after"] == pytest.approx(1.0)
     assert receipt["heal"]["amount"] == pytest.approx(250.0)
-    use = _survival(combat, "main")["cleanse_use"]
+    use = survival_of(combat, "main")["cleanse_use"]
     assert use["uses_before"] == 1
     assert use["uses_after"] == 0
 
@@ -1020,7 +992,7 @@ def test_public_result_exposes_heal_packet_cleanse_use_and_truncation():
     assert purify["target"] == "ally:Jinx"
     assert purify["target_scope"] == "explicit_selected_ally"
 
-    use = _survival(combat, "main")["cleanse_use"]
+    use = survival_of(combat, "main")["cleanse_use"]
     assert use["item"] == MIKAELS
     assert use["uses_before"] == 1
     assert use["uses_after"] == 0
@@ -1029,7 +1001,7 @@ def test_public_result_exposes_heal_packet_cleanse_use_and_truncation():
     assert use["cooldown_source_gap"] is True
     assert use["fired_while_crowd_controlled"] is False
 
-    receipt = _survival(combat, "ally:Jinx")["cleanse"]
+    receipt = survival_of(combat, "ally:Jinx")["cleanse"]
     assert receipt["item"] == MIKAELS
     assert receipt["target"] == "ally:Jinx"
     assert receipt["activation_time"] == pytest.approx(1.0)
@@ -1051,7 +1023,7 @@ def test_public_result_exposes_heal_packet_cleanse_use_and_truncation():
     # The truncated intervals match the public survival row (no drift).
     assert [(i["kind"], i["start"], i["end"]) for i in receipt["intervals_after"]] == [
         (i["kind"], i["start"], i["end"])
-        for i in _survival(combat, "ally:Jinx")["crowd_control_intervals"]
+        for i in survival_of(combat, "ally:Jinx")["crowd_control_intervals"]
     ]
 
 
@@ -1064,7 +1036,7 @@ def test_heal_receipt_carries_the_sourced_atom():
             allies=[_ally("Jinx")],
         )
     )
-    heal = _survival(combat, "ally:Jinx")["cleanse"]["heal"]
+    heal = survival_of(combat, "ally:Jinx")["cleanse"]["heal"]
     assert heal["amount"] == pytest.approx(250.0)
     assert heal["source"] == MIKAELS_SOURCE
     assert {atom["hash"] for atom in heal["source_atoms"]} == {HEAL_ATOM_HASH}
@@ -1292,7 +1264,7 @@ def test_mikaels_is_optimizer_eligible_with_purify_review_reason():
     from src.calculator.item_coverage import target_item_model_coverage
 
     item = get_item_by_name(MIKAELS)
-    coverage = _attacker_coverage(item)
+    coverage = item_probe.attacker_coverage(item)
     assert coverage["optimizer_eligible"] is True
     assert coverage["status"] == "modeled_state"
     assert coverage["calculation_eligible"] is True
@@ -1344,12 +1316,12 @@ def test_identical_fights_produce_identical_packets_and_receipts():
     assert len(_purify_events(first)) == 1
     assert len(_purify_events(second)) == 1
     assert (
-        _survival(first, "ally:Jinx")["cleanse"]
-        == _survival(second, "ally:Jinx")["cleanse"]
+        survival_of(first, "ally:Jinx")["cleanse"]
+        == survival_of(second, "ally:Jinx")["cleanse"]
     )
     assert (
-        _survival(first, "main")["cleanse_use"]
-        == _survival(second, "main")["cleanse_use"]
+        survival_of(first, "main")["cleanse_use"]
+        == survival_of(second, "main")["cleanse_use"]
     )
 
 

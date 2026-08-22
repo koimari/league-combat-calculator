@@ -41,7 +41,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import ability_on_hit_entry, simple_damage
@@ -194,7 +194,7 @@ def _determination_heal_ratios(level: int) -> tuple[float, float]:
     return _HEAL_BANDS[-1][1], _HEAL_BANDS[-1][2]
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -207,13 +207,13 @@ def derive_self_healing(
     healing = []
     lifesteal = champion_stat(champion_stats, "lifesteal_percent")
     if lifesteal > 0.0:
-        for event in _healing._attributed_events(
+        for event in _healing.attributed_events(
             damage_events, lambda source, _event: source == "W"
         ):
             amount = (
                 0.333 * max(0.0, float(event.get("damage", 0.0))) * lifesteal / 100.0
             )
-            _healing._heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
+            _healing.heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
     # Determination (P): the third stack "consume[s] them all to deal ...
     # bonus physical damage and heal Xin Zhao for 2% / 3.5% / 5% (based on
     # level) of his maximum health (+ 40% / 50% / 70% (based on level) AP)".
@@ -230,13 +230,13 @@ def derive_self_healing(
         # The module declares the cadence; dividing by it here is what keeps
         # the heal and the damage on one grouping.
         stacks = max(1, int(determination.get("stacks_required") or 1))
-        for event in _healing._attributed_events(
+        for event in _healing.attributed_events(
             damage_events, lambda source, _event: source == "on_hit_ability_passive"
         ):
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing, event, per_proc_heal / stacks, "Determination"
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Xin Zhao", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Xin Zhao")(derive_self_healing)

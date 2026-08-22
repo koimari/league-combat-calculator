@@ -58,12 +58,10 @@ _staggering_blow.phase = ONHIT
 
 def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: Pain of Wrath's Total Magic Damage across both instances."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Titan's Wrath"),
@@ -87,12 +85,10 @@ def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the primary-target eruption's Increased Damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     increased = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
     # The primary target "is stunned for the same duration, and knocked up
     # for a modified duration": the cached "Stun Duration" and "Knock Up

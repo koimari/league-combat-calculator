@@ -512,39 +512,6 @@ class TestFightEngineIntegration:
 # Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
-# Every control word the Wiki uses for the classes an item passive keys on.
-CONTROL_WORDS = (
-    "stun",
-    "root",
-    "snare",
-    "charm",
-    "fear",
-    "flee",
-    "taunt",
-    "sleep",
-    "suppress",
-    "knock",
-    "airborne",
-    "pull",
-    "slow",
-    "immobiliz",
-    "stasis",
-    "drowsy",
-    "cripple",
-    "polymorph",
-    "disarm",
-    "silence",
-)
-
-
-def _slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
 
 class TestReviewedCrowdControl:
     """Kog'Maw's kit facts, held to the cached text and to the ledger.
@@ -556,16 +523,16 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_quote_the_cached_text(self, kogmaw_data):
         assert kogmaw.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
-        assert "slowing enemies within the area" in _slot_text(kogmaw_data, "E")
+        assert "slowing enemies within the area" in cc_review.slot_text(
+            kogmaw_data, "E"
+        )
 
     def test_reviewed_absences_read_the_whole_slot(self, kogmaw_data):
         """A "none" is a slot that was read, not a slot that was skipped."""
         for slot, kind in kogmaw.MODULE_CC.items():
             if kind != "none":
                 continue
-            hits = [
-                word for word in CONTROL_WORDS if word in _slot_text(kogmaw_data, slot)
-            ]
+            hits = cc_review.any_control_hits(kogmaw_data, slot)
             assert hits == [], slot
 
     def test_every_ability_event_carries_the_review(self, kogmaw_data):

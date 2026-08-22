@@ -56,6 +56,8 @@ from .slotlib import (
     find_named_leveling,
     on_hit_entry,
 )
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"
 
@@ -326,12 +328,10 @@ def _radiant_volley(ctx: SlotCtx):
     target area.  The volley launches over the sourced 0.5 seconds, with
     the bolts distributing evenly.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     initial = extract_named(
         ability, "Initial Explosion Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -377,12 +377,10 @@ def _solar_snare(ctx: SlotCtx):
     Second) over the 0.5s window.  The field expands after the sourced
     0.5-second delay, so the first tick lands at 0.5s.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     orb = extract_named(ability, "Orb Magic Damage", rank, ctx.stats, ctx.target)
     per_tick = extract_named(
         ability, "Field Magic Damage per Tick", rank, ctx.stats, ctx.target
@@ -443,22 +441,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "r_overwhelm_stacks",
-        "type": "int",
-        "default": _R_DEFAULT_OVERWHELM_STACKS,
-        "label": "Overwhelm stacks on the target when Golden Eclipse detonates",
-        "min": 0,
-        "max": 50,
-    },
-    {
-        "key": "p_searing_brilliance_missiles",
-        "type": "int",
-        "default": _P_MISSILES_PER_CAST,
-        "label": "Searing Brilliance projectiles consumed per empowered attack",
-        "min": 0,
-        "max": _P_MAX_MISSILES,
-    },
+    int_option(
+        "r_overwhelm_stacks",
+        _R_DEFAULT_OVERWHELM_STACKS,
+        minimum=0,
+        maximum=50,
+        label="Overwhelm stacks on the target when Golden Eclipse detonates",
+    ),
+    int_option(
+        "p_searing_brilliance_missiles",
+        _P_MISSILES_PER_CAST,
+        minimum=0,
+        maximum=_P_MAX_MISSILES,
+        label="Searing Brilliance projectiles consumed per empowered attack",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -521,6 +517,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "data/champions.json re-pull/re-cert, which is outside this task's "
     "scope (see docs/patch-day-runbook.md Step 3.A).",
 ]
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="W")

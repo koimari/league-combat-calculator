@@ -9,15 +9,14 @@ from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Spinning Axe"),
@@ -37,12 +36,10 @@ def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _blood_rush(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     entry = damage_entry(
         ability.get("name", "Blood Rush"),
@@ -62,12 +59,10 @@ _blood_rush.phase = BUFF
 
 
 def _stand_aside(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Stand Aside"),
@@ -84,12 +79,10 @@ def _stand_aside(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     per_pass = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -144,28 +137,13 @@ MODULE_CC = {"Q": "none", "E": "airborne", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Draven", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "adoration_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 10000,
-        "label": "Adoration stacks",
-    },
-    {
-        "key": "adoration_cash_in",
-        "type": "bool",
-        "default": False,
-        "label": "Cash in Adoration on a champion kill",
-    },
-    {
-        "key": "r_passes",
-        "type": "int",
-        "default": 2,
-        "min": 1,
-        "max": 2,
-        "label": "Whirling Death passes",
-    },
+    int_option(
+        "adoration_stacks", 0, minimum=0, maximum=10000, label="Adoration stacks"
+    ),
+    bool_option(
+        "adoration_cash_in", False, label="Cash in Adoration on a champion kill"
+    ),
+    int_option("r_passes", 2, minimum=1, maximum=2, label="Whirling Death passes"),
 ]
 
 ASSUMPTIONS = [

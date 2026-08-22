@@ -47,7 +47,7 @@ from ..ability_spec import Quantity
 from .views import UnrankableNumber, ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
-from .route import PairDefender, RouteContext, RoutePolicy, resolve_route
+from .route import PairDefender, RouteContext, resolve_route
 
 
 class Projection(Enum):
@@ -344,25 +344,6 @@ def walk_repriced_mechanics() -> frozenset[str]:
         if capability.pair_of is not None:
             repriced.add(capability.pair_of)
     return frozenset(repriced) & previews
-
-
-def pair_repriced_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """Which of one pair fight's preview rows the walk re-prices, not drops.
-
-    A subset of :func:`pair_preview_sources` by construction, and the difference
-    between the two sets is exactly what a composition drops.  Both readings
-    live here for the reason :func:`pair_preview_sources` gives: a roster
-    composes a pair fight in two places, and two copies of "is this row a
-    duplicate or a packet awaiting its price" would eventually disagree.
-    """
-    repriced = walk_repriced_mechanics()
-    if not repriced:
-        return frozenset()
-    return frozenset(
-        source
-        for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in repriced
-    )
 
 
 @cache
@@ -663,11 +644,6 @@ def build_program(
     )
 
 
-def route_policy_of(event: PairEvent) -> RoutePolicy:
-    """One authored event's delivery policy, named as a reader of the field."""
-    return event.route
-
-
 __all__ = [
     "CapabilityView",
     "MixedViewFold",
@@ -689,8 +665,6 @@ __all__ = [
     "pair_preview_mechanics",
     "pair_preview_sources",
     "pair_program",
-    "pair_repriced_sources",
     "walk_repriced_mechanics",
     "roster_program",
-    "route_policy_of",
 ]

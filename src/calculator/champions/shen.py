@@ -63,6 +63,9 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option, int_option
+from .module_contract import coverage
+from ..stats import calculate_attack_speed
 
 _Q_ATTACKS = 3
 _Q_ENHANCED_BONUS_ATTACK_SPEED = 50.0
@@ -155,12 +158,10 @@ def _energy_restore(level: int) -> float:
 
 def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: selected normal/enhanced attacks, including their base swings."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     hits = min(
         _Q_ATTACKS,
@@ -212,8 +213,10 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
     if hits:
         attack_speed = ctx.stat("attack_speed")
         if enhanced:
-            attack_speed += ctx.stat("attack_speed_ratio") * (
-                _Q_ENHANCED_BONUS_ATTACK_SPEED / 100.0
+            attack_speed = calculate_attack_speed(
+                attack_speed,
+                ctx.stat("attack_speed_ratio"),
+                _Q_ENHANCED_BONUS_ATTACK_SPEED,
             )
         first_delay = float(ctx.option("q_first_attack_delay"))
         interval = 1.0 / attack_speed if attack_speed > 0 else 0.0
@@ -256,12 +259,10 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     prices exactly the one grant a real fight would produce and Q's own
     later completion is not double-counted.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     distance = min(600.0, max(300.0, float(ctx.option("e_dash_distance"))))
     speed = _E_BASE_SPEED + ctx.stat("move_speed")
@@ -328,38 +329,26 @@ def _spirits_refuge(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "q_spirit_blade_hit",
-        "type": "bool",
-        "default": True,
-        "label": "Q blade passes through a champion",
-    },
-    {
-        "key": "q_attacks_landed",
-        "type": "int",
-        "default": 3,
-        "label": "Q empowered attacks landed",
-        "min": 0,
-        "max": 3,
-    },
-    {
-        "key": "q_first_attack_delay",
-        "type": "float",
-        "default": 0.5,
-        "label": "Delay to first Q attack (seconds)",
-        "min": 0.0,
-        "max": 2.0,
-        "step": 0.1,
-    },
-    {
-        "key": "e_dash_distance",
-        "type": "float",
-        "default": 600.0,
-        "label": "E dash distance",
-        "min": 300.0,
-        "max": 600.0,
-        "step": 50.0,
-    },
+    bool_option("q_spirit_blade_hit", True, label="Q blade passes through a champion"),
+    int_option(
+        "q_attacks_landed", 3, minimum=0, maximum=3, label="Q empowered attacks landed"
+    ),
+    float_option(
+        "q_first_attack_delay",
+        0.5,
+        minimum=0.0,
+        maximum=2.0,
+        label="Delay to first Q attack (seconds)",
+        step=0.1,
+    ),
+    float_option(
+        "e_dash_distance",
+        600.0,
+        minimum=300.0,
+        maximum=600.0,
+        label="E dash distance",
+        step=50.0,
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -426,7 +415,5 @@ parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
 # the engine prices.  W emits an explicit zero-damage state row: its cached
 # entry carries no HP number at all, and the attack block it does apply lives
 # on the defender side of an interaction, not in this outgoing slot map.
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="W")
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

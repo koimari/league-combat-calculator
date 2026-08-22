@@ -77,6 +77,8 @@ from src.calculator.champions.aurelion_sol import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.champions.slotlib import find_named_leveling
+from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 # The data-file key differs from the display/dispatcher name (conftest
@@ -97,39 +99,8 @@ _PER_STACK_BURST_DELTA = (  # 3 bursts x 0.031% of 2000 HP per stack
 )
 
 
-def _stats() -> dict:
-    return {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "armor_penetration_percent": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "critical_strike_chance": 0.0,
-        "flat_armor_penetration": 0.0,
-        "health": 0.0,
-        "is_melee": True,
-        "lethality": 0.0,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "ultimate_haste": 0.0,
-        "attack_damage": 100.0,
-        "ability_power": 0.0,
-        "base_attack_damage": 60.0,
-        "bonus_attack_damage": 40.0,
-        "attack_speed": 0.8,
-        "attack_speed_ratio": 0.625,
-        "bonus_attack_speed": 0.0,
-        "max_mana": 300.0,
-        "resource_regen_per_second": 0.0,
-        "level": _LEVEL,
-    }
-
-
 def _parse(option: dict | None):
-    stats = _stats()
+    stats = parse_stats(_LEVEL)
     return stats, parse_champion_abilities(
         get_champion("Aurelion Sol"),
         _LEVEL,
@@ -196,11 +167,10 @@ def _api(option: dict):
 
 def _leveling(ability: dict, attribute: str) -> dict:
     """The first leveling row named *attribute* in one ability entry."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return leveling
-    raise AssertionError(f"no leveling {attribute!r} in {ability.get('name')}")
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        raise AssertionError(f"no leveling {attribute!r} in {ability.get('name')}")
+    return leveling
 
 
 def _resolve(ability: dict, attribute: str, index: int, stats: dict) -> float:
@@ -386,10 +356,10 @@ class TestSeededOptionCompatibility:
         for seed, want_delta in ((0, 0.0), (100, 186.0), (500, 930.0)):
             _, abilities = _parse({"stardust_stacks": seed})
             assert abilities["Q"]["total_raw"] == pytest.approx(
-                _q_expected(_stats(), stacks=seed)
+                _q_expected(parse_stats(_LEVEL), stacks=seed)
             )
             assert abilities["Q"]["total_raw"] == pytest.approx(
-                _q_expected(_stats()) + want_delta
+                _q_expected(parse_stats(_LEVEL)) + want_delta
             )
 
     def test_q_burst_term_is_linear_per_stack(self):
@@ -433,14 +403,14 @@ class TestSeededOptionCompatibility:
         # the parse-time price must stay the seeded price.
         _, abilities = _parse({"stardust_stacks": 1000})
         assert abilities["Q"]["total_raw"] == pytest.approx(
-            _q_expected(_stats(), stacks=1000.0)
+            _q_expected(parse_stats(_LEVEL), stacks=1000.0)
         )
         _, abilities = _parse({"stardust_stacks": 999})
         assert abilities["Q"]["total_raw"] == pytest.approx(
-            _q_expected(_stats(), stacks=999.0)
+            _q_expected(parse_stats(_LEVEL), stacks=999.0)
         )
         _, abilities = _parse({"stardust_stacks": -5})
-        assert abilities["Q"]["total_raw"] < _q_expected(_stats())
+        assert abilities["Q"]["total_raw"] < _q_expected(parse_stats(_LEVEL))
 
     def test_api_malformed_option_fails_closed(self):
         # Non-numeric and non-integer seeds are rejected with named
@@ -463,7 +433,7 @@ class TestSeededOptionCompatibility:
                 _LEVEL,
                 0.0,
                 ability_ranks=_RANKS,
-                champion_stats=_stats(),
+                champion_stats=parse_stats(_LEVEL),
                 target_stats={"target_max_health": _TARGET_MAX_HP},
                 champion_options={"stardust_stacks": "abc"},
             )
@@ -849,7 +819,7 @@ class TestUnchangedBoundaries:
         # (Total Maximum Magic Damage / Magic Damage per Second — rank 5
         # has no practical cap).
         _, abilities = _parse({"stardust_stacks": 0})
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         q = _q_ability()
         assert abilities["Q"]["total_raw"] == pytest.approx(
             _q_expected(stats, stacks=0.0)
@@ -873,7 +843,7 @@ class TestUnchangedBoundaries:
         # W rank 5 multiplies the beam base by 112% (sourced row), never
         # the burst base or AP portions; w_active with W unlearned
         # applies nothing.
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         w = _ASOL_DATA["abilities"]["W"][0]
         modifier = _resolve(w, "Breath of Light Flat Damage Modifier", 4, stats)
         assert modifier == pytest.approx(112.0)
@@ -889,7 +859,7 @@ class TestUnchangedBoundaries:
             beam * _Q_CHANNEL_SECONDS + _Q_BURSTS_PER_CHANNEL * burst
         )
         # w_active with W unlearned applies no modifier.
-        stats0 = _stats()
+        stats0 = parse_stats(_LEVEL)
         unlearned_abilities = parse_champion_abilities(
             get_champion("Aurelion Sol"),
             _LEVEL,
@@ -909,7 +879,7 @@ class TestUnchangedBoundaries:
         # bursts stay primary-only; the option is deliberately not
         # declared in OPTIONS.
         _, abilities = _parse({"stardust_stacks": 0})
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         secondary = _resolve(
             _q_ability(), "Secondary Magic Damage per Second", 4, stats
         )
@@ -933,10 +903,10 @@ class TestUnchangedBoundaries:
         # without target max HP in context.
         _, abilities = _parse({"stardust_stacks": 0})
         assert abilities["E"]["total_raw"] == pytest.approx(
-            _resolve(_e_ability(), "Total Magic Damage", 4, _stats())
+            _resolve(_e_ability(), "Total Magic Damage", 4, parse_stats(_LEVEL))
         )
         assert abilities["E"]["detail"] == "Executes below 5.0% max HP (100 HP)"
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         no_target = parse_champion_abilities(
             get_champion("Aurelion Sol"),
             _LEVEL,
@@ -954,7 +924,7 @@ class TestUnchangedBoundaries:
         # star-struck target is immune) — and reads R[0]'s cooldown.
         _, base = _parse({"stardust_stacks": 0})
         _, empowered = _parse({"stardust_stacks": 0, "r_empowered": True})
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         assert base["R"]["total_raw"] == pytest.approx(
             _resolve(_ASOL_DATA["abilities"]["R"][0], "Magic Damage", 2, stats)
         )

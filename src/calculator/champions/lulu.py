@@ -97,12 +97,10 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
     polymorphed would be one cast modelled twice, and it would broadcast
     a control nobody cast onto every enemy on the board.
     """
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     target = str(ctx.option("lulu_whimsy_target"))
     granted = extract_value(ability, "Bonus Attack Speed", rank)
@@ -151,12 +149,10 @@ _whimsy.phase = BUFF
 
 def _wild_growth(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the self cast's 275-575 (+55% AP) bonus health for 7 seconds."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     target = str(ctx.option("lulu_wild_growth_target"))
     granted = extract_named(ability, "Bonus Health", rank, ctx.stats, ctx.target)

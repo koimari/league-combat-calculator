@@ -77,18 +77,17 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .module_contract import coverage
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
 
 
 def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the two-way pass priced from the Total Maximum Champion Damage row."""
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(
         ability, "Total Maximum Champion Damage", rank, ctx.stats, ctx.target
     )
@@ -138,12 +137,10 @@ def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     (``timing.active_duration``) and the Heal row (60-80% AD + 50% AP by
     rank).  The 0.25s heal delay is prose-sourced (no atom exists).
     """
-    ability = ctx.ability("E")
-    if ability is None:
+    ranked = ctx.ranked("E")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     duration_atom = required_ability_atom(
         "Sivir",
@@ -270,10 +267,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "text does not mention at all; fail-closed, an uncorroborated "
     "attack-speed steroid is not modeled.",
 ]
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "out_of_scope",
-}
+MODULE_COVERAGE = coverage(no_damage="P", out_of_scope="R")

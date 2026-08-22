@@ -33,7 +33,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -45,6 +45,7 @@ from .slotlib import (
     resolve_scaling,
     with_control_event,
 )
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki Q prose, not JSON:
 # the stance empowers the next two basic attacks; the Awaken lightning
@@ -97,12 +98,10 @@ def _target_max_health_percent(
 
 def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the stance's empowered-attack on-hit (+ Awaken rows)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     awaken = bool(ctx.options.get("q_awaken", False))
     empowered = min(
         max(
@@ -362,16 +361,10 @@ ASSUMPTIONS = ASSUMPTIONS + [
     "by time whereas this window is bounded by attack count as well, and "
     "because the cooldown refund has no engine channel.",
 ]
-MODULE_COVERAGE = {
-    "P": "out_of_scope",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="E", out_of_scope="P")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -382,9 +375,12 @@ def derive_self_healing(
 ):
     """Resolve Udyr self-healing events from its authored packet."""
     healing = []
-    w_rank = _healing._rank(ability_damages, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     per_tick = _healing.extract_named(
-        _healing._ability(champion_data, "W"), "Heal per Tick", w_rank, champion_stats
+        _healing.ability_json(champion_data, "W"),
+        "Heal per Tick",
+        w_rank,
+        champion_stats,
     )
     if per_tick > 0.0:
         for cast in cast_timeline or []:
@@ -401,7 +397,7 @@ def derive_self_healing(
                         "actor_wide": True,
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Udyr", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Udyr")(derive_self_healing)

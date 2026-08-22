@@ -42,6 +42,7 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
 
 # HARDCODED: verify on patch updates — P (Martial Cadence) has no JSON
 # leveling; these values exist only in description prose. Source:
@@ -87,12 +88,10 @@ _martial_cadence.phase = ONHIT
 
 def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: physical damage + % armor reduction debuff (option-gated)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -120,12 +119,10 @@ _dragon_strike.phase = DEBUFF
 
 def _demacian_standard(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: magic active damage + bonus-AS stat buff (doubled near the flag)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -151,18 +148,8 @@ _demacian_standard.phase = BUFF
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "q_armor_shred",
-        "type": "bool",
-        "default": True,
-        "label": "Q armor shred active",
-    },
-    {
-        "key": "near_flag",
-        "type": "bool",
-        "default": True,
-        "label": "Near Demacian Standard (flag planted)",
-    },
+    bool_option("q_armor_shred", True, label="Q armor shred active"),
+    bool_option("near_flag", True, label="Near Demacian Standard (flag planted)"),
 ]
 
 ASSUMPTIONS = [

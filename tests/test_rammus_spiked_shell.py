@@ -65,6 +65,7 @@ from src.calculator.data_fetcher import get_champion
 from src.calculator.item_effects import TARGET_CLASSES
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests import game_binary
 
 _RAMMUS = get_champion("Rammus")
 _WIKI = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Rammus"]
@@ -89,14 +90,6 @@ _TARGET = {
     "target_current_health": 2000.0,
     "target_missing_health": 0.0,
 }
-
-
-def _data_value(record: dict, name: str) -> list[float]:
-    """One named ``DataValues`` row out of a binary spell record."""
-    for entry in record.get("DataValues", []):
-        if entry.get("name") == name:
-            return list(entry.get("values") or [])
-    raise AssertionError(f"binary record has no DataValues row {name!r}")
 
 
 def _parse(level: int, *, options: dict | None = None, ranks: dict | None = None):
@@ -162,7 +155,7 @@ class TestSpikedShellIsBinaryCorroborated:
         ],
     )
     def test_binary_ratios_match_the_module_constants(self, data_value, constant):
-        values = _data_value(_bin_p(), data_value)
+        values = game_binary.data_value(_bin_p(), data_value)
         assert values, f"{data_value} row is empty"
         assert all(value == pytest.approx(constant, abs=1e-6) for value in values)
 
@@ -181,7 +174,7 @@ class TestSpikedShellIsBinaryCorroborated:
         assert all(
             part["__type"] == "StatByNamedDataValueCalculationPart" for part in parts
         )
-        assert _data_value(_bin_p(), "BaseDamage")  # exists...
+        assert game_binary.data_value(_bin_p(), "BaseDamage")  # exists...
         assert "BaseDamage" not in {part["mDataValue"] for part in parts}  # ...unused
 
 

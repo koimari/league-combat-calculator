@@ -7,9 +7,7 @@ when damage landed.  It intentionally does not invent targeting, cooldown,
 or crowd-control behavior that the packets do not provide.
 """
 
-# Several imported names remain public compatibility aliases for the timeline
-# test and extension surface.
-# pylint: disable=duplicate-code,unused-import
+# pylint: disable=duplicate-code
 
 from __future__ import annotations
 
@@ -35,7 +33,6 @@ from .roster_composition import (
     defensive_signature as _defensive_signature,
     from_loadout as _from_loadout,
     main_combatant as _main_combatant,
-    require_roster_fight_window_support,
     target_params as _target_params,
     target_overrides as _target_overrides,
 )
@@ -84,7 +81,6 @@ from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
 )
-from .interaction_effects import target_physical_damage_reduction_params
 from .resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
@@ -111,7 +107,6 @@ from .survival import (
     support_transition_rank,
     thorns_return_damage,
 )
-from .survival.pricing import DeclaredPacket
 
 # The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
 # both layers, so this module is where the logical builder and the kernel it
@@ -127,14 +122,12 @@ from .survival.pricing import DeclaredPacket
 from .program.amp import (
     ArmingLedger,
     LiveAmpRider,
-    live_amp_for,
     live_amp_riders,
 )
 from .program.build import (
     ParamPatch,
     arming_stacking,
     dropped_pair_previews,
-    pair_preview_sources,
     roster_program,
 )
 from .program.dependency import (
@@ -159,11 +152,9 @@ from .program.compile import (
     WalkCompiler,
     ability_instance_for_event,
     action_from_event,
-    declared_packet_of,
     grey_health_heal_action,
     is_authored_ability_event,
     modifier_delivery_receipt,
-    pair_resistance_baselines,
     pair_view,
     revive_candidate_actions,
     stage_knights_vow_heals,
@@ -3495,7 +3486,6 @@ class CoupledSearchContext:
         # travel with the panel that staged the split.
         "kv_redirect_children",
         "base_heal_dedup",
-        "validated_roster_window",
         # The main champion's wound-declaring sources are champion-fixed;
         # derived once per search instead of once per evaluation.
         "main_champion_wounds",
@@ -3536,7 +3526,6 @@ class CoupledSearchContext:
         self.base_sorted: list[tuple[Any, ...]] = []
         self.base_heal_dedup: dict[int, dict[tuple[str, float], float]] = {}
         self.kv_redirect_children: dict[int, SurvivalAction] = {}
-        self.validated_roster_window = False
         self.main_champion_wounds: dict[str, Any] | None = None
 
 
@@ -3621,9 +3610,6 @@ def _context_setup(
     """
     if context.roster_actors is not None:
         return
-    if not context.validated_roster_window:
-        require_roster_fight_window_support(params, enemies=enemies, allies=allies)
-        context.validated_roster_window = True
     # The roster is search-invariant, so a loadout the compiled kernel
     # cannot represent poisons the whole context.  Checked BEFORE any pair
     # fight runs so the fallback costs nothing beyond the capability scan.
@@ -4753,9 +4739,8 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             # instead of stopping at this frame: ``rung_receipts`` is keyed
             # by the declaration that refused, and its total is the fallback
             # count.  Recording the label alone is what left the reason
-            # travelling exactly one expression, which was a dated row on
-            # ``escalated-defects-P4-S10.json`` until the sink grew the field
-            # to carry it.
+            # travelling exactly one expression, until the sink grew the
+            # field to carry it.
             decision = (
                 SearchPoisoned(exc.receipt)
                 if exc.invariant or exc.receipt == _CONTEXT_POISONED_RECEIPT
@@ -4778,7 +4763,6 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # it out here would be the second spelling of one decision that the
         # bridge in ``program/rung`` exists to prevent.
         record_rung(work_counters, *counter_entry(gate_rung(_GATE_REFUSAL_RECEIPT)))
-    require_roster_fight_window_support(params, enemies=enemies, allies=allies)
     main = _main_combatant(
         champion_data,
         level,

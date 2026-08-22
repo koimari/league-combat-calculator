@@ -142,8 +142,6 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
@@ -161,24 +159,12 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
-    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.interpreters import uncompilable_item_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
 
 ITEM_NAME = "Knight's Vow"
 ITEM_ID = 3109
@@ -745,7 +731,7 @@ def test_redirect_reprices_pre_mitigation_damage_for_holder_resistance():
     protected = _combatant("protected", "main", armor=0.0)
     holder = _combatant("holder", "main", armor=100.0)
     event = _kv_redirect_event("kv-premit", 0.0, 100.0)
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, protected, holder], {"protected": [event]}, {}, {}, 10.0
     )
     assert result["protected"]["health_damage"] == pytest.approx(86.0)
@@ -761,7 +747,7 @@ def test_redirect_uses_the_respective_damage_type_for_the_holder():
     event = _kv_redirect_event(
         "kv-magic", 0.0, 100.0, damage_type="magic", baseline=0.0
     )
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, protected, holder], {"protected": [event]}, {}, {}, 10.0
     )
     # 14 raw magic against 300 MR -> 14 * 100/400 = 3.5.
@@ -784,7 +770,7 @@ def test_true_damage_incoming_is_never_redirected():
         "sequence": 0,
         "_event_id": "kv-true",
     }
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, protected, holder], {"protected": [event]}, {}, {}, 10.0
     )
     assert result["protected"]["health_damage"] == pytest.approx(100.0)
@@ -870,7 +856,7 @@ def test_kernel_cancels_redirect_when_holder_falls_below_health_gate():
         ],
         "protected": [_kv_redirect_event("kv-gated", 1.0, 40.0)],
     }
-    result = _simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
+    result = simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
     assert result["protected"]["health_damage"] == pytest.approx(40.0)
     assert result["holder"]["health_damage"] == pytest.approx(90.0)
 
@@ -906,7 +892,7 @@ def test_kernel_skips_the_holder_heal_below_the_health_gate():
             }
         ]
     }
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, holder], below, {"holder": [dict(heal)]}, {}, 10.0
     )
     # Holder at 20/100 <= 30: heal skipped.
@@ -924,7 +910,7 @@ def test_kernel_skips_the_holder_heal_below_the_health_gate():
             }
         ]
     }
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, holder], above, {"holder": [dict(heal)]}, {}, 10.0
     )
     # Holder at 80/100 > 30: the 24 heal applies, capped by missing health.
@@ -1437,7 +1423,7 @@ def test_regression_surface_timeline_redirect_math_stays_green():
     protected = _combatant("protected", "main", armor=0.0)
     holder = _combatant("holder", "main", armor=100.0)
     event = _kv_redirect_event("kv-premit", 0.0, 100.0)
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, protected, holder], {"protected": [event]}, {}, {}, 10.0
     )
     assert result["protected"]["health_damage"] == pytest.approx(86.0)
@@ -1464,7 +1450,7 @@ def test_regression_surface_holder_gate_cancel_stays_green():
         ],
         "protected": [_kv_redirect_event("kv-gated", 1.0, 40.0)],
     }
-    result = _simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
+    result = simulate_survival([source, protected, holder], incoming, {}, {}, 10.0)
     assert result["protected"]["health_damage"] == pytest.approx(40.0)
     assert result["holder"]["health_damage"] == pytest.approx(90.0)
 

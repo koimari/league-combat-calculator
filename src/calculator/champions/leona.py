@@ -26,6 +26,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 
 def _sunlight(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -99,14 +100,7 @@ SLOTS = {
     "R": delayed_damage(delay=_R_IMPACT_SECONDS, attr="Magic Damage", dmg_type="magic"),
 }
 OPTIONS = [
-    {
-        "key": "p_marks",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 6,
-        "label": "Sunlight ally detonations",
-    }
+    int_option("p_marks", 1, minimum=0, maximum=6, label="Sunlight ally detonations")
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Leona")

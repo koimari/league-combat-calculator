@@ -298,6 +298,20 @@ class SlotCtx:
             return self.ability_ranks[key]
         return get_ability_rank(key, self.level, self.champion_name)
 
+    def ranked(
+        self, slot: str | None = None, index: int = 0
+    ) -> tuple[dict, int] | None:
+        """The ``(ability, rank)`` a slot parser needs, or ``None``.
+
+        ``None`` is either reason the slot prices nothing, and a parser must
+        not tell them apart: no such entry cached, or no point in it yet.
+        """
+        ability = self.ability(slot, index)
+        if ability is None:
+            return None
+        rank = self.rank_for(slot)
+        return None if rank < 1 else (ability, rank)
+
 
 # ---------------------------------------------------------------------------
 # Parser builder

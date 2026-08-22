@@ -39,6 +39,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
 # seconds", wiki prose below) — it is not permanent.
@@ -68,12 +69,10 @@ _stone_skin.phase = BUFF
 
 
 def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Crushing Blow"),
@@ -103,12 +102,10 @@ _crushing_blow.phase = DEBUFF
 
 
 def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     per_tick = extract_named(
         ability, "Physical Damage Per Tick", rank, ctx.stats, ctx.target
     )
@@ -156,28 +153,11 @@ parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
 
 
 OPTIONS = [
-    {
-        "key": "stone_skin_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": "Strength of Stone stacks",
-    },
-    {
-        "key": "q_armor_reduction",
-        "type": "bool",
-        "default": True,
-        "label": "Q armor reduction active",
-    },
-    {
-        "key": "r_casts",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 2,
-        "label": "Cyclone casts",
-    },
+    int_option(
+        "stone_skin_stacks", 0, minimum=0, maximum=5, label="Strength of Stone stacks"
+    ),
+    bool_option("q_armor_reduction", True, label="Q armor reduction active"),
+    int_option("r_casts", 1, minimum=1, maximum=2, label="Cyclone casts"),
 ]
 
 ASSUMPTIONS = [

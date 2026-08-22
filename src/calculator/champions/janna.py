@@ -16,7 +16,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -25,7 +25,8 @@ from .slotlib import (
     on_hit_entry,
 )
 from .source_receipts import load_champion_sources
-from ..healing_helpers import _ability, _rank
+from ..healing_helpers import ability_json, parsed_rank
+from .inputs import float_option
 
 
 def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -42,12 +43,10 @@ def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
@@ -67,12 +66,10 @@ def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _zephyr(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Zephyr"),
@@ -112,23 +109,21 @@ MODULE_CC = {"Q": "knockup", "W": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Janna", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "bonus_movement_speed",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 500.0,
-        "label": "Bonus movement speed",
-    },
-    {
-        "key": "q_charge",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-        "label": "Howling Gale charge fraction",
-    },
+    float_option(
+        "bonus_movement_speed",
+        0.0,
+        minimum=0.0,
+        maximum=500.0,
+        label="Bonus movement speed",
+    ),
+    float_option(
+        "q_charge",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Howling Gale charge fraction",
+        step=0.25,
+    ),
 ]
 ASSUMPTIONS = [
     "Tailwind's 30% bonus-movement-speed on-hit uses the explicit movement-speed input.",
@@ -174,8 +169,8 @@ def derive_self_healing(
     own — never inferred from the damage ledger.
     """
     healing: list[dict] = []
-    r_rank = _rank(ability_damages, "R")
-    ability = _ability(champion_data, "R")
+    r_rank = parsed_rank(ability_damages, "R")
+    ability = ability_json(champion_data, "R")
     per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
     total = extract_named(ability, "Total Heal", r_rank, champion_stats)
     tick_count = (
@@ -200,7 +195,7 @@ def derive_self_healing(
                         "_event_id": f"janna:r:{cast_index}:{index}",
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Janna", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Janna")(derive_self_healing)

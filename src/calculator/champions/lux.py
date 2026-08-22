@@ -30,6 +30,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .inputs import int_option
 
 PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc332407130"
 
@@ -116,17 +117,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_illumination_procs",
-        "type": "int",
-        "default": _P_ILLUMINATION_DEFAULT_PROCS,
-        "min": 0,
-        "max": 12,
-        "label": (
-            "Illumination procs in the fight (each post-ability auto / "
-            "Final Spark consumes one mark)"
-        ),
-    },
+    int_option(
+        "p_illumination_procs",
+        _P_ILLUMINATION_DEFAULT_PROCS,
+        minimum=0,
+        maximum=12,
+        label="Illumination procs in the fight (each post-ability auto / "
+        "Final Spark consumes one mark)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

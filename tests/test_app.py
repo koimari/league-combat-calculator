@@ -16,15 +16,14 @@ from src.calculator.bis import bis_main_request
 from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request
 from src.rate_limit import TokenBucketStore
+from tests.app_config import app_config
 
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits_between_route_tests():
     """Only dedicated tests spend the production abuse-control budget."""
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contract():
@@ -547,44 +546,6 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline(monkeypatc
     assert "Sterak's Gage" in error
     assert source in error
     assert "not event-certified" in error
-
-
-@pytest.mark.parametrize("side,field", (("Enemy", "enemies"), ("Ally", "allies")))
-def test_timed_fight_rejects_a_window_a_roster_module_cannot_join(
-    monkeypatch, side, field
-):
-    """The coverage campaign left no champion declaring a window restriction,
-    so the guard is proven against a module made to declare one.  The coupled
-    timeline runs every roster member as an attacker: a member that cannot
-    join is a clean 400 naming it, never an uncaught 500 mid-timeline."""
-    import src.calculator.champions.vi as vi_module
-
-    monkeypatch.setattr(
-        vi_module, "SUPPORTED_FIGHT_MODES", ("one_rotation",), raising=False
-    )
-    monkeypatch.setattr(
-        vi_module,
-        "UNSUPPORTED_FIGHT_MODE_REASON",
-        "Synthetic restriction. Use One Rotation.",
-        raising=False,
-    )
-
-    response = app_module.app.test_client().post(
-        "/api/calculate",
-        json={
-            "champion": "Ahri",
-            "level": 18,
-            "items": ["Rabadon's Deathcap"],
-            "fight_mode": "timed",
-            "fight_duration": 10,
-            field: [{"champion": "Vi", "level": 18, "items": []}],
-        },
-    )
-
-    assert response.status_code == 400
-    error = response.get_json()["error"]
-    assert f"{side} Vi" in error
-    assert "One Rotation" in error
 
 
 @pytest.mark.parametrize("field", ("enemies", "allies"))
@@ -1296,7 +1257,7 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
 
     assert response.status_code == 200
     contract = response.get_json()["capabilities"]
-    assert contract["schema_version"] == 6
+    assert contract["schema_version"] == 7
     assert set(contract["participants"]) == {"main", "enemy", "ally"}
     assert (
         contract["participants"]["enemy"]["fields"]["champion"]["state_path"]
@@ -2007,7 +1968,7 @@ def test_frontend_exposes_calculated_uptime_mode_and_policy_receipt():
     assert 'aaUptimeMode: "calculated"' in source
     assert "payload.auto_attack_uptime_mode = state.fight.aaUptimeMode" in source
     assert "rotations: 1," in source
-    assert 'state.fight.autosOnly\n    ? "auto_only"' in source
+    assert 'state.fight.autosOnly ? "auto_only" : "time_based"' in source
     assert "auto_attack_schedule" in source
     assert "aResult?.auto_attack_policy" in source
     assert 'id="uptimeModeToggle"' in template
@@ -2354,28 +2315,10 @@ class TestChampionRegistrationField:
             "name",
             "icon",
             "engine_registration",
-            "supported_fight_modes",
-            "unsupported_fight_mode_reason",
             "patch_last_changed",
             "abilities",
             "ability_ingestion",
         }
-
-    def test_every_champion_publishes_an_unrestricted_fight_window(self):
-        """The published contract carries the restriction and its sourced
-        reason together, and after the coverage campaign no module declares
-        one: every champion certifies every public fight mode."""
-        champs = app_module.app.test_client().get("/api/champions").get_json()
-
-        restricted = {
-            champion["name"]: champion["supported_fight_modes"]
-            for champion in champs
-            if champion["supported_fight_modes"] is not None
-        }
-        assert restricted == {}
-        assert all(
-            champion["unsupported_fight_mode_reason"] is None for champion in champs
-        )
 
     def test_registered_champions_sort_first(self):
         champs = app_module.app.test_client().get("/api/champions").get_json()

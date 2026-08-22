@@ -32,6 +32,7 @@ from typing import Any
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import attach_self_shield, extract_named, on_hit_entry
+from .inputs import int_option
 
 PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd15"
 
@@ -135,18 +136,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_gloom_detonations",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 20,
-        "label": (
-            "Gloom mark detonations (each: next basic attack deals the "
-            "sourced bonus magic damage; marks require the enemy to "
-            "dash/blink)"
-        ),
-    },
+    int_option(
+        "p_gloom_detonations",
+        1,
+        minimum=0,
+        maximum=20,
+        label="Gloom mark detonations (each: next basic attack deals the "
+        "sourced bonus magic damage; marks require the enemy to "
+        "dash/blink)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

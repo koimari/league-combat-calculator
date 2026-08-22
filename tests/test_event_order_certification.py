@@ -4,11 +4,7 @@ import pytest
 
 from src.calculator.scenario import load_public_champion as _load_public_champion
 from src.app import app
-from src.calculator.champions import (
-    get_champion_options_meta,
-    get_supported_fight_modes,
-    get_unsupported_fight_mode_reason,
-)
+from src.calculator.champions import get_champion_options_meta
 from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.pipeline import FightParams, run_fight
 
@@ -380,12 +376,6 @@ def test_optimize_api_certifies_ziggs_minefield_cadence():
     assert body["timeline_coverage"]["complete"] is True
     assert body["timeline_coverage"]["coarse_sources"] == []
     assert body["ranked_builds"]
-
-
-@pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
-def test_persistent_state_champions_publish_every_fight_mode(champion):
-    assert get_supported_fight_modes(champion) is None
-    assert get_unsupported_fight_mode_reason(champion) is None
 
 
 def test_shyvana_multi_form_e_and_w_have_certified_sources():

@@ -6,13 +6,13 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from ..healing_helpers import _ability
+from ..healing_helpers import ability_json
 
 
 def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -25,12 +25,10 @@ def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     charged = bool(ctx.options.get("q_fully_fermented", True))
     attr = "Maximum Magic Damage" if charged else "Minimum Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -49,12 +47,10 @@ def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Drunken Rage"),
@@ -74,12 +70,10 @@ def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Body Slam"),
@@ -97,12 +91,10 @@ def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _explosive_cask(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Explosive Cask"),
@@ -131,12 +123,7 @@ MODULE_CC = {"Q": "slow", "W": "none", "E": "knockback", "R": "knockback"}
 parse_abilities = build_parser(SLOTS, "Gragas", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "q_fully_fermented",
-        "type": "bool",
-        "default": True,
-        "label": "Barrel Roll fully fermented",
-    },
+    bool_option("q_fully_fermented", True, label="Barrel Roll fully fermented"),
 ]
 
 ASSUMPTIONS = [
@@ -167,7 +154,7 @@ def derive_self_healing(
     healing: list[dict] = []
     p_text = " ".join(
         effect.get("description", "")
-        for effect in _ability(champion_data, "P").get("effects", [])
+        for effect in ability_json(champion_data, "P").get("effects", [])
     )
     ratio_match = re.search(
         r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
@@ -190,7 +177,7 @@ def derive_self_healing(
                     "actor_wide": True,
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Gragas", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Gragas")(derive_self_healing)

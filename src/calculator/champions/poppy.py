@@ -32,6 +32,7 @@ from .slotlib import (
     on_hit_entry,
     with_control,
 )
+from .inputs import bool_option
 
 PACKET_SHA256 = "b6f179d37816f86a3c589048738bf588034d2340535ad6dde533391daf113d90"
 
@@ -64,12 +65,10 @@ def _keepers_verdict(packet_r):
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         if not bool(ctx.options.get("r_charged", False)):
             return packet_r(ctx)
-        ability = ctx.ability("R")
-        if ability is None:
+        ranked = ctx.ranked("R")
+        if ranked is None:
             return None
-        rank = ctx.rank_for("R")
-        if rank < 1:
-            return None
+        ability, rank = ranked
         total = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
         entry = damage_entry(
             ability.get("name", "Keeper's Verdict"),
@@ -137,12 +136,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "r_charged",
-        "type": "bool",
-        "default": False,
-        "label": "Fully-charged Keeper's Verdict (R)",
-    },
+    bool_option("r_charged", False, label="Fully-charged Keeper's Verdict (R)"),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

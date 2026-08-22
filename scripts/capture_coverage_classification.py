@@ -1,9 +1,13 @@
-"""Phase 1's numeric gate: the full coverage classification of every cached item.
+"""The coverage baseline: the full classification of every cached item.
 
 Golden is near-vacuous for coverage — ``pipeline.py`` does not import
-``item_coverage`` — so per runbook R-11/D-93 this phase needs its own numeric
-gate, and only a before-image captured from unmodified behaviour can prove
-"evidence added, nothing moved".  This script is that instrument.
+``item_coverage`` — so coverage carries its own numeric baseline, and this
+script is its instrument.  ``tests/test_coverage_claims.py`` is the live gate
+over it: every run re-captures from behaviour and diffs the committed receipt,
+so a status, an eligibility flag or a reason string that moved lands as a named
+leaf.  The CLI's ``capture`` is the other half, run in the commit that
+legitimately moves the baseline — nothing rebuilds this receipt automatically,
+because a receipt refreshed beside the change it should catch gates nothing.
 
 The receipt holds one record per **(cached item, lane)**: the complete public
 dict returned by ``item_model_coverage`` on the attacker lane and by

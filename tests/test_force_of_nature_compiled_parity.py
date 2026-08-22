@@ -123,8 +123,6 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import item_effects
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -142,7 +140,6 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
-    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
@@ -153,18 +150,7 @@ from src.calculator.state_lifecycle import SourceReceipt
 # moved to: the declaration's own resolved citation.
 from src.calculator.defensive_effects import defense_source
 from src.calculator.item_behavior import DefenseMechanic
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
 
 _SOURCE = defense_source("Force of Nature", DefenseMechanic.STEADFAST)
 
@@ -276,7 +262,7 @@ def _magic_packet(
 
 def _run_packets(events, duration: float = 10.0) -> dict:
     """Run one _simulate_survival with the FoN holder as target."""
-    return _simulate_survival(
+    return simulate_survival(
         [_dummy_source(), _stack_holder()], {"target": events}, {}, {}, duration
     )
 
@@ -959,7 +945,7 @@ def test_absent_force_of_nature_produces_no_stacks_and_no_receipt_row():
         defenses=defenses,
     )
     events = [_magic_packet(float(index), index + 1) for index in range(8)]
-    result = _simulate_survival(
+    result = simulate_survival(
         [_dummy_source(), holder], {"target": events}, {}, {}, 10.0
     )
     row = result["target"]["force_of_nature"]

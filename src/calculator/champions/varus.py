@@ -48,6 +48,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Blight stacks to 3 on basic attacks; abilities detonate all stacks.
@@ -115,12 +116,10 @@ def _charge_fraction(ctx: SlotCtx) -> float:
 
 def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: charge-interpolated arrow damage + the Blight detonation."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     fraction = _charge_fraction(ctx)
     minimum = extract_named(
@@ -181,12 +180,10 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: flat on-hit magic per basic attack (Blight stacks ride it)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     leveling = find_named_leveling(ability, "Bonus Magic Damage")
     if leveling is None:
@@ -276,53 +273,42 @@ _living_vengeance.phase = BUFF
 GRIEVOUS_WOUNDS_SOURCES = frozenset({"E"})
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "blight_stacks",
-        "type": "int",
-        "default": _BLIGHT_MAX_STACKS,
-        "min": 0,
-        "max": _BLIGHT_MAX_STACKS,
-        "label": (
-            "Blight stacks on the target when Piercing Arrow lands "
-            "(3 = fully stacked; the Q detonation consumes them)"
-        ),
-    },
-    {
-        "key": "q_charge_fraction",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-        "label": (
-            "Piercing Arrow channel charge (1.0 = fully charged; the "
-            "arrow interpolates between the sourced Minimum and Maximum "
-            "damage rows)"
-        ),
-    },
-    {
-        "key": "w_active_empower",
-        "type": "bool",
-        "default": True,
-        "label": (
-            "W active empowers the next Piercing Arrow (+% of the "
-            "target's missing health as magic damage)"
-        ),
-    },
-    {
-        "key": "target_missing_hp_pct",
-        "type": "int",
-        "default": 50,
-        "min": 0,
-        "max": 100,
-        "label": "Target missing health %",
-    },
-    {
-        "key": "p_champion_takedown",
-        "type": "bool",
-        "default": False,
-        "label": "Living Vengeance is empowered by a champion takedown",
-        "rotation": {
+    int_option(
+        "blight_stacks",
+        _BLIGHT_MAX_STACKS,
+        minimum=0,
+        maximum=_BLIGHT_MAX_STACKS,
+        label="Blight stacks on the target when Piercing Arrow lands "
+        "(3 = fully stacked; the Q detonation consumes them)",
+    ),
+    float_option(
+        "q_charge_fraction",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Piercing Arrow channel charge (1.0 = fully charged; the "
+        "arrow interpolates between the sourced Minimum and Maximum "
+        "damage rows)",
+        step=0.25,
+    ),
+    bool_option(
+        "w_active_empower",
+        True,
+        label="W active empowers the next Piercing Arrow (+% of the "
+        "target's missing health as magic damage)",
+    ),
+    int_option(
+        "target_missing_hp_pct",
+        50,
+        minimum=0,
+        maximum=100,
+        label="Target missing health %",
+    ),
+    bool_option(
+        "p_champion_takedown",
+        False,
+        label="Living Vengeance is empowered by a champion takedown",
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -330,7 +316,7 @@ OPTIONS: list[dict[str, Any]] = [
                 "buff — self-state, with no cross-slot cast edge."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = [

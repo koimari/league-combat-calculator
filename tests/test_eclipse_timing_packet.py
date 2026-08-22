@@ -69,8 +69,6 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import _load_public_champion
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.ability_spec import DamagePart
 from src.calculator.damage import FightConfig, calculate_fight_damage
@@ -84,11 +82,7 @@ from src.calculator.item_effects import (
     resolve_damage_effects,
 )
 import src.calculator.participant_timeline as participant_timeline
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-    build_participant_timeline,
-)
+from src.calculator.participant_timeline import Combatant, build_participant_timeline
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
@@ -101,18 +95,7 @@ from src.calculator.timeline_coverage import (
     EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES,
     applicability_exclusion_sources,
 )
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -343,7 +326,7 @@ def _survival(
                 "_event_id": "proc",
             }
         ]
-    result = _simulate_survival(
+    result = simulate_survival(
         [_dummy_combatant("source", "main"), _dummy_combatant("target", "enemy")],
         incoming,
         {},

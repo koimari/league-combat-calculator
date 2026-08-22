@@ -30,7 +30,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .engine import BUFF, ONHIT, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -92,12 +92,10 @@ _double_strike.phase = ONHIT
 
 def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: a zero-damage channel receipt (the heal lives in healing.py)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     entry = damage_entry(
         ability.get("name", "Meditate"),
         rank,
@@ -117,12 +115,10 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the 25/45/65% attack-speed steroid, priced onto the auto count."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
@@ -205,7 +201,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # Minimum/Maximum Total Heal == 8 x per-tick at every rank).  W deals no
 # enemy damage, so the W cast timeline is the sourced trigger — the heal
 # is paid on the channel's own tick schedule, not inferred from hits.
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -216,8 +212,8 @@ def derive_self_healing(
 ):
     """Resolve Master Yi self-healing events from its authored packet."""
     healing = []
-    w_rank = _healing._rank(ability_damages, "W")
-    w_ability = _healing._ability(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
+    w_ability = _healing.ability_json(champion_data, "W")
     min_tick = _healing.extract_named(
         w_ability, "Minimum Heal Per Tick", w_rank, champion_stats
     )
@@ -225,14 +221,14 @@ def derive_self_healing(
         w_ability, "Maximum Heal Per Tick", w_rank, champion_stats
     )
     if min_tick > 0.0:
-        for cast_time in _healing._cast_slot_times(cast_timeline, "W"):
+        for cast_time in _healing.cast_slot_times(cast_timeline, "W"):
             start = float(cast_time)
             for index in range(1, 9):
                 healing.append(
                     {
                         "time": start + index * 0.5,
                         "amount": 0.0,
-                        "amount_formula": _healing._missing_health_scaled_heal(
+                        "amount_formula": _healing.missing_health_scaled_heal(
                             min_tick, max_tick
                         ),
                         "source": "Meditate",
@@ -240,7 +236,7 @@ def derive_self_healing(
                         "actor_wide": True,
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Master Yi", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Master Yi")(derive_self_healing)

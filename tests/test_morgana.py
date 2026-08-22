@@ -13,30 +13,7 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.champions import morgana
 from src.calculator.data_fetcher import get_champion
 from src.calculator.champions.engine import CC_PER_PART
-
-# Every control word the Wiki uses for the classes an item passive keys on.
-CONTROL_WORDS = (
-    "stun",
-    "root",
-    "snare",
-    "charm",
-    "fear",
-    "flee",
-    "taunt",
-    "sleep",
-    "suppress",
-    "knock",
-    "airborne",
-    "pull",
-    "slow",
-    "immobiliz",
-    "stasis",
-    "drowsy",
-    "cripple",
-    "polymorph",
-    "disarm",
-    "silence",
-)
+from tests import cc_review
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"Q": "roots them for a duration"}
@@ -50,27 +27,18 @@ def cached():
     return get_champion("Morgana")
 
 
-def slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
         assert morgana.MODULE_CC == {"Q": "root", "W": "none", "R": CC_PER_PART}
         for slot, phrase in QUOTED.items():
-            assert phrase in slot_text(cached, slot), slot
+            assert phrase in cc_review.slot_text(cached, slot), slot
 
     def test_reviewed_absences_read_the_whole_slot(self, cached):
         """A "none" is a slot that was read, not a slot that was skipped."""
         for slot, kind in morgana.MODULE_CC.items():
             if kind != "none":
                 continue
-            hits = [word for word in CONTROL_WORDS if word in slot_text(cached, slot)]
+            hits = cc_review.any_control_hits(cached, slot)
             assert hits == UNCONTROLLED_MENTIONS.get(slot, []), slot
 
     def test_every_ability_event_carries_the_review(self, cached):
@@ -87,7 +55,7 @@ class TestReviewedCrowdControl:
 
     def test_r_declares_its_two_controls_per_part(self, cached):
         """Soul Shackles slows on contact and stuns only on the break."""
-        text = slot_text(cached, "R")
+        text = cc_review.slot_text(cached, "R")
         assert "slowed by 20%" in text
         assert "become stunned" in text
         parts = morgana.parse_abilities(cached, 18, 100.0)["R"]["parts"]

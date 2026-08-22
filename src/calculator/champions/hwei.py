@@ -15,6 +15,7 @@ from .slotlib import (
     proc_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
 
 
 def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -49,12 +50,10 @@ def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     variant = min(max(int(ctx.option("q_variant")), 0), 2)
-    ability = ctx.ability("Q", variant + 1)
-    if ability is None:
+    ranked = ctx.ranked("Q", variant + 1)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     if variant == 0:
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         parts = (DamagePart("magic", value, time_offset=0.25, cc_kind="none"),)
@@ -116,12 +115,10 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
     variant = min(max(int(ctx.option("w_variant")), 0), 2)
-    ability = ctx.ability("W", variant + 1)
-    if ability is None:
+    ranked = ctx.ranked("W", variant + 1)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     if variant == 0:
         return no_damage(
             ctx,
@@ -161,12 +158,10 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
     variant = min(max(int(ctx.option("e_variant")), 0), 2)
-    ability = ctx.ability("E", variant + 1)
-    if ability is None:
+    ranked = ctx.ranked("E", variant + 1)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Hwei E"),
@@ -201,12 +196,10 @@ def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("R", 0)
-    if ability is None:
+    ranked = ctx.ranked("R", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     tick = extract_named(ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target)
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     # Each tick applies a Despair stack, and "for each stack, the target is
@@ -249,63 +242,28 @@ MODULE_CC = {"P": "none", "Q": CC_PER_PART, "E": CC_PER_PART, "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Hwei", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "q_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Disaster subject (QQ/QW/QE)",
-    },
-    {
-        "key": "q_missing_health",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.1,
-        "label": "Severing Bolt missing-health fraction",
-    },
-    {
-        "key": "q_explosions",
-        "type": "int",
-        "default": 7,
-        "min": 1,
-        "max": 7,
-        "label": "Molten Fissure explosions",
-    },
-    {
-        "key": "w_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Serenity subject (WQ/WW/WE)",
-    },
-    {
-        "key": "we_hits",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 3,
-        "label": "Stirring Lights hits",
-    },
-    {
-        "key": "e_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Torment subject (EQ/EW/EE)",
-    },
-    {
-        "key": "p_triggers",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 8,
-        "label": "Signature detonations",
-    },
+    int_option(
+        "q_variant", 0, minimum=0, maximum=2, label="Disaster subject (QQ/QW/QE)"
+    ),
+    float_option(
+        "q_missing_health",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Severing Bolt missing-health fraction",
+        step=0.1,
+    ),
+    int_option(
+        "q_explosions", 7, minimum=1, maximum=7, label="Molten Fissure explosions"
+    ),
+    int_option(
+        "w_variant", 0, minimum=0, maximum=2, label="Serenity subject (WQ/WW/WE)"
+    ),
+    int_option("we_hits", 3, minimum=1, maximum=3, label="Stirring Lights hits"),
+    int_option(
+        "e_variant", 0, minimum=0, maximum=2, label="Torment subject (EQ/EW/EE)"
+    ),
+    int_option("p_triggers", 1, minimum=0, maximum=8, label="Signature detonations"),
 ]
 ASSUMPTIONS = [
     "The three subject toggles are state-only; the selected QQ/QW/QE, WQ/WW/WE and EQ/EW/EE entries are explicit variants.",

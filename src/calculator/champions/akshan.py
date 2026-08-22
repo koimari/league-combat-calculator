@@ -47,7 +47,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -62,6 +62,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Akshan
@@ -190,7 +191,7 @@ def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
         match = re.search(r"deals?\s+(\d+)%\s*AD\s+physical damage", desc)
         if match:
             return float(match.group(1)) / 100.0
-    return 0.5  # Fallback
+    raise ValueError("Akshan P double-shot AD ratio is unavailable")
 
 
 def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -240,12 +241,10 @@ def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
     variant already has the 3x missing-HP multiplier baked in; the
     fight engine applies that scaling itself from the flags.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_bullet = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target
@@ -381,22 +380,10 @@ def _going_rogue(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 3,
-        "label": "Passive procs (3-stack)",
-        "min": 0,
-        "max": 20,
-    },
-    {
-        "key": "e_shots",
-        "type": "int",
-        "default": 5,
-        "label": "E shots fired",
-        "min": 0,
-        "max": 20,
-    },
+    int_option(
+        "passive_procs", 3, minimum=0, maximum=20, label="Passive procs (3-stack)"
+    ),
+    int_option("e_shots", 5, minimum=0, maximum=20, label="E shots fired"),
 ]
 
 ASSUMPTIONS = [
@@ -448,10 +435,4 @@ parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Akshan")
 
 # W is emitted, but its row is a sourced zero — a fact SLOTS cannot derive.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="W")

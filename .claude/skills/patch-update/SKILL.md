@@ -9,10 +9,16 @@ One command does the mechanical work; your job is interpreting its report
 and finishing with an explained commit.
 
 ```bash
-python scripts/patch_update.py run             # pull + audit + rebuild + gates (start here)
+python scripts/patch_update.py run             # the full day-0 pipeline (start here)
+python scripts/patch_update.py detect          # is a new patch live? read-only
 python scripts/patch_update.py audit           # re-print the audit, no pull
 python scripts/patch_update.py detail NAME...  # full leaf diff vs HEAD for ANY champion/item
 ```
+
+This script is the only patch-day orchestrator; every scriptable step is one
+of its subcommands (`fetch`, `bis` and `packets` run the game-file refresh,
+the bis-profiles rebuild and the packet-currency check in isolation). See
+`docs/patch-day-runbook.md` for the per-subcommand exit codes.
 
 `run` clears lolstaticdata's page caches (stale caches silently "re-pull"
 the old patch), fetches the new data, refreshes `data/economics-sourced.json`
@@ -22,12 +28,13 @@ HEAD — `data/` is tracked), rebuilds the static catalogues the web UI fetches,
 runs the patch-day gates, pytest and the golden compare, and re-captures the
 baseline **only if pytest is green**.
 
-The rebuild covers `static/ability-catalog.json` and `static/effect-catalog.json`.
-It deliberately skips `static/bis-profiles.json`, which merges an Axword Meraki
-kit reference from the `lol-strength-analysis` sibling repo supplying 24 damage
-packets the wiki parser cannot read — rebuilding without that repo checked out
-silently drops them. If its wiki inputs moved, check the sibling out and run
-`python scripts/build_bis_profiles.py` by hand.
+The rebuild covers `static/ability-catalog.json`, `static/effect-catalog.json`
+and `static/bis-profiles.json`. The last merges an Axword Meraki kit reference
+from the `lol-strength-analysis` sibling repo supplying 24 damage packets the
+wiki parser cannot read, so the run needs that repo checked out
+(`LCC_AXWORD_SOURCE`) — it refuses to write rather than dropping them, on an
+absent kit source, zero champions, zero merged packets, or a merged count
+below the checked-in asset.
 
 Modifier-parse ERROR spam during the pull ("FAILURE TO PARSE MODIFIER") is
 normal lolstaticdata noise; only the `Skipped N` summary lines mean data was
@@ -123,11 +130,19 @@ as the re-review triage list.
 
 `python scripts/patch_update.py run` fails closed BEFORE re-capturing the
 golden baseline when any of these are missing/stale:
-- reviewed champion packets (packet freshness receipts vs champions.json +
-  the Meraki axword kit; rebuild with `build_reviewed_modules.py` and commit
-  the asset with its source receipts),
+- reviewed champion packets — both halves of `patch_update.py packets`: the
+  source receipts (vs champions.json + the Meraki axword kit + per-champion
+  wiki revisions) and a rebuild that must still reproduce the asset's slots.
+  They catch disjoint drift (a changed source vs a changed builder), and
+  neither is covered by the import-time `PACKET_SHA256` pin, which only
+  proves the 76 packet-backed modules accepted *this* asset. Rebuild with
+  `build_reviewed_modules.py` and commit the asset with its source receipts,
 - the full-entry audit tool (`--query-tool`/`LCC_WIKI_QUERY`/PATH/vendor),
-- the patch-regression staleness check (`CDTB_BIN` or `--patch`),
+- the game-file refresh and the patch-regression staleness check (`CDTB_BIN`
+  or `--patch`). The refresh clears `data/gamefiles/` first: the downloader
+  skips files that already exist and its filenames are not patch-versioned,
+  so an un-cleared cache compares the new wiki data against the previous
+  patch's game files,
 - the item economics refresh (DDragon must have published the release the
   new cache pins) and its audit section,
 - the coverage census (`scripts/coverage_census.py run --output

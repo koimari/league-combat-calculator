@@ -13,15 +13,14 @@ import json
 import pytest
 
 import src.app as app_module
+from tests.app_config import app_config
 
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits_between_route_tests():
     """Keep these route tests off the production abuse-control budget."""
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _test_password_hash(password="secret"):

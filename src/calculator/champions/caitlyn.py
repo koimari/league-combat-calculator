@@ -53,6 +53,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home
 # (the P entry has no leveling data; R's crit scaling is prose).
@@ -237,12 +238,10 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ``q_secondary_targets`` champion option takes one reduced hit;
     traps-revealed enemies (full damage) are not distinguished.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -332,34 +331,23 @@ def _yordle_snap_trap(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "p_pre_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": "Pre-stacked Headshot Count stacks",
-    },
-    {
-        "key": "w_traps",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 5,
-        "label": "Sprung Yordle Snap Traps",
-    },
-    {
-        "key": "q_secondary_targets",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Enemies the shot passes through beyond the first (each "
-            "takes the sourced 60% Reduced Damage row)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "Q"},
-    },
+    int_option(
+        "p_pre_stacks",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Pre-stacked Headshot Count stacks",
+    ),
+    int_option("w_traps", 1, minimum=0, maximum=5, label="Sprung Yordle Snap Traps"),
+    int_option(
+        "q_secondary_targets",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Enemies the shot passes through beyond the first (each "
+        "takes the sourced 60% Reduced Damage row)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [

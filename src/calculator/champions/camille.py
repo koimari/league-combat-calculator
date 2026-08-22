@@ -41,7 +41,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     attach_self_shield,
     damage_entry,
@@ -52,6 +52,8 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .inputs import bool_option
+from .module_contract import coverage
 
 
 def _true_split_parts(
@@ -83,12 +85,10 @@ def _q_true_ratio(ability: dict[str, Any], level: int) -> float:
 
 def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q1: next basic attack deals +20-40% total AD physical, no crit."""
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     total_ad = ctx.stat("attack_damage")
@@ -113,12 +113,10 @@ def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q2 (always delayed): doubled bonus, whole attack true-converted."""
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     bonus = extract_named(
         ability, "Increased Mixed Damage", rank, ctx.stats, ctx.target
@@ -149,12 +147,10 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: inner cone physical + optional outer-cone % max HP sweet spot."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if ctx.options.get("w_outer_cone", True):
@@ -209,12 +205,10 @@ _hookshot.phase = BUFF
 
 def _hextech_ultimatum(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: zero upfront damage; current-health magic rider on zone autos."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     percent = extract_value(ability, "Bonus Magic Damage", rank)
     window = extract_value(ability, "Zone Duration", rank)
@@ -241,12 +235,7 @@ def _hextech_ultimatum(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "w_outer_cone",
-        "type": "bool",
-        "default": True,
-        "label": "W Outer cone (sweet spot)",
-    },
+    bool_option("w_outer_cone", True, label="W Outer cone (sweet spot)"),
 ]
 
 # HARDCODED: verify on patch updates — Adaptive Defenses' shield amount,
@@ -352,11 +341,11 @@ SOURCES = load_champion_sources("Camille")
 # P emits no cast row, so the derivation would call it out_of_scope; the
 # shield W carries is what the engine prices (466.6 for 2s at level 18
 # with no items, 20% of max health).
-MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -367,12 +356,12 @@ def derive_self_healing(
 ):
     """Resolve Camille self-healing events from its authored packet."""
     healing = []
-    w_ability = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
+    w_ability = _healing.ability_json(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     base_raw = _healing.extract_named(
         w_ability, "Physical Damage", w_rank, champion_stats, {}
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
         event = payment.event
@@ -380,8 +369,8 @@ def derive_self_healing(
         post = float(event.get("damage", 0.0) or 0.0)
         outer_raw = max(0.0, raw - base_raw)
         amount = outer_raw * (post / raw) if raw > 0.0 else 0.0
-        _healing._heal_from_damage(healing, event, amount, "Tactical Sweep")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        _healing.heal_from_damage(healing, event, amount, "Tactical Sweep")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Camille", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Camille")(derive_self_healing)

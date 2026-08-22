@@ -16,6 +16,7 @@ from .module_helpers import (
 )
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -110,32 +111,10 @@ SLOTS = {
     "R": _lilting_lullaby,
 }
 OPTIONS = [
-    {
-        "key": "p_ticks",
-        "type": "int",
-        "default": 6,
-        "min": 1,
-        "max": 6,
-        "label": "Dream Dust ticks",
-    },
-    {
-        "key": "q_outer_edge",
-        "type": "bool",
-        "default": True,
-        "label": "Blooming Blows outer edge",
-    },
-    {
-        "key": "w_epicenter",
-        "type": "bool",
-        "default": True,
-        "label": "Watch Out! Eep! epicenter",
-    },
-    {
-        "key": "r_wake",
-        "type": "bool",
-        "default": True,
-        "label": "Lilting Lullaby wake damage",
-    },
+    int_option("p_ticks", 6, minimum=1, maximum=6, label="Dream Dust ticks"),
+    bool_option("q_outer_edge", True, label="Blooming Blows outer edge"),
+    bool_option("w_epicenter", True, label="Watch Out! Eep! epicenter"),
+    bool_option("r_wake", True, label="Lilting Lullaby wake damage"),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Lillia")

@@ -23,7 +23,7 @@ import re
 from typing import Any
 
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import simple_damage
 from .. import healing_helpers as _healing
@@ -148,7 +148,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # consumes — which is what the contract derives.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -170,7 +170,7 @@ def derive_self_healing(
     realm = ability_damages.get("R", {}).get("self_heal_state")
     if isinstance(realm, dict):
         amount = float(realm.get("amount", 0.0) or 0.0)
-        for cast_time in _healing._cast_slot_times(cast_timeline, "R"):
+        for cast_time in _healing.cast_slot_times(cast_timeline, "R"):
             healing.append(
                 {
                     "time": cast_time,
@@ -180,7 +180,7 @@ def derive_self_healing(
                     "actor_wide": True,
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Mordekaiser", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Mordekaiser")(derive_self_healing)

@@ -82,6 +82,7 @@ from src.calculator.champions.sylas import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
+from tests import game_binary
 
 _SYLAS = get_champion("Sylas")
 _WIKI = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Sylas"]
@@ -103,14 +104,6 @@ def _spell_record(suffix: str) -> dict:
         for key, value in _BIN.items()
         if key.endswith(suffix) and isinstance(value, dict) and "mSpell" in value
     )
-
-
-def _data_value(record: dict, name: str) -> list[float]:
-    """One named ``DataValues`` row out of a binary spell record."""
-    for entry in record.get("DataValues", []):
-        if entry.get("name") == name:
-            return list(entry.get("values") or [])
-    raise AssertionError(f"binary record has no DataValues row {name!r}")
 
 
 _P_ENTRY = _WIKI["abilities"]["P"][0]
@@ -461,7 +454,7 @@ class TestUnshackledStackAccounting:
 
     def test_binary_passive_charges_corroborates_the_cap(self):
         record = _spell_record("SylasPassive")
-        charges = _data_value(record, "PassiveCharges")
+        charges = game_binary.data_value(record, "PassiveCharges")
         # Rank-indexed; every real rank holds 3.
         assert charges[1:] == [3.0] * len(charges[1:])
 
@@ -516,7 +509,9 @@ class TestWithheldRiders:
 
     def test_monster_multiplier_is_sourced_and_not_applied(self):
         record = _spell_record("SylasPassive")
-        assert _data_value(record, "MonsterDamageMulti")[0] == pytest.approx(1.15)
+        assert game_binary.data_value(record, "MonsterDamageMulti")[0] == pytest.approx(
+            1.15
+        )
         text = " ".join(effect["description"] for effect in _P_ENTRY["effects"])
         assert "115% damage to monsters" in text
         # No monster class exists to bind it to; the emitted figure is the
@@ -525,13 +520,17 @@ class TestWithheldRiders:
 
     def test_secondary_minion_execute_is_sourced_and_not_applied(self):
         record = _spell_record("SylasPassive")
-        assert _data_value(record, "CheatingThreshold")[0] == pytest.approx(25.0)
+        assert game_binary.data_value(record, "CheatingThreshold")[0] == pytest.approx(
+            25.0
+        )
         text = " ".join(effect["description"] for effect in _P_ENTRY["effects"])
         assert "executes minions that are secondary targets" in text
 
     def test_bonus_attack_speed_is_sourced_and_emits_no_stat_buff(self):
         record = _spell_record("SylasPassive")
-        assert _data_value(record, "PassiveAttackSpeed")[0] == pytest.approx(1.25)
+        assert game_binary.data_value(record, "PassiveAttackSpeed")[0] == pytest.approx(
+            1.25
+        )
         assert "125% bonus attack speed" in _P_ENTRY["effects"][1]["description"]
 
         _, abilities = _parse(procs=3)
@@ -541,7 +540,9 @@ class TestWithheldRiders:
     def test_stack_duration_is_sourced_and_not_a_modeled_window(self):
         """The 4s refreshing window is why the count is user-set, not derived."""
         record = _spell_record("SylasPassive")
-        assert _data_value(record, "PassiveDuration")[0] == pytest.approx(4.0)
+        assert game_binary.data_value(record, "PassiveDuration")[0] == pytest.approx(
+            4.0
+        )
         assert "for 4 seconds" in _P_ENTRY["effects"][0]["description"]
 
     def test_every_withholding_is_named_in_the_detail_string(self):

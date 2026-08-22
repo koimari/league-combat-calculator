@@ -47,6 +47,8 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the
 # passive's monster damage cap (attribute "Bonus Damage", 100-270 by
@@ -100,12 +102,10 @@ def _expunge_scaled(recast_min: float, recast_max: float) -> Callable[[float], f
 
 def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: first-cast bolts + auto-recast expunge, both fire every cast."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     first = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     recast_min = extract_named(
@@ -194,19 +194,16 @@ def _across_the_veil(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "q_marked_enemies",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Additional enemies marked by Q: each expunge bolt passing "
-            "through the primary target deals the sourced 20% "
-            "subsequent-bolt damage"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "Q"},
-    },
+    int_option(
+        "q_marked_enemies",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Additional enemies marked by Q: each expunge bolt passing "
+        "through the primary target deals the sourced 20% "
+        "subsequent-bolt damage",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -257,10 +254,4 @@ parse_abilities = build_parser(SLOTS, "Aurora", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Aurora")
 
 # W is emitted, but its row is a sourced zero — not a fact SLOTS derives.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="W")

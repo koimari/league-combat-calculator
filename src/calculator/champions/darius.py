@@ -35,7 +35,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -47,6 +47,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — the passive's bonus-AD ratios
 # exist ONLY in the description prose; its modifier ``units`` are all
@@ -191,12 +192,10 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _decimate(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the outer blade's physical damage; applies a bleed stack."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     attribute = "Physical Damage (Blade)"
     total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -230,12 +229,10 @@ def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     (one-rotation, or timed at zero uptime) the engine appends the
     expected-crit base swing to this row — the Blitzcrank/Caitlyn rule.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     attribute = "Bonus Physical Damage"
     bonus = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -311,12 +308,10 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
     once more against the same (max) stack count — the recast parts are
     a second base + per-stack pair offset past the kill check.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     base = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(
@@ -384,47 +379,33 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "r_execute_recast",
-        "type": "bool",
-        "default": False,
-        "label": (
-            "Assume R executes the target: the free recast fires once "
-            "more within 20 seconds (same stack count)"
-        ),
-        "rotation": {
+    bool_option(
+        "r_execute_recast",
+        False,
+        label="Assume R executes the target: the free recast fires once "
+        "more within 20 seconds (same stack count)",
+        rotation={
             "condition": "execute",
             "kind": "execute",
             "role": "execute",
             "slot": "R",
         },
-    },
-    {
-        "key": "starting_hemorrhage_stacks",
-        "type": "int",
-        "default": 5,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Hemorrhage stacks on the target when the fight opens "
-            "(5 = already stacked, so Noxian Might is up)"
-        ),
-    },
-    {
-        "key": "w_kill_assertion",
-        "type": "bool",
-        "default": False,
-        "label": (
-            "Assume every accepted W empowered attack kills the target: "
-            "Crippling Strike's cooldown is halved (PercentCDRefund 50.0) "
-            "and its mana cost (40) is refunded"
-        ),
-        # NO rotation metadata: the kill does not reorder the rotation (an
-        # execute-role edge on the damage row would make the resolver
-        # derive a different order — the r_execute_recast metadata is R's
-        # own; W's kill is a resource/cooldown assertion, not a rotation
-        # edge).
-    },
+    ),
+    int_option(
+        "starting_hemorrhage_stacks",
+        5,
+        minimum=0,
+        maximum=5,
+        label="Hemorrhage stacks on the target when the fight opens "
+        "(5 = already stacked, so Noxian Might is up)",
+    ),
+    bool_option(
+        "w_kill_assertion",
+        False,
+        label="Assume every accepted W empowered attack kills the target: "
+        "Crippling Strike's cooldown is halved (PercentCDRefund 50.0) "
+        "and its mana cost (40) is refunded",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -527,7 +508,7 @@ parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Darius")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -545,7 +526,7 @@ def derive_self_healing(
     per-target receipts before applying one live heal.
     """
     healing = []
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
         event = payment.event
@@ -567,10 +548,10 @@ def derive_self_healing(
                 "source": "Decimate",
                 "kind": "champion_ability",
                 "_darius_q_group": (trigger_time, trigger_sequence),
-                **_healing._trigger_fields(event),
+                **_healing.trigger_fields(event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Darius", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Darius")(derive_self_healing)

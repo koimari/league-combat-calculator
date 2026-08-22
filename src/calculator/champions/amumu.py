@@ -32,6 +32,7 @@ from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_named, simple_damage, with_control
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option
 
 _CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
 _W_TICK_SECONDS = 0.5  # Despair "deal[s] magic damage every 0.5 seconds"
@@ -93,12 +94,10 @@ def _cursed_touch_display(ctx: SlotCtx) -> None:
 
 def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: toggle DoT — ``w_seconds`` of 0.5 s ticks, per-tick keys."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     w_seconds = max(0.5, float(ctx.option("w_seconds")))
     per_tick = extract_named(
@@ -126,21 +125,12 @@ def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "target_cursed",
-        "type": "bool",
-        "default": True,
-        "label": "Target already Cursed (10% bonus true damage)",
-    },
-    {
-        "key": "w_seconds",
-        "type": "float",
-        "default": 3.0,
-        "label": "W seconds active",
-        "min": 0.5,
-        "max": 30,
-        "step": 0.5,
-    },
+    bool_option(
+        "target_cursed", True, label="Target already Cursed (10% bonus true damage)"
+    ),
+    float_option(
+        "w_seconds", 3.0, minimum=0.5, maximum=30, label="W seconds active", step=0.5
+    ),
 ]
 
 ASSUMPTIONS = [

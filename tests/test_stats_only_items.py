@@ -34,15 +34,7 @@ from src.calculator.item_coverage import (
 from src.calculator.item_source import is_ordinary_sr_item
 from src.calculator.stats import calculate_total_stats, get_item_stats
 
-from src.calculator.item_coverage import ATTACKER_LANES
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
-
+from tests import item_probe
 
 # The 91-plus SR-admitted items whose current cached data classifies as
 # stats_only.  Computed live (the same predicate the optimizer's candidate
@@ -57,7 +49,9 @@ def _all_stats_only_items() -> list[dict]:
     items = fetch_item_data()
     sr_items = [item for item in items.values() if is_ordinary_sr_item(item)]
     return [
-        item for item in sr_items if _attacker_coverage(item)["status"] == "stats_only"
+        item
+        for item in sr_items
+        if item_probe.attacker_coverage(item)["status"] == "stats_only"
     ]
 
 
@@ -93,7 +87,7 @@ def test_certified_names_have_no_duplicates():
 
 @pytest.mark.parametrize("item_name", _CERTIFIED_NAMES)
 def test_certified_item_is_stats_only_and_eligible(item_name):
-    coverage = _attacker_coverage(_ITEMS_BY_NAME[item_name])
+    coverage = item_probe.attacker_coverage(_ITEMS_BY_NAME[item_name])
 
     assert coverage["status"] == "stats_only"
     assert coverage["optimizer_eligible"] is True

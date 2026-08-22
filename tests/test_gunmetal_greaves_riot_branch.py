@@ -123,15 +123,7 @@ from src.calculator.item_source import item_source_audit, riot_declared_effects
 from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
 
-from src.calculator.item_coverage import ATTACKER_LANES
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
-
+from tests import item_probe
 
 BOOTS = "Gunmetal Greaves"
 ITEM_ID = 3172
@@ -709,7 +701,7 @@ def test_coverage_posture_keeps_the_boots_eligible():
     pinned, not a downgrade.  The reason it publishes names the mechanic
     and the boundary again; the test below pins that half.
     """
-    coverage = _attacker_coverage(_boots())
+    coverage = item_probe.attacker_coverage(_boots())
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
@@ -726,7 +718,7 @@ def test_coverage_wording_names_the_mechanic_and_the_boundary():
     """Live again: the ``modeled_state`` rung names its mechanic and its
     boundary, both read off declarations — the mechanic off the item's own
     rules and the boundary off the ``*_unsourced`` key that declares it."""
-    coverage = _attacker_coverage(_boots())
+    coverage = item_probe.attacker_coverage(_boots())
     assert "Noxian Gait" in coverage["reason"]
     assert any(
         token in coverage["reason"]

@@ -301,9 +301,8 @@ def required_delivery_class(action: Any, accepted: frozenset[str]) -> str:
 class DefenseWindow:
     """One sourced active window (start inclusive, end exclusive).
 
-    The boundary convention mirrors the survival walk and the existing
-    ``defense_matches`` checks: an event at ``start`` is inside, an event
-    at ``until`` is outside.
+    The boundary convention mirrors the survival walk: an event at
+    ``start`` is inside, an event at ``until`` is outside.
     """
 
     start: float

@@ -56,6 +56,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Corki
@@ -128,12 +129,10 @@ _hextech_munitions.phase = ONHIT
 
 def _valkyrie(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: one blazing patch's 5 ticks, scaled by the target's patch uptime."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     uptime = _fraction_option(ctx, "w_patch_uptime")
     ticks = _ticks_at_uptime(_W_TICKS, uptime)
@@ -170,12 +169,10 @@ def _gatling_gun(ctx: SlotCtx) -> dict[str, Any] | None:
     The ticks are one part; the engine's ``stacks`` ramp lands a stack
     after each of the first four HITS of it.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     uptime = _fraction_option(ctx, "e_cone_uptime")
     ticks = _ticks_at_uptime(_E_TICKS, uptime)
@@ -273,12 +270,10 @@ def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     the counts live on the parts because the fight engine casts an
     ultimate exactly once, so it never repeats them itself.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     regular = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     big_one = extract_named(
@@ -322,40 +317,36 @@ def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "r_starting_charges",
-        "type": "int",
-        "default": _R_MAX_CHARGES,
-        "label": "R charges stored at fight start",
-        "min": 0,
-        "max": _R_MAX_CHARGES,
-    },
-    {
-        "key": "r_big_one_cycle_position",
-        "type": "int",
-        "default": 0,
-        "label": "Missiles already fired toward the next Big One",
-        "min": 0,
-        "max": _R_BIG_ONE_CYCLE - 1,
-    },
-    {
-        "key": "w_patch_uptime",
-        "type": "float",
-        "default": 1.0,
-        "label": "Fraction of W's 2.5s patch duration the target stays in it",
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.1,
-    },
-    {
-        "key": "e_cone_uptime",
-        "type": "float",
-        "default": 1.0,
-        "label": "Fraction of E's 4s duration the target stays in the cone",
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.1,
-    },
+    int_option(
+        "r_starting_charges",
+        _R_MAX_CHARGES,
+        minimum=0,
+        maximum=_R_MAX_CHARGES,
+        label="R charges stored at fight start",
+    ),
+    int_option(
+        "r_big_one_cycle_position",
+        0,
+        minimum=0,
+        maximum=_R_BIG_ONE_CYCLE - 1,
+        label="Missiles already fired toward the next Big One",
+    ),
+    float_option(
+        "w_patch_uptime",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Fraction of W's 2.5s patch duration the target stays in it",
+        step=0.1,
+    ),
+    float_option(
+        "e_cone_uptime",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Fraction of E's 4s duration the target stays in the cone",
+        step=0.1,
+    ),
 ]
 
 ASSUMPTIONS = [

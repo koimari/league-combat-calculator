@@ -836,12 +836,7 @@ def ally_item_level_value(
 
 def _item_option_schemas(config: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
     """Return the typed state controls for one item configuration."""
-    # Keep compatibility with the original two-option schema while all new
-    # controls use the explicit ``options`` mapping.
-    if "options" in config:
-        return config["options"]
-    legacy = config.get("glory_stacks")
-    return {"glory_stacks": legacy} if isinstance(legacy, Mapping) else {}
+    return config.get("options", {})
 
 
 def item_input_options_meta() -> dict[str, dict[str, Any]]:

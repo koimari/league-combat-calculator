@@ -68,6 +68,8 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 
 # One full Q channel: 3.25 s of beam, with a burst on the primary target
 # at each full second of channel (3 bursts).
@@ -236,12 +238,10 @@ _Q_TICK_INTERVAL = 1.0 / _Q_TICKS_PER_SECOND  # "every 0.125 seconds"
 
 def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: full-channel beam + bursts; continuous channel in timed fights."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     ap = ctx.stat("ability_power")
     beam_per_second = _beam_per_second(ctx, ability, rank, ap)
@@ -390,12 +390,10 @@ _E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
 
 def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: 20 sourced ticks of the full-zone total, plus the execute line."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -483,40 +481,26 @@ def _astral_flight(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "stardust_stacks",
-        "type": "int",
-        "default": 0,
-        "label": "Stardust stacks",
-        "min": 0,
-        "max": 999,
-        "state": AURELION_SOL_STARDUST_RULE.public_receipt(),
-    },
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": False,
-        "label": "W (Astral Flight) active",
-    },
-    {
-        "key": "r_empowered",
-        "type": "bool",
-        "default": False,
-        "label": "R empowered (The Skies Descend)",
-    },
-    {
-        "key": "q_secondary_targets",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Enemies caught by the beam beyond the primary (each takes "
-            "the sourced 50%-strength 'Secondary Magic Damage per "
-            "Second' row; the Stardust bursts stay primary-only)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "Q"},
-    },
+    int_option(
+        "stardust_stacks",
+        0,
+        minimum=0,
+        maximum=999,
+        label="Stardust stacks",
+        state=AURELION_SOL_STARDUST_RULE.public_receipt(),
+    ),
+    bool_option("w_active", False, label="W (Astral Flight) active"),
+    bool_option("r_empowered", False, label="R empowered (The Skies Descend)"),
+    int_option(
+        "q_secondary_targets",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Enemies caught by the beam beyond the primary (each takes "
+        "the sourced 50%-strength 'Secondary Magic Damage per "
+        "Second' row; the Stardust bursts stay primary-only)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -616,10 +600,4 @@ parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Aurelion Sol")
 
 # P and W emit a row but price no damage, which is not what SLOTS derives.
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="PW")

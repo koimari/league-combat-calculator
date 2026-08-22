@@ -28,6 +28,7 @@ from .slotlib import (
     extract_value,
     proc_damage,
 )
+from .inputs import int_option
 
 PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d6"
 
@@ -43,12 +44,10 @@ _W_DURATION = 4.0
 
 def _purge(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: 12 sourced shots at the fixed 3.0 attack speed over 4 seconds."""
-    ability = ctx.ability("W", 0)
-    if ability is None:
+    ranked = ctx.ranked("W", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_shot = extract_named(
         ability, "Modified Physical Damage", rank, ctx.stats, ctx.target
@@ -89,12 +88,10 @@ def _echoing_flames_per_proc(ctx: SlotCtx, ability: dict[str, Any]) -> float:
 
 def _fear_beyond_death(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: chem-drill initial damage; the sub-25% execution is a boundary."""
-    ability = ctx.ability("R", 0)
-    if ability is None:
+    ranked = ctx.ranked("R", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Fear Beyond Death"),
@@ -151,17 +148,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
-    {
-        "key": "p_legs",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 6,
-        "label": (
-            "Echoing Flames legs that fire (each shotgun leg procs once "
-            "per its cooldown)"
-        ),
-    },
+    int_option(
+        "p_legs",
+        1,
+        minimum=0,
+        maximum=6,
+        label="Echoing Flames legs that fire (each shotgun leg procs once "
+        "per its cooldown)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

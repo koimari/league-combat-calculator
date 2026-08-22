@@ -1911,15 +1911,9 @@ function engineFightPayload(side) {
   // The Enemy Hits constraint: unchecked, every enemy deals zero damage.
   payload.enemies_attack = state.fight.enemiesAttack !== false;
   // The Window is a timed window: abilities recast whenever their cooldown
-  // is back up inside it (the engine's shared cast schedule). one_rotation —
-  // a fixed 5s window where every ability casts exactly once — is only sent
-  // for the few champions whose module certifies nothing else.
+  // is back up inside it (the engine's shared cast schedule).
   // "Autos only" is the engine's own public mode: no casts, no summons.
-  const timedMode = state.fight.autosOnly
-    ? "auto_only"
-    : championSupportsTimedWindow(state.attacker.champion)
-      ? "time_based"
-      : "one_rotation";
+  const timedMode = state.fight.autosOnly ? "auto_only" : "time_based";
   if (state.fight.aaUptimeMode === "calculated") {
     payload.fight_mode = timedMode;
     payload.fight_duration = configuredFightWindow();
@@ -1937,17 +1931,6 @@ function engineFightPayload(side) {
     payload.auto_attack_uptime = 0;
   }
   return payload;
-}
-
-/**
- * Whether the champion's module certifies timed-window (recast) fights.
- * Unrestricted modules (the overwhelming majority) certify every mode; a
- * restricted module names its modes and carries a sourced reason, shown in
- * the Window constraint by renderRail.
- */
-function championSupportsTimedWindow(championName) {
-  const modes = getChampion(championName)?.supportedFightModes;
-  return !Array.isArray(modes) || modes.includes("time_based");
 }
 
 /**
@@ -2435,11 +2418,6 @@ function windowSummary() {
     ? "AA calc"
     : `${Math.round(state.fight.aaUptime * 100)}% AA`;
   if (state.fight.autosOnly) return `${one(configuredFightWindow())}s · autos only · ${uptime}`;
-  // A restricted module runs the engine's fixed one-cast rotation instead of
-  // the timed window; say so where the window is read, not just in the body.
-  if (state.attacker.champion && !championSupportsTimedWindow(state.attacker.champion)) {
-    return `1 rotation · 5s · ${uptime}`;
-  }
   return `${one(configuredFightWindow())}s window · ${uptime}`;
 }
 
@@ -3002,16 +2980,6 @@ function renderPrototypeBuilder() {
     modeButton.disabled = modeCapability.supported === false;
     modeButton.title = capabilityTitle(modeCapability);
     modeButton.dataset.capabilityField = "auto_attack_uptime_mode";
-  }
-  const windowModeNote = $("windowModeNote");
-  if (windowModeNote) {
-    const restricted = Boolean(state.attacker.champion)
-      && !championSupportsTimedWindow(state.attacker.champion);
-    windowModeNote.hidden = !restricted;
-    if (restricted) {
-      windowModeNote.textContent = getChampion(state.attacker.champion)?.fightModeReason
-        || "This champion is certified for single-rotation calculations only; the timed window and its cooldown recasts are withheld.";
-    }
   }
 }
 
@@ -4403,15 +4371,6 @@ function rosterOptimizationPaths(rootOrPath) {
   return (state[rootOrPath] || []).map((loadout, index) => `${rootOrPath}.${index}`).filter((path) => bisReadyForPath(path));
 }
 
-async function requestBis(path) {
-  const payload = bisBackendPayload(path);
-  if (!payload) throw new Error("Invalid roster optimization path");
-  const response = await postJson("/api/bis", payload);
-  const result = await response.json();
-  if (!response.ok || result.error) throw new Error(result.error || "BIS service unavailable");
-  return result;
-}
-
 async function requestBisBatch(path, slots) {
   const payload = bisBackendPayload(path);
   if (!payload) throw new Error("Invalid roster optimization path");
@@ -5420,11 +5379,6 @@ Promise.all([
     mergeBisProfiles(bisProfiles);
     mergeEffectCatalog(effectCatalog);
     championAvailability.forEach((entry) => {
-      const champion = DATA.champions.find((candidate) => candidate.name === entry.name);
-      if (champion) {
-        champion.supportedFightModes = entry.supported_fight_modes || null;
-        champion.fightModeReason = entry.unsupported_fight_mode_reason || "";
-      }
       engine.registration.set(entry.name, entry.engine_registration || null);
     });
     engine.itemOptions = config.item_options || {};

@@ -15,18 +15,17 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 PASSIVE_W_BASE = 25.0  # Full parent entry: Nether Blade passive, not a leveling row.
 PASSIVE_W_AP_RATIO = 0.10
 
 
 def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Null Sphere"),
@@ -47,12 +46,10 @@ def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     passive = PASSIVE_W_BASE + PASSIVE_W_AP_RATIO * ctx.stat("ability_power")
     active = (
         extract_named(
@@ -85,12 +82,10 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _riftwalk(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("r_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     bonus = extract_named(
@@ -132,20 +127,8 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kassadin", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "w_empowered",
-        "type": "bool",
-        "default": True,
-        "label": "Nether Blade empowered attack",
-    },
-    {
-        "key": "r_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 4,
-        "label": "Riftwalk stacks",
-    },
+    bool_option("w_empowered", True, label="Nether Blade empowered attack"),
+    int_option("r_stacks", 0, minimum=0, maximum=4, label="Riftwalk stacks"),
 ]
 ASSUMPTIONS = [
     "Void Stone's magic-damage reduction is defensive and never enters TDD.",

@@ -310,34 +310,23 @@ def get_champion_cast_dependencies(champion_name: str) -> tuple[CastDependency, 
 
 
 def get_champion_options_meta(champion_name: str) -> dict[str, Any]:
-    """Return a champion's option/assumption metadata for the frontend.
+    """A champion's option/assumption metadata for the frontend.
 
-    Registered modules declare ``OPTIONS`` (a list of option dicts:
-    ``key``, ``type`` ("bool"/"int"/"float"), ``default``, ``label``,
-    plus ``min``/``max``/``step`` for numeric inputs) and
-    ``ASSUMPTIONS`` (prose strings shown in the UI), and optionally
-    revision-pinned ``SOURCES`` beside their ``SLOTS``. An unregistered
-    name has no metadata.
-
-    Returns:
-        ``{"options": [...], "assumptions": [...], "sources": [...]}``
-        (JSON-safe). A source row contains ``label``, ``url``,
-        ``revision_id``, and ``revision_timestamp``.
+    Registered modules declare ``OPTIONS`` (dicts of ``key``, ``type``,
+    ``default``, ``label``, plus ``min``/``max``/``step`` for numeric
+    inputs), ``ASSUMPTIONS`` (prose shown in the UI), and optionally
+    revision-pinned ``SOURCES``; a source row carries ``label``, ``url``,
+    ``revision_id``, ``revision_timestamp``. Unregistered: empty lists.
     """
     try:
         contract = get_champion_module_contract(champion_name)
     except KeyError:
         return {"options": [], "assumptions": [], "sources": []}
-    module = contract.module
-    result: dict[str, Any] = {
+    return {
         "options": list(contract.options),
         "assumptions": list(contract.assumptions),
         "sources": list(contract.sources),
     }
-    supported_modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
-    if supported_modes is not None:
-        result["supported_fight_modes"] = list(supported_modes)
-    return result
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -832,36 +821,6 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
     result["review_status"] = contract.review_status
     result["registration"] = contract.review_status
     return result
-
-
-def get_comparison_curve_unavailable_reason(champion_name: str) -> str | None:
-    """Why timed crossover windows are withheld for a champion, if at all."""
-    try:
-        module = get_champion_module_contract(champion_name).module
-    except KeyError:
-        return None
-    reason = getattr(module, "COMPARISON_CURVE_UNAVAILABLE_REASON", None)
-    return str(reason) if reason else None
-
-
-def get_supported_fight_modes(champion_name: str) -> tuple[str, ...] | None:
-    """Return a module's certified public fight modes, when restricted."""
-    try:
-        module = get_champion_module_contract(champion_name).module
-    except KeyError:
-        return None
-    modes = getattr(module, "SUPPORTED_FIGHT_MODES", None)
-    return tuple(str(mode) for mode in modes) if modes is not None else None
-
-
-def get_unsupported_fight_mode_reason(champion_name: str) -> str | None:
-    """Return the sourced fail-closed explanation for restricted modes."""
-    try:
-        module = get_champion_module_contract(champion_name).module
-    except KeyError:
-        return None
-    reason = getattr(module, "UNSUPPORTED_FIGHT_MODE_REASON", None)
-    return str(reason) if reason else None
 
 
 def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:

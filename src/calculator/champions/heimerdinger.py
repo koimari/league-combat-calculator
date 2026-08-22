@@ -9,6 +9,7 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_recharge
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -197,12 +198,10 @@ def _require_row(ability: dict[str, Any], attribute: str) -> None:
 
 
 def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("W", 0)
-    if ability is None:
+    ranked = ctx.ranked("W", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
     _require_row(ability, "Initial Rocket Magic Damage")
     _require_row(ability, "Subsequent Rocket Magic Damage")
@@ -239,12 +238,10 @@ def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     variant = min(max(int(ctx.option("e_upgrade")), 0), 1)
-    ability = ctx.ability("E", variant)
-    if ability is None:
+    ranked = ctx.ranked("E", variant)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     if variant == 0:
         _require_row(ability, "Magic Damage")
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -294,56 +291,28 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Heimerdinger", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "q_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 1,
-        "label": "Turret variant (Evolution/Apex)",
-    },
-    {
-        "key": "q_turrets",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 3,
-        "label": "Deployed turrets",
-    },
-    {
-        "key": "q_turret_attacks",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 12,
-        "label": "Turret attacks",
-    },
-    {
-        "key": "q_beams",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 3,
-        "label": "Charged beams",
-    },
-    {
-        "key": "w_rockets",
-        "type": "int",
-        "default": 5,
-        "min": 1,
-        "max": 5,
-        "label": "Rockets hitting the target",
-        "state": HEIMER_W_ROCKETS_RULE.public_receipt(),
-    },
-    {
-        "key": "e_upgrade",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 1,
-        "label": "Grenade variant",
-        "state": HEIMER_E_GRENADE_RULE.public_receipt(),
-    },
+    int_option(
+        "q_variant", 0, minimum=0, maximum=1, label="Turret variant (Evolution/Apex)"
+    ),
+    int_option("q_turrets", 3, minimum=1, maximum=3, label="Deployed turrets"),
+    int_option("q_turret_attacks", 3, minimum=1, maximum=12, label="Turret attacks"),
+    int_option("q_beams", 1, minimum=0, maximum=3, label="Charged beams"),
+    int_option(
+        "w_rockets",
+        5,
+        minimum=1,
+        maximum=5,
+        label="Rockets hitting the target",
+        state=HEIMER_W_ROCKETS_RULE.public_receipt(),
+    ),
+    int_option(
+        "e_upgrade",
+        0,
+        minimum=0,
+        maximum=1,
+        label="Grenade variant",
+        state=HEIMER_E_GRENADE_RULE.public_receipt(),
+    ),
 ]
 ASSUMPTIONS = [
     "Turret shot/beam values and cadences are copied from the full Wiki Pets entry because the champion slot template intentionally contains no pet formula rows.",

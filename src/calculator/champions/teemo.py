@@ -43,6 +43,7 @@ from typing import Any
 from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value
+from .module_contract import coverage
 
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
 # "the target takes magic damage every second over 4 seconds" — 4 ticks
@@ -259,10 +260,4 @@ ASSUMPTIONS.extend(
         "row for the magnitude (wiki prose and the game binary only).",
     ]
 )
-MODULE_COVERAGE = {
-    "P": "out_of_scope",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="W", out_of_scope="P")

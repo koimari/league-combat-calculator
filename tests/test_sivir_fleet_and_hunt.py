@@ -70,6 +70,7 @@ from src.calculator.item_effects import (
     swiftmarch_adaptive_force,
 )
 from src.calculator.stats import apply_movement_speed_soft_caps, calculate_total_stats
+from tests import game_binary
 
 _SIVIR = get_champion("Sivir")
 _WIKI = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Sivir"]
@@ -91,14 +92,6 @@ def _spell_record(suffix: str) -> dict:
         for key, value in _BIN.items()
         if key.endswith(suffix) and isinstance(value, dict) and "mSpell" in value
     )
-
-
-def _data_value(record: dict, name: str) -> list[float]:
-    """One named ``DataValues`` row out of a binary spell record."""
-    for entry in record.get("DataValues", []):
-        if entry.get("name") == name:
-            return list(entry.get("values") or [])
-    raise AssertionError(f"binary record has no DataValues row {name!r}")
 
 
 _P_EFFECT = _WIKI["abilities"]["P"][0]["effects"][0]
@@ -177,7 +170,7 @@ class TestFleetOfFootHasNoDamageAnywhere:
 
     def test_binary_decay_window_matches_the_wiki_prose(self):
         record = _spell_record("SivirPassiveAbility/SivirPassive")
-        assert _data_value(record, "HasteDuration")[1] == pytest.approx(1.5)
+        assert game_binary.data_value(record, "HasteDuration")[1] == pytest.approx(1.5)
         assert "1.5 seconds" in _P_EFFECT["description"]
 
     def test_parser_emits_a_zero_damage_passive_row(self):
@@ -311,11 +304,15 @@ class TestOnTheHuntStaysOutOfScope:
     def test_binary_movement_ladder_matches_the_wiki_ranks(self):
         record = _spell_record("SivirRAbility/SivirR")
         # DataValues arrays are rank-indexed with an unused slot 0.
-        assert _data_value(record, "MaxMS")[1:4] == pytest.approx([0.20, 0.25, 0.30])
+        assert game_binary.data_value(record, "MaxMS")[1:4] == pytest.approx(
+            [0.20, 0.25, 0.30]
+        )
 
     def test_binary_cooldown_refund_matches_the_wiki(self):
         record = _spell_record("SivirRAbility/SivirR")
-        assert _data_value(record, "AttackCooldownRefund")[1] == pytest.approx(0.5)
+        assert game_binary.data_value(record, "AttackCooldownRefund")[
+            1
+        ] == pytest.approx(0.5)
         assert "0.5 seconds" in " ".join(
             effect["description"] for effect in _R_ENTRY["effects"]
         )
@@ -350,7 +347,7 @@ class TestOnTheHuntKernelGaps:
 class TestHuntAttackSpeedIsAnUnusedSourceConflict:
     def test_binary_carries_the_attack_speed_row(self):
         record = _spell_record("SivirRAbility/SivirR")
-        assert _data_value(record, "HuntAttackSpeed")[1:4] == pytest.approx(
+        assert game_binary.data_value(record, "HuntAttackSpeed")[1:4] == pytest.approx(
             [0.05, 0.06, 0.07]
         )
 

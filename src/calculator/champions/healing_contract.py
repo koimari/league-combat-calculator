@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import functools
 from dataclasses import dataclass
 from collections.abc import Callable
 from typing import Any
+
+
+def heal_receipt_order(event: dict[str, Any]) -> tuple[float, str]:
+    """The order a self-heal ledger is read in: by time, then by source."""
+    return (event["time"], event["source"])
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,3 +58,24 @@ def declare_healing_rule(
             f"{champion_name!r} declares SELF_HEALING_RULE without a resolver"
         )
     return ChampionHealingRule(champion_name=champion_name, resolver=resolver)
+
+
+def self_healing_rule(
+    champion_name: str,
+) -> Callable[[Callable[..., list[dict[str, Any]]]], ChampionHealingRule]:
+    """Declare a champion module's self-heal rule from its own resolver.
+
+    The declaration owns the receipt order, so a module writes only the
+    formula its kit needs and every rule hands back one ordered ledger:
+
+        SELF_HEALING_RULE = self_healing_rule("Nami")(derive_self_healing)
+    """
+
+    def declare(resolver: Callable[..., list[dict[str, Any]]]) -> ChampionHealingRule:
+        @functools.wraps(resolver)
+        def ordered(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+            return sorted(resolver(*args, **kwargs), key=heal_receipt_order)
+
+        return declare_healing_rule(champion_name, ordered)
+
+    return declare

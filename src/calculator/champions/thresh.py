@@ -20,6 +20,7 @@ from typing import Any
 
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
+from .inputs import int_option
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
@@ -101,14 +102,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "souls",
-        "type": "int",
-        "default": _DEFAULT_SOULS,
-        "min": 0,
-        "max": _MAX_SOULS,
-        "label": "Souls collected",
-    },
+    int_option(
+        "souls", _DEFAULT_SOULS, minimum=0, maximum=_MAX_SOULS, label="Souls collected"
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

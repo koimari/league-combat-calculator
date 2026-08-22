@@ -154,8 +154,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
@@ -165,7 +163,6 @@ from src.calculator.champions.slotlib import extract_named
 from src.calculator.cleanse_eligibility import (
     CHAMPION_CLEANSE_DECLARATIONS,
     ITEM_CLEANSE_DECLARATIONS,
-    compiled_support_receipt,
     resolve_cleanse_item,
     truncate_intervals,
 )
@@ -178,23 +175,11 @@ from src.calculator.crowd_control_eligibility import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
+from tests.app_config import app_config
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MUNDO_DATA = _CHAMPION_DATA["DrMundo"]
@@ -352,12 +337,8 @@ def _testing_client():
     rely on ``TESTING`` being False (the limiter is bypassed under
     TESTING), so this file must never leave the flag set.
     """
-    previous = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
+    with app_config(TESTING=True):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous
 
 
 def _app_combat(
@@ -402,14 +383,6 @@ def _app_combat(
     return response.get_json()["combat"]
 
 
-def _survival(combat: dict, participant_id: str = "main") -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
-
-
 def _main_heals(combat: dict) -> list[dict]:
     return [e for e in combat.get("healing_events", []) if e.get("attacker") == "main"]
 
@@ -429,7 +402,7 @@ _REGEN_TICK_MAX_RATIO = 0.0023
 
 def _pickup_heals(combat: dict) -> list[dict]:
     """Passive receipts too large to be one regeneration tick."""
-    max_health = _survival(combat)["max_health"]
+    max_health = survival_of(combat)["max_health"]
     return [
         heal
         for heal in _main_heals(combat)
@@ -513,7 +486,7 @@ def _kernel_survival(
         "target": "main",
         "_event_id": "main:mundo_p:arm",
     }
-    return _simulate_survival(
+    return simulate_survival(
         combatants,
         {"main": list(controls or [])},
         {"main": []},
@@ -909,7 +882,7 @@ class TestNoTrigger:
         # is the pre-wiring behavior (the passive's immunity never
         # fires).  The only heal surface is the already-authored R regen.
         combat = _app_combat(enemy="Garen")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["crowd_control_intervals"] == []
         assert survival["action_downtime_intervals"] == []
         assert survival["crowd_control_until"] == pytest.approx(0.0)
@@ -948,7 +921,7 @@ class TestNoTrigger:
         # cleanse keys.  The wired absence must be indistinguishable from
         # today's (the completion keeps this surface).
         combat = _app_combat(enemy="Garen")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["crowd_control_intervals"] == []
         assert survival["action_downtime_intervals"] == []
         assert "cleanse" not in survival
@@ -971,7 +944,7 @@ class TestImmobilizingTrigger:
         # P2-8 completion inverts for the FIRST hostile immobilizing
         # effect.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["crowd_control_intervals"] == []
         assert survival["action_downtime_intervals"] == []
         assert survival["crowd_control_until"] == pytest.approx(0.0)
@@ -989,7 +962,7 @@ class TestImmobilizingTrigger:
         # (the pre-wiring absence the completion adds): no resist,
         # canister, pickup, health-cost or passive-cooldown surfaces.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         # The wired resist publishes the full passive receipt set.
         for key in (
             "cleanse",
@@ -1010,7 +983,7 @@ class TestImmobilizingTrigger:
         # CURRENT-health cost is paid at the resist time, and the
         # canister drop is receipted (525 units, 7s lifetime).
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["crowd_control_intervals"] == []
         assert survival["action_downtime_intervals"] == []
         assert survival["crowd_control_until"] == pytest.approx(0.0)
@@ -1094,7 +1067,7 @@ class TestCanisterTimingAndLifetime:
         # in the survival row, no canister events, no canister sources —
         # the drop does not exist before the wiring.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         canister = survival["canister"]
         assert canister["time"] == pytest.approx(0.0)
         assert canister["distance"] == pytest.approx(_P_CANISTER_DISTANCE)
@@ -1105,7 +1078,7 @@ class TestCanisterTimingAndLifetime:
         # P2-8 contract: the canister drop is receipted AT the trigger
         # time with the sourced 525-unit distance and 7s lifetime.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         canister = survival["canister"]
         assert canister["time"] == pytest.approx(0.0)
         assert canister["distance"] == pytest.approx(_P_CANISTER_DISTANCE)
@@ -1118,7 +1091,7 @@ class TestCanisterTimingAndLifetime:
         # does NOT fire without a pickup event.  The denial names the
         # missing movement simulation instead of silently healing.
         combat = _app_combat(enemy="Ahri", duration=8.0)
-        survival = _survival(combat)
+        survival = survival_of(combat)
         pickup = survival["pickup"]
         assert pickup["supported"] is False
         assert "movement" in pickup["reason"]
@@ -1139,7 +1112,7 @@ class TestHealthCost:
         # — the 4% current-health cost is not paid because the resist
         # never fires.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         cost = survival["passive_cost"]
         assert cost["percent"] == pytest.approx(_P_CURRENT_HEALTH_COST_PERCENT)
         assert cost["amount"] > 0.0
@@ -1150,7 +1123,7 @@ class TestHealthCost:
         # time (not max health, not pre-fight) — recomputed from the
         # fight's own running health.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         cost = survival["passive_cost"]
         assert cost["percent"] == pytest.approx(_P_CURRENT_HEALTH_COST_PERCENT)
         # 4% of the CURRENT health at the resist (the receipt's own
@@ -1177,7 +1150,7 @@ class TestHealReceipt:
         heals = _main_heals(combat)
         assert heals
         assert _pickup_heals(combat) == []
-        max_health = _survival(combat)["max_health"]
+        max_health = survival_of(combat)["max_health"]
         assert not any(
             float(h.get("amount", 0.0))
             == pytest.approx(_PICKUP_MAX_HEALTH_RATIO * max_health, rel=1e-3)
@@ -1189,7 +1162,7 @@ class TestHealReceipt:
         # game file MaxHealthGain 0.04) and is receipted ONLY with the
         # pickup — a drop alone heals nothing.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         pickup = survival["pickup"]
         assert pickup["heal_percent"] == pytest.approx(_P_MAX_HEALTH_HEAL_PERCENT)
         assert pickup["heal_amount"] == pytest.approx(
@@ -1210,7 +1183,7 @@ class TestCleanseReceipt:
         # does not exist — no cleanse / cleanse_use / cleanse_denied
         # survival keys, zero cleanse event count.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["cleanse"]["eligible"] is True
         assert survival["cleanse"]["item"] == _P_CLEANSE_ITEM
         assert survival["cleanse_use"]["uses_after"] == 0
@@ -1235,7 +1208,7 @@ class TestCleanseReceipt:
         # removed-controls tail, no historical downtime), and the
         # decision/use receipts land on the survival rows.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         resist = survival["cleanse"]
         assert resist["decision"]["eligible"] is True
         assert resist["decision"]["item"] == _P_CLEANSE_ITEM
@@ -1260,7 +1233,7 @@ class TestCooldownAndReduction:
         _, abilities = _parse()
         assert "P" not in abilities
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["passive_cooldown"]["seconds"] == pytest.approx(
             _P_COOLDOWN_ROW[_LEVEL - 1]
         )
@@ -1272,7 +1245,7 @@ class TestCooldownAndReduction:
         # has no recharge timer); the 15s pickup refund is receipted
         # against that row, never applied.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["passive_cooldown"]["seconds"] == pytest.approx(
             _P_COOLDOWN_ROW[_LEVEL - 1]
         )
@@ -1296,7 +1269,7 @@ class TestDestructionAndUnavailablePickup:
         # movement (no auto-pickup, no toggle) — each names its missing
         # mechanic instead of silently granting gold-equivalent value.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["canister"]["destruction"] == {
             "supported": False,
             "reason": "enemy movement not modeled",
@@ -1523,14 +1496,7 @@ class TestScoreFailClosed:
         # packets through this gate (never silently re-price the pickup
         # heal as a plain heal or drop the resist).
         resist = _resist_packet(0.0)
-        assert compiled_support_receipt(resist) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(resist) == "support_kind=cleanse"
-        assert (
-            compiled_support_receipt(
-                {"kind": "heal", "amount": 100.0, "cleanse_item": _P_CLEANSE_ITEM}
-            )
-            == "support_cleanse"
-        )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse_item": _P_CLEANSE_ITEM}
@@ -1538,12 +1504,7 @@ class TestScoreFailClosed:
             == "support_cleanse"
         )
         canister = _canister_packet(0.0)
-        # The contract mirror covers cleanse/movement/heal-with-marker;
-        # the compile module's own gate names the canister kind.  The
-        # pinned asymmetry: the completion must extend the mirror or the
-        # canister packet must ride the compile gate.
         assert unrepresentable_template_receipt(canister) == "support_kind=canister"
-        assert compiled_support_receipt({"kind": "heal", "amount": 50.0}) is None
         assert (
             unrepresentable_template_receipt({"kind": "heal", "amount": 50.0}) is None
         )
@@ -1555,7 +1516,7 @@ class TestScoreFailClosed:
         # not vanish from the score surface).
         combat = _app_combat(enemy="Ahri")
         # The full surface carries the resist receipt.
-        assert _survival(combat)["cleanse"]["decision"]["eligible"] is True
+        assert survival_of(combat)["cleanse"]["decision"]["eligible"] is True
         # The score surface either mirrors it or names the divergence.
         score = _fight({}, one_rotation=True, score_only=True)
         assert "P" not in score["breakdown"]  # the passive stays out of damage
@@ -1708,7 +1669,10 @@ class TestModeParity:
             assert frow["total_damage"] == srow["total_damage"]
             assert frow["total_raw"] == srow["total_raw"]
             assert frow.get("casts") == srow.get("casts")
-        assert compiled_support_receipt(_resist_packet(0.0)) == "support_kind=cleanse"
+        assert (
+            unrepresentable_template_receipt(_resist_packet(0.0))
+            == "support_kind=cleanse"
+        )
         assert (
             unrepresentable_template_receipt(_canister_packet(0.0))
             == "support_kind=canister"

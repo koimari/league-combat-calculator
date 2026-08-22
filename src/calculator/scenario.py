@@ -22,7 +22,7 @@ from .item_coverage import (
 from .interaction_effects import target_physical_damage_reduction_params
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
-from .pipeline import FightParams, validate_cast_order_shape
+from .pipeline import MAX_ALLIES, MAX_ENEMIES, FightParams, validate_cast_order_shape
 from .practice_dummy import (
     PRACTICE_DUMMY_KIND,
     PRACTICE_DUMMY_LEVEL,
@@ -42,8 +42,6 @@ from .request_parsing import (
 from .stats import MAX_LEVEL, calculate_total_stats
 from .champions.skill_orders import get_ability_rank
 
-MAX_ENEMIES = 5
-MAX_ALLIES = 4
 MAX_LOADOUT_ITEMS = 6
 
 
@@ -668,14 +666,6 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
         missing = exc.args[0] if exc.args else "requested data"
         raise LookupError(f"Scenario data '{missing}' not found") from exc
 
-    # participant_timeline imports this module, so the roster-window gate is
-    # imported lazily to keep the module graph acyclic.
-    # pylint: disable-next=import-outside-toplevel  # deliberate, see above
-    from .participant_timeline import require_roster_fight_window_support
-
-    require_roster_fight_window_support(
-        request.fight_params, enemies=enemies, allies=allies
-    )
     for enemy in enemies:
         participant = f"Enemy {enemy.champion_data['name']}"
         require_calculation_item_coverage(

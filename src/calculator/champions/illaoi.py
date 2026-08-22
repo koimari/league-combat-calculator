@@ -7,10 +7,11 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 
 def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -60,12 +61,10 @@ _tentacle.phase = ONHIT
 
 
 def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     pct = extract_value(ability, "Additional Physical Damage", rank) / 100.0
     ad_ratio = extract_value(ability, "Additional Physical Damage", rank, 1) / 100.0
@@ -94,12 +93,10 @@ def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _leap_of_faith(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Leap of Faith"),
@@ -140,14 +137,7 @@ MODULE_CC = {"W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Illaoi", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "p_tentacles",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 12,
-        "label": "Tentacle strikes",
-    }
+    int_option("p_tentacles", 1, minimum=0, maximum=12, label="Tentacle strikes")
 ]
 ASSUMPTIONS = [
     "Tentacle strikes use the level-scaled parent formula and Q rank increase; the user supplies how many authored strikes land.",
@@ -160,7 +150,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Illaoi")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -171,7 +161,7 @@ def derive_self_healing(
 ):
     """Resolve Illaoi self-healing events from its authored packet."""
     healing = []
-    tentacle_hits = _healing._attributed_events(
+    tentacle_hits = _healing.attributed_events(
         damage_events, lambda source, _event: source == "passive"
     )
     for event in tentacle_hits:
@@ -184,10 +174,10 @@ def derive_self_healing(
                 ),
                 "source": "Prophet of an Elder God",
                 "kind": "champion_passive",
-                **_healing._trigger_fields(event),
+                **_healing.trigger_fields(event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Illaoi", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Illaoi")(derive_self_healing)

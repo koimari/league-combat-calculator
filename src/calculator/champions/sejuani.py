@@ -36,12 +36,10 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     override that prices the percentage against the fight's live health —
     matching the cached Total Physical Damage row at every rank.
     """
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     def sejuani_max_health(unit: str, value: float) -> float | None:
         if unit == "% of her maximum health":

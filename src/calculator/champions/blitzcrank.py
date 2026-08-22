@@ -46,6 +46,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Blitzcrank
@@ -67,12 +68,10 @@ MANA_BARRIER_DURATION_SECONDS = 10.0
 
 def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: bonus AS for the fight's first 5s, time-averaged over the window."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     duration = ctx.options.get("fight_duration_seconds")
@@ -95,12 +94,10 @@ _overdrive.phase = BUFF
 
 def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: hand-authored 100% AD + 25% AP bonus riding the next auto."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     bonus = POWER_FIST_TOTAL_AD_RATIO * ctx.stat(
         "attack_damage"
@@ -127,12 +124,10 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: active burst only — the passive bolt entry is skipped by design."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     # Both R damage entries are named "Magic Damage"; only the skipped
     # passive carries a '% maximum mana' modifier.
@@ -244,5 +239,5 @@ SOURCES = load_champion_sources("Blitzcrank")
 # P emits no cast row, so the derivation would call it out_of_scope; the
 # shield Q carries is what the engine prices (331.45 for 10s at level 18
 # with no items, 35% of max mana).
-MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}

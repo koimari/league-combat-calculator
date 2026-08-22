@@ -9,6 +9,7 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -21,12 +22,10 @@ def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     recasts = min(max(int(ctx.option("q_recasts")), 0), 3)
     marked = bool(ctx.options.get("q_marked_target", True))
     dart = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -59,12 +58,10 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     entry = no_damage(
         ctx,
         name=ability.get("name", "Allure"),
@@ -129,12 +126,10 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _last_caress(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     execute = bool(ctx.options.get("r_execute_ready", False))
     attr = "Empowered Damage" if execute else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -168,44 +163,16 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Evelynn", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "q_recasts",
-        "type": "int",
-        "default": 3,
-        "min": 0,
-        "max": 3,
-        "label": "Hate Spike recasts",
-    },
-    {
-        "key": "q_marked_target",
-        "type": "bool",
-        "default": True,
-        "label": "Hate Spike mark is active",
-    },
-    {
-        "key": "w_charmed",
-        "type": "bool",
-        "default": True,
-        "label": "Allure fully charmed champion",
-    },
-    {
-        "key": "w_charm_triggered",
-        "type": "bool",
-        "default": False,
-        "label": "Allure mark is expunged after its 2.5 second maturity",
-    },
-    {
-        "key": "e_empowered",
-        "type": "bool",
-        "default": False,
-        "label": "Empowered Whiplash",
-    },
-    {
-        "key": "r_execute_ready",
-        "type": "bool",
-        "default": False,
-        "label": "Last Caress execute branch",
-    },
+    int_option("q_recasts", 3, minimum=0, maximum=3, label="Hate Spike recasts"),
+    bool_option("q_marked_target", True, label="Hate Spike mark is active"),
+    bool_option("w_charmed", True, label="Allure fully charmed champion"),
+    bool_option(
+        "w_charm_triggered",
+        False,
+        label="Allure mark is expunged after its 2.5 second maturity",
+    ),
+    bool_option("e_empowered", False, label="Empowered Whiplash"),
+    bool_option("r_execute_ready", False, label="Last Caress execute branch"),
 ]
 
 ASSUMPTIONS = [

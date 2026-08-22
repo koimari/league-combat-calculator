@@ -26,6 +26,8 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
+from .inputs import bool_option, float_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
 
@@ -42,12 +44,10 @@ _W_STUN_SECONDS = 1.0
 
 def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Hurl base (or <20%-HP execute) + the Mortal Will empowered term."""
-    ability = ctx.ability("Q", 0)
-    if ability is None:
+    ranked = ctx.ranked("Q", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     if bool(ctx.options.get("q_execute", False)):
         # Target below 20% of maximum health: the Increased Hurl Damage row.
@@ -90,12 +90,10 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: %max-HP physical damage with the AP and bonus-health per-100 terms."""
-    ability = ctx.ability("W", 0)
-    if ability is None:
+    ranked = ctx.ranked("W", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     ap = float(ctx.stat("ability_power") or 0.0)
@@ -132,12 +130,10 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _grand_starfall(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: center Magic Damage row, or the Reduced edge row when selected."""
-    ability = ctx.ability("R", 0)
-    if ability is None:
+    ranked = ctx.ranked("R", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     attr = (
         "Reduced Damage" if bool(ctx.options.get("r_edge", False)) else "Magic Damage"
@@ -189,46 +185,34 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
-    {
-        "key": "q_execute",
-        "type": "bool",
-        "default": False,
-        "label": "Q hits a target below 20% maximum health (execute row)",
-    },
-    {
-        "key": "q_mortal_will",
-        "type": "bool",
-        "default": True,
-        "label": "Mortal Will empowered Q (first basic ability at 5 stacks)",
-    },
-    {
-        "key": "r_edge",
-        "type": "bool",
-        "default": False,
-        "label": "R edge hit (Reduced Damage row)",
-    },
-    {
-        "key": "e_active",
-        "type": "bool",
-        "default": False,
-        "label": "E (Aegis Assault) active against selected skillshots",
-    },
-    {
-        "key": "e_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "E active start time in seconds",
-    },
-    {
-        "key": "e_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 1.5,
-        "label": "E active seconds; zero uses the sourced 1.5 second duration",
-    },
+    bool_option(
+        "q_execute",
+        False,
+        label="Q hits a target below 20% maximum health (execute row)",
+    ),
+    bool_option(
+        "q_mortal_will",
+        True,
+        label="Mortal Will empowered Q (first basic ability at 5 stacks)",
+    ),
+    bool_option("r_edge", False, label="R edge hit (Reduced Damage row)"),
+    bool_option(
+        "e_active", False, label="E (Aegis Assault) active against selected skillshots"
+    ),
+    float_option(
+        "e_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="E active start time in seconds",
+    ),
+    float_option(
+        "e_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=1.5,
+        label="E active seconds; zero uses the sourced 1.5 second duration",
+    ),
     {
         "key": "e_blocked_skillshots",
         "type": "string_list",
@@ -271,10 +255,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # P emits a row and there is nothing left for it to price — Mortal Will's
 # only damage is the empowered rider, which Q prices — so it is no_damage,
 # not a missing axis.  The bare stack counter is resource state.
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="P")

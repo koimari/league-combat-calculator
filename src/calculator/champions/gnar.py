@@ -51,6 +51,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — against the GAME FILES, not the
 # wiki: https://raw.communitydragon.org/latest/game/data/characters/
@@ -170,12 +171,10 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
     enemy hit on the return pass takes one reduced hit (enemies can be
     hit only once per pass, so the primary never double-dips).
     """
-    ability = ctx.ability("Q", 0)
-    if ability is None:
+    ranked = ctx.ranked("Q", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -384,37 +383,19 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "mega",
-        "type": "bool",
-        "default": False,
-        "label": "Mega Gnar form",
-    },
-    {
-        "key": "q_pickup",
-        "type": "bool",
-        "default": True,
-        "label": "Catch Q (boomerang/boulder)",
-    },
-    {
-        "key": "r_wall",
-        "type": "bool",
-        "default": True,
-        "label": "R into wall (1.5x damage + sourced stun)",
-    },
-    {
-        "key": "q_secondary_targets",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Mini Q: enemies hit on the boomerang's return pass (each "
-            "takes the sourced 50% Reduced Damage row; Mega's boulder "
-            "stops on the first enemy)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "Q"},
-    },
+    bool_option("mega", False, label="Mega Gnar form"),
+    bool_option("q_pickup", True, label="Catch Q (boomerang/boulder)"),
+    bool_option("r_wall", True, label="R into wall (1.5x damage + sourced stun)"),
+    int_option(
+        "q_secondary_targets",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Mini Q: enemies hit on the boomerang's return pass (each "
+        "takes the sourced 50% Reduced Damage row; Mega's boulder "
+        "stops on the first enemy)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [

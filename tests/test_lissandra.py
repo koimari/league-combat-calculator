@@ -5,6 +5,7 @@ import pytest
 from tests.ability_math import parts_raw_total
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import lissandra
+from tests import cc_review
 
 
 def test_lissandra_full_rotation_uses_each_direct_hit(lissandra_data, parse_at):
@@ -67,15 +68,6 @@ def test_lissandra_rotation_is_mitigated_and_resource_ordered(
 # ---------------------------------------------------------------------------
 
 
-def _slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
 class TestReviewedCrowdControl:
     """Lissandra's kit facts, held to the cached text and to the ledger.
 
@@ -91,15 +83,19 @@ class TestReviewedCrowdControl:
             "E": "none",
             "R": "slow",
         }
-        assert "slows enemies hit for 1.5 seconds" in _slot_text(lissandra_data, "Q")
-        assert "rooting them for a duration" in _slot_text(lissandra_data, "W")
+        assert "slows enemies hit for 1.5 seconds" in cc_review.slot_text(
+            lissandra_data, "Q"
+        )
+        assert "rooting them for a duration" in cc_review.slot_text(lissandra_data, "W")
         # R's priced instance is the ice field, which slows on either cast;
         # the enemy cast's stun is not the hit the module counts.
-        assert "slowing them for 0.5 seconds" in _slot_text(lissandra_data, "R")
+        assert "slowing them for 0.5 seconds" in cc_review.slot_text(
+            lissandra_data, "R"
+        )
 
     def test_the_reviewed_absence_read_the_whole_slot(self, lissandra_data):
         """E's claw only decelerates itself — no control word at all."""
-        text = _slot_text(lissandra_data, "E")
+        text = cc_review.slot_text(lissandra_data, "E")
         assert "slow" not in text
         assert "root" not in text
         assert "stun" not in text

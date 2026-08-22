@@ -23,14 +23,14 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..healing_helpers import (
-    _ability,
-    _attributed_events,
-    _leveling_value,
-    _trigger_fields,
+    ability_json,
+    attributed_events,
+    leveling_value,
+    trigger_fields,
 )
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, with_control
 
@@ -47,12 +47,10 @@ _ATTACHED_TICK_INTERVAL = 0.75
 
 def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: Sapling Toss — plain explosion or brush-empowered burst+burn."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     cooldown = extract_cooldown(ability, rank)
     if not bool(ctx.options.get("sapling_empowered", True)):
         explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -149,12 +147,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "sapling_empowered",
-        "type": "bool",
-        "default": True,
-        "label": "Sapling thrown into brush (empowered burn)",
-    },
+    bool_option(
+        "sapling_empowered", True, label="Sapling thrown into brush (empowered burn)"
+    ),
 ]
 
 
@@ -170,7 +165,7 @@ def derive_self_healing(
 ) -> list[dict[str, Any]]:
     """Resolve Sap Magic's cooldown and empowered-attack heal."""
     del ability_damages
-    passive = _ability(champion_data, "P")
+    passive = ability_json(champion_data, "P")
     level = max(1, int(champion_stat(champion_stats, "level")))
     cooldown_values: list[float] = []
     for modifier in (passive.get("cooldown") or {}).get("modifiers", []):
@@ -178,7 +173,7 @@ def derive_self_healing(
         if values:
             cooldown_values = [float(value) for value in values]
             break
-    percentage = _leveling_value(passive, "Max Health Damage", level)
+    percentage = leveling_value(passive, "Max Health Damage", level)
     if not cooldown_values or percentage <= 0.0:
         return []
     cooldown = cooldown_values[min(level - 1, len(cooldown_values) - 1)]
@@ -193,7 +188,7 @@ def derive_self_healing(
         return maximum_health * percentage / 100.0
 
     duration = max(0.0, float(fight_duration_seconds or 0.0))
-    auto_events = _attributed_events(
+    auto_events = attributed_events(
         damage_events, lambda source, _event: source == "auto_attacks"
     )
     trigger_by_time: dict[float, int] = {}
@@ -261,7 +256,7 @@ def derive_self_healing(
                 "source": "Sap Magic",
                 "kind": "champion_passive",
                 "actor_wide": True,
-                **_trigger_fields(proc_auto),
+                **trigger_fields(proc_auto),
             }
         )
         proc_time = float(proc_auto.get("time", 0.0))
@@ -272,7 +267,7 @@ def derive_self_healing(
             trigger_index += 1
         cycle_start = proc_time
         auto_index += 1
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Maokai", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Maokai")(derive_self_healing)

@@ -99,7 +99,11 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import extract_named, extract_value
+from src.calculator.champions.slotlib import (
+    extract_named,
+    extract_value,
+    find_named_leveling,
+)
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 
@@ -236,11 +240,10 @@ def _ability(slot: str, index: int = 0) -> dict:
 def _leveling(slot: str, attribute: str, index: int = 0) -> dict:
     """The first leveling row named *attribute* in one ability entry."""
     ability = _ability(slot, index)
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return leveling
-    raise AssertionError(f"KSante {slot}[{index}] has no leveling {attribute!r}")
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        raise AssertionError(f"KSante {slot}[{index}] has no leveling {attribute!r}")
+    return leveling
 
 
 def _extract(slot: str, attribute: str, rank: int, stats: dict) -> float:

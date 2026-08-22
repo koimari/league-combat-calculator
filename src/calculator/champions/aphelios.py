@@ -26,11 +26,12 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, CC_PER_PART, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
+from .module_contract import coverage
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -366,18 +367,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "r_followup_targets",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Locked-on targets hit by Moonlight Vigil follow-up attacks "
-            "(each takes one 100% AD main-weapon attack with on-hits)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "R"},
-    },
+    int_option(
+        "r_followup_targets",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Locked-on targets hit by Moonlight Vigil follow-up attacks "
+        "(each takes one 100% AD main-weapon attack with on-hits)",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
     {
         "key": "aphelios_main_weapon",
         "type": "select",
@@ -387,52 +385,42 @@ OPTIONS = [
             {"value": key, "label": label} for key, label in _WEAPON_LABELS.items()
         ],
     },
-    {
-        "key": "aphelios_bonus_ad_points",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 6,
-        "label": "Weapon Master AD points",
-    },
-    {
-        "key": "aphelios_bonus_as_points",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 6,
-        "label": "Weapon Master AS points",
-    },
-    {
-        "key": "aphelios_lethality_points",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 6,
-        "label": "Weapon Master lethality points",
-    },
-    {
-        "key": "aphelios_overheal_shield",
-        "type": "bool",
-        "default": True,
-        "label": "Severum overheal converts into a shield",
-    },
+    int_option(
+        "aphelios_bonus_ad_points",
+        0,
+        minimum=0,
+        maximum=6,
+        label="Weapon Master AD points",
+    ),
+    int_option(
+        "aphelios_bonus_as_points",
+        0,
+        minimum=0,
+        maximum=6,
+        label="Weapon Master AS points",
+    ),
+    int_option(
+        "aphelios_lethality_points",
+        0,
+        minimum=0,
+        maximum=6,
+        label="Weapon Master lethality points",
+    ),
+    bool_option(
+        "aphelios_overheal_shield",
+        True,
+        label="Severum overheal converts into a shield",
+    ),
 ]
 
 # The Weapon Queue System has nothing to price — it is the prompt that
 # reorders the next weapons, with no gameplay effect of its own — so the
 # packet's own no_damage row is what E emits, and the slot is no_damage
 # rather than an axis the engine is missing.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -490,7 +478,7 @@ def derive_self_healing(
         # post-mitigation damage dealt".  An attack that dealt nothing heals
         # nothing, and Onslaught's six attacks are six payments of their own
         # shares, not six copies of one.
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             lambda source: source in {"auto_attacks", "Q"},
             damage_events,
@@ -500,16 +488,16 @@ def derive_self_healing(
             # count as ability attacks for the heal.
             ratio = (
                 basic_ratio
-                if _healing._event_source(event) == "auto_attacks"
+                if _healing.event_source(event) == "auto_attacks"
                 else ability_ratio
             )
             amount = max(0.0, float(event.get("damage", 0.0))) * ratio
-            _healing._heal_from_damage(healing, event, amount, "Severum")
+            _healing.heal_from_damage(healing, event, amount, "Severum")
             if overheal_shield and amount > 0.0 and shield_cap > 0.0:
                 healing[-1]["overheal_to_shield"] = True
                 healing[-1]["overheal_shield_cap"] = shield_cap
                 healing[-1]["overheal_shield_duration"] = 30.0
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Aphelios", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Aphelios")(derive_self_healing)

@@ -61,6 +61,7 @@ from src.calculator.survival.actions import (
     ActionKind,
     TransitionRank,
 )
+from tests.survival_probe import survival_of
 
 # Rank pins for hand-math tests (independent of level/skill order).
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 2}
@@ -152,14 +153,6 @@ def _events(combat: dict, *, attacker: str, target: str, source: str) -> list[di
         and event.get("target") == target
         and event.get("source") == source
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _briar_against_corki(*, champion_options: dict | None, duration: float = 5.0):
@@ -605,8 +598,8 @@ class TestReductionWindow:
         # The window's total saving is exactly the in-window 35%: the
         # reduced fight takes 0.65x of the in-window baseline packets and
         # the full amount of every post-window packet.
-        on_taken = _survival(with_window, "enemy:Briar")["damage_taken"]
-        off_taken = _survival(baseline, "enemy:Briar")["damage_taken"]
+        on_taken = survival_of(with_window, "enemy:Briar")["damage_taken"]
+        off_taken = survival_of(baseline, "enemy:Briar")["damage_taken"]
         # damage_taken is rounded to one decimal; the recomputed saving is
         # exact, so allow the display rounding.
         assert on_taken == pytest.approx(
@@ -684,7 +677,7 @@ class TestTerrainCollisionControl:
             assert atoms[0]["units"] == ["s", "s"]
             assert atoms[0]["hash"]
 
-        survival = _survival(combat, "enemy:Aatrox")
+        survival = survival_of(combat, "enemy:Aatrox")
         assert survival["action_downtime"] == pytest.approx(2.0)
         assert survival["crowd_control_until"] == pytest.approx(3.0)
         assert [
@@ -722,7 +715,7 @@ class TestTerrainCollisionControl:
         # sequence is still the only thing that locks the target out.
         assert [event.get("cc_kind") for event in controls] == ["knockback"]
         assert all("cc_duration" not in event for event in controls)
-        assert _survival(combat, "enemy:Aatrox")["action_downtime"] == 0.0
+        assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == 0.0
 
     def test_module_parses_control_events_with_atoms(self, briar_data):
         """Parse-level: the entry carries both ControlEvents and the

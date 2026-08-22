@@ -22,6 +22,7 @@ from dataclasses import dataclass, field, fields, replace
 from types import MappingProxyType
 from typing import Any
 
+from ..cleanse_eligibility import merged_interval_duration
 from ..delivery_eligibility import (
     delivery_declarations_receipt,
     spell_shield_rules_receipt,
@@ -76,45 +77,6 @@ class AttackerOutcome:
     death_time: float | None
     sources: tuple[Mapping[str, Any], ...] = ()
     utility_outcomes: Mapping[str, Any] | None = None
-
-
-def merged_interval_duration(intervals: Sequence[Mapping[str, Any]]) -> float:
-    """The union length of one participant's authored inactive intervals.
-
-    Union rather than sum: two controls overlapping in time cost the actor
-    one window of downtime and not two, so a total that added them would
-    publish more downtime than the fight is long.
-
-    It lives here rather than beside its reader for criterion 3's reason:
-    the survival row publishes this number, and a view that folded the
-    intervals itself would be a second producer of it.
-    """
-    # The overwhelmingly common answer, taken without allocating: almost no
-    # participant of almost any fight is ever inactive, and this fold runs
-    # once per participant per walk on the optimizer's hot path.
-    if not intervals:
-        return 0.0
-    ordered: list[tuple[float, float]] = []
-    for interval in intervals:
-        try:
-            start = float(interval.get("start", 0.0))
-            end = float(interval.get("end", 0.0))
-        except (TypeError, ValueError):
-            continue
-        if end > start:
-            ordered.append((start, end))
-    ordered.sort()
-    total = 0.0
-    current_start = current_end = 0.0
-    for start, end in ordered:
-        if start > current_end:
-            total += current_end - current_start
-            current_start, current_end = start, end
-        else:
-            current_end = max(current_end, end)
-    if ordered:
-        total += current_end - current_start
-    return max(0.0, total)
 
 
 def _crowd_control_immunity(state: Mapping[str, Any]) -> dict[str, Any] | None:

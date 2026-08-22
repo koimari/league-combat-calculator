@@ -19,6 +19,7 @@ from src.calculator.champions.engine import (
     CC_PER_PART,
     DAMAGE,
     PHASE_ORDER,
+    SlotCtx,
     build_parser,
 )
 from src.calculator.damage import _declared_cc_marker
@@ -29,7 +30,6 @@ from src.calculator.champions.slotlib import (
     damage_entry,
     extract_value,
     find_named_leveling,
-    on_hit_auto,
     pct_health_per_hit,
     proc_damage,
     simple_damage,
@@ -1010,22 +1010,25 @@ class TestEntryKeyValidation:
 
 
 class TestPassiveSlot:
-    """P slot maps to the "passive" results key; on_hit_auto detection."""
+    """The P slot maps to the "passive" results key."""
 
     def test_p_slot_keys_result_as_passive(self) -> None:
         """The P slot's entry lands under the "passive" results key."""
-        champ = _champion(
-            P=[
-                _ability(
-                    name="Test Passive",
-                    description="Basic attacks deal bonus magic damage on-hit.",
-                    leveling=[
-                        _leveling("Magic Damage", [float(5 + i) for i in range(18)])
-                    ],
-                )
-            ],
-        )
-        parse = build_parser({"P": on_hit_auto()}, "TestChamp")
+        champ = _champion(P=[_ability(name="Test Passive")])
+
+        def passive_parser(_ctx):
+            return ability_on_hit_entry(
+                "Test Passive",
+                1,
+                "magic",
+                {
+                    "name": "Test Passive (on-hit)",
+                    "damage_per_hit": 14.0,
+                    "damage_type": "magic",
+                },
+            )
+
+        parse = build_parser({"P": passive_parser}, "TestChamp")
         results = parse(champ, 10, 0.0)
         assert "passive" in results
         assert results["passive"]["on_hit"]["damage_per_hit"] == 14.0
@@ -1063,35 +1066,6 @@ class TestPassiveSlot:
         # The recast shares its container's rank and cooldown.
         assert results["Q2"]["rank"] == results["Q"]["rank"] == 5
         assert results["Q2"]["cooldown"] == results["Q"]["cooldown"] == 5.0
-
-    def test_on_hit_auto_requires_keywords(self) -> None:
-        """A passive without on-hit keywords emits nothing."""
-        champ = _champion(
-            P=[
-                _ability(
-                    name="Not On-Hit",
-                    description="Deals damage in an area around the champion.",
-                    leveling=[_leveling("Magic Damage", [10.0] * 18)],
-                )
-            ],
-        )
-        parse = build_parser({"P": on_hit_auto()}, "TestChamp")
-        assert parse(champ, 10, 0.0) == {}
-
-    def test_on_hit_auto_requires_damage_type(self) -> None:
-        """A passive without a damageType field emits nothing."""
-        champ = _champion(
-            P=[
-                _ability(
-                    name="Utility Passive",
-                    damage_type=None,
-                    description="Basic attacks slow the target on-hit.",
-                    leveling=[_leveling("Slow", [20.0] * 18, units=["%"] * 18)],
-                )
-            ],
-        )
-        parse = build_parser({"P": on_hit_auto()}, "TestChamp")
-        assert parse(champ, 10, 0.0) == {}
 
 
 # ---------------------------------------------------------------------------
@@ -1624,3 +1598,62 @@ class TestSingleHitSpansOneLanding:
         )
         results = parse(_champion(Q=[_ability()]), 9, 0.0)
         assert results["Q"]["parts"][0].time_offset is None
+
+
+class TestSlotCtxRanked:
+    """``SlotCtx.ranked()`` — the guard prologue every slot parser opens with."""
+
+    @staticmethod
+    def _ctx(abilities: dict, **overrides) -> SlotCtx:
+        fields = {
+            "slot": "Q",
+            "champion_name": "TestChamp",
+            "abilities": abilities,
+            "level": 9,
+            "ability_ranks": {"Q": 3, "W": 2},
+            **overrides,
+        }
+        return SlotCtx(**fields)
+
+    def test_a_ranked_ability_returns_its_json_and_rank(self) -> None:
+        ability = _ability()
+        assert self._ctx({"Q": [ability]}).ranked() == (ability, 3)
+
+    def test_an_absent_ability_is_none(self) -> None:
+        assert self._ctx({}).ranked() is None
+
+    def test_an_unranked_ability_is_none(self) -> None:
+        ctx = self._ctx({"Q": [_ability()]}, ability_ranks={"Q": 0})
+        assert ctx.ranked() is None
+
+    def test_the_ability_test_runs_before_the_rank_test(self) -> None:
+        """An absent entry answers None whatever the rank would resolve to,
+        so a champion the cache never delivered fails one way."""
+
+        class _NoRank(SlotCtx):
+            def rank_for(self, slot: str | None = None) -> int:
+                raise AssertionError("rank_for must not run for an absent ability")
+
+        ctx = _NoRank(slot="Q", champion_name="TestChamp", abilities={}, level=9)
+        assert ctx.ranked() is None
+
+    def test_slot_and_index_select_the_entry(self) -> None:
+        second = _ability(name="Second")
+        ctx = self._ctx({"W": [_ability(name="First"), second]})
+        assert ctx.ranked("W", 1) == (second, 2)
+        assert ctx.ranked("W", 2) is None
+
+    def test_it_matches_the_prologue_it_replaced(self) -> None:
+        for abilities, ranks in (
+            ({"Q": [_ability()]}, {"Q": 3}),
+            ({"Q": [_ability()]}, {"Q": 0}),
+            ({}, {"Q": 3}),
+            ({}, {"Q": 0}),
+        ):
+            ctx = self._ctx(abilities, ability_ranks=ranks)
+            ability = ctx.ability()
+            expected = None
+            if ability is not None:
+                rank = ctx.rank_for()
+                expected = None if rank < 1 else (ability, rank)
+            assert ctx.ranked() == expected

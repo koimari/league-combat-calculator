@@ -135,7 +135,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -145,6 +145,7 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .inputs import bool_option
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
@@ -201,12 +202,10 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
     ``NaafiriADPercentBoost``) and for why the branch's bonus movement
     speed stays a documented rider instead of a ``stat_buff`` key.
     """
-    ability = ctx.ability("W", 0)
-    if ability is None:
+    ranked = ctx.ranked("W", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     entry = damage_entry(
         ability.get("name", "The Call of the Pack"),
@@ -325,12 +324,10 @@ def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: initial dagger + 10 bleed ticks + the recast's bonus damage."""
-    ability = ctx.ability("Q", 0)
-    if ability is None:
+    ranked = ctx.ranked("Q", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     initial = extract_named(
         ability, "Initial Physical Damage", rank, ctx.stats, ctx.target
@@ -395,12 +392,10 @@ def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: dash damage plus the Flurry explosion on arrival."""
-    ability = ctx.ability("E", 0)
-    if ability is None:
+    ranked = ctx.ranked("E", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     dash = extract_named(ability, "Dash Physical Damage", rank, ctx.stats, ctx.target)
     flurry = extract_named(
@@ -464,20 +459,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
-    {
-        "key": "q_recast",
-        "type": "bool",
-        "default": True,
-        "label": "Q recast hits the bleeding target (bonus damage + heal)",
-    },
-    {
-        "key": "w_hunt",
-        "type": "bool",
-        "default": True,
-        "label": (
-            "W hunt is active (20% AD bonus attack damage + the raised " "Packmate cap)"
-        ),
-    },
+    bool_option(
+        "q_recast",
+        True,
+        label="Q recast hits the bleeding target (bonus damage + heal)",
+    ),
+    bool_option(
+        "w_hunt",
+        True,
+        label="W hunt is active (20% AD bonus attack damage + the raised "
+        "Packmate cap)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -541,7 +533,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # what the contract derives from SLOTS.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -552,9 +544,9 @@ def derive_self_healing(
 ):
     """Resolve Naafiri self-healing events from its authored packet."""
     healing = []
-    q_rank = _healing._rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_heal = _healing.extract_named(
-        _healing._ability(champion_data, "Q"), "Heal", q_rank, champion_stats
+        _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
     # One heal per Q cast: the module emits the initial hit at the cast
     # boundary, then the bleed ticks and the recast share later
@@ -562,17 +554,17 @@ def derive_self_healing(
     # hits an already-bleeding champion the same cast).  Matching cast
     # time to event time exactly drops a cast whose published time the
     # engine rounded, so the anchor is resolved by ``HealAnchor.CAST``.
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing,
             payment.event,
             q_heal,
             "Darkin Daggers",
             link_to_damage=False,
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Naafiri", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Naafiri")(derive_self_healing)

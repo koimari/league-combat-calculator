@@ -33,7 +33,7 @@ from functools import partial
 from typing import Any
 
 from .engine import BUFF, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -43,6 +43,8 @@ from .slotlib import (
     with_item_on_hits,
 )
 from .. import healing_helpers as _healing
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
@@ -327,15 +329,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "senna_mist_stacks",
-        "type": "int",
-        "default": 40,
-        "min": 0,
-        "max": 300,
-        "label": "Mist (soul) stacks",
-        "state": SENNA_MIST_RULE.public_receipt(),
-    },
+    int_option(
+        "senna_mist_stacks",
+        40,
+        minimum=0,
+        maximum=300,
+        label="Mist (soul) stacks",
+        state=SENNA_MIST_RULE.public_receipt(),
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -376,13 +377,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "rather than an unmodeled gap (no_damage, not out_of_scope).",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -393,17 +391,17 @@ def derive_self_healing(
 ):
     """Resolve Senna self-healing events from its authored packet."""
     healing = []
-    q = _healing._ability(champion_data, "Q")
-    q_rank = _healing._rank(ability_damages, "Q")
+    q = _healing.ability_json(champion_data, "Q")
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_heal = _healing.extract_named(q, "Healing", q_rank, champion_stats)
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
         event = payment.event
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing, event, q_heal, "Piercing Darkness", link_to_damage=False
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Senna", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Senna")(derive_self_healing)

@@ -84,10 +84,10 @@ fail-closed behavior.  CURRENT RUNTIME FACTS (verified before pinning):
   the EXACT ledger entry — amount must be > 0; a zero-amount shield
   arms nothing), the stat-buff packet kernel (bonus_armor /
   bonus_magic_resistance fields; NO bonus-AD / size / movement fields
-  on the stat-buff action), and the score gates
-  (compiled_support_receipt / unrepresentable_template_receipt:
-  support_kind=cleanse / support_kind=stat_buff / support_kind=
-  movement; crowd_control_resist representable).
+  on the stat-buff action), and the score gate
+  (unrepresentable_template_receipt: support_kind=cleanse /
+  support_kind=stat_buff / support_kind=movement; crowd_control_resist
+  representable).
 - Walk dispatch order (same-time ordering): SHIELD / STAT_BUFF /
   UTILITY kinds dispatch BEFORE the attacker-state gate (the
   QSS/Mercurial/GP/Rengar utility-before-gate carve-out), so a
@@ -177,8 +177,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
@@ -190,7 +188,6 @@ from src.calculator.cleanse_eligibility import (
     CHAMPION_CLEANSE_DECLARATIONS,
     ITEM_CLEANSE_DECLARATIONS,
     CleanseEligibility,
-    compiled_support_receipt,
     resolve_cleanse_item,
     truncate_intervals,
 )
@@ -201,23 +198,11 @@ from src.calculator.crowd_control_eligibility import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.data_fetcher import get_champion
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
+from tests.app_config import app_config
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _OLAF_DATA = _CHAMPION_DATA["Olaf"]
@@ -355,12 +340,8 @@ def _testing_client():
     rely on ``TESTING`` being False (the limiter is bypassed under
     TESTING), so this file must never leave the flag set.
     """
-    previous = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
+    with app_config(TESTING=True):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous
 
 
 def _app_combat(
@@ -404,14 +385,6 @@ def _app_combat(
         )
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()["combat"]
-
-
-def _survival(combat: dict, participant_id: str = "main") -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _cleanse_event_count(combat: dict) -> int:
@@ -498,7 +471,7 @@ def _kernel_survival(
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
     ]
-    return _simulate_survival(
+    return simulate_survival(
         combatants,
         {"main": list(controls or [])},
         {"main": []},
@@ -876,7 +849,7 @@ class TestNoR:
         # the full R surface (cleanse + immunity + stats).
         for ranks in (dict(_RANKS), {**_RANKS, "R": 1}):
             combat = _app_combat(ranks=ranks)
-            survival = _survival(combat)
+            survival = survival_of(combat)
             assert survival["cleanse"]["item"] == _R_CLEANSE_ITEM
             assert survival["cleanse_use"]["uses_after"] == 0
             assert survival["ragnarok_immunity"]["source"] == _R_CLEANSE_SOURCE
@@ -894,7 +867,7 @@ class TestNoR:
         result = _fight({}, one_rotation=True, ranks={**_RANKS, "R": 0})
         assert [c for c in result["cast_timeline"] if c["slot"] == "R"] == []
         combat = _app_combat(ranks={**_RANKS, "R": 0})
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert "cleanse" not in survival
         assert "cleanse_use" not in survival
         assert "crowd_control_immunity" not in survival
@@ -957,7 +930,7 @@ class TestNoR:
         meta = get_champion_options_meta("Olaf")
         assert not _r_option_keys(meta)
         combat = _app_combat()
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["cleanse"]["activation_time"] == pytest.approx(
             _r_activation_time(combat)
         )
@@ -1001,7 +974,7 @@ class TestRTiming:
         # instant — that is what ``_r_activation_time`` asserts — and the
         # immunity window opens on it, three sourced seconds long.
         combat = _app_combat()
-        survival = _survival(combat)
+        survival = survival_of(combat)
         activation = _r_activation_time(combat)
         assert survival["cleanse"]["activation_time"] == pytest.approx(activation)
         assert survival["ragnarok_immunity"]["start"] == pytest.approx(activation)
@@ -1150,7 +1123,7 @@ class TestCleanseOfActiveControls:
         # activates and still spends its one use; it simply finds nothing
         # active to remove, which the decision names.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         activation = _r_activation_time(combat)
         assert survival["crowd_control_intervals"] == []
         assert survival["crowd_control_until"] == pytest.approx(0.0)
@@ -1173,7 +1146,7 @@ class TestCleanseOfActiveControls:
         # cast, the declared item, the named control_not_active decision,
         # and the one-use latch spent exactly once.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         cleanse = survival["cleanse"]
         assert cleanse["activation_time"] == pytest.approx(_r_activation_time(combat))
         assert cleanse["eligible"] is False
@@ -1194,7 +1167,7 @@ class TestCleanseOfActiveControls:
         # Kernel-level contract: a cleanse packet authored at the cast
         # rides the Slice 4 kernel with the candidate exclusion set.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert set(
             CHAMPION_CLEANSE_DECLARATIONS[_R_CLEANSE_ITEM]["excluded_control_kinds"]
         ) == set(_R_EXCLUDED_KINDS)
@@ -1387,7 +1360,7 @@ class TestImmunityWindow:
         # sourced 3 seconds from there.
         combat = _app_combat(enemy="Garen")
         activation = _r_activation_time(combat)
-        immunity = _survival(combat)["ragnarok_immunity"]
+        immunity = survival_of(combat)["ragnarok_immunity"]
         assert immunity["source"] == _R_CLEANSE_SOURCE
         assert immunity["start"] == pytest.approx(activation)
         assert immunity["until"] == pytest.approx(activation + _R_DURATION)
@@ -1485,7 +1458,7 @@ class TestCastability:
         ]
         assert shield_rows, "Tough It Out shield missing"
         assert shield_rows[0]["time"] == pytest.approx(0.25)
-        assert _survival(combat)["support_shield_received"] == pytest.approx(130.0)
+        assert survival_of(combat)["support_shield_received"] == pytest.approx(130.0)
 
     def test_r_casts_while_crowd_controlled_and_cleanses(self):
         # P2-9 contract (the brief's contract #5): an R cast fires while
@@ -1752,7 +1725,7 @@ class TestBonusStateReceipts:
         # MERGE: the fixed-window claim is the point, so it is asserted as
         # a LENGTH — the window is the sourced 3 seconds from the cast,
         # never 3 + 2.5 — rather than as a pinned end instant.
-        immunity = _survival(combat)["ragnarok_immunity"]
+        immunity = survival_of(combat)["ragnarok_immunity"]
         assert immunity["until"] - immunity["start"] == pytest.approx(_R_DURATION)
         assert immunity["until"] == pytest.approx(
             _r_activation_time(combat) + _R_DURATION
@@ -1933,7 +1906,7 @@ class TestSameTimeOrdering:
         # per-cast receipt trio (cleanse + heal) landing at one
         # timestamp in the app fight.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         # The E8c W shield (support band) landed at 0.25 even though the
         # same-timestamp W heal + cleanse ordering is the walk's total
         # order — the shield row proves the support band executes at the
@@ -1953,7 +1926,7 @@ class TestSameTimeOrdering:
         # decision first against the pre-cast intervals, then the
         # immunity window, then the stat rows) never re-prices damage.
         combat = _app_combat(enemy="Ahri")
-        survival = _survival(combat)
+        survival = survival_of(combat)
         # MERGE: "the same activation" is the claim, so it is read off the
         # fight — ``_r_activation_time`` fails if the four receipts ever
         # disagree — instead of restating one instant three times.
@@ -2068,17 +2041,7 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
-        # The cleanse_eligibility MIRROR owns only the cleanse/movement
-        # kinds (stat_buff falls through to the compile module's own
-        # gate); the compile gate itself names support_kind=stat_buff.
-        assert (
-            compiled_support_receipt(
-                {"kind": "stat_buff", "amount": 0.0, "bonus_armor": 20.0}
-            )
-            is None
-        )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "stat_buff", "amount": 0.0, "bonus_armor": 20.0}
@@ -2086,18 +2049,16 @@ class TestScoreFailClosed:
             == "support_kind=stat_buff"
         )
         assert (
-            compiled_support_receipt({"kind": "movement", "amount": 70.0})
+            unrepresentable_template_receipt({"kind": "movement", "amount": 70.0})
             == "support_kind=movement"
         )
         assert (
-            compiled_support_receipt({"kind": "heal", "amount": 100.0, "cleanse": True})
+            unrepresentable_template_receipt(
+                {"kind": "heal", "amount": 100.0, "cleanse": True}
+            )
             == "support_cleanse"
         )
         # The Slice 8 resist arm is representable (it only arms state).
-        assert (
-            compiled_support_receipt({"kind": "crowd_control_resist", "amount": 0.0})
-            is None
-        )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "crowd_control_resist", "amount": 0.0}
@@ -2115,10 +2076,8 @@ class TestScoreFailClosed:
             "source": _R_CLEANSE_SOURCE,
             "time": 0.5,
         }
-        assert compiled_support_receipt(heal_template) is None
         assert unrepresentable_template_receipt(heal_template) is None
         marked = {**heal_template, "cleanse": True}
-        assert compiled_support_receipt(marked) == "support_cleanse"
         assert unrepresentable_template_receipt(marked) == "support_cleanse"
 
     def test_wired_score_models_or_receipts_the_r(self):
@@ -2145,7 +2104,6 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:olaf:r:cleanse:0",
         }
-        assert compiled_support_receipt(template) == "support_kind=cleanse"
         assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
 
 
@@ -2259,7 +2217,7 @@ class TestUnchangedBoundaries:
         assert rows[0]["amount"] == pytest.approx(130.0)
         assert rows[0]["time"] == pytest.approx(0.25)
         assert rows[0]["expires_at"] == pytest.approx(2.75)
-        survival = _survival(combat)
+        survival = survival_of(combat)
         assert survival["support_shield_received"] == pytest.approx(130.0)
         assert survival["shield_absorbed"] == pytest.approx(130.0)
 

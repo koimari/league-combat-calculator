@@ -65,6 +65,7 @@ from src.calculator.champions.naafiri import (
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests import game_binary
 
 _CHAMPIONS = fetch_champion_data()
 _BY_NAME = {data.get("name"): data for data in _CHAMPIONS.values()}
@@ -83,14 +84,6 @@ _TARGET = {
     "target_current_health": 2000.0,
     "target_missing_health": 0.0,
 }
-
-
-def _data_value(record: dict, name: str) -> list[float]:
-    """One named ``DataValues`` row out of a binary spell record."""
-    for entry in record.get("DataValues", []):
-        if entry.get("name") == name:
-            return list(entry.get("values") or [])
-    raise AssertionError(f"binary record has no DataValues row {name!r}")
 
 
 def _parse(level: int, *, options: dict | None = None, ranks: dict | None = None):
@@ -163,13 +156,13 @@ class TestSlotLabelsAreSwapped:
 
     def test_ad_steroid_lives_on_the_record_that_is_really_W(self):
         """NaafiriADPercentBoost sits on the wiki-W record, not wiki R."""
-        assert _data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
+        assert game_binary.data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
         with pytest.raises(AssertionError):
-            _data_value(_BIN_W_RECORD, "NaafiriADPercentBoost")
+            game_binary.data_value(_BIN_W_RECORD, "NaafiriADPercentBoost")
 
     def test_packmate_damage_modifier_lives_on_the_record_that_is_really_R(self):
         """The 10%-bonus-AD-per-Packmate modifier sits on the wiki-R record."""
-        modifier = _data_value(_BIN_W_RECORD, "PackmateModifier")
+        modifier = game_binary.data_value(_BIN_W_RECORD, "PackmateModifier")
         assert modifier[0] == pytest.approx(0.10, abs=1e-6)
 
 
@@ -181,17 +174,17 @@ class TestSlotLabelsAreSwapped:
 class TestHuntSteroid:
     def test_module_percent_matches_the_binary(self):
         """20.0 in the module == NaafiriADPercentBoost 0.20 in the game file."""
-        binary = _data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
+        binary = game_binary.data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
         assert all(value == pytest.approx(0.20, abs=1e-6) for value in binary)
         assert _HUNT_AD_PERCENT / 100.0 == pytest.approx(binary[0], abs=1e-6)
 
     def test_hunt_duration_matches_the_binary(self):
-        binary = _data_value(_BIN_R_RECORD, "Duration")
+        binary = game_binary.data_value(_BIN_R_RECORD, "Duration")
         assert _HUNT_DURATION == pytest.approx(binary[0])
 
     def test_steroid_is_unranked(self):
         """Both channels agree the 20% does not scale with W rank."""
-        binary = _data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
+        binary = game_binary.data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
         assert len(set(round(v, 6) for v in binary)) == 1
 
     def test_w_does_not_exist_at_level_one(self):

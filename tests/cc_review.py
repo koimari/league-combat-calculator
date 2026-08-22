@@ -14,7 +14,11 @@ file:
 This is a test helper, not a test module: it holds no assertions.
 """
 
+from dataclasses import dataclass
+from typing import Mapping
+
 from src.calculator.calculate import calculate_payload
+from src.calculator.champions import parse_champion_abilities
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import (
     load_public_champion,
@@ -43,6 +47,18 @@ CONTROL_WORDS = (
     "taunt",
 )
 
+# The wider screen a reviewed "none" is held to: every control word the
+# Wiki uses at all, not just the classes an item passive keys on.  A slot
+# reviewed as uncontrolled whose text carries one of these owes the
+# reader a named reason (its test's ``UNCONTROLLED_MENTIONS``).
+ANY_CONTROL_WORDS = CONTROL_WORDS + (
+    "cripple",
+    "disarm",
+    "drowsy",
+    "polymorph",
+    "silence",
+)
+
 _PROBE = {
     "level": 18,
     "items": ["Fimbulwinter"],
@@ -64,7 +80,7 @@ def slot_text(champion_data, slot):
     """
     return " ".join(
         (effect.get("description") or "")
-        for ability in champion_data["abilities"].get(slot, [])
+        for ability in champion_data["abilities"][slot]
         for effect in ability.get("effects", []) or []
     ).lower()
 
@@ -72,6 +88,12 @@ def slot_text(champion_data, slot):
 def control_words(text):
     """The control vocabulary present in *text*, sorted."""
     return sorted(word for word in CONTROL_WORDS if word in text)
+
+
+def any_control_hits(champion_data, slot):
+    """One slot's cached text screened against :data:`ANY_CONTROL_WORDS`."""
+    text = slot_text(champion_data, slot)
+    return sorted(word for word in ANY_CONTROL_WORDS if word in text)
 
 
 def fimbulwinter_coverage(champion, **window):
@@ -110,3 +132,45 @@ def unreviewed_ability_slots(champion, **window):
             if event.get("is_ability") and not event.get("cc_reviewed")
         }
     )
+
+
+@dataclass(frozen=True, slots=True)
+class ChampionReview:
+    """The reviewed-cc reads bound to one champion and its declared ranks.
+
+    A champion module's cc tests all ask the same four questions of the
+    same kit, so they name the kit once here instead of threading it
+    through every call.
+    """
+
+    champion: str
+    ranks: Mapping[str, int]
+
+    def slot_text(self, slot):
+        """Every cached description of one slot, lowercased and joined."""
+        return slot_text(kit(self.champion), slot)
+
+    def control_hits(self, slot):
+        """The control vocabulary one slot's cached text actually uses."""
+        return control_words(self.slot_text(slot))
+
+    def kinds(self, **options):
+        """Result key -> the reviewed kinds the slot's parts actually carry."""
+        parsed = parse_champion_abilities(
+            kit(self.champion),
+            18,
+            100.0,
+            self.ranks,
+            champion_options=options or None,
+        )
+        carried = {
+            key: sorted(
+                {part.cc_kind for part in entry.get("parts") or () if part.cc_kind}
+            )
+            for key, entry in parsed.items()
+        }
+        return {key: kinds for key, kinds in carried.items() if kinds}
+
+    def coverage(self, **window):
+        """The campaign's control-token probe, through the public entry."""
+        return fimbulwinter_coverage(self.champion, **window)

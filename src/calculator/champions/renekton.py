@@ -14,10 +14,11 @@ here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
 
 from functools import partial
 
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import extract_named, with_item_on_hits
-from ..healing_helpers import _ability, _event_source, _heal_from_damage, _rank
+from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
+from .module_contract import coverage
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 
@@ -70,10 +71,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "MODULE_COVERAGE reflects a sourced no-damage classification "
     "rather than an unmodeled gap (no_damage, not out_of_scope).",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
@@ -87,13 +85,13 @@ def derive_self_healing(
 ):
     """Cull the Meek pays its heal on every Q hit that lands."""
     healing: list[dict] = []
-    ability = _ability(champion_data, "Q")
-    rank = _rank(ability_damages, "Q")
+    ability = ability_json(champion_data, "Q")
+    rank = parsed_rank(ability_damages, "Q")
     amount = extract_named(ability, "Champion Healing", rank, champion_stats, {})
     for event in damage_events:
-        if _event_source(event) == "Q":
-            _heal_from_damage(healing, event, amount, "Cull the Meek")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        if event_source(event) == "Q":
+            heal_from_damage(healing, event, amount, "Cull the Meek")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Renekton", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Renekton")(derive_self_healing)

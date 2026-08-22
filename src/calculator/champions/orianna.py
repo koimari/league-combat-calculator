@@ -42,6 +42,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -99,12 +100,10 @@ def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     exactly 70% of "Magic Damage" at every rank.  Each secondary target
     selected via ``q_secondary_targets`` takes one reduced hit.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     primary = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -146,12 +145,10 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
     "Shield Strength" row by name — only the fly-through "Magic Damage"
     is a damage source, and only when the ball crosses the target.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = 0.0
     if ctx.options.get("e_passes_through_target", True):
@@ -170,24 +167,16 @@ def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "q_secondary_targets",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Enemies hit by the ball beyond the first (each takes the "
-            "sourced 70% Reduced Damage row)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "Q"},
-    },
-    {
-        "key": "e_passes_through_target",
-        "type": "bool",
-        "default": True,
-        "label": "E ball passes through target",
-    },
+    int_option(
+        "q_secondary_targets",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Enemies hit by the ball beyond the first (each takes the "
+        "sourced 70% Reduced Damage row)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
+    bool_option("e_passes_through_target", True, label="E ball passes through target"),
 ]
 
 ASSUMPTIONS = [

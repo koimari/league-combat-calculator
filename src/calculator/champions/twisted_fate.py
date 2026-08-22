@@ -35,6 +35,8 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
+from .inputs import int_option
+from .module_contract import coverage
 
 # Pick a Card's three card branches, in the cycle order the game presents
 # (gold -> red -> blue).  The wiki JSON stores the "Magic Damage" rows as
@@ -54,12 +56,10 @@ def _card_parser(occurrence: int, name: str, cc_kind: str):
     """One selected card's magic damage (flat + 100% AD + AP ratio)."""
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
+        ability, rank = ranked
         leveling = find_named_leveling(ability, "Magic Damage", occurrence)
         if leveling is None:
             return None
@@ -137,23 +137,10 @@ SLOTS = {
     ),
 }
 
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="PR")
 
 OPTIONS = [
-    {
-        "key": "w_card",
-        "type": "int",
-        "default": 0,
-        "label": "Pick a Card selection",
-        "min": 0,
-        "max": 2,
-    },
+    int_option("w_card", 0, minimum=0, maximum=2, label="Pick a Card selection"),
 ]
 
 # Reviewed crowd control, read from the cached kit.  Q (Wild Cards)

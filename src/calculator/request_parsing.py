@@ -1,11 +1,13 @@
 """Shared coercion policy for public request scalars and name lists.
 
 Public integers accept JSON integers and canonical base-10 integer strings.
-Public numbers additionally accept finite numeric strings. Booleans are never
-numbers, and strings/collections are otherwise never implicitly coerced.
+Booleans are never numbers, and strings/collections are otherwise never
+implicitly coerced. Public *floats* are parsed by
+``pipeline._bounded_request_float``, which owns them because every one of
+them is a key of ``pipeline.PUBLIC_INPUT_LIMITS`` and carries that table's
+range rather than a caller-supplied one.
 """
 
-import math
 from collections.abc import Mapping
 
 
@@ -53,26 +55,18 @@ def request_int(
     return parsed
 
 
-def request_number(
+def request_optional_int(
     data: Mapping[str, object],
     key: str,
-    default: float,
-    minimum: float,
-    maximum: float,
-) -> float:
-    """Read one bounded finite number, accepting finite numeric strings."""
-    value = data.get(key, default)
-    if isinstance(value, bool):
-        raise ValueError(f"{key} must be a number")
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"{key} must be a number") from exc
-    if not math.isfinite(parsed):
-        raise ValueError(f"{key} must be finite")
-    if not minimum <= parsed <= maximum:
-        raise ValueError(f"{key} must be between {minimum:g} and {maximum:g}")
-    return parsed
+    minimum: int,
+    maximum: int,
+) -> int | None:
+    """Read one bounded integer, or ``None`` when the request omits it:
+    ``None`` and an empty string both spell "not supplied", so there is no
+    default to return and a supplied value reads under :func:`request_int`."""
+    if data.get(key) in (None, ""):
+        return None
+    return request_int(data, key, default=minimum, minimum=minimum, maximum=maximum)
 
 
 def request_bool(data: Mapping[str, object], key: str, default: bool) -> bool:

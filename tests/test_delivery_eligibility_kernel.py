@@ -6,8 +6,8 @@ the six typed delivery declarations with source receipts, deterministic
 delivery classification (projectile / hitscan / area / targeted / basic
 attack / damage over time), the named fail-closed path for unclassifiable
 deliveries, window boundaries (start inclusive, end exclusive), source-
-slot and event-id selection, the legacy ``defense_matches`` delivery
-gates reproduced exactly, and the orthogonal composition rules (finite
+slot and event-id selection, the delivery acceptance gates, and the
+orthogonal composition rules (finite
 uses, first-valid-hit, destruction, later-hit reduction).
 """
 
@@ -243,7 +243,7 @@ class TestSourceSelection:
 
 
 # ---------------------------------------------------------------------------
-# Delivery acceptance (the legacy defense_matches gates, typed)
+# Delivery acceptance
 # ---------------------------------------------------------------------------
 
 
@@ -260,7 +260,7 @@ class TestDeliveryAcceptance:
         )
         assert (denied, reason) == (False, "delivery_not_accepted")
 
-    def test_basic_and_area_only_defense_matches_jax(self) -> None:
+    def test_basic_and_area_only_defense_jax(self) -> None:
         rule = de.DeliveryAcceptance(
             requires_skillshot=False,
             blocks_basic_attacks=True,

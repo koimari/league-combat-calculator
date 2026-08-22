@@ -56,6 +56,7 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
+from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
@@ -69,12 +70,10 @@ _R_SHRED_SECONDS = 4.0
 
 def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the empowered attack's flat armour shred on the marked target."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     landed = bool(ctx.option("r_thrill_attack"))
     shred = extract_value(ability, "Armor Reduction", rank)
@@ -196,12 +195,10 @@ def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Savagery — base or Ferocity-empowered (level array) bonus damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     # Both part sets are emitted unconditionally (P3 package 3V): the
     # engine prices the FEROCITY parts for a live empowered cast (the
     # post-rotation stack walk's consume) and the base parts otherwise,
@@ -240,12 +237,10 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: Battle Roar — base or Ferocity-empowered (level array) magic damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     base_damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Magic Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
@@ -279,12 +274,10 @@ def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     kind: the base bola "slows them for 1.75 seconds",
     and the empowered one roots "instead of slowed".
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     base_damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
@@ -366,25 +359,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "p_ferocity",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 4,
-        "label": "Ferocity stacks (4 = empowered next)",
-        # Public kernel receipt for the user decision: the option seeds
-        # the typed Ferocity stack state (state_lifecycle) whose rule
-        # carries the cap, the 1-second per-stack expiry, the no-refresh
-        # rule, and the 10-second in-combat expiry freeze.
-        "state": RENGAR_FEROCITY_STACK_RULE.public_receipt(),
-    },
-    {
-        "key": "r_thrill_attack",
-        "type": "bool",
-        "default": True,
-        "label": "Thrill of the Hunt's empowered attack lands (armour shred)",
-        "rotation": {
+    int_option(
+        "p_ferocity",
+        0,
+        minimum=0,
+        maximum=4,
+        label="Ferocity stacks (4 = empowered next)",
+        state=RENGAR_FEROCITY_STACK_RULE.public_receipt(),
+    ),
+    bool_option(
+        "r_thrill_attack",
+        True,
+        label="Thrill of the Hunt's empowered attack lands (armour shred)",
+        rotation={
             "role": "self_state",
             "slot": "R",
             "note": (
@@ -392,7 +379,7 @@ OPTIONS = [
                 "target_debuff atom."
             ),
         },
-    },
+    ),
 ]
 
 

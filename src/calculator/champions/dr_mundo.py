@@ -38,9 +38,9 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -50,6 +50,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — W's charge lasts 3.0s and ticks 4
 # times a second, so the charge total is per-tick x 12.
@@ -125,12 +126,10 @@ def _maximum_dosage(ctx: SlotCtx) -> dict[str, Any] | None:
     never reach items that convert BONUS health (Overlord's Bloodmail).
     ``base_health`` is the fight engine's key for that distinction.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     # "% missing health" is Mundo's OWN missing health — no scaling unit
     # covers that, so the percentage is read raw and applied here.
@@ -257,12 +256,10 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
     not decay its own target across casts. The floor is not decoration —
     at rank 5 it takes over below roughly 933 target health.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     percent = extract_value(ability, "Magic Damage", rank) / 100.0
     minimum = extract_value(ability, "Minimum Damage", rank)
@@ -311,12 +308,10 @@ def _heart_zapper(ctx: SlotCtx) -> dict[str, Any] | None:
     — the field "does so automatically after the duration" — so it is one
     guaranteed instance per W cast, folded into the same entry.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
@@ -350,37 +345,29 @@ def _heart_zapper(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "mundo_missing_health_percent",
-        "type": "int",
-        "default": _DEFAULT_MISSING_HEALTH_PERCENT,
-        "min": 0,
-        "max": 100,
-        "label": "Dr. Mundo's missing health (%)",
-    },
-    {
-        "key": "r_nearby_champions",
-        "type": "int",
-        "default": _DEFAULT_NEARBY_CHAMPIONS,
-        "min": 0,
-        "max": R_MAX_NEARBY_CHAMPIONS,
-        "label": "Enemy champions near R cast (rank 3 bonus)",
-    },
-    {
-        "key": "e_reset_throughput",
-        "type": "bool",
-        "default": False,
-        "label": (
-            "Model Blunt Force Trauma's attack-reset throughput: each "
-            "accepted E cast buys one extra basic attack (the wiki: "
-            "'Blunt Force Trauma resets Dr. Mundo's basic attack timer'; "
-            "the binary Trait_AttackReset tag; the acceleration magnitude "
-            "is script-side)"
-        ),
-        # NO rotation metadata — a throughput assertion is not a rotation
-        # edge (centrally classified irrelevant, the q_tumble_reset
-        # precedent).
-    },
+    int_option(
+        "mundo_missing_health_percent",
+        _DEFAULT_MISSING_HEALTH_PERCENT,
+        minimum=0,
+        maximum=100,
+        label="Dr. Mundo's missing health (%)",
+    ),
+    int_option(
+        "r_nearby_champions",
+        _DEFAULT_NEARBY_CHAMPIONS,
+        minimum=0,
+        maximum=R_MAX_NEARBY_CHAMPIONS,
+        label="Enemy champions near R cast (rank 3 bonus)",
+    ),
+    bool_option(
+        "e_reset_throughput",
+        False,
+        label="Model Blunt Force Trauma's attack-reset throughput: each "
+        "accepted E cast buys one extra basic attack (the wiki: "
+        "'Blunt Force Trauma resets Dr. Mundo's basic attack timer'; "
+        "the binary Trait_AttackReset tag; the acceleration magnitude "
+        "is script-side)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -454,14 +441,14 @@ parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
 # P damages nothing and has no cast, so it emits no row; the self-heal
 # rule is what prices its regeneration, and that is the channel the map
 # names.
-MODULE_COVERAGE = {slot: "modeled" for slot in "PQWER"}
+MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
 SOURCES = load_champion_sources("Dr. Mundo")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -479,8 +466,8 @@ def derive_self_healing(
     receipts across multiple defenders.
     """
     healing = []
-    r = _healing._ability(champion_data, "R")
-    r_rank = _healing._rank(ability_damages, "R")
+    r = _healing.ability_json(champion_data, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     per_tick = _healing.extract_named(
         r, "Health Regenerated per 0.5 Seconds", r_rank, champion_stats, {}
     )
@@ -517,7 +504,7 @@ def derive_self_healing(
     # passive's additional stream alone.
     level = int(champion_stat(champion_stats, "level"))
     regen_percent = extract_value(
-        _healing._ability(champion_data, "P"),
+        _healing.ability_json(champion_data, "P"),
         "Max Health Damage",
         level,
         level=level,
@@ -537,7 +524,7 @@ def derive_self_healing(
                 }
             )
             tick += 0.5
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Dr. Mundo", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Dr. Mundo")(derive_self_healing)

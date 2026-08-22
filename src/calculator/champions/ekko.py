@@ -7,10 +7,11 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option, int_option
 
 
 def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -33,12 +34,10 @@ _resonance_proc = proc_damage(
 
 
 def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     initial = extract_named(
         ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -63,12 +62,10 @@ def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     ready = bool(ctx.options.get("w_passive_ready", False))
     entry = no_damage(
         ctx,
@@ -100,12 +97,10 @@ _parallel_convergence.phase = ONHIT
 
 
 def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Phase Dive"),
@@ -125,12 +120,10 @@ def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _chronobreak(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Chronobreak"),
@@ -164,29 +157,22 @@ MODULE_CC = {"Q": "slow", "E": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Ekko", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "p_procs",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 10,
-        "label": "Z-Drive Resonance detonations (3 stacks each)",
-    },
-    {
-        "key": "w_passive_ready",
-        "type": "bool",
-        "default": False,
-        "label": "Parallel Convergence passive ready",
-    },
-    {
-        "key": "w_target_missing_health",
-        "type": "float",
-        "default": 0.5,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.05,
-        "label": "W target missing-health ratio",
-    },
+    int_option(
+        "p_procs",
+        0,
+        minimum=0,
+        maximum=10,
+        label="Z-Drive Resonance detonations (3 stacks each)",
+    ),
+    bool_option("w_passive_ready", False, label="Parallel Convergence passive ready"),
+    float_option(
+        "w_target_missing_health",
+        0.5,
+        minimum=0.0,
+        maximum=1.0,
+        label="W target missing-health ratio",
+        step=0.05,
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -199,7 +185,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Ekko")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -210,18 +196,21 @@ def derive_self_healing(
 ):
     """Resolve Ekko self-healing events from its authored packet."""
     healing = []
-    r_rank = _healing._rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     r_heal = _healing.extract_named(
-        _healing._ability(champion_data, "R"), "Minimum Heal", r_rank, champion_stats
+        _healing.ability_json(champion_data, "R"),
+        "Minimum Heal",
+        r_rank,
+        champion_stats,
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
     ):
         event = payment.event
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing, event, r_heal, "Chronobreak", link_to_damage=False
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Ekko", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Ekko")(derive_self_healing)
