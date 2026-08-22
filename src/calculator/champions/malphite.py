@@ -72,7 +72,6 @@ def _seismic_shard(packet_q):
             window = _DEFAULT_FIGHT_WINDOW_SECONDS
         if not window or window <= 0.0:
             window = _DEFAULT_FIGHT_WINDOW_SECONDS
-        entry["event_order_certified"] = "single_hit"
         return attach_self_shield(
             entry,
             amount=shield,
@@ -164,7 +163,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # Ground Slam is one slam on the enemies around Malphite and
     # Unstoppable Force is one arrival — one part and one hit each, which
     # is what carries their reviewed control into the event ledger.
-    single_hit_slots=frozenset({"E", "R"}),
+    single_hit_slots=frozenset({"E", "Q", "R"}),
     slot_parsers={
         "W": _thunderclap,
     },

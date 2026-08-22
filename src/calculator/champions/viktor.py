@@ -100,11 +100,6 @@ def _siphon_power(packet_q):
                 "on-hit"
             ),
         )
-        # One projectile hit at the cast boundary: certifying the packet lets
-        # the damage engine declare its event ledger, which is what carries
-        # the module-authored self-shield payload onto the event row (the
-        # Ambessa W convention).
-        entry["event_order_certified"] = "single_hit"
         if bool(ctx.options.get("q_discharge", True)):
             ability = ctx.ability()
             discharge = extract_named(
@@ -149,8 +144,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     ),
     # One beam, one hit: "fires an energy beam along the target path that
     # deals magic damage to enemies hit" — the packet has no travel or tick
-    # phase to place, so the hit lands at the cast.
-    single_hit_slots=frozenset({"E"}),
+    # phase to place, so the hit lands at the cast.  Q is one projectile hit
+    # at the same boundary, and certifying it is what carries the
+    # module-authored self-shield payload onto the event row.
+    single_hit_slots=frozenset({"E", "Q"}),
     slot_parsers={
         "R": initial_plus_ticks_parser(
             initial_attr="Magic Damage",

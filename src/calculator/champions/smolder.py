@@ -99,7 +99,6 @@ def _super_scorcher_breath(packet_q):
         entry = packet_q(ctx)
         if entry is None:
             return None
-        entry["event_order_certified"] = "single_hit"
 
         crit_chance = min(
             1.0,
@@ -178,7 +177,7 @@ MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Smolder",
     PACKET_SHA256,
-    single_hit_slots=frozenset({"R"}),
+    single_hit_slots=frozenset({"Q", "R"}),
     slot_parsers={
         "P": _dragon_practice,
         "W": _achooo,

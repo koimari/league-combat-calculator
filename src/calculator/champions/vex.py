@@ -55,7 +55,6 @@ def _personal_space(packet_w):
         shield = extract_named(
             ctx.ability(), "Shield Strength", rank, ctx.stats, ctx.target
         )
-        entry["event_order_certified"] = "single_hit"
         return attach_self_shield(
             entry,
             amount=shield,
@@ -126,6 +125,7 @@ MODULE_CC = {"P": "none", "W": "none"}
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vex",
     PACKET_SHA256,
+    single_hit_slots=frozenset({"W"}),
     slot_parsers={
         "P": _gloom_detonation,
     },
