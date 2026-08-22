@@ -19107,7 +19107,7 @@
           "cast_time": 0.75,
           "cooldown": 22.0,
           "damage_type": "physical",
-          "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed, which stays a sourced-but-unmodeled rider \u2014 see ASSUMPTIONS.  The untargetability and the Packmate vanish/reappear are state.",
+          "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed, published as a move_speed_percent stat buff \u2014 a term in the shared movement-speed fold.  The untargetability and the Packmate vanish/reappear are state.",
           "name": "The Call of the Pack",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
@@ -19116,7 +19116,8 @@
           "resource_cost": 60.0,
           "resource_type": "MANA",
           "stat_buff": {
-            "bonus_attack_damage": 14.6
+            "bonus_attack_damage": 14.6,
+            "move_speed_percent": 25.0
           },
           "total_raw": 0.0
         },
@@ -25628,13 +25629,16 @@
           "cast_time": 0.25,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Shield only, priced by the ally-support scanner. The cast's own 20% (+ 2% per 100 AP) grant (20% at this build) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold; its 2.5s decay, its 2-stack rule and the ally half of the grant are state.",
           "name": "Surround Sound",
           "parts": [],
           "rank": 3,
           "resource_cost": 80.0,
           "resource_type": "MANA",
           "skillshot": true,
+          "stat_buff": {
+            "move_speed_percent": 20.0
+          },
           "total_raw": 0.0
         },
         "passive": {
@@ -26652,7 +26656,7 @@
             "ability_power": 55.0,
             "armor": 55.0,
             "magic_resistance": 55.0,
-            "move_speed": 55.0
+            "move_speed_flat": 55.0
           },
           "total_raw": 0.0
         },
@@ -31173,12 +31177,15 @@
           ],
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The percent movement grants are not yet wired onto the shared move-speed fold (the named percent-movement boundary).",
+          "detail": "Stampede Stance: no damage row exists in the slot. Ghosting plus 25% bonus movement speed (+5% per 100 bonus AD) for 4s, decaying to 7.5% (+1.5% per 100 bonus AD) over 1.5s; the Awaken recast adds 75 bonus attack range, a per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus and 1.5s of crowd-control immunity. The empowered attack's 0.75s stun IS priced, as a sourced control event. The stance's own grant (25% at this build) is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold; the decayed row and the Awaken recast's per-level bonus are not published.",
           "name": "Blazing Stampede",
           "parts": [],
           "rank": 1,
           "resource_cost": 28.82,
           "resource_type": "MANA",
+          "stat_buff": {
+            "move_speed_percent": 25.0
+          },
           "total_raw": 0.0
         },
         "Q": {
@@ -52840,18 +52847,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 59946,
-      "numeric_leaves": 46172,
+      "leaves": 59949,
+      "numeric_leaves": 46175,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "35f2ec61cf272181be361119b7763b01f9f21795",
+    "git_head": "f8971b4f83352bd29c58e852a2436f1a326a0586",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "70db4bd0797ec3900fa4761ec045f7218ea9207c"
+    "src_tree_sha": "5f97a41b7d7d77ab910b3c8932c81ad40e23de4c"
   },
   "registered_champion_fights": {
     "Aatrox": {

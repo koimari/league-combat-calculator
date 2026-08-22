@@ -25,15 +25,18 @@ Unlike the Rumble/Rammus rails, the ceiling of 4 is a **sourced game
 value** (``MaxNotes``), not a sanity rail — ``TestNoteCapIsSourced``
 pins it against both the cached prose and the binary.
 
-**Two sourced riders are deliberately withheld**, and both withholdings
-are pinned so a later worker cannot quietly "finish" them:
+**Two ally-coupled riders are deliberately withheld**, and both
+withholdings are pinned so a later worker cannot quietly "finish" them:
+ally Notes (``AllyNoteDamagePercent`` 0.25) and the ally half of W's
+movement grant. Both require allied champions in range at Seraphine's
+cast times, structurally outside the 1v1 damage surface (the Rakan-E /
+Kai'Sa-R ally-coupling boundary).
 
-* ally Notes (``AllyNoteDamagePercent`` 0.25) — they require allied
-  champions in range at Seraphine's cast times, structurally outside the
-  1v1 damage surface (the Rakan-E / Kai'Sa-R ally-coupling boundary);
-* W's bonus movement speed, an additive PERCENT that the flat-scalar
-  ``stat_buff`` channel would push past
-  ``stats.apply_movement_speed_soft_caps`` (the Naafiri-W boundary).
+**W's own movement grant IS published**, as a ``move_speed_percent``
+``stat_buff`` that ``damage.py`` re-folds through
+``stats.resolve_move_speed`` (soft caps included). Its magnitude is
+prose rather than a leveling row, so the module constants are pinned
+against the cached sentence here.
 
 **W stays scanner-priced.** Being shield-only, W cannot carry
 ``attach_self_shield`` (that payload rides damage-event rows), so it is
@@ -57,9 +60,12 @@ from src.calculator.champions import (
 from src.calculator.champions.seraphine import (
     ASSUMPTIONS,
     _MAX_NOTES,
+    _W_MOVE_SPEED_PER_100_AP,
+    _W_MOVE_SPEED_PERCENT,
 )
 from src.calculator.data_fetcher import get_champion
-from src.calculator.stats import calculate_total_stats
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.stats import calculate_total_stats, resolve_move_speed
 from src.calculator.support_effects import derive_ally_effects
 from tests import game_binary
 
@@ -407,17 +413,80 @@ class TestSurroundSound:
         assert abilities["W"]["parts"] == ()
 
 
-class TestSurroundSoundMovementSpeedIsWithheld:
+class TestSurroundSoundMovementSpeedRidesTheSharedFold:
+    """W's SELF grant is published; the ally half has no 1v1 channel.
+
+    The magnitude is prose, not a leveling row, so the constants are
+    pinned against the cached sentence they were read from — a patch
+    that renumbers the grant fails here rather than leaving a stale
+    literal in the module.
+    """
+
     def test_cached_row_states_both_movement_terms(self):
         description = _WIKI["abilities"]["W"][0]["effects"][0]["description"]
-        assert "20% (+ 2% per 100 AP) decaying bonus movement speed" in description
+        assert (
+            f"{_W_MOVE_SPEED_PERCENT:g}% "
+            f"(+ {_W_MOVE_SPEED_PER_100_AP:g}% per 100 AP) "
+            "decaying bonus movement speed" in description
+        )
         assert "8% (+ 0.8% per 100 AP) bonus movement speed" in description
 
-    def test_no_move_speed_buff_is_emitted(self):
-        _, abilities = _parse(18, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
-        assert "stat_buff" not in abilities["W"]
+    def test_the_slot_has_no_leveling_row_for_the_grant(self):
+        """Why the module pins a constant instead of calling an accessor."""
+        attributes = {
+            row.get("attribute")
+            for entry in _WIKI["abilities"]["W"]
+            for effect in entry.get("effects", [])
+            for row in effect.get("leveling", [])
+        }
+        assert attributes == {"Shield Strength", "Heal"}
 
-    def test_withholding_names_the_soft_cap_channel(self):
+    def test_the_self_grant_is_published_as_a_move_speed_stat_buff(self):
+        _, abilities = _parse(18, ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
+        assert abilities["W"]["stat_buff"] == {
+            "move_speed_percent": _W_MOVE_SPEED_PERCENT
+        }
+
+    def test_the_ap_rider_scales_the_published_grant(self):
+        _, abilities = _parse(
+            18,
+            ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+            stats_override={"ability_power": 300.0},
+        )
+        assert abilities["W"]["stat_buff"]["move_speed_percent"] == pytest.approx(
+            _W_MOVE_SPEED_PERCENT + _W_MOVE_SPEED_PER_100_AP * 3.0
+        )
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        data = copy.deepcopy(_SERAPHINE)
+        build = calculate_total_stats(data, 18, [])
+        result = run_fight(
+            data,
+            18,
+            [],
+            FightParams(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=10.0,
+                ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+                deterministic=True,
+            ),
+        )
+        granted = _W_MOVE_SPEED_PERCENT + _W_MOVE_SPEED_PER_100_AP * (
+            build["ability_power"] / 100.0
+        )
+        buffed = result["champion_stats"]["move_speed"]
+
+        assert buffed == pytest.approx(
+            resolve_move_speed(
+                build["move_speed_flat"], build["move_speed_percent"] + granted
+            )
+        )
+        assert buffed > build["move_speed"]
+
+    def test_the_ally_half_stays_withheld(self):
         # Two assumptions mention Surround Sound (the older heal-pulse note
         # and this session's scanner note); select the scanner one.
         assumption = next(
@@ -427,7 +496,7 @@ class TestSurroundSoundMovementSpeedIsWithheld:
         )
         assert "resolve_move_speed" in assumption
         assert "soft caps" in assumption
-        assert "NOT modeled" in assumption
+        assert "ALLY half" in assumption
 
 
 # ---------------------------------------------------------------------------

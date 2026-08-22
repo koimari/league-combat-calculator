@@ -205,19 +205,62 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
         ]
         assert not [atom for atom in atoms if atom["atom_id"].startswith("damage")]
 
-    def test_e_percent_movement_is_not_published_as_a_stat_buff(self):
-        """The named Naafiri-W / Sivir-R percent-movement boundary.
+    def test_e_publishes_the_burst_grant_as_a_move_speed_stat_buff(self):
+        """The cast's own row, on the shared movement-speed channel.
 
-        Stats publishes the flat/percent pair and the shared
-        ``resolve_move_speed`` fold; Udyr E is not yet wired onto it, and
-        this pin records that absence — an over-credited movement number
-        would become Swiftmarch damage.
+        The magnitude is re-derived from the tracked cache rather than
+        restated: rank 5 of the "Bonus Movement Speed" ladder, with the
+        row's own "% per 100 bonus AD" modifier resolving to zero on a
+        no-item parse.
         """
         row = _parse()["E"]
 
-        assert "stat_buff" not in row
+        assert row["stat_buff"] == {
+            "move_speed_percent": _e_leveling("Bonus Movement Speed")[4]
+        }
         assert "auto_attack_override" not in row
-        assert "the named percent-movement boundary" in row["detail"]
+
+    def test_the_decayed_and_awaken_rows_stay_withheld(self):
+        """One scalar cannot carry a decay curve or an unoptioned recast."""
+        row = _parse()["E"]
+        decayed = _e_leveling("Decayed Bonus Movement Speed")[4]
+
+        assert row["stat_buff"]["move_speed_percent"] != pytest.approx(decayed)
+        assert "not published" in row["detail"]
+        assert any(
+            "Decayed Bonus Movement Speed" in text and "withheld" in text
+            for text in udyr.ASSUMPTIONS
+        )
+
+    def test_the_fight_folds_the_grant_through_the_shared_move_speed_call(self):
+        """Abilities, items and runes all land in one term list."""
+        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.stats import calculate_total_stats, resolve_move_speed
+
+        data = get_champion("Udyr")
+        build = calculate_total_stats(data, 18, [])
+        result = run_fight(
+            data,
+            18,
+            [],
+            FightParams(
+                target_health=2000.0,
+                target_armor=100.0,
+                target_magic_resistance=50.0,
+                fight_duration_seconds=10.0,
+                deterministic=True,
+            ),
+        )
+        # Level 18 derives E rank 5 (Udyr's ladder runs to 6).
+        granted = _e_leveling("Bonus Movement Speed")[4]
+        buffed = result["champion_stats"]["move_speed"]
+
+        assert buffed == pytest.approx(
+            resolve_move_speed(
+                build["move_speed_flat"], build["move_speed_percent"] + granted
+            )
+        )
+        assert buffed > build["move_speed"]
 
 
 class TestTheStunIsAuthoredAsASourcedControlEvent:
