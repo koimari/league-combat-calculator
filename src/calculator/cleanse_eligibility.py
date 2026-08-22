@@ -68,7 +68,7 @@ from __future__ import annotations
 # pylint: disable=too-many-lines,too-many-return-statements  # one
 # dependency-light leaf owns the typed contracts; the decision path's named
 # reasons map one-to-one onto returns.
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
@@ -706,9 +706,19 @@ def interval_active(interval: Mapping[str, Any], at: float) -> bool:
     return start <= at + _EPS and end > at + _EPS
 
 
-def merged_interval_duration(intervals: Iterable[Mapping[str, Any]]) -> float:
-    """Union length of authored intervals (identical semantics to the
-    survival row's ``_merged_interval_duration``)."""
+def merged_interval_duration(intervals: Sequence[Mapping[str, Any]]) -> float:
+    """The union length of authored inactive intervals -- the ONE fold, which
+    both the truncation below and the survival row's published downtime call.
+
+    Union rather than sum: two controls overlapping in time cost the actor one
+    window of downtime and not two, so a total that added them would publish
+    more downtime than the fight is long.
+    """
+    # The overwhelmingly common answer, taken without allocating: almost no
+    # participant of almost any fight is ever inactive, and the survival row
+    # runs this once per participant per walk on the optimizer's hot path.
+    if not intervals:
+        return 0.0
     ordered: list[tuple[float, float]] = []
     for interval in intervals:
         start, end = _interval_bounds(interval)

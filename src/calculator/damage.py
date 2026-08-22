@@ -243,6 +243,8 @@ from .survival.pricing import (
     BasicAttackSwing,
     RoutingProvenance,
 )
+from .survival.transitions import evaluate_live_raw_formula
+from .stats import calculate_attack_speed
 
 # Critical strikes deal 200% base damage (this changed once before, from
 # 175%). Items add on top via crit_damage_bonus; anything recovering the
@@ -2411,18 +2413,7 @@ def _simulate_ordered_damage(
     target_threshold_health_heal: float = 0.0,
     target_threshold_health_ratio: float = 0.0,
     target_threshold_health_duration: float = 0.0,
-    return_events: bool = False,
-    return_adjustments: bool = False,
-) -> (
-    tuple[float, dict[str, float]]
-    | tuple[float, dict[str, float], list[dict[str, Any]]]
-    | tuple[
-        float,
-        dict[str, float],
-        list[dict[str, Any]],
-        dict[str, Any],
-    ]
-):
+) -> tuple[float, dict[str, float], list[dict[str, Any]], dict[str, Any]]:
     """Simulate the ordered damage ledger against the target's pools.
 
     **This is not one mechanic's function.**  Two unrelated things need the
@@ -2441,8 +2432,8 @@ def _simulate_ordered_damage(
 
     Returns:
         (total Cinderbloom bonus, bonus per damage type — the crit bonus
-        keeps the underlying damage's type), optionally the bonus events and
-        the non-Cinderbloom adjustments the same walk produced.
+        keeps the underlying damage's type, the bonus events, the
+        non-Cinderbloom adjustments the same walk produced).
     """
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
@@ -2531,11 +2522,7 @@ def _simulate_ordered_damage(
         "threshold_health_triggered": heal_drip.triggered,
         "threshold_health_trigger_time": heal_drip.trigger_time,
     }
-    if return_adjustments:
-        return total_bonus, bonus_by_type, bonus_events, adjustments
-    if return_events:
-        return total_bonus, bonus_by_type, bonus_events
-    return total_bonus, bonus_by_type
+    return total_bonus, bonus_by_type, bonus_events, adjustments
 
 
 def _navori_effective_cd(
@@ -3165,7 +3152,9 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                         )
                     )
                 base_as = state.attack_speed
-                buffed_as = base_as + state.attack_speed_ratio * (bonus_as_pct / 100.0)
+                buffed_as = calculate_attack_speed(
+                    base_as, state.attack_speed_ratio, bonus_as_pct
+                )
                 state.q_window_start = cast_start
                 state.q_window_end = cast_start + window
                 state.q_window_base_rate = base_as
@@ -3189,8 +3178,8 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 state.q_window_pre_autos = pre_autos
                 state.num_auto_attacks = pre_autos + in_autos + post_autos
             else:
-                state.attack_speed = state.attack_speed + state.attack_speed_ratio * (
-                    bonus_as_pct / 100.0
+                state.attack_speed = calculate_attack_speed(
+                    state.attack_speed, state.attack_speed_ratio, bonus_as_pct
                 )
                 stats["attack_speed"] = state.attack_speed
                 state.num_auto_attacks = math.floor(
@@ -4339,8 +4328,9 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     (``resource_ledger``): one account owns regen ticks, external restores
     (Catalyst's Eternity, Essence Reaver's Spellblade), ability restores,
     cast spends, Tear's max-mana growth, and Lost Chapter's Enlighten.
-    ENERGY fights, and any MANA fight declaring a temporary maximum bonus,
-    run ``_apply_resource_limits_legacy`` instead.
+    ENERGY fights run ``_apply_energy_resource_limits`` instead: the energy
+    lane has no ledger representation for the temporary maximum bonus Akali's
+    W declares, which is the one energy mechanic the account cannot hold.
     """
     if not state.enforce_resource_limits:
         # Direct engine callers may provide an intentionally partial stat
@@ -4365,29 +4355,14 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         )
         return plan
     if resource_type == "ENERGY":
-        return _apply_resource_limits_legacy(state, plan, resource_type)
-    if any(
-        float(ability_field(info, "resource_maximum_bonus")) > 0.0
-        for info in state.ability_damages.values()
-    ):
-        # Only Akali (ENERGY) declares a temporary maximum bonus today.  A
-        # MANA ability doing so has no certified ledger representation, so
-        # ``_apply_resource_limits_legacy`` runs and the note says why.
-        state.notes.append(
-            "Resource ledger unavailable: temporary maximum bonus declared "
-            "for a mana resource."
-        )
-        return _apply_resource_limits_legacy(state, plan, resource_type)
+        return _apply_energy_resource_limits(state, plan)
     return _apply_mana_resource_limits(state, plan)
 
 
-def _apply_resource_limits_legacy(
-    state: FightState, plan: CastPlan, resource_type: str
-) -> CastPlan:
-    """Legacy admission walk (ENERGY resources; unchanged behavior)."""
-    base_maximum = float(state.champion_stats["max_mana"])
-    remaining = base_maximum
-    regen = float(state.champion_stats["resource_regen_per_second"])
+def _cast_admission_events(
+    state: FightState, plan: CastPlan
+) -> list[tuple[float, int, int, str]]:
+    """The planned casts as (time, cast-order, ordinal, slot), chronological."""
     events: list[tuple[float, int, int, str]] = []
     order = {key: index for index, key in enumerate(state.cast_order)}
     for key, times in plan.times.items():
@@ -4396,85 +4371,29 @@ def _apply_resource_limits_legacy(
             for ordinal, cast_time in enumerate(times)
         )
     events.sort()
+    return events
 
-    accepted: dict[str, list[float]] = {key: [] for key in plan.times}
-    accepted_ordinals: dict[str, set[int]] = {key: set() for key in plan.times}
-    omitted: list[str] = []
-    spent = 0.0
-    previous_time = 0.0
-    maximum_bonus = 0.0
-    maximum_bonus_until = -1.0
-    resource_by_cast: dict[tuple[str, int], dict[str, float]] = {}
 
-    proc_restore = next(
-        (
-            info
-            for info in state.ability_damages.values()
-            if float(ability_field(info, "resource_restore_per_proc")) > 0
-            and int(ability_field(info, "proc_count")) > 0
-        ),
-        None,
-    )
-    proc_restores_left = (
-        int(ability_field(proc_restore, "proc_count", form="proc_restore"))
-        if proc_restore
-        else 0
-    )
+def _resource_timeline(
+    state: FightState,
+    events: list[tuple[float, int, int, str]],
+    *,
+    restore_producer: str,
+) -> list[tuple[float, int, int, int, str, str, float]]:
+    """The heap both resource walks drain: planned casts and external restores.
 
-    # Essence Reaver's Manaflow is restored by the accepted Spellblade attack,
-    # not by the ability that arms it.  Keep those restores on the same
-    # ordered resource timeline so a later cast can actually spend the mana
-    # the preceding empowered attack returned.  Scheduling the restore only
-    # after its arming cast is accepted also prevents an omitted cast from
-    # minting phantom resources.
-    spellblade = state.item_spellblade
-    mana_restore_per_proc = 0.0
-    spellblade_cooldown_ready = float("-inf")
-    spellblade_restore_count = 0
-    if (
-        resource_type == "MANA"
-        and spellblade is not None
-        and (
-            spellblade.mana_restore_base_ad_ratio or spellblade.mana_restore_crit_ratio
-        )
-        and state.num_auto_attacks > 0
-    ):
-        stats = state.champion_stats
-        mana_restore_per_proc = item_effects.essence_reaver_mana_restore_per_proc(
-            base_attack_damage=stats["base_attack_damage"],
-            critical_strike_chance=stats["critical_strike_chance"],
-            item_name=spellblade.source.item_name,
-        )
-
-    # Heap entries are (time, phase, cast-order, ordinal, kind, key, amount).
-    # Restore events sort before a cast at the same timestamp, matching the
-    # attack landing before a simultaneous ability input is evaluated.
+    Heap entries are (time, phase, cast-order, ordinal, kind, key, amount).
+    Restore events sort before a cast at the same timestamp, matching the
+    attack landing before a simultaneous ability input is evaluated.  The
+    damage-taken restoration is an external, timestamped input from the
+    coupled participant ledger; malformed rows are ignored here because the
+    producer is required to fail closed before constructing this typed tuple.
+    The caller may append its own rows before heapifying.
+    """
     timeline: list[tuple[float, int, int, int, str, str, float]] = [
         (cast_time, 1, order_index, ordinal, "cast", key, 0.0)
         for cast_time, order_index, ordinal, key in events
     ]
-    # The damage-taken restoration is an external, timestamped input from the
-    # coupled participant ledger.  It is ordered before casts at the same
-    # timestamp, matching the sourced hit -> resource update -> input
-    # sequence.  Malformed rows are ignored here; the producer is required to
-    # fail closed before constructing this typed tuple.
-    #
-    # The key slot of a restore row is the producer, read off the same
-    # declaration the ledger built the row from
-    # (``roster_composition.resource_restores``) rather than spelled.  Empty
-    # where this build declares none, which is the case where the rows came
-    # from a caller staging them directly.
-    schedule_owners = sorted(
-        {item_effects.resolved_item_name(item) for item in state.items}
-    )
-    restore_slot = declared_sustain(schedule_owners, ManaSpentHealRule)
-    restore_producer = "" if restore_slot is None else restore_slot.owner
-    # The casting trade an open active window makes, resolved once rather
-    # than per cast: what a cast costs is a build fact, and re-asking it
-    # inside the loop would buy the same answer at a per-event price.
-    cast_economy = stat_derivation.sole_declared_derivation(
-        schedule_owners, ActiveWindowCastEconomyRule
-    )
     for restore_index, (restore_time, restore_amount) in enumerate(
         state.resource_restore_events
     ):
@@ -4502,6 +4421,139 @@ def _apply_resource_limits_legacy(
                 restore_amount,
             ),
         )
+    return timeline
+
+
+class _CastAdmission:
+    """The accept/omit bookkeeping both resource walks keep.
+
+    Insertion order is load-bearing — the ledger replays these lists — so an
+    accepted time, an omitted slot and a per-cast row are appended exactly
+    where the walk produced them.  The fixed-count per-proc restore an ability
+    may declare is admitted here too, because it is paid to an accepted cast:
+    Ambessa weaves her empowered attacks between casts, so their restores ride
+    this same ordered timeline.
+    """
+
+    def __init__(self, state: FightState, plan: CastPlan) -> None:
+        self.score_only = state.score_only
+        self.accepted: dict[str, list[float]] = {key: [] for key in plan.times}
+        self.accepted_ordinals: dict[str, set[int]] = {key: set() for key in plan.times}
+        self.omitted: list[str] = []
+        self.spent = 0.0
+        self.resource_by_cast: dict[tuple[str, int], dict[str, float]] = {}
+        proc_restore = next(
+            (
+                info
+                for info in state.ability_damages.values()
+                if float(ability_field(info, "resource_restore_per_proc")) > 0
+                and int(ability_field(info, "proc_count")) > 0
+            ),
+            None,
+        )
+        # One entry per declared proc: what this fight has left to pay.
+        self._proc_restores: list[float] = (
+            [float(proc_restore["resource_restore_per_proc"])]
+            * int(ability_field(proc_restore, "proc_count", form="proc_restore"))
+            if proc_restore
+            else []
+        )
+
+    def omit(self, key: str) -> None:
+        """Record a cast the walk refused."""
+        self.omitted.append(key)
+
+    def recast_parent_denied(self, info: Mapping[str, Any], ordinal: int) -> bool:
+        """True when a recast's parent cast at this ordinal was not accepted."""
+        parent = info.get("recast_of")
+        return bool(parent) and ordinal not in self.accepted_ordinals.get(parent, set())
+
+    def restore_for(self, info: Mapping[str, Any]) -> float:
+        """One accepted cast's own restore, plus a proc's while procs are left."""
+        restored = float(ability_field(info, "resource_restore"))
+        if self._proc_restores:
+            restored += self._proc_restores.pop()
+        return restored
+
+    def accept(
+        self,
+        key: str,
+        ordinal: int,
+        cast_time: float,
+        *,
+        resource_before: float,
+        resource_restored: float,
+        resource_after: float,
+    ) -> int:
+        """Admit one cast and return its accepted ordinal."""
+        accepted_ordinal = len(self.accepted[key])
+        self.accepted[key].append(cast_time)
+        self.accepted_ordinals[key].add(ordinal)
+        if not self.score_only:
+            # Per-cast resource rows serve only the public cast-timeline
+            # receipt; nothing on the scoring path reads them.
+            self.resource_by_cast[(key, accepted_ordinal)] = {
+                "resource_before": resource_before,
+                "resource_restored": resource_restored,
+                "resource_after": resource_after,
+            }
+        return accepted_ordinal
+
+    def cast_plan(self, *, resource_remaining: float, **extra: Any) -> CastPlan:
+        """The admitted plan, with whatever receipts the walk's lane adds."""
+        counts = {key: len(times) for key, times in self.accepted.items()}
+        last_cast_time = max(
+            (time for times in self.accepted.values() for time in times), default=0.0
+        )
+        return CastPlan(
+            counts=counts,
+            times={key: tuple(times) for key, times in self.accepted.items()},
+            last_cast_time=last_cast_time,
+            resource_spent=self.spent,
+            resource_remaining=resource_remaining,
+            omitted_for_resource=tuple(self.omitted),
+            resource_by_cast=self.resource_by_cast,
+            **extra,
+        )
+
+
+def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
+    """Admit ENERGY casts against a plain account with a temporary maximum.
+
+    Energy has no ledger receipts of its own: the one mechanic beyond regen
+    and spend is the temporary maximum bonus (Akali's W), so the walk carries
+    a running ``remaining`` rather than a ``resource_ledger`` account.
+    """
+    base_maximum = float(state.champion_stats["max_mana"])
+    remaining = base_maximum
+    regen = float(state.champion_stats["resource_regen_per_second"])
+    events = _cast_admission_events(state, plan)
+
+    admission = _CastAdmission(state, plan)
+    previous_time = 0.0
+    maximum_bonus = 0.0
+    maximum_bonus_until = -1.0
+
+    schedule_owners = sorted(
+        {item_effects.resolved_item_name(item) for item in state.items}
+    )
+    # The key slot of a restore row is the producer, read off the same
+    # declaration the ledger built the row from
+    # (``roster_composition.resource_restores``) rather than spelled.  Empty
+    # where this build declares none, which is the case where the rows came
+    # from a caller staging them directly.
+    restore_slot = declared_sustain(schedule_owners, ManaSpentHealRule)
+    # The casting trade an open active window makes, resolved once rather
+    # than per cast: what a cast costs is a build fact, and re-asking it
+    # inside the loop would buy the same answer at a per-event price.
+    cast_economy = stat_derivation.sole_declared_derivation(
+        schedule_owners, ActiveWindowCastEconomyRule
+    )
+    timeline = _resource_timeline(
+        state,
+        events,
+        restore_producer="" if restore_slot is None else restore_slot.owner,
+    )
     heapq.heapify(timeline)
     while timeline:
         (
@@ -4524,9 +4576,8 @@ def _apply_resource_limits_legacy(
             remaining = min(maximum, remaining + restore_amount)
             continue
         info = state.ability_damages[key]
-        parent = info.get("recast_of")
-        if parent and ordinal not in accepted_ordinals.get(parent, set()):
-            omitted.append(key)
+        if admission.recast_parent_denied(info, ordinal):
+            admission.omit(key)
             continue
         cost = float(ability_field(info, "resource_cost"))
         if (
@@ -4536,11 +4587,11 @@ def _apply_resource_limits_legacy(
         ):
             cost *= cast_economy.value("resource_cost_multiplier")
         if cost > remaining + _CAST_SCHEDULE_EPS:
-            omitted.append(key)
+            admission.omit(key)
             continue
         before = remaining
         remaining -= cost
-        spent += cost
+        admission.spent += cost
         cast_maximum_bonus = float(ability_field(info, "resource_maximum_bonus"))
         if cast_maximum_bonus > 0:
             maximum_bonus = max(maximum_bonus, cast_maximum_bonus)
@@ -4551,65 +4602,18 @@ def _apply_resource_limits_legacy(
             )
             maximum = base_maximum + maximum_bonus
 
-        restored = float(ability_field(info, "resource_restore"))
-        if proc_restore is not None and proc_restores_left > 0:
-            # A fixed-count proc entry represents those procs as having
-            # happened in this scenario. For Ambessa, each accepted ability
-            # cast mints one passive stack and the model weaves the selected
-            # empowered attacks between casts, so their energy restoration
-            # belongs on the same ordered resource timeline.
-            restored += float(proc_restore["resource_restore_per_proc"])
-            proc_restores_left -= 1
+        restored = admission.restore_for(info)
         remaining = min(maximum, remaining + restored)
-        accepted_ordinal = len(accepted[key])
-        accepted[key].append(cast_time)
-        accepted_ordinals[key].add(ordinal)
-        if not state.score_only:
-            # Per-cast resource rows serve only the public cast-timeline
-            # receipt; nothing on the scoring path reads them.
-            resource_by_cast[(key, accepted_ordinal)] = {
-                "resource_before": before,
-                "resource_restored": restored,
-                "resource_after": remaining,
-            }
+        admission.accept(
+            key,
+            ordinal,
+            cast_time,
+            resource_before=before,
+            resource_restored=restored,
+            resource_after=remaining,
+        )
 
-        if mana_restore_per_proc > 0.0 and spellblade is not None:
-            # One Spellblade proc is consumed by one basic attack.  The
-            # authored auto stream caps how many accepted casts can return
-            # mana; cooldown and weave delay determine when each return lands.
-            if spellblade_restore_count < state.num_auto_attacks:
-                proc_time = (
-                    max(cast_time, spellblade_cooldown_ready) + spellblade.weave_delay
-                )
-                spellblade_cooldown_ready = proc_time + spellblade.cooldown
-                if proc_time <= state.fight_duration_seconds + _CAST_SCHEDULE_EPS:
-                    heapq.heappush(
-                        timeline,
-                        (
-                            proc_time,
-                            0,
-                            -1,
-                            spellblade_restore_count,
-                            "restore",
-                            "",
-                            mana_restore_per_proc,
-                        ),
-                    )
-                    spellblade_restore_count += 1
-
-    counts = {key: len(times) for key, times in accepted.items()}
-    last_cast_time = max(
-        (time for times in accepted.values() for time in times), default=0.0
-    )
-    return CastPlan(
-        counts=counts,
-        times={key: tuple(times) for key, times in accepted.items()},
-        last_cast_time=last_cast_time,
-        resource_spent=spent,
-        resource_remaining=remaining,
-        omitted_for_resource=tuple(omitted),
-        resource_by_cast=resource_by_cast,
-    )
+    return admission.cast_plan(resource_remaining=remaining)
 
 
 def _tear_hit_identity(
@@ -5118,36 +5122,10 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     tear = _tear_manaflow_for(state, owner)
     enlighten_decl = _enlighten_decl_for(state)
 
-    events: list[tuple[float, int, int, str]] = []
-    order = {key: index for index, key in enumerate(state.cast_order)}
-    for key, times in plan.times.items():
-        events.extend(
-            (cast_time, order.get(key, len(order)), ordinal, key)
-            for ordinal, cast_time in enumerate(times)
-        )
-    events.sort()
+    events = _cast_admission_events(state, plan)
 
-    accepted: dict[str, list[float]] = {key: [] for key in plan.times}
-    accepted_ordinals: dict[str, set[int]] = {key: set() for key in plan.times}
-    omitted: list[str] = []
-    spent = 0.0
+    admission = _CastAdmission(state, plan)
     previous_time = 0.0
-    resource_by_cast: dict[tuple[str, int], dict[str, float]] = {}
-
-    proc_restore = next(
-        (
-            info
-            for info in state.ability_damages.values()
-            if float(ability_field(info, "resource_restore_per_proc")) > 0
-            and int(ability_field(info, "proc_count")) > 0
-        ),
-        None,
-    )
-    proc_restores_left = (
-        int(ability_field(proc_restore, "proc_count", form="proc_restore"))
-        if proc_restore
-        else 0
-    )
 
     # Essence Reaver's Manaflow is restored by the accepted Spellblade attack,
     # not by the ability that arms it.  Keep those restores on the same
@@ -5173,45 +5151,10 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             item_name=spellblade.source.item_name,
         )
 
-    # Heap entries are (time, phase, cast-order, ordinal, kind, key, amount).
-    # Restore events sort before a cast at the same timestamp, matching the
-    # attack landing before a simultaneous ability input is evaluated.
-    timeline: list[tuple[float, int, int, int, str, str, float]] = [
-        (cast_time, 1, order_index, ordinal, "cast", key, 0.0)
-        for cast_time, order_index, ordinal, key in events
-    ]
-    # Catalyst's damage-taken restoration is an external, timestamped input
-    # from the coupled participant ledger.  It is ordered before casts at the
-    # same timestamp, matching the sourced hit -> resource update -> input
-    # sequence.  Malformed rows are ignored here; the producer is required to
-    # fail closed before constructing this typed tuple.
-    for restore_index, (restore_time, restore_amount) in enumerate(
-        state.resource_restore_events
-    ):
-        try:
-            restore_time = float(restore_time)
-            restore_amount = float(restore_amount)
-        except (TypeError, ValueError):
-            continue
-        if (
-            not math.isfinite(restore_time)
-            or not math.isfinite(restore_amount)
-            or restore_amount <= 0.0
-            or restore_time < 0.0
-            or restore_time > state.fight_duration_seconds + _CAST_SCHEDULE_EPS
-        ):
-            continue
-        timeline.append(
-            (
-                restore_time,
-                0,
-                -1,
-                restore_index,
-                "restore",
-                "Catalyst of Aeons",
-                restore_amount,
-            ),
-        )
+    # The external restores on this lane are Catalyst's Eternity rows; the
+    # restore handler reads the producer off the key rather than dispatching
+    # on an item name.
+    timeline = _resource_timeline(state, events, restore_producer="Catalyst of Aeons")
     # Lost Chapter's Enlighten: the explicit sourced level-up timing (the
     # smallest public option choice) authors ONE marker event.  On pop it
     # schedules the deterministic 20%-over-3s ticks against the account's
@@ -5375,7 +5318,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             # lands, so its restore is a denial receipt, not a guess.
             row = auto_restore_rows[ordinal]
             if row["kind"] == "swing":
-                arming = accepted_ordinals.get(row["arming_key"], set())
+                arming = admission.accepted_ordinals.get(row["arming_key"], set())
                 if row["arming_ordinal"] not in arming:
                     auto_restore_denials.append(
                         {
@@ -5429,9 +5372,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             sequence += 1
             continue
         info = state.ability_damages[key]
-        parent = info.get("recast_of")
-        if parent and ordinal not in accepted_ordinals.get(parent, set()):
-            omitted.append(key)
+        if admission.recast_parent_denied(info, ordinal):
+            admission.omit(key)
             continue
         cost = float(ability_field(info, "resource_cost"))
         if (
@@ -5459,21 +5401,13 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             # A denied cast cannot spend, so it can never trigger Tear or
             # consume a Manaflow charge (the hit is only driven below for
             # accepted casts).
-            omitted.append(key)
+            admission.omit(key)
             continue
         before = spend.current_before
         remaining = spend.current_after
-        spent += cost
+        admission.spent += cost
 
-        restored = float(ability_field(info, "resource_restore"))
-        if proc_restore is not None and proc_restores_left > 0:
-            # A fixed-count proc entry represents those procs as having
-            # happened in this scenario. For Ambessa, each accepted ability
-            # cast mints one passive stack and the model weaves the selected
-            # empowered attacks between casts, so their energy restoration
-            # belongs on the same ordered resource timeline.
-            restored += float(proc_restore["resource_restore_per_proc"])
-            proc_restores_left -= 1
+        restored = admission.restore_for(info)
         if restored > 0.0:
             restored_receipt = ledger.apply(
                 resource_ledger.ResourceEvent(
@@ -5488,17 +5422,14 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             )
             sequence += 1
             remaining = restored_receipt.current_after
-        accepted_ordinal = len(accepted[key])
-        accepted[key].append(cast_time)
-        accepted_ordinals[key].add(ordinal)
-        if not state.score_only:
-            # Per-cast resource rows serve only the public cast-timeline
-            # receipt; nothing on the scoring path reads them.
-            resource_by_cast[(key, accepted_ordinal)] = {
-                "resource_before": before,
-                "resource_restored": restored,
-                "resource_after": remaining,
-            }
+        accepted_ordinal = admission.accept(
+            key,
+            ordinal,
+            cast_time,
+            resource_before=before,
+            resource_restored=restored,
+            resource_after=remaining,
+        )
 
         # Tear of the Goddess: only an ACCEPTED cast with a PROVEN
         # champion-affecting identity can consume a Manaflow charge.  The
@@ -5702,10 +5633,6 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             "marks": mark_refunds,
         }
 
-    counts = {key: len(times) for key, times in accepted.items()}
-    last_cast_time = max(
-        (time for times in accepted.values() for time in times), default=0.0
-    )
     # Catalyst's Eternity heal is a projection of THIS account's accepted
     # spend receipts: one heal row per accepted spend at the cast time, capped
     # per cast and per one-second bucket.  It is computed here, once, from the
@@ -5726,14 +5653,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             "declaration": declaration,
             "heals": [row.public() for row in heal_rows],
         }
-    return CastPlan(
-        counts=counts,
-        times={key: tuple(times) for key, times in accepted.items()},
-        last_cast_time=last_cast_time,
-        resource_spent=spent,
+    return admission.cast_plan(
         resource_remaining=ledger.account.current,
-        omitted_for_resource=tuple(omitted),
-        resource_by_cast=resource_by_cast,
         resource_ledger=_resource_ledger_public(
             ledger,
             tear,
@@ -12528,6 +12449,47 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
     )
 
 
+def _stack_receipt_row(
+    kind: str,
+    sequence: int,
+    operation: str,
+    amount: float,
+    time: float,
+    source: str,
+    *,
+    current_before: Any,
+    current_after: Any,
+    maximum: Any,
+    accepted: bool,
+    reason: str,
+    detail: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """One row of a champion stack ledger, in the shape every kind publishes.
+
+    ``kind`` names the ledger sub-section the row belongs to; the caller owns
+    the stack arithmetic and hands in the before/after it produced, so a
+    published zero keeps the type its own mechanic gave it.
+    """
+    return {
+        "owner": "main",
+        "kind": kind,
+        "operation": operation,
+        "amount": amount,
+        "time": round(float(time), 3),
+        "source": source,
+        "sequence": sequence,
+        "tier": 0.0,
+        "atoms": [],
+        "current_before": current_before,
+        "maximum_before": maximum,
+        "current_after": current_after,
+        "maximum_after": maximum,
+        "accepted": accepted,
+        "reason": reason,
+        **(dict(detail) if detail else {}),
+    }
+
+
 def _add_senna_souls(
     state: FightState,
     rotation: RotationResult,
@@ -12573,24 +12535,20 @@ def _add_senna_souls(
             current += amount
             gains += 1
         receipts.append(
-            {
-                "owner": "main",
-                "kind": "souls",
-                "operation": operation,
-                "amount": amount,
-                "time": round(float(time), 3),
-                "source": source,
-                "sequence": len(receipts) + 1,
-                "tier": 0.0,
-                "atoms": [],
-                "current_before": before,
-                "maximum_before": 300,
-                "current_after": current,
-                "maximum_after": 300,
-                "accepted": accepted,
-                "reason": reason,
-                **(dict(detail) if detail else {}),
-            }
+            _stack_receipt_row(
+                "souls",
+                len(receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=before,
+                current_after=current,
+                maximum=300,
+                accepted=accepted,
+                reason=reason,
+                detail=detail,
+            )
         )
 
     # The accepted soul event: the champion takedown of the modeled target.
@@ -12737,23 +12695,19 @@ def _feed_ashe_focus_stack(
             if operation == "gain":
                 gains += 1
         receipts.append(
-            {
-                "owner": "main",
-                "kind": "focus",
-                "operation": operation,
-                "amount": amount,
-                "time": round(float(time), 3),
-                "source": source,
-                "sequence": len(receipts) + 1,
-                "tier": 0.0,
-                "atoms": [],
-                "current_before": before,
-                "maximum_before": 4,
-                "current_after": current,
-                "maximum_after": 4,
-                "accepted": accepted,
-                "reason": reason,
-            }
+            _stack_receipt_row(
+                "focus",
+                len(receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=before,
+                current_after=current,
+                maximum=4,
+                accepted=accepted,
+                reason=reason,
+            )
         )
 
     events: list[tuple[float, str, int]] = []
@@ -13030,24 +12984,20 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         detail: Mapping[str, Any] | None = None,
     ) -> None:
         receipts.append(
-            {
-                "owner": "main",
-                "kind": "w",
-                "operation": operation,
-                "amount": amount,
-                "time": round(float(time), 3),
-                "source": source,
-                "sequence": len(receipts) + 1,
-                "tier": 0.0,
-                "atoms": [],
-                "current_before": 0.0,
-                "maximum_before": 0,
-                "current_after": 0.0,
-                "maximum_after": 0,
-                "accepted": accepted,
-                "reason": reason,
-                **(dict(detail) if detail else {}),
-            }
+            _stack_receipt_row(
+                "w",
+                len(receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=0.0,
+                current_after=0.0,
+                maximum=0,
+                accepted=accepted,
+                reason=reason,
+                detail=detail,
+            )
         )
 
     # The accepted stream: the engine-priced W parts (the All Out
@@ -13191,24 +13141,20 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         detail: Mapping[str, Any] | None = None,
     ) -> None:
         receipts.append(
-            {
-                "owner": "main",
-                "kind": "w_e",
-                "operation": operation,
-                "amount": amount,
-                "time": round(float(time), 3),
-                "source": source,
-                "sequence": len(receipts) + 1,
-                "tier": 0.0,
-                "atoms": [],
-                "current_before": 0.0,
-                "maximum_before": 0,
-                "current_after": 0.0,
-                "maximum_after": 0,
-                "accepted": accepted,
-                "reason": reason,
-                **(dict(detail) if detail else {}),
-            }
+            _stack_receipt_row(
+                "w_e",
+                len(receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=0.0,
+                current_after=0.0,
+                maximum=0,
+                accepted=accepted,
+                reason=reason,
+                detail=detail,
+            )
         )
 
     # The accepted stream: the engine-priced W/E parts, one receipt per
@@ -13403,24 +13349,20 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
             current -= amount
             consumed += 1
         receipts.append(
-            {
-                "owner": "main",
-                "kind": "chimes",
-                "operation": operation,
-                "amount": amount,
-                "time": round(float(time), 3),
-                "source": source,
-                "sequence": len(receipts) + 1,
-                "tier": 0.0,
-                "atoms": [],
-                "current_before": before,
-                "maximum_before": 200,
-                "current_after": current,
-                "maximum_after": 200,
-                "accepted": accepted,
-                "reason": reason,
-                **(dict(detail) if detail else {}),
-            }
+            _stack_receipt_row(
+                "chimes",
+                len(receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=before,
+                current_after=current,
+                maximum=200,
+                accepted=accepted,
+                reason=reason,
+                detail=detail,
+            )
         )
 
     # The accepted stream: one meep consumed per meep-empowered auto,
@@ -13612,24 +13554,20 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
             current += amount
             gains += 1
         receipts.append(
-            {
-                "owner": "main",
-                "kind": "stardust",
-                "operation": operation,
-                "amount": amount,
-                "time": round(float(time), 3),
-                "source": source,
-                "sequence": len(receipts) + 1,
-                "tier": 0.0,
-                "atoms": [],
-                "current_before": before,
-                "maximum_before": 999,
-                "current_after": current,
-                "maximum_after": 999,
-                "accepted": accepted,
-                "reason": reason,
-                **(dict(detail) if detail else {}),
-            }
+            _stack_receipt_row(
+                "stardust",
+                len(receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=before,
+                current_after=current,
+                maximum=999,
+                accepted=accepted,
+                reason=reason,
+                detail=detail,
+            )
         )
 
     # The accepted stream: one Q burst vs the champion target per full
@@ -16440,8 +16378,6 @@ def _add_shadowflame_cinderbloom(
         target_threshold_health_heal=config.target_threshold_health_heal,
         target_threshold_health_ratio=config.target_threshold_health_ratio,
         target_threshold_health_duration=config.target_threshold_health_duration,
-        return_events=True,
-        return_adjustments=True,
     )
     _apply_liandry_reprice(state, adjustments)
     if shadowflame_bonus > 0:
@@ -18147,13 +18083,9 @@ def _resolve_starting_shield_outcome(
                         1.0 - pools.health / max(pools.max_health, 1e-12),
                     ),
                 )
-                try:
-                    live_raw = max(
-                        0.0,
-                        float(raw_formula(missing_ratio, pools.max_health)),
-                    )
-                except TypeError:
-                    live_raw = max(0.0, float(raw_formula(missing_ratio)))
+                live_raw = evaluate_live_raw_formula(
+                    raw_formula, missing_ratio, pools.max_health
+                )
                 live_damage = remaining * live_raw / raw_damage
                 if abs(live_damage - remaining) > 1e-9:
                     repriced = True

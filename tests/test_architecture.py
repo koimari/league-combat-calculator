@@ -39,19 +39,11 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
             "assertion about it runs through an app response instead"
         ),
     ),
-    # `comparison` joined this frontier with the one-request compare
-    # boundary: the module is new, and the two complete results it returns
-    # are asserted through `/api/compare` in `tests/test_app.py`, so it has
-    # behaviour coverage and no front door.  Recorded as an arrival for the
-    # reason the departures below are recorded: the set is the receipt.
-    "comparison": FrontierEntry(
-        owning_phase="none - arrived with the compare boundary",
-        reason=(
-            "the one-request build-comparison boundary, exercised only "
-            "through /api/compare in tests/test_app.py rather than through "
-            "its own module"
-        ),
-    ),
+    # `comparison` left this frontier by ceasing to exist: `compare_payload`
+    # is thirty lines that call `calculate_payload` twice, and it moved into
+    # `calculate.py` beside the comparison curves that module already owns.
+    # A module whose one symbol has one caller was never a boundary of its
+    # own, and the frontier row it needed is the receipt for that.
     "practice_dummy": FrontierEntry(
         owning_phase="none — pre-campaign debt",
         reason=(
@@ -59,13 +51,11 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
             "whose suite exercises it through a parsed scenario"
         ),
     ),
-    "request_parsing": FrontierEntry(
-        owning_phase="none — pre-campaign debt",
-        reason=(
-            "request coercion, exercised through the endpoints in "
-            "tests/test_app.py rather than through its own module"
-        ),
-    ),
+    # `request_parsing` left this frontier when the optional-integer sibling
+    # arrived: `tests/test_request_parsing.py` imports the module to pin the
+    # sentinel set (`None` and `""`, never 0) that three optimize fields had
+    # each been spelling inline, and a sentinel policy exercised only through
+    # an endpoint is a policy nobody has watched decide.
     # `survival.receipt_state` left this frontier at Phase 4 S4, which is what
     # a member closing looks like: the stage that gave `ReceiptLedger` its
     # injected `compile_event` also gave the module an importing test module

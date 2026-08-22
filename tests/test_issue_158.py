@@ -92,7 +92,9 @@ def test_bis_route_only_delegates_and_translates() -> None:
     )
     route_source = ast.get_source_segment(source, route) or ""
 
-    assert "bis_payload(data)" in route_source
+    # The route names the façade and hands it to the shared operation ladder,
+    # which is the only thing that calls it with the decoded body.
+    assert "bis_payload" in route_source
     assert "for candidate in candidates" not in route_source
     assert "ranked.sort" not in route_source
 

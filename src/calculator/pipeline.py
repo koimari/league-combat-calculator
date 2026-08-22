@@ -55,7 +55,6 @@ from .request_parsing import (
     request_index_map,
     request_bool as _request_bool,
     request_int as _request_int,
-    request_number,
     request_string,
 )
 from .rune_effects import (
@@ -91,6 +90,12 @@ DEFAULT_AUTO_ATTACK_UPTIME_MODE = AUTO_ATTACK_UPTIME_MODE_CALCULATED
 DEFAULT_FIGHT_MODE = "one_rotation"
 ONE_ROTATION_DURATION = 5.0
 MAX_ROTATIONS = 6
+# The roster bounds live beside the other public request bounds rather than in
+# scenario.py, which composes the roster: a support packet's teammate index is
+# checked here and the roster lists are parsed there, and one of the two would
+# otherwise spell the other's limit as a literal.
+MAX_ENEMIES = 5
+MAX_ALLIES = 4
 PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
     # The prototype exposes up to six five-second rotations, so a timed
     # request must be able to represent the complete sequential window.
@@ -812,12 +817,29 @@ def _bounded_request_float(
     *,
     allow_none: bool = False,
 ) -> float | None:
-    """Parse one finite public number inside its UI-supported range."""
+    """Parse one finite public number inside its UI-supported range.
+
+    The one home for the public number policy, kept here rather than beside
+    its integer and string siblings in :mod:`request_parsing`: every number
+    the public API accepts is a key of ``PUBLIC_INPUT_LIMITS``, so its range
+    is read from that table by name and can never be passed in, and a caller
+    has nowhere to spell a second range for the same field.
+    """
     value = data.get(key, default)
     if allow_none and value is None:
         return None
     minimum, maximum = PUBLIC_INPUT_LIMITS[key]
-    return request_number(data, key, default, minimum, maximum)
+    if isinstance(value, bool):
+        raise ValueError(f"{key} must be a number")
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{key} must be a number") from exc
+    if not math.isfinite(parsed):
+        raise ValueError(f"{key} must be finite")
+    if not minimum <= parsed <= maximum:
+        raise ValueError(f"{key} must be between {minimum:g} and {maximum:g}")
+    return parsed
 
 
 def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
@@ -981,7 +1003,7 @@ class FightParams(FightConfig):
         support_target_selections = request_index_map(
             data.get("support_target_selections"),
             field="support_target_selections",
-            maximum_index=3,
+            maximum_index=MAX_ALLIES - 1,
         )
         # One page validates the whole rune selection — keystone, minors,
         # shards and every rune's options — so a keystone-only validator is
