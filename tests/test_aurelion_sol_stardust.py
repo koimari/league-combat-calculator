@@ -147,6 +147,8 @@ from src.calculator.champions.aurelion_sol import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, ONE_ROTATION_DURATION, run_fight
+from src.calculator.champions.slotlib import find_named_leveling
+from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 # The data-file key differs from the display/dispatcher name (conftest
@@ -178,39 +180,8 @@ _PER_STACK_TIMED10_DELTA = (
 )
 
 
-def _stats() -> dict:
-    return {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "armor_penetration_percent": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "critical_strike_chance": 0.0,
-        "flat_armor_penetration": 0.0,
-        "health": 0.0,
-        "is_melee": True,
-        "lethality": 0.0,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "ultimate_haste": 0.0,
-        "attack_damage": 100.0,
-        "ability_power": 0.0,
-        "base_attack_damage": 60.0,
-        "bonus_attack_damage": 40.0,
-        "attack_speed": 0.8,
-        "attack_speed_ratio": 0.625,
-        "bonus_attack_speed": 0.0,
-        "max_mana": 300.0,
-        "resource_regen_per_second": 0.0,
-        "level": _LEVEL,
-    }
-
-
 def _parse(option: dict | None, *, ap: float = 0.0):
-    stats = dict(_stats(), ability_power=ap)
+    stats = dict(parse_stats(_LEVEL), ability_power=ap)
     return stats, parse_champion_abilities(
         get_champion("Aurelion Sol"),
         _LEVEL,
@@ -277,11 +248,10 @@ def _api(option: dict):
 
 def _leveling(ability: dict, attribute: str) -> dict:
     """The first leveling row named *attribute* in one ability entry."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return leveling
-    raise AssertionError(f"no leveling {attribute!r} in {ability.get('name')}")
+    leveling = find_named_leveling(ability, attribute)
+    if leveling is None:
+        raise AssertionError(f"no leveling {attribute!r} in {ability.get('name')}")
+    return leveling
 
 
 def _resolve(ability: dict, attribute: str, index: int, stats: dict) -> float:
@@ -788,13 +758,13 @@ class TestTypedOptionAndBounds:
         # walk's opening seed (S4).
         _, abilities = _parse({"stardust_stacks": 1000})
         assert abilities["Q"]["total_raw"] == pytest.approx(
-            _q_expected(_stats(), stacks=1000.0)
+            _q_expected(parse_stats(_LEVEL), stacks=1000.0)
         )
         _, abilities = _parse({"stardust_stacks": -5})
         assert abilities["Q"]["total_raw"] == pytest.approx(
-            _q_expected(_stats(), stacks=-5.0)
+            _q_expected(parse_stats(_LEVEL), stacks=-5.0)
         )
-        assert abilities["Q"]["total_raw"] < _q_expected(_stats())
+        assert abilities["Q"]["total_raw"] < _q_expected(parse_stats(_LEVEL))
 
     def test_ledger_opening_seed_clamped_to_declared_max(self):
         # The 4.47 ledger walk clamps its opening seed to 0..999: a
@@ -806,7 +776,7 @@ class TestTypedOptionAndBounds:
         assert account["opening_current"] == 999
         assert account["base_maximum"] == 999
         assert result["breakdown"]["Q"]["total_raw"] == pytest.approx(
-            _q_expected(_stats(), stacks=1000.0)
+            _q_expected(parse_stats(_LEVEL), stacks=1000.0)
         )
 
 
@@ -909,7 +879,7 @@ class TestPrimaryAndSecondaryBeam:
         # channel at 13.125 per 0.125 s tick; the parts carry the sourced
         # tick/burst cadence.
         _, abilities = _parse({"stardust_stacks": 0})
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         beam = _resolve(_q_ability(), "Magic Damage per Second", 4, stats)
         assert beam == pytest.approx(105.0)
         per_tick = _resolve(_q_ability(), "Magic Damage per Tick", 4, stats)
@@ -929,7 +899,7 @@ class TestPrimaryAndSecondaryBeam:
         # The full per-cast channel: beam x 3.25 + 3 bursts, Stardust term
         # added per burst; recomputed from the cached leveling rows at
         # every seed, plus the AP term at 200 AP.
-        stats = _stats()
+        stats = parse_stats(_LEVEL)
         for seed in (0, 100, 500):
             _, abilities = _parse({"stardust_stacks": seed})
             assert abilities["Q"]["total_raw"] == pytest.approx(

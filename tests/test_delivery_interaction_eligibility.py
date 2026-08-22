@@ -18,6 +18,7 @@ Row status conventions:
 import pytest
 
 from src.app import app
+from tests.survival_probe import survival_of
 
 
 def _calculate(payload: dict) -> dict:
@@ -37,14 +38,6 @@ def _events(
         and event.get("target") == target
         and (source is None or event.get("source") == source)
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _reject(payload: dict) -> tuple[int, dict]:
@@ -146,7 +139,7 @@ def test_d1_projectile_skillshot_braum_full_blocks_then_reduces():
     assert after["damage"] == pytest.approx(127.8)
     assert "projectile_defense" not in after
 
-    survival = _survival(combat, "enemy:Braum")
+    survival = survival_of(combat, "enemy:Braum")
     assert survival["projectile_defense"]["until"] == pytest.approx(4.0)
     assert survival["projectile_defense_blocked"] == [
         {"time": 0.25, "source": "Q", "mode": "full_block"}
@@ -183,7 +176,7 @@ def test_d1_area_only_delivery_passes_braum():
         assert "skillshot" not in event
         assert event["damage"] == pytest.approx(190.9)
         assert "projectile_defense" not in event
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == []
 
 
 def test_d1_targeted_unmarked_ability_passes_braum():
@@ -215,7 +208,7 @@ def test_d1_targeted_unmarked_ability_passes_braum():
         assert "skillshot" not in event
         assert event["damage"] == pytest.approx(84.6)
         assert "projectile_defense" not in event
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == []
 
 
 def test_d1_basic_attack_delivery_passes_both_defenses():
@@ -249,7 +242,7 @@ def test_d1_basic_attack_delivery_passes_both_defenses():
         # blocked list never contains basic-attack entries.
         assert all(
             entry["source"] != "auto_attacks"
-            for entry in _survival(combat, target)["projectile_defense_blocked"]
+            for entry in survival_of(combat, target)["projectile_defense_blocked"]
         )
 
 
@@ -284,7 +277,7 @@ def test_d1_damage_over_time_ticks_pass_unmarked_defense():
         assert "projectile_defense" not in event
         if event.get("skipped_reason") is None:
             assert event["damage"] == pytest.approx(18.4)
-    assert _survival(combat, "enemy:Yasuo")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Yasuo")["projectile_defense_blocked"] == []
 
 
 def test_d1_skillshot_marked_dot_ticks_are_destroyed_by_wind_wall():
@@ -329,7 +322,7 @@ def test_d1_skillshot_marked_dot_ticks_are_destroyed_by_wind_wall():
     first_passing = next(event for event in e_events if event["time"] == 4.0)
     assert first_passing["damage"] == pytest.approx(8.2)
     assert "projectile_defense" not in first_passing
-    blocked = _survival(combat, "enemy:Yasuo")["projectile_defense_blocked"]
+    blocked = survival_of(combat, "enemy:Yasuo")["projectile_defense_blocked"]
     assert len(blocked) == 14
     assert blocked[0] == {"time": 0.5, "source": "E", "mode": "destroyed"}
 
@@ -374,7 +367,7 @@ def test_d1_unknown_unmarked_delivery_has_no_receipt():
     # packets never reach the defense.
     assert all(
         entry["source"] == "Q"
-        for entry in _survival(combat, "enemy:Braum")["projectile_defense_blocked"]
+        for entry in survival_of(combat, "enemy:Braum")["projectile_defense_blocked"]
     )
 
 
@@ -404,7 +397,7 @@ def test_d2_braum_blocks_only_selected_skillshots():
     w_events = _events(combat, attacker="main", target="enemy:Braum", source="W")
     assert w_events[0]["damage"] == pytest.approx(179.6)
     assert "projectile_defense" not in w_events[0]
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == [
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == [
         {"time": 0.25, "source": "Q", "mode": "full_block"}
     ]
 
@@ -461,7 +454,7 @@ def test_d2_empty_selection_blocks_all_marked_skillshots():
     assert q_first["projectile_defense"]["mode"] == "reduced"
     assert q_first["projectile_defense"]["reduction"] == pytest.approx(0.55)
     assert e_first["projectile_defense"]["mode"] == "reduced"
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == [
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == [
         {"time": 0.0, "source": "W", "mode": "full_block"}
     ]
 
@@ -506,7 +499,7 @@ def test_d2_empty_selection_destroys_all_marked_projectiles():
     assert q_later["time"] == pytest.approx(6.75)
     assert q_later["damage"] == pytest.approx(133.9)
     assert "projectile_defense" not in q_later
-    blocked = _survival(combat, "enemy:Yasuo")["projectile_defense_blocked"]
+    blocked = survival_of(combat, "enemy:Yasuo")["projectile_defense_blocked"]
     assert len(blocked) == 5
 
 
@@ -558,8 +551,8 @@ def test_d2_defense_is_per_target():
     assert braum_q["projectile_defense"]["mode"] == "full_block"
     assert aatrox_q["damage"] == pytest.approx(127.8)
     assert "projectile_defense" not in aatrox_q
-    assert _survival(combat, "enemy:Aatrox")["projectile_defense"] is None
-    assert _survival(combat, "enemy:Aatrox")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Aatrox")["projectile_defense"] is None
+    assert survival_of(combat, "enemy:Aatrox")["projectile_defense_blocked"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -584,7 +577,7 @@ def test_d3_source_slot_selection_is_declared_and_receipted():
             ],
         }
     )
-    defense = _survival(combat, "enemy:Braum")["projectile_defense"]
+    defense = survival_of(combat, "enemy:Braum")["projectile_defense"]
     assert defense["blocked_sources"] == ["Q"]
     assert defense["requires_skillshot"] is True
 
@@ -622,7 +615,7 @@ def test_d3_event_id_selection_blocks_exact_packets():
     assert second["time"] == pytest.approx(3.5)
     assert second["damage"] == pytest.approx(0.0)
     assert second["projectile_defense"]["mode"] == "full_block"
-    survival = _survival(combat, "enemy:Braum")
+    survival = survival_of(combat, "enemy:Braum")
     assert survival["projectile_defense_blocked"] == [
         {"time": 3.5, "source": "Q", "mode": "full_block"}
     ]
@@ -664,7 +657,7 @@ def test_d3_mixed_slot_and_event_id_selection_is_a_union():
     assert second["damage"] == pytest.approx(57.5)
     assert second["projectile_defense"]["mode"] == "reduced"
     assert second["projectile_defense"]["reduction"] == pytest.approx(0.55)
-    survival = _survival(combat, "enemy:Braum")
+    survival = survival_of(combat, "enemy:Braum")
     assert survival["projectile_defense_blocked"] == [
         {"time": 0.0, "source": "W", "mode": "full_block"}
     ]
@@ -696,7 +689,7 @@ def test_d4_event_before_window_start_passes():
     assert q_first["time"] == pytest.approx(0.25)
     assert q_first["damage"] == pytest.approx(127.8)
     assert "projectile_defense" not in q_first
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == []
 
 
 def test_d4_event_exactly_at_window_start_is_included():
@@ -745,7 +738,7 @@ def test_d4_event_exactly_at_window_end_is_excluded():
     assert q_first["time"] == pytest.approx(0.25)
     assert q_first["damage"] == pytest.approx(127.8)
     assert "projectile_defense" not in q_first
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == []
 
 
 def test_d4_event_after_window_end_passes():
@@ -793,7 +786,7 @@ def test_d4_zero_active_seconds_uses_source_rank_duration():
             ],
         }
     )
-    defense = _survival(combat, "enemy:Braum")["projectile_defense"]
+    defense = survival_of(combat, "enemy:Braum")["projectile_defense"]
     assert defense["start"] == pytest.approx(0.0)
     assert defense["until"] == pytest.approx(4.0)
     q_second = _events(combat, attacker="main", target="enemy:Braum", source="Q")[1]
@@ -820,7 +813,7 @@ def test_d4_requested_duration_clamps_to_source_rank_duration():
             ],
         }
     )
-    defense = _survival(combat, "enemy:Braum")["projectile_defense"]
+    defense = survival_of(combat, "enemy:Braum")["projectile_defense"]
     assert defense["until"] == pytest.approx(3.0)
     assert defense["damage_reduction"] == pytest.approx(0.35)
     q_events = sorted(
@@ -895,7 +888,7 @@ def test_d5_braum_reduction_value_scales_with_rank():
                 ],
             }
         )
-        defense = _survival(combat, "enemy:Braum")["projectile_defense"]
+        defense = survival_of(combat, "enemy:Braum")["projectile_defense"]
         assert defense["damage_reduction"] == pytest.approx(expected)
         # W (0.0 s) consumes the first use; Q (0.25 s) is the first reduced
         # selected hit at the ranked value.
@@ -930,7 +923,7 @@ def test_d5_braum_full_block_is_a_single_first_use():
         "reduced",
         "reduced",
     ]
-    blocked = _survival(combat, "enemy:Braum")["projectile_defense_blocked"]
+    blocked = survival_of(combat, "enemy:Braum")["projectile_defense_blocked"]
     assert [entry["mode"] for entry in blocked] == ["full_block"]
     assert blocked[0]["source"] == "W"  # the first eligible packet consumed it
 
@@ -960,7 +953,7 @@ def test_d5_yasuo_destroys_every_selected_projectile_without_cap():
     assert q_events[1]["projectile_defense"]["mode"] == "destroyed"
     assert q_events[2]["time"] == pytest.approx(6.75)
     assert "projectile_defense" not in q_events[2]
-    blocked = _survival(combat, "enemy:Yasuo")["projectile_defense_blocked"]
+    blocked = survival_of(combat, "enemy:Yasuo")["projectile_defense_blocked"]
     assert [entry["time"] for entry in blocked] == [0.25, 3.5]
 
 
@@ -995,7 +988,7 @@ def test_d5_control_only_packet_can_consume_the_full_block():
     assert event["cc_duration"] == pytest.approx(1.0)
     assert event["projectile_defense"]["mode"] == "full_block"
     assert event["skipped_reason"] == "braum_unbreakable"
-    survival = _survival(combat, "enemy:Braum")
+    survival = survival_of(combat, "enemy:Braum")
     assert survival["projectile_defense_blocked"] == [
         {"time": 0.0, "source": "E", "mode": "full_block"}
     ]
@@ -1039,7 +1032,7 @@ def test_d5_control_carrying_hit_consumes_first_use_and_cc_is_skipped():
     assert later["damage"] > 0.0
     assert "projectile_defense" not in later
     assert later["cc_kind"] == "immobilize"
-    survival = _survival(combat, "enemy:Braum")
+    survival = survival_of(combat, "enemy:Braum")
     assert survival["projectile_defense_blocked"] == [
         {"time": 0.0, "source": "E", "mode": "full_block"}
     ]
@@ -1096,7 +1089,7 @@ def test_d6_same_timestamp_selection_is_deterministic():
     assert modes[0] == "full_block"
     assert modes[1:] == ["reduced", "reduced", "reduced"]
     assert [event["source"] for event in events] == ["W", "Q", "E", "R"]
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == [
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == [
         {"time": 0.0, "source": "W", "mode": "full_block"}
     ]
 
@@ -1131,7 +1124,7 @@ def test_d6_target_state_gate_runs_before_projectile_defense():
     assert "projectile_defense" not in in_stasis
     assert after_stasis["time"] == pytest.approx(3.5)
     assert after_stasis["projectile_defense"]["mode"] == "full_block"
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == [
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == [
         {"time": 3.5, "source": "Q", "mode": "full_block"}
     ]
 
@@ -1168,7 +1161,7 @@ def test_d6_attacker_state_gate_runs_after_full_block_prepare():
     assert later["projectile_defense"]["mode"] == "reduced"
     assert after["time"] == pytest.approx(6.75)
     assert "projectile_defense" not in after
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == [
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == [
         {"time": 0.25, "source": "Q", "mode": "full_block"}
     ]
 
@@ -1209,7 +1202,7 @@ def test_d7_true_damage_bypasses_braum_e():
         assert event["skillshot"] is True
         assert event["damage"] == pytest.approx(160.0)
         assert "projectile_defense" not in event
-    assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == []
+    assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == []
 
 
 def test_d7_true_damage_is_destroyed_by_yasuo_w():
@@ -1385,7 +1378,7 @@ def test_d8_blocked_list_matches_per_event_receipts():
                 )
             else:
                 assert receipt["mode"] == "reduced"
-        assert _survival(combat, target)["projectile_defense_blocked"] == listed
+        assert survival_of(combat, target)["projectile_defense_blocked"] == listed
 
 
 def test_d8_full_block_events_have_zero_damage():
@@ -1470,7 +1463,7 @@ def test_d8_reduced_events_preserve_pair_math_and_listing():
     assert before == pytest.approx(127.8, abs=0.2)
     assert reduced["damage"] == pytest.approx(reduced["pair_damage"], abs=0.2)
     assert receipt["mitigated"] == pytest.approx(before * receipt["reduction"], abs=0.2)
-    blocked = _survival(combat, "enemy:Braum")["projectile_defense_blocked"]
+    blocked = survival_of(combat, "enemy:Braum")["projectile_defense_blocked"]
     assert all(entry["mode"] != "reduced" for entry in blocked)
 
 
@@ -1492,7 +1485,9 @@ def test_d8_defense_receipts_carry_sourced_atom_hashes():
             ],
         }
     )
-    atoms = _survival(braum_combat, "enemy:Braum")["projectile_defense"]["source_atoms"]
+    atoms = survival_of(braum_combat, "enemy:Braum")["projectile_defense"][
+        "source_atoms"
+    ]
     assert [atom["hash"] for atom in atoms] == [
         "d6f463652bc9c57b",
         "3e8de1fe75f419da",
@@ -1511,5 +1506,7 @@ def test_d8_defense_receipts_carry_sourced_atom_hashes():
             ],
         }
     )
-    atoms = _survival(yasuo_combat, "enemy:Yasuo")["projectile_defense"]["source_atoms"]
+    atoms = survival_of(yasuo_combat, "enemy:Yasuo")["projectile_defense"][
+        "source_atoms"
+    ]
     assert [atom["hash"] for atom in atoms] == ["df1b544914798426"]

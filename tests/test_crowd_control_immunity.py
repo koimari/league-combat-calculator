@@ -112,32 +112,16 @@ from typing import Any
 import pytest
 
 from src.app import app
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.roster_composition import ActorRequest
 from src.calculator import shield_ledger
 from src.calculator.delivery_eligibility import DefenseWindow, stable_event_key
-from src.calculator.participant_timeline import (
-    Combatant,
-    _WalkCompiler,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import ActionKind
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
 
 try:  # P2 Slice 3 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import crowd_control_eligibility as cce
@@ -178,14 +162,6 @@ def _events(combat: dict, *, target: str, source: str | None = None) -> list[dic
         if event.get("target") == target
         and (source is None or event.get("source") == source)
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _cc_blocked(combat: dict, target: str) -> list[dict]:
@@ -405,7 +381,7 @@ def _simulate(
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("target", "main"),
         ]
-    result = _simulate_survival(
+    result = simulate_survival(
         combatants,
         {"target": packets},
         {},
@@ -502,21 +478,21 @@ def test_r1_black_shield_protects_the_selected_ally_only():
     assert charm["source"] == "E"
     assert charm["crowd_control_blocked"]["source"] == "Black Shield"
     assert charm["crowd_control_blocked"]["until"] == pytest.approx(5.0)
-    assert _survival(combat, "ally:Lux")["action_downtime"] == pytest.approx(0.0)
-    assert _survival(combat, "ally:Lux")["crowd_control_intervals"] == []
+    assert survival_of(combat, "ally:Lux")["action_downtime"] == pytest.approx(0.0)
+    assert survival_of(combat, "ally:Lux")["crowd_control_intervals"] == []
 
     jinx_cc = _cc_applied(combat, "ally:Jinx")
     assert len(jinx_cc) == 1
     assert jinx_cc[0]["source"] == "E"
     assert jinx_cc[0]["crowd_control"]["duration"] == pytest.approx(1.8)
-    assert _survival(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
-    assert _survival(combat, "ally:Jinx")["crowd_control_until"] == pytest.approx(1.8)
+    assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
+    assert survival_of(combat, "ally:Jinx")["crowd_control_until"] == pytest.approx(1.8)
 
     # NEW-CONTRACT: the recipient's survival row carries the immunity
     # receipt (recipient, holder source, window, active-until, ended
     # reason, blocked entries); the unselected ally has none.
     cce = _require_contract()
-    receipt = _survival(combat, "ally:Lux")["crowd_control_immunity"]
+    receipt = survival_of(combat, "ally:Lux")["crowd_control_immunity"]
     assert receipt["recipient"] == "ally:Lux"
     assert receipt["shield_source"] == "Black Shield"
     assert receipt["window"]["start"] == pytest.approx(0.0)
@@ -524,7 +500,7 @@ def test_r1_black_shield_protects_the_selected_ally_only():
     assert receipt["active_until"] == pytest.approx(5.0)
     assert receipt["reason_immunity_ended"] == "expired"
     assert [entry["control_kind"] for entry in receipt["blocked"]] == ["immobilize"]
-    assert "crowd_control_immunity" not in _survival(combat, "ally:Jinx")
+    assert "crowd_control_immunity" not in survival_of(combat, "ally:Jinx")
 
 
 # ---------------------------------------------------------------------------
@@ -549,7 +525,7 @@ def test_r2_damage_attached_cc_blocked_while_shield_remains():
     assert charm["cc_kind"] == "immobilize"
     assert charm["cc_duration"] == pytest.approx(1.8)
     assert charm["crowd_control_blocked"]["source"] == "Black Shield"
-    lux = _survival(combat, "ally:Lux")
+    lux = survival_of(combat, "ally:Lux")
     assert lux["health_damage"] == pytest.approx(0.0)
     assert lux["shield_absorbed"] == pytest.approx(157.9)
     assert lux["action_downtime"] == pytest.approx(0.0)
@@ -599,11 +575,11 @@ def test_r3_control_only_packet_blocked_while_shield_remains():
     assert whimsy["cc_kind"] == "polymorph"
     assert whimsy["cc_duration"] == pytest.approx(2.0)
     assert whimsy["crowd_control_blocked"]["source"] == "Black Shield"
-    assert _survival(combat, "ally:Lux")["action_downtime"] == pytest.approx(0.0)
+    assert survival_of(combat, "ally:Lux")["action_downtime"] == pytest.approx(0.0)
     jinx_cc = _cc_applied(combat, "ally:Jinx")
     assert len(jinx_cc) == 1
     assert jinx_cc[0]["crowd_control"]["duration"] == pytest.approx(2.0)
-    assert _survival(combat, "ally:Jinx")["action_downtime"] == pytest.approx(2.0)
+    assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(2.0)
 
     # NEW-CONTRACT: identical decision receipt shape to R2 (same fields,
     # polymorph kind; the control-only packet spends no shield amount).
@@ -673,7 +649,7 @@ def test_r4_physical_before_control_does_not_consume_magic_pool():
     assert swing["damage_type"] == "physical"
     assert swing["damage"] == pytest.approx(629.6)
     assert "crowd_control_blocked" not in swing
-    lux = _survival(combat, "ally:Lux")
+    lux = survival_of(combat, "ally:Lux")
     assert lux["shield_absorbed"] == pytest.approx(0.0)
     assert lux["health_damage"] == pytest.approx(629.6)
     (whimsy,) = [
@@ -751,7 +727,7 @@ def test_r5_magic_below_shield_strength_persists_immunity():
     (whimsy,) = _cc_blocked(combat, "ally:Lux")
     assert whimsy["source"] == "W"
     assert whimsy["crowd_control_blocked"]["source"] == "Black Shield"
-    lux = _survival(combat, "ally:Lux")
+    lux = survival_of(combat, "ally:Lux")
     assert lux["shield_absorbed"] == pytest.approx(131.6)
     assert lux["health_damage"] == pytest.approx(0.0)
     assert lux["action_downtime"] == pytest.approx(0.0)
@@ -924,7 +900,7 @@ def test_r6b_app_depletion_then_stun_lands():
     assert tether["time"] == pytest.approx(3.0)
     assert tether["cc_kind"] == "stun"
     assert tether["crowd_control"]["duration"] == pytest.approx(2.0)
-    lux = _survival(combat, "ally:Lux")
+    lux = survival_of(combat, "ally:Lux")
     assert lux["action_downtime"] == pytest.approx(2.0)
     assert lux["crowd_control_until"] == pytest.approx(5.0)
 
@@ -1163,16 +1139,16 @@ def test_r11a_spell_shield_blocks_the_cast_entirely():
     assert annul_blocked["spell_shield_source"] == "Banshee's Veil — Annul"
     assert "crowd_control_blocked" not in annul_blocked
     assert "crowd_control" not in annul_blocked
-    assert _survival(combat, "ally:Yasuo")["spell_shield_used"] is True
+    assert survival_of(combat, "ally:Yasuo")["spell_shield_used"] is True
     # The post-window cast (shield expired at 5.0) lands normally.
     assert later["time"] == pytest.approx(12.25)
     assert later["crowd_control"]["duration"] == pytest.approx(1.8)
-    assert _survival(combat, "ally:Yasuo")["action_downtime"] == pytest.approx(1.8)
+    assert survival_of(combat, "ally:Yasuo")["action_downtime"] == pytest.approx(1.8)
 
     # NEW-CONTRACT: the Annul-blocked cast never reached the immunity
     # gate — the recipient's immunity receipt blocked nothing.
     cce = _require_contract()
-    assert _survival(combat, "ally:Yasuo")["crowd_control_immunity"]["blocked"] == []
+    assert survival_of(combat, "ally:Yasuo")["crowd_control_immunity"]["blocked"] == []
 
 
 def test_r11b_projectile_defense_destroys_the_packet():
@@ -1209,7 +1185,7 @@ def test_r11b_projectile_defense_destroys_the_packet():
     assert annul_blocked["time"] == pytest.approx(12.25)
     assert annul_blocked["skipped_reason"] == "spell_shield"
     assert annul_blocked["spell_shield_source"] == "Banshee's Veil — Annul"
-    survival = _survival(combat, "ally:Yasuo")
+    survival = survival_of(combat, "ally:Yasuo")
     assert survival["spell_shield_used"] is True
     assert survival["action_downtime"] == pytest.approx(0.0)
 
@@ -1251,7 +1227,7 @@ def test_r11c_full_blocked_packet_drops_its_cc_without_receipt():
     assert "crowd_control" not in full_blocked
     assert later["time"] == pytest.approx(12.25)
     assert later["crowd_control"]["duration"] == pytest.approx(1.8)
-    survival = _survival(combat, "ally:Braum")
+    survival = survival_of(combat, "ally:Braum")
     assert survival["action_downtime"] == pytest.approx(1.8)
     assert survival["crowd_control_until"] == pytest.approx(14.05)
 
@@ -1288,7 +1264,7 @@ def test_r11d_stasis_blocked_packets_skip_every_later_gate():
     assert "crowd_control" not in stasis_blocked
     assert later["time"] == pytest.approx(12.25)
     assert later["crowd_control"]["duration"] == pytest.approx(1.8)
-    survival = _survival(combat, "ally:Lux")
+    survival = survival_of(combat, "ally:Lux")
     intervals = survival["crowd_control_intervals"]
     assert [(entry["kind"], entry["start"], entry["end"]) for entry in intervals] == [
         ("immobilize", 12.25, 14.05)
@@ -1389,13 +1365,13 @@ def test_r12_receipt_result_parity():
         (0.0, "E"),
         (0.0, "W"),
     }
-    lux = _survival(combat, "ally:Lux")
+    lux = survival_of(combat, "ally:Lux")
     assert lux["crowd_control_intervals"] == []
     assert lux["action_downtime"] == pytest.approx(0.0)
 
     jinx_applied = _cc_applied(combat, "ally:Jinx")
     assert len(jinx_applied) == 2
-    jinx = _survival(combat, "ally:Jinx")
+    jinx = survival_of(combat, "ally:Jinx")
     intervals = jinx["crowd_control_intervals"]
     assert {(entry["kind"], entry["source"]) for entry in intervals} == {
         ("immobilize", "E"),
@@ -1511,7 +1487,7 @@ def test_r14_non_control_damage_never_reports_a_control_block():
     assert not any(event.get("crowd_control_blocked") for event in combat["events"])
     assert not any(event.get("crowd_control") for event in combat["events"])
     for pid in ("ally:Lux", "ally:Jinx"):
-        survival = _survival(combat, pid)
+        survival = survival_of(combat, pid)
         assert survival["action_downtime"] == pytest.approx(0.0)
         assert survival["crowd_control_intervals"] == []
 
@@ -1519,7 +1495,7 @@ def test_r14_non_control_damage_never_reports_a_control_block():
     # blocked control, and the contract never classifies the plain
     # damage packet as a control at all.
     cce = _require_contract()
-    assert _survival(combat, "ally:Lux")["crowd_control_immunity"]["blocked"] == []
+    assert survival_of(combat, "ally:Lux")["crowd_control_immunity"]["blocked"] == []
     profile = cce.classify_control(_CcAction(cc_kind="", damage=100.0))
     assert profile.kind == ""
     assert profile.blocking is False

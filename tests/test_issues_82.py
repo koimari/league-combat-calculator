@@ -38,6 +38,7 @@ from src.calculator.role_quests import (
     SUPPORT_QUEST_ITEM_STAGES,
     support_quest_item_stage,
 )
+from tests.app_config import app_config
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_JS = ROOT / "static" / "js" / "app.js"
@@ -54,16 +55,8 @@ UPGRADED_BY_BASE = {upgraded: base for base, upgraded in BOOT_UPGRADES.items()}
 @pytest.fixture(autouse=True)
 def _isolate_app_config():
     """Keep these route tests off the shared rate-limit budget."""
-    previous_testing = app_module.app.config.get("TESTING")
-    previous_rate = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["TESTING"] = True
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    if previous_testing is None:
-        app_module.app.config.pop("TESTING", None)
-    else:
-        app_module.app.config["TESTING"] = previous_testing
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous_rate
+    with app_config(TESTING=True, RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _client():

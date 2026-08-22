@@ -46,31 +46,16 @@ from types import SimpleNamespace
 import pytest
 
 from src.app import app
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import delivery_eligibility as de
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant
 from src.calculator.stats import calculate_total_stats
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.survival import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -91,14 +76,6 @@ def _events(combat: dict, *, target: str, source: str | None = None) -> list[dic
         if event.get("target") == target
         and (source is None or event.get("source") == source)
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _spell_shield_blocked(combat: dict, target: str) -> list[dict]:
@@ -298,7 +275,7 @@ def test_r1_sivir_e_blocks_one_effect_and_triggers_exactly_one_heal():
     assert heal["amount"] == pytest.approx(_sivir_expected_heal())
     assert heal["applied_amount"] > 0.0
 
-    survival = _survival(combat, "main")
+    survival = survival_of(combat, "main")
     assert survival["spell_shield_used"] is True
     assert survival["spell_shield_until"] == pytest.approx(1.5)
     assert survival["spell_shield_source"] == "Spell Shield"
@@ -339,7 +316,7 @@ def test_r2_annul_items_block_one_ability_then_second_passes(item, source):
     assert len(blocked) == 1
     assert blocked[0]["spell_shield_source"] == source
 
-    survival = _survival(combat, "enemy:Ahri")
+    survival = survival_of(combat, "enemy:Ahri")
     assert survival["spell_shield_used"] is True
     assert survival["spell_shield_source"] == source
     assert survival["spell_shield_until"] is None  # infinite until consumed
@@ -368,7 +345,7 @@ def test_r3_basic_attack_first_does_not_consume_then_ability_blocks():
     then blocked."""
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=100.0)
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, target],
         {
             "target": [
@@ -487,7 +464,7 @@ def test_r4_multipart_cast_blocks_all_packets_with_one_use_and_one_heal():
     assert len(heals) == 1
     assert heals[0]["time"] == pytest.approx(0.0 + 0.25)
 
-    survival = _survival(combat, "main")
+    survival = survival_of(combat, "main")
     assert survival["spell_shield_used"] is True
     assert survival["spell_shield_heal_triggered"] is True
     # A later cast from the same attacker passes.
@@ -506,7 +483,7 @@ def test_r5_control_only_cast_consumes_the_shield_and_is_blocked():
     consumes the spell shield and is blocked; the CC is never applied."""
     source = _dummy_combatant("source", "enemy", health=100.0)
     target = _dummy_combatant("target", "main", health=100.0)
-    result = _simulate_survival(
+    result = simulate_survival(
         [source, target],
         {
             "target": [
@@ -610,7 +587,7 @@ def test_r6_two_casts_same_timestamp_total_order_decides():
     )
     assert lux_q.get("skipped_reason") is None
     assert lux_q["damage"] > 0.0
-    assert _survival(combat, "main")["spell_shield_used"] is True
+    assert survival_of(combat, "main")["spell_shield_used"] is True
 
 
 def test_r6_same_slot_collision_groups_as_one_cast_one_use():
@@ -670,7 +647,7 @@ def test_r6_same_slot_collision_groups_as_one_cast_one_use():
     assert len(heals) == 1
     assert heals[0]["time"] == pytest.approx(0.25)
 
-    survival = _survival(combat, "main")
+    survival = survival_of(combat, "main")
     assert survival["spell_shield_used"] is True
     receipt = survival["spell_shield"]
     assert receipt["selected_cast_identity"] == "E:1"
@@ -830,7 +807,7 @@ def test_r8_stasis_blocked_packets_do_not_spend_the_shield():
 
     assert passed.get("skipped_reason") is None
     assert passed["damage"] > 0.0
-    assert _survival(combat, "enemy:Ahri")["spell_shield_used"] is True
+    assert survival_of(combat, "enemy:Ahri")["spell_shield_used"] is True
 
 
 def test_r8_yasuo_destroyed_packets_do_not_spend_the_shield():
@@ -872,7 +849,7 @@ def test_r8_yasuo_destroyed_packets_do_not_spend_the_shield():
     )
     assert shield_blocked["time"] == 6.5
     assert shield_blocked["spell_shield_source"] == "Banshee's Veil — Annul"
-    assert _survival(combat, "enemy:Yasuo")["spell_shield_used"] is True
+    assert survival_of(combat, "enemy:Yasuo")["spell_shield_used"] is True
 
 
 def test_r8_braum_full_blocked_packet_does_not_spend_the_shield():
@@ -924,7 +901,7 @@ def test_r8_braum_full_blocked_packet_does_not_spend_the_shield():
     # Third projectile: both defenses spent, full damage.
     assert third.get("skipped_reason") is None
     assert third["damage"] > 0.0
-    assert _survival(combat, "enemy:Braum")["spell_shield_used"] is True
+    assert survival_of(combat, "enemy:Braum")["spell_shield_used"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -978,7 +955,7 @@ def test_r10_survival_row_matches_blocked_events():
             ],
         }
     )
-    survival = _survival(combat, "main")
+    survival = survival_of(combat, "main")
     blocked = _spell_shield_blocked(combat, "main")
     assert blocked
     assert all(
@@ -1006,7 +983,7 @@ def test_r10_spell_shield_receipt_parity():
             ],
         }
     )
-    survival = _survival(combat, "main")
+    survival = survival_of(combat, "main")
     receipt = survival["spell_shield"]
     blocked = _spell_shield_blocked(combat, "main")
 

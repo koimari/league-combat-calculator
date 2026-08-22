@@ -84,16 +84,10 @@ from pathlib import Path
 import pytest
 
 from src.app import app
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_coverage import (
-    item_model_coverage,
-    review_issue_refs,
-    target_item_model_coverage,
-)
+from src.calculator.item_coverage import review_issue_refs, target_item_model_coverage
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -107,7 +101,6 @@ from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
@@ -119,26 +112,9 @@ from src.calculator.survival.compile import (
     unrepresentable_template_receipt,
 )
 
-from src.calculator.item_coverage import ATTACKER_LANES
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
+from tests import item_probe
 
 REDEMPTION = "Redemption"
 SOURCE = "Redemption \u2014 Intervention"  # "Redemption — Intervention"
@@ -252,14 +228,6 @@ def _enemy(champion: str = "Aatrox", *, ranks=None) -> dict:
         "items": [],
         "ability_ranks": ranks,
     }
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _redemption_support(combat: dict) -> list[dict]:
@@ -399,7 +367,7 @@ def test_active_seconds_zero_no_cast_no_packets():
         combat = _calculate(payload)
         assert _redemption_support(combat) == []
         assert _redemption_damage(combat) == []
-        assert _survival(combat, "ally:Jinx")["healing_received"] == 0.0
+        assert survival_of(combat, "ally:Jinx")["healing_received"] == 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -601,7 +569,7 @@ def test_max_boundary_30_seconds_is_schema_valid_and_skipped_outside_window():
         event["skipped_reason"] == "outside_window"
         for event in _redemption_damage(combat)
     )
-    assert _survival(combat, "ally:Jinx")["healing_received"] == 0.0
+    assert survival_of(combat, "ally:Jinx")["healing_received"] == 0.0
 
 
 def test_beam_landing_exactly_at_fight_end_is_in_window():
@@ -622,7 +590,7 @@ def test_beam_landing_exactly_at_fight_end_is_in_window():
     # The vision receipt rides the activation (1.0, in-window); the beam
     # packets ride 3.5 == fight end (in-window, strict ">").
     assert all(packet.get("skipped_reason") is None for packet in packets)
-    assert _survival(combat, "ally:Jinx")["healing_received"] == pytest.approx(350.0)
+    assert survival_of(combat, "ally:Jinx")["healing_received"] == pytest.approx(350.0)
 
     payload["fight_duration"] = 3.49
     combat = _calculate(payload)
@@ -633,7 +601,7 @@ def test_beam_landing_exactly_at_fight_end_is_in_window():
             assert packet.get("skipped_reason") is None  # 1.0 in-window
         else:
             assert packet["skipped_reason"] == "outside_window"
-    assert _survival(combat, "ally:Jinx")["healing_received"] == 0.0
+    assert survival_of(combat, "ally:Jinx")["healing_received"] == 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -845,7 +813,7 @@ def test_dead_enemy_at_impact_skips_the_beam_damage():
             ),
         ]
     }
-    result = _simulate_survival(combatants, incoming, {}, {}, 5.0)
+    result = simulate_survival(combatants, incoming, {}, {}, 5.0)
     enemy = result["enemy"]
     assert enemy["first_death_time"] == pytest.approx(1.0)
     assert enemy["health_damage"] == pytest.approx(300.0)  # beam damage skipped
@@ -877,7 +845,7 @@ def test_dead_ally_at_impact_is_not_resurrected_by_the_beam_heal():
             }
         ]
     }
-    result = _simulate_survival(combatants, incoming, healing, {}, 5.0)
+    result = simulate_survival(combatants, incoming, healing, {}, 5.0)
     ally = result["ally"]
     assert ally["first_death_time"] == pytest.approx(1.0)
     assert ally["healing_received"] == pytest.approx(0.0)
@@ -1187,7 +1155,7 @@ def test_redemption_is_optimizer_eligible_with_modeled_state():
     'sustain' outcome dimensions), in get_eligible_legendaries, and the
     target model is 'modeled' (not target-blocked)."""
     item = get_item_by_name(REDEMPTION)
-    coverage = _attacker_coverage(item)
+    coverage = item_probe.attacker_coverage(item)
     assert coverage["optimizer_eligible"] is True
     assert coverage["status"] == "modeled_state"
     assert coverage["calculation_eligible"] is True

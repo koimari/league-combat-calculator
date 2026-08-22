@@ -12,6 +12,7 @@ import pytest
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import lucian
 from src.calculator.data_fetcher import get_champion
+from tests import cc_review
 
 # Every control word the Wiki uses for the classes an item passive keys on.
 CONTROL_WORDS = (
@@ -49,27 +50,22 @@ def cached():
     return get_champion("Lucian")
 
 
-def slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
         assert lucian.MODULE_CC == {"Q": "none", "W": "none", "R": "none"}
         for slot, phrase in QUOTED.items():
-            assert phrase in slot_text(cached, slot), slot
+            assert phrase in cc_review.slot_text(cached, slot), slot
 
     def test_reviewed_absences_read_the_whole_slot(self, cached):
         """A "none" is a slot that was read, not a slot that was skipped."""
         for slot, kind in lucian.MODULE_CC.items():
             if kind != "none":
                 continue
-            hits = [word for word in CONTROL_WORDS if word in slot_text(cached, slot)]
+            hits = [
+                word
+                for word in CONTROL_WORDS
+                if word in cc_review.slot_text(cached, slot)
+            ]
             assert hits == UNCONTROLLED_MENTIONS.get(slot, []), slot
 
     def test_every_ability_event_carries_the_review(self, cached):

@@ -37,19 +37,9 @@ from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_coverage import (
-    item_model_coverage,
-    require_calculation_item_coverage,
-)
+from src.calculator.item_coverage import require_calculation_item_coverage
 
-from src.calculator.item_coverage import ATTACKER_LANES
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
+from tests import item_probe
 
 
 def _actor(
@@ -562,7 +552,7 @@ def test_new_typed_keys_have_exactly_one_registry_owner():
 )
 def test_cp20_items_are_classified_modeled_state_and_optimizer_eligible(item_name):
     item = get_item_by_name(item_name)
-    coverage = _attacker_coverage(item)
+    coverage = item_probe.attacker_coverage(item)
     assert coverage["status"] == "modeled_state"
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True

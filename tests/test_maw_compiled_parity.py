@@ -147,8 +147,6 @@ import pytest
 
 from src import app as app_module
 from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator import item_effects
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
@@ -170,7 +168,6 @@ from src.calculator.item_effects import (
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
@@ -186,18 +183,8 @@ from src.calculator.item_behavior import DefenseMechanic
 # Ours' declaration layer raises its own fail-closed error where main's
 # accessor raised KeyError; both refuse the corrupted value.
 from src.calculator.value_ref import ValueRefError
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.app_config import app_config
 
 _SOURCE = defense_source("Maw of Malmortius", DefenseMechanic.LIFELINE_MAW)
 
@@ -237,10 +224,8 @@ AHRi_SHIELD = SHIELD_RANGED_BASE + SHIELD_RANGED_AD_RATIO * AD_FLAT
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits():
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _maw_item() -> dict:
@@ -330,7 +315,7 @@ def _run_packets(
     holder_id: str = "target",
 ) -> dict:
     """Run one _simulate_survival with the Maw holder as target."""
-    return _simulate_survival(
+    return simulate_survival(
         [_dummy_source(), holder], {holder_id: events}, {}, {}, duration
     )
 
@@ -848,7 +833,7 @@ def test_post_trigger_omnivamp_heals_ten_percent_until_end_of_combat():
             ),
         ],
     }
-    result = _simulate_survival([holder, _dummy_source()], incoming, {}, {}, 5.0)
+    result = simulate_survival([holder, _dummy_source()], incoming, {}, {}, 5.0)
     row = _row(result)
     assert row["threshold_shield_triggered"] is True
     # 10% of 100 physical + 10% of 200 magic = 30; the true hit heals 0.
@@ -872,7 +857,7 @@ def test_no_omnivamp_heal_before_the_lifeline_triggers():
             ),
         ],
     }
-    result = _simulate_survival([holder, _dummy_source()], incoming, {}, {}, 5.0)
+    result = simulate_survival([holder, _dummy_source()], incoming, {}, {}, 5.0)
     assert _row(result)["threshold_shield_triggered"] is False
     assert _row(result)["healing_received"] == pytest.approx(0.0)
 
@@ -1439,7 +1424,7 @@ def test_regression_surface_participant_timeline_post_trigger_omnivamp():
             ),
         ],
     }
-    result = _simulate_survival([holder, _dummy_source()], incoming, {}, {}, 2.0)
+    result = simulate_survival([holder, _dummy_source()], incoming, {}, {}, 2.0)
     assert _row(result)["threshold_shield_triggered"] is True
     assert _row(result)["healing_received"] == pytest.approx(2.0)
 

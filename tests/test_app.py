@@ -16,15 +16,14 @@ from src.calculator.bis import bis_main_request
 from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request
 from src.rate_limit import TokenBucketStore
+from tests.app_config import app_config
 
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits_between_route_tests():
     """Only dedicated tests spend the production abuse-control budget."""
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contract():

@@ -153,8 +153,6 @@ import pytest
 
 from src import app as app_module
 from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
@@ -178,25 +176,14 @@ from src.calculator.item_effects import (
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.interpreters import uncompilable_item_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.app_config import app_config
 
 ITEM_NAME = "Verdant Barrier"
 ITEM_ID = 4632
@@ -225,10 +212,8 @@ ASSUMPTION = (
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits():
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _verdant_item() -> dict:
@@ -315,7 +300,7 @@ def _run_packets(
     holder_id: str = "target",
 ) -> dict:
     """Run one _simulate_survival with the Verdant holder as target."""
-    return _simulate_survival(
+    return simulate_survival(
         [_dummy_source(), holder], {holder_id: events}, {}, {}, duration
     )
 
@@ -576,7 +561,7 @@ def test_shield_blocks_for_the_holder_only_no_inferred_owner_path():
     # The main without the shield takes the full ability packet.
     main_events = [_packet(1.0, 0, damage=100.0, damage_type="magic", target="main")]
     main_events[0]["target"] = "main"
-    result = _simulate_survival(
+    result = simulate_survival(
         [_dummy_source(), main], {"main": main_events}, {}, {}, 10.0
     )
     assert result["main"]["damage_taken"] == pytest.approx(100.0)
@@ -1281,7 +1266,7 @@ def test_regression_surface_participant_timeline_opening_annul():
             basic_attack=True,
         ),
     ]
-    result = _simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
+    result = simulate_survival([source, target], {"target": events}, {}, {}, 10.0)
     assert result["target"]["damage_taken"] == pytest.approx(20.0)
     assert result["target"]["spell_shield_used"] is True
     assert result["target"]["spell_shield_source"] == SHIELD_SOURCE

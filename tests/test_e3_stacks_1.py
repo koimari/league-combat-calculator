@@ -35,6 +35,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import braum, darius, twitch, varus
+from src.calculator.champions.slotlib import _modifier_value, find_named_leveling
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _CACHE_KEY_BY_DISPLAY = {
@@ -93,28 +94,13 @@ def _leveling(champion: str, slot: str, attribute: str, occurrence: int = 0) -> 
     Noxian Might row), so the Might row is occurrence 4.
     """
     ability = _CHAMPION_DATA[_CACHE_KEY_BY_DISPLAY[champion]]["abilities"][slot][0]
-    seen = 0
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                if seen == occurrence:
-                    return leveling
-                seen += 1
-    raise AssertionError(
-        f"{champion} {slot} has no leveling attribute {attribute!r} "
-        f"(occurrence {occurrence})"
-    )
-
-
-def _modifier_value(leveling: dict, modifier_index: int, rank: int) -> float:
-    """Raw value of one modifier at rank (the E2 test pattern)."""
-    modifiers = leveling.get("modifiers", [])
-    if modifier_index >= len(modifiers):
-        return 0.0
-    values = modifiers[modifier_index].get("values", [])
-    if not values:
-        return 0.0
-    return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+    leveling = find_named_leveling(ability, attribute, occurrence=occurrence)
+    if leveling is None:
+        raise AssertionError(
+            f"{champion} {slot} has no leveling attribute {attribute!r} "
+            f"(occurrence {occurrence})"
+        )
+    return leveling
 
 
 def _normalize_unit(unit: str) -> str:

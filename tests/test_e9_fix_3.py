@@ -21,6 +21,7 @@ from src import app as app_module
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
+from src.calculator.champions.slotlib import find_named_leveling
 
 LEVEL = 18
 _FULL_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -35,16 +36,12 @@ _CACHE_KEY_BY_DISPLAY = {
 def _leveling(champion: str, slot: str, attribute: str, occurrence: int = 0) -> dict:
     """Return one leveling entry from data/champions.json, failing loudly."""
     ability = _CHAMPION_DATA[_CACHE_KEY_BY_DISPLAY[champion]]["abilities"][slot][0]
-    seen = 0
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                if seen == occurrence:
-                    return leveling
-                seen += 1
-    raise AssertionError(
-        f"no {attribute!r} leveling row (occurrence {occurrence}) for {champion} {slot}"
-    )
+    leveling = find_named_leveling(ability, attribute, occurrence=occurrence)
+    if leveling is None:
+        raise AssertionError(
+            f"no {attribute!r} leveling row (occurrence {occurrence}) for {champion} {slot}"
+        )
+    return leveling
 
 
 def _leveling_at(

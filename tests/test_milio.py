@@ -14,6 +14,7 @@ from src.calculator.champions import get_champion_module_contract
 from tests import rider_probe
 from src.calculator.champions import milio
 from src.calculator.data_fetcher import get_champion
+from tests import cc_review
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"Q": "knocks back and stuns the first enemy it hits over 1 second"}
@@ -24,20 +25,11 @@ def cached():
     return get_champion("Milio")
 
 
-def slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
         assert milio.MODULE_CC == {"Q": "stun"}
         for slot, phrase in QUOTED.items():
-            assert phrase in slot_text(cached, slot), slot
+            assert phrase in cc_review.slot_text(cached, slot), slot
 
     def test_every_ability_event_carries_the_review(self, cached):
         """Reviewing a kit only counts where the ledger can see it."""

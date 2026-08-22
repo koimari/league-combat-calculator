@@ -22,6 +22,7 @@ import src.app as app_module
 # The app imports its persistence layer as the top-level ``db`` module (src/
 # is placed on sys.path by app.py), so tests reuse that same module instance.
 from src import db
+from tests.app_config import app_config
 
 ROOT = Path(__file__).parents[1]
 
@@ -56,16 +57,8 @@ def sqlite_database(tmp_path, monkeypatch):
 @pytest.fixture(autouse=True)
 def _isolate_app_config():
     """Keep these route tests off the shared rate-limit budget."""
-    previous_testing = app_module.app.config.get("TESTING")
-    previous_rate = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["TESTING"] = True
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    if previous_testing is None:
-        app_module.app.config.pop("TESTING", None)
-    else:
-        app_module.app.config["TESTING"] = previous_testing
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous_rate
+    with app_config(TESTING=True, RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _client():

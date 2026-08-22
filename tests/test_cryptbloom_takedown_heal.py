@@ -66,10 +66,7 @@ import pytest
 from src.app import app
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_coverage import (
-    item_model_coverage,
-    target_item_model_coverage,
-)
+from src.calculator.item_coverage import target_item_model_coverage
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_EFFECTS,
@@ -90,13 +87,12 @@ from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import unrepresentable_template_receipt
 
-from src.calculator.item_coverage import ATTACKER_LANES
-
 # The retired ``EVENT_*_SUPPORT_ITEMS`` name lists and their predicates,
 # derived from the declarations that replaced them: a holder needs dict
 # rows exactly when it reads a raw stream, and it is a takedown scanner
 # exactly when the stream it reads is the takedown one.
 from src.calculator.trigger_stream import Stream, streams_for, tuple_incapable_items
+from tests import item_probe
 
 TAKEDOWN_SCAN_SUPPORT_ITEMS = frozenset(
     name
@@ -118,13 +114,6 @@ def has_takedown_scan_support_items(items):
     return bool(
         {str(item.get("name", "")) for item in items} & TAKEDOWN_SCAN_SUPPORT_ITEMS
     )
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
 
 
 CRYPTBLOOM = "Cryptbloom"
@@ -840,7 +829,7 @@ def test_item_coverage_wording_and_optimizer_eligibility():
     optimizer-eligible, in get_eligible_legendaries, and the target model
     prices it on the target lane."""
     item = get_item_by_name(CRYPTBLOOM)
-    coverage = _attacker_coverage(item)
+    coverage = item_probe.attacker_coverage(item)
     assert coverage["optimizer_eligible"] is True
     assert coverage["calculation_eligible"] is True
     assert coverage["status"] == "modeled_state"

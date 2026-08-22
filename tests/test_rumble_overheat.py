@@ -80,6 +80,7 @@ from src.calculator.champions.scaling import (
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
 from src.calculator.support_effects import derive_ally_effects
+from tests import game_binary
 
 _RUMBLE = get_champion("Rumble")
 _WIKI_ALL = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -115,14 +116,6 @@ _TARGET = {
 
 _P_EFFECT = _WIKI["abilities"]["P"][0]["effects"][2]
 _ALIAS = "% of maximum health"
-
-
-def _data_value(record: dict, name: str) -> list[float]:
-    """One named ``DataValues`` row out of a binary spell record."""
-    for entry in record.get("DataValues", []):
-        if entry.get("name") == name:
-            return list(entry.get("values") or [])
-    raise AssertionError(f"binary record has no DataValues row {name!r}")
 
 
 def _leveling_row(effect: dict, attribute: str) -> dict:
@@ -209,7 +202,7 @@ class TestOverheatIsBinaryCorroborated:
     def test_binary_percent_health_term_matches_the_wiki(self):
         row = _leveling_row(_P_EFFECT, "Bonus Magic Damage")
         assert row["modifiers"][2]["values"][0] == pytest.approx(4.0)
-        values = _data_value(_heat_record(), "OverheatPercBonusDamage")
+        values = game_binary.data_value(_heat_record(), "OverheatPercBonusDamage")
         assert all(value == pytest.approx(0.04, abs=1e-6) for value in values)
 
     def test_binary_base_ladder_matches_the_wiki_endpoints(self):

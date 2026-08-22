@@ -62,17 +62,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
     resolve_starting_defenses,
 )
-from src.calculator.item_coverage import (
-    item_model_coverage,
-    target_item_model_coverage,
-)
+from src.calculator.item_coverage import target_item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -82,7 +77,6 @@ from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
-    _simulate_survival as _simulate_survival_walk,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
@@ -94,26 +88,9 @@ from src.calculator.stats import calculate_total_stats
 from src.calculator.defensive_effects import defense_source
 from src.calculator.item_behavior import DefenseMechanic
 
-from src.calculator.item_coverage import ATTACKER_LANES
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
-
-def _attacker_coverage(item):
-    """Ours' lane-taking classifier, called with the cached record these
-    tests carry.  The payload shape is unchanged; only the argument moved
-    from the record to the name plus the lanes the caller needs."""
-    return item_model_coverage(str(item["name"]), ATTACKER_LANES).as_payload()
-
+from tests.survival_probe import simulate_survival
+from tests.survival_probe import survival_of
+from tests import item_probe
 
 _SOURCE = defense_source("Zhonya's Hourglass", DefenseMechanic.TIME_STOP)
 
@@ -207,14 +184,6 @@ def _no_option_fight(duration=8.0, champion="Ahri"):
     zhonya = get_item_by_name(ZHONYA)
     params = _params(fight_duration=duration)
     return _timeline(champion, 18, [zhonya], params, [_roster("Janna")])
-
-
-def _survival(result, participant_id="main"):
-    return next(
-        row["survival"]
-        for row in result["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _events(result, attacker=None, target=None):
@@ -372,7 +341,7 @@ def test_item_presence_alone_never_activates_stasis():
     assert defenses.starting_stasis_source == ""
 
     result = _no_option_fight()
-    survival = _survival(result)
+    survival = survival_of(result)
     assert survival["stasis_until"] == 0.0
     assert survival["stasis_started_at"] is None
     assert survival["stasis_source"] == ""
@@ -384,7 +353,7 @@ def test_item_presence_alone_never_activates_stasis():
     # not depend on holding the item.  The target lane answers a different
     # question (what the wearer survives) and names the mechanic instead.
     assert "Time Stop" in target_item_model_coverage(get_item_by_name(ZHONYA))["reason"]
-    for coverage in (_attacker_coverage(get_item_by_name(ZHONYA)),):
+    for coverage in (item_probe.attacker_coverage(get_item_by_name(ZHONYA)),):
         assert (
             "Time Stop is priced only from the explicit bounded active-seconds "
             "scenario input; item presence alone never assumes stasis."
@@ -401,7 +370,7 @@ def test_stasis_interval_and_action_downtime_receipt():
     """2.0s input -> stasis_until 2.0 at 0, named source, downtime >= 2.0
     with exactly one [0, 2.0] interval row."""
     result = _stasis_fight(seconds=2.0)
-    survival = _survival(result)
+    survival = survival_of(result)
     assert survival["stasis_until"] == pytest.approx(2.0)
     assert survival["stasis_started_at"] == pytest.approx(0.0)
     assert survival["stasis_source"] == STASIS_SOURCE_LABEL
@@ -441,8 +410,8 @@ def test_incoming_damage_blocked_during_stasis_and_lands_after():
     assert all(event.get("skipped_reason") is None for event in landed)
     assert landed[0]["time"] == pytest.approx(2.119)
 
-    assert _survival(stasis)["damage_taken"] == pytest.approx(301.1)
-    assert _survival(plain)["damage_taken"] == pytest.approx(301.1 + blocked_sum)
+    assert survival_of(stasis)["damage_taken"] == pytest.approx(301.1)
+    assert survival_of(plain)["damage_taken"] == pytest.approx(301.1 + blocked_sum)
 
 
 def test_holder_outgoing_actions_blocked_during_stasis():
@@ -547,7 +516,7 @@ def test_same_time_ordering_stasis_wins_and_expiry_is_exclusive():
             _kernel_packet(2.0, 300.0, "main", "enemy", source="Q2"),
         ],
     }
-    result = _simulate_survival(combatants, incoming, {}, {}, 6.0)
+    result = simulate_survival(combatants, incoming, {}, {}, 6.0)
 
     main = result["main"]
     assert main["health_damage"] == pytest.approx(1000.0)  # t=0,1 blocked; t=2,2.5 land
@@ -733,7 +702,7 @@ def test_score_only_fight_parity_zhonya_build():
 def test_zhonya_not_optimizer_blocked_by_stasis():
     """Zhonya stays optimizer-eligible with stasis as a reviewed outcome
     dimension; the registry entry names Time Stop as defensive stasis."""
-    coverage = _attacker_coverage(get_item_by_name(ZHONYA))
+    coverage = item_probe.attacker_coverage(get_item_by_name(ZHONYA))
     assert coverage["optimizer_eligible"] is True
     assert coverage["status"] == "stats_only"
     assert coverage["calculation_eligible"] is True
@@ -774,7 +743,7 @@ def test_identical_fights_produce_identical_stasis_receipts():
     first = _stasis_fight(seconds=2.0)
     second = _stasis_fight(seconds=2.0)
     assert first == second
-    survival = _survival(first)
+    survival = survival_of(first)
     assert survival["stasis_until"] == pytest.approx(2.0)
     assert len(survival["action_downtime_intervals"]) == 1
     assert [
@@ -791,7 +760,7 @@ def test_input_never_authors_midfight_stasis_packet():
     """The option is a fight-start window: the only stasis artifact it
     authors starts at t=0, and no activation-timestamp option exists."""
     result = _stasis_fight(seconds=2.0)
-    survival = _survival(result)
+    survival = survival_of(result)
     assert survival["stasis_started_at"] == pytest.approx(0.0)
     assert all(row["start"] == 0.0 for row in survival["action_downtime_intervals"])
     assert all(row["kind"] == "stasis" for row in survival["action_downtime_intervals"])

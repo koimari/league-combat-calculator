@@ -103,8 +103,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
@@ -128,23 +126,10 @@ from src.calculator.cleanse_eligibility import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.app_config import app_config
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _RENGAR_DATA = _CHAMPION_DATA["Rengar"]
@@ -263,12 +248,8 @@ def _testing_client():
     rely on ``TESTING`` being False (the limiter is bypassed under
     TESTING), so this file must never leave the flag set.
     """
-    previous = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
+    with app_config(TESTING=True):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous
 
 
 def _app_combat(
@@ -484,7 +465,7 @@ def _kernel_survival(
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
     ]
-    return _simulate_survival(
+    return simulate_survival(
         combatants,
         {"main": list(controls or [])},
         {"main": list(heals or [])},

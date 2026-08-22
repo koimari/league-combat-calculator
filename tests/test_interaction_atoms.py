@@ -9,6 +9,7 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from src.calculator.interaction_effects import resolve_physical_damage_reduction
 from src.calculator.stats import calculate_total_stats
+from tests.survival_probe import survival_of
 
 
 def _calculate(payload: dict) -> dict:
@@ -26,14 +27,6 @@ def _events(combat: dict, *, attacker: str, target: str, source: str) -> list[di
         and event.get("target") == target
         and event.get("source") == source
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def test_amumu_tantrum_resolves_ranked_atoms_and_exposes_receipts():
@@ -82,7 +75,7 @@ def test_amumu_tantrum_reduction_reaches_the_survival_receipt():
         }
     )
 
-    reduction = _survival(combat, "enemy:Amumu")["physical_damage_reduction"]
+    reduction = survival_of(combat, "enemy:Amumu")["physical_damage_reduction"]
     assert reduction["source"] == "Amumu E · Tantrum"
     assert reduction["per_instance_cap"] == pytest.approx(0.5)
     assert reduction["source_atoms"][-1]["source"] == (
@@ -127,7 +120,7 @@ def test_braum_e_blocks_one_selected_skillshot_then_reduces_later_hits():
     assert later["projectile_defense"]["reduction"] == pytest.approx(0.55)
     assert [
         atom["source"]
-        for atom in _survival(combat, "enemy:Braum")["projectile_defense"][
+        for atom in survival_of(combat, "enemy:Braum")["projectile_defense"][
             "source_atoms"
         ]
     ] == [
@@ -135,7 +128,7 @@ def test_braum_e_blocks_one_selected_skillshot_then_reduces_later_hits():
         "Braum.E[0].effects[0].leveling[0].modifiers[0]",
     ]
 
-    survival = _survival(combat, "enemy:Braum")
+    survival = survival_of(combat, "enemy:Braum")
     assert survival["projectile_defense"]["until"] == pytest.approx(4.0)
     assert survival["projectile_defense_blocked"] == [
         {"time": first["time"], "source": "Q", "mode": "full_block"}
@@ -170,7 +163,7 @@ def test_braum_e_blocks_control_with_the_projectile():
     assert charm["damage"] == pytest.approx(0.0)
     assert charm["cc_kind"] == "immobilize"
     assert charm["projectile_defense"]["mode"] == "full_block"
-    assert _survival(combat, "enemy:Braum")["crowd_control_intervals"] == []
+    assert survival_of(combat, "enemy:Braum")["crowd_control_intervals"] == []
 
 
 def test_yasuo_w_blocks_selected_skillshots_only_during_active_window():
@@ -207,7 +200,7 @@ def test_yasuo_w_blocks_selected_skillshots_only_during_active_window():
     assert later["damage"] > 0.0
     assert "projectile_defense" not in later
 
-    survival = _survival(combat, "enemy:Yasuo")
+    survival = survival_of(combat, "enemy:Yasuo")
     assert survival["projectile_defense"]["until"] == pytest.approx(1.0)
     assert survival["projectile_defense"]["source_atoms"][0]["source"] == (
         "Yasuo.W[0].effects[0].description"
@@ -271,7 +264,7 @@ def test_sivir_e_blocks_one_effect_and_schedules_its_sourced_heal():
     assert heals[0]["attacker"] == "main"
     assert heals[0]["time"] == pytest.approx(0.25)
     assert heals[0]["applied_amount"] > 0.0
-    assert _survival(combat, "main")["spell_shield_heal_triggered"] is True
+    assert survival_of(combat, "main")["spell_shield_heal_triggered"] is True
 
 
 def test_morgana_black_shield_selects_one_ally_and_blocks_magic_cc():
@@ -329,7 +322,7 @@ def test_morgana_black_shield_selects_one_ally_and_blocks_magic_cc():
     )[0]
     assert charm["damage"] > 0.0
     assert charm["crowd_control_blocked"]["source"] == "Black Shield"
-    lux_survival = _survival(combat, "ally:Lux")
+    lux_survival = survival_of(combat, "ally:Lux")
     assert lux_survival["health_damage"] == pytest.approx(0.0)
     assert lux_survival["crowd_control_intervals"] == []
     assert lux_survival["action_downtime"] == pytest.approx(0.0)
@@ -564,7 +557,7 @@ def test_additional_defensive_windows_use_selected_sources_and_expire(
         assert first["skipped_reason"] == reason
     assert later["damage"] > 0.0
 
-    survival = _survival(combat, f"enemy:{defender}")
+    survival = survival_of(combat, f"enemy:{defender}")
     until = option.get("w_active_seconds", option.get("e_active_seconds", 0.0))
     assert survival["projectile_defense"]["until"] == pytest.approx(until)
     assert survival["projectile_defense_blocked"] == [
@@ -594,7 +587,7 @@ def test_yasuo_q3_carries_knockup_duration_into_target_downtime():
         "duration": pytest.approx(0.9),
         "until": pytest.approx(0.9),
     }
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(0.9)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(0.9)
 
 
 def test_jax_e_blocks_basic_attacks_only_during_the_sourced_window():
@@ -638,7 +631,7 @@ def test_jax_e_blocks_basic_attacks_only_during_the_sourced_window():
     assert later["damage"] > 0.0
     assert "projectile_defense" not in later
 
-    survival = _survival(combat, "enemy:Jax")
+    survival = survival_of(combat, "enemy:Jax")
     assert survival["projectile_defense"]["until"] == pytest.approx(1.0)
     assert survival["projectile_defense"]["blocks_basic_attacks"] is True
     assert survival["projectile_defense"]["source_atoms"][0]["source"] == (
@@ -702,7 +695,7 @@ def test_control_only_ability_is_an_ordered_survival_action():
     assert controls[0]["crowd_control"]["until"] == pytest.approx(
         controls[0]["time"] + 2.5
     )
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.5)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.5)
 
 
 def test_morgana_q_root_uses_the_sourced_rank_duration():
@@ -721,7 +714,7 @@ def test_morgana_q_root_uses_the_sourced_rank_duration():
     q_event = _events(combat, attacker="main", target="enemy:Aatrox", source="Q")[0]
     assert q_event["cc_kind"] == "root"
     assert q_event["cc_duration"] == pytest.approx(3.0)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(3.0)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(3.0)
 
 
 def test_morgana_r_stun_is_attached_to_the_tether_break_hit():
@@ -766,7 +759,7 @@ def test_nautilus_r_knockup_uses_the_primary_target_duration():
     # which is the number this test is named for.
     assert r_event["cc_kind"] == "immobilize"
     assert r_event["cc_duration"] == pytest.approx(2.0)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
 
 
 # A cast whose control is one branch of a two-branch active has to be told
@@ -846,7 +839,7 @@ def test_structured_control_atoms_create_action_downtime(
         str(unit).strip().lower() in {"seconds", "s"}
         for unit in controls[0]["control_source_atoms"][0]["units"]
     )
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(
         duration
     )
 
@@ -882,7 +875,7 @@ def test_silence_atoms_are_reported_without_full_action_downtime(
         if event.get("cc_kind") == kind
     )
     assert event["cc_duration"] == pytest.approx(duration)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(0.0)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(0.0)
 
 
 def test_zilean_q_second_bomb_emits_sourced_stun():
@@ -905,7 +898,7 @@ def test_zilean_q_second_bomb_emits_sourced_stun():
     )
     assert event["time"] == pytest.approx(0.0)
     assert event["cc_duration"] == pytest.approx(1.5)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(1.5)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(1.5)
 
 
 def test_delayed_control_atoms_keep_their_authored_hit_time():
@@ -927,7 +920,7 @@ def test_delayed_control_atoms_keep_their_authored_hit_time():
     )
     assert root["time"] == pytest.approx(2.0)
     assert root["cc_duration"] == pytest.approx(2.0)
-    assert _survival(karma, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
+    assert survival_of(karma, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
 
 
 def test_evelynn_allure_requires_an_explicit_matured_mark_trigger_for_charm():
@@ -953,7 +946,7 @@ def test_evelynn_allure_requires_an_explicit_matured_mark_trigger_for_charm():
     )
     assert charm["time"] == pytest.approx(2.5)
     assert charm["cc_duration"] == pytest.approx(2.25)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.25)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.25)
 
 
 def test_soraka_e_root_is_a_delayed_control_only_event():
@@ -980,7 +973,7 @@ def test_soraka_e_root_is_a_delayed_control_only_event():
     assert root["damage"] == pytest.approx(0.0)
     assert root["time"] == pytest.approx(1.5)
     assert root["cc_duration"] == pytest.approx(2.0)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
 
 
 @pytest.mark.parametrize(
@@ -1166,6 +1159,6 @@ def test_stateful_control_atoms_create_timed_downtime(
     assert control["cc_duration"] == pytest.approx(duration)
     if champion == "Nocturne":
         assert control["time"] == pytest.approx(2.0)
-    assert _survival(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(
+    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(
         duration
     )

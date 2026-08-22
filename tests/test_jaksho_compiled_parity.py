@@ -128,8 +128,6 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
@@ -147,7 +145,6 @@ from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
-    _simulate_survival as _simulate_survival_walk,
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
@@ -162,18 +159,7 @@ from src.calculator.item_behavior import DefenseMechanic
 # Ours' declaration layer raises its own fail-closed error where main's
 # accessor raised KeyError; both refuse the corrupted value.
 from src.calculator.value_ref import ValueRefError
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
 
 _SOURCE = defense_source("Jak'Sho, The Protean", DefenseMechanic.VOIDBORN_RESILIENCE)
 
@@ -280,7 +266,7 @@ def _combat_packet(
 
 def _run_packets(events, duration: float = 10.0) -> dict:
     """Run one _simulate_survival with the Jak'Sho holder as target."""
-    return _simulate_survival(
+    return simulate_survival(
         [_dummy_source(), _stack_holder()], {"target": events}, {}, {}, duration
     )
 
@@ -711,7 +697,7 @@ def test_bonus_only_rule_base_resistances_are_never_multiplied():
     zero_events = [
         _combat_packet(0.5 + index, index + 1, baseline_mr=100.0) for index in range(7)
     ]
-    zero_result = _simulate_survival(
+    zero_result = simulate_survival(
         [_dummy_source(), holder], {"target": zero_events}, {}, {}, 10.0
     )
     row = zero_result["target"]["jaksho"]
@@ -969,7 +955,7 @@ def test_absent_jaksho_produces_no_stacks_and_no_receipt_row():
     events = [
         _combat_packet(0.5 + index, index + 1, baseline_mr=100.0) for index in range(7)
     ]
-    result = _simulate_survival(
+    result = simulate_survival(
         [_dummy_source(), holder], {"target": events}, {}, {}, 10.0
     )
     row = result["target"]["jaksho"]

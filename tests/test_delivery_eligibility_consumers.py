@@ -20,6 +20,7 @@ from src.calculator.delivery_eligibility import (
     DefenseWindow,
     SourceSelection,
 )
+from tests.survival_probe import survival_of
 
 
 def _calculate(payload: dict) -> dict:
@@ -35,14 +36,6 @@ def _events(combat: dict, *, target: str, source: str) -> list[dict]:
         for event in combat["events"]
         if event.get("target") == target and event.get("source") == source
     ]
-
-
-def _survival(combat: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in combat["participants"]
-        if row["participant_id"] == participant_id
-    )
 
 
 def _ezreal_timed(duration: float = 8.0) -> dict:
@@ -100,7 +93,7 @@ class TestNewReceiptFields:
         assert later["projectile_defense"]["delivery"]["classes"] == ["projectile"]
         assert later["projectile_defense"]["remaining_uses"] == 0
 
-        row = _survival(combat, "enemy:Braum")["projectile_defense"]
+        row = survival_of(combat, "enemy:Braum")["projectile_defense"]
         assert row["remaining_uses"] == 0
         assert row["acceptance"]["accepts_deliveries"] == ["projectile"]
         assert row["composition"]["full_block"]["mode"] == "first"
@@ -143,7 +136,7 @@ class TestNewReceiptFields:
             assert event["projectile_defense"]["eligible"] is True
             assert event["projectile_defense"]["delivery"]["classes"] == ["projectile"]
             assert event["projectile_defense"]["remaining_uses"] is None
-        row = _survival(combat, "enemy:Yasuo")["projectile_defense"]
+        row = survival_of(combat, "enemy:Yasuo")["projectile_defense"]
         assert row["remaining_uses"] is None
         assert row["composition"]["destroy"]["enabled"] is True
 
@@ -166,11 +159,11 @@ class TestNewReceiptFields:
                 ],
             }
         )
-        row = _survival(combat, "enemy:Braum")["projectile_defense"]
+        row = survival_of(combat, "enemy:Braum")["projectile_defense"]
         # No incoming event matches the selection, so the one-use budget
         # is never spent.
         assert row["remaining_uses"] == 1
-        assert _survival(combat, "enemy:Braum")["projectile_defense_blocked"] == []
+        assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -215,7 +208,7 @@ class TestEventIdSelection:
         assert selected["damage"] == pytest.approx(0.0)
         assert selected["projectile_defense"]["mode"] == "full_block"
         assert selected["projectile_defense"]["remaining_uses"] == 0
-        blocked = _survival(combat, "enemy:Braum")["projectile_defense_blocked"]
+        blocked = survival_of(combat, "enemy:Braum")["projectile_defense_blocked"]
         assert blocked == [
             {"time": selected["time"], "source": "Q", "mode": "full_block"}
         ]
@@ -313,7 +306,7 @@ class TestEventIdSelection:
                 ],
             }
         )
-        row = _survival(combat, "enemy:Braum")["projectile_defense"]
+        row = survival_of(combat, "enemy:Braum")["projectile_defense"]
         assert row["blocked_event_ids"] == [
             "main:enemy:Braum:4",
             "main:enemy:Braum:999",
@@ -505,7 +498,7 @@ class TestOrderingAndUses:
                 ],
             }
         )
-        blocked = _survival(combat, "enemy:Braum")["projectile_defense_blocked"]
+        blocked = survival_of(combat, "enemy:Braum")["projectile_defense_blocked"]
         assert blocked == [{"time": 0.0, "source": "W", "mode": "full_block"}]
 
     def test_destroy_has_no_use_cap(self):
@@ -532,7 +525,7 @@ class TestOrderingAndUses:
                 ],
             }
         )
-        blocked = _survival(combat, "enemy:Yasuo")["projectile_defense_blocked"]
+        blocked = survival_of(combat, "enemy:Yasuo")["projectile_defense_blocked"]
         assert [entry["source"] for entry in blocked] == ["W", "Q", "E", "R"]
         assert all(entry["mode"] == "destroyed" for entry in blocked)
 

@@ -36,6 +36,7 @@ from src.calculator.support_effects import (
     _MODULE_AUTHORED_HEAL_SLOTS,
     derive_ally_effects,
 )
+from tests.survival_probe import survival_of
 
 # The 15 slots this phase adds to the registry (phase 1's three are locked
 # in tests/test_issue_143.py).
@@ -127,14 +128,6 @@ def _support_heals(res: dict, source: str) -> list[dict]:
     ]
 
 
-def _survival(res: dict, participant_id: str) -> dict:
-    return next(
-        row["survival"]
-        for row in res["participants"]
-        if row["participant_id"] == participant_id
-    )
-
-
 # ---------------------------------------------------------------------------
 # Registry + mechanical scanner gate
 # ---------------------------------------------------------------------------
@@ -208,7 +201,7 @@ def test_sona_w_heals_self_once_and_fans_out_one_ally_clone():
     self_heal = self_heals[0]
     assert self_heal["amount"] == pytest.approx(90.0, abs=0.06)
     assert self_heal["applied_amount"] == pytest.approx(90.0, abs=0.06)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(90.0, abs=0.06)
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(90.0, abs=0.06)
     clones = _support_heals(res, "Aria of Perseverance")
     assert len(clones) == 1
     clone = clones[0]
@@ -217,13 +210,13 @@ def test_sona_w_heals_self_once_and_fans_out_one_ally_clone():
     assert clone["time"] == self_heal["time"]
     assert clone["source_event_id"] == self_heal["event_id"]
     assert clone["event_id"] == f'{self_heal["event_id"]}:ally:1'
-    assert _survival(res, "ally:Ashe")["healing_received"] == pytest.approx(
+    assert survival_of(res, "ally:Ashe")["healing_received"] == pytest.approx(
         90.0, abs=0.06
     )
 
     res_1v1 = _fight("Sona")
     assert len(_main_heals(res_1v1, "Aria of Perseverance")) == 1
-    assert _survival(res_1v1, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res_1v1, "main")["healing_received"] == pytest.approx(
         90.0, abs=0.06
     )
     assert _support_heals(res_1v1, "Aria of Perseverance") == []
@@ -238,7 +231,7 @@ def test_janna_r_heals_self_in_sourced_ticks_and_fans_out_every_tick():
     assert len(self_heals) == 12
     assert all(h["amount"] == pytest.approx(50.0, abs=0.06) for h in self_heals)
     assert sum(h["amount"] for h in self_heals) == pytest.approx(600.0, abs=0.6)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(600.0, abs=0.6)
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(600.0, abs=0.6)
     clones = _support_heals(res, "Monsoon")
     assert len(clones) == 12
     self_by_time = {h["time"]: h for h in self_heals}
@@ -249,7 +242,7 @@ def test_janna_r_heals_self_in_sourced_ticks_and_fans_out_every_tick():
         assert clone["source_event_id"] == self_event["event_id"]
         assert clone["event_id"] == f'{self_event["event_id"]}:ally:1'
     assert sum(clone["raw_amount"] for clone in clones) == pytest.approx(600.0, abs=0.6)
-    assert _survival(res, "ally:Ashe")["healing_received"] == pytest.approx(
+    assert survival_of(res, "ally:Ashe")["healing_received"] == pytest.approx(
         sum(clone["applied_amount"] for clone in clones), abs=0.6
     )
 
@@ -259,7 +252,7 @@ def test_janna_r_heals_self_in_sourced_ticks_and_fans_out_every_tick():
     assert sum(event["raw_amount"] for event in one_v_one_heals) == pytest.approx(
         600.0, abs=0.6
     )
-    assert _survival(res_1v1, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res_1v1, "main")["healing_received"] == pytest.approx(
         sum(event["applied_amount"] for event in one_v_one_heals), abs=0.6
     )
     assert _support_heals(res_1v1, "Monsoon") == []
@@ -280,7 +273,7 @@ def test_milio_r_heals_self_once_and_fans_out_one_ally_clone():
     assert clone["target"] == "ally:Ashe"
     assert clone["amount"] == pytest.approx(350.0, abs=0.06)
     assert clone["source_event_id"] == self_heal["event_id"]
-    assert _survival(res, "ally:Ashe")["healing_received"] >= 350.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] >= 350.0
 
     res_1v1 = _fight("Milio")
     assert len(_main_heals(res_1v1, "Breath of Life")) == 1
@@ -306,11 +299,11 @@ def test_irelia_q_heals_self_once_at_the_sourced_ad_share():
     heals = _main_heals(res, "Bladesurge")
     assert len(heals) == 1
     assert heals[0]["amount"] == pytest.approx(expected, abs=0.06)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Bladesurge") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_vladimir_q_heals_self_once_at_the_rank_row():
@@ -336,7 +329,7 @@ def test_volibear_w_first_cast_applies_wound_only_and_never_scanner_heals():
     res = _fight("Volibear", with_ally=True)
     assert _main_heals(res, "Frenzied Maul") == []
     assert _support_heals(res, "Frenzied Maul") == []
-    assert _survival(res, "main")["healing_received"] == 0.0
+    assert survival_of(res, "main")["healing_received"] == 0.0
 
     def w_event(time: float, sequence: int) -> dict:
         return {
@@ -386,11 +379,11 @@ def test_ekko_r_heals_self_once_at_the_minimum_heal_row():
     heals = _main_heals(res, "Chronobreak")
     assert len(heals) == 1
     assert heals[0]["amount"] == pytest.approx(200.0, abs=0.06)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Chronobreak") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_gangplank_w_heals_self_once_with_the_missing_health_formula():
@@ -401,11 +394,11 @@ def test_gangplank_w_heals_self_once_with_the_missing_health_formula():
     heals = _main_heals(res, "Remove Scurvy")
     assert len(heals) == 1
     assert heals[0]["applied_amount"] >= 145.0
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Remove Scurvy") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_khazix_w_heals_self_once_at_the_rank_row():
@@ -415,11 +408,11 @@ def test_khazix_w_heals_self_once_at_the_rank_row():
     heals = _main_heals(res, "Void Spike")
     assert len(heals) == 1
     assert heals[0]["amount"] == pytest.approx(135.0, abs=0.06)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Void Spike") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_tahm_kench_q_heals_self_once_with_the_missing_health_formula():
@@ -432,7 +425,7 @@ def test_tahm_kench_q_heals_self_once_with_the_missing_health_formula():
     assert len(heals) == 1
     assert heals[0]["applied_amount"] >= 30.0
     assert _support_heals(res, "Tongue Lash") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_sylas_w_heals_self_once_and_never_an_ally():
@@ -442,11 +435,11 @@ def test_sylas_w_heals_self_once_and_never_an_ally():
     heals = _main_heals(res, "Kingslayer")
     assert len(heals) == 1
     assert 100.0 <= heals[0]["applied_amount"] <= 200.0
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Kingslayer") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_tryndamere_q_heals_self_once_at_the_zero_fury_row():
@@ -456,11 +449,11 @@ def test_tryndamere_q_heals_self_once_at_the_zero_fury_row():
     heals = _main_heals(res, "Bloodlust")
     assert len(heals) == 1
     assert heals[0]["amount"] == pytest.approx(70.0, abs=0.06)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Bloodlust") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_talon_q_heals_self_once_at_the_per_level_row():
@@ -471,11 +464,11 @@ def test_talon_q_heals_self_once_at_the_per_level_row():
     heals = _main_heals(res, "Noxian Diplomacy")
     assert len(heals) == 1
     assert heals[0]["amount"] == pytest.approx(55.0, abs=0.06)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Noxian Diplomacy") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_yorick_q_heals_self_once_with_the_missing_health_formula():
@@ -486,11 +479,11 @@ def test_yorick_q_heals_self_once_with_the_missing_health_formula():
     heals = _main_heals(res, "Last Rites")
     assert len(heals) == 1
     assert heals[0]["applied_amount"] > 0.0
-    assert _survival(res, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
         heals[0]["applied_amount"], abs=0.06
     )
     assert _support_heals(res, "Last Rites") == []
-    assert _survival(res, "ally:Ashe")["healing_received"] == 0.0
+    assert survival_of(res, "ally:Ashe")["healing_received"] == 0.0
 
 
 def test_kindred_w_hunters_vigor_heals_self_on_the_next_auto_and_never_an_ally():
@@ -529,13 +522,15 @@ def test_rakan_q_self_heal_wins_at_210_and_scanner_ally_branch_stays_at_80():
     assert len(self_heals) == 1
     assert self_heals[0]["amount"] == pytest.approx(210.0, abs=0.06)
     assert self_heals[0]["time"] == pytest.approx(3.0)
-    assert _survival(res, "main")["healing_received"] == pytest.approx(210.0, abs=0.06)
+    assert survival_of(res, "main")["healing_received"] == pytest.approx(
+        210.0, abs=0.06
+    )
     ally_heals = _support_heals(res, "Gleaming Quill")
     assert len(ally_heals) == 1
     assert ally_heals[0]["amount"] == pytest.approx(80.0, abs=0.06)
     assert ally_heals[0]["target"] == "ally:Ashe"
     assert ally_heals[0]["target_scope"] == "all_teammates"
-    assert _survival(res, "ally:Ashe")["healing_received"] == pytest.approx(
+    assert survival_of(res, "ally:Ashe")["healing_received"] == pytest.approx(
         80.0, abs=0.06
     )
 
@@ -544,7 +539,7 @@ def test_rakan_q_self_heal_wins_at_210_and_scanner_ally_branch_stays_at_80():
         ranks={"Q": 5, "W": 5, "E": 5, "R": 0},
     )
     assert len(_main_heals(res_1v1, "Gleaming Quill")) == 1
-    assert _survival(res_1v1, "main")["healing_received"] == pytest.approx(
+    assert survival_of(res_1v1, "main")["healing_received"] == pytest.approx(
         210.0, abs=0.06
     )
     assert _support_heals(res_1v1, "Gleaming Quill") == []

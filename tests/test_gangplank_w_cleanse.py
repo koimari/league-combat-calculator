@@ -99,8 +99,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
@@ -119,23 +117,10 @@ from src.calculator.healing import derive_self_healing
 # ``healing_helpers.py`` (HEALING-API); ``healing.py`` only loads
 # declarations and sorts receipts now.
 from src.calculator.healing_helpers import _leveling_ratio
-from src.calculator.participant_timeline import (
-    Combatant,
-    _simulate_survival as _simulate_survival_walk,
-)
+from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-
-
-# MERGE: ``_simulate_survival`` returns the frozen ``WalkResult`` now -- one
-# walk handed to five views -- so a caller that wants the published rows
-# projects it through the survival view, exactly as the composition does.
-def _simulate_survival(combatants, *args, **kwargs):
-    combatant_list = list(combatants)
-    return _survival_view(
-        _roster_program(combatant_list),
-        _simulate_survival_walk(combatant_list, *args, **kwargs),
-    )
-
+from tests.survival_probe import simulate_survival
+from tests.app_config import app_config
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _GANPLANK_DATA = _CHAMPION_DATA["Gangplank"]
@@ -270,12 +255,8 @@ def _testing_client():
     rely on ``TESTING`` being False (the limiter is bypassed under
     TESTING), so this file must never leave the flag set.
     """
-    previous = app_module.app.config.get("TESTING", False)
-    app_module.app.config["TESTING"] = True
-    try:
+    with app_config(TESTING=True):
         yield app_module.app.test_client()
-    finally:
-        app_module.app.config["TESTING"] = previous
 
 
 def _app_combat(
@@ -960,7 +941,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {
                 "main": [
@@ -1008,7 +989,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {"main": [_control_packet(1.0, "suppression", 2.0, source="R")]},
             {},
@@ -1045,7 +1026,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {"main": [_control_packet(1.0, "pull", 2.0, source="E")]},
             {},
@@ -1082,7 +1063,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("main", "main"),
         ]
         with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-            _simulate_survival(
+            simulate_survival(
                 combatants,
                 {"main": [_control_packet(1.0, "dance", 2.0, source="E")]},
                 {},
@@ -1107,7 +1088,7 @@ class TestCrowdControlAndSuppression:
             _dummy_combatant("enemy", "enemy"),
             _dummy_combatant("main", "main"),
         ]
-        result = _simulate_survival(
+        result = simulate_survival(
             combatants,
             {"main": [_control_packet(1.0, "airborne", 2.0, source="R")]},
             {},

@@ -12,6 +12,7 @@ import pytest
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import maokai
 from src.calculator.data_fetcher import get_champion
+from tests import cc_review
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {
@@ -27,20 +28,11 @@ def cached():
     return get_champion("Maokai")
 
 
-def slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
         assert maokai.MODULE_CC == {"Q": "slow", "W": "root", "E": "slow", "R": "root"}
         for slot, phrase in QUOTED.items():
-            assert phrase in slot_text(cached, slot), slot
+            assert phrase in cc_review.slot_text(cached, slot), slot
 
     def test_every_ability_event_carries_the_review(self, cached):
         """Reviewing a kit only counts where the ledger can see it."""

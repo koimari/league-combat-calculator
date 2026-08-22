@@ -537,15 +537,6 @@ CONTROL_WORDS = (
 )
 
 
-def _slot_text(cached, slot):
-    """Every cached description of one slot, lowercased."""
-    return " ".join(
-        effect.get("description") or ""
-        for ability in cached["abilities"][slot]
-        for effect in ability.get("effects", [])
-    ).lower()
-
-
 class TestReviewedCrowdControl:
     """Kog'Maw's kit facts, held to the cached text and to the ledger.
 
@@ -556,7 +547,9 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_quote_the_cached_text(self, kogmaw_data):
         assert kogmaw.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
-        assert "slowing enemies within the area" in _slot_text(kogmaw_data, "E")
+        assert "slowing enemies within the area" in cc_review.slot_text(
+            kogmaw_data, "E"
+        )
 
     def test_reviewed_absences_read_the_whole_slot(self, kogmaw_data):
         """A "none" is a slot that was read, not a slot that was skipped."""
@@ -564,7 +557,9 @@ class TestReviewedCrowdControl:
             if kind != "none":
                 continue
             hits = [
-                word for word in CONTROL_WORDS if word in _slot_text(kogmaw_data, slot)
+                word
+                for word in CONTROL_WORDS
+                if word in cc_review.slot_text(kogmaw_data, slot)
             ]
             assert hits == [], slot
 

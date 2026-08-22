@@ -14,6 +14,7 @@ from src.calculator.public_response import (
     aggregate_public_results,
     serialize_fight_result,
 )
+from tests.app_config import app_config
 
 app = app_module.app
 
@@ -21,16 +22,8 @@ app = app_module.app
 @pytest.fixture(autouse=True)
 def _isolate_app_config():
     """Keep these route tests off the shared rate-limit budget."""
-    previous_testing = app.config.get("TESTING")
-    previous_rate = app.config.get("RATE_LIMIT_ENABLED", True)
-    app.config["TESTING"] = True
-    app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    if previous_testing is None:
-        app.config.pop("TESTING", None)
-    else:
-        app.config["TESTING"] = previous_testing
-    app.config["RATE_LIMIT_ENABLED"] = previous_rate
+    with app_config(TESTING=True, RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _client():

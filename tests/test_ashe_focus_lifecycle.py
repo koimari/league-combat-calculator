@@ -91,6 +91,7 @@ from src.calculator.champions.ashe import ASHE_FOCUS_STACK_RULE
 from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _GAME_FILE_PATH = Path("data/bin/characters/ashe.bin.json")
@@ -107,39 +108,8 @@ _LEVEL = 18
 _AWAIT = "awaiting P1-10 wiring"
 
 
-def _stats() -> dict:
-    return {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "armor_penetration_percent": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "critical_strike_chance": 0.0,
-        "flat_armor_penetration": 0.0,
-        "health": 0.0,
-        "is_melee": True,
-        "lethality": 0.0,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "ultimate_haste": 0.0,
-        "attack_damage": 100.0,
-        "ability_power": 0.0,
-        "base_attack_damage": 60.0,
-        "bonus_attack_damage": 40.0,
-        "attack_speed": 0.8,
-        "attack_speed_ratio": 0.625,
-        "bonus_attack_speed": 0.0,
-        "max_mana": 300.0,
-        "resource_regen_per_second": 0.0,
-        "level": _LEVEL,
-    }
-
-
 def _parse(option: dict | None, *, ranks: dict | None = None, data=None):
-    stats = _stats()
+    stats = parse_stats(_LEVEL)
     return stats, parse_champion_abilities(
         data if data is not None else get_champion("Ashe"),
         _LEVEL,
