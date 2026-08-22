@@ -720,6 +720,7 @@
           "proc_count": 3,
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 163.88,
               "duration": 2.0,
               "source": "Dirty Fighting (3-Stack Shield)"
@@ -1183,6 +1184,7 @@
           "resource_type": "ENERGY",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 208.82,
               "duration": 1.5,
               "source": "Repudiation"
@@ -3459,6 +3461,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 216.3,
               "duration": 10.0,
               "source": "Mana Barrier"
@@ -4616,6 +4619,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 303.8,
               "duration": 2.0,
               "source": "Adaptive Defenses"
@@ -16403,6 +16407,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 157.8,
               "duration": 5.0,
               "source": "Granite Shield"
@@ -19385,6 +19390,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 185.0,
               "duration": 2.0,
               "source": "Pop Blossom"
@@ -22060,6 +22066,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 158.2,
               "duration": 10.0,
               "source": "Fey Feathers"
@@ -22870,6 +22877,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 50.0,
               "duration": 3.0,
               "source": "Loyalty Program"
@@ -24555,6 +24563,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 220.0,
               "duration": 3.0,
               "source": "Dawning Shadow"
@@ -25356,6 +25365,7 @@
           "resource_type": "ENERGY",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 89.94,
               "duration": 2.5,
               "source": "Ki Barrier"
@@ -25592,6 +25602,7 @@
           "rank": 3,
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 130.0,
               "duration": 1.0,
               "source": "Inferno Aegis"
@@ -26473,6 +26484,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 127.6,
               "duration": 2.5,
               "source": "Seismic Bastion"
@@ -31448,6 +31460,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 100.0,
               "duration": 2.5,
               "source": "Personal Space"
@@ -31645,6 +31658,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 189.12,
               "duration": 3.0,
               "source": "Blast Shield"
@@ -32054,6 +32068,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 98.82,
               "duration": 2.5,
               "source": "Siphon Power"
@@ -32443,6 +32458,7 @@
           "resource_type": "MANA",
           "self_shield_events": [
             {
+              "actor_wide": true,
               "amount": 218.82,
               "duration": 3.0,
               "source": "Sky Splitter"
@@ -51202,18 +51218,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 670,
-      "leaves": 58507,
+      "leaves": 58523,
       "numeric_leaves": 44857,
       "sections": "champion_baselines,item_sweep,registered_champion_fights"
     },
-    "git_head": "c9976586bce7dbf78607b645e1bcee6cd2ba8b8e",
+    "git_head": "11b0e9231bad1ea2a117971f92d845140cf396ad",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "42d843e0909708eaca86d618b3b3ebd7b5987c23"
+    "src_tree_sha": "6b728b8e1bffba66f49eafd7c1dd52f16568fbc3"
   },
   "registered_champion_fights": {
     "Aatrox": {

@@ -1014,6 +1014,43 @@ def test_mundo_regeneration_is_actor_wide_and_deduplicated_in_a_roster():
     ]
 
 
+def test_a_module_self_shield_is_actor_wide_and_granted_once_per_roster():
+    """One Mana Barrier against five enemies, not one per enemy pair.
+
+    The payload is authored once per rotation and replayed by every pair
+    fight, so the ``actor_wide`` flag ``slotlib.attach_self_shield`` stamps
+    is what the composition de-duplicates on -- the same convention
+    actor-wide heals use, rather than a per-module roster-index gate.
+    """
+    app.config["TESTING"] = True
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Blitzcrank",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "include_auto_attacks": False,
+            "deterministic": True,
+            "enemies": [
+                {"champion": name, "level": 18, "items": []}
+                for name in ("Aphelios", "Ambessa", "Ashe", "Annie", "Akali")
+            ],
+        },
+    )
+    assert response.status_code == 200
+    barriers = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event["source"] == "Mana Barrier"
+    ]
+    (barrier,) = barriers
+    assert barrier["target"] == "main"
+    # 35% of Blitzcrank's level-18 max mana, granted once.
+    assert barrier["amount"] == pytest.approx(331.45, abs=0.01)
+
+
 def test_fight_result_promotes_the_same_ordered_damage_ledger_used_by_shields():
     result = run_fight(get_champion("Aatrox"), 18, [], _timed_params())
 

@@ -4781,6 +4781,11 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
     item_denial_receipts: list[dict[str, Any]] = []
     ordered_item_support_ids: set[str] = set()
+    # One activation, one shield: an ``actor_wide`` self-shield payload is
+    # authored once per rotation but replayed by every enemy pair, so the
+    # first pair to carry it keeps it and the rest are dropped here.  Keyed
+    # the way actor-wide heals are keyed below -- holder, source, timestamp.
+    actor_wide_shield_keys: set[tuple[str, str, float]] = set()
     support_attached: set[str] = set()
     # The main champion's own cast timeline (from its first outgoing pair
     # fight) drives grey-health consume timing (Rengar W, Mordekaiser W).
@@ -4892,10 +4897,21 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                     defender_incoming.append(enriched)
                     shield_payload = enriched.get("self_shield")
                     shield_event_id = str(enriched.get("_event_id", ""))
+                    shield_key = (
+                        (
+                            attacker.participant_id,
+                            str(shield_payload.get("source", "")),
+                            float(enriched.get("time", 0.0) or 0.0),
+                        )
+                        if isinstance(shield_payload, Mapping)
+                        and shield_payload.get("actor_wide")
+                        else None
+                    )
                     if (
                         isinstance(shield_payload, Mapping)
                         and shield_event_id
                         and shield_event_id not in ordered_item_support_ids
+                        and shield_key not in actor_wide_shield_keys
                     ):
                         try:
                             shield_amount = max(0.0, float(shield_payload["amount"]))
@@ -4958,6 +4974,8 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                 }
                             )
                             ordered_item_support_ids.add(shield_event_id)
+                            if shield_key is not None:
+                                actor_wide_shield_keys.add(shield_key)
                 attacker_healing = healing[attacker.participant_id]
                 for template in view.heals:
                     if template.get("actor_wide"):

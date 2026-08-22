@@ -6491,18 +6491,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "item_denial_receipts[1].rebind_time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "item_denial_receipts[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "item_denial_receipts[1].withheld_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "objective.enemy_team_damage_before_death": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -7835,31 +7823,6 @@
           "support_events[0].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
-          },
-          "support_events[1].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].applied_amount": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "trigger_event_skipped",
-            "view_tag": "applied"
-          },
-          "support_events[1].duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
           }
         },
         "duration": 8.0,
@@ -8916,19 +8879,6 @@
         "item_denial_receipts": [
           {
             "attacker": "enemy:Malphite",
-            "carrier_event_id": "enemy:Malphite:ally:Pantheon:0",
-            "carrier_skipped_reason": "attacker_state_blocked",
-            "event_id": "enemy:Malphite:ally:Pantheon:0:shield",
-            "kind": "item_denial",
-            "reason": "self_shield_carrier_skipped",
-            "rebind_time": 7.49,
-            "source": "Granite Shield",
-            "target": "enemy:Malphite",
-            "time": 0.0,
-            "withheld_amount": 243.3
-          },
-          {
-            "attacker": "enemy:Malphite",
             "carrier_event_id": "enemy:Malphite:main:0",
             "carrier_skipped_reason": "attacker_state_blocked",
             "event_id": "enemy:Malphite:main:0:shield",
@@ -9698,25 +9648,6 @@
           }
         ],
         "support_events": [
-          {
-            "amount": 243.3,
-            "applied_amount": 0.0,
-            "attacker": "enemy:Malphite",
-            "duration": 8.0,
-            "event_id": "enemy:Malphite:ally:Pantheon:0:shield",
-            "kind": "shield",
-            "raw_amount": 243.3,
-            "recipient": "enemy:Malphite",
-            "reduced_amount": 243.3,
-            "skipped_reason": "trigger_event_skipped",
-            "source": "Granite Shield",
-            "target": "enemy:Malphite",
-            "target_policy": "self",
-            "target_scope": "self",
-            "target_selection_key": "",
-            "time": 0.0,
-            "trigger_event_id": "enemy:Malphite:ally:Pantheon:0"
-          },
           {
             "amount": 243.3,
             "applied_amount": 0.0,
@@ -34349,7 +34280,7 @@
             "healing_reduced": 0.0,
             "health_damage": 2864.0,
             "incoming_damage": 3794.0,
-            "outgoing_damage_before_death": 7698.5,
+            "outgoing_damage_before_death": 7455.2,
             "participant_id": "main",
             "shield_absorbed": 930.0,
             "sources": [
@@ -34359,7 +34290,7 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 3927.0
+                "total_damage": 3683.7
               },
               {
                 "name": "Headshot",
@@ -34386,7 +34317,7 @@
             "support_value": 0.0,
             "survived_window": false,
             "team": "main",
-            "total_damage": 7698.5,
+            "total_damage": 7455.2,
             "utility_outcomes": {
               "applied_dimensions": [
                 "multi_target"
@@ -34622,15 +34553,15 @@
           {
             "champion": "Malphite",
             "death_time": 2.84,
-            "effective_health": 2919.6,
+            "effective_health": 2676.3,
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
             "health_damage": 2433.0,
-            "incoming_damage": 2919.6,
+            "incoming_damage": 2676.3,
             "outgoing_damage_before_death": 1837.8,
             "participant_id": "enemy:Malphite",
-            "shield_absorbed": 486.6,
+            "shield_absorbed": 243.3,
             "sources": [
               {
                 "name": "Seismic Shard",
@@ -34653,8 +34584,8 @@
                 "total_damage": 526.3
               }
             ],
-            "support_shield_received": 486.6,
-            "support_value": 486.6,
+            "support_shield_received": 243.3,
+            "support_value": 243.3,
             "survived_window": false,
             "team": "enemy",
             "total_damage": 1837.8,
@@ -34688,7 +34619,7 @@
                 "bonus_mana": 0,
                 "event_count": 0
               },
-              "scored_support_amount": 486.6,
+              "scored_support_amount": 243.3,
               "slow": {
                 "event_count": 0,
                 "percent_seconds": 0
@@ -44885,6 +44816,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "support_events[1].duration_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "support_events[1].expires_at": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44898,38 +44833,6 @@
             "view_tag": "applied"
           },
           "support_events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].duration_atom.values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].expires_at": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -46537,13 +46440,13 @@
           },
           {
             "attacker": "main",
-            "damage": 253.7,
+            "damage": 10.4,
             "damage_type": "physical",
             "event_id": "main:enemy:Malphite:29",
             "event_precision": "exact",
-            "overkill": 47.8,
+            "overkill": 291.1,
             "pair_damage": 301.5,
-            "raw_damage": 253.7,
+            "raw_damage": 10.4,
             "sequence": 9,
             "source": "auto_attacks",
             "target": "enemy:Malphite",
@@ -50217,8 +50120,8 @@
         "item_denial_receipts": [],
         "objective": {
           "enemy_team_damage_before_death": 5923.0,
-          "enemy_team_effective_health": 8948.9,
-          "focus_damage_before_death": 7698.5,
+          "enemy_team_effective_health": 8705.6,
+          "focus_damage_before_death": 7455.2,
           "focus_healing": 465.0,
           "focus_participant_id": "main",
           "focus_support_value": 0.0,
@@ -50395,11 +50298,11 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 8443.6,
+          "main_team_damage_before_death": 8200.3,
           "main_team_effective_health": 5223.0,
           "surviving_main_team": 0,
           "total_healing_reduced": 0.0,
-          "total_support_value": 716.6
+          "total_support_value": 473.3
         },
         "participants": [
           {
@@ -50938,7 +50841,7 @@
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 2919.6,
+              "effective_health": 2676.3,
               "ending_health": 0.0,
               "ending_health_ratio": 0.0,
               "execute_source": "",
@@ -50969,7 +50872,7 @@
               },
               "max_health": 2433.0,
               "overhealing": 0.0,
-              "overkill": 47.8,
+              "overkill": 291.1,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -50979,7 +50882,7 @@
               "revive_source": "",
               "revive_time": null,
               "revived": false,
-              "shield_absorbed": 486.6,
+              "shield_absorbed": 243.3,
               "spell_shield_heal_triggered": false,
               "spell_shield_source": "",
               "spell_shield_until": 0.0,
@@ -50989,7 +50892,7 @@
               "stasis_started_at": null,
               "stasis_until": 0.0,
               "support_shield_expired": 0.0,
-              "support_shield_received": 486.6,
+              "support_shield_received": 243.3,
               "survived_window": false,
               "temporary_health_expired_at": null,
               "temporary_health_received": 0.0,
@@ -51008,26 +50911,6 @@
           }
         ],
         "support_events": [
-          {
-            "amount": 243.3,
-            "applied_amount": 243.3,
-            "attacker": "enemy:Malphite",
-            "duration": 8.0,
-            "event_id": "enemy:Malphite:ally:Lulu:0:shield",
-            "expires_at": 8.0,
-            "kind": "shield",
-            "raw_amount": 243.3,
-            "recipient": "enemy:Malphite",
-            "reduced_amount": 243.3,
-            "shield_pool": "general",
-            "source": "Granite Shield",
-            "target": "enemy:Malphite",
-            "target_policy": "self",
-            "target_scope": "self",
-            "target_selection_key": "",
-            "time": 0.0,
-            "trigger_event_id": "enemy:Malphite:ally:Lulu:0"
-          },
           {
             "amount": 243.3,
             "applied_amount": 243.3,
@@ -51304,7 +51187,7 @@
                 "bonus_mana": 0,
                 "event_count": 0
               },
-              "scored_support_amount": 486.6,
+              "scored_support_amount": 243.3,
               "slow": {
                 "event_count": 0,
                 "percent_seconds": 0
@@ -89574,31 +89457,6 @@
           "support_events[0].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
-          },
-          "support_events[1].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].applied_amount": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "trigger_event_skipped",
-            "view_tag": "applied"
-          },
-          "support_events[1].duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
           }
         },
         "duration": 5.0,
@@ -91018,25 +90876,6 @@
           }
         ],
         "support_events": [
-          {
-            "amount": 303.3,
-            "applied_amount": 0.0,
-            "attacker": "enemy:Malphite",
-            "duration": 5.0,
-            "event_id": "enemy:Malphite:ally:Pantheon:0:shield",
-            "kind": "shield",
-            "raw_amount": 303.3,
-            "recipient": "enemy:Malphite",
-            "reduced_amount": 303.3,
-            "skipped_reason": "trigger_event_skipped",
-            "source": "Granite Shield",
-            "target": "enemy:Malphite",
-            "target_policy": "self",
-            "target_scope": "self",
-            "target_selection_key": "",
-            "time": 0.0,
-            "trigger_event_id": "enemy:Malphite:ally:Pantheon:0"
-          },
           {
             "amount": 303.3,
             "applied_amount": 0.0,
@@ -102645,8 +102484,8 @@
                 "total_damage": 526.3
               }
             ],
-            "support_shield_received": 486.6,
-            "support_value": 486.6,
+            "support_shield_received": 243.3,
+            "support_value": 243.3,
             "survived_window": true,
             "team": "enemy",
             "total_damage": 1876.1,
@@ -102680,7 +102519,7 @@
                 "bonus_mana": 0,
                 "event_count": 0
               },
-              "scored_support_amount": 486.6,
+              "scored_support_amount": 243.3,
               "slow": {
                 "event_count": 0,
                 "percent_seconds": 0
@@ -111935,6 +111774,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "support_events[1].duration_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "support_events[1].expires_at": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -111948,38 +111791,6 @@
             "view_tag": "applied"
           },
           "support_events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].duration_atom.values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].expires_at": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[2].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -116908,7 +116719,7 @@
           "main_team_effective_health": 4795.7,
           "surviving_main_team": 0,
           "total_healing_reduced": 0.0,
-          "total_support_value": 716.6
+          "total_support_value": 473.3
         },
         "participants": [
           {
@@ -117492,8 +117303,8 @@
               "stasis_source": "",
               "stasis_started_at": null,
               "stasis_until": 0.0,
-              "support_shield_expired": 345.5,
-              "support_shield_received": 486.6,
+              "support_shield_expired": 102.2,
+              "support_shield_received": 243.3,
               "survived_window": true,
               "temporary_health_expired_at": null,
               "temporary_health_received": 0.0,
@@ -117512,26 +117323,6 @@
           }
         ],
         "support_events": [
-          {
-            "amount": 243.3,
-            "applied_amount": 243.3,
-            "attacker": "enemy:Malphite",
-            "duration": 8.0,
-            "event_id": "enemy:Malphite:ally:Lulu:0:shield",
-            "expires_at": 8.0,
-            "kind": "shield",
-            "raw_amount": 243.3,
-            "recipient": "enemy:Malphite",
-            "reduced_amount": 243.3,
-            "shield_pool": "general",
-            "source": "Granite Shield",
-            "target": "enemy:Malphite",
-            "target_policy": "self",
-            "target_scope": "self",
-            "target_selection_key": "",
-            "time": 0.0,
-            "trigger_event_id": "enemy:Malphite:ally:Lulu:0"
-          },
           {
             "amount": 243.3,
             "applied_amount": 243.3,
@@ -117820,7 +117611,7 @@
                 "bonus_mana": 0,
                 "event_count": 0
               },
-              "scored_support_amount": 486.6,
+              "scored_support_amount": 243.3,
               "slow": {
                 "event_count": 0,
                 "percent_seconds": 0
@@ -135099,15 +134890,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 22,
-      "leaves": 85845,
-      "numeric_leaves": 28820,
+      "leaves": 85704,
+      "numeric_leaves": 28791,
       "sections": "coupled_scenarios"
     },
-    "git_head": "87d1f4fe76457596cba1ebd862302af235db3b67",
+    "git_head": "11b0e9231bad1ea2a117971f92d845140cf396ad",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 22,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
+    "src_tree_sha": "6b728b8e1bffba66f49eafd7c1dd52f16568fbc3"
   }
 }

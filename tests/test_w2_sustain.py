@@ -272,6 +272,7 @@ class TestViBlastShield:
             "amount": pytest.approx(0.12 * 2440.0),
             "duration": 3.0,
             "source": "Blast Shield",
+            "actor_wide": True,
         }
         assert "self_shield_events" not in parsed["E"]
         assert "self_shield_events" not in parsed["R"]
