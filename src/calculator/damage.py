@@ -207,6 +207,7 @@ from .item_behavior import (
     AmpChainSlot,
     Isolation,
     ManaSpentHealRule,
+    OnHitHealRule,
     PacketKind,
     PacketTrigger,
     Probe,
@@ -16176,8 +16177,11 @@ def _add_on_hit_healing(
     copies, pets, and other un-timestamped carriers remain withheld rather
     than receiving an invented time.
     """
-    effects = state.damage_effects.on_hit_heals
-    if not effects or state.num_auto_attacks <= 0:
+    slot = declared_sustain(
+        sorted({item_effects.resolved_item_name(item) for item in state.items}),
+        OnHitHealRule,
+    )
+    if slot is None or state.num_auto_attacks <= 0:
         return
     swing_times = _auto_attack_timestamps(state)
     if len(swing_times) != state.num_auto_attacks:
@@ -16192,25 +16196,25 @@ def _add_on_hit_healing(
         if double_shot_extra:
             application_times.append(swing_time)
 
-    for effect in effects:
-        if not application_times:
-            continue
-        state.breakdown[f"heal_{effect.item_name}"] = {
-            "name": f"{effect.item_name} (Reap)",
-            "count": len(application_times),
-            "amount_per_proc": effect.amount,
-            "total_amount": effect.amount * len(application_times),
-            "unit": "health",
-            "heal_events": [
-                {
-                    "time": event_time,
-                    "amount": effect.amount,
-                    "trigger_source": "auto_attacks",
-                }
-                for event_time in application_times
-            ],
-            "event_phase": "heal",
-        }
+    if not application_times:
+        return
+    amount = slot.value("amount")
+    state.breakdown[f"heal_{slot.owner}"] = {
+        "name": f"{slot.owner} (Reap)",
+        "count": len(application_times),
+        "amount_per_proc": amount,
+        "total_amount": amount * len(application_times),
+        "unit": "health",
+        "heal_events": [
+            {
+                "time": event_time,
+                "amount": amount,
+                "trigger_source": "auto_attacks",
+            }
+            for event_time in application_times
+        ],
+        "event_phase": "heal",
+    }
 
 
 def _add_first_auto_healing(state: FightState) -> None:

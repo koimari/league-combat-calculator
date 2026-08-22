@@ -432,11 +432,15 @@ class TestResolveDamageEffects:
         assert [effect.item_name for effect in effects.per_ability_hits] == ["Muramana"]
 
     def test_cull_compiles_its_sourced_on_hit_health_receipt(self) -> None:
-        effects = resolve_damage_effects(_build("Cull"))
+        """SD9 retired this tag's ladder branch: the SUSTAIN declaration is
+        the one owner, and the projection carries no second copy."""
+        from src.calculator.item_behavior import OnHitHealRule
+        from src.calculator.interpreters.sustain import declared_sustain
 
-        assert len(effects.on_hit_heals) == 1
-        assert effects.on_hit_heals[0].item_name == "Cull"
-        assert effects.on_hit_heals[0].amount == pytest.approx(3.0)
+        slot = declared_sustain(["Cull"], OnHitHealRule)
+        assert slot.owner == "Cull"
+        assert slot.value("amount") == pytest.approx(3.0)
+        assert not hasattr(resolve_damage_effects(_build("Cull")), "on_hit_heals")
 
     def test_spellblade_compiles_formula_and_scheduling(self) -> None:
         armed = _spellblade_slot("Lich Bane", is_melee=False)

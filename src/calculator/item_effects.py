@@ -4781,14 +4781,6 @@ class PerHitEffect:
 
 
 @dataclass(frozen=True, slots=True)
-class OnHitHealEffect:
-    """Health restored by one authored on-hit application."""
-
-    item_name: str
-    amount: float
-
-
-@dataclass(frozen=True, slots=True)
 class SpellbladeEffect:
     """One mutually-exclusive spellblade behavior."""
 
@@ -4971,7 +4963,6 @@ class BuildDamageEffects:
     # them by accident — only the fight engine's class-aware auto stream
     # arms them.
     class_restricted_per_hits: tuple[PerHitEffect, ...] = ()
-    on_hit_heals: tuple[OnHitHealEffect, ...] = ()
     auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
     per_ability_hits: tuple[DamageSource, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
@@ -5072,18 +5063,6 @@ def _compile_class_restricted_on_hit(
         breakdown_key=str(required.value("breakdown_key")),
     )
     return PerHitEffect(source, target_class=target_class)
-
-
-def _compile_on_hit_heal(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> OnHitHealEffect:
-    """Compile one fixed health receipt from an on-hit item passive."""
-    required = _RequiredValues(item_name, values)
-    amount = required.number("health_per_on_hit")
-    if amount <= 0.0:
-        raise ValueError(f"{item_name!r} on-hit heal must be positive")
-    return OnHitHealEffect(item_name=item_name, amount=amount)
 
 
 def _compile_auto_cooldown(
@@ -5266,7 +5245,6 @@ def _resolve_damage_effects_uncached(
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
     class_restricted_per_hits: list[PerHitEffect] = []
-    on_hit_heals: list[OnHitHealEffect] = []
     auto_cooldowns: list[AutoCooldownEffect] = []
     per_ability_hits: list[DamageSource] = []
     phantom_hit: PhantomHitEffect | None = None
@@ -5294,9 +5272,7 @@ def _resolve_damage_effects_uncached(
             class_restricted_per_hits.append(
                 _compile_class_restricted_on_hit(item_name, restricted)
             )
-        if effect_type == "on_hit_heal":
-            on_hit_heals.append(_compile_on_hit_heal(item_name, values))
-        elif effect_type == "ult_empowered_autos":
+        if effect_type == "ult_empowered_autos":
             # The window itself is a declared charged strike; what stays here
             # is its assumption note.  ``conditional_notes`` is the one prose
             # surface this projection owns — ``unmodeled_splash_note`` below
@@ -5393,7 +5369,6 @@ def _resolve_damage_effects_uncached(
 
     return BuildDamageEffects(
         class_restricted_per_hits=tuple(class_restricted_per_hits),
-        on_hit_heals=tuple(on_hit_heals),
         auto_cooldowns=tuple(auto_cooldowns),
         per_ability_hits=tuple(per_ability_hits),
         phantom_hit=phantom_hit,
