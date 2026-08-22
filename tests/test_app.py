@@ -295,6 +295,9 @@ def test_loadout_stats_returns_champion_derived_full_matrix():
     assert response.status_code == 200
     data = response.get_json()
     assert data["champion"] == "Galio"
+    # The loadout card is the pre-combat surface and says so: it resolves
+    # with no scenario, so no ability stat buff could have been applied.
+    assert data["stats_state"] == "pre_combat"
     assert data["stats"]["health"] == 2240
     assert data["stats"]["base_health"] == 1840
     assert data["stats"]["bonus_health"] == 400
@@ -1257,7 +1260,7 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
 
     assert response.status_code == 200
     contract = response.get_json()["capabilities"]
-    assert contract["schema_version"] == 7
+    assert contract["schema_version"] == 8
     assert set(contract["participants"]) == {"main", "enemy", "ally"}
     assert (
         contract["participants"]["enemy"]["fields"]["champion"]["state_path"]

@@ -3009,6 +3009,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -3145,6 +3146,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -3281,6 +3283,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 8.0,
               "action_downtime_intervals": [
@@ -3914,6 +3917,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 3087.6,
             "physical": 0.0,
@@ -9139,6 +9143,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -9275,6 +9280,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -9411,6 +9417,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.8,
               "action_downtime_intervals": [
@@ -9577,6 +9584,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.8,
               "action_downtime_intervals": [
@@ -10197,6 +10205,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 878.4,
             "physical": 0.0,
@@ -10851,6 +10860,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 900.0,
             "physical": 0.0,
@@ -20211,6 +20221,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.15,
               "action_downtime_intervals": [
@@ -20355,6 +20366,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 2.61,
               "action_downtime_intervals": [
@@ -20499,6 +20511,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -21612,6 +21625,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 2467.7,
             "physical": 1453.2,
@@ -31925,6 +31939,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -32061,6 +32076,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -32197,6 +32213,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 2.75,
               "action_downtime_intervals": [
@@ -32377,6 +32394,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 5.84,
               "action_downtime_intervals": [
@@ -33338,6 +33356,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
             "physical": 2170.1,
@@ -33939,6 +33958,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
             "physical": 2298.0,
@@ -50455,6 +50475,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 2.65,
               "action_downtime_intervals": [
@@ -50614,6 +50635,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 7.51,
               "action_downtime_intervals": [
@@ -50773,6 +50795,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -50909,6 +50932,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 5.16,
               "action_downtime_intervals": [
@@ -51638,6 +51662,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 167.7,
             "physical": 8052.4,
@@ -52685,6 +52710,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 171.8,
             "physical": 10749.1,
@@ -57091,6 +57117,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -57227,6 +57254,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -57363,6 +57391,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -57950,6 +57979,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 377.2,
             "physical": 0.0,
@@ -60586,6 +60616,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -60740,6 +60771,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -61222,6 +61254,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 903.8,
             "physical": 186.7,
@@ -67817,6 +67850,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.53,
               "action_downtime_intervals": [
@@ -67961,6 +67995,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 3.69,
               "action_downtime_intervals": [
@@ -68105,6 +68140,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -68676,6 +68712,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 167.7,
             "physical": 3764.8,
@@ -77893,6 +77930,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -78029,6 +78067,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.15,
               "action_downtime_intervals": [
@@ -78173,6 +78212,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.0,
               "action_downtime_intervals": [
@@ -78823,6 +78863,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 178.4,
             "physical": 4258.9,
@@ -85841,6 +85882,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.15,
               "action_downtime_intervals": [
@@ -85985,6 +86027,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 3.69,
               "action_downtime_intervals": [
@@ -86129,6 +86172,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -86794,6 +86838,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
             "physical": 3157.7,
@@ -90623,6 +90668,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -90759,6 +90805,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -90897,6 +90944,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 1.8,
               "action_downtime_intervals": [
@@ -91473,6 +91521,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 1953.1,
             "physical": 0.0,
@@ -95545,6 +95594,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -95681,6 +95731,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -95817,6 +95868,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 4.47,
               "action_downtime_intervals": [
@@ -96688,6 +96740,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 2012.8,
             "physical": 0.0,
@@ -98478,6 +98531,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 1865.2,
             "physical": 0.0,
@@ -100232,6 +100286,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 2089.8,
             "physical": 0.0,
@@ -101935,6 +101990,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 1643.9,
             "physical": 0.0,
@@ -116962,6 +117018,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 7.34,
               "action_downtime_intervals": [
@@ -117121,6 +117178,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 7.51,
               "action_downtime_intervals": [
@@ -117282,6 +117340,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -117421,6 +117480,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -118141,6 +118201,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 167.7,
             "physical": 3315.4,
@@ -119070,6 +119131,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 171.8,
             "physical": 4248.5,
@@ -121293,6 +121355,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -121514,6 +121577,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -122082,6 +122146,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5856.0,
             "physical": 0.0,
@@ -123829,6 +123894,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -124050,6 +124116,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -124593,6 +124660,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 4720.0,
             "physical": 0.0,
@@ -126287,6 +126355,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -126508,6 +126577,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -127076,6 +127146,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5370.0,
             "physical": 0.0,
@@ -128823,6 +128894,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -129044,6 +129116,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -129612,6 +129685,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5856.0,
             "physical": 0.0,
@@ -131386,6 +131460,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -131607,6 +131682,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -132150,6 +132226,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 4720.0,
             "physical": 0.0,
@@ -133861,6 +133938,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0.0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -134082,6 +134160,7 @@
               "tenacity_percent": 0.0,
               "ultimate_haste": 0
             },
+            "stats_state": "pre_combat",
             "survival": {
               "action_downtime": 0.0,
               "action_downtime_intervals": [],
@@ -134650,6 +134729,7 @@
             "tenacity_percent": 0.0,
             "ultimate_haste": 0.0
           },
+          "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 5370.0,
             "physical": 0.0,
@@ -135099,15 +135179,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 22,
-      "leaves": 85845,
+      "leaves": 85925,
       "numeric_leaves": 28820,
       "sections": "coupled_scenarios"
     },
-    "git_head": "87d1f4fe76457596cba1ebd862302af235db3b67",
+    "git_head": "8c5232f8e46d7c96e3a7b4b481ccf9b13190561a",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 22,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "9132aea80e5af8c065c3a486a12938414b78536b"
+    "src_tree_sha": "a0aa3f4935e9ed84d3effbcdae9c028e4fdf0b8c"
   }
 }

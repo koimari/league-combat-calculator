@@ -28,6 +28,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from ...capabilities import PRE_COMBAT_STATS
 from ...survival.outcome_state import outcome_quantity
 from ..build import Program
 from ..precision import round_field, sum_plan
@@ -707,6 +708,9 @@ def _participant_rows(
         block.raw("champion", actor.champion_data.get("name", ""))
         block.raw("level", actor.level)
         block.structure("stats", dict(actor.stats))
+        # Which fight state that block reports. A raw leaf, deliberately:
+        # it is a label on the numbers, not one of them.
+        block.raw("stats_state", PRE_COMBAT_STATS)
         block.raw("items", [item.get("name", "") for item in actor.items])
         block.raw("survival", rows[actor.participant_id])
     return published
