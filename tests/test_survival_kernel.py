@@ -94,6 +94,7 @@ from src.calculator.survival.pricing import (
     mitigate_declared,
     price_declared_packet,
     route_declared_packet,
+    unroute_declared_packet,
 )
 from src.calculator import damage as pair_engine
 from src.calculator import shield_ledger
@@ -4642,3 +4643,207 @@ def test_existing_shield_gate_uses_the_cast_time_snapshot_in_both_adapters():
     score_row = _walk(ScoreLedger)
     assert receipt_row == score_row
     assert score_row["healing_received"] == 5.0
+
+
+# ---------------------------------------------------------------------------
+# A cancelled route, and the packet it hands back
+# ---------------------------------------------------------------------------
+
+
+def _bare_combatant(participant_id: str, health: float) -> Combatant:
+    """One participant with health, no resistance, and no defenses."""
+    return Combatant(
+        participant_id=participant_id,
+        team="blue",
+        champion_data={"name": participant_id},
+        level=1,
+        items=(),
+        stats={"health": health, "magic_resistance": 0.0},
+        defenses=StartingDefenses(
+            magic_shield=0.0,
+            physical_shield=0.0,
+            general_shield=0.0,
+            healing_received_multiplier=1.0,
+        ),
+    )
+
+
+class TestARouteInvertsExactly:
+    """``unroute_declared_packet`` is the inverse of the route, for the gate
+    that has to hand a whole packet back after staging a share of it."""
+
+    def test_the_share_divides_back_out(self):
+        packet = DeclaredPacket(
+            raw_amount=250.0, damage_type="magic", rule_id="aura", holder_amp=1.0
+        )
+        routed = route_declared_packet(
+            packet, RoutingProvenance("knights_vow.sacrifice", 0.14)
+        )
+        assert routed.raw_amount == pytest.approx(35.0)
+        recovered = unroute_declared_packet(routed)
+        assert recovered.raw_amount == pytest.approx(packet.raw_amount)
+        assert recovered._replace(raw_amount=packet.raw_amount) == packet
+
+    def test_an_unrouted_packet_is_returned_untouched(self):
+        packet = DeclaredPacket(
+            raw_amount=250.0, damage_type="magic", rule_id="aura", holder_amp=1.0
+        )
+        assert unroute_declared_packet(packet) is packet
+        assert unroute_declared_packet(None) is None
+
+    def test_a_zero_share_is_refused_rather_than_inverted(self):
+        packet = DeclaredPacket(
+            raw_amount=0.0,
+            damage_type="magic",
+            rule_id="aura",
+            holder_amp=1.0,
+            routing=RoutingProvenance("knights_vow.sacrifice", 0.0),
+        )
+        with pytest.raises(ValueError, match="zero share"):
+            unroute_declared_packet(packet)
+
+
+def test_a_cancelled_redirect_restores_the_whole_packet_in_both_lanes():
+    """The holder-health gate cancels the redirected child, and the Worthy
+    then meets the WHOLE packet — its restored amount and, when its family
+    declared its own magnitude, the un-routed declaration.
+
+    Driven with ``event=None`` as well as with an event dict: the receipt
+    adapter's restore is written onto the event it holds, and a compiled
+    action has none, so a restore only one adapter can read is how the same
+    cancelled redirect came to charge the Worthy two different numbers."""
+    from src.calculator.program.build import roster_program
+    from src.calculator.program.views.survival import survival
+    from src.calculator.program.walk import walk as run_one_walk
+    from src.calculator.survival.score_state import ScoreLedger
+
+    worthy = _bare_combatant("worthy", 4000.0)
+    holder = _bare_combatant("holder", 100.0)
+    parent_slot = EVENT_SLOTS.slot("parent")
+    declared_slot = EVENT_SLOTS.slot("declared-parent")
+    aura = DeclaredPacket(
+        raw_amount=100.0, damage_type="magic", rule_id="aura", holder_amp=1.0
+    )
+    children = {}
+
+    def _parent(aidx, slot, name, amount, original, declaration):
+        return SurvivalAction(
+            sort_key=(1.0, TransitionRank.DAMAGE, 0, 0, 0, "worthy", name, "src"),
+            time=1.0,
+            phase=TransitionRank.DAMAGE,
+            kind=ActionKind.DAMAGE,
+            subject=0,
+            attacker=0,
+            aidx=aidx,
+            amount=amount,
+            damage_type="magic",
+            declared=declaration,
+            baseline_effective_mr=0.0,
+            redirect_original_damage=original,
+            redirect_holder_health_ratio=0.3,
+            source_key="src",
+            source="src",
+            event_slot=slot,
+            sequence=0,
+        )
+
+    def _child(aidx, parent_aidx, slot, name, amount, declaration):
+        return SurvivalAction(
+            sort_key=(1.0, TransitionRank.REACTIVE, 0, 1, 0, "holder", name, "src"),
+            time=1.0,
+            phase=TransitionRank.DAMAGE,
+            kind=ActionKind.REDIRECT,
+            subject=1,
+            attacker=0,
+            aidx=aidx,
+            amount=amount,
+            damage_type="magic",
+            declared=declaration,
+            baseline_effective_mr=0.0,
+            redirected=True,
+            trigger=parent_aidx,
+            trigger_slot=slot,
+            source_key="src",
+            source="src",
+            event_slot=EVENT_SLOTS.slot(name),
+            sequence=0,
+        )
+
+    opening = SurvivalAction(
+        sort_key=(0.0, TransitionRank.DAMAGE, 0, 1, 0, "holder", "open", "src"),
+        time=0.0,
+        phase=TransitionRank.DAMAGE,
+        kind=ActionKind.DAMAGE,
+        subject=1,
+        attacker=0,
+        aidx=0,
+        amount=80.0,
+        damage_type="magic",
+        baseline_effective_mr=0.0,
+        source_key="src",
+        source="src",
+        event_slot=EVENT_SLOTS.slot("open"),
+        sequence=0,
+    )
+    plain_parent = _parent(1, parent_slot, "parent", 43.0, 50.0, None)
+    plain_child = _child(2, 1, parent_slot, "parent:redirect", 7.0, None)
+    declared_parent = _parent(
+        3,
+        declared_slot,
+        "declared-parent",
+        86.0,
+        100.0,
+        route_declared_packet(aura, RoutingProvenance("knights_vow.sacrifice", 0.86)),
+    )
+    declared_child = _child(
+        4,
+        3,
+        declared_slot,
+        "declared-parent:redirect",
+        14.0,
+        route_declared_packet(aura, RoutingProvenance("knights_vow.sacrifice", 0.14)),
+    )
+    children = {parent_slot: plain_child, declared_slot: declared_child}
+    actions = [opening, plain_parent, plain_child, declared_parent, declared_child]
+
+    def _walk(ledger_cls):
+        states = build_states([worthy, holder], (0.0, 0.0))
+        index_of = {"worthy": 0, "holder": 1}
+        if ledger_cls is ReceiptLedger:
+            walk_actions = [
+                action._replace(
+                    event={"_event_id": str(action.aidx), "damage": action.amount}
+                )
+                for action in actions
+            ]
+            ledger = ledger_cls(
+                actions=list(walk_actions),
+                index_of=index_of,
+                compile_event=action_from_event,
+                annotating=False,
+            )
+            live = {slot: walk_actions[child.aidx] for slot, child in children.items()}
+        else:
+            walk_actions = actions
+            ledger = ledger_cls(len(actions))
+            live = children
+        ctx = TransitionContext(
+            duration=5.0,
+            states=states,
+            combatants=[worthy, holder],
+            index_of=index_of,
+            ledger=ledger,
+            regeneration_windows=(None, None),
+            redirect_children=live,
+        )
+        result = run_one_walk(walk_actions, ctx)
+        return survival(roster_program([worthy, holder]), result)
+
+    receipt_rows = _walk(ReceiptLedger)
+    score_rows = _walk(ScoreLedger)
+    assert receipt_rows == score_rows
+    # 50 restored from the pair-engine-priced packet, 100 from the declared
+    # one whose route the gate handed back: never 43 + 86.
+    assert score_rows["worthy"]["damage_taken"] == pytest.approx(150.0)
+    # The holder paid the opening packet and neither cancelled share.
+    assert score_rows["holder"]["damage_taken"] == pytest.approx(80.0)

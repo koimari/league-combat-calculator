@@ -81,7 +81,11 @@ from ..cleanse_eligibility import (
     resolve_cleanse_item,
     truncate_intervals,
 )
-from ..healing_reduction import GRIEVOUS_WOUNDS_FACTOR, matching_healing_reduction
+from ..healing_reduction import (
+    GRIEVOUS_WOUNDS_FACTOR,
+    heal_and_shield_power_factor,
+    matching_healing_reduction,
+)
 from ..delivery_eligibility import (
     SPELL_SHIELD_ONE_USE_RULE,
     DefenseWindow,
@@ -337,6 +341,9 @@ class TransitionContext:
     stack_flags: list[bool] = field(init=False, repr=False)
     regeneration_flags: list[bool] = field(init=False, repr=False)
     _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
+    # Every caster's heal-and-shield-power factor, resolved once per walk
+    # so the recovery path never re-reads a stat dict per packet.
+    _heal_power: list[float] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.records_annotations = bool(self.ledger.records_annotations)
@@ -365,10 +372,22 @@ class TransitionContext:
         self.regeneration_flags = [
             profile.regeneration is not None for profile in profiles
         ]
+        self._heal_power = [
+            heal_and_shield_power_factor(getattr(combatant, "stats", None))
+            for combatant in self.combatants
+        ]
 
     def defense_profile(self, subject: int) -> "SubjectDefenseProfile":
         """The subject's cached per-event defense constants."""
         return self._defense_profiles[subject]
+
+    # A packet with no attacker index (``-1``) was not authored by a
+    # participant this walk holds, so nobody's stat may amplify it.
+    def heal_power(self, caster: int) -> float:
+        """One caster's heal-and-shield-power factor, 1.0 outside the roster."""
+        if not 0 <= caster < len(self._heal_power):
+            return 1.0
+        return self._heal_power[caster]
 
     def reductions_for(self, attacker: int) -> tuple[Any, ...]:
         """One attacker's healing-reduction profiles, empty where it has none.
@@ -1474,7 +1493,11 @@ def _apply_guardian_shield(
                 "cooldown_until": round(owner_state["guardian_cooldown_until"], 3),
             }
         )
-    amount = max(0.0, action.amount) * state["healing_received_multiplier"]
+    amount = (
+        max(0.0, action.amount)
+        * ctx.heal_power(action.attacker)
+        * state["healing_received_multiplier"]
+    )
     if state["pools"].venom_factor < 1.0:
         amount *= state["pools"].venom_factor
         ctx.ledger.annotate(
@@ -1548,7 +1571,7 @@ def _apply_shield(
                 action.amount_formula(state["pools"].health, state["pools"].max_health)
             ),
         )
-    amount *= state["healing_received_multiplier"]
+    amount *= ctx.heal_power(action.attacker) * state["healing_received_multiplier"]
     if state["pools"].venom_factor < 1.0:
         amount *= state["pools"].venom_factor
         ctx.ledger.annotate(
@@ -2094,6 +2117,11 @@ def _apply_heal(
     amount_formula = action.amount_formula
     if callable(amount_formula):
         amount = max(0.0, float(amount_formula(pools.health, pools.max_health)))
+    if action.amplified_recovery:
+        # The CASTER's heal and shield power, not the recipient's: it
+        # amplifies what this champion applies, its own self-heals
+        # included. A caster without the stat factors 1.0 exactly.
+        amount *= ctx.heal_power(action.attacker)
     if state["healing_received_multiplier"] != 1.0 or state["below_half_healing_bonus"]:
         # With no received-healing modifier armed, the multiplier is exactly
         # 1.0 for every category and the multiply is skipped bit-for-bit.
@@ -3271,14 +3299,14 @@ def _apply_damage(
             state["healing_reduction_factor"], strongest_factor
         )
         for label in labels:
-            state["healing_reduction_sources"].add(label)
+            state["healing_reduction_window_sources"].add(label)
         if ctx.records_annotations:
             ctx.ledger.annotate(
                 action,
                 healing_reduction={
                     "factor": round(state["healing_reduction_factor"], 6),
                     "until": round(state["healing_reduction_until"], 6),
-                    "sources": sorted(state["healing_reduction_sources"]),
+                    "sources": sorted(state["healing_reduction_window_sources"]),
                 },
             )
         state["healing_reduction_events"].append(
@@ -3286,7 +3314,7 @@ def _apply_damage(
                 "time": round(event_time, 3),
                 "until": round(state["healing_reduction_until"], 3),
                 "factor": round(state["healing_reduction_factor"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
+                "sources": sorted(state["healing_reduction_window_sources"]),
             }
         )
     if action.wound is not None:
@@ -3302,14 +3330,14 @@ def _apply_damage(
             state["healing_reduction_factor"],
             GRIEVOUS_WOUNDS_FACTOR,
         )
-        state["healing_reduction_sources"].add(wound_label)
+        state["healing_reduction_window_sources"].add(wound_label)
         if ctx.records_annotations:
             ctx.ledger.annotate(
                 action,
                 healing_reduction={
                     "factor": round(state["healing_reduction_factor"], 6),
                     "until": round(state["healing_reduction_until"], 6),
-                    "sources": sorted(state["healing_reduction_sources"]),
+                    "sources": sorted(state["healing_reduction_window_sources"]),
                 },
             )
         state["healing_reduction_events"].append(
@@ -3317,7 +3345,7 @@ def _apply_damage(
                 "time": round(event_time, 3),
                 "until": round(state["healing_reduction_until"], 3),
                 "factor": round(state["healing_reduction_factor"], 6),
-                "sources": sorted(state["healing_reduction_sources"]),
+                "sources": sorted(state["healing_reduction_window_sources"]),
             }
         )
     if pools.health <= 0.0 and state["death_time"] is None:
@@ -3417,7 +3445,7 @@ def run_survival_walk(
             # A new wound after expiry starts a fresh composition window; do
             # not carry the prior factor or source labels into its receipt.
             state["healing_reduction_factor"] = 1.0
-            state["healing_reduction_sources"].clear()
+            state["healing_reduction_window_sources"].clear()
         if state["venom_until"] > 0.0 and event_time >= state["venom_until"]:
             # A new venom application after expiry starts a fresh window;
             # expired venom must not keep cutting shields.
@@ -3530,6 +3558,18 @@ def run_survival_walk(
                         _redirected_amount=0.0,
                         _redirect_fraction=0.0,
                         redirect_skipped_reason="holder_health_gate",
+                    )
+                    # The redirect did not happen, so the Worthy meets the
+                    # whole packet: the direct share goes back to the
+                    # pre-split amount and the declaration back to the share
+                    # the router took from it.  Put both on the action, not
+                    # only on the event the receipt adapter holds -- a
+                    # compiled action has no event, and a restore only one
+                    # lane can read is how the same cancelled redirect came
+                    # to charge the Worthy two different numbers.
+                    action = action._replace(
+                        amount=restored,
+                        declared=pricing.unroute_declared_packet(action.declared),
                     )
         if state["death_time"] is not None:
             # Preserve the scheduled source in the receipt, but do not let

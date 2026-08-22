@@ -549,6 +549,43 @@ class TestCooldownState:
             sl.CooldownState(sl.CooldownRule(name="Bad", cooldown_seconds=0.0))
 
 
+class TestTriggerGate:
+    """The reactive authors' acceptance gate: a seen set and one clock."""
+
+    def test_a_repeated_key_is_refused_without_touching_the_clock(self):
+        gate = sl.TriggerGate(5.0, inclusive=False)
+        assert gate.accepts(1.0, ("Q", 1.0, "stun"))
+        assert not gate.accepts(1.0, ("Q", 1.0, "stun"))
+        assert gate.ready_at == float("-inf")
+
+    def test_a_trigger_inside_the_cooldown_does_not_consume_its_key(self):
+        gate = sl.TriggerGate(5.0, inclusive=False)
+        assert gate.accepts(1.0, "a")
+        gate.arm(1.0)
+        assert not gate.accepts(3.0, "b")
+        assert gate.accepts(6.0, "b")
+
+    def test_the_boundary_convention_is_the_authors_to_name(self):
+        inclusive = sl.TriggerGate(5.0, inclusive=True)
+        inclusive.arm(1.0)
+        strict = sl.TriggerGate(5.0, inclusive=False)
+        strict.arm(1.0)
+        assert inclusive.accepts(6.0 - 5e-10)
+        assert not strict.accepts(6.0 - 5e-10)
+        assert inclusive.accepts(6.0) and strict.accepts(6.0)
+
+    def test_an_explicit_cooldown_overrides_the_declared_one(self):
+        gate = sl.TriggerGate(inclusive=False)
+        gate.arm(1.0, cooldown=2.0)
+        assert gate.ready_at == pytest.approx(3.0)
+        assert not gate.accepts(2.9)
+
+    def test_a_keyless_gate_records_nothing(self):
+        gate = sl.TriggerGate(inclusive=False)
+        assert gate.accepts(1.0)
+        assert gate.accepts(1.0)
+
+
 # ---------------------------------------------------------------------------
 # CC trigger predicate and instance cadence
 # ---------------------------------------------------------------------------

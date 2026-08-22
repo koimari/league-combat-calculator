@@ -46,7 +46,7 @@ from typing import Any, NamedTuple, Protocol
 from .interpreters import cast_proc, periodic, spellblade, sustain
 from .interpreters.sustain import declared_sustain
 from .interpreters.threshold_defense import threshold_health_owner
-from .item_behavior import ManaSpentHealRule, SustainStat
+from .item_behavior import ManaSpentHealRule, OnHitHealRule, SustainStat
 from .rune_effects import (
     KeystoneConquerorEffect,
     KeystoneFleetEffect,
@@ -445,7 +445,7 @@ def _item_self_heal_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
     armed = (
         spellblade.declares_self_heal(names)
         or periodic.declares_self_heal(names)
-        or bool(effects.on_hit_heals)
+        or declared_sustain(names, OnHitHealRule) is not None
         or (
             first_auto_crit is not None
             and (

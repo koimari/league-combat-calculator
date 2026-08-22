@@ -35,6 +35,7 @@ OPTIONS_HARNESS = (
     Path(__file__).resolve().parent / "js" / "champion_options_harness.mjs"
 )
 BIS_PROFILES = ROOT / "static" / "bis-profiles.json"
+PATCH_SNAPSHOT = ROOT / "static" / "data.json"
 
 
 def _client():
@@ -327,44 +328,32 @@ def test_ability_variant_buttons_write_the_declared_backend_option():
     assert "globalFormToggles" in source
 
 
-def _wiki_kit(champion):
-    """The ability kit app.js renders: each damage packet of each cached wiki
-    form becomes one Variant button, in slot order."""
-    profiles = json.loads(BIS_PROFILES.read_text(encoding="utf-8"))
-    abilities = profiles["champions"][champion]["abilities"]
-    kit = []
-    for slot in ("P", "Q", "W", "E", "R"):
-        forms = abilities.get(slot)
-        if not forms:
-            continue
-        variants = []
-        for form in forms:
-            packets = [
-                packet
-                for packet in form.get("packets", [])
-                if re.search(
-                    r"TRUE|MAGIC|PHYSICAL", str(packet.get("damageType") or "").upper()
-                )
-            ]
-            variants += [{"name": packet["attribute"]} for packet in packets] or [
-                {"name": form["name"]}
-            ]
-        kit.append({"slot": slot, "variants": variants, "maxHits": 11})
-    return kit
+def _authored_abilities(champion):
+    """The champion's hand-authored kit in the served patch snapshot."""
+    snapshot = json.loads(PATCH_SNAPSHOT.read_text(encoding="utf-8"))
+    entry = next(
+        (row for row in snapshot["champions"] if row["name"] == champion), None
+    )
+    return (entry or {}).get("abilities", [])
 
 
 def _payload_probe(champion, variants, tmp_path):
-    """Run app.js's real payload builder: ``options`` and ``bindings``."""
+    """Run app.js's real payload builder over the kit the browser renders:
+    the served snapshot's abilities merged with the wiki forms by app.js's own
+    ``mergeBisProfiles``. Returns ``options``, ``bindings``, ``kit`` and
+    ``selected``."""
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not installed")
+    profiles = json.loads(BIS_PROFILES.read_text(encoding="utf-8"))
     fixture = tmp_path / "fixture.json"
     fixture.write_text(
         json.dumps(
             {
                 "champion": champion,
                 "options": champion_options_meta_map()[champion]["options"],
-                "abilities": _wiki_kit(champion),
+                "abilities": _authored_abilities(champion),
+                "abilityForms": profiles["champions"][champion]["abilities"],
                 "variants": variants,
             }
         ),
@@ -384,18 +373,35 @@ def _champion_options_payload(champion, variants, tmp_path):
     return _payload_probe(champion, variants, tmp_path)["options"]
 
 
-def test_variant_flattening_pins_the_boolean_option_indices():
-    """``VARIANT_BOOLEAN_OPTIONS`` names one variant index per boolean; the
-    cached wiki packets are what those indices count."""
-    assert [variant["name"] for variant in _wiki_kit("Ziggs")[4]["variants"]] == [
-        "Epicenter Magic Damage",
-        "Reduced Damage",
+def _kit(champion, tmp_path):
+    """Each slot's rendered variants as ``(name, source form)`` pairs."""
+    kit = _payload_probe(champion, {}, tmp_path)["kit"]
+    return {
+        slot: [(variant["name"], variant["form"]) for variant in variants]
+        for slot, variants in kit.items()
+    }
+
+
+def test_variant_flattening_stamps_every_variant_with_its_source_form(tmp_path):
+    """``VARIANT_BOOLEAN_OPTIONS`` counts two different things: a ``form`` axis
+    and a ``variant`` (packet) axis. Only the stamp tells them apart — Gnar's Q
+    puts two Mini packets and one Mega packet on one flat index."""
+    gnar = _kit("Gnar", tmp_path)
+    assert gnar["Q"] == [
+        ("Physical Damage", 0),  # Boomerang Throw, Mini
+        ("Reduced Damage", 0),  # ... its reduced packet, still Mini
+        ("Physical Damage", 1),  # Boulder Toss, Mega
     ]
-    assert [variant["name"] for variant in _wiki_kit("Jayce")[1]["variants"]] == [
-        "Physical Damage",
-        "Physical Damage",
-        "Increased Damage",
+    assert gnar["W"] == [("Bonus Magic Damage", 0), ("Physical Damage", 1)]
+    jayce = _kit("Jayce", tmp_path)
+    assert jayce["Q"] == [
+        ("Physical Damage", 0),  # To the Skies!, hammer
+        ("Physical Damage", 1),  # Shock Blast, cannon
+        ("Increased Damage", 1),  # ... accelerated, cannon
     ]
+    # A hand-authored kit declares no forms, so every variant is form 0 and
+    # its boolean is a packet toggle.
+    assert _kit("Ziggs", tmp_path)["R"] == [("Epicenter", 0), ("Outer blast", 0)]
 
 
 @pytest.mark.parametrize(
@@ -420,6 +426,30 @@ def test_variant_buttons_send_booleans_not_variant_indices(
     ``accelerated_q``) and left the whole champion uncalculable."""
     options = _champion_options_payload(champion, variants, tmp_path)
     assert options[key] is expected
+
+
+@pytest.mark.parametrize(
+    ("clicked", "mega", "mirrored"),
+    [
+        (0, False, 0),  # Boomerang Throw — Mini
+        (1, False, 0),  # its reduced packet — still Mini
+        (2, True, 1),  # Boulder Toss — the Mega Q
+    ],
+)
+def test_gnar_q_variants_read_their_form_not_the_flat_index(
+    clicked, mega, mirrored, tmp_path
+):
+    """Gnar's Q flattens three variants onto one index while W/E carry two, so
+    `mega` cannot be a flat index. Before the form stamp, clicking Boomerang
+    Throw's *reduced* packet sent ``mega: true`` and clicking Boulder Toss —
+    the real Mega Q — sent ``mega: false``, while W/E rendered Mega for both.
+    """
+    probe = _payload_probe("Gnar", {"Q": clicked}, tmp_path)
+    assert probe["options"]["mega"] is mega
+    # The mirror follows the form, so W/E can never disagree with the payload.
+    assert probe["selected"]["W"] == mirrored
+    assert probe["selected"]["E"] == mirrored
+    assert probe["kit"]["W"][mirrored]["form"] == probe["kit"]["Q"][clicked]["form"]
 
 
 @pytest.mark.parametrize("variants", [{"R": 0}, {"R": 1}])
@@ -502,10 +532,7 @@ def test_global_form_variants_default_to_the_module_option_default():
     assert "defaultFormVariantIndex" in source
     # One home for the starting index: a boolean toggle through
     # VARIANT_BOOLEAN_OPTIONS, an index-valued option clamped to the list.
-    assert (
-        "variant: defaultFormVariantIndex(ability.slot, ability.variants?.length || 1)"
-        in source
-    )
+    assert "variant: defaultFormVariantIndex(ability)" in source
     # Payload never reads the synthetic variant-0 fallback for form toggles.
     assert (
         "options[option.key] = abilityInput(variantAbility.slot).variant" not in source

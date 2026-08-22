@@ -66,7 +66,38 @@ from .survival.actions import TransitionRank, public_phase
 #
 # The version moves for a change to the *published payload* and for nothing
 # else, so a derivation edit that comes out byte-identical leaves it alone.
-CAPABILITY_SCHEMA_VERSION = 7
+# 8 is ``stat_surfaces``: the response publishes two stat blocks that answer
+# two different questions, and each now names which one it is.
+CAPABILITY_SCHEMA_VERSION = 8
+
+# The two states a published stat block can report. Both are correct and
+# neither can replace the other: a loadout block is renderable before any
+# fight is run (``/api/loadout-stats`` has no scenario to read), and the
+# fight's own block is an outcome — the engine folds each cast ability's
+# stat buff (Tristana Q, Olaf R, Lulu W and R, Warwick W) onto its own
+# copy of it. A block that owns its own mapping carries ``stats_state``
+# inside it; ``champion_stats`` is a flat mapping, so its label is
+# the sibling key ``champion_stats_state``. Either way a consumer reads
+# which fight state a block holds instead of inferring it from where the
+# block sits.
+PRE_COMBAT_STATS = "pre_combat"
+FIGHT_EFFECTIVE_STATS = "fight_effective"
+STAT_SURFACE_CONTRACT: dict[str, Any] = {
+    "name": "published_stat_surfaces",
+    "label_key": "stats_state",
+    "sibling_label_keys": {"champion_stats": "champion_stats_state"},
+    "states": {
+        PRE_COMBAT_STATS: (
+            "base stats and level growth, items and their declared state, "
+            "and rune stat grants; no ability stat buff, because no fight "
+            "has been run"
+        ),
+        FIGHT_EFFECTIVE_STATS: (
+            "the pre-combat block plus every ability stat buff the fight's "
+            "cast schedule actually applied"
+        ),
+    },
+}
 
 # This is an API receipt, not a UI hint.  It names the one ordered ledger that
 # resolves every participant's state transition.  Keeping the phase names in
@@ -123,11 +154,9 @@ def _target_policy_label(scope: str) -> str:
     }[scope]
 
 
-# Deriving the phase list from :class:`TransitionRank` keeps the published
-# vocabulary and the walk's ordering one fact, so a rank added, split or
-# renamed shows up here.  ``CAPABILITY_SCHEMA_VERSION`` moves when the
-# resulting list changes, never when this derivation is edited and the
-# payload comes out identical.
+# Derived from :class:`TransitionRank` so the published vocabulary and the
+# walk's ordering stay one fact.  ``CAPABILITY_SCHEMA_VERSION`` moves when the
+# resulting list changes, never when this derivation is edited to no effect.
 def _ledger_phases() -> list[str]:
     """``PARTICIPANT_LEDGER_CONTRACT['phases']``, in declaration order."""
     return list(dict.fromkeys(public_phase(rank) for rank in TransitionRank))
@@ -488,6 +517,7 @@ def public_capability_contract(
         "schema_version": CAPABILITY_SCHEMA_VERSION,
         "scope": "public_calculator_controls",
         "participant_ledger": deepcopy(PARTICIPANT_LEDGER_CONTRACT),
+        "stat_surfaces": deepcopy(STAT_SURFACE_CONTRACT),
         "participants": participants,
         "scenario": {
             "supported": True,

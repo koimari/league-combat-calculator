@@ -11,6 +11,7 @@ from dataclasses import dataclass, field as dataclass_field, replace
 from typing import Any
 
 from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
+from .capabilities import PRE_COMBAT_STATS
 from .champions import get_champion_options_meta
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import StartingDefenses, resolve_starting_defenses
@@ -451,6 +452,7 @@ class ResolvedLoadout:
             ),
             "target_stats": dict(self.request.target_stats),
             "stats": dict(self.stats),
+            "stats_state": PRE_COMBAT_STATS,
             "starting_defenses": self.defenses.public_summary(),
             "target_model_coverage": target_build_coverage(list(self.item_data)),
         }

@@ -14,7 +14,7 @@ Extraction core:
 """
 
 import re
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any, Callable
 
 from ..ability_spec import ControlEvent, DamagePart, Disposition, ZeroPolicy
@@ -23,7 +23,7 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .engine import BUFF, DAMAGE, SlotCtx, SlotParser
+from .engine import BUFF, DAMAGE, PENDING_CONTROL_EVENTS, SlotCtx, SlotParser
 from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
@@ -612,6 +612,38 @@ def damage_entry(
     return entry
 
 
+def post_hit_proc_row(
+    *,
+    name: str,
+    breakdown_key: str,
+    parts: tuple[DamagePart, ...],
+    detail: str,
+) -> dict[str, Any]:
+    """Build the row a cast pays *after* its own hit (``post_hit_proc``).
+
+    ``engine._ALLOWED_POST_HIT_PROC_KEYS`` is a four-key shape (plus an
+    optional ``target_debuff``) that :func:`damage_entry`'s richer entry
+    cannot be narrowed to, so the proc row gets its own builder — and a
+    builder rather than a dict literal per module for the reason
+    :data:`MODULE_FORMULA_ZERO` gives: every part it emits is a numeric leaf,
+    and one born here says its zero was computed instead of carrying no
+    disposition at all.  A part that already declares a policy keeps it.
+    """
+    return {
+        "name": name,
+        "breakdown_key": breakdown_key,
+        "parts": tuple(
+            (
+                part
+                if part.zero_policy is not None
+                else replace(part, zero_policy=MODULE_FORMULA_ZERO)
+            )
+            for part in parts
+        ),
+        "detail": detail,
+    }
+
+
 def support_cast(
     *,
     default_name: str,
@@ -663,18 +695,20 @@ def attach_self_shield(
     """Attach a module-authored self-shield payload to an ability entry.
 
     The payload shape mirrors the Eclipse item's ``self_shield_events``
-    breakdown receipt: the fight engine copies the list onto the
-    ability's damage-event rows (aligned by event ordinal), and the
-    participant ledger turns the first event's payload into a timed
-    self-shield at that event's timestamp.  Only abilities that emit
-    damage events can carry the payload (the ledger has no zero-damage
-    channel), so shield-only abilities stay on the ally-support scanner.
+    receipt: the engine copies the list onto the ability's damage-event
+    rows by ordinal, and the participant ledger grants a timed self-shield
+    at that event's timestamp.  Only an ability emitting damage events can
+    carry it, so a shield-only slot stays on the ally-support scanner.
+    ``actor_wide`` is the flag actor-wide heals carry -- one activation is
+    one shield, de-duplicated across enemy pairs in ``participant_timeline``
+    rather than by a per-module roster-index gate.
     """
     entry["self_shield_events"] = [
         {
             "amount": round(float(amount), 6),
             "duration": float(duration),
             "source": str(source),
+            "actor_wide": True,
         }
     ]
     if detail:
@@ -686,8 +720,23 @@ def on_hit_entry(
     name: str,
     damage_per_hit: float,
     dmg_type: str,
+    *,
+    crit_effectiveness: float = 0.0,
 ) -> dict[str, Any]:
-    """Build an on-hit entry the fight engine applies per auto attack."""
+    """Build an on-hit entry the fight engine applies per auto attack.
+
+    ``crit_effectiveness`` is the crit-probability scale the row's own
+    sourced text states ("affected by critical strike modifiers" is 1.0);
+    the default 0.0 is the wiki's general rule that on-hit damage does not
+    crit unless stated.
+    """
+    on_hit: dict[str, Any] = {
+        "name": f"{name} (on-hit)",
+        "damage_per_hit": damage_per_hit,
+        "damage_type": dmg_type,
+    }
+    if crit_effectiveness:
+        on_hit["crit_effectiveness"] = crit_effectiveness
     return {
         "name": name,
         "damage_type": dmg_type,
@@ -696,12 +745,101 @@ def on_hit_entry(
         # parts tuple, even when the row's damage is attached to the next
         # basic attack rather than dealt by the cast itself.
         "parts": (),
-        "on_hit": {
-            "name": f"{name} (on-hit)",
-            "damage_per_hit": damage_per_hit,
-            "damage_type": dmg_type,
-        },
+        "on_hit": on_hit,
     }
+
+
+@dataclass(frozen=True)
+class HitRider:
+    """A per-hit bonus a champion's passive adds to declared carriers.
+
+    Some passives ride more than one delivery channel: a bonus that lands
+    on named ability hits AND on the basic attacks a range gate admits
+    (Samira's Daredevil Impulse, on Blade Whirl, Wild Rush, Flair's blade
+    branches and every attack inside the 200-unit blade zone).  One
+    declaration serves both — :func:`with_hit_rider` attaches it to a
+    slot's parts, :meth:`auto_entry` to the basic-attack stream — so the
+    number and its missing-health amplification have one home.
+
+    Attributes:
+        name: The passive's own name, for the rows both channels publish.
+        damage_type: The rider's type, which need not be its carrier's.
+        amount: Raw damage of one application at the target's full health.
+        missing_health_amp: Extra fraction at the target's full missing
+            health; 1.0 doubles the rider (Daredevil Impulse).
+    """
+
+    name: str
+    damage_type: str
+    amount: float
+    missing_health_amp: float = 0.0
+
+    def _raw_at(self, missing_ratio: float) -> float:
+        return self.amount * (1.0 + self.missing_health_amp * missing_ratio)
+
+    def part(self, ridden: DamagePart) -> DamagePart:
+        """The rider instance one ridden part's hits carry.
+
+        It mirrors that part's hit count and authored timing, so a
+        multi-hit or offset carrier rides its own schedule rather than a
+        boundary this helper invents.
+        """
+        return DamagePart(
+            self.damage_type,
+            amount=self.amount,
+            hp_scaled_damage=self._raw_at if self.missing_health_amp else None,
+            count=ridden.count,
+            time_offset=ridden.time_offset,
+            hit_interval=ridden.hit_interval,
+        )
+
+    def auto_entry(self) -> dict[str, Any]:
+        """The basic-attack half: this rider on every swing.
+
+        The engine prices each swing against the target's health at it.
+        """
+        entry = on_hit_entry(self.name, self.amount, self.damage_type)
+        if self.missing_health_amp:
+            entry["on_hit"]["missing_health_amp"] = self.missing_health_amp
+        return entry
+
+
+def with_hit_rider(parser: SlotParser, rider_for) -> SlotParser:
+    """Wrap a slot so every hit its parts deal carries a declared rider.
+
+    ``rider_for(ctx)`` returns this fight's :class:`HitRider`, or None when
+    the slot is not a carrier at these options.  The rider parts LEAD the
+    entry: they are priced against the target's health before the hit they
+    ride lands, and a mixed row's magic instance is the one its readers
+    take as the trigger (the Fizz Q shape).  A row certified as one hit at
+    the cast gives up that single-part certification and authors the cast
+    instant on both parts instead.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is None:
+            return None
+        rider = rider_for(ctx)
+        ridden = tuple(entry.get("parts") or ())
+        if rider is None or rider.amount <= 0 or not ridden:
+            return entry
+        if entry.get("event_order_certified") == "single_hit" and all(
+            part.time_offset is None for part in ridden
+        ):
+            del entry["event_order_certified"]
+            ridden = tuple(replace(part, time_offset=0.0) for part in ridden)
+        riders = tuple(rider.part(part) for part in ridden)
+        entry["parts"] = riders + ridden
+        entry["total_raw"] = float(entry.get("total_raw") or 0.0) + sum(
+            part.amount * part.count for part in riders
+        )
+        if any(part.damage_type != rider.damage_type for part in ridden):
+            entry["damage_type"] = "mixed"
+        return entry
+
+    parse.phase = getattr(parser, "phase", DAMAGE)
+    return parse
 
 
 def fixed_count_pet_row(
@@ -819,6 +957,106 @@ def _control_duration_atom(
             query=query,
         )
         value = ranked_ability_atom_value(atom, 1, source=source_path)
+    _require_seconds(ctx, src_slot, atom)
+    return value, atom_receipt(atom)
+
+
+ATOM_RECEIPT_KEYS = (
+    "atom_id",
+    "behavior",
+    "source",
+    "values",
+    "units",
+    "evidence",
+    "hash",
+)
+
+
+def atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+    """The provenance fields a sourced control number publishes."""
+    return {key: atom[key] for key in ATOM_RECEIPT_KEYS}
+
+
+_PROSE_CONTROL_PREFIXES = {
+    "prose": "control duration@",
+    "active": "active duration@",
+}
+
+
+def _prose_control_atom(
+    ctx: SlotCtx,
+    source: tuple[str, int] | None,
+    effect_index: int,
+    duration_source: str,
+) -> tuple[float, dict[str, Any]]:
+    """Read a control window the cache states in a sentence, not a row.
+
+    Two evidence prefixes, because the catalog files two different readings
+    of one description and a slot can carry both.  ``control duration@`` is
+    a control verb followed by an interval (Udyr's pounce "stun them for
+    0.75 seconds"); ``active duration@`` is the effect's own window (Bard's
+    Tempered Fate "puts all units within into stasis for 2.5 seconds",
+    Nasus ages his target "for 5 seconds"), which is the control's window
+    exactly when the control lasts as long as the effect.  The caller says
+    which it means rather than the reader guessing.
+    """
+    src_slot, src_index = source if source else (ctx.slot, 0)
+    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
+    from ..ability_atoms import (
+        AbilityAtomQuery,
+        ranked_ability_atom_value,
+        required_ability_atom,
+    )
+
+    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
+    source_path = (
+        f"{ctx.champion_name}.{src_slot}[{src_index}].effects[{effect_index}]"
+        ".description"
+    )
+    atom = required_ability_atom(
+        ctx.champion_name,
+        champion_data,
+        src_slot,
+        query=AbilityAtomQuery(
+            source=source_path,
+            behavior="timing",
+            evidence_prefix=_PROSE_CONTROL_PREFIXES[duration_source],
+        ),
+    )
+    value = ranked_ability_atom_value(atom, 1, source=source_path)
+    _require_seconds(ctx, src_slot, atom)
+    return value, atom_receipt(atom)
+
+
+def _control_magnitude_atom(
+    ctx: SlotCtx,
+    source: tuple[str, int] | None,
+    attribute: str,
+    rank: int,
+) -> tuple[float, dict[str, Any]]:
+    """Read a control's strength off the named cached leveling attribute.
+
+    Tier one only, and deliberately: a magnitude is a ranked number the
+    cache either carries under a name or does not carry at all, and a prose
+    fallback here would be the literal-default shape rule 5 refuses.
+    """
+    src_slot, src_index = source if source else (ctx.slot, 0)
+    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
+    from ..ability_atoms import required_ranked_attribute_atom
+
+    value, atom = required_ranked_attribute_atom(
+        ctx.champion_name,
+        {"name": ctx.champion_name, "abilities": ctx.abilities},
+        src_slot,
+        attribute,
+        rank,
+        entry_index=src_index,
+    )
+    return value, atom_receipt(atom)
+
+
+def _require_seconds(ctx: SlotCtx, src_slot: str, atom: dict[str, Any]) -> None:
+    """A control window is an interval; anything else is the wrong atom."""
     units = atom.get("units", [])
     allowed_units = {"seconds", "s"}
     if not isinstance(units, list) or any(
@@ -827,19 +1065,6 @@ def _control_duration_atom(
         raise ValueError(
             f"{ctx.champion_name} {src_slot} control duration atom must use seconds"
         )
-    receipt = {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
-    return value, receipt
 
 
 def _resolve_casts(
@@ -1096,21 +1321,87 @@ def with_control(
     return parse
 
 
+def park_control_interval(
+    entry: dict[str, Any],
+    duration: float,
+    *,
+    time_offset: float | None = 0.0,
+    magnitude: float = 0.0,
+) -> None:
+    """Park a sourced control interval for ``MODULE_CC`` to name.
+
+    :func:`with_control_event` for a slot that builds its entry by hand.
+    """
+    entry[PENDING_CONTROL_EVENTS] = tuple(entry.get(PENDING_CONTROL_EVENTS, ())) + (
+        {
+            "duration": float(duration),
+            "time_offset": time_offset,
+            "magnitude": float(magnitude),
+        },
+    )
+
+
 def with_control_event(
     parser: SlotParser,
     *,
-    kind: str,
-    duration_attr: str,
+    duration_attr: str | None = None,
+    duration_source: str = "attribute",
+    magnitude_attr: str | None = None,
+    kind: str | None = None,
     source: tuple[str, int] | None = None,
     ranks: str = "rank",
     time_offset: float | None = 0.0,
     effect_index: int = 0,
 ) -> SlotParser:
-    """Add one sourced control event, including to a utility-only slot."""
-    if not kind.strip():
+    """Add one sourced control event, including to a utility-only slot.
+
+    Like :func:`with_control`, the interval is what this helper sources and
+    the kind is the module's ``MODULE_CC`` entry: an event authored with no
+    ``kind`` rides the slot as a pending interval and
+    ``engine._apply_module_cc`` stamps the declared kind onto it after every
+    phase.  A cc-only slot therefore states its control exactly where a
+    damaging slot does, and the two cannot disagree.
+
+    ``kind`` is for the one slot shape ``MODULE_CC`` cannot state: a cast
+    whose control is not one answer (Vayne's Condemn stuns only into a wall,
+    on top of the knockback every cast lands; Lulu's Whimsy polymorphs only
+    the enemy branch).  Such a slot declares :data:`engine.CC_PER_PART` and
+    authors the kind here; the engine refuses this argument on any slot that
+    declared a constant.
+
+    ``duration_source`` names which cached window the control occupies:
+
+    * ``"attribute"`` reads ``duration_attr`` off the ability's leveling
+      rows, falling back to the ``control duration@`` prose atom;
+    * ``"prose"`` reads that prose atom directly, for a control the cache
+      states in a sentence and in no leveling row (Udyr's 0.75s pounce stun,
+      Viktor's 1s refreshing slow window);
+    * ``"active"`` reads the effect's own ``active duration@`` window, for a
+      control that lasts exactly as long as the effect applying it (Bard's
+      2.5s stasis, Nasus' 5s Wither).
+
+    Naming the source at the call site is the point: a slot can carry more
+    than one seconds atom and only a reviewer knows which is the control
+    (Singed's Mega Adhesive carries the 0.375s landing delay, not its 3s
+    field, which is why that slot stays undeclared).
+
+    ``magnitude_attr`` sources the control's strength -- a slow's percent --
+    off a named leveling attribute, through the same validated catalog.
+    """
+    if kind is not None and not kind.strip():
         raise ValueError("with_control_event kind must be a non-empty string")
     if ranks not in {"rank", "level"}:
         raise ValueError("with_control_event ranks must be 'rank' or 'level'")
+    if duration_source not in {"attribute", "prose", "active"}:
+        raise ValueError(
+            "with_control_event duration_source must be 'attribute', 'prose' "
+            "or 'active'"
+        )
+    if (duration_source == "attribute") != (duration_attr is not None):
+        raise ValueError(
+            "with_control_event names duration_attr for an attribute source "
+            "and omits it for a prose or active one"
+        )
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
@@ -1122,14 +1413,30 @@ def with_control_event(
         rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
         if rank < 1:
             return entry
-        duration, duration_atom = _control_duration_atom(
-            ctx, source, duration_attr, rank, effect_index
-        )
+        if duration_source != "attribute":
+            duration, duration_atom = _prose_control_atom(
+                ctx, source, effect_index, duration_source
+            )
+        else:
+            duration, duration_atom = _control_duration_atom(
+                ctx, source, duration_attr, rank, effect_index
+            )
         if duration <= 0.0:
             raise ValueError(
                 f"{ctx.champion_name} {ctx.slot}: sourced control duration "
-                f"{duration_attr!r} is missing or zero"
+                f"{duration_attr or duration_source!r} is missing or zero"
             )
+        magnitude = 0.0
+        magnitude_atom = None
+        if magnitude_attr is not None:
+            magnitude, magnitude_atom = _control_magnitude_atom(
+                ctx, source, magnitude_attr, rank
+            )
+            if magnitude <= 0.0:
+                raise ValueError(
+                    f"{ctx.champion_name} {ctx.slot}: sourced control magnitude "
+                    f"{magnitude_attr!r} is missing or zero"
+                )
         if entry is None:
             entry = {
                 "name": ability.get("name", f"Ability {ctx.slot}"),
@@ -1139,19 +1446,26 @@ def with_control_event(
                 "total_raw": 0.0,
                 "parts": (),
             }
-        controls = list(entry.get("control_events", ()))
-        controls.append(
-            ControlEvent(
-                kind,
-                duration,
-                time_offset=time_offset,
-                skillshot=False,
+        if kind is None:
+            park_control_interval(
+                entry, duration, time_offset=time_offset, magnitude=magnitude
             )
-        )
-        entry["control_events"] = tuple(controls)
+        else:
+            controls = list(entry.get("control_events", ()))
+            controls.append(
+                ControlEvent(
+                    kind,
+                    duration,
+                    magnitude=magnitude,
+                    time_offset=time_offset,
+                    skillshot=False,
+                )
+            )
+            entry["control_events"] = tuple(controls)
         entry["control_source_atoms"] = [
             *entry.get("control_source_atoms", []),
             duration_atom,
+            *([magnitude_atom] if magnitude_atom is not None else []),
         ]
         return entry
 
@@ -1168,6 +1482,7 @@ def stat_buff(
     damage_attr: str | None = None,
     dmg_type: str = "physical",
     couples: tuple[str, str] | None = None,
+    uptime_option: str | None = None,
 ) -> SlotParser:
     """BUFF-phase stat steroid (Vayne/Aatrox/Ambessa R pattern).
 
@@ -1195,6 +1510,14 @@ def stat_buff(
             value into ``ctx.stats`` under ``stats_key`` for a dependent
             slot listed later (Vayne R's Tumble cooldown reduction,
             read by Q). The key never leaves the parse context.
+        uptime_option: A 0..1 champion option scaling the buff, for a
+            steroid the champion only holds part of the fight — a zone he
+            has to stand in (Trundle W's Frozen Domain). The scaled value
+            is the buff's fight average, which for a bonus-attack-speed
+            steroid is exact: attack speed is linear in the bonus percent,
+            so ``AS(b x f)`` equals ``f`` seconds at ``AS(b)`` plus
+            ``1 - f`` at ``AS(0)``. None applies the buff for the whole
+            fight, the reading with no option to dial.
 
     Returns:
         A BUFF-phase slot parser.
@@ -1213,6 +1536,10 @@ def stat_buff(
         value = extract_value(ability, attr, rank, level=ctx.level)
         if mode == "percent_of":
             value = value / 100.0 * ctx.stat(percent_of)
+        uptime = 1.0
+        if uptime_option is not None:
+            uptime = min(max(float(ctx.option(uptime_option)), 0.0), 1.0)
+            value *= uptime
 
         damage = 0.0
         if damage_attr is not None:
@@ -1240,6 +1567,11 @@ def stat_buff(
             ),
         )
         entry["stat_buff"] = {stat: value}
+        if uptime_option is not None:
+            entry["detail"] = (
+                f"{attr} priced at {uptime:.0%} uptime ({value:g} applied "
+                "across the fight window)"
+            )
         return entry
 
     parse.phase = BUFF

@@ -45,6 +45,7 @@ from .slotlib import (
     simple_damage,
     support_cast,
     with_control,
+    with_control_event,
 )
 from .source_receipts import load_champion_sources
 from .inputs import int_option
@@ -259,7 +260,11 @@ SLOTS = {
         "fully-charged shrine; the 5s charge ramp is not modeled.",
     ),
     "E": _magical_journey,
-    "R": _tempered_fate,
+    # Tempered Fate prices no damage; its stasis is the effect's own
+    # window ("puts all units within into stasis for 2.5 seconds"), which
+    # the cache carries as the slot's active-duration atom and in no
+    # leveling row.
+    "R": with_control_event(_tempered_fate, duration_source="active"),
 }
 
 # Cached kit review.  Q "slows [the first enemy hit] by 60% for a
@@ -267,7 +272,7 @@ SLOTS = {
 # or a second enemy", which the single-target model never supplies, so the
 # slow is the answer for the target Q damages here.  W, E and R deal no
 # damage, and P's Meep slow rides basic attacks rather than an ability.
-MODULE_CC = {"Q": "slow"}
+MODULE_CC = {"Q": "slow", "R": "stasis"}
 
 parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
 

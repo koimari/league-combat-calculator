@@ -210,7 +210,8 @@
    "closed_row": "opening_defense/receipt_walk",
    "covering_coupled_scenarios": [
     "immolate_active_bruiser_roster",
-    "swing_term_armed_carry_roster"
+    "swing_term_armed_carry_roster",
+    "undaunted_armed_swing_roster"
    ],
    "declared_rules": [
     "bloodthirster.ichorshield",
@@ -298,6 +299,7 @@
       },
       "guardians_horn.undaunted": {
        "consumed_at": [
+        "program.compile.knights_vow_target_factor",
         "scenario.resolve_scenario"
        ],
        "fields_no_engine_reads": [
@@ -322,8 +324,7 @@
       },
       "plated_steelcaps.plating": {
        "consumed_at": [
-        "participant_timeline._simulate_survival._target_factor",
-        "program.compile._knight_target_factor",
+        "program.compile.knights_vow_target_factor",
         "roster_composition.target_overrides",
         "scenario.resolve_scenario"
        ],
@@ -344,8 +345,7 @@
       },
       "wardens_mail.rock_solid": {
        "consumed_at": [
-        "participant_timeline._simulate_survival._target_factor",
-        "program.compile._knight_target_factor",
+        "program.compile.knights_vow_target_factor",
         "roster_composition.target_overrides",
         "scenario.resolve_scenario"
        ],

@@ -694,7 +694,6 @@ class TestFailClosedValidation:
         """The public API boundary fails closed on option keys the module
         does not declare — a never-declared typo stays rejected before
         and after the completion."""
-        app_module.app.config["TESTING"] = True
         client = app_module.app.test_client()
         response = client.post(
             "/api/calculate",
@@ -720,7 +719,6 @@ class TestFailClosedValidation:
         """Once the bool option is declared, the API's existing option
         validator rejects a non-bool value with the typed message (today
         the key is unknown, so the message differs — hence the xfail)."""
-        app_module.app.config["TESTING"] = True
         client = app_module.app.test_client()
         response = client.post(
             "/api/calculate",
@@ -747,7 +745,6 @@ class TestFailClosedValidation:
         the reset is applied — Q's public casts exceed the ambient auto
         cap (10 today on the pipeline surface).  Today the key is
         unknown (400), hence the xfail."""
-        app_module.app.config["TESTING"] = True
         client = app_module.app.test_client()
         response = client.post(
             "/api/calculate",

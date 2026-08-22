@@ -14,7 +14,9 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Udyr")
-        assert udyr.MODULE_CC == {"R": "slow"}
+        # A cc-only slot states its kind in MODULE_CC like any other and
+        # publishes the sourced interval as a ControlEvent (CF8).
+        assert udyr.MODULE_CC == {"E": "stun", "R": "slow"}
         assert "slows them while they remain within" in cc_review.slot_text(data, "R")
         # Blazing Stampede is where the kit's stun lives, and it deals no
         # damage of its own, so no part can carry that answer: the stun is

@@ -124,11 +124,18 @@ def test_cull_typed_values_match_the_cached_wiki_branches():
 
 
 def test_cull_reap_on_hit_heal_is_a_typed_health_packet():
-    effects = resolve_damage_effects([get_item_by_name("Cull")])
-    assert len(effects.on_hit_heals) == 1
-    assert effects.on_hit_heals[0].item_name == "Cull"
-    assert effects.on_hit_heals[0].amount == pytest.approx(
+    """The declaration owns the number; the projection carries no second
+    copy of it (SD9)."""
+    from src.calculator.item_behavior import OnHitHealRule
+    from src.calculator.interpreters.sustain import declared_sustain
+
+    slot = declared_sustain(["Cull"], OnHitHealRule)
+    assert slot.owner == "Cull"
+    assert slot.value("amount") == pytest.approx(
         required_effect_value("Cull", "health_per_on_hit")
+    )
+    assert not hasattr(
+        resolve_damage_effects([get_item_by_name("Cull")]), "on_hit_heals"
     )
 
 

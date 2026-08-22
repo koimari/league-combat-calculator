@@ -868,7 +868,6 @@ class TestFailClosedDeclarations:
         """The public API boundary already fails closed on option keys the
         module does not declare (a never-declared typo stays rejected
         before and after the completion)."""
-        app_module.app.config["TESTING"] = True
         client = app_module.app.test_client()
         response = client.post(
             "/api/calculate",
@@ -893,7 +892,6 @@ class TestFailClosedDeclarations:
     def test_api_rejects_non_bool_option_values(self) -> None:
         """Once the bool option is declared, the API's existing option
         validator rejects a non-bool value with the typed message."""
-        app_module.app.config["TESTING"] = True
         client = app_module.app.test_client()
         response = client.post(
             "/api/calculate",

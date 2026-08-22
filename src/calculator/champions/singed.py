@@ -119,6 +119,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
+    "W (Mega Adhesive) stays out of MODULE_CC: its slow is sourced "
+    "(the cached 'Slow' row, 50/55/60/65/70%) but its window is not. "
+    "The field lasts 3 seconds by the effect description alone, and the "
+    "only seconds atom the slot carries is the 0.375s landing delay -- "
+    "reading that one as the control window would understate the slow "
+    "eightfold, so the slot is left unreviewed rather than declared "
+    "against the wrong number.",
     "R (Insanity Potion) grants the cached Bonus Stats row (25/55/85, "
     "corroborated by the game binary's InsanityPotion StatAmount "
     "DataValue) as ability power, bonus armour, bonus magic resistance "
@@ -136,9 +143,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The slot's declared control is the unconditional displacement; the "
     "root would need a W-field placement the fight does not track.",
     "P (Noxious Slipstream) is stacking movement speed and W (Mega "
-    "Adhesive) a slow and a ground: both are emitted zero-damage rows, "
-    "because the engine has no movement-speed axis and records crowd "
-    "control as a kind without a magnitude.  Neither spell object "
+    "Adhesive) a slow and a ground: both are emitted zero-damage rows. "
+    "P is not yet wired onto the shared move-speed fold, and W's slow "
+    "magnitude is blocked on the cache (its only seconds atom is the "
+    "0.375 landing delay).  Neither spell object "
     "carries a damage field in the game binary.",
 ]
 

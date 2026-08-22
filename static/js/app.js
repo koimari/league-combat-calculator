@@ -332,12 +332,16 @@ function wikiDamageType(type) {
   return null;
 }
 
-function wikiFallbackVariant(form, packet = null) {
+function wikiFallbackVariant(form, packet = null, formIndex = 0) {
   const source = packet || (form?.packets || []).find((entry) => wikiDamageType(entry?.damageType));
   const ratios = source?.ratios || {};
   const levelScaled = Array.isArray(source?.base) && source.base.length > 6;
   return {
     name: packet?.attribute || form?.name || "Wiki-derived form",
+    // The form this packet was flattened out of. A slot's variant list is one
+    // flat index over two axes — which form, and which packet inside it — so
+    // the form must survive the flattening or a form toggle has to guess.
+    form: formIndex,
     levelBase: levelScaled ? source.base : undefined,
     base: levelScaled ? undefined : (source?.base || []),
     ap: ratios.ap,
@@ -351,9 +355,11 @@ function wikiFallbackVariant(form, packet = null) {
 }
 
 function wikiFallbackAbility(slot, forms, metadata) {
-  const normalized = (forms || []).flatMap((form) => {
+  const normalized = (forms || []).flatMap((form, formIndex) => {
     const packets = (form.packets || []).filter((packet) => wikiDamageType(packet?.damageType));
-    return packets.length ? packets.map((packet) => wikiFallbackVariant(form, packet)) : [wikiFallbackVariant(form)];
+    return packets.length
+      ? packets.map((packet) => wikiFallbackVariant(form, packet, formIndex))
+      : [wikiFallbackVariant(form, null, formIndex)];
   });
   const first = normalized[0] || { name: metadata?.name || slot, packets: [] };
   return {
@@ -456,49 +462,65 @@ function applyPrerequisiteGates() {
   }
 }
 
-function applyControlCapabilities() {
-  // P2 (#78 follow-up): consume contract.controls so the backend can
-  // runtime-disable a control family; unsupported families get disabled
-  // with the backend reason instead of silently ignoring input.
+/**
+ * What a refused control family does to the page, keyed by the family's name
+ * in `capabilities.controls.fields`.  Keyed by *name*, not by
+ * `frontend_token`: the contract strips the locator off an unsupported field
+ * on purpose ("a locator there names a control that does not exist"), so
+ * matching on the token could only ever match a *supported* field — which is
+ * why this whole pass had never fired.
+ *
+ * A family belongs here when its controls are in the served document at boot,
+ * which is when this pass runs; the families whose controls a later render
+ * creates (`optimize`, and best_in_slot's `.bis-trigger` / roster
+ * `[data-picker]` rows) can only be gated by their boot-time selectors.
+ * The server's `_feature_fields` currently builds every family with
+ * `supported: true`, so this pass is exercised by tests through synthetic
+ * contracts and waits on a server-side refusal to fire in production.
+ */
+const CONTROL_FAMILY_GATES = {
+  // The prerequisite pass re-enables #bisButton on every render, so a gated
+  // one is marked. Deliberately not dataset.capabilityField — that names a
+  // payload field, and this is a control family.
+  best_in_slot: { selector: ".bis-trigger, #bisButton", mark: true },
+  game_state: { selector: "[data-game-state]" },
+  objective: { selector: "[data-objective]" },
+  share: { selector: "#sharePanel, #shareAnalystButton", hide: true },
+  roster_membership: { selector: "#addEnemy, #addAlly" },
+  purchase_optimize: { selector: "#economicsGold, #economicsOptimize" },
+  picker: { selector: "[data-picker]" },
+};
+
+/** Every declared control family the backend refuses, with its reason. */
+function refusedControlFamilies() {
   const fields = engine.capabilities?.controls?.fields || {};
-  const gated = (token) => {
-    const hit = Object.values(fields).find((f) => f.frontend_token === token);
-    return hit && hit.supported === false ? hit : null;
-  };
-  if (gated("data-bis-path")) {
-    document.querySelectorAll(".bis-trigger, #bisButton").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-bis-path").reason || "BIS unavailable";
-      // Marks the control as backend-gated so the per-render prerequisite
-      // pass leaves it disabled instead of re-enabling it. Deliberately not
-      // dataset.capabilityField — that names a payload field, and this is a
-      // control family.
-      b.dataset.capabilityGated = "true";
+  return Object.entries(CONTROL_FAMILY_GATES)
+    .filter(([name]) => fields[name]?.supported === false)
+    .map(([name, gate]) => ({ ...gate, name, reason: capabilityReason(fields[name]) }));
+}
+
+/**
+ * Disable the control families the backend refuses (issue #78 follow-up).
+ *
+ * `controls` is the only capability section this boot-time pass walks, and
+ * deliberately so: its fields name control *families*, while participant and
+ * scenario fields name payload fields whose refusal rides on the control
+ * itself through `capabilityDescriptorAttributes` at render time, and
+ * `catalogs` mounts no control of its own.
+ */
+function applyControlCapabilities() {
+  refusedControlFamilies().forEach((refusal) => {
+    document.querySelectorAll(refusal.selector).forEach((control) => {
+      if (refusal.hide) {
+        control.hidden = true;
+        return;
+      }
+      control.disabled = true;
+      control.title = refusal.reason;
+      if (refusal.mark) control.dataset.capabilityGated = "true";
     });
-  }
+  });
   applyPrerequisiteGates();
-  if (gated("data-game-state")) {
-    document.querySelectorAll("[data-game-state]").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-game-state").reason || "Unavailable";
-    });
-  }
-  if (gated("data-objective")) {
-    document.querySelectorAll("[data-objective]").forEach((b) => {
-      b.disabled = true;
-      b.title = gated("data-objective").reason || "Unavailable";
-    });
-  }
-  if (gated('id="sharePanel"')) {
-    document.querySelectorAll("#sharePanel, #shareAnalystButton").forEach((b) => {
-      if (b) b.hidden = true;
-    });
-  }
-  if (gated("data-remove-target")) {
-    document.querySelectorAll("#addEnemy, #addAlly").forEach((b) => {
-      if (b) b.disabled = true;
-    });
-  }
 }
 
 function maybeInitConsentAnalytics() {
@@ -585,20 +607,34 @@ const SLOT_OPTION_BINDINGS = {
 // to; every other option finds its slot by the name it carries (optionSlot).
 const SLOT_COUNT_OPTIONS = { passive_procs: "P", mines_hit: "E" };
 
-// Champion options the Variant buttons write, mapped to the variant index
-// that means `true`.  The backend types these as booleans, so the payload
-// must never carry the raw variant index (Gnar's `mega: 0`, Ziggs'
-// `r_sweet_spot: 0` and Jayce's `accelerated_q: 0` each answered "must be
-// true or false").  Indices follow the wiki's packet order: Gnar lists Mini
-// first (mega = 1), Jayce's hammer kit and Ziggs' epicenter blast come first
-// (0), and Jayce's Q flattens to To-the-Skies / Shock Blast / accelerated
-// Shock Blast (accelerated_q = 2).
+// Champion options the Variant buttons write, each naming the axis it reads
+// and the value on that axis that means `true`.  The backend types these as
+// booleans, so the payload must never carry a raw index (Gnar's `mega: 0`,
+// Ziggs' `r_sweet_spot: 0` and Jayce's `accelerated_q: 0` each answered "must
+// be true or false").
+//
+// The two axes are not interchangeable.  A slot's variant list is a flat
+// index over (form, packet) pairs, so `form` and `variant` count different
+// things whenever one form carries several damage packets: Gnar's Q flattens
+// to Boomerang Throw / its reduced packet / Boulder Toss, and only the third
+// is Mega.  A `form` option reads the source form stamped on the selected
+// variant; a `variant` option reads the flat index, because the packet it
+// names is the thing the user picked.
 const VARIANT_BOOLEAN_OPTIONS = {
-  "mega": 1,
-  "hammer_stance": 0,
-  "r_sweet_spot": 0,
-  "accelerated_q": 2,
+  // Form toggles: the wiki lists Gnar Mini first and Mega second, Jayce
+  // hammer first and cannon second.
+  "mega": { form: 1 },
+  "hammer_stance": { form: 0 },
+  // Packet toggles: Ziggs' R leads with the epicenter blast, and Jayce's Q
+  // flattens to To-the-Skies / Shock Blast / accelerated Shock Blast.
+  "r_sweet_spot": { variant: 0 },
+  "accelerated_q": { variant: 2 },
 };
+
+/** The source form of one flattened variant; a kit that declares no forms is one form. */
+function variantForm(ability, index) {
+  return Number(ability?.variants?.[index]?.form || 0);
+}
 
 // The option keys one slot's Variant control claims by name.
 function slotVariantKeys(slot) {
@@ -610,14 +646,12 @@ function slotVariantKeys(slot) {
   ];
 }
 
-// The boolean options no single slot claims: global form toggles that
-// re-shape every Q/W/E entry rather than one slot's variant list.
+// The boolean options that select a form: they re-shape every Q/W/E entry
+// rather than one slot's packet list, so a slot binds one by declaration
+// alone.  Which options those are is the map's `form` axis, never a second
+// inference from the option's name.
 function globalFormToggles() {
-  const owned = new Set([
-    ...Object.values(SLOT_OPTION_BINDINGS),
-    ...ABILITY_SLOTS.flatMap(slotVariantKeys),
-  ]);
-  return Object.keys(VARIANT_BOOLEAN_OPTIONS).filter((key) => !owned.has(key));
+  return Object.keys(VARIANT_BOOLEAN_OPTIONS).filter((key) => "form" in VARIANT_BOOLEAN_OPTIONS[key]);
 }
 
 function abilityOptionBinding(slot, field, championName = state.attacker.champion) {
@@ -650,42 +684,57 @@ function abilityOptionBinding(slot, field, championName = state.attacker.champio
   return family || null;
 }
 
+/** The first variant of one form, or -1 when the slot has no entry in that form. */
+function formVariantIndex(ability, form) {
+  return (ability?.variants || []).findIndex((variant, index) => variantForm(ability, index) === form);
+}
+
 /**
  * The variant index a slot starts on: the one matching its bound option's
  * module default.  Variant 0 is Jayce's hammer kit, but his module defaults
  * hammer_stance to false (cannon) — a fresh pick must not flip the form.  A
- * boolean toggle maps through VARIANT_BOOLEAN_OPTIONS; an option whose default
- * is already an index is clamped to the slot's variant list.  Slots without a
- * bound option start on their first variant.
+ * form toggle lands on the first variant of the form its default names; a
+ * packet toggle names the index itself; an option whose default is already an
+ * index is clamped to the slot's variant list.  Slots without a bound option
+ * start on their first variant.
  */
-function defaultFormVariantIndex(slot, count = 1) {
-  const binding = abilityOptionBinding(slot, "ability_variants");
+function defaultFormVariantIndex(ability) {
+  const count = ability?.variants?.length || 1;
+  const binding = abilityOptionBinding(ability?.slot, "ability_variants");
   if (!binding) return 0;
   const option = (engine.championOptions[state.attacker.champion]?.options || [])
     .find((entry) => entry.key === binding);
   const clamp = (index) => Math.max(0, Math.min(count - 1, Math.trunc(index)));
-  if (binding in VARIANT_BOOLEAN_OPTIONS) {
-    const trueIndex = VARIANT_BOOLEAN_OPTIONS[binding];
-    return clamp(option?.default ? trueIndex : 1 - trueIndex);
+  const axis = VARIANT_BOOLEAN_OPTIONS[binding];
+  if (axis && "form" in axis) {
+    const wanted = (ability.variants || []).findIndex((variant, index) =>
+      (variantForm(ability, index) === axis.form) === Boolean(option?.default));
+    return wanted >= 0 ? wanted : 0;
   }
+  if (axis) return clamp(option?.default ? axis.variant : 1 - axis.variant);
   const value = Number(option?.default);
   return Number.isFinite(value) ? clamp(value) : 0;
 }
 
 /**
- * Mirror one slot's Variant selection onto every slot bound to the same
- * global form toggle.  Q/W/E all bind the toggle, but the payload reads the
- * first bound slot only — without the mirror, clicking Boulder Toss on Q
- * would leave W/E rendering (and the user reading) the Mini kit.
+ * Mirror one slot's Variant selection onto every slot bound to the same form
+ * toggle, by form rather than by index.  Q/W/E all bind Gnar's `mega`, but Q
+ * carries three variants to W/E's two — mirroring the raw index put W/E in
+ * Mega whenever Q left its first packet, including on Boomerang Throw's
+ * reduced packet, which is Mini.
  */
 function syncGlobalFormVariants(slot, variantIndex) {
   const binding = abilityOptionBinding(slot, "ability_variants");
-  if (!(binding in VARIANT_BOOLEAN_OPTIONS)) return;
+  const axis = VARIANT_BOOLEAN_OPTIONS[binding];
+  if (!axis || !("form" in axis)) return;
+  const source = activeAbilityKit().find((ability) => ability.slot === slot);
+  const form = variantForm(source, variantIndex);
   activeAbilityKit().forEach((ability) => {
     if (ability.slot === slot || !(ability.variants?.length > 1)) return;
     if (abilityOptionBinding(ability.slot, "ability_variants") !== binding) return;
+    const match = formVariantIndex(ability, form);
     const input = abilityInput(ability.slot);
-    input.variant = Math.min(variantIndex, ability.variants.length - 1);
+    input.variant = match >= 0 ? match : 0;
     state.attacker.abilityInputs[ability.slot] = input;
   });
 }
@@ -725,7 +774,7 @@ function resetAbilityInputs() {
   });
   state.attacker.abilityInputs = Object.fromEntries(activeAbilityKit().map((ability) => [ability.slot, {
     rank: ability.slot === "P" ? 1 : Number(defaultRanks[ability.slot] || 0),
-    variant: defaultFormVariantIndex(ability.slot, ability.variants?.length || 1),
+    variant: defaultFormVariantIndex(ability),
   }]));
 }
 
@@ -1805,8 +1854,13 @@ function engineChampionOptions() {
       // option keeps its stored/default value instead of reading the
       // synthetic variant-0 fallback (which would flip Jayce to hammer).
       const input = state.attacker.abilityInputs[variantAbility.slot];
-      if (option.key in VARIANT_BOOLEAN_OPTIONS) {
-        if (input) options[option.key] = input.variant === VARIANT_BOOLEAN_OPTIONS[option.key];
+      const axis = VARIANT_BOOLEAN_OPTIONS[option.key];
+      if (axis) {
+        if (input) {
+          options[option.key] = "form" in axis
+            ? variantForm(variantAbility, input.variant) === axis.form
+            : input.variant === axis.variant;
+        }
       } else if (input) {
         options[option.key] = input.variant;
       }
@@ -2297,8 +2351,9 @@ function scheduleEngineCalculation() {
         renderPrototypeBuilder();
         renderPrototypeResult(engine.responses.a, engine.responses.b);
         renderScenarioRail();
-        // feedback.js re-reads the displayed payload off this signal.
-        document.dispatchEvent(new Event("scryglass:result"));
+        // The one published result signal. feedback.js re-reads the displayed
+        // request off it; eventorder.js reads the receipt it carries.
+        document.dispatchEvent(new CustomEvent("scryglass:result", { detail: engine.responses.a }));
       })
       .catch((error) => {
         if (requestId === engine.requestId) {
@@ -3238,7 +3293,7 @@ function renderRunePage() {
   const secondaryRows = runePaths().filter((path) => path !== primary).map((path) =>
     `<div class="rune-path ${secondary === path ? "is-on" : ""}"><b>${escapeHtml(path)}</b>${pathRows(path, [1, 2, 3], "minor")}</div>`).join("");
   const shardRows = (engine.runeShards || []).map((row, index) =>
-    `<div class="rune-row" data-rune-focus="shard-${index + 1}"><b>${escapeHtml(row.name || `Row ${index + 1}`)}</b>${(row.options || []).map((option) =>
+    `<div class="rune-row" data-rune-focus="shard-${index + 1}"><b>${escapeHtml(row.name || `Row ${index + 1}`)}</b>${statShardChoices(index).map((option) =>
       runePickButton("shard", side, { ...option, implemented: option.implemented !== false }, shards[index] === option.name, index)).join("")}</div>`).join("");
   const chosen = [keystoneName, ...minors].filter(Boolean).length + shards.filter(Boolean).length;
   $("runePageTitle").textContent = `Build ${side} runes`;
@@ -3295,30 +3350,6 @@ function copyRunePage(from, to) {
 /** One rune by name from the whole roster the config published. */
 function getRune(name) {
   return name ? (engine.runes || []).find((entry) => entry.name === name) || null : null;
-}
-
-/**
- * The minor runes a slot may legally hold, as an affordance only — the
- * server owns the rules and refuses anything illegal that reaches it.
- * Slots 0-2 are the primary path's three rows in order; slots 3-4 are the
- * secondary path's two.
- */
-function minorRuneChoices(side, index) {
-  const minors = (engine.runes || []).filter((entry) => entry.row > 0);
-  const primary = getKeystone(state.attacker[`keystone${side}`])?.path || "";
-  if (index < 3) {
-    return minors.filter((entry) => entry.row === index + 1 && (!primary || entry.path === primary));
-  }
-  const taken = (state.attacker[`minorRunes${side}`] || [])
-    .filter((name, slot) => slot >= 3 && slot !== index)
-    .map((name) => getRune(name))
-    .filter(Boolean);
-  const secondary = taken[0]?.path || "";
-  return minors.filter((entry) => (
-    entry.path !== primary
-    && (!secondary || entry.path === secondary)
-    && !taken.some((other) => other.row === entry.row)
-  ));
 }
 
 /** The options one shard row offers, from the published shard table. */

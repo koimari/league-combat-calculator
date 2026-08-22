@@ -5,6 +5,17 @@ participant event timeline, not a second stat-only optimizer.  Keeping the
 objective contract, candidate orchestration, sorting, and receipt assembly in
 this module means the API and any future consumer cannot silently disagree.
 Flask owns only HTTP decoding, cache/rate policy, and error translation.
+
+Every number in a receipt is published beside a disposition entry, so the
+dispositions map walks the whole payload rather than two named leaves:
+``components.*`` and the stat block are what the objective is folded from, and
+naming only ``score`` and ``objective_value`` leaves them with no entry.  Every
+member is re-written at the path it lives at, so each row stays byte-identical
+and each entry is produced beside its leaf by ``serialize_leaf``.
+``program.views.RankingWriter`` writes them, so a block a view opened
+``THEORETICAL`` may not reach a ranking; the read half of that rule is
+``program.views.refuse_previewed``, which ``bis_objective_score`` runs over
+each candidate's combat map before folding a score out of it.
 """
 
 from copy import deepcopy
@@ -636,19 +647,6 @@ def _bis_coverage_receipt(
     )
 
 
-# The public interface stays deliberately small; the internal orchestration
-# mirrors one candidate through every coverage and scoring gate.
-#
-# ``_bis_dispositions`` walks the whole payload rather than two named leaves:
-# naming only ``score`` and ``objective_value`` leaves each candidate's
-# ``components.*`` and stat block with no entry, and those components are what
-# the objective is folded from.  Every member is re-written through the one
-# writer at the path it lives at, so each row stays byte-identical and every
-# entry is produced beside its leaf by ``serialize_leaf``.  The writer is a
-# ``program.views.RankingWriter``, so a block a view opened ``THEORETICAL``
-# may not reach a ranking; the read half of that rule is
-# ``program.views.refuse_previewed``, which ``bis_objective_score`` runs over
-# each candidate's combat map before folding a score out of it.
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
     """The payload's parallel ``dispositions`` map, keyed by leaf path."""

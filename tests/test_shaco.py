@@ -77,6 +77,30 @@ class TestBackstab:
         assert row["total_damage"] == pytest.approx(15.0, abs=0.05)
         assert row["total_damage"] < result["total_damage"]
 
+    def test_the_bonus_carries_the_crit_modifier_the_cached_text_states(self):
+        """ "This damage is affected by critical strike modifiers" — the row
+        declares the crit-probability effectiveness ability parts carry, so a
+        crit build prices the probability-weighted value and a 0%-crit build
+        is unchanged."""
+        text = cc_review.slot_text(cc_review.kit("Shaco"), "P")
+        assert "this damage is affected by critical strike modifiers" in text
+        on_hit = row_review.entry("Shaco", "passive")["on_hit"]
+        assert on_hit["crit_effectiveness"] == shaco.BACKSTAB_CRIT_EFFECTIVENESS == 1.0
+
+        crit = rider_probe.fight(
+            "Shaco", items=["Infinity Edge", "Essence Reaver"], deterministic=True
+        )
+        plain = rider_probe.fight("Shaco", deterministic=True)
+        assert crit["champion_stats"]["critical_strike_chance"] == 50.0
+        assert plain["champion_stats"]["critical_strike_chance"] == 0.0
+        # 27.5 without the modifier; the 50%-crit expectation is 1.65x that.
+        assert crit["breakdown"][rider_probe.RIDER_ROW][
+            "total_damage"
+        ] == pytest.approx(45.4, abs=0.05)
+        assert plain["breakdown"][rider_probe.RIDER_ROW][
+            "total_damage"
+        ] == pytest.approx(15.0, abs=0.05)
+
     def test_a_frontal_duel_prices_nothing(self):
         result = rider_probe.fight("Shaco", champion_options={"p_procs": 0})
         assert rider_probe.RIDER_ROW not in result["breakdown"]

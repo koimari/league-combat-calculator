@@ -4,6 +4,8 @@ A lone Time Bomb only explodes; the kit's stun needs a second bomb inside
 the first one's fuse.
 """
 
+import copy
+
 import pytest
 
 from src.calculator.champions import (
@@ -30,9 +32,9 @@ class TestReviewedCrowdControl:
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Zilean")
         # Q's kind depends on the second-bomb state, so it is authored PER
-        # PART by ``_time_bomb`` rather than declared per slot; the module
-        # therefore declares no slot kind of its own.
-        assert zilean.MODULE_CC == {"Q": CC_PER_PART}
+        # PART by ``_time_bomb`` rather than declared per slot.  E prices no
+        # damage, so its slow rides the entry as a sourced ControlEvent.
+        assert zilean.MODULE_CC == {"Q": CC_PER_PART, "E": "slow"}
         assert zilean.parse_abilities.cc_kinds == zilean.MODULE_CC
         lone = parse_champion_abilities(
             data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -63,18 +65,20 @@ class TestReviewedCrowdControl:
         (part,) = parsed["Q"]["parts"]
         assert part.time_offset == 3.0
 
-    def test_the_damageless_slots_stay_absent_from_the_review(self):
-        """E holds the enemy slow, but Time Warp deals no damage.
+    def test_the_damageless_slots_publish_what_they_can_source(self):
+        """E holds the enemy slow, and Time Warp deals no damage.
 
-        MERGE: a slot that emits a declared zero-damage row is
-        ``no_damage``, not ``out_of_scope`` -- "we looked and it prices
-        nothing" is a different answer from "nothing looked".  Either way
-        it authors no damage event, so it carries no reviewable control.
+        A slot that emits a declared zero-damage row is ``no_damage``,
+        not ``out_of_scope`` -- "we looked and it prices nothing" is a
+        different answer from "nothing looked".  It authors no damage
+        event, so its reviewed control rides the entry as a sourced
+        ControlEvent instead of on a part (CF8).
         """
         data = cc_review.kit("Zilean")
         coverage = get_champion_module_contract("Zilean").coverage
+        assert zilean.MODULE_CC["E"] == "slow"
+        assert "W" not in zilean.MODULE_CC
         for slot in ("W", "E"):
-            assert slot not in zilean.MODULE_CC, slot
             assert coverage[slot] == "no_damage", slot
         assert "if the target is an enemy, they are slowed" in (
             cc_review.slot_text(data, "E")
@@ -96,6 +100,34 @@ class TestReviewedCrowdControl:
         defenses = resolve_starting_defenses("Zilean", 18, stats, [])
         assert defenses.revive_source == "Chronoshift"
         assert defenses.revive_health_amount == pytest.approx(1100.0)
+
+    def test_the_revive_row_is_read_from_the_cache_not_recalled(self, monkeypatch):
+        """CF5: move the cached Heal/cooldown rows and the revive follows.
+
+        The rank-3 numbers above are the cache's; doctoring the cached row
+        is what separates reading it from holding a copy of it.
+        """
+        doctored = copy.deepcopy(cc_review.kit("Zilean"))
+        chronoshift = doctored["abilities"]["R"][0]
+        heal = chronoshift["effects"][1]["leveling"][0]
+        heal["modifiers"][0]["values"] = [1.0, 2.0, 3.0]
+        heal["modifiers"][1]["values"] = [100.0, 100.0, 100.0]
+        chronoshift["cooldown"]["modifiers"][0]["values"] = [11.0, 12.0, 13.0]
+        monkeypatch.setattr(zilean, "get_champion", lambda _name: doctored)
+
+        assert zilean.starting_revive_defense(18, {"ability_power": 50.0}) == {
+            "revive_health_amount": pytest.approx(3.0 + 50.0),
+            "revive_delay": 3.0,
+            "revive_cooldown": 13.0,
+        }
+
+    def test_a_missing_heal_row_names_the_source_and_the_key(self, monkeypatch):
+        stripped = copy.deepcopy(cc_review.kit("Zilean"))
+        stripped["abilities"]["R"][0]["effects"][1]["leveling"] = []
+        monkeypatch.setattr(zilean, "get_champion", lambda _name: stripped)
+
+        with pytest.raises(KeyError, match="Heal.*data/champions.json"):
+            zilean.starting_revive_defense(18, {"ability_power": 0.0})
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Zilean") == []

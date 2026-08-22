@@ -5,7 +5,6 @@ from src import app as app_module
 
 
 def _fight(champion: str, ranks: dict, role: str) -> dict:
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": champion,
         "level": 18,

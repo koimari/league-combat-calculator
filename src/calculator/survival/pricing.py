@@ -336,6 +336,37 @@ def route_declared_packet(
     )
 
 
+def unroute_declared_packet(packet: DeclaredPacket | None) -> DeclaredPacket | None:
+    """The packet a route was applied to, recovered from the routed one.
+
+    The inverse of :func:`route_declared_packet`, for the one caller that
+    needs it: a router whose own condition failed after the route was staged
+    (Knight's Vow's holder-health gate cancels the redirect, so the Worthy
+    meets the whole packet again).  Dividing the share back out is exact
+    because the route is a single multiplication, and a share of zero is
+    refused rather than inverted: nothing divides back out of a magnitude a
+    router scaled to nothing.
+    """
+    if packet is None or packet.routing is None:
+        return packet
+    share = float(packet.routing.damage_share)
+    if share <= 0.0:
+        raise ValueError(
+            f"{packet.routing.router_rule_id!r} routed {packet.rule_id!r} at "
+            "a zero share; there is no magnitude left to recover"
+        )
+    swing = packet.swing
+    return packet._replace(
+        raw_amount=packet.raw_amount / share,
+        routing=None,
+        swing=(
+            None
+            if swing is None
+            else swing._replace(crit_raw_amount=swing.crit_raw_amount / share)
+        ),
+    )
+
+
 def price_declared_packet(
     packet: DeclaredPacket,
     *,
@@ -409,4 +440,5 @@ __all__ = [
     "mitigate_declared",
     "price_declared_packet",
     "route_declared_packet",
+    "unroute_declared_packet",
 ]

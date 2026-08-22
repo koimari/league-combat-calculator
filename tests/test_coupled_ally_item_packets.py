@@ -55,7 +55,6 @@ NO_IMMOBILIZE_HOLDER = "Garen"
 
 def _roster(ally: str, ally_items: tuple[str, ...], *, main: str, duration: int = 8):
     """One coupled response through the public request path."""
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={

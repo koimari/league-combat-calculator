@@ -2,11 +2,18 @@
 """Prose lint over ``src/`` and ``scripts/``: docstrings and comments hold current state.
 
 ``tests/test_prose_lint.py`` pins three findings at zero: a function docstring
-longer than the body it documents, a comment run longer than the function
-holding it, and prose about what the code was rather than what it is.  A fourth,
+longer than the body it documents, a comment run longer than the function it
+belongs to, and prose about what the code was rather than what it is.  A fourth,
 ``pointer``, names prose citing a campaign document where the reason itself
 belongs; it reports without failing.  Prose citing a wiki URL or a game file for
 a number is evidence, and is never reported.
+
+A comment run belongs to the function holding it, or — when it touches a ``def``
+— to the definition it introduces.  Inside a body the bound is the body; above
+the ``def`` it is the whole definition, header and docstring included, so moving
+a paragraph out of a docstring buys it headroom and never exemption.  A run a
+blank line away from the ``def`` heads a section, not a definition, and is
+bounded by nothing.
 """
 
 from __future__ import annotations
@@ -64,6 +71,25 @@ def _comment_blocks(source: str) -> list[tuple[int, list[str]]]:
     return blocks
 
 
+def _definition_spans(funcs: list[ast.stmt]) -> dict[int, int]:
+    """First line of each definition (decorators included) to its line count."""
+    heads = {}
+    for func in funcs:
+        head = (func.decorator_list or [func])[0].lineno
+        heads[head] = func.end_lineno - head + 1
+    return heads
+
+
+def _comment_bound(
+    line: int, block: list[str], funcs: list[ast.stmt], heads: dict[int, int]
+) -> int | None:
+    """How many lines this run may hold, or ``None`` if it heads a section."""
+    holders = [f for f in funcs if f.lineno <= line <= f.end_lineno]
+    if holders:
+        return _span(min(holders, key=lambda f: f.end_lineno - f.lineno).body)
+    return heads.get(line + len(block))
+
+
 def _cite(found: dict[str, list], where: str, line: int, text: str) -> None:
     for offset, raw in enumerate(text.splitlines()):
         if EVIDENCE.search(raw):
@@ -93,11 +119,11 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
             if isinstance(node, FUNCS) and doc.end_lineno - doc.lineno + 1 > body:
                 found["long_docstring"].append(f"{where}:{doc.lineno}: {node.name}")
         funcs = [n for n in ast.walk(tree) if isinstance(n, FUNCS)]
+        heads = _definition_spans(funcs)
         for line, block in _comment_blocks(source):
             _cite(found, where, line, "\n".join(block))
-            holders = [f for f in funcs if f.lineno <= line <= f.end_lineno]
-            host = min(holders, default=None, key=lambda f: f.end_lineno - f.lineno)
-            if host is not None and len(block) > _span(host.body):
+            bound = _comment_bound(line, block, funcs, heads)
+            if bound is not None and len(block) > bound:
                 found["long_comment"].append(f"{where}:{line}: {len(block)} lines")
     return found
 

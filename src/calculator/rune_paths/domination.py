@@ -35,7 +35,7 @@ from ..rune_effects import (
     display_name,
     no_damage_compiler,
     required_leveling,
-    rune_effect_value,
+    stack_count_option,
     stated_type,
 )
 
@@ -225,12 +225,11 @@ def _compile_ultimate_hunter(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
             f"{ceiling:g}-stack maximum. The fight reads the "
             f"{_HUNTER_STACKS!r} option, whose default is no stacks: a stack "
             "is a takedown against a champion this engine never scores.",
-            f"{name} shortens the ultimate's cooldown and nothing else, and "
-            "the timed scheduler casts the ultimate exactly once whatever "
-            "its cooldown is — so the grant reaches the stat card and no "
-            "damage row. Every ultimate-haste source the engine carries is "
-            "in that same position; the floor is the scheduler's, not this "
-            "rune's.",
+            f"{name} shortens the ultimate's cooldown and nothing else. "
+            "The timed scheduler recasts the ultimate on its hasted "
+            "cooldown only for modules that certify ULTIMATE_RECASTS; for "
+            "every other kit the ultimate is cast exactly once, so there "
+            "the grant reaches the stat card and no damage row.",
         ),
     )
 
@@ -306,20 +305,13 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
         ),
     ),
     "Ultimate Hunter": (
-        RuneOption(
-            key=_HUNTER_STACKS,
-            label="Bounty Hunter stacks",
-            kind=RuneOptionKind.COUNT,
-            default=0.0,
-            bounds=(
-                0.0,
-                rune_effect_value("Ultimate Hunter", "max_stacks"),
-            ),
-            disclosure=(
-                "How many unique enemy champions Ultimate Hunter's holder "
-                "has taken down when the fight opens. 0 is the default: the "
-                "engine simulates one fight and scores no takedown in it."
-            ),
+        stack_count_option(
+            "Ultimate Hunter",
+            _HUNTER_STACKS,
+            "Bounty Hunter stacks",
+            "How many unique enemy champions Ultimate Hunter's holder has "
+            "taken down when the fight opens; the engine simulates one fight "
+            "and scores no takedown in it.",
         ),
     ),
 }

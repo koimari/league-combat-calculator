@@ -280,10 +280,11 @@ class TestUltimateHunter:
     def test_the_grant_reaches_the_stat_card_and_says_the_scheduler_caps_it(self):
         """0 -> 6 -> 31 ultimate haste, and no damage row moves.
 
-        The timed scheduler casts the ultimate exactly once whatever its
-        cooldown is (``damage._schedule_shared_casts``), which is a floor
-        every ultimate-haste source in the engine shares. The rune says so
-        rather than letting the reader read a zero as "no haste".
+        For a kit that does not certify ``ULTIMATE_RECASTS`` the timed
+        scheduler casts the ultimate exactly once, so the grant reaches
+        the stat card and no damage row. The rune's note states the
+        conditional rather than letting the reader read a zero as
+        "no haste".
         """
         request = {**_PROBE, "fight_mode": "time_based", "fight_duration": 30.0}
         bare = calculate_payload(dict(request))
@@ -302,7 +303,8 @@ class TestUltimateHunter:
         assert hastes == [0, pytest.approx(6.0), pytest.approx(31.0)]
         assert stacked["total_damage"] == pytest.approx(bare["total_damage"])
         assert any(
-            "casts the ultimate exactly once" in note for note in stacked["notes"]
+            "only for modules that certify ULTIMATE_RECASTS" in note
+            for note in stacked["notes"]
         )
 
     def test_a_build_with_no_haste_item_still_publishes_an_integer_zero(self):

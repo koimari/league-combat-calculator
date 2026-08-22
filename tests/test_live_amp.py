@@ -337,7 +337,6 @@ ALLY = "Pantheon"
 @lru_cache(maxsize=4)
 def _roster(allies):
     """One roster response through the public request path."""
-    app_module.app.config["TESTING"] = True
     payload = {
         "champion": HOLDER,
         "level": 18,

@@ -60,7 +60,13 @@ from ..survival.actions import TransitionRank
 from .inputs import champion_stat, int_option
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    atom_receipt,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 from .source_receipts import load_champion_sources
 
 
@@ -217,21 +223,6 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _R_DURATION_SOURCE = "Alistar.R[0].effects[0].description"
 
-_ATOM_RECEIPT_KEYS = (
-    "atom_id",
-    "behavior",
-    "source",
-    "values",
-    "units",
-    "evidence",
-    "hash",
-)
-
-
-def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
-    """Keep the provenance fields that identify one runtime atom."""
-    return {key: atom[key] for key in _ATOM_RECEIPT_KEYS}
-
 
 def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: zero damage, a sourced incoming-damage-reduction self-state window.
@@ -295,8 +286,8 @@ def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
                 "duration": duration,
                 "source": f"{name} · damage reduction",
                 "source_atoms": [
-                    _atom_receipt(reduction_atom),
-                    _atom_receipt(duration_atom),
+                    atom_receipt(reduction_atom),
+                    atom_receipt(duration_atom),
                 ],
                 # The cached prose reduces "incoming damage taken" with no
                 # attack/spell-only carve-out, so the modifier gates no

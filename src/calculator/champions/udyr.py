@@ -207,8 +207,8 @@ def _blazing_stampede(packet_e):
             "per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus "
             "and 1.5s of crowd-control immunity. The empowered attack's "
             "0.75s stun IS priced, as a sourced control event. The percent "
-            "movement grants are not published as a stat_buff (the named "
-            "percent-movement boundary)."
+            "movement grants are not yet wired onto the shared move-speed "
+            "fold (the named percent-movement boundary)."
         )
         return entry
 
@@ -267,7 +267,9 @@ def _bridge_between(packet_p):
 # Stampede) deals no damage of its own, so its stun is not a part kind —
 # it is published as a standalone sourced ControlEvent by the
 # ``with_control_event`` wrapper below (the Rammus-E shape).
-MODULE_CC = {"R": "slow"}
+# E (Blazing Stampede) prices no damage of its own; its reviewed stun rides
+# the entry as a sourced ControlEvent read off the slot's prose atom.
+MODULE_CC = {"E": "stun", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Udyr",
@@ -292,7 +294,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         # sourced control event, read through the validated atom catalog.
         "E": lambda parser: with_control_event(
             _blazing_stampede(parser),
-            kind="stun",
             duration_attr="Stun Duration",
             time_offset=None,
         ),

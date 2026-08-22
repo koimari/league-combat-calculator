@@ -102,7 +102,6 @@ def _coupled_fight() -> dict:
     from level), so the ranks are the level-18 derived ones, which put E
     at rank 5 — the same rank the parse tests use.
     """
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post(
         "/api/calculate",
         json={
@@ -209,9 +208,10 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
     def test_e_percent_movement_is_not_published_as_a_stat_buff(self):
         """The named Naafiri-W / Sivir-R percent-movement boundary.
 
-        Only the final soft-capped ``move_speed`` scalar is exposed, so a
-        percent-to-flat decomposition would be invented — and Swiftmarch's
-        adaptive force turns an over-credited movement number into DAMAGE.
+        Stats publishes the flat/percent pair and the shared
+        ``resolve_move_speed`` fold; Udyr E is not yet wired onto it, and
+        this pin records that absence — an over-credited movement number
+        would become Swiftmarch damage.
         """
         row = _parse()["E"]
 

@@ -178,21 +178,8 @@ def test_renata_e_ally_packets_scope_all_selected_teammates():
 
 
 def _roster_combat(champion, *, allies=None, selections=None, duration=6.0):
-    """Run /api/calculate with *champion* as main and allies in the roster.
-
-    TESTING is scoped to this request and restored afterwards (the flag is
-    session-global; a module-level assignment would leak into every later
-    test file — the rate-limiter short-circuits on TESTING).
-    """
-    previous_testing = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = True
-    try:
-        return _roster_combat_impl(champion, allies, selections, duration)
-    finally:
-        if previous_testing is None:
-            app_module.app.config.pop("TESTING", None)
-        else:
-            app_module.app.config["TESTING"] = previous_testing
+    """Run /api/calculate with *champion* as main and allies in the roster."""
+    return _roster_combat_impl(champion, allies, selections, duration)
 
 
 def _roster_combat_impl(champion, allies, selections, duration):

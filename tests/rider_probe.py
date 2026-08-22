@@ -30,13 +30,16 @@ _PROBE = {
 }
 
 
-def fight(champion, **request):
+def fight(champion, *, deterministic=False, **request):
     """One timed, autos-on fight through the public calculate entry.
 
     ``request`` overrides the probe (``champion_options``, ``items``,
-    ``level``) exactly as a caller would.
+    ``level``) exactly as a caller would.  ``deterministic`` is the crit
+    roll's seed switch, required on any crit-capable build.
     """
-    return calculate_payload({"champion": champion, **_PROBE, **request})
+    return calculate_payload(
+        {"champion": champion, **_PROBE, **request}, deterministic=deterministic
+    )
 
 
 def rider_row(champion, **request):

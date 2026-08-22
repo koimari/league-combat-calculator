@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from src.calculator.ability_spec import DamagePart, Disposition
+from src.calculator.ability_spec import ControlEvent, DamagePart, Disposition
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     AMP,
@@ -30,6 +30,7 @@ from src.calculator.champions.slotlib import (
     damage_entry,
     extract_value,
     find_named_leveling,
+    park_control_interval,
     pct_health_per_hit,
     proc_damage,
     simple_damage,
@@ -1657,3 +1658,89 @@ class TestSlotCtxRanked:
                 rank = ctx.rank_for()
                 expected = None if rank < 1 else (ability, rank)
             assert ctx.ranked() == expected
+
+
+class TestModuleCcNamesTheControlEvent:
+    """ER3: a ``ControlEvent``'s kind comes from ``MODULE_CC``, not beside it.
+
+    ``with_control_event`` sources the interval; the declaration supplies the
+    kind.  A cc-only slot therefore states its control at exactly the one
+    name a damaging slot does, and the two cannot drift apart.
+    """
+
+    @staticmethod
+    def _parked_slot(*, time_offset=0.0):
+        def parse(ctx):
+            entry = damage_entry("Cocooner", 3, 8.0, 0.0, "magic")
+            entry["parts"] = ()
+            park_control_interval(entry, 2.5, time_offset=time_offset)
+            return entry
+
+        parse.phase = DAMAGE
+        return parse
+
+    @staticmethod
+    def _authored_slot(kind):
+        def parse(ctx):
+            entry = damage_entry("Cocooner", 3, 8.0, 0.0, "magic")
+            entry["parts"] = ()
+            entry["control_events"] = (ControlEvent(kind, 2.5),)
+            return entry
+
+        parse.phase = DAMAGE
+        return parse
+
+    def test_the_declared_kind_is_stamped_onto_the_sourced_interval(self) -> None:
+        parse = build_parser(
+            {"E": self._parked_slot(time_offset=1.5)},
+            "TestChamp",
+            cc_kinds={"E": "stun"},
+        )
+        results = parse(_champion(E=[_ability()]), 9, 0.0)
+        assert results["E"]["control_events"] == (
+            ControlEvent("stun", 2.5, time_offset=1.5),
+        )
+
+    def test_an_event_restating_the_declared_kind_is_refused(self) -> None:
+        """One fact, one home -- the same rule the parts-level stamp applies."""
+        parse = build_parser(
+            {"E": self._authored_slot("stun")},
+            "TestChamp",
+            cc_kinds={"E": "stun"},
+        )
+        with pytest.raises(ValueError, match="restates it"):
+            parse(_champion(E=[_ability()]), 9, 0.0)
+
+    def test_an_event_naming_a_second_control_is_kept(self) -> None:
+        """Vayne's Condemn stuns into a wall on top of the knockback it
+        always lands: a different kind is another fact, not a restatement."""
+        parse = build_parser(
+            {"E": self._authored_slot("stun")},
+            "TestChamp",
+            cc_kinds={"E": "knockback"},
+        )
+        results = parse(_champion(E=[_ability()]), 9, 0.0)
+        assert [event.kind for event in results["E"]["control_events"]] == ["stun"]
+
+    def test_an_interval_on_an_undeclared_slot_stops_the_parse(self) -> None:
+        parse = build_parser({"E": self._parked_slot()}, "TestChamp", cc_kinds={})
+        with pytest.raises(ValueError, match="MODULE_CC does not declare the slot"):
+            parse(_champion(E=[_ability()]), 9, 0.0)
+
+    def test_a_per_part_slot_must_name_its_own_kinds(self) -> None:
+        parse = build_parser(
+            {"E": self._parked_slot()},
+            "TestChamp",
+            cc_kinds={"E": CC_PER_PART},
+        )
+        with pytest.raises(ValueError, match="control event authored no kind"):
+            parse(_champion(E=[_ability()]), 9, 0.0)
+
+    def test_a_reviewed_absence_may_not_carry_an_interval(self) -> None:
+        parse = build_parser(
+            {"E": self._parked_slot()},
+            "TestChamp",
+            cc_kinds={"E": "none"},
+        )
+        with pytest.raises(ValueError, match="authors control_events"):
+            parse(_champion(E=[_ability()]), 9, 0.0)

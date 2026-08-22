@@ -20,8 +20,17 @@ with it absent.
 import pytest
 
 import src.app as app_module
+from src.calculator import item_behavior_catalog
 from src.calculator import rune_effects
 from src.calculator.ability_spec import DamagePart
+from src.calculator.item_behavior import (
+    AmpChainSlot,
+    Comparison,
+    Probe,
+    chain_rank,
+)
+from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
+from src.calculator.value_ref import resolve as resolve_ref
 from src.calculator.calculate import calculate_payload
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.rune_paths import precision, sorcery
@@ -37,29 +46,30 @@ class TestCutDownNeedsNoNewKind:
     def test_it_compiles_to_the_target_health_gate_the_cache_states(self):
         effect = rune_effects.resolve_rune("Cut Down")
         assert isinstance(effect, rune_effects.RuneConditionalAmpEffect)
-        assert effect.condition is rune_effects.AmpCondition.TARGET_ABOVE
-        assert effect.health_ratio == pytest.approx(0.60)
-        assert effect.amp_ratio == pytest.approx(0.08)
         assert effect.breakdown_key == "rune_Cut Down"
-        assert "above 60% of its maximum health" in effect.disclosures[0]
+        (rule,) = behavior_rules("Cut Down")
+        assert rule.payload.activation.probe is Probe.TARGET_HEALTH_FRACTION
+        assert rule.payload.activation.cmp is Comparison.GT
+        assert resolve_ref(rule.payload.activation.threshold) == pytest.approx(0.60)
+        assert resolve_ref(rule.payload.magnitude.value) == pytest.approx(0.08)
 
-    def test_the_row_it_shares_with_coup_de_grace_reads_the_other_side(self):
-        """One helper, two runes: the side each prices is the declaration."""
-        coup = rune_effects.resolve_rune("Coup de Grace")
-        assert coup.condition is rune_effects.AmpCondition.TARGET_BELOW
-        assert "below 40% of its maximum health" in coup.disclosures[0]
+    def test_the_slot_it_shares_with_coup_de_grace_reads_the_other_side(self):
+        """One chain slot, two runes: the side each prices is its ``cmp``."""
+        (rule,) = behavior_rules("Coup de Grace")
+        assert rule.payload.activation.cmp is Comparison.LT
+        assert resolve_ref(rule.payload.activation.threshold) == pytest.approx(0.40)
+        assert rule.payload.lane_chain_rank == chain_rank(
+            AmpChainSlot.TARGET_HEALTH_GATE
+        )
 
-    def test_a_description_stating_the_other_side_is_refused(self):
-        with pytest.raises(KeyError, match="prices the 'target_above' one"):
-            precision._compile_cut_down(
-                {
-                    "effects": {
-                        "damage_amp_health_gate": "target_below",
-                        "damage_amp_health_ratio": 0.4,
-                        "damage_amp_ratio": 0.08,
-                    }
-                }
-            )
+    def test_a_description_stating_the_other_side_is_refused(self, monkeypatch):
+        monkeypatch.setitem(
+            rune_effects.RUNE_EFFECTS["Cut Down"]["effects"],
+            "damage_amp_health_gate",
+            "target_below",
+        )
+        with pytest.raises(BehaviorCatalogError, match="description reordered"):
+            item_behavior_catalog._target_health_gate_rule("Cut Down", "RUNE_EFFECTS")
 
 
 class TestLastStandsRamp:

@@ -81,6 +81,9 @@ def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     if bonus_as > 0:
         entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+        # "Passive: Kog'Maw gains bonus attack speed" (cached Q effect 0):
+        # ranking Q buys it, casting Q does not, so autos-only keeps it.
+        entry["innate_grant"] = True
 
     # Resistance shred: damage.py reduces target armor and MR by this
     # percentage before all other damage calculations.

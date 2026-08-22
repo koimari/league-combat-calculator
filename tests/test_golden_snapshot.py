@@ -1078,12 +1078,10 @@ class TestRepricingWindowCoverage:
 SWING_TERM_ROSTER = "swing_term_armed_carry_roster"
 
 
-def _swing_term_roster():
-    """The swing-term roster, parsed and resolved once per asking test."""
+def _swing_term_roster(name=SWING_TERM_ROSTER):
+    """One swing-term roster, parsed and resolved once per asking test."""
     scenario = next(
-        candidate
-        for candidate in gs.COUPLED_SCENARIOS
-        if candidate.name == SWING_TERM_ROSTER
+        candidate for candidate in gs.COUPLED_SCENARIOS if candidate.name == name
     )
     parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
     return parsed, resolve_scenario(parsed)
@@ -1233,29 +1231,49 @@ class TestSwingTermCoverage:
                 swing_terms=terms,
             )
 
-    def test_the_roster_hands_every_declared_term_to_a_pair_fight(self):
-        """Armed means *met*: the walk's own hand-off carries each term.
+    def test_every_declared_term_reaches_the_composition_that_prices_it(self):
+        """Armed means *met*: each term reaches whichever composition prices it.
 
-        Each defender card's resolved state is read through
-        ``roster_composition.target_overrides`` — the function that hands a
-        defender to every pair fight the walk runs — and compared with the
-        sourced number the declaring item's own ``ValueRef`` names, so a
-        registry that stopped producing the value fails here rather than
-        arming an inert term.
+        A term the pair engine is fed arrives through
+        ``roster_composition.target_overrides`` — the walk's hand-off of a
+        defender to every pair fight it runs.  Undaunted's two are priced by
+        the coupled walk itself off the defender's resolved defences, so the
+        hand-off deliberately does not carry them and feeding them there
+        would price them twice.  Either way the value checked is the
+        declaring item's own ``ValueRef``, so a registry that stopped
+        producing the number fails here rather than arming an inert term.
+
+        Which rosters to walk comes from the same derivation the capture
+        guard reads, not from one named scenario: a term armed by a second
+        roster is the ordinary case once a declaring item cannot share a card
+        with the others.
         """
-        _, resolved = _swing_term_roster()
+        declarations = gs.swing_term_declarations()
+        covering = gs.swing_term_covering_scenarios(gs.COUPLED_SCENARIOS, declarations)
         carried = {}
-        for index, enemy in enumerate(resolved.enemies):
-            overrides = target_overrides(from_loadout(str(index), "enemy", enemy))
-            for term, owners in gs.swing_term_declarations().items():
-                equipped = {item["name"] for item in enemy.item_data} & set(owners)
-                if equipped:
+        for name in sorted({name for names in covering.values() for name in names}):
+            _, resolved = _swing_term_roster(name)
+            for index, enemy in enumerate(resolved.enemies):
+                overrides = target_overrides(from_loadout(str(index), "enemy", enemy))
+                for term, owners in declarations.items():
+                    equipped = {item["name"] for item in enemy.item_data} & set(owners)
+                    if not equipped:
+                        continue
                     (owner,) = equipped
-                    assert overrides[f"target_{term}"] == _declared_swing_value(
-                        owner, term
-                    )
+                    key = f"target_{term}"
+                    # Undaunted's two terms are priced off target.defenses by
+                    # both walks, so their hand-off deliberately has no
+                    # override; every other declared term must ride one.
+                    if term in (
+                        "champion_damage_flat_reduction",
+                        "champion_dot_damage_flat_reduction",
+                    ):
+                        read = getattr(enemy.defenses, term)
+                    else:
+                        read = overrides[key]
+                    assert read == _declared_swing_value(owner, term)
                     carried[term] = owner
-        assert set(carried) == set(gs.swing_term_declarations())
+        assert set(carried) == set(declarations)
 
     def test_the_plating_multiplier_is_a_pure_factor_on_the_swing(self):
         """A factor on a linear mitigation, which is why Ruling 1 folds it.

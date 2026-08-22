@@ -36,7 +36,9 @@ the number of attacks that land from behind; it defaults to the one
 Deceive blinks him into, and the target's facing is otherwise the
 player's problem, not the model's.  Backstab modifies the attack
 (``spelleffects = basic``) rather than applying on-hit, so item on-hit
-effects do not proc from it.
+effects do not proc from it.  "This damage is affected by critical strike
+modifiers", so the row declares ``crit_effectiveness`` — the on-hit
+channel's half of the axis ability parts already carry.
 """
 
 from __future__ import annotations
@@ -75,6 +77,11 @@ _CLONE_ATTACK_AD_RATIO = 0.75
 # AttackBonusADRatio=0.2) — bonus AD, 0.2, matching the prose 1:1.
 _BACKSTAB_BONUS_AD_RATIO = 0.20
 
+# "This damage is affected by critical strike modifiers" (cached P effect
+# 0) — an ordinary crit, so the on-hit row crits at full effectiveness on
+# Shaco's own crit chance and multiplier.
+BACKSTAB_CRIT_EFFECTIVENESS = 1.0
+
 
 def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: the from-behind bonus on however many attacks land there."""
@@ -89,13 +96,18 @@ def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
 
     attacks = max(0, int(ctx.option("p_procs")))
-    entry = on_hit_entry(ability.get("name", "Backstab"), per_hit, "physical")
+    entry = on_hit_entry(
+        ability.get("name", "Backstab"),
+        per_hit,
+        "physical",
+        crit_effectiveness=BACKSTAB_CRIT_EFFECTIVENESS,
+    )
     entry["on_hit"]["max_procs"] = attacks
     entry["detail"] = (
         f"{attacks} attack(s) from behind for {per_hit:.2f} bonus physical "
         f"({flat:.2f} at level {ctx.level} + "
-        f"{_BACKSTAB_BONUS_AD_RATIO:.0%} bonus AD); the wiki's critical "
-        "strike modifier on this damage is not priced"
+        f"{_BACKSTAB_BONUS_AD_RATIO:.0%} bonus AD), affected by critical "
+        "strike modifiers"
     )
     return entry
 
@@ -271,8 +283,9 @@ ASSUMPTIONS.extend(
         "attacks that land there and defaults to 1 — the attack Deceive "
         "blinks Shaco behind the target for.  The bonus modifies the "
         "attack rather than applying on-hit (spelleffects = basic), so "
-        "item on-hit effects do not proc from it, and the wiki's "
-        "critical-strike modifier on the bonus is not priced.",
+        "item on-hit effects do not proc from it.  It IS affected by "
+        "critical strike modifiers (cached P effect 0), priced as the "
+        "probability-weighted crit at full effectiveness.",
     ]
 )
 OPTIONS.append(

@@ -63,7 +63,6 @@ def _fight(
             for index in range(enemies)
         ],
     }
-    app_module.app.config["TESTING"] = True
     response = app_module.app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200
     return response.get_json()["combat"]

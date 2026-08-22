@@ -93,17 +93,7 @@ def _payload(setup: dict) -> dict:
 
 def _run_calculate(setup: dict) -> dict:
     """POST one /api/calculate fight; fail loudly on a non-200 response."""
-    previous_testing = app_module.app.config.get("TESTING")
-    app_module.app.config["TESTING"] = True
-    try:
-        response = app_module.app.test_client().post(
-            "/api/calculate", json=_payload(setup)
-        )
-    finally:
-        if previous_testing is None:
-            app_module.app.config.pop("TESTING", None)
-        else:
-            app_module.app.config["TESTING"] = previous_testing
+    response = app_module.app.test_client().post("/api/calculate", json=_payload(setup))
     assert response.status_code == 200, response.get_data(as_text=True)[:500]
     return response.get_json()
 
@@ -289,7 +279,7 @@ def _assert_grievous(data: dict, expected: dict) -> None:
     assert survival["healing_reduced"] == pytest.approx(
         expected["healing_reduced"], abs=AMOUNT_ABS
     )
-    assert survival["healing_reduction_sources"] == expected["reduction_sources"]
+    assert survival["healing_reduction_window_sources"] == expected["reduction_sources"]
 
 
 def _assert_venom_shield(data: dict, expected: dict) -> None:

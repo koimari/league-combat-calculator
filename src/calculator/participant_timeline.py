@@ -17,7 +17,7 @@ from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
 import math
 from operator import itemgetter
-from typing import Any
+from typing import Any, TypeVar
 
 from .defensive_effects import StartingDefenses
 from . import rune_effects
@@ -53,8 +53,9 @@ from .trigger_stream import (
     holders_in,
     is_immobilizing_event,
 )
+from .champions.inputs import declared_option_defaults
 from .champions.skill_orders import get_ability_rank
-from .champions.slotlib import extract_named
+from .champions.slotlib import extract_cooldown, extract_named
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     champion_grievous_wound_sources,
@@ -71,8 +72,16 @@ from .interpreters.sustain import SustainSlot, walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
-from .item_behavior import BelowHalfHealingRule, RegenerationRule, ThresholdRegenRule
+from .item_behavior import (
+    BelowHalfHealingRule,
+    PacketKind,
+    RegenerationRule,
+    ThresholdRegenRule,
+    is_denial_receipt,
+    is_packet_kind,
+)
 from .ability_spec import AttackClass, DamageClass
+from .state_lifecycle import TriggerGate
 from .interpreters.delta_amp import (
     StaticHolderAmps,
     resolve_static_holder_amps,
@@ -81,11 +90,7 @@ from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
 )
-from .resistance import (
-    apply_armor_penetration,
-    apply_magic_penetration,
-    apply_resistance,
-)
+from .resistance import apply_resistance
 from .survival import (
     BARRIER_GRANT_KINDS,
     EVENT_SLOTS,
@@ -153,9 +158,12 @@ from .program.compile import (
     ability_instance_for_event,
     action_from_event,
     grey_health_heal_action,
+    grey_health_shield_action,
     is_authored_ability_event,
+    knights_vow_target_factor,
     modifier_delivery_receipt,
     pair_view,
+    routed_declaration,
     revive_candidate_actions,
     stage_knights_vow_heals,
     stage_knights_vow_redirect_actions,
@@ -717,6 +725,84 @@ def _guardian_selection_template() -> dict[str, Any]:
     }
 
 
+#: The compiled keystone effect a scheduler resolved, whatever its shape.
+_KeystoneEffect = TypeVar("_KeystoneEffect")
+
+
+def _keystone_holder(
+    all_actors: list[Combatant],
+    keystone_name: str,
+    name: str,
+    effect_type: type[_KeystoneEffect],
+) -> tuple[Combatant, _KeystoneEffect] | None:
+    """The opening every keystone scheduler shares: the selected keystone, its
+    compiled effect, and the one holder that carries a rune page.
+
+    The request carries one selected keystone for the main loadout, so roster
+    actors have no separate rune-page input and cannot hold a keystone here.
+    """
+    if keystone_name != name:
+        return None
+    effect = rune_effects.resolve_keystone(name)
+    if not isinstance(effect, effect_type):
+        return None
+    return next(
+        ((actor, effect) for actor in all_actors if actor.participant_id == "main"),
+        None,
+    )
+
+
+def _reactive_candidate(
+    *,
+    holder: Combatant,
+    recipient: str,
+    keystone: str,
+    label: str,
+    kind: str,
+    time: float,
+    rank: TransitionRank,
+    event_id: str,
+    trigger_id: str,
+    sequence: int,
+    amount: float = 0.0,
+    target_scope: str = "self",
+    target_policy: str = "self",
+    reactive: bool = True,
+    sort_key: bool = True,
+    **fields: Any,
+) -> dict[str, Any]:
+    """One keystone-authored support candidate on its shared frame.
+
+    Who authored it, who receives it, which trigger it answers and where it
+    sorts are the same fields in every scheduler below; only the mechanic's
+    own payload is spelled at the call site.  ``sort_key`` stamps the walk's
+    precomputed transition key, and ``reactive`` marks a row that dies with a
+    skipped trigger — the zone rows a control leaves behind are neither.
+    """
+    candidate: dict[str, Any] = {
+        "time": time,
+        "kind": kind,
+        "amount": amount,
+        "source": f"{keystone} · {label}",
+        "source_key": f"rune_{keystone}",
+        "attacker": holder.participant_id,
+        "target": recipient,
+        "target_scope": target_scope,
+        "target_policy": target_policy,
+        "sequence": sequence,
+        "event_precision": "exact",
+        "_event_id": event_id,
+        "_trigger_event_id": trigger_id,
+        SUPPORT_RANK_KEY: rank,
+        **fields,
+    }
+    if reactive:
+        candidate["_reactive"] = True
+    if sort_key:
+        candidate["_sk"] = _action_key(time, rank, recipient, candidate)
+    return candidate
+
+
 def _schedule_guardian_events(
     all_actors: list[Combatant],
     incoming: dict[str, list[dict[str, Any]]],
@@ -730,94 +816,74 @@ def _schedule_guardian_events(
     incoming hit.  The survival kernel decides whether the current hit or
     the recent 2.5-second window reaches the sourced threshold.
     """
-    if keystone_name != "Guardian":
+    resolved = _keystone_holder(
+        all_actors, keystone_name, "Guardian", rune_effects.KeystoneGuardianEffect
+    )
+    if resolved is None:
         return
-    effect = rune_effects.resolve_keystone("Guardian")
-    if not isinstance(effect, rune_effects.KeystoneGuardianEffect):
-        return
+    holder, effect = resolved
     combatant_by_id = {actor.participant_id: actor for actor in all_actors}
-    for holder in all_actors:
-        # The request carries one selected keystone for the main loadout.
-        # Roster actors have no separate rune-page input.
-        if holder.participant_id != "main":
-            continue
-        selected = _guardian_target(holder, all_actors)
-        if selected is None:
-            continue
-        guarded, target_policy = selected
-        protected = (holder, guarded)
-        protected_ids = tuple(actor.participant_id for actor in protected)
-        shield_amount = effect.shield_amount(holder.level, holder.stats)
-        threshold = effect.threshold_at(holder.level)
-        cooldown = effect.cooldown_at(holder.level)
-        for trigger_target_id in protected_ids:
-            events = incoming.get(trigger_target_id, [])
-            for event_index, trigger in enumerate(events):
-                attacker = combatant_by_id.get(str(trigger.get("attacker", "")))
-                if attacker is None or attacker.team == holder.team:
-                    continue
-                if float(trigger.get("damage", 0.0) or 0.0) <= 0.0:
-                    continue
-                trigger_id = str(
-                    trigger.get(
-                        "_event_id",
-                        f"{attacker.participant_id}:{trigger_target_id}:guardian:{event_index}",
+    selected = _guardian_target(holder, all_actors)
+    if selected is None:
+        return
+    guarded, target_policy = selected
+    protected = (holder, guarded)
+    protected_ids = tuple(actor.participant_id for actor in protected)
+    shield_amount = effect.shield_amount(holder.level, holder.stats)
+    threshold = effect.threshold_at(holder.level)
+    cooldown = effect.cooldown_at(holder.level)
+    for trigger_target_id in protected_ids:
+        events = incoming.get(trigger_target_id, [])
+        for event_index, trigger in enumerate(events):
+            attacker = combatant_by_id.get(str(trigger.get("attacker", "")))
+            if attacker is None or attacker.team == holder.team:
+                continue
+            trigger_amount = float(trigger.get("damage", 0.0) or 0.0)
+            if trigger_amount <= 0.0:
+                continue
+            trigger_id = str(
+                trigger.get(
+                    "_event_id",
+                    f"{attacker.participant_id}:{trigger_target_id}:guardian:{event_index}",
+                )
+            )
+            owners = trigger.setdefault("_guardian_owner_ids", [])
+            if holder.participant_id not in owners:
+                owners.append(holder.participant_id)
+            activation_id = f"{holder.participant_id}:{trigger_id}"
+            for recipient in protected:
+                is_holder = recipient.participant_id == holder.participant_id
+                support_effects[recipient.participant_id].append(
+                    _reactive_candidate(
+                        holder=holder,
+                        recipient=recipient.participant_id,
+                        keystone="Guardian",
+                        label="Shield",
+                        kind="shield",
+                        time=float(trigger.get("time", 0.0) or 0.0),
+                        rank=TransitionRank.AURA_ARM,
+                        event_id=(
+                            f"{holder.participant_id}:guardian:{trigger_id}:"
+                            f"{recipient.participant_id}"
+                        ),
+                        trigger_id=trigger_id,
+                        sequence=trigger.get("sequence", event_index),
+                        amount=shield_amount,
+                        target_scope="self" if is_holder else "explicit_selected_ally",
+                        target_policy="self" if is_holder else target_policy,
+                        duration=effect.shield_duration_seconds,
+                        target_selection_key="guardian:target",
+                        _guardian_reactive=True,
+                        _guardian_owner_id=holder.participant_id,
+                        _guardian_activation_id=activation_id,
+                        _guardian_trigger_event_id=trigger_id,
+                        _guardian_trigger_target=trigger_target_id,
+                        _guardian_trigger_amount=trigger_amount,
+                        _guardian_threshold=threshold,
+                        _guardian_window_seconds=effect.trigger_window_seconds,
+                        _guardian_cooldown_seconds=cooldown,
                     )
                 )
-                owners = trigger.setdefault("_guardian_owner_ids", [])
-                if holder.participant_id not in owners:
-                    owners.append(holder.participant_id)
-                activation_id = f"{holder.participant_id}:{trigger_id}"
-                for recipient in protected:
-                    candidate_id = (
-                        f"{holder.participant_id}:guardian:{trigger_id}:"
-                        f"{recipient.participant_id}"
-                    )
-                    candidate = {
-                        "time": float(trigger.get("time", 0.0) or 0.0),
-                        "kind": "shield",
-                        "amount": shield_amount,
-                        "duration": effect.shield_duration_seconds,
-                        "source": "Guardian · Shield",
-                        "source_key": "rune_Guardian",
-                        "attacker": holder.participant_id,
-                        "target": recipient.participant_id,
-                        "target_scope": (
-                            "self"
-                            if recipient.participant_id == holder.participant_id
-                            else "explicit_selected_ally"
-                        ),
-                        "target_policy": (
-                            "self"
-                            if recipient.participant_id == holder.participant_id
-                            else target_policy
-                        ),
-                        "target_selection_key": "guardian:target",
-                        "sequence": trigger.get("sequence", event_index),
-                        "event_precision": "exact",
-                        "_event_id": candidate_id,
-                        "_trigger_event_id": trigger_id,
-                        "_guardian_reactive": True,
-                        "_reactive": True,
-                        SUPPORT_RANK_KEY: TransitionRank.AURA_ARM,
-                        "_guardian_owner_id": holder.participant_id,
-                        "_guardian_activation_id": activation_id,
-                        "_guardian_trigger_event_id": trigger_id,
-                        "_guardian_trigger_target": trigger_target_id,
-                        "_guardian_trigger_amount": float(
-                            trigger.get("damage", 0.0) or 0.0
-                        ),
-                        "_guardian_threshold": threshold,
-                        "_guardian_window_seconds": effect.trigger_window_seconds,
-                        "_guardian_cooldown_seconds": cooldown,
-                    }
-                    candidate["_sk"] = _action_key(
-                        candidate["time"],
-                        TransitionRank.AURA_ARM,
-                        recipient.participant_id,
-                        candidate,
-                    )
-                    support_effects[recipient.participant_id].append(candidate)
 
 
 #: The bus stream a control reader asks for.  Damage triggers ride the same
@@ -891,68 +957,47 @@ def _schedule_aftershock_events(
     keystone_name: str,
 ) -> None:
     """Author Aftershock's resistance snapshot after an accepted control."""
-    if keystone_name != "Aftershock":
-        return
-    effect = rune_effects.resolve_keystone("Aftershock")
-    if not isinstance(effect, rune_effects.KeystoneAftershockEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors, keystone_name, "Aftershock", rune_effects.KeystoneAftershockEffect
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     armor_bonus = effect.resistance_bonus(holder.level, holder.stats, "armor")
     magic_resistance_bonus = effect.resistance_bonus(
         holder.level, holder.stats, "magic_resistance"
     )
-    ready_at = 0.0
-    seen: set[tuple[str, float, str]] = set()
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     for event, cc_kind, duration in _immobilizing_controls(
         outgoing.get(holder.participant_id, [])
     ):
         trigger_time = float(event.get("time", 0.0) or 0.0)
-        key = (
-            str(event.get("source_key", "")),
-            round(trigger_time, 9),
-            cc_kind,
-        )
-        if key in seen or trigger_time + 1e-9 < ready_at:
+        key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
+        if not gate.accepts(trigger_time, key):
             continue
-        seen.add(key)
         trigger_id = str(event.get("_event_id", ""))
-        activation_time = trigger_time + 1e-9
-        candidate = {
-            "time": activation_time,
-            "kind": "stat_buff",
-            "amount": 0.0,
-            "duration": effect.duration_seconds,
-            "source": "Aftershock · Resistance",
-            "source_key": "rune_Aftershock",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(event.get("sequence", 0) or 0),
-            "event_precision": "exact",
-            "bonus_armor": armor_bonus,
-            "bonus_magic_resistance": magic_resistance_bonus,
-            "_aftershock": True,
-            "_reactive": True,
-            SUPPORT_RANK_KEY: TransitionRank.DAMAGE,
-            "_event_id": f"{holder.participant_id}:aftershock:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "aftershock_trigger_kind": cc_kind,
-            "aftershock_duration": effect.duration_seconds,
-            "aftershock_cooldown": effect.cooldown_seconds,
-        }
-        candidate["_sk"] = _action_key(
-            activation_time,
-            TransitionRank.DAMAGE,
-            holder.participant_id,
-            candidate,
+        support_effects[holder.participant_id].append(
+            _reactive_candidate(
+                holder=holder,
+                recipient=holder.participant_id,
+                keystone="Aftershock",
+                label="Resistance",
+                kind="stat_buff",
+                time=trigger_time + 1e-9,
+                rank=TransitionRank.DAMAGE,
+                event_id=f"{holder.participant_id}:aftershock:{trigger_id}",
+                trigger_id=trigger_id,
+                sequence=int(event.get("sequence", 0) or 0),
+                duration=effect.duration_seconds,
+                bonus_armor=armor_bonus,
+                bonus_magic_resistance=magic_resistance_bonus,
+                _aftershock=True,
+                aftershock_trigger_kind=cc_kind,
+                aftershock_duration=effect.duration_seconds,
+                aftershock_cooldown=effect.cooldown_seconds,
+            )
         )
-        support_effects[holder.participant_id].append(candidate)
-        ready_at = trigger_time + effect.cooldown_seconds
+        gate.arm(trigger_time)
 
 
 def _schedule_grasp_events(
@@ -963,16 +1008,15 @@ def _schedule_grasp_events(
     keystone_name: str,
 ) -> None:
     """Author Grasp's permanent health gain after each accepted proc."""
-    if keystone_name != "Grasp of the Undying":
-        return
-    effect = rune_effects.resolve_keystone("Grasp of the Undying")
-    if not isinstance(effect, rune_effects.KeystoneGraspEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors,
+        keystone_name,
+        "Grasp of the Undying",
+        rune_effects.KeystoneGraspEffect,
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     proc_events = sorted(
         (
             event
@@ -981,42 +1025,30 @@ def _schedule_grasp_events(
         ),
         key=_sequence_reading_order,
     )
-    seen: set[float] = set()
+    gate = TriggerGate(inclusive=False)
     bonus_health = effect.bonus_health(bool(holder.stats.get("is_melee", True)))
     for event in proc_events:
         trigger_time = float(event.get("time", 0.0) or 0.0)
-        if trigger_time in seen:
+        if not gate.accepts(trigger_time, trigger_time):
             continue
-        seen.add(trigger_time)
         trigger_id = str(event.get("_event_id", ""))
-        activation_time = trigger_time + 1e-9
-        candidate = {
-            "time": activation_time,
-            "kind": "stat_buff",
-            "amount": 0.0,
-            "source": "Grasp of the Undying · Permanent health",
-            "source_key": "rune_Grasp of the Undying",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(event.get("sequence", 0) or 0),
-            "event_precision": "exact",
-            "bonus_health": bonus_health,
-            "_grasp_permanent_health": True,
-            "_reactive": True,
-            SUPPORT_RANK_KEY: TransitionRank.DEBUFF_ARM,
-            "_event_id": f"{holder.participant_id}:grasp:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "grasp_bonus_health": bonus_health,
-        }
-        candidate["_sk"] = _action_key(
-            activation_time,
-            TransitionRank.DEBUFF_ARM,
-            holder.participant_id,
-            candidate,
+        support_effects[holder.participant_id].append(
+            _reactive_candidate(
+                holder=holder,
+                recipient=holder.participant_id,
+                keystone="Grasp of the Undying",
+                label="Permanent health",
+                kind="stat_buff",
+                time=trigger_time + 1e-9,
+                rank=TransitionRank.DEBUFF_ARM,
+                event_id=f"{holder.participant_id}:grasp:{trigger_id}",
+                trigger_id=trigger_id,
+                sequence=int(event.get("sequence", 0) or 0),
+                bonus_health=bonus_health,
+                _grasp_permanent_health=True,
+                grasp_bonus_health=bonus_health,
+            )
         )
-        support_effects[holder.participant_id].append(candidate)
 
 
 def _schedule_glacial_events(
@@ -1027,16 +1059,12 @@ def _schedule_glacial_events(
     keystone_name: str,
 ) -> None:
     """Author Glacial's zones from the holder's reviewed control events."""
-    if keystone_name != "Glacial Augment":
-        return
-    effect = rune_effects.resolve_keystone("Glacial Augment")
-    if not isinstance(effect, rune_effects.KeystoneGlacialEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors, keystone_name, "Glacial Augment", rune_effects.KeystoneGlacialEffect
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     actor_by_id = {actor.participant_id: actor for actor in all_actors}
     allied_targets = [
         actor
@@ -1045,8 +1073,7 @@ def _schedule_glacial_events(
         and ("main" if actor.team in {"main", "ally"} else actor.team) == "main"
     ]
     slow_percent = effect.slow_ratio(holder.stats) * 100.0
-    ready_at = 0.0
-    seen: set[tuple[str, float, str]] = set()
+    gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     for event, cc_kind, cc_duration in _immobilizing_controls(
         outgoing.get(holder.participant_id, [])
     ):
@@ -1056,11 +1083,11 @@ def _schedule_glacial_events(
             continue
         trigger_time = float(event.get("time", 0.0) or 0.0)
         key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
-        if key in seen or trigger_time + 1e-9 < ready_at:
+        if not gate.accepts(trigger_time, key):
             continue
-        seen.add(key)
         trigger_id = str(event.get("_event_id", ""))
         activation_time = trigger_time + 1e-9
+        sequence = int(event.get("sequence", 0) or 0)
         zone_duration = effect.zone_duration(cc_duration)
         zone_id = f"{holder.participant_id}:glacial:{trigger_id}"
         zone_fields = {
@@ -1071,59 +1098,63 @@ def _schedule_glacial_events(
             "glacial_slow_percent": slow_percent,
             "glacial_damage_reduction_ratio": effect.damage_reduction_ratio,
         }
+        # The zone outlives the control that dropped it, so its rows are not
+        # reactive republishes and the walk sorts them itself.
         support_effects[target_id].append(
-            {
-                "time": activation_time,
-                "kind": "slow",
-                "amount": slow_percent,
-                "slow_percent": slow_percent,
-                "duration": zone_duration,
-                "source": "Glacial Augment · Icy zone",
-                "source_key": "rune_Glacial Augment",
-                "attacker": holder.participant_id,
-                "target": target_id,
-                "target_scope": "enemy_champion",
-                "target_policy": "immobilized_target",
-                "sequence": int(event.get("sequence", 0) or 0),
-                "event_precision": "exact",
-                "_event_id": f"{zone_id}:slow",
-                "_trigger_event_id": trigger_id,
-                "_glacial_zone": dict(zone_fields),
-                SUPPORT_RANK_KEY: TransitionRank.BARRIER_GRANT,
+            _reactive_candidate(
+                holder=holder,
+                recipient=target_id,
+                keystone="Glacial Augment",
+                label="Icy zone",
+                kind=PacketKind.SLOW.value,
+                time=activation_time,
+                rank=TransitionRank.BARRIER_GRANT,
+                event_id=f"{zone_id}:slow",
+                trigger_id=trigger_id,
+                sequence=sequence,
+                amount=slow_percent,
+                target_scope="enemy_champion",
+                target_policy="immobilized_target",
+                reactive=False,
+                sort_key=False,
+                slow_percent=slow_percent,
+                duration=zone_duration,
+                _glacial_zone=dict(zone_fields),
                 **zone_fields,
-            }
+            )
         )
         for ally in allied_targets:
             support_effects[ally.participant_id].append(
-                {
-                    "time": activation_time,
-                    "kind": "damage_modifier",
-                    "amount": effect.damage_reduction_ratio,
-                    "duration": zone_duration,
-                    "multiplier": 1.0 - effect.damage_reduction_ratio,
-                    "all_sources": True,
+                _reactive_candidate(
+                    holder=holder,
+                    recipient=ally.participant_id,
+                    keystone="Glacial Augment",
+                    label="Ally damage reduction",
+                    kind=PacketKind.DAMAGE_MODIFIER.value,
+                    time=activation_time,
+                    rank=TransitionRank.AURA_ARM,
+                    event_id=f"{zone_id}:reduction:{ally.participant_id}",
+                    trigger_id=trigger_id,
+                    sequence=sequence,
+                    amount=effect.damage_reduction_ratio,
+                    target_scope="ally_champion",
+                    target_policy="glacial_zone",
+                    reactive=False,
+                    sort_key=False,
+                    duration=zone_duration,
+                    multiplier=1.0 - effect.damage_reduction_ratio,
+                    all_sources=True,
                     # D-04: the zone reduces "damage dealt" with no carve-out
                     # in the sourced prose, so every damage and attack class
                     # is the full declaration - never an empty one.
-                    "damage_classes": frozenset(DamageClass),
-                    "attack_classes": frozenset(AttackClass),
-                    "source": "Glacial Augment · Ally damage reduction",
-                    "source_key": "rune_Glacial Augment",
-                    "attacker": holder.participant_id,
-                    "target": ally.participant_id,
-                    "target_scope": "ally_champion",
-                    "target_policy": "glacial_zone",
-                    "source_participant": target_id,
-                    "sequence": int(event.get("sequence", 0) or 0),
-                    "event_precision": "exact",
-                    "_event_id": f"{zone_id}:reduction:{ally.participant_id}",
-                    "_trigger_event_id": trigger_id,
-                    "_glacial_zone": dict(zone_fields),
-                    SUPPORT_RANK_KEY: TransitionRank.AURA_ARM,
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
+                    source_participant=target_id,
+                    _glacial_zone=dict(zone_fields),
                     **zone_fields,
-                }
+                )
             )
-        ready_at = trigger_time + effect.cooldown_seconds
+        gate.arm(trigger_time)
 
 
 def _schedule_stormraider_events(
@@ -1134,16 +1165,15 @@ def _schedule_stormraider_events(
     keystone_name: str,
 ) -> None:
     """Author Stormraider's movement burst from exact damage windows."""
-    if keystone_name != "Stormraider's Surge":
-        return
-    effect = rune_effects.resolve_keystone("Stormraider's Surge")
-    if not isinstance(effect, rune_effects.KeystoneStormraiderEffect):
-        return
-    holder = next(
-        (actor for actor in all_actors if actor.participant_id == "main"), None
+    resolved = _keystone_holder(
+        all_actors,
+        keystone_name,
+        "Stormraider's Surge",
+        rune_effects.KeystoneStormraiderEffect,
     )
-    if holder is None:
+    if resolved is None:
         return
+    holder, effect = resolved
     actors_by_id = {actor.participant_id: actor for actor in all_actors}
     events_by_target: dict[str, list[tuple[float, int, dict[str, Any], float]]] = (
         defaultdict(list)
@@ -1188,12 +1218,11 @@ def _schedule_stormraider_events(
                 )
 
     trigger_candidates.sort(key=lambda row: (row[0], row[1], row[2]))
-    ready_at = 0.0
+    gate = TriggerGate(effect.cooldown_at(holder.level), inclusive=True)
     move_speed = effect.bonus_move_speed_percent(
         bool(holder.stats.get("is_melee", True))
     )
     slow_resist_percent = effect.slow_resist_ratio * 100.0
-    seen_events: set[str] = set()
     for (
         trigger_time,
         event_index,
@@ -1207,45 +1236,35 @@ def _schedule_stormraider_events(
                 f"{holder.participant_id}:{target_id}:stormraider:{event_index}",
             )
         )
-        if trigger_id in seen_events or trigger_time + 1e-9 < ready_at:
+        if not gate.accepts(trigger_time, trigger_id):
             continue
-        seen_events.add(trigger_id)
-        event = {
-            "time": trigger_time + 1e-9,
-            "kind": "movement",
-            "amount": move_speed,
-            "bonus_move_speed_percent": move_speed,
-            "slow_resist_percent": slow_resist_percent,
-            "duration": effect.duration_seconds,
-            "source": "Stormraider's Surge · Movement burst",
-            "source_key": "rune_Stormraider's Surge",
-            "attacker": holder.participant_id,
-            "target": holder.participant_id,
-            "target_scope": "self",
-            "target_policy": "self",
-            "sequence": int(trigger.get("sequence", event_index) or event_index),
-            "event_precision": "exact",
-            "stormraider_damage_threshold_ratio": effect.damage_threshold_ratio,
-            "stormraider_damage_window_seconds": effect.damage_window_seconds,
-            "stormraider_trigger_damage": window_damage,
-            "stormraider_target_max_health": actors_by_id[target_id].stats.get(
-                "health", 0.0
-            ),
-            "stormraider_cooldown_seconds": effect.cooldown_at(holder.level),
-            "_event_id": f"{holder.participant_id}:stormraider:{trigger_id}",
-            "_trigger_event_id": trigger_id,
-            "_stormraider": True,
-            "_reactive": True,
-            SUPPORT_RANK_KEY: TransitionRank.BARRIER_GRANT,
-        }
-        event["_sk"] = _action_key(
-            float(event["time"]),
-            TransitionRank.BARRIER_GRANT,
-            holder.participant_id,
-            event,
+        support_effects[holder.participant_id].append(
+            _reactive_candidate(
+                holder=holder,
+                recipient=holder.participant_id,
+                keystone="Stormraider's Surge",
+                label="Movement burst",
+                kind=PacketKind.MOVEMENT.value,
+                time=trigger_time + 1e-9,
+                rank=TransitionRank.BARRIER_GRANT,
+                event_id=f"{holder.participant_id}:stormraider:{trigger_id}",
+                trigger_id=trigger_id,
+                sequence=int(trigger.get("sequence", event_index) or event_index),
+                amount=move_speed,
+                bonus_move_speed_percent=move_speed,
+                slow_resist_percent=slow_resist_percent,
+                duration=effect.duration_seconds,
+                stormraider_damage_threshold_ratio=effect.damage_threshold_ratio,
+                stormraider_damage_window_seconds=effect.damage_window_seconds,
+                stormraider_trigger_damage=window_damage,
+                stormraider_target_max_health=actors_by_id[target_id].stats.get(
+                    "health", 0.0
+                ),
+                stormraider_cooldown_seconds=effect.cooldown_at(holder.level),
+                _stormraider=True,
+            )
         )
-        support_effects[holder.participant_id].append(event)
-        ready_at = trigger_time + effect.cooldown_at(holder.level)
+        gate.arm(trigger_time)
 
 
 def _aery_support_templates(
@@ -1266,7 +1285,7 @@ def _aery_support_templates(
             "is missing participant stats"
         )
     templates: list[dict[str, Any]] = []
-    ready_at = 0.0
+    gate = TriggerGate(inclusive=False)
     ordered = sorted(
         (event for event in trigger_effects if isinstance(event, Mapping)),
         key=lambda event: _trigger_reading_order(event, attacker.participant_id),
@@ -1289,7 +1308,7 @@ def _aery_support_templates(
             )
         if (
             trigger_amount <= 0.0 and not callable(trigger.get("amount_formula"))
-        ) or trigger_time < ready_at:
+        ) or not gate.accepts(trigger_time):
             continue
         target = str(trigger.get("target", ""))
         if not target:
@@ -1324,8 +1343,12 @@ def _aery_support_templates(
             }
         )
         # Return travel has no fixed source duration.  The same lower-bound
-        # cadence as the offensive Aery path uses the sourced linger window.
-        ready_at = trigger_time + effect.shield_flight_seconds + effect.linger_seconds
+        # cadence as the offensive Aery path uses the sourced linger window:
+        # Aery flies, lands, and lingers there.
+        gate.arm(
+            trigger_time + effect.shield_flight_seconds,
+            cooldown=effect.linger_seconds,
+        )
     return templates
 
 
@@ -1344,6 +1367,13 @@ def _owned_state_event_id(
     text = str(authored)
     prefix = f"{participant_id}:"
     return text if text.startswith(prefix) else f"{prefix}{text}"
+
+
+#: Stamped on a support template whose amount was priced off its RECIPIENT's
+#: build (Taric W's Bastion).  An optimizer candidate changes that build, so
+#: a list carrying one is derived per evaluation instead of being served from
+#: the per-search pair-view cache.
+RECIPIENT_SCALED_KEY = "_recipient_scaled"
 
 
 def _support_effect_templates(
@@ -1428,10 +1458,28 @@ def _support_effect_templates(
             # withheld lethal-damage half) is a RECEIPT, not an applied
             # packet — it rides the same split the item scan already uses so
             # the survival walk can never misread it as a shield or heal.
-            if resolved_template.get("kind") == "item_denial":
+            if is_denial_receipt(resolved_template):
                 if denial_receipts is not None:
                     denial_receipts.append(resolved_template)
                 continue
+            ratio = resolved_template.pop("recipient_max_health_ratio", None)
+            if ratio is not None and ally_target_id != attacker.participant_id:
+                # Taric W's Bastion pays each recipient a share of their OWN
+                # maximum health, and only here is that recipient in hand.
+                # The mark is what keeps the priced packet off the
+                # per-search template cache: an optimizer candidate moves
+                # the recipient's maximum health under it.
+                recipient = next(
+                    actor
+                    for actor in all_actors
+                    if actor.participant_id == ally_target_id
+                )
+                resolved_template["amount"] = max(
+                    0.0, float(ratio) * float(recipient.stats.get("health", 0.0) or 0.0)
+                )
+                resolved_template[RECIPIENT_SCALED_KEY] = True
+                if resolved_template["amount"] <= 0.0:
+                    continue
             templates.append(resolved_template)
     # Fan out champion-owned heal events (authored by the E1 self-heal rule
     # for slots in ``_MODULE_AUTHORED_HEAL_SLOTS``, Taric Q today) to the
@@ -1527,7 +1575,7 @@ def _support_effect_templates(
     # they are routed there for the public denial-receipt section; otherwise
     # they are dropped from the applied stream entirely.
     for template in item_templates:
-        if template.get("kind") == "item_denial":
+        if is_denial_receipt(template):
             if denial_receipts is not None:
                 denial_receipts.append(dict(template))
             continue
@@ -1553,7 +1601,7 @@ def _support_effect_templates(
             cast_time = float(cast.get("time", 0.0))
             templates.append(
                 {
-                    "kind": "cleanse",
+                    "kind": PacketKind.CLEANSE.value,
                     "time": cast_time,
                     "amount": 1.0,
                     "target_scope": "self",
@@ -1603,7 +1651,7 @@ def _support_effect_templates(
                 cast_time = float(cast.get("time", 0.0))
                 templates.append(
                     {
-                        "kind": "cleanse",
+                        "kind": PacketKind.CLEANSE.value,
                         "time": cast_time,
                         "amount": 1.0,
                         "target_scope": "self",
@@ -1633,7 +1681,7 @@ def _support_effect_templates(
             for recipient_index, recipient_id in enumerate(recipients):
                 templates.append(
                     {
-                        "kind": "cleanse",
+                        "kind": PacketKind.CLEANSE.value,
                         "time": cast_time,
                         "amount": 1.0,
                         "target_scope": "self_and_all_teammates",
@@ -1703,7 +1751,7 @@ def _support_effect_templates(
             cast_index = int(cast.get("ordinal", 0) or 0)
             templates.append(
                 {
-                    "kind": "cleanse",
+                    "kind": PacketKind.CLEANSE.value,
                     "time": cast_time,
                     "amount": 1.0,
                     "target_scope": "self",
@@ -1751,7 +1799,7 @@ def _support_effect_templates(
             )
             templates.append(
                 {
-                    "kind": "movement",
+                    "kind": PacketKind.MOVEMENT.value,
                     "time": cast_time,
                     "amount": _OLAF_R_FIRST_SECOND_MS,
                     "duration": 1.0,
@@ -1765,6 +1813,46 @@ def _support_effect_templates(
                 }
             )
     templates.extend(_aery_support_templates(attacker, result, templates))
+    return templates
+
+
+def _attached_support_templates(
+    view: PairView,
+    attacker: Combatant,
+    all_actors: list[Combatant],
+    *,
+    pair_defender_id: str | None,
+    damage_events: Iterable[Mapping[str, Any]] | None = None,
+    target_id: str | None = None,
+    denial_receipts: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """One attacker's support templates, cached on the pair view when they can be.
+
+    The one home of that decision, for all three composition paths.  A list
+    holding a packet priced off a RECIPIENT's build cannot be served from
+    the per-search cache — the next optimizer candidate moves that
+    recipient's maximum health under it — so it is rebuilt per evaluation
+    and everything else keeps riding the pair packet.
+    """
+    if view.support is not None:
+        if denial_receipts is not None:
+            denial_receipts.extend(dict(row) for row in view.support_denials or ())
+        return view.support
+    denials: list[dict[str, Any]] = []
+    templates = _support_effect_templates(
+        attacker,
+        view.result,
+        all_actors,
+        pair_defender_id=pair_defender_id,
+        damage_events=damage_events,
+        target_id=target_id,
+        denial_receipts=denials,
+    )
+    if denial_receipts is not None:
+        denial_receipts.extend(dict(row) for row in denials)
+    if not any(template.get(RECIPIENT_SCALED_KEY) for template in templates):
+        view.support = templates
+        view.support_denials = denials
     return templates
 
 
@@ -1853,7 +1941,9 @@ def _utility_outcome_receipt(
         if event.get("kind") != "damage"
         if float(event.get("applied_amount", event.get("amount", 0.0)) or 0.0) > 0.0
     ]
-    movement = [event for event in support if event.get("kind") == "movement"]
+    movement = [
+        event for event in support if is_packet_kind(event, PacketKind.MOVEMENT)
+    ]
     # A Purify cast rides a heal packet carrying the ``cleanse`` marker
     # (kind "heal", cleanse=True), so the marker counts alongside the
     # dedicated kind=="cleanse" packets.  ``cleanse_group`` then folds one
@@ -1863,7 +1953,7 @@ def _utility_outcome_receipt(
     cleanse_packets = [
         event
         for event in support
-        if event.get("kind") == "cleanse" or bool(event.get("cleanse"))
+        if is_packet_kind(event, PacketKind.CLEANSE) or bool(event.get("cleanse"))
     ]
     cleanse = list(
         {
@@ -1876,18 +1966,18 @@ def _utility_outcome_receipt(
             for event in cleanse_packets
         }.values()
     )
-    slow = [event for event in support if event.get("kind") == "slow"]
+    slow = [event for event in support if is_packet_kind(event, PacketKind.SLOW)]
     # A movement packet that also names a slow-resist share is two
     # utility facts in one packet: the burst and the resistance that
     # rides it (Stormraider's Surge grants both from one trigger).
     slow_resistance = [
         event
         for event in support
-        if event.get("kind") == "movement"
+        if is_packet_kind(event, PacketKind.MOVEMENT)
         and event.get("slow_resist_percent") is not None
     ]
-    economy = [event for event in support if event.get("kind") == "economy"]
-    vision = [event for event in support if event.get("kind") == "vision"]
+    economy = [event for event in support if is_packet_kind(event, PacketKind.ECONOMY)]
+    vision = [event for event in support if is_packet_kind(event, PacketKind.VISION)]
     # Umbral Glaive's Blackout is a vision packet that applies no amount to
     # anybody -- it denies the enemy's wards rather than granting the holder
     # anything -- so it is read off the AUTHORED stream rather than the
@@ -1896,14 +1986,14 @@ def _utility_outcome_receipt(
     blackout = [
         event
         for event in authored
-        if event.get("kind") == "vision" and bool(event.get("ward_only"))
+        if is_packet_kind(event, PacketKind.VISION) and bool(event.get("ward_only"))
     ]
     # A damage modifier is an outcome whether or not it applied an amount:
     # the window it opened is the fact.  ``ratio_seconds`` prices only the
     # ones carrying a positive share, while the event count stays honest
     # about the windows.
     damage_modifiers = [
-        event for event in authored if event.get("kind") == "damage_modifier"
+        event for event in authored if is_packet_kind(event, PacketKind.DAMAGE_MODIFIER)
     ]
     damage_reduction = [
         event
@@ -1914,7 +2004,9 @@ def _utility_outcome_receipt(
     # native mana units (including the zero-amount Helping Hand boundary,
     # which is read from the authored stream so the named boundary stays
     # visible even though it never applies to a champion target).
-    resource = [event for event in authored if event.get("kind") == "resource"]
+    resource = [
+        event for event in authored if is_packet_kind(event, PacketKind.RESOURCE)
+    ]
     movement_speed_percent_seconds = sum(
         abs(
             float(
@@ -2361,15 +2453,21 @@ _RENGAR_W_CONSUME_HEAL_RATIO = 1.0
 #   the out-of-combat consume ("after 4 seconds without taking damage ...
 #   restore 60% : 100% (based on level) of the amount") whose level row
 #   "Max Health Damage" carries 60 : 100 (based on level).  The E ACTIVE
-#   converts grey into a 2.5 s shield — a shield, not a heal — and stays
-#   out of this primitive's scope (the module documents Thick Skin as
-#   shield state).  The consume is modeled as one lump heal at the 4 s
-#   boundary; the wiki's 10%-max-health-per-0.264 s tick delivery is a
-#   rate detail with the same total, documented here.
+#   ("Tahm Kench converts his current grey health into a shield that lasts
+#   for 2.5 seconds") pays the pool as a SHIELD instead, on E's own cached
+#   3 s haste-scaled cooldown.  It is a player decision, so the module
+#   declares it as the ``e_convert_grey_shield`` option and the press
+#   schedule is the earliest-available convention Mordekaiser's recast
+#   already uses; with the option off nothing presses and the pool pays
+#   the out-of-combat heal exactly as before.  The consume is modeled as
+#   one lump heal at the 4 s boundary; the wiki's 10%-max-health-per-
+#   0.264 s tick delivery is a rate detail with the same total.
 _TAHM_E_STORE_RANK = (0.15, 0.23, 0.31, 0.39, 0.47)
 _TAHM_E_STORE_MULTI_RANK = (0.42, 0.44, 0.46, 0.48, 0.50)
 _TAHM_E_STORE_CAP_RATIO = 3.0
 _TAHM_E_OUT_OF_COMBAT_SECONDS = 4.0
+_TAHM_E_SHIELD_DURATION_SECONDS = 2.5
+_TAHM_E_ACTIVE_OPTION = "e_convert_grey_shield"
 # Mordekaiser W (Indestructible) — data/champions.json W prose:
 #   "stores 45% of the post-mitigation damage he deals and 7.5% of the
 #   pre-mitigation damage he takes ... up to 30% of his maximum health."
@@ -2443,21 +2541,29 @@ def _grey_health_receipts(
     duration: float,
     enemy_count: int,
     ability_ranks: Mapping[str, int] | None = None,
-) -> tuple[list[tuple[float, str, float]], dict[str, float]]:
-    """Author grey-health consume heals for one grey-health main champion.
+    champion_options: Mapping[str, Any] | None = None,
+) -> tuple[
+    list[tuple[float, str, float]],
+    list[tuple[float, str, float, float]],
+    dict[str, float],
+]:
+    """Author the grey-health consumes for one grey-health main champion.
 
     ``incoming``/``outgoing`` are ``(time, post_mitigation,
     pre_mitigation)`` damage records for damage the main TAKES (its
     defenders' pair packets) and DEALS within the fight window.  Returns
-    ``(consume_heals, summary)`` where each heal is ``(time, source,
-    amount)`` and the summary carries the ``grey_health_stored`` pool,
-    the ``grey_health_consumed`` total, and a ``source`` label for the
-    receipt.  The pool accumulates the sourced ratio of post-mitigation
-    incoming damage (Mordekaiser also stores from pre-mitigation damage
-    taken and from post-mitigation damage dealt), capped per champion.
+    ``(consume_heals, consume_shields, summary)`` — a heal is ``(time,
+    source, amount)``, a shield adds its duration — and the summary
+    carries the ``grey_health_stored`` pool, the ``grey_health_consumed``
+    total, and a ``source`` label for the receipt.  The pool accumulates
+    the sourced ratio of post-mitigation incoming damage (Mordekaiser also
+    stores from pre-mitigation damage taken and from post-mitigation
+    damage dealt), capped per champion.  Only Tahm Kench's E active pays a
+    pool as a shield, and only when its option is on.
     """
     name = str(champion_name)
     heals: list[tuple[float, str, float]] = []
+    shields: list[tuple[float, str, float, float]] = []
 
     def _slot_rank(slot: str) -> int:
         if ability_ranks and slot in ability_ranks:
@@ -2481,15 +2587,19 @@ def _grey_health_receipts(
         pool = min(cap, ratio * sum(post for _t, post, _pre in incoming))
         # Out-of-vision consume: vision is a boundary the 1v1 ledger does
         # not model, so the 100% heal is documented, not authored.
-        return heals, {
-            "grey_health_stored": pool,
-            "grey_health_consumed": 0.0,
-            "source": (
-                "Gift of the Drowned Ones (9% + 0.2% per Lethality of "
-                "post-mitigation damage taken; out-of-vision consume is a "
-                "vision boundary, not modeled in-window)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": pool,
+                "grey_health_consumed": 0.0,
+                "source": (
+                    "Gift of the Drowned Ones (9% + 0.2% per Lethality of "
+                    "post-mitigation damage taken; out-of-vision consume is a "
+                    "vision boundary, not modeled in-window)"
+                ),
+            },
+        )
     if name == "Rengar":
         w_casts = sorted(
             float(cast.get("time", 0.0))
@@ -2508,45 +2618,79 @@ def _grey_health_receipts(
                 heals.append((cast_time, "Battle Roar (grey health)", amount))
                 consumed += amount
         stored = _RENGAR_W_STORE_RATIO * sum(post for _t, post, _pre in incoming)
-        return heals, {
-            "grey_health_stored": stored,
-            "grey_health_consumed": consumed,
-            "source": (
-                "Battle Roar (50% of post-mitigation damage taken in the "
-                "last 1.5 seconds stored as grey health; the active heals "
-                "the stored pool)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": stored,
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Battle Roar (50% of post-mitigation damage taken in the "
+                    "last 1.5 seconds stored as grey health; the active heals "
+                    "the stored pool)"
+                ),
+            },
+        )
     if name == "Tahm Kench":
         e_rank = max(1, _slot_rank("E"))
         rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
         ratio = rank_row[min(e_rank, len(rank_row)) - 1]
         max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
+        ability = _grey_ability(champion_data, "E")
         pool = min(
             _TAHM_E_STORE_CAP_RATIO * max_health,
             ratio * sum(post for _t, post, _pre in incoming),
         )
         consumed = 0.0
-        if pool > 0.0 and incoming:
+        # The E ACTIVE, when the module's option turns it on: each press
+        # converts the grey banked since the previous one into a 2.5 s
+        # shield, on E's own haste-scaled cooldown.
+        residual, last_press = pool, None
+        cooldown = _grey_cooldown(ability, e_rank, stats)
+        if _declared_option(name, champion_options, _TAHM_E_ACTIVE_OPTION):
+            banked, press_time = 0.0, None
+            for event_time, post, _pre in sorted(incoming):
+                if press_time is not None and event_time >= press_time:
+                    banked = _press_thick_skin(shields, press_time, banked, duration)
+                    last_press, press_time = press_time, press_time + cooldown
+                banked = min(
+                    _TAHM_E_STORE_CAP_RATIO * max_health, banked + ratio * post
+                )
+                if press_time is None:
+                    press_time = event_time
+            if press_time is not None:
+                banked = _press_thick_skin(shields, press_time, banked, duration)
+                last_press = press_time
+            residual = banked
+            consumed = pool - residual
+        if residual > 0.0 and incoming:
             last_damage_time = max(event_time for event_time, _post, _pre in incoming)
             consume_time = last_damage_time + _TAHM_E_OUT_OF_COMBAT_SECONDS
-            if consume_time <= duration:
-                ability = _grey_ability(champion_data, "E")
+            # "While Thick Skin is not on cooldown, and after 4 seconds
+            # without taking damage": a press inside the window blocks the
+            # heal until its own cooldown has run out.
+            ready = last_press is None or last_press + cooldown <= consume_time
+            if consume_time <= duration and ready:
                 restore = _grey_level_ratio(ability, "Max Health Damage", level)
-                amount = restore * pool
+                amount = restore * residual
                 if amount > 0.0:
                     heals.append((consume_time, "Thick Skin (grey health)", amount))
-                    consumed = amount
-        return heals, {
-            "grey_health_stored": pool,
-            "grey_health_consumed": consumed,
-            "source": (
-                "Thick Skin (E-rank % of post-mitigation damage taken "
-                "stored as grey health; the out-of-combat consume restores "
-                "60% : 100% based on level of the pool after 4 seconds "
-                "without damage)"
-            ),
-        }
+                    consumed += amount
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": pool,
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Thick Skin (E-rank % of post-mitigation damage taken "
+                    "stored as grey health; the out-of-combat consume restores "
+                    "60% : 100% based on level of the pool after 4 seconds "
+                    "without damage, and the active converts the pool into a "
+                    "2.5s shield when its option is on)"
+                ),
+            },
+        )
     if name == "Mordekaiser":
         w_rank = max(1, _slot_rank("W"))
         heal_ratio = _MORDE_W_SHIELD_TO_HEALING_RANK[
@@ -2581,18 +2725,22 @@ def _grey_health_receipts(
             if amount > 0.0 and recast_time <= duration:
                 heals.append((recast_time, "Indestructible (grey health)", amount))
                 consumed = amount
-        return heals, {
-            "grey_health_stored": pool,
-            "grey_health_consumed": consumed,
-            "source": (
-                "Indestructible (45% of post-mitigation damage dealt + "
-                "7.5% of pre-mitigation damage taken stored as Potential "
-                "Shield, capped at 30% of maximum health; the W recast "
-                "heals the Shield-to-Healing % of the stored shield — the "
-                "recast is modeled at its earliest available time, shield "
-                "decay is state)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": pool,
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Indestructible (45% of post-mitigation damage dealt + "
+                    "7.5% of pre-mitigation damage taken stored as Potential "
+                    "Shield, capped at 30% of maximum health; the W recast "
+                    "heals the Shield-to-Healing % of the stored shield — the "
+                    "recast is modeled at its earliest available time, shield "
+                    "decay is state)"
+                ),
+            },
+        )
     if name == "Locke":
         # Soul Ignition (W): each W cast opens a 6-second storage window
         # during which 100% of the post-mitigation champion damage taken
@@ -2633,40 +2781,103 @@ def _grey_health_receipts(
             if amount > 0.0 and consume_time <= duration:
                 heals.append((consume_time, "Soul Ignition (grey health)", amount))
                 consumed += amount
-        return heals, {
-            "grey_health_stored": min(
-                cap,
-                _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
-            ),
-            "grey_health_consumed": consumed,
-            "source": (
-                "Soul Ignition (100% of post-mitigation damage taken from "
-                "enemy champions during the 6s active stored as grey "
-                "health, capped by the 'Damage taken grey health cap' row; "
-                "the automatic recast at 6s heals the stored pool; the "
-                "health-cost add and missing-health bonus remain dynamic "
-                "self-state boundaries)"
-            ),
-        }
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": min(
+                    cap,
+                    _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
+                ),
+                "grey_health_consumed": consumed,
+                "source": (
+                    "Soul Ignition (100% of post-mitigation damage taken from "
+                    "enemy champions during the 6s active stored as grey "
+                    "health, capped by the 'Damage taken grey health cap' row; "
+                    "the automatic recast at 6s heals the stored pool; the "
+                    "health-cost add and missing-health bonus remain dynamic "
+                    "self-state boundaries)"
+                ),
+            },
+        )
     if name == "Kled":
         # Skaarl's 400 : 1400 (based on level) health pool is the mounted
         # duo's damage sink; dismount at zero and the remount restore are a
         # revive-boundary pattern (like Aatrox's ghost atom) and are NOT
         # implemented.  No heal is authored; the module documents it.
-        return heals, {
+        return (
+            heals,
+            shields,
+            {
+                "grey_health_stored": 0.0,
+                "grey_health_consumed": 0.0,
+                "source": (
+                    "Skaarl the Cowardly Lizard (the mounted duo's damage pool "
+                    "is a revive-boundary pattern; dismount/remount are not "
+                    "modeled)"
+                ),
+            },
+        )
+    return (
+        heals,
+        shields,
+        {
             "grey_health_stored": 0.0,
             "grey_health_consumed": 0.0,
-            "source": (
-                "Skaarl the Cowardly Lizard (the mounted duo's damage pool "
-                "is a revive-boundary pattern; dismount/remount are not "
-                "modeled)"
-            ),
-        }
-    return heals, {
-        "grey_health_stored": 0.0,
-        "grey_health_consumed": 0.0,
-        "source": "",
-    }
+            "source": "",
+        },
+    )
+
+
+def _declared_option(
+    champion: str, options: Mapping[str, Any] | None, key: str
+) -> bool:
+    """One champion option, falling back to the module's own declared row."""
+    if options is not None and key in options:
+        return bool(options[key])
+    return bool(declared_option_defaults(champion)[key])
+
+
+def _grey_cooldown(
+    ability: Mapping[str, Any], rank: int, stats: Mapping[str, float]
+) -> float:
+    """One cached ability cooldown at a rank, after ability haste.
+
+    Thick Skin's press cadence hangs off this number, so a missing cooldown
+    row raises rather than pricing a zero-cooldown press loop.
+    """
+    base = extract_cooldown(dict(ability), rank)
+    if base <= 0.0:
+        raise ValueError(
+            "grey-health press cadence needs a cached cooldown row; "
+            f"ability {ability.get('name')!r} declares none"
+        )
+    haste = max(0.0, float(stats.get("ability_haste", 0.0) or 0.0))
+    return base * 100.0 / (100.0 + haste)
+
+
+def _press_thick_skin(
+    shields: list[tuple[float, str, float, float]],
+    press_time: float,
+    banked: float,
+    duration: float,
+) -> float:
+    """One Thick Skin press: the bank becomes a shield, or stays banked.
+
+    Returns the grey health still on the bar afterwards, so a press the
+    fight window never reaches consumes nothing.
+    """
+    if banked <= 0.0 or press_time > duration:
+        return banked
+    shields.append(
+        (
+            press_time,
+            "Thick Skin (grey health)",
+            banked,
+            _TAHM_E_SHIELD_DURATION_SECONDS,
+        )
+    )
+    return 0.0
 
 
 def _grey_ability(champion_data: Mapping[str, Any], slot: str) -> dict[str, Any]:
@@ -2994,117 +3205,29 @@ def _simulate_survival(
                         expanded_incoming[target_id].append(event)
                         continue
 
-                    def _target_factor(target: Combatant) -> float | None:
-                        if damage_type == "physical":
-                            effective = apply_armor_penetration(
-                                float(target.stats.get("armor", 0.0) or 0.0)
-                                + float(
-                                    states[target.participant_id].get(
-                                        "dynamic_bonus_armor", 0.0
-                                    )
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("flat_armor_penetration", 0.0)
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("armor_penetration_percent", 0.0)
-                                    or 0.0
-                                )
-                                / 100.0,
-                                float(
-                                    source.stats.get(
-                                        "armor_penetration_bonus_percent", 0.0
-                                    )
-                                    or 0.0
-                                )
-                                / 100.0,
-                                float(target.stats.get("bonus_armor", 0.0) or 0.0)
-                                + float(
-                                    states[target.participant_id].get(
-                                        "dynamic_bonus_armor", 0.0
-                                    )
-                                    or 0.0
-                                ),
-                            )
-                        elif damage_type == "magic":
-                            effective = apply_magic_penetration(
-                                float(target.stats.get("magic_resistance", 0.0) or 0.0)
-                                + float(
-                                    states[target.participant_id].get(
-                                        "dynamic_bonus_magic_resistance", 0.0
-                                    )
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("magic_penetration_flat", 0.0)
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("magic_penetration_percent", 0.0)
-                                    or 0.0
-                                )
-                                / 100.0,
-                            )
-                        elif damage_type == "true":
-                            return 1.0
-                        else:
-                            return None
-                        factor = apply_resistance(1.0, effective)
-                        if not math.isfinite(factor) or factor < 0.0:
-                            return None
-                        # Basic-damage defenses are post-mitigation and belong
-                        # to the recipient of each split, not the Worthy.
-                        if event.get("basic_attack") and damage_type != "true":
-                            defenses = target.defenses
-                            factor *= max(
-                                0.0,
-                                float(defenses.basic_damage_multiplier),
-                            )
-                            flat = max(
-                                0.0,
-                                float(defenses.basic_damage_flat_reduction),
-                            )
-                            cap = max(
-                                0.0,
-                                float(defenses.basic_damage_flat_reduction_cap),
-                            )
-                            if flat > 0.0 and cap > 0.0:
-                                mitigated = raw_amount * factor
-                                factor = max(
-                                    0.0,
-                                    (mitigated - min(flat, mitigated * cap))
-                                    / raw_amount,
-                                )
-                        if damage_type != "true":
-                            defenses = target.defenses
-                            flat = max(
-                                0.0,
-                                float(
-                                    getattr(
-                                        defenses,
-                                        (
-                                            "champion_dot_damage_flat_reduction"
-                                            if event.get("damage_over_time")
-                                            else "champion_damage_flat_reduction"
-                                        ),
-                                        0.0,
-                                    )
-                                    or 0.0
-                                ),
-                            )
-                            if flat > 0.0:
-                                mitigated = raw_amount * factor
-                                factor = max(
-                                    0.0,
-                                    (mitigated - min(flat, mitigated)) / raw_amount,
-                                )
-                        return factor
+                    declared = event.get("_declared")
+                    if declared is not None and declared.routing is not None:
+                        # A packet another family already re-delivered carries
+                        # one route and one share; splitting it again would
+                        # either lose that provenance or pay a share of a
+                        # share nobody declared.
+                        event["redirect_skipped_reason"] = "packet_already_routed"
+                        event["redirect_fraction"] = 0.0
+                        expanded_incoming[target_id].append(event)
+                        continue
 
-                    protected_factor = _target_factor(protected)
-                    holder_factor = _target_factor(holder)
-                    if protected_factor is None or holder_factor is None:
+                    split = {
+                        "damage_type": damage_type,
+                        "basic_attack": bool(event.get("basic_attack")),
+                        "damage_over_time": bool(event.get("damage_over_time")),
+                        "source": source,
+                        "raw_amount": raw_amount,
+                    }
+                    protected_share = knights_vow_target_factor(
+                        target=protected, **split
+                    )
+                    holder_share = knights_vow_target_factor(target=holder, **split)
+                    if protected_share is None or holder_share is None:
                         event["redirect_skipped_reason"] = (
                             "target_mitigation_receipt_unavailable"
                         )
@@ -3112,9 +3235,11 @@ def _simulate_survival(
                         expanded_incoming[target_id].append(event)
                         continue
                     direct_amount = (
-                        raw_amount * (1.0 - redirect_fraction) * protected_factor
+                        raw_amount * (1.0 - redirect_fraction) * protected_share.factor
                     )
-                    redirected_amount = raw_amount * redirect_fraction * holder_factor
+                    redirected_amount = (
+                        raw_amount * redirect_fraction * holder_share.factor
+                    )
                 else:
                     direct_amount = original_amount * (1.0 - redirect_fraction)
                     redirected_amount = original_amount * redirect_fraction
@@ -3134,6 +3259,29 @@ def _simulate_survival(
                     redirected["redirect_attributed_to"] = str(
                         event.get("attacker", "")
                     )
+                    redirected["_redirect_original_damage"] = original_amount
+                    # The redirected share met the HOLDER's resistance: its
+                    # own baseline, and its own share of any declaration the
+                    # source family handed the walk.  Inheriting the Worthy's
+                    # baseline and the whole declaration made the walk price
+                    # this share a second time, at the wrong resistance.
+                    if holder_share.effective_resistance is not None:
+                        redirected.pop("_baseline_effective_armor", None)
+                        redirected.pop("_baseline_effective_mr", None)
+                        redirected[
+                            (
+                                "_baseline_effective_armor"
+                                if damage_type == "physical"
+                                else "_baseline_effective_mr"
+                            )
+                        ] = holder_share.effective_resistance
+                    if declared is not None:
+                        redirected["_declared"] = routed_declaration(
+                            declared, redirect_fraction
+                        )
+                        original["_declared"] = routed_declaration(
+                            declared, 1.0 - redirect_fraction
+                        )
                 redirected["_sk"] = _action_key(
                     float(redirected.get("time", 0.0)),
                     TransitionRank.REACTIVE,
@@ -3775,10 +3923,10 @@ def _context_setup(
             suppress_actor_wide_heals=attacker.team == "enemy",
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
-            if view.support is None:
-                view.support = _support_effect_templates(
+            base.add_support_templates(
+                _attached_support_templates(
+                    view,
                     attacker,
-                    view.result,
                     all_actors_by_index,
                     # ``support_attached`` admits one pair per attacker, so
                     # this is the first of ``base_pairs``' defenders for it —
@@ -3786,8 +3934,10 @@ def _context_setup(
                     # loop rather than re-derived from the roster.
                     pair_defender_id=defender.participant_id,
                     damage_events=view.events,
-                )
-            base.add_support_templates(view.support, attacker_i, context.index_of)
+                ),
+                attacker_i,
+                context.index_of,
+            )
             support_attached.add(attacker.participant_id)
     for actor in context.roster_actors:
         wearer_i = context.index_of[actor.participant_id]
@@ -3925,18 +4075,20 @@ def _build_signature_panel(
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
         )
-        if view.support is None:
-            view.support = _support_effect_templates(
+        sig.add_support_templates(
+            _attached_support_templates(
+                view,
                 attacker,
-                view.result,
                 all_actors,
                 # The signature panel prices every enemy attacker against the
                 # candidate main and nobody else (the ``"main"`` defender
                 # above), so the pair this result came from is that one.
                 pair_defender_id=main.participant_id,
                 damage_events=view.events,
-            )
-        sig.add_support_templates(view.support, attacker_i, context.index_of)
+            ),
+            attacker_i,
+            context.index_of,
+        )
     # The enemy->main fights live here rather than on the base panel, so the
     # Sacrifice split for a holder whose Worthy ally IS the candidate main
     # has to be staged against this panel's actions.
@@ -4268,7 +4420,7 @@ def _score_with_search_context(
             if first_result is not None
             else []
         )
-        grey_heals, grey_summary = _grey_health_receipts(
+        grey_heals, grey_shields, grey_summary = _grey_health_receipts(
             str(champion_data.get("name", "")),
             champion_data,
             level,
@@ -4279,12 +4431,21 @@ def _score_with_search_context(
             duration,
             len(enemy_actors),
             params.ability_ranks,
+            params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
                 grey_health_heal_action(heal_time, source, amount, index, aidx)
+            )
+        for index, (grant_time, source, amount, window) in enumerate(grey_shields):
+            aidx = fresh.next_aidx
+            fresh.next_aidx += 1
+            fresh.actions.append(
+                grey_health_shield_action(
+                    grant_time, source, amount, window, index, aidx
+                )
             )
 
     # An armed damage modifier restricts itself by attack class, and the
@@ -4586,7 +4747,7 @@ def _self_shield_carrier_denials(
         denials.append(
             {
                 "time": round(carrier_time, 3),
-                "kind": "item_denial",
+                "kind": PacketKind.ITEM_DENIAL.value,
                 "source": str(rider.get("source", "")),
                 "reason": SELF_SHIELD_CARRIER_DENIAL,
                 "attacker": holder,
@@ -4781,6 +4942,11 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
     item_denial_receipts: list[dict[str, Any]] = []
     ordered_item_support_ids: set[str] = set()
+    # One activation, one shield: an ``actor_wide`` self-shield payload is
+    # authored once per rotation but replayed by every enemy pair, so the
+    # first pair to carry it keeps it and the rest are dropped here.  Keyed
+    # the way actor-wide heals are keyed below -- holder, source, timestamp.
+    actor_wide_shield_keys: set[tuple[str, str, float]] = set()
     support_attached: set[str] = set()
     # The main champion's own cast timeline (from its first outgoing pair
     # fight) drives grey-health consume timing (Rengar W, Mordekaiser W).
@@ -4892,10 +5058,21 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                     defender_incoming.append(enriched)
                     shield_payload = enriched.get("self_shield")
                     shield_event_id = str(enriched.get("_event_id", ""))
+                    shield_key = (
+                        (
+                            attacker.participant_id,
+                            str(shield_payload.get("source", "")),
+                            float(enriched.get("time", 0.0) or 0.0),
+                        )
+                        if isinstance(shield_payload, Mapping)
+                        and shield_payload.get("actor_wide")
+                        else None
+                    )
                     if (
                         isinstance(shield_payload, Mapping)
                         and shield_event_id
                         and shield_event_id not in ordered_item_support_ids
+                        and shield_key not in actor_wide_shield_keys
                     ):
                         try:
                             shield_amount = max(0.0, float(shield_payload["amount"]))
@@ -4912,7 +5089,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                     "time": round(
                                         float(enriched.get("time", 0.0) or 0.0), 3
                                     ),
-                                    "kind": "item_denial",
+                                    "kind": PacketKind.ITEM_DENIAL.value,
                                     "source": str(
                                         shield_payload.get(
                                             "source", "Eclipse (Ever Rising Moon)"
@@ -4958,6 +5135,8 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                 }
                             )
                             ordered_item_support_ids.add(shield_event_id)
+                            if shield_key is not None:
+                                actor_wide_shield_keys.add(shield_key)
                 attacker_healing = healing[attacker.participant_id]
                 for template in view.heals:
                     if template.get("actor_wide"):
@@ -4974,22 +5153,16 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                         dict(template) if copy_templates else template
                     )
                 if attacker.participant_id not in support_attached:
-                    if view.support is None:
-                        support_denials: list[dict[str, Any]] = []
-                        view.support = _support_effect_templates(
-                            attacker,
-                            result,
-                            all_actors,
-                            pair_defender_id=defender.participant_id,
-                            damage_events=view.events,
-                            target_id=defender.participant_id,
-                            denial_receipts=support_denials,
-                        )
-                        view.support_denials = support_denials
-                    item_denial_receipts.extend(
-                        dict(row) for row in view.support_denials or ()
+                    support_templates = _attached_support_templates(
+                        view,
+                        attacker,
+                        all_actors,
+                        pair_defender_id=defender.participant_id,
+                        damage_events=view.events,
+                        target_id=defender.participant_id,
+                        denial_receipts=item_denial_receipts,
                     )
-                    for template in view.support:
+                    for template in support_templates:
                         packet_template = dict(template) if copy_templates else template
                         support_effects[template["target"]].append(packet_template)
                         if template.get("kind") == "damage":
@@ -5171,7 +5344,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             )
             for event in main_outgoing
         ]
-        grey_heals, grey_summary = _grey_health_receipts(
+        grey_heals, grey_shields, grey_summary = _grey_health_receipts(
             main_name,
             champion_data,
             level,
@@ -5182,6 +5355,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             duration,
             len(enemy_actors),
             params.ability_ranks,
+            params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             heal_event: dict[str, Any] = {
@@ -5200,6 +5374,25 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 heal_event,
             )
             healing["main"].append(heal_event)
+        for index, (grant_time, source, amount, window) in enumerate(grey_shields):
+            support_effects["main"].append(
+                {
+                    "time": float(grant_time),
+                    "kind": "shield",
+                    "amount": float(amount),
+                    "duration": float(window),
+                    "source": source,
+                    "source_key": source,
+                    "attacker": "main",
+                    "target": "main",
+                    "target_scope": "self",
+                    "target_policy": "self",
+                    "_event_id": f"main:grey:{source}:shield:{index}",
+                    # Grey health is banked by damage already taken, so the
+                    # barrier this press raises arms after it.
+                    SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
+                }
+            )
         for event in main_incoming:
             receipt = _grey_health_event_receipt(
                 main_name,
