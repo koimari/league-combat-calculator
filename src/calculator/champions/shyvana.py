@@ -290,7 +290,13 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear"}
 parse_abilities = build_parser(SLOTS, "Shyvana", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    int_option("scalemail_stacks", 0, minimum=0, maximum=100, label="Scalemail stacks"),
+    int_option(
+        "scalemail_stacks",
+        0,
+        minimum=0,
+        maximum=_SCALEMAIL_MAX_STACKS,
+        label="Scalemail stacks",
+    ),
     bool_option("dragon_form", False, label="Dragon Form"),
     int_option("q_casts", 1, minimum=1, maximum=3, label="Emberstrike casts"),
     bool_option("w_recast", True, label="Inferno Aegis recast hits"),

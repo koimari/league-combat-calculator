@@ -238,17 +238,6 @@ class ShieldBypass:
     duration: float
 
 
-def routing_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every pair-priced routing rule *owners* bring, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.DAMAGE_ROUTING
-        and isinstance(rule.payload, (ExecuteRule, ShieldBypassRule))
-    )
-
-
 def _field(fields: tuple[KernelField, ...], name: str) -> float:
     """One compiled field by name, or a stop naming the question asked."""
     for compiled in fields:
@@ -424,9 +413,9 @@ class Deferral:
 def walk_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every routing rule *owners* bring, in build order, for the walk lane.
 
-    All three payload shapes, unlike :func:`routing_rules`: the walk stages
-    the deferral as well, and reading only the two the pair engine prices is
-    how the third would quietly keep arriving from somewhere else.
+    All three payload shapes: the walk stages the deferral as well, and
+    reading only the two the pair engine prices is how the third would
+    quietly keep arriving from somewhere else.
     """
     return tuple(
         rule
@@ -578,7 +567,6 @@ __all__ = [
     "resolve_deferral",
     "resolve_execution",
     "resolve_shield_bypass",
-    "routing_rules",
     "walk_deferral",
     "walk_execution",
     "walk_fields",

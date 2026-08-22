@@ -137,22 +137,15 @@ def test_one_compiler_per_family() -> None:
     )
 
 
-def test_a_partly_migrated_family_still_names_what_it_refuses() -> None:
-    """A partly migrated family names every tag it still refuses."""
+def test_the_delta_amp_family_is_fully_migrated() -> None:
+    """Every delta-amp tag is migrated; the unmigrated set stays empty."""
     delta_tags = frozenset(
         tag
         for tag, family in catalog.TAG_FAMILY.items()
         if family is RuleFamily.DELTA_AMP
     )
-    named = catalog.MIGRATED_DELTA_AMP_TAGS | frozenset(
-        catalog.DELTA_AMP_UNMIGRATED_TAGS
-    )
-    assert named == delta_tags
-    assert not catalog.MIGRATED_DELTA_AMP_TAGS & frozenset(
-        catalog.DELTA_AMP_UNMIGRATED_TAGS
-    )
-    for tag, slice_name in catalog.DELTA_AMP_UNMIGRATED_TAGS.items():
-        assert slice_name.strip(), tag
+    assert catalog.MIGRATED_DELTA_AMP_TAGS == delta_tags
+    assert not catalog.DELTA_AMP_UNMIGRATED_TAGS
 
 
 def test_an_unnamed_delta_amp_tag_fails_the_catalog(
