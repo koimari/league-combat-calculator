@@ -2841,10 +2841,7 @@ def _resolve_combat_state(
         champion_stats = dict(champion_stats)
         attack_speed = max(
             0.0,
-            attack_speed
-            - calculate_attack_speed(
-                0.0, as_ratio, swing_schedule.opening_rate_bonus_percent
-            ),
+            attack_speed - as_ratio * swing_schedule.opening_rate_bonus_percent / 100.0,
         )
         champion_stats["attack_speed"] = attack_speed
 
@@ -4374,6 +4371,17 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         return plan
     if resource_type == "ENERGY":
         return _apply_energy_resource_limits(state, plan)
+    if any(
+        float(ability_field(info, "resource_maximum_bonus") or 0.0) > 0.0
+        for info in state.ability_damages.values()
+    ):
+        # Only the energy walk models a temporary maximum; the mana account's
+        # maximum grows and never falls.  Fail closed rather than dropping a
+        # declared mechanic silently (the only declarer today is ENERGY Akali).
+        raise ValueError(
+            "temporary resource maximum bonus is not modeled for MANA; "
+            "route the kit through the energy walk or extend the ledger"
+        )
     return _apply_mana_resource_limits(state, plan)
 
 

@@ -358,9 +358,6 @@
               <input id="uptimeRange" type="range" min="0" max="100" value="0" data-proto-range="aaUptime" aria-label="Auto attack uptime percent" disabled />
             </label>
             <button class="toggle" id="uptimeModeToggle" type="button" aria-pressed="true">Use explicit</button>
-            <!-- Shown only for champions whose module certifies one_rotation
-                 fights exclusively: the sourced reason the timed window (and
-                 its cooldown recasts) is withheld. renderRail owns it. -->
           </div>
 
           <div class="constraint-body" id="constraintStateBody" hidden>
@@ -370,7 +367,7 @@
             </div>
             <!-- One home for the mode copy (#150). These descriptions are what
                  assistive technology announces on each button before selection;
-                 renderRail mirrors the active one into #gameStateHelp so sighted
+                 app.js mirrors the active one into #gameStateHelp so sighted
                  users read the same sentence. Do not restate them in JS. -->
             <span id="stateTheoryHelp" class="visually-hidden">Theory: the unconstrained comparison state. Builds are scored exactly as you assemble them, with no check that the gold, timing, or purchase order they would require is achievable in a real game.</span>
             <span id="stateLiveHelp" class="visually-hidden">Snapshot lens: reads the scenario as one moment in a game. The champion level, role quest, and legal inventory you have selected are the constraints the comparison is judged under, and the Window controls set the time slice it is measured over.</span>

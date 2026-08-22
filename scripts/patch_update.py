@@ -1089,7 +1089,7 @@ def run_fetch(
 # ---------------------------------------------------------------------------
 
 
-def rebuild_static_artifacts(patch: str | None = None):
+def rebuild_static_artifacts():
     """Rebuild the derived catalogues the web UI fetches at runtime.
 
     app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
@@ -1128,7 +1128,10 @@ def rebuild_static_artifacts(patch: str | None = None):
 
     print("== Rebuilding static/bis-profiles.json ==", flush=True)
     try:
-        report = run_bis(patch=patch)
+        # The stamp comes from run_bis's default (source_receipt.cache_patch(),
+        # the one home for "the patch the cache pins"), never a caller label
+        # in a different version format.
+        report = run_bis()
     except RuntimeError as exc:
         print(f"FAIL: bis-profiles rebuild refused: {exc}")
         return 1
@@ -1549,8 +1552,8 @@ def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int
     never shelled out to — because the game-file refresh above needs its
     ``champion_dir`` mapping and ``download_game_files`` at function
     granularity, and a second integration style for the same dependency would
-    put that mapping in two places.  ``main`` returns 0/1/2 and raises nothing
-    but OSError on an unreadable cache, so it composes as a gate directly.
+    put that mapping in two places.  ``main`` returns 0/1/2, so it composes
+    as a gate directly (a corrupt cache can still raise out of it).
     """
     out = out or DEFAULT_STALENESS
     print("== Gate: staleness vs game files (patch_regression check) ==", flush=True)
@@ -1648,7 +1651,13 @@ def run_gates():
     return capture.returncode
 
 
-def run_gamefile_refresh(patch: str | None, *, force: bool = False) -> int:
+def run_gamefile_refresh(
+    patch: str | None,
+    *,
+    force: bool = False,
+    resolver=None,
+    fetch=None,
+) -> int:
     """Re-download data/gamefiles/ before the staleness gate compares against it.
 
     Not optional and not a convenience: ``patch_regression._download`` skips
@@ -1665,12 +1674,15 @@ def run_gamefile_refresh(patch: str | None, *, force: bool = False) -> int:
             print(f"\nFAIL: invalid public patch label: {exc}", flush=True)
             return 2
     else:
-        detect, detect_rc = run_detect()
-        if detect_rc == 2:
-            print(f"\nFAIL: cannot resolve the live patch: {detect['reason']}")
+        # Resolve with the same resolver the staleness gate uses so the
+        # refresh cannot download a roster the gate then refuses to compare
+        # (cdtb absent fails HERE, before any network work).
+        try:
+            patch = (resolver or patch_regression.resolve_patch)()
+        except RuntimeError as exc:
+            print(f"\nFAIL: cannot resolve the live patch: {exc}", flush=True)
             return 2
-        patch = detect["live_patch"]
-    report, returncode = run_fetch(patch=patch, force=force)
+    report, returncode = (fetch or run_fetch)(patch=patch, force=force)
     print(json.dumps(report, indent=2, sort_keys=True), flush=True)
     if returncode:
         print(
@@ -1711,7 +1723,7 @@ def run_full(
             "rebuilding artifacts or re-capturing golden."
         )
         return 1
-    rebuild_failed = rebuild_static_artifacts(pulled_patch)
+    rebuild_failed = rebuild_static_artifacts()
     if rebuild_failed:
         return rebuild_failed
 
@@ -1901,7 +1913,13 @@ def main(argv: list[str] | None = None) -> int:
         rebuild=not args.no_rebuild,
     )
     print(json.dumps(report, indent=2, sort_keys=True))
-    return 0 if report["clean"] else 1
+    if not report["clean"]:
+        return 1
+    # "clean" with the rebuild half skipped is an incomplete check, not a
+    # certified pass: 2 means could-not-fully-run, as run_packets always did.
+    if not args.no_rebuild and report.get("rebuild_skipped"):
+        return 2
+    return 0
 
 
 if __name__ == "__main__":

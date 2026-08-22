@@ -80,7 +80,7 @@ def slot_text(champion_data, slot):
     """
     return " ".join(
         (effect.get("description") or "")
-        for ability in champion_data["abilities"].get(slot, [])
+        for ability in champion_data["abilities"][slot]
         for effect in ability.get("effects", []) or []
     ).lower()
 

@@ -32,7 +32,6 @@ from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 from .module_contract import coverage
-from ..stats import calculate_attack_speed
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -113,8 +112,8 @@ def _weapon_master(ctx: SlotCtx) -> dict[str, Any] | None:
         ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
     if bonus_as:
         ctx.stats["bonus_attack_speed"] = ctx.stat("bonus_attack_speed") + bonus_as
-        ctx.stats["attack_speed"] = calculate_attack_speed(
-            ctx.stat("attack_speed"), ctx.stat("attack_speed_ratio"), bonus_as
+        ctx.stats["attack_speed"] = (
+            ctx.stat("attack_speed") + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
         )
     if lethality_points:
         ctx.stats["lethality"] = ctx.stat("lethality") + 4.5 * lethality_points

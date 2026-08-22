@@ -113,7 +113,7 @@ What `run` does:
      DDragon lagging the patch fails the run: re-run once it has published.)
 4. **Rebuilds the static catalogues** the UI fetches at runtime
    (`scripts/build_ability_catalog.py`, `scripts/build_effect_catalog.py`,
-   `scripts/build_receipts.py`) **and `static/bis-profiles.json`**. The
+   `scripts/build_receipts.py`, `scripts/build_onhit_matrix.py`) **and `static/bis-profiles.json`**. The
    bis rebuild needs the Axword Meraki sibling repo (`lol-strength-analysis`,
    `LCC_AXWORD_SOURCE`) and refuses to write without it — an absent kit
    source, zero champions, zero merged Meraki packets, or a merged count

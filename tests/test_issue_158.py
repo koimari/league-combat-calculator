@@ -94,6 +94,7 @@ def test_bis_route_only_delegates_and_translates() -> None:
 
     # The route names the façade and hands it to the shared operation ladder,
     # which is the only thing that calls it with the decoded body.
+    assert "_pure_payload_response" in route_source
     assert "bis_payload" in route_source
     assert "for candidate in candidates" not in route_source
     assert "ranked.sort" not in route_source

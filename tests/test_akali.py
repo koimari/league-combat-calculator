@@ -84,6 +84,21 @@ class TestWTwilightShroud:
         assert outlived["resource_remaining"] == pytest.approx(200.0)
         assert outlived["cast_timeline"] == inside["cast_timeline"]
 
+    def test_expiry_credits_regeneration_up_to_the_shroud_end(self, akali_data) -> None:
+        """The expiry event samples the pool at t=7.0, regen included.
+
+        Before the expiry event existed, ``resource_remaining`` was last
+        observed at the final cast, so regeneration between that cast and
+        the shroud's end went uncredited.  Q,W,E at 8s pins the credited
+        value; spend and the cast timeline are unchanged by the event.
+        """
+        import dataclasses
+
+        params = dataclasses.replace(_shroud_params(8.0), cast_order=["Q", "W", "E"])
+        result = run_fight(akali_data, 18, [], params)
+        assert result["resource_remaining"] == pytest.approx(62.5)
+        assert result["resource_spent"] == pytest.approx(310.0)
+
 
 class TestEShurikenFlip:
     """Tests for E (Shuriken Flip) — both hits combined."""

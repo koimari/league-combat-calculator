@@ -869,6 +869,24 @@ class TestRefreshGamefiles:
         )
 
 
+class TestRunGamefileRefresh:
+    def test_resolver_failure_returns_2_before_any_network_work(self, capsys):
+        # The refresh resolves with the SAME resolver the staleness gate
+        # uses; when it is unavailable the step fails before run_fetch can
+        # download anything.
+        def _no_resolver():
+            raise RuntimeError("cdtb not found")
+
+        def _never_fetch(**kwargs):
+            raise AssertionError("run_fetch must not be called")
+
+        rc = patch_update.run_gamefile_refresh(
+            None, resolver=_no_resolver, fetch=_never_fetch
+        )
+        assert rc == 2
+        assert "cannot resolve the live patch" in capsys.readouterr().out
+
+
 @requires_jq
 class TestRunFetch:
     def test_hard_failure_in_gamefiles_returns_exit_2(self, tmp_path):

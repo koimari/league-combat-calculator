@@ -68,7 +68,6 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import float_option, int_option
 from .module_contract import coverage
-from ..stats import calculate_attack_speed
 
 _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
@@ -526,9 +525,7 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
         )
     casts, duty_cycle = _supercharge_uptime(ctx, ability, rank, duration, uptime)
     granted = bonus_percent * duty_cycle
-    ctx.stats["attack_speed"] = calculate_attack_speed(
-        ctx.stat("attack_speed"), ctx.stat("attack_speed_ratio"), granted
-    )
+    ctx.bump_stat("attack_speed", ctx.stat("attack_speed_ratio") * granted / 100.0)
     return {
         "name": ability.get("name", "Supercharge"),
         "rank": rank,
