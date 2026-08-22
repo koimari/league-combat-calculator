@@ -41,7 +41,8 @@ Contract pinned (typed source-backed values):
   named ValueErrors.  Boundary: 30.0 is schema-valid but a 30.0 activation
   in a shorter fight is skipped with the named "outside_window" reason.
 * Selected-ally targeting: the packet targets the selected teammate
-  (support_target_selections override honored; default roster order);
+  (support_target_selections override honored; default roster order) and is
+  priced at THAT ally's level, not at the first teammate's;
   target_scope "explicit_selected_ally"; NO teammates -> no packet (fail
   closed).
 * Cleanse decision + exclusions: an eligible control (stun/root/charm)
@@ -627,6 +628,31 @@ def test_packet_targets_the_selected_ally_and_override_is_honored():
     # damaged by the charm and restored; Jinx receives nothing.
     assert survival_of(overridden, "ally:Ashe")["healing_received"] > 0.0
     assert survival_of(overridden, "ally:Jinx")["healing_received"] == 0.0
+
+
+def test_heal_is_priced_at_the_selected_allys_own_level():
+    """The TARGET's level is the level of the ally the packet lands on, not
+    of the roster's first teammate.  With a level-1 Jinx and a level-18 Ashe
+    the default selection heals 100 and index 1 heals 250."""
+    allies = [_ally("Jinx", level=1), _ally("Ashe", level=18)]
+    default = _calculate(_main(enemies=[_enemy()], allies=allies))
+    (first,) = _purify_events(default)
+    assert first["target"] == "ally:Jinx"
+    assert first["amount"] == pytest.approx(
+        ally_item_level_value(MIKAELS, "heal_min", "heal_max", 1)
+    )
+
+    overridden = _calculate(
+        {
+            **_main(enemies=[_enemy()], allies=allies),
+            "support_target_selections": {f"heal:{MIKAELS_SOURCE}": 1},
+        }
+    )
+    (second,) = _purify_events(overridden)
+    assert second["target"] == "ally:Ashe"
+    assert second["amount"] == pytest.approx(
+        ally_item_level_value(MIKAELS, "heal_min", "heal_max", 18)
+    )
 
 
 def test_no_teammates_fails_closed():
