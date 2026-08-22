@@ -199,10 +199,8 @@ _summon_tibbers.phase = BUFF
 
 
 def _pyromania_placeholder(ctx: SlotCtx) -> None:
-    """P: stun-only passive, a zero-damage display row under key "P".
-
-    Written into ``ctx.results`` directly: a returned P-slot entry maps to
-    the "passive" key, and this row's home is the literal "P".
+    """P: a stun-only passive's zero-damage row, written into ``ctx.results``
+    because its home is the literal "P" key, not the "passive" a return maps to.
     """
     ability = ctx.ability()
     if ability is not None:
