@@ -1322,16 +1322,20 @@ MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset(
         "basic_damage_amp",
         "damage_amp",
         "hypershot_amp",
+        "magic_damage_amp",
         "magic_true_crit",
     }
 )
 
-DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {
-    "magic_damage_amp": (
-        "3.7 — Abyssal Mask's magic amp is applied by _mitigate on the "
-        "defender's side, so it occupies no chain slot"
-    ),
-}
+# Empty: every delta-amp tag compiles.  Kept as the family's declared place
+# to book a refusal, which `validate_catalog` reads together with the set
+# above — a new tag with no compiler goes here or fails collection.
+DELTA_AMP_UNMIGRATED_TAGS: Mapping[str, str] = {}
+
+# The key Abyssal Mask's curse is read from.  Occupying no chain slot is what
+# makes it a `PartAmpRule`, not a refusal: it multiplies each magic packet
+# where the mitigation prices it.
+MAGIC_AMP_KEY = "magic_amp"
 
 
 # Rules whose sources disagree about a *reading* rather than about a number,
@@ -1950,6 +1954,17 @@ def _part_amp_typing(attack_class: AttackClass) -> Typing:
     )
 
 
+def _damage_class_amp_typing(damage_class: DamageClass) -> Typing:
+    """One damage class however it arrived, the dual of the above: a curse
+    restricts what mitigates a number rather than how it was delivered, which
+    is what makes it a different selector.
+    """
+    return Typing(
+        damage_classes=frozenset({damage_class}),
+        attack_classes=frozenset(AttackClass),
+    )
+
+
 def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """Actualizer's Mana Made Real: every ability, while the active is up.
 
@@ -2049,6 +2064,41 @@ def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             "the amp is a sourced ratio scaled by the declared range "
             "assumption; a zero would mean the registry holds zero, which is "
             "a measurement",
+        ),
+    )
+
+
+def _magic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+    """Abyssal Mask's Unmake: every magic part the cursed target takes.
+
+    Not a chain slot and deliberately so — the curse multiplies each magic
+    packet where ``damage._mitigate`` prices it, which is what the two
+    attack-class part amps do for their own deliveries.  The mechanic id is
+    the one ``trigger_stream`` already pairs the walk's aura against, so the
+    pair half it names is now a declaration rather than a ladder field.
+    """
+    return BehaviorRule(
+        family=RuleFamily.DELTA_AMP,
+        owner=owner,
+        mechanic_id=f"{_mechanic_slug(owner)}.magic_amp",
+        payload=PartAmpRule(
+            pool=Pool.ALL_EVENTS,
+            activation=Always(),
+            consumption=Persist(),
+            magnitude=Fixed(ValueRef(registry, owner, MAGIC_AMP_KEY)),
+            typing=_damage_class_amp_typing(DamageClass.MAGIC),
+            bonus_typing=BonusTyping.SAME_AS_SOURCE,
+            subject=Subject.TARGET,
+        ),
+        compilability=AMP_COMPILABILITY,
+        receipt=receipt_for(
+            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        ),
+        zero_policy=ZeroPolicy(
+            Disposition.MEASURED,
+            "the curse is a sourced share added to every magic packet the "
+            "target takes; a zero would mean the registry holds zero, which "
+            "is a measurement",
         ),
     )
 
@@ -2596,6 +2646,8 @@ def _compile_delta_amp(
             rules.append(_basic_part_amp_rule(owner, registry))
         if tag == "hypershot_amp":
             rules.append(_hypershot_rule(owner, registry))
+        if tag == "magic_damage_amp":
+            rules.append(_magic_part_amp_rule(owner, registry))
         if tag == "magic_true_crit":
             rules.append(_cinderbloom_rule(owner, registry))
         if tag == "damage_amp" or _declares_secondary(

@@ -1,24 +1,28 @@
 """SD9 — the two dispatchers over one effect `type` tag, number by number.
 
-`item_effects._resolve_damage_effects_uncached` branches on eight tags;
-`item_behavior_catalog.TAG_FAMILY` maps all thirty-eight to a family whose
-compiler builds a declaration an interpreter prices.  `validate_catalog`
-proves the two see the same tag vocabulary and nothing proved they produce
-the same NUMBER for a tag both claim.
+`item_behavior_catalog.TAG_FAMILY` maps all thirty-eight tags to a family
+whose compiler builds a declaration an interpreter prices.
+`item_effects._resolve_damage_effects_uncached` used to branch on eight of
+them and compile a second number for six.  It branches on two now, and
+neither prices anything: `ult_empowered_autos` and `ult_attack_speed_buff`
+quote the catalog's attack-speed digits into an assumption note, which is
+the one prose surface the projection owns.
 
-This file is that proof, and the gate any retirement has to keep green: for
-every tag the ladder branches on, either both lanes are compared here and
-agree, or this file names which lane owns the number and why the other one
-cannot.  The ladder's tag set is read off its own source rather than listed,
-so a ninth branch fails here until somebody decides which lane owns it.
+This file is the proof each retirement was made against and the gate the
+next one has to keep green: for every tag the ladder still branches on,
+either both lanes are compared here and agree, or this file names which lane
+owns the number.  The ladder's tag set is read off its own source rather
+than listed, so a third branch fails here until somebody decides which lane
+owns it, and each retired tag keeps a test asserting the projection carries
+no field for it.
 
-Where the two lanes DISAGREE by construction, the difference is composition
-and not arithmetic: the ladder's single-holder slots silently take the last
-holder (`execute`, `cd_refund_percent`), while the catalog's stop naming both
-holders.  Today's registry carries exactly one item per those tags, so no
-build reaches the difference; the case is pinned in
+The one place the two lanes DISAGREED by construction was composition and
+not arithmetic: the ladder's single-holder slots silently took the last
+holder (`execute`, `cd_refund_percent`) where the catalog's stop naming
+both.  Every one of those slots is now the catalog's alone;
 ``test_a_second_holder_is_a_stop_on_one_lane_and_the_last_word_on_the_other``
-rather than left for a future second holder to discover.
+pins that today's registry carries exactly one holder per tag, so no build
+ever reached the difference.
 """
 
 from pathlib import Path
@@ -43,8 +47,21 @@ from src.calculator.item_effects import (
     required_effect_value,
     resolve_damage_effects,
 )
-from src.calculator.interpreters.crit_profile import resolve_profile
-from src.calculator.interpreters.damage_routing import resolve_execution
+from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.interpreters import crit_profile, damage_routing, delta_amp
+from src.calculator.interpreters.crit_profile import (
+    CRIT_PAYLOAD_REFERENCES,
+    CritProfileInterpretationError,
+    declared_crit_profile,
+    resolve_profile,
+)
+from src.calculator.interpreters.damage_routing import (
+    DamageRoutingInterpretationError,
+    FLAT_ROUTING_REFERENCES,
+    declared_execution,
+    resolve_execution,
+    walk_rules,
+)
 from src.calculator.interpreters.stat_derivation import (
     declared_stat_derivations,
     reference_fields,
@@ -100,11 +117,6 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
     assert branches == {
         "ult_empowered_autos",
         "ult_attack_speed_buff",
-        "execute",
-        "crit_modifier",
-        "secondary_target",
-        "magic_damage_amp",
-        "first_auto_crit",
     }
     # Every one of them is a tag the catalog also files under a family: the
     # overlap is total, so there is no ladder-only tag to leave alone.
@@ -116,73 +128,75 @@ def test_the_ladder_branches_on_exactly_the_tags_this_file_compares():
 # ---------------------------------------------------------------------------
 
 
-def test_execute_threshold_agrees():
+def test_execute_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The second retirement: the ladder compiled its own ``ExecuteEffect``
+    beside the routing declaration, and the declaration is now the only owner
+    — so the projection carries no field for it and both engines read the
+    threshold through the fight-free reader."""
     owner = _sole("execute")
-    ladder = _ladder(owner).execute
     catalog = resolve_execution([owner], **CATALOG_CONTEXT)
-    assert ladder.item_name == catalog.owner == owner
-    assert ladder.threshold == pytest.approx(catalog.threshold)
-    assert ladder.threshold == pytest.approx(required_effect_value(owner, "threshold"))
+    assert catalog.owner == owner
+    assert catalog.threshold == pytest.approx(required_effect_value(owner, "threshold"))
+    assert not hasattr(_ladder(owner), "execute")
 
 
-def test_crit_damage_bonus_agrees():
+def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The third retirement.  The ladder carried both sub-branches as three
+    fields — a summed bonus, a refund fraction and the item it came from —
+    beside the crit declarations that already held the same numbers."""
     owner = "Infinity Edge"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    ladder = _ladder(owner)
     catalog = resolve_profile([owner], **CATALOG_CONTEXT)
-    assert ladder.crit_damage_bonus == pytest.approx(catalog.damage_bonus)
-    assert ladder.crit_damage_bonus == pytest.approx(
+    assert catalog.damage_bonus == pytest.approx(
         required_effect_value(owner, "bonus_crit_damage")
     )
-    # The other two crit slots are declared-absent on this build, and the
-    # ladder says the same thing with a zero and a None.
-    assert catalog.forced_crit is None
-    assert catalog.cooldown_refund is None
-    assert ladder.first_auto_crit is None
-    assert ladder.navori_refund_percent == 0.0
+    assert catalog.forced_crit is None and catalog.cooldown_refund is None
+    ladder = _ladder(owner)
+    for retired in ("crit_damage_bonus", "navori_refund_percent"):
+        assert not hasattr(ladder, retired)
+    assert not hasattr(ladder, "cooldown_refund_source")
 
 
-def test_attack_cooldown_refund_agrees():
+def test_attack_cooldown_refund_is_the_catalogs_alone():
     owner = "Navori Flickerblade"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    ladder = _ladder(owner)
     catalog = resolve_profile([owner], **CATALOG_CONTEXT)
-    assert ladder.cooldown_refund_source == catalog.cooldown_refund.owner == owner
-    assert ladder.navori_refund_percent == pytest.approx(
-        catalog.cooldown_refund.fraction
+    assert catalog.cooldown_refund.owner == owner
+    assert catalog.cooldown_refund.fraction == pytest.approx(
+        required_effect_value(owner, "cd_refund_percent")
     )
 
 
-def test_a_build_holding_both_crit_items_agrees():
-    """The two crit_modifier sub-branches compose the same way on both lanes:
-    the bonus sums into one slot and the refund fills another."""
-    ladder = _ladder("Infinity Edge", "Navori Flickerblade")
+def test_a_build_holding_both_crit_items_folds_both_sub_branches():
+    """The two crit_modifier sub-branches compose the way the ladder folded
+    them: the bonus sums into one slot and the refund fills another."""
     catalog = resolve_profile(
         ["Infinity Edge", "Navori Flickerblade"], **CATALOG_CONTEXT
     )
-    assert ladder.crit_damage_bonus == pytest.approx(catalog.damage_bonus)
-    assert ladder.navori_refund_percent == pytest.approx(
-        catalog.cooldown_refund.fraction
+    assert catalog.damage_bonus == pytest.approx(
+        required_effect_value("Infinity Edge", "bonus_crit_damage")
     )
-    assert ladder.cooldown_refund_source == catalog.cooldown_refund.owner
+    assert catalog.cooldown_refund.owner == "Navori Flickerblade"
 
 
-def test_forced_crit_agrees_on_every_number_it_carries():
+def test_first_auto_crit_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The fourth retirement.  Every number the ladder's ``FirstAutoCritEffect``
+    carried is a key of the forced-crit declaration, read here against the
+    registry so a dropped reference fails rather than defaults."""
     owner = _sole("first_auto_crit")
-    ladder = _ladder(owner).first_auto_crit
     catalog = resolve_profile([owner], **CATALOG_CONTEXT).forced_crit
-    assert ladder.item_name == catalog.owner == owner
-    assert ladder.reduced_crit_ratio == pytest.approx(catalog.reduced_ratio)
-    assert ladder.heal_base_ad_ratio == pytest.approx(catalog.heal_base_ad_ratio)
-    assert ladder.heal_base_ad_ratio_ranged == pytest.approx(
-        catalog.heal_base_ad_ratio_ranged
-    )
-    assert ladder.heal_missing_health_ratio == pytest.approx(
-        catalog.heal_missing_health_ratio
-    )
-    assert ladder.temporary_health_duration == pytest.approx(
-        catalog.temporary_health_duration
-    )
+    assert catalog.owner == owner
+    for field, key in (
+        ("reduced_ratio", "reduced_crit_ratio"),
+        ("heal_base_ad_ratio", "heal_base_ad_ratio"),
+        ("heal_base_ad_ratio_ranged", "heal_base_ad_ratio_ranged"),
+        ("heal_missing_health_ratio", "heal_missing_health_ratio"),
+        ("temporary_health_duration", "temporary_health_duration"),
+    ):
+        assert getattr(catalog, field) == pytest.approx(
+            required_effect_value(owner, key)
+        )
+    assert not hasattr(_ladder(owner), "first_auto_crit")
 
 
 def test_on_hit_heal_is_retired_from_the_ladder_and_owned_by_the_catalog():
@@ -200,36 +214,140 @@ def test_on_hit_heal_is_retired_from_the_ladder_and_owned_by_the_catalog():
 
 
 # ---------------------------------------------------------------------------
+# The fight-free readers — same numbers, no fight
+# ---------------------------------------------------------------------------
+
+CRIT_HOLDERS = ("Infinity Edge", "Navori Flickerblade", "Sundered Sky")
+
+
+def test_the_flat_crit_reader_answers_what_the_contextual_one_answers():
+    """``declared_crit_profile`` is ``resolve_profile`` without the fight.
+
+    Every crit reference is flat today, so the two readers agree on all six
+    numbers a build holding every crit item carries — which is what lets a
+    caller with item names and no fight read the declaration instead of the
+    ladder's projection."""
+    contextual = resolve_profile(list(CRIT_HOLDERS), **CATALOG_CONTEXT)
+    flat = declared_crit_profile(list(CRIT_HOLDERS))
+    assert flat.damage_bonus == pytest.approx(contextual.damage_bonus)
+    assert flat.cooldown_refund == contextual.cooldown_refund
+    assert flat.forced_crit == contextual.forced_crit
+
+
+def test_the_flat_execution_reader_answers_what_the_contextual_one_answers():
+    owner = _sole("execute")
+    assert declared_execution([owner]) == resolve_execution([owner], **CATALOG_CONTEXT)
+    assert declared_execution([]) is None
+
+
+def test_every_declared_crit_payload_has_a_reference_row():
+    """A fourth crit payload fails here rather than compiling no fields."""
+    declared = {
+        type(rule.payload)
+        for owner in ITEM_EFFECTS
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.CRIT_PROFILE
+    }
+    assert declared and declared <= set(CRIT_PAYLOAD_REFERENCES)
+
+
+def test_every_declared_routing_payload_has_a_reference_row():
+    """The flat table is total over the family the registry actually declares.
+
+    The empty rows are the answer and not an omission: a shield bypass and a
+    deferral both carry a melee/ranged share, so the fight-free reader stops
+    on them instead of picking a range class nobody supplied."""
+    declared = {
+        type(rule.payload) for owner in ITEM_EFFECTS for rule in walk_rules([owner])
+    }
+    assert declared and declared <= set(FLAT_ROUTING_REFERENCES)
+    assert {
+        shape for shape, refs in FLAT_ROUTING_REFERENCES.items() if not refs
+    } < declared
+
+
+def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
+    """Both refusals are raised, not returned as a zero."""
+    with pytest.raises(DamageRoutingInterpretationError):
+        damage_routing._flat_fields(  # pylint: disable=protected-access
+            walk_rules([_sole("shield_reduction")])[0], EngineLane.PAIR_ENGINE
+        )
+    with pytest.raises(CritProfileInterpretationError):
+        crit_profile.crit_references(walk_rules([_sole("execute")])[0])
+
+
+# ---------------------------------------------------------------------------
 # Tags one lane owns — and this is where it says so
 # ---------------------------------------------------------------------------
 
 
-def test_magic_damage_amp_is_the_ladders_alone_and_the_catalog_books_it_so():
-    """The catalog files ``magic_damage_amp`` under DELTA_AMP and compiles no
-    rule for it: the tag is explicitly unmigrated, so the ladder is the only
-    owner of the number and there is nothing to compare it against."""
+def test_magic_damage_amp_is_retired_from_the_ladder_and_owned_by_the_catalog():
+    """The sixth retirement, and the one that needed a compiler written first.
+
+    Abyssal Mask's curse occupies no chain slot — it multiplies each magic
+    packet where the mitigation prices it — so it is a ``PartAmpRule``,
+    selected by the damage class it restricts rather than by an attack class.
+    The ladder's summed field is gone and the declaration is the one owner."""
     owner = _sole("magic_damage_amp")
     assert TAG_FAMILY["magic_damage_amp"] is RuleFamily.DELTA_AMP
-    assert "magic_damage_amp" in DELTA_AMP_UNMIGRATED_TAGS
-    assert not [
+    assert not DELTA_AMP_UNMIGRATED_TAGS
+    (rule,) = [
         rule for rule in behavior_rules(owner) if rule.family is RuleFamily.DELTA_AMP
     ]
-    assert _ladder(owner).magic_amp == pytest.approx(
+    assert rule.mechanic_id == "abyssal_mask.magic_amp"
+    assert delta_amp.declared_magic_amp([owner]) == pytest.approx(
         1.0 + required_effect_value(owner, "magic_amp")
     )
+    assert delta_amp.declared_magic_amp([]) == 1.0
+    assert not hasattr(_ladder(owner), "magic_amp")
 
 
-def test_secondary_target_is_the_catalogs_alone():
-    """The ladder's branch is a ``continue``: it prices nothing, and the
-    catalog's SECONDARY_TARGET rule is the only owner of the numbers."""
+def test_the_two_part_amp_selectors_are_disjoint_and_total():
+    """Neither reading may drop a declaration or claim the other's.
+
+    The engine multiplies the magic reading by the attack-class one, so a
+    rule both selectors matched would be counted twice and one neither matched
+    would vanish."""
+    every = {
+        rule.mechanic_id
+        for owner in ITEM_EFFECTS
+        for rule in delta_amp._part_amps([owner])  # pylint: disable=protected-access
+    }
+    by_attack = {
+        rule.mechanic_id
+        for owner in ITEM_EFFECTS
+        for attack_class in AttackClass
+        for rule in delta_amp.part_amp_rules([owner], attack_class)
+    }
+    by_damage = {
+        rule.mechanic_id
+        for owner in ITEM_EFFECTS
+        for damage_class in DamageClass
+        for rule in delta_amp.damage_class_amp_rules([owner], damage_class)
+    }
+    assert by_attack and by_damage
+    assert not by_attack & by_damage
+    assert by_attack | by_damage == every
+
+
+def test_secondary_target_is_retired_and_was_always_the_catalogs_alone():
+    """The fifth retirement, and the one that priced nothing to begin with.
+
+    The ladder's branch was a bare ``continue``.  It skipped the loop's whole
+    tail for the holder, so a secondary-target item that ever grew a splash
+    note or a phantom hit would have lost it silently; today's one holder
+    declares none of those keys, so removing the branch moves no number and
+    closes that trap."""
     owner = _sole("secondary_target")
     ladder = _ladder(owner)
-    assert ladder.execute is None
-    assert ladder.crit_damage_bonus == 0.0
     assert ladder.conditional_notes == ()
+    assert declared_crit_profile([owner]) == crit_profile.CritProfile(0.0, None, None)
     assert [rule.family for rule in behavior_rules(owner)] == [
         RuleFamily.SECONDARY_TARGET
     ]
+    assert not {"unmodeled_splash_note", "secondary_behavior", "phantom_hit"} & set(
+        ITEM_EFFECTS[owner]
+    )
 
 
 def test_the_empowered_auto_note_quotes_the_catalogs_number():

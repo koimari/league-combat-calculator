@@ -19,7 +19,7 @@ bonus is a **declared** zero rather than an accumulator that never ran.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 from ..item_behavior import (
@@ -34,7 +34,7 @@ from ..item_behavior import (
     RuleFamily,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import resolve
+from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
 
 # The field names a crit-profile rule compiles to.  One per declared number,
 # named for what it *is* rather than for the item it came from.
@@ -48,60 +48,91 @@ FORCED_CRIT_HEAL_MISSING_HEALTH_FIELD = "forced_crit_heal_missing_health_ratio"
 FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD = "forced_crit_temporary_health_duration"
 
 
+# Which reference each compiled field is read from, per payload shape — the
+# family's mirror of ``SUSTAIN_PAYLOAD_REFERENCES``.  One table so the
+# contextual and fight-free readers cannot compile different field sets for
+# one declaration.
+CRIT_PAYLOAD_REFERENCES: Mapping[type, tuple[tuple[str, str], ...]] = {
+    CritDamageBonusRule: ((CRIT_DAMAGE_BONUS_FIELD, "bonus"),),
+    AttackCooldownRefundRule: ((COOLDOWN_REFUND_FIELD, "refund_fraction"),),
+    ForcedCritRule: (
+        (FORCED_CRIT_RATIO_FIELD, "reduced_ratio"),
+        (FORCED_CRIT_COOLDOWN_FIELD, "cooldown"),
+    ),
+}
+
+# The heal a forced crit declares, when it declares one.  Separate from the
+# table above because these four are optional together: an item that forces a
+# crit and heals nothing carries none of them.
+FORCED_CRIT_HEAL_REFERENCES: tuple[tuple[str, str], ...] = (
+    (FORCED_CRIT_HEAL_BASE_AD_FIELD, "base_ad_ratio"),
+    (FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD, "base_ad_ratio_ranged"),
+    (FORCED_CRIT_HEAL_MISSING_HEALTH_FIELD, "missing_health_ratio"),
+    (FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD, "temporary_health_duration"),
+)
+
+
 class CritProfileInterpretationError(ValueError):
     """A crit declaration was asked something its payload does not answer."""
+
+
+def crit_references(rule: BehaviorRule) -> tuple[tuple[str, AnyValueRef], ...]:
+    """Every field one crit declaration carries, and the reference behind it.
+
+    A rule that is none of the three payloads is a stop rather than an empty
+    tuple, because an empty tuple here would be a crit profile that silently
+    changes nothing.
+    """
+    payload = rule.payload
+    names = CRIT_PAYLOAD_REFERENCES.get(type(payload))
+    if names is None:
+        raise CritProfileInterpretationError(
+            f"{rule.mechanic_id} is not a crit-profile rule"
+        )
+    references = [(name, getattr(payload, attribute)) for name, attribute in names]
+    if isinstance(payload, ForcedCritRule) and payload.heal is not None:
+        references.extend(
+            (name, getattr(payload.heal, attribute))
+            for name, attribute in FORCED_CRIT_HEAL_REFERENCES
+        )
+    return tuple(references)
 
 
 def crit_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """The sourced numbers one crit declaration resolves to.
+    """The sourced numbers one crit declaration resolves to, at one fight."""
+    return tuple(
+        KernelField(
+            name=name,
+            value=resolve(reference, ctx.level),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        )
+        for name, reference in crit_references(rule)
+    )
 
-    Three payloads, three field sets, and no shared default: a rule that is
-    none of the three is a stop rather than an empty tuple, because an empty
-    tuple here would be a crit profile that silently changes nothing.
+
+def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:
+    """One crit declaration's numbers, resolved without any fight context.
+
+    The arithmetic behind :func:`declared_crit_profile`, field for field
+    :func:`crit_fields`.  A reference needing a level or a fight fact is a
+    stop naming the shape, exactly as sustain's fight-free reader refuses one.
     """
-
-    def field(name: str, value: float) -> KernelField:
-        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-
-    payload = rule.payload
-    if isinstance(payload, CritDamageBonusRule):
-        return (field(CRIT_DAMAGE_BONUS_FIELD, resolve(payload.bonus, ctx.level)),)
-    if isinstance(payload, AttackCooldownRefundRule):
-        return (
-            field(COOLDOWN_REFUND_FIELD, resolve(payload.refund_fraction, ctx.level)),
-        )
-    if not isinstance(payload, ForcedCritRule):
+    references = crit_references(rule)
+    try:
+        values = resolve_flat([reference for _, reference in references])
+    except ValueRefError as exc:
         raise CritProfileInterpretationError(
-            f"{rule.mechanic_id} is not a crit-profile rule"
-        )
-    fields = [
-        field(FORCED_CRIT_RATIO_FIELD, resolve(payload.reduced_ratio, ctx.level)),
-        field(FORCED_CRIT_COOLDOWN_FIELD, resolve(payload.cooldown, ctx.level)),
-    ]
-    if payload.heal is not None:
-        fields.extend(
-            (
-                field(
-                    FORCED_CRIT_HEAL_BASE_AD_FIELD,
-                    resolve(payload.heal.base_ad_ratio, ctx.level),
-                ),
-                field(
-                    FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD,
-                    resolve(payload.heal.base_ad_ratio_ranged, ctx.level),
-                ),
-                field(
-                    FORCED_CRIT_HEAL_MISSING_HEALTH_FIELD,
-                    resolve(payload.heal.missing_health_ratio, ctx.level),
-                ),
-                field(
-                    FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD,
-                    resolve(payload.heal.temporary_health_duration, ctx.level),
-                ),
-            )
-        )
-    return tuple(fields)
+            f"{rule.mechanic_id} declares a reference that needs a level or a "
+            "fight fact, and this accessor has neither; read it through "
+            "resolve_profile, which is handed the context it resolves against"
+        ) from exc
+    return tuple(
+        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        for (name, _), value in zip(references, values)
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -214,11 +245,9 @@ def resolve_profile(
     different thing from a number that resolved to zero, which is why the two
     slots are optional records rather than floats.
     """
-    damage_bonus = 0.0
-    forced: ForcedCrit | None = None
-    refund: CooldownRefund | None = None
-    for rule in crit_rules(owners):
-        fields = crit_fields(
+    return _fold(
+        owners,
+        lambda rule: crit_fields(
             rule,
             build_context(
                 rule.owner,
@@ -228,7 +257,29 @@ def resolve_profile(
                 holder_is_melee=holder_is_melee,
             ),
             EngineLane.PAIR_ENGINE,
-        )
+        ),
+    )
+
+
+def declared_crit_profile(owners: Sequence[str]) -> CritProfile:
+    """This build's crit profile from flat references alone — no fight needed."""
+    return _fold(owners, lambda rule: _flat_fields(rule, EngineLane.PAIR_ENGINE))
+
+
+def _fold(
+    owners: Sequence[str],
+    compile_fields: Callable[[BehaviorRule], tuple[KernelField, ...]],
+) -> CritProfile:
+    """Fold this build's crit declarations, however their fields were compiled.
+
+    ``damage_bonus`` sums in build order, so the two readers replay one float
+    addition rather than two spellings of it.
+    """
+    damage_bonus = 0.0
+    forced: ForcedCrit | None = None
+    refund: CooldownRefund | None = None
+    for rule in crit_rules(owners):
+        fields = compile_fields(rule)
         payload = rule.payload
         if isinstance(payload, CritDamageBonusRule):
             damage_bonus += _field(fields, CRIT_DAMAGE_BONUS_FIELD)
@@ -259,6 +310,7 @@ def resolve_profile(
 __all__ = [
     "COOLDOWN_REFUND_FIELD",
     "CRIT_DAMAGE_BONUS_FIELD",
+    "CRIT_PAYLOAD_REFERENCES",
     "CooldownRefund",
     "CritProfile",
     "CritProfileInterpretationError",
@@ -266,10 +318,13 @@ __all__ = [
     "FORCED_CRIT_HEAL_BASE_AD_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD",
     "FORCED_CRIT_HEAL_MISSING_HEALTH_FIELD",
+    "FORCED_CRIT_HEAL_REFERENCES",
     "FORCED_CRIT_RATIO_FIELD",
     "FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD",
     "ForcedCrit",
     "crit_fields",
+    "crit_references",
     "crit_rules",
+    "declared_crit_profile",
     "resolve_profile",
 ]

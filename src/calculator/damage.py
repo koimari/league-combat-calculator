@@ -184,6 +184,7 @@ from .interpreters import (
     ally_packet,
     cast_proc,
     charged_strike,
+    crit_profile,
     damage_routing,
     delta_amp,
     periodic,
@@ -3123,7 +3124,9 @@ def _resolve_combat_state(
         roster_target_count=max(1, int(config.roster_target_count)),
         target_class=config.target_class,
         resists=resists,
-        magic_amp=damage_effects.magic_amp,
+        magic_amp=delta_amp.declared_magic_amp(
+            [item_effects.resolved_item_name(item) for item in items]
+        ),
         ability_amp=ability_part_amp[0],
         ability_amp_owner=ability_part_amp[1],
         basic_amp=basic_part_amp[0],
@@ -3350,11 +3353,11 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
-    # auto-attack simulation.
+    # auto-attack simulation.  The item bonus above the game's base multiplier
+    # is read once off the build's crit declarations.
+    crit_damage_bonus = _crit_profile(state).damage_bonus
     state.crit_chance = min(stats["critical_strike_chance"] / 100.0, 1.0)
-    state.crit_multiplier = (
-        BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
-    )
+    state.crit_multiplier = BASE_CRIT_MULTIPLIER + crit_damage_bonus
 
     # Champion-owned crit modifiers (Yasuo/Yone P: "total critical strike
     # chance is doubled from all other sources" and "critical strikes deal
@@ -3383,7 +3386,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             )
         )
         state.crit_multiplier = (
-            BASE_CRIT_MULTIPLIER + state.damage_effects.crit_damage_bonus
+            BASE_CRIT_MULTIPLIER + crit_damage_bonus
         ) * damage_factor
         excess_percent = raw_crit_percent * chance_multiplier - 100.0
         per_percent = float(
@@ -6273,8 +6276,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # (~2% on the first ability) that would require re-parsing ability
     # damages mid-fight to fix properly.
 
-    # Basic attacks may reduce basic ability cooldowns.
-    result.navori_refund = state.damage_effects.navori_refund_percent
+    # Basic attacks may reduce basic ability cooldowns.  A build declaring no
+    # refund gets a zero here rather than a slot, which is what the rest of
+    # the rotation's arithmetic reads.
+    refund = _crit_profile(state).cooldown_refund
+    result.navori_refund = refund.fraction if refund is not None else 0.0
     result.has_navori = result.navori_refund > 0
     result.autos_per_second = (
         state.attack_speed * state.auto_attack_uptime
@@ -8234,9 +8240,9 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         else 0.0
     )
 
-    first_auto_crit = state.damage_effects.first_auto_crit
+    first_auto_crit = _crit_profile(state).forced_crit
     ss_reduced_crit = (
-        first_auto_crit.reduced_crit_ratio if first_auto_crit is not None else 0.0
+        first_auto_crit.reduced_ratio if first_auto_crit is not None else 0.0
     )
 
     sundered_sky_damage_diff = 0.0  # post-target: + = bonus, - = lost damage
@@ -8611,7 +8617,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         else:
             ss_note = "No damage change"
         breakdown["sundered_sky"] = {
-            "name": f"{first_auto_crit.item_name} (Lightshield Strike)",
+            "name": f"{first_auto_crit.owner} (Lightshield Strike)",
             "total_damage": mitigated_diff,
             "detail": ss_note,
             "informational": True,
@@ -16417,7 +16423,7 @@ def _add_on_hit_healing(
 
 def _add_first_auto_healing(state: FightState) -> None:
     """Emit Sundered Sky's first-attack heal with a live missing-HP formula."""
-    effect = state.damage_effects.first_auto_crit
+    effect = _crit_profile(state).forced_crit
     if effect is None or (
         effect.heal_base_ad_ratio <= 0.0 and effect.heal_missing_health_ratio <= 0.0
     ):
@@ -16450,8 +16456,8 @@ def _add_first_auto_healing(state: FightState) -> None:
     ) -> float:
         return base_amount + missing_ratio * max(0.0, maximum_health - current_health)
 
-    state.breakdown[f"heal_{effect.item_name}"] = {
-        "name": f"{effect.item_name} (Lightshield Strike)",
+    state.breakdown[f"heal_{effect.owner}"] = {
+        "name": f"{effect.owner} (Lightshield Strike)",
         "count": 1,
         "amount_per_proc": base_amount,
         "total_amount": base_amount,
@@ -16852,13 +16858,23 @@ def _hypershot_delta_events(
     )
 
 
+def _held_owners(state: FightState) -> list[str]:
+    """This build's item names in build order — the order a family's fold sums."""
+    return [item_effects.resolved_item_name(item) for item in state.items]
+
+
+def _crit_profile(state: FightState) -> "crit_profile.CritProfile":
+    """What this build's crit declarations say — bonus, forced strike, refund."""
+    return crit_profile.declared_crit_profile(_held_owners(state))
+
+
 def _amp_slot(
     state: FightState, slot: AmpChainSlot, *extra_owners: str
 ) -> "delta_amp.AmpSlot | None":
     """The declared amp occupying one chain slot for this build.  ``None``
     means nothing the build holds declares the slot, an answer and not a zero.
     ``extra_owners`` carries the keystone, an owner the item list cannot hold."""
-    owners = [item_effects.resolved_item_name(item) for item in state.items]
+    owners = _held_owners(state)
     owners.extend(extra_owners)
     return _amp_slot_for(state, slot, owners)
 
@@ -17547,7 +17563,7 @@ def _add_execute_display(state: FightState) -> None:
     The execute damage is NOT added to the total; the row displays the HP
     threshold at which the target would be executed.
     """
-    execute = state.damage_effects.execute
+    execute = damage_routing.declared_execution(_held_owners(state))
     if execute is not None:
         collector_threshold = state.target_health * execute.threshold
         threshold_pct = (
@@ -17556,12 +17572,12 @@ def _add_execute_display(state: FightState) -> None:
             else 0.0
         )
         state.breakdown["execute"] = {
-            "name": f"{execute.item_name} (Execute)",
+            "name": f"{execute.owner} (Execute)",
             "total_damage": 0.0,
             "damage_type": "true",
             "execution_threshold_hp": collector_threshold,
             "detail": (
-                f"{execute.item_name} Execution Threshold: "
+                f"{execute.owner} Execution Threshold: "
                 f"{collector_threshold:.0f} HP "
                 f"({threshold_pct:.0f}% of {state.target_health:.0f})"
             ),
@@ -17608,10 +17624,10 @@ def _collect_fight_notes(
         and rotation.navori_refund > 0
         and rotation.autos_per_second > 0
     ):
-        cooldown_refund_source = state.damage_effects.cooldown_refund_source
-        assert cooldown_refund_source is not None
+        refund = _crit_profile(state).cooldown_refund
+        assert refund is not None
         notes.append(
-            f"{cooldown_refund_source}: basic ability CDs reduced by "
+            f"{refund.owner}: basic ability CDs reduced by "
             f"{rotation.navori_refund:.0%} per auto attack "
             f"({rotation.autos_per_second:.2f} autos/sec effective)."
         )
@@ -18129,7 +18145,7 @@ def calculate_fight_damage(
     # thresholds apply only to their own cast. Item thresholds apply to every
     # authored packet. When both apply, keep the larger threshold.
     if not tuple_ledger:
-        item_execute = state.damage_effects.execute
+        item_execute = damage_routing.declared_execution(_held_owners(state))
         for event in damage_events:
             if not isinstance(event, dict):
                 continue
@@ -18157,7 +18173,7 @@ def calculate_fight_damage(
                 event["execute_declared_by_cast"] = True
             elif item_ratio > 0:
                 event["execute_threshold_ratio"] = item_ratio
-                event["execute_source"] = item_execute.item_name
+                event["execute_source"] = item_execute.owner
     if (
         score_only
         and shield_outcome_projection(shield_outcome_inputs(config, items))

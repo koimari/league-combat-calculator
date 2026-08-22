@@ -26,7 +26,7 @@ no ``packet_source`` at all.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from ..item_behavior import (
@@ -44,7 +44,7 @@ from ..item_behavior import (
     ShieldBypassRule,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import resolve
+from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 # The field names a routing rule compiles to on the pair lane.
@@ -89,6 +89,17 @@ _DEFERRAL_SCHEDULE: tuple[tuple[str, DefenseField], ...] = (
 _INTEGER_FIELDS = frozenset(
     {DefenseField.DAMAGE_DEFERRAL_TICKS, DefenseField.DEFY_HEAL_TICKS}
 )
+
+# Which reference each fight-free field is read from, per routing payload —
+# this family's mirror of ``SUSTAIN_PAYLOAD_REFERENCES``.  Total over the
+# family's three shapes, and the two empty entries are the answer rather than
+# an omission: both carry a melee/ranged share their subject's range class
+# picks, which a reader holding item names and no fight cannot pick.
+FLAT_ROUTING_REFERENCES: Mapping[type, tuple[tuple[str, str], ...]] = {
+    ExecuteRule: ((EXECUTE_THRESHOLD_FIELD, "threshold"),),
+    ShieldBypassRule: (),
+    DamageDeferralRule: (),
+}
 
 
 class DamageRoutingInterpretationError(ValueError):
@@ -249,6 +260,82 @@ def _field(fields: tuple[KernelField, ...], name: str) -> float:
     )
 
 
+def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None:
+    """The one rule of *payload_type* this build declares, or ``None``.
+
+    Two holders of one shape is a stop rather than a fold — how two of them
+    compose is a declaration somebody owes, and guessing it here is the silent
+    default this campaign exists to remove.
+    """
+    found = [
+        rule for rule in walk_rules(owners) if isinstance(rule.payload, payload_type)
+    ]
+    if not found:
+        return None
+    if len(found) > 1:
+        raise DamageRoutingInterpretationError(
+            f"{[rule.owner for rule in found]} all declare "
+            f"{payload_type.__name__} and no rule declares how two of them "
+            "compose; the slice that declares a second one owns the fold"
+        )
+    return found[0]
+
+
+def _flat_references(rule: BehaviorRule) -> tuple[tuple[str, AnyValueRef], ...]:
+    """Every field one routing declaration carries with no fight to read."""
+    payload = rule.payload
+    names = FLAT_ROUTING_REFERENCES.get(type(payload))
+    if names is None:
+        raise DamageRoutingInterpretationError(
+            f"{rule.mechanic_id} is not a damage-routing rule"
+        )
+    if not names:
+        raise DamageRoutingInterpretationError(
+            f"{rule.mechanic_id} carries a melee/ranged share its subject's "
+            "range class picks, and this accessor has no fight to pick one "
+            "from; read it through the lane accessor handed a build context"
+        )
+    return tuple((name, getattr(payload, attribute)) for name, attribute in names)
+
+
+def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:
+    """One routing declaration's numbers, resolved without any fight context.
+
+    The arithmetic behind :func:`declared_execution`, field for field
+    :func:`pair_fields`.  A reference needing a level or a fight fact is a stop
+    naming the shape, exactly as sustain's fight-free reader refuses one.
+    """
+    references = _flat_references(rule)
+    try:
+        values = resolve_flat([reference for _, reference in references])
+    except ValueRefError as exc:
+        raise DamageRoutingInterpretationError(
+            f"{rule.mechanic_id} declares a reference that needs a level or a "
+            "fight fact, and this accessor has neither; read it through "
+            "resolve_execution, which is handed the context it resolves against"
+        ) from exc
+    return tuple(
+        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        for (name, _), value in zip(references, values)
+    )
+
+
+def declared_execution(owners: Sequence[str]) -> Execution | None:
+    """This build's execution threshold from flat references alone.
+
+    The fight-free reader, for the callers holding item names and no fight:
+    identical to :func:`resolve_execution` on a flat declaration, and a stop
+    rather than a defaulted zero on one that needs a context.
+    """
+    rule = _sole_rule(owners, ExecuteRule)
+    if rule is None:
+        return None
+    fields = _flat_fields(rule, EngineLane.PAIR_ENGINE)
+    return Execution(
+        owner=rule.owner, threshold=_field(fields, EXECUTE_THRESHOLD_FIELD)
+    )
+
+
 def resolve_execution(
     owners: Sequence[str],
     *,
@@ -262,18 +349,9 @@ def resolve_execution(
     ``None`` is an answer and not a zero: no holder executes, so no rule ran
     and no health share is low enough to finish the target.
     """
-    found = [
-        rule for rule in routing_rules(owners) if isinstance(rule.payload, ExecuteRule)
-    ]
-    if not found:
+    rule = _sole_rule(owners, ExecuteRule)
+    if rule is None:
         return None
-    if len(found) > 1:
-        raise DamageRoutingInterpretationError(
-            f"{[rule.owner for rule in found]} all declare an execution and no "
-            "rule declares how two thresholds combine; the slice that declares "
-            "a second one owns the fold"
-        )
-    rule = found[0]
     fields = pair_fields(
         rule,
         build_context(
@@ -299,20 +377,9 @@ def resolve_shield_bypass(
     holder_is_melee: bool,
 ) -> ShieldBypass | None:
     """This build's shield bypass, or ``None`` if nobody declares one."""
-    found = [
-        rule
-        for rule in routing_rules(owners)
-        if isinstance(rule.payload, ShieldBypassRule)
-    ]
-    if not found:
+    rule = _sole_rule(owners, ShieldBypassRule)
+    if rule is None:
         return None
-    if len(found) > 1:
-        raise DamageRoutingInterpretationError(
-            f"{[rule.owner for rule in found]} all declare a shield bypass and "
-            "no rule declares how two of them compose; the slice that declares "
-            "a second one owns the fold"
-        )
-    rule = found[0]
     fields = pair_fields(
         rule,
         build_context(
@@ -381,24 +448,11 @@ def _walk_fields(  # pylint: disable=too-many-arguments
     """The one declaration of *payload_type* this build brings, compiled.
 
     ``None`` when nobody declares one, which is an answer and not a zero: no
-    holder defers, executes or envenoms, so no rule ran.  Two holders of one
-    shape is a stop rather than a fold — how two of them compose is a
-    declaration somebody owes, and guessing it here is the silent default
-    this campaign exists to remove.
+    holder defers, executes or envenoms, so no rule ran.
     """
-    found = [
-        rule for rule in walk_rules(owners) if isinstance(rule.payload, payload_type)
-    ]
-    if not found:
+    rule = _sole_rule(owners, payload_type)
+    if rule is None:
         return None
-    if len(found) > 1:
-        raise DamageRoutingInterpretationError(
-            f"{[rule.owner for rule in found]} all declare "
-            f"{payload_type.__name__} and no rule declares how two of them "
-            "compose on the walk; the slice that declares a second one owns "
-            "the fold"
-        )
-    rule = found[0]
     return rule, walk_fields(
         rule,
         build_context(
@@ -511,6 +565,7 @@ __all__ = [
     "Deferral",
     "EXECUTE_THRESHOLD_FIELD",
     "Execution",
+    "FLAT_ROUTING_REFERENCES",
     "IGNORE_PAIN_NOTE",
     "SHIELD_BYPASS_DURATION_FIELD",
     "SHIELD_BYPASS_FRACTION_FIELD",
@@ -518,6 +573,7 @@ __all__ = [
     "VENOM_DURATION_FIELD",
     "VENOM_KEEP_FIELD",
     "Venom",
+    "declared_execution",
     "pair_fields",
     "resolve_deferral",
     "resolve_execution",

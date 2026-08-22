@@ -18,6 +18,9 @@ from src.calculator.interpreters import (
     on_hit_strike,
     spellblade,
 )
+from src.calculator.interpreters.crit_profile import declared_crit_profile
+from src.calculator.interpreters.delta_amp import declared_magic_amp
+from src.calculator.interpreters.damage_routing import declared_execution
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -792,18 +795,24 @@ class TestResolveDamageEffects:
         assert effects.stacking_pen is not None
         assert effects.stacking_pen.max_pen == pytest.approx(0.30)
         assert effects.stacking_pen.average_pen(6) == pytest.approx(0.15)
-        assert effects.navori_refund_percent == pytest.approx(0.15)
-        assert effects.crit_damage_bonus == pytest.approx(0.30)
-        assert effects.first_auto_crit is not None
-        assert effects.first_auto_crit.reduced_crit_ratio == pytest.approx(0.80)
+        # SD9 retired ``crit_modifier``: the crit declarations own both slots.
+        profile = declared_crit_profile(
+            ["Navori Flickerblade", "Infinity Edge", "Sundered Sky"]
+        )
+        assert profile.cooldown_refund.fraction == pytest.approx(0.15)
+        assert profile.damage_bonus == pytest.approx(0.30)
+        assert profile.forced_crit is not None
+        assert profile.forced_crit.reduced_ratio == pytest.approx(0.80)
         buff = _charged_strikes("Fiendhunter Bolts").empowered_auto_buff
         assert buff is not None
         assert buff.empowered_auto_count == 3
         # The two per-part amps left this registry for their declarations at
         # 3.7-r2; ``tests/test_interp_delta_amp.py`` owns their numbers now.
-        assert effects.magic_amp == pytest.approx(1.12)
-        assert effects.execute is not None
-        assert effects.execute.threshold == pytest.approx(0.05)
+        assert declared_magic_amp(["Abyssal Mask"]) == pytest.approx(1.12)
+        # SD9 retired ``execute``: the routing declaration is its one owner.
+        execution = declared_execution(["The Collector"])
+        assert execution is not None
+        assert execution.threshold == pytest.approx(0.05)
         assert len(effects.conditional_notes) == 2
 
     @pytest.mark.parametrize(
