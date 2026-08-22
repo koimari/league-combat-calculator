@@ -8,9 +8,11 @@ isolated SQLite file; the layer itself is dialect-agnostic, so the same
 models and helpers run against PostgreSQL in production.
 """
 
+import threading
 import time
 
 import pytest
+from sqlalchemy import event
 
 import src.app as app_module
 
@@ -312,6 +314,76 @@ def test_cache_invalidation_clears_everything(sqlite_database):
     assert removed == 2
     assert db.cache_stats()["cached_entries"] == 0
     assert db.cache_get(key) is None
+
+
+def _statements_touching_cached_results(action):
+    """Run ``action`` and return every SQL statement it aimed at the table."""
+    engine = db.get_engine()
+    seen = []
+
+    def record(_conn, _cursor, statement, *_rest):
+        if "cached_results" in statement:
+            seen.append(" ".join(statement.split()))
+
+    event.listen(engine, "after_cursor_execute", record)
+    try:
+        action()
+    finally:
+        event.remove(engine, "after_cursor_execute", record)
+    return seen
+
+
+def test_cache_set_writes_one_upsert_statement(sqlite_database):
+    """One statement decides the row, so no reader-writer gap exists to lose."""
+    key = db.stable_cache_key("calculate", {"champion": "Ahri"})
+    statements = _statements_touching_cached_results(
+        lambda: db.cache_set(key, {"total_damage": 1.0})
+    )
+    assert len(statements) == 1, statements
+    assert statements[0].upper().startswith("INSERT INTO CACHED_RESULTS")
+    assert "ON CONFLICT" in statements[0].upper()
+
+
+def test_concurrent_cache_set_on_one_key_never_raises(sqlite_database):
+    """Two writers racing on one cache_key: neither may raise.
+
+    A barrier armed on the engine's SELECT against ``cached_results`` forces a
+    select-then-insert implementation into its losing interleave — both writers
+    read no row, both INSERT, and the loser breaks the UNIQUE constraint out of
+    ``commit()``.  An upsert issues no such SELECT, so nothing waits.
+    """
+    key = db.stable_cache_key("calculate", {"champion": "Ahri", "level": 18})
+    engine = db.get_engine()
+    barrier = threading.Barrier(2, timeout=10)
+
+    def hold_after_existence_check(_conn, _cursor, statement, *_rest):
+        if "cached_results" in statement and statement.lstrip()[:6].upper() == "SELECT":
+            try:
+                barrier.wait()
+            except threading.BrokenBarrierError:
+                pass
+
+    errors = []
+
+    def writer(index):
+        try:
+            db.cache_set(key, {"total_damage": float(index)})
+        except Exception as exc:  # noqa: BLE001 - the raise under test
+            errors.append(exc)
+
+    event.listen(engine, "after_cursor_execute", hold_after_existence_check)
+    threads = [threading.Thread(target=writer, args=(index,)) for index in range(2)]
+    try:
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=30)
+    finally:
+        event.remove(engine, "after_cursor_execute", hold_after_existence_check)
+
+    assert errors == []
+    assert db.cache_get(key) in ({"total_damage": 0.0}, {"total_damage": 1.0})
+    assert db.cache_stats()["cached_entries"] == 1
 
 
 def test_cache_consulted_by_calculate_when_configured(sqlite_database, monkeypatch):
