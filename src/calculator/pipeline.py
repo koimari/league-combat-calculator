@@ -953,6 +953,12 @@ class FightParams(FightConfig):
         # says, so it sets it.  Validating the name and then dropping it served
         # a full rotation — abilities, summons and all — to anyone who asked
         # for autos alone, and made the mode indistinguishable from time_based.
+        # No cast means no cast: an ability stat grant (Tristana Q, Olaf R,
+        # Lulu W/R, Warwick W) is bought with the cast that grants it, so
+        # autos-only earns none of them and reports the unbuffed attack speed.
+        # The full rotation stays in ``cast_order`` for the breakdown's slot
+        # rows; ``damage._apply_stat_buff_ultimates`` is what reads the mode,
+        # and it names every grant it withheld in the fight notes.
         auto_attacks_only = (
             _request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
         )

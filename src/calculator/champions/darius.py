@@ -284,6 +284,10 @@ def _apprehend(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = _armor_pen_buff(ctx)
     if entry is not None:
         entry["cast_time"] = E_CAST_TIME
+        # "Apprehend passively grants Darius bonus armor penetration": the
+        # grant is innate, not bought with the pull, so an autos-only fight
+        # keeps it while it withholds every cast steroid.
+        entry["innate_grant"] = True
     return entry
 
 

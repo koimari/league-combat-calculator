@@ -3057,19 +3057,29 @@ def _base_slot(key: str) -> str:
     return key.split("_", 1)[0].rstrip("0123456789")
 
 
+# Two things are live without a cast of their own: a passive row
+# (``passive``, ``passive_plasma``), and an active row whose payload the module
+# declares ``innate_grant`` — an always-on passive that happens to hang off an
+# active slot (Darius E's armor penetration, Kog'Maw Q's, Nocturne W's, Quinn
+# W's).  Everything else is bought with a cast, so autos-only
+# (``casts_nothing``) earns none of it, including a cast-derived
+# ``off_rotation_grant`` whose window average counts casts the rotation omits
+# (Kai'Sa E).  Outside that mode an ``off_rotation_grant`` is live, and any
+# other active row is live when its key, or the base slot of its variant key
+# (``Q2`` -> ``Q``), is in the cast order; an unknown order casts every slot.
 def _slot_is_cast(
-    key: str, info: Mapping[str, Any], cast_order: "list[str] | None"
+    key: str,
+    info: Mapping[str, Any],
+    cast_order: "list[str] | None",
+    casts_nothing: bool = False,
 ) -> bool:
-    """Whether the ability row *key* belongs to a slot the rotation casts.
-    Passive rows (``passive``, ``passive_plasma``) are always live, as is a row
-    the module declares ``off_rotation_grant`` (a zero-damage cast the rotation
-    omits whose grant is priced across the window, Kai'Sa E).  Any other active
-    row is live when its key, or the base slot of its variant key (``Q2`` ->
-    ``Q``), is in the cast order; an unknown order casts every slot."""
+    """Whether the ability row *key* carries a payload this fight earns."""
     base = _base_slot(key)
-    if base not in ("Q", "W", "E", "R") or info.get("off_rotation_grant"):
+    if base not in ("Q", "W", "E", "R") or info.get("innate_grant"):
         return True
-    if cast_order is None:
+    if casts_nothing:
+        return False
+    if info.get("off_rotation_grant") or cast_order is None:
         return True
     return key in cast_order or base in cast_order
 
@@ -3087,14 +3097,20 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     """
     stats = state.champion_stats
     resists = state.resists
+    withheld: list[str] = []
 
     for key, ability_info in state.ability_damages.items():
         stat_buff = ability_info.get("stat_buff")
         if not stat_buff:
             continue
-        if not _slot_is_cast(key, ability_info, state.cast_order):
+        if not _slot_is_cast(
+            key, ability_info, state.cast_order, state.auto_attacks_only
+        ):
             # An active's grant rides its cast: a rotation that never casts
-            # the ability earns none of it. A passive's grant is always on.
+            # the ability earns none of it, and autos-only casts nothing at
+            # all. A passive's grant is always on.
+            if state.auto_attacks_only:
+                withheld.append(str(ability_info.get("name", key)))
             continue
         for stat_key, buff_value in stat_buff.items():
             stats[stat_key] = stats.get(stat_key, 0.0) + buff_value
@@ -3225,6 +3241,14 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 * state.fight_duration_seconds
                 * state.auto_attack_uptime
             )
+
+    if withheld:
+        state.notes.append(
+            "Autos-only performs no cast, so no ability stat grant applies: "
+            + ", ".join(sorted(set(withheld)))
+            + ". The mode reports the champion's unbuffed attack speed and "
+            "auto damage; pick the timed mode to buy a steroid with a cast."
+        )
 
     # Crit stats — needed by both ability crit scaling (rotation) and the
     # auto-attack simulation.

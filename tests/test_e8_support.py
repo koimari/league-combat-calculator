@@ -125,7 +125,13 @@ def _revive_fight(champion: str, level: int, stats_override=None):
         },
         deterministic=True,
     )
-    enemy = ChampionLoadout(champion="Aatrox", level=18, items=()).resolve()
+    # The enemy carries one flat-AD item so its FIRST swing is lethal: an
+    # autos-only fight performs no cast, so it buys no ability stat grant
+    # either (CF23) and a bare Aatrox needs two swings, which would push
+    # the revive past this short window.
+    enemy = ChampionLoadout(
+        champion="Aatrox", level=18, items=("Infinity Edge",)
+    ).resolve()
     result = build_participant_timeline(
         main,
         level,

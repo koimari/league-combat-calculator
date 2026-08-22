@@ -130,3 +130,50 @@ class TestBlitzcrankCertification:
         )
         assert certified == ["Blitzcrank"]
         assert get_champion_ultimate_recasts("Nobody") is False
+
+
+class TestAutosOnlyBuysNoSteroid:
+    """CF23: autos-only performs no cast, so it earns no cast's stat grant."""
+
+    @staticmethod
+    def _steroid_kit():
+        row = _slot_row("Rapid Fire", 20.0)
+        row["stat_buff"] = {"bonus_attack_speed": 100.0}
+        return {"Q": row}
+
+    @staticmethod
+    def _fight(attacker_stats, abilities, order, **overrides):
+        """The engine buffs the stats dict in place, so hold on to it."""
+        stats = attacker_stats()
+        result = _timed(
+            stats,
+            abilities,
+            cast_order=order,
+            auto_attack_uptime=1.0,
+            **overrides,
+        )
+        return stats, result
+
+    def test_a_timed_fight_still_buys_the_grant(self, attacker_stats):
+        stats, _ = self._fight(attacker_stats, self._steroid_kit(), ["Q"])
+        assert stats["attack_speed"] == 1.625
+
+    def test_autos_only_keeps_the_unbuffed_attack_speed(self, attacker_stats):
+        stats, result = self._fight(
+            attacker_stats, self._steroid_kit(), ["Q"], auto_attacks_only=True
+        )
+        assert stats["attack_speed"] == 1.0
+        assert any(
+            "Autos-only performs no cast" in note and "Rapid Fire" in note
+            for note in result["notes"]
+        )
+
+    def test_a_passive_grant_survives_autos_only(self, attacker_stats):
+        """The mode drops casts, not the kit: an innate is still innate."""
+        row = _slot_row("Innate", 0.0)
+        row["stat_buff"] = {"bonus_attack_speed": 100.0}
+        stats, result = self._fight(
+            attacker_stats, {"passive": row}, [], auto_attacks_only=True
+        )
+        assert stats["attack_speed"] == 1.625
+        assert not any("Autos-only performs no cast" in n for n in result["notes"])
