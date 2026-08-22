@@ -348,11 +348,11 @@ authoritative Riot statement), not more engineering effort.
 
 ## 4. Patch-day pipeline — manual vs. scriptable
 
-Nine steps total: 6 manual, 3 scriptable, per `docs/patch-day-runbook.md`.
+Nine steps total: 5 manual, 3 scriptable, 1 partly scripted (detect), per `docs/patch-day-runbook.md`.
 
 | # | Step | Manual/Scriptable | Inputs | Deps | Fail-closed failure mode |
 |---|---|---|---|---|---|
-| 1 | Detect patch + read patch notes + open tracking issue | **Manual** | `cdtb versions game -a`, `data/staleness.json`, Riot patch notes page | `cdtb` binary on PATH (or `CDTB_BIN`) | None automated — a missed patch silently serves stale data until Step 2 next runs; this is why Step 0 has its own <4h SLA |
+| 1 | Detect patch + read patch notes + open tracking issue | **Partly scripted** | `python scripts/patch_update.py detect` (live CDragon vs cached patch; exit 1 = new patch), Riot patch notes page | `cdtb` binary on PATH (or `CDTB_BIN`) | None automated — a missed patch silently serves stale data until Step 2 next runs; this is why Step 0 has its own <4h SLA |
 | 2 | `scripts/patch_update.py run` — re-pull wiki cache, rebuild catalogues, run gates | **Scriptable** | live wiki pages via `vendor/lolstaticdata`, `git HEAD` (for the audit diff) | cleared `vendor/lolstaticdata/__cache__`/`__wiki__`; network access | Stops the run on: a vanished effect branch not in `APPROVED_BRANCH_REMOVALS`; an unreviewed Riot-declared effect missing from the wiki not in `ACKNOWLEDGED_SOURCE_CONFLICTS`/`OPEN_SOURCE_CONFLICTS`; a removed item still `IMPLEMENTED` in code; pytest red |
 | 3 | `scripts/patch_regression.py check` — game-file ground-truth diff | **Scriptable** | `raw.communitydragon.org` per-champion bins + `items.cdtb.bin.json`, live patch string | Step 2's refreshed cache; network access to CommunityDragon | Exits 1 on any stale champion/item; unmappable stats/rows are `unchecked`, never silently passed as fresh |
 | 4 | Triage every stale flag: re-certify or boundary-document | **Manual** (human-by-design — this is a judgment call, not a comparison) | Step 3's stale list, patch notes, `data/gamefiles/` | Step 3's output | No automated fallback — an untriaged stale flag blocks Step 5 by design (the STALE badge stays up) |

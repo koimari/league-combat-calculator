@@ -27,7 +27,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -36,6 +36,8 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
+from .module_contract import coverage
 
 
 def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -54,12 +56,10 @@ _acquired_taste.phase = ONHIT
 
 
 def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     # Tongue Lash's row carries a per-rank base and an eighteen-entry per-level
     # term, so reading it needs the level as well as the rank.
     total = extract_named(
@@ -99,12 +99,10 @@ def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _regurgitate(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("R", 1)
-    if ability is None:
+    ranked = ctx.ranked("R", 1)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Regurgitate"),
@@ -149,14 +147,13 @@ MODULE_CC = {"Q": CC_PER_PART, "W": "immobilize", "R": "suppression"}
 parse_abilities = build_parser(SLOTS, "Tahm Kench", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "q_passive_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 3,
-        "label": "Acquired Taste stacks before Q",
-    }
+    int_option(
+        "q_passive_stacks",
+        0,
+        minimum=0,
+        maximum=3,
+        label="Acquired Taste stacks before Q",
+    )
 ]
 
 ASSUMPTIONS = [
@@ -185,15 +182,10 @@ SOURCES = load_champion_sources("Tahm Kench")
 
 # E damages nothing, so it is a reviewed no-damage slot rather than the
 # unmodeled gap the slot map would otherwise derive.
-MODULE_COVERAGE = {
-    slot: (
-        "modeled" if slot in SLOTS else "no_damage" if slot == "E" else "out_of_scope"
-    )
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -204,10 +196,10 @@ def derive_self_healing(
 ):
     """Resolve Tahm Kench self-healing events from its authored packet."""
     healing = []
-    q = _healing._ability(champion_data, "Q")
-    q_rank = _healing._rank(ability_damages, "Q")
+    q = _healing.ability_json(champion_data, "Q")
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_flat = _healing.extract_named(q, "Heal", q_rank, champion_stats, {})
-    q_missing_pct = _healing._leveling_modifier(q, "Heal", q_rank, 1)
+    q_missing_pct = _healing.leveling_modifier(q, "Heal", q_rank, 1)
 
     def tongue_lash_heal(
         current_health: float,
@@ -217,7 +209,7 @@ def derive_self_healing(
     ) -> float:
         return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
 
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
         event = payment.event
@@ -228,10 +220,10 @@ def derive_self_healing(
                 "amount_formula": tongue_lash_heal,
                 "source": "Tongue Lash",
                 "kind": "champion_ability",
-                **_healing._trigger_fields(event),
+                **_healing.trigger_fields(event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Tahm Kench", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Tahm Kench")(derive_self_healing)

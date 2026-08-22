@@ -629,12 +629,10 @@ def support_cast(
     """
 
     def parse(ctx: Any) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
+        ability, rank = ranked
         entry = damage_entry(
             ability.get("name", default_name),
             rank,
@@ -1207,12 +1205,10 @@ def stat_buff(
         )
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        rank = ctx.rank_for()
-        if rank < 1:
-            return None
+        ability, rank = ranked
 
         value = extract_value(ability, attr, rank, level=ctx.level)
         if mode == "percent_of":

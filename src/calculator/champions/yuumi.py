@@ -51,10 +51,11 @@ one home for the attached-bonus anchor transfer ("Affects the Anchor
 instead of Yuumi").
 """
 
-from ..healing_helpers import _ability, _rank
-from .healing_contract import declare_healing_rule
+from ..healing_helpers import ability_json, parsed_rank
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import extract_named
+from .module_contract import coverage
 
 PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c82942"
 
@@ -106,9 +107,7 @@ ASSUMPTIONS = [
     "rule; You and Me!'s heal-and-shield-power amplifier has no outgoing "
     "heal-power kernel hook.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(out_of_scope="PW")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
@@ -127,9 +126,9 @@ def derive_self_healing(
     than inferred from the damage ledger's event count.
     """
     healing: list[dict] = []
-    r_rank = _rank(ability_damages, "R")
+    r_rank = parsed_rank(ability_damages, "R")
     per_wave = extract_named(
-        _ability(champion_data, "R"), "Heal per Hit", r_rank, champion_stats
+        ability_json(champion_data, "R"), "Heal per Hit", r_rank, champion_stats
     )
     if per_wave > 0.0:
         for cast in cast_timeline or []:
@@ -146,7 +145,7 @@ def derive_self_healing(
                         "actor_wide": True,
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Yuumi", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Yuumi")(derive_self_healing)

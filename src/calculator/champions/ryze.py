@@ -9,6 +9,7 @@ rather than left unmodeled.
 """
 
 from .packet_module import build_packet_module
+from .module_contract import coverage
 
 PACKET_SHA256 = "9da3638ceb40ffff52f60102f737c9576d5d5c13e67a3149499cf273105ff4f2"
 
@@ -41,7 +42,4 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     ),
 )
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

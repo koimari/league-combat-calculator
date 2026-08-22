@@ -35,7 +35,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -46,6 +46,7 @@ from .slotlib import (
     stat_buff,
     with_item_on_hits,
 )
+from .module_contract import coverage
 
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
 # the up-to-1.5s suppress; "applies on-hit effects and triggers
@@ -70,12 +71,10 @@ _BLOOD_HUNT_DOUBLED_MISSING = 0.75
 
 def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: Total Magic Damage over the 1.5s suppress channel."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -256,13 +255,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "health).  Blood Hunt's bonus movement speed and its 8-second mark "
     "duration are not modeled — stat_buff has no movement-speed key.",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(out_of_scope="E")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -273,15 +269,15 @@ def derive_self_healing(
 ):
     """Resolve Warwick self-healing events from its authored packet."""
     healing = []
-    q = _healing._ability(champion_data, "Q")
-    q_rank = _healing._rank(ability_damages, "Q")
+    q = _healing.ability_json(champion_data, "Q")
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_ratio = _healing.extract_named(
         q, "Healing Percentage", q_rank, champion_stats, {}
     )
     for event in damage_events:
-        source = _healing._event_source(event)
+        source = _healing.event_source(event)
         if source == "Q":
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing,
                 event,
                 float(event.get("damage", 0.0)) * q_ratio / 100.0,
@@ -290,7 +286,7 @@ def derive_self_healing(
         elif source == "R":
             # Infinite Duress explicitly heals for 100% of all
             # post-mitigation damage dealt to its target.
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing, event, float(event.get("damage", 0.0)), "Infinite Duress"
             )
     # Eternal Hunger (P): "While below 50% maximum health, Warwick also
@@ -304,19 +300,19 @@ def derive_self_healing(
         ability_damages.get("passive", {}).get("self_heal_share_of_damage") or 0.0
     )
     if hunger_share > 0.0:
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             "on_hit_ability_passive",
             damage_events,
         ):
             event = payment.event
-            _healing._heal_from_damage(
+            _healing.heal_from_damage(
                 healing,
                 event,
                 float(event.get("damage", 0.0)) * hunger_share,
                 "Eternal Hunger",
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Warwick", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Warwick")(derive_self_healing)

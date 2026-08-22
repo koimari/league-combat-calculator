@@ -37,6 +37,8 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .inputs import int_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki prose, not leveling rows.
 # The mark-consuming second strike deals "20% AD (+ 15% AP) physical
@@ -51,12 +53,10 @@ PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756
 
 def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the active thrust plus the on-hit passive and mark second strike."""
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     active = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     second_strikes = min(max(int(ctx.option("q_second_strike")), 0), 20)
     second_damage = (
@@ -109,12 +109,10 @@ def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the 120% AD base strike plus the live %missing-health bonus."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     ad = float(ctx.stat("attack_damage"))
     base = _R_BASE_AD_RATIO * ad
     missing_pct = extract_value(ability, "Physical Damage", rank, 0)
@@ -167,12 +165,10 @@ MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
 
 def _harrowed_path(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: the 30-50% attack speed Viego holds while inside his own mist."""
-    ability = ctx.ability("E")
-    if ability is None:
+    ranked = ctx.ranked("E")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0
@@ -213,14 +209,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "q_second_strike",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 20,
-        "label": "Mark-consuming second strikes (Q passive)",
-        "rotation": {
+    int_option(
+        "q_second_strike",
+        0,
+        minimum=0,
+        maximum=20,
+        label="Mark-consuming second strikes (Q passive)",
+        rotation={
             "role": "self_state",
             "slot": "Q",
             "note": (
@@ -228,15 +223,14 @@ OPTIONS = list(OPTIONS) + [
                 "(auto-stream self-consumed mark) — no cross-slot edge."
             ),
         },
-    },
-    {
-        "key": "e_mist_uptime",
-        "type": "int",
-        "default": 100,
-        "min": 0,
-        "max": 100,
-        "label": "Share of the fight Viego spends inside Harrowed Path (%)",
-        "rotation": {
+    ),
+    int_option(
+        "e_mist_uptime",
+        100,
+        minimum=0,
+        maximum=100,
+        label="Share of the fight Viego spends inside Harrowed Path (%)",
+        rotation={
             "role": "self_state",
             "slot": "E",
             "note": (
@@ -244,7 +238,7 @@ OPTIONS = list(OPTIONS) + [
                 "cross-slot cast edge."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -271,6 +265,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # P is emitted and grants nothing the engine prices — Possession assumes
 # another champion's whole kit, which no axis expresses.
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

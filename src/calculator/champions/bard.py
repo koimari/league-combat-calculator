@@ -47,6 +47,8 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
 # no effects/leveling in the wiki JSON at all (known-degraded parse), so
@@ -207,15 +209,14 @@ def _tempered_fate(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "chimes",
-        "type": "int",
-        "default": _DEFAULT_CHIMES,
-        "label": "Chimes collected",
-        "min": 0,
-        "max": 200,
-        "state": BARD_TRAVELERS_CALL_RULE.public_receipt(),
-    },
+    int_option(
+        "chimes",
+        _DEFAULT_CHIMES,
+        minimum=0,
+        maximum=200,
+        label="Chimes collected",
+        state=BARD_TRAVELERS_CALL_RULE.public_receipt(),
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -277,10 +278,4 @@ SOURCES = load_champion_sources("Bard")
 # from SLOTS ("modeled") would overstate them.  W stays modeled: its own
 # row prices no damage, but the ally-support scanner prices its sourced
 # heal off the cast this slot schedules.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="ER")

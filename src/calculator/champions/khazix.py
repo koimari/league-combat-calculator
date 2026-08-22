@@ -7,11 +7,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import extract_cooldown, extract_named, on_hit_entry, simple_damage
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .inputs import bool_option
+from .module_contract import coverage
 
 
 def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -36,12 +38,10 @@ def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _taste_their_fear(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     isolated = bool(ctx.options.get("q_isolated", True))
     attribute = "Isolated Target Physical Damage" if isolated else "Physical Damage"
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -81,18 +81,8 @@ SLOTS = {
     ),
 }
 OPTIONS = [
-    {
-        "key": "p_ready",
-        "type": "bool",
-        "default": True,
-        "label": "Unseen Threat armed",
-    },
-    {
-        "key": "q_isolated",
-        "type": "bool",
-        "default": True,
-        "label": "Isolated target",
-    },
+    bool_option("p_ready", True, label="Unseen Threat armed"),
+    bool_option("q_isolated", True, label="Isolated target"),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kha'Zix")
@@ -106,12 +96,10 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kha'Zix", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot != "R" else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="R")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -122,17 +110,17 @@ def derive_self_healing(
 ):
     """Resolve Kha'Zix self-healing events from its authored packet."""
     healing = []
-    w = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
+    w = _healing.ability_json(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     w_heal = _healing.extract_named(w, "Heal", w_rank, champion_stats)
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
         event = payment.event
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing, event, w_heal, "Void Spike", link_to_damage=False
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Kha'Zix", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Kha'Zix")(derive_self_healing)

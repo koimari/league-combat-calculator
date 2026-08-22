@@ -45,15 +45,15 @@ from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 
 
 def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Pierce"),
@@ -70,12 +70,10 @@ def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     """W's damage only exists after both tethered marks are present."""
     if not bool(ctx.options.get("soul_mark_proc", False)):
         return None
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         "Soul-Marked", rank, extract_cooldown(ability, rank), total, "magic"
@@ -86,12 +84,10 @@ def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("E")
-    if ability is None:
+    ranked = ctx.ranked("E")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("rend_stacks")), 1), 254)
     first = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     additional = extract_named(
@@ -182,20 +178,12 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
 parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "rend_stacks",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 254,
-        "label": "Rend stacks",
-    },
-    {
-        "key": "soul_mark_proc",
-        "type": "bool",
-        "default": False,
-        "label": "Soul-Marked proc is armed",
-        "rotation": {
+    int_option("rend_stacks", 1, minimum=1, maximum=254, label="Rend stacks"),
+    bool_option(
+        "soul_mark_proc",
+        False,
+        label="Soul-Marked proc is armed",
+        rotation={
             "role": "consume",
             "slot": "W",
             "condition": "soul-mark",
@@ -208,7 +196,7 @@ OPTIONS = [
                 "rotation."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -225,10 +213,4 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Kalista")
 
 # P and R emit a row but price no damage, which is not what SLOTS derives.
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="PR")

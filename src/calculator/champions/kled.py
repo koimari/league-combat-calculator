@@ -29,6 +29,8 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option
+from .module_contract import coverage
 
 # Bear Trap on a Rope lands twice and the cache times the second hit: the
 # trap "collides with the first enemy champion ... forming a tether
@@ -42,12 +44,10 @@ _Q_TETHER_SECONDS = 1.75
 
 def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the trap's own hit, then the tether's pull hit 1.75s later."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     # Two cached rows share the name "Physical Damage" — the trap's
     # (30 : 130 + 60% bonus AD) and the pull's (60 : 260 + 120% bonus AD).
     # The first is the one a name lookup reaches, and the cached "Total
@@ -119,12 +119,10 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _charge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     fraction = max(0.0, min(1.0, float(ctx.option("charge_fraction"))))
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
@@ -159,21 +157,15 @@ SLOTS = {
     "R": _charge,
 }
 OPTIONS = [
-    {
-        "key": "q_pull",
-        "type": "bool",
-        "default": True,
-        "label": "Bear Trap pull resolves",
-    },
-    {
-        "key": "charge_fraction",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-        "label": "Chaaaaaaaarge distance",
-    },
+    bool_option("q_pull", True, label="Bear Trap pull resolves"),
+    float_option(
+        "charge_fraction",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Chaaaaaaaarge distance",
+        step=0.25,
+    ),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kled")
@@ -235,7 +227,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 GRIEVOUS_WOUNDS_SOURCES = frozenset()
 GRIEVOUS_WOUNDS_SOURCE_LABELS = {}
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

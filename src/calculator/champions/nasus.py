@@ -36,16 +36,17 @@ unpriced; its kind rides ``MODULE_CC``.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..healing_helpers import HealAnchor, _heal_from_damage, _payments
-from .inputs import champion_stat
+from ..healing_helpers import HealAnchor, heal_from_damage, payments
+from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
 )
 from .source_receipts import load_champion_sources
+from .module_contract import coverage
 
 # E2-sourced tick cadences (data/worklists/e2-dot-ticks.json and the
 # ability descriptions): Spirit Fire's zone ticks every 0.5s over 5s
@@ -67,12 +68,10 @@ _R_DOT_DURATION = 15.0
 
 def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: bonus damage (flat + permanent stacks) riding the next auto."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     stacks = max(0, int(ctx.option("q_stacks")))
     bonus = (
@@ -108,12 +107,10 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: initial hit + 10 sourced 0.5s zone ticks (E2 fix)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_tick = extract_named(
@@ -147,12 +144,10 @@ def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _fury_of_the_sands(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: all 30 sourced 0.5s ticks (E2 fix)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -220,27 +215,21 @@ def _wither(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "r_q_cooldown_halved",
-        "type": "bool",
-        "default": True,
-        "label": (
-            "Fury of the Sands halves Siphoning Strike's cooldown "
-            "(effective while R is ranked)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "Q"},
-    },
-    {
-        "key": "q_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5000,
-        "label": (
-            "Permanent Siphoning Strike stacks (each adds 1 bonus damage "
-            "to Q; 3 per minion kill, 12 per champion kill)"
-        ),
-    },
+    bool_option(
+        "r_q_cooldown_halved",
+        True,
+        label="Fury of the Sands halves Siphoning Strike's cooldown "
+        "(effective while R is ranked)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
+    int_option(
+        "q_stacks",
+        0,
+        minimum=0,
+        maximum=5000,
+        label="Permanent Siphoning Strike stacks (each adds 1 bonus damage "
+        "to Q; 3 per minion kill, 12 per champion kill)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -296,10 +285,7 @@ parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
 # (48.6 over a level-18 itemless timed fight with autos).  W is a cast
 # slot emitting the pinned packet's sourced zero-damage row: no_damage,
 # not a gap — only its slow/cripple magnitude stays unpriced.
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="W")
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
@@ -343,15 +329,15 @@ def derive_self_healing(
             return True
         return empowered and source == "Q"
 
-    for payment in _payments(HealAnchor.DAMAGING_HIT, is_swing, damage_events):
+    for payment in payments(HealAnchor.DAMAGING_HIT, is_swing, damage_events):
         event = payment.event
         if event.get("damage_type") != "physical":
             continue
         amount = max(0.0, float(event.get("damage", 0.0))) * ratio
-        _heal_from_damage(healing, event, amount, "Soul Eater")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        heal_from_damage(healing, event, amount, "Soul Eater")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Nasus", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Nasus")(derive_self_healing)
 
 SOURCES = load_champion_sources("Nasus")

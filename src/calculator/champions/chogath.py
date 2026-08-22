@@ -33,7 +33,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import delayed_damage
 from .slotlib import (
     damage_entry,
@@ -47,6 +47,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .inputs import int_option
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
 # attribute of its own; the JSON's "Total Magic Damage" entry is exactly
@@ -91,12 +92,10 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
     swings, which the fight engine appends via ``empowers_next_auto``'s
     ``hits`` count.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
         return None
@@ -164,12 +163,10 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
     (BUFF-phase guarantee) so R's own "% bonus health" ratio — and any
     other read of Cho'Gath's health — sees stacks plus item health.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     stack_health = _feast_stacks(ctx) * extract_value(
         ability, "Bonus Health Per Stack", rank
@@ -195,23 +192,21 @@ _feast.phase = BUFF
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "feast_stacks",
-        "type": "int",
-        "default": _DEFAULT_FEAST_STACKS,
-        "label": "Feast stacks",
-        "min": 0,
-        "max": 15,
-    },
-    {
-        "key": "p_carnivore_kills",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 10,
-        "step": 1,
-        "label": "Enemies Cho'Gath kills during the fight (P Carnivore)",
-        "rotation": {
+    int_option(
+        "feast_stacks",
+        _DEFAULT_FEAST_STACKS,
+        minimum=0,
+        maximum=15,
+        label="Feast stacks",
+    ),
+    int_option(
+        "p_carnivore_kills",
+        0,
+        minimum=0,
+        maximum=10,
+        label="Enemies Cho'Gath kills during the fight (P Carnivore)",
+        step=1,
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -219,7 +214,7 @@ OPTIONS: list[dict[str, Any]] = [
                 "count is player state, not a rotation edge."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -282,7 +277,7 @@ parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Cho'Gath")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -303,7 +298,7 @@ def derive_self_healing(
     carnivore = ability_damages.get("passive", {}).get("self_heal_state")
     if isinstance(carnivore, dict):
         amount = float(carnivore.get("amount", 0.0) or 0.0)
-        for payment in _healing._takedown_payments(
+        for payment in _healing.takedown_payments(
             int(carnivore.get("kills", 0) or 0), damage_events
         ):
             healing.append(
@@ -313,10 +308,10 @@ def derive_self_healing(
                     "source": "Carnivore",
                     "kind": "champion_passive",
                     "actor_wide": True,
-                    **_healing._trigger_fields(payment.event),
+                    **_healing.trigger_fields(payment.event),
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Cho'Gath", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Cho'Gath")(derive_self_healing)

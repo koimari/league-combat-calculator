@@ -40,8 +40,8 @@ staying silently absent, and its heal keeps it ``modeled`` through the
 import re
 from typing import Any
 
-from .healing_contract import declare_healing_rule
-from .inputs import champion_stat
+from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -56,11 +56,11 @@ from .slotlib import (
 
 from ..healing_helpers import (
     HealAnchor,
-    _ability,
-    _is_persistent,
-    _leveling_value,
-    _payments,
-    _trigger_fields,
+    ability_json,
+    event_source,
+    leveling_value,
+    payments,
+    trigger_fields,
 )
 from .source_receipts import load_champion_sources
 
@@ -97,12 +97,10 @@ _Q_STRIKE_INTERVAL_SECONDS_UNAUTHORED = 1.0
 
 def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: sum all three sweetspot or normal casts into one entry."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     if "q_variant" in ctx.options:
         try:
@@ -183,16 +181,15 @@ def _umbral_dash(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "q_variant",
-        "type": "int",
-        "default": 7,
-        "min": 0,
-        "max": 7,
-        "label": "Q damage variant",
-        "legacy_keys": ["sweetspot"],
-    },
-    {"key": "sweetspot", "type": "bool", "default": True, "label": "Q Sweetspot hits"},
+    int_option(
+        "q_variant",
+        7,
+        minimum=0,
+        maximum=7,
+        label="Q damage variant",
+        legacy_keys=["sweetspot"],
+    ),
+    bool_option("sweetspot", True, label="Q Sweetspot hits"),
 ]
 
 ASSUMPTIONS = [
@@ -257,7 +254,22 @@ MODULE_CC: dict[str, str] = {}
 parse_abilities = build_parser(SLOTS, "Aatrox", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,too-many-locals
+# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+def _is_persistent(event: dict[str, Any]) -> bool:
+    """Return the source-certified persistent/periodic damage boundary.
+
+    The engine's own source keys are stable public receipts for these rows;
+    no damage amount or champion archetype is guessed here.
+    """
+    source = event_source(event).lower()
+    return (
+        source.startswith("burn_")
+        or source.startswith("stacking_dot_")
+        or "tibbers_aura" in source
+        or source.startswith("immolate_")
+    )
+
+
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
@@ -272,14 +284,14 @@ def derive_self_healing(
     # Both rules pay a share of what a hit dealt — Deathbringer Stance
     # "heals for a percentage of the damage dealt" and Umbral Dash the same
     # for every damage source — so both pay per hit that dealt some.
-    passive_payments = _payments(
+    passive_payments = payments(
         HealAnchor.DAMAGING_HIT,
         lambda source: "passive" in source.lower(),
         damage_events,
     )
     e_description = " ".join(
         effect.get("description", "")
-        for effect in _ability(champion_data, "E").get("effects", [])
+        for effect in ability_json(champion_data, "E").get("effects", [])
     )
     ratio_match = re.search(
         r"heals for\s+(\d+(?:\.\d+)?)%\s*\(\+\s*(\d+(?:\.\d+)?)%\s*per\s*100\s*bonus health",
@@ -292,7 +304,9 @@ def derive_self_healing(
         float(champion_stat(champion_stats, "bonus_health")) / 100.0
     )
     r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
-    r_inc = _leveling_value(_ability(champion_data, "R"), "Increased Healing", r_rank)
+    r_inc = leveling_value(
+        ability_json(champion_data, "R"), "Increased Healing", r_rank
+    )
     healing_amp = 1.0 + r_inc / 100.0 if r_rank > 0 else 1.0
 
     for payment in passive_payments:
@@ -305,11 +319,11 @@ def derive_self_healing(
                     "amount": amount,
                     "source": "Deathbringer Stance",
                     "kind": "champion_passive",
-                    **_trigger_fields(event),
+                    **trigger_fields(event),
                 }
             )
 
-    for payment in _payments(
+    for payment in payments(
         HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
     ):
         event = payment.event
@@ -323,7 +337,7 @@ def derive_self_healing(
                     "amount": amount,
                     "source": "Umbral Dash",
                     "kind": "champion_passive",
-                    **_trigger_fields(event),
+                    **trigger_fields(event),
                 }
             )
     return healing
@@ -331,7 +345,7 @@ def derive_self_healing(
 
 SOURCES = load_champion_sources("Aatrox")
 
-SELF_HEALING_RULE = declare_healing_rule("Aatrox", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Aatrox")(derive_self_healing)
 
 # E's own row is a sourced zero, so SLOTS derives ``modeled`` without a
 # damage number behind it; what prices the slot is the rule above, which

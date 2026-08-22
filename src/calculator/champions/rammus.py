@@ -63,6 +63,8 @@ from .slotlib import (
     extract_cooldown,
     with_control_event,
 )
+from .inputs import int_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the thorns formula exists only in
 # the cached W description prose ("enemies that use a basic attack
@@ -134,12 +136,10 @@ PACKET_SHA256 = "e48aa5766d5565b485a6d7fa34421f25d11f56fdcfdec5bb0c0823acc991e0f
 
 def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the thorns damage per enemy basic attack during the stance."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     autos = min(max(int(ctx.option("w_thorns_autos")), 0), 30)
     armor = float(ctx.stat("armor") or 0.0)
     magic_resistance = float(ctx.stat("magic_resistance") or 0.0)
@@ -220,14 +220,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "w_thorns_autos",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 30,
-        "label": "Enemy basic attacks during Defensive Ball Curl",
-    },
+    int_option(
+        "w_thorns_autos",
+        0,
+        minimum=0,
+        maximum=30,
+        label="Enemy basic attacks during Defensive Ball Curl",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -263,10 +262,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 # E is emitted and grants nothing the engine prices against a champion.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="E")

@@ -34,6 +34,7 @@ from .module_helpers import delayed_damage, no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, extract_value, simple_damage
 from ..ability_spec import ControlEvent, DamagePart
+from .module_contract import coverage
 
 # Primordial Burst gains +100% at 66.66% missing health and remains capped
 # thereafter ("increased by 0% : 100% (based on target's missing health)";
@@ -46,12 +47,10 @@ _EXECUTE_MISSING_RATIO_CAP = 2.0 / 3.0
 
 def _event_horizon(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: one sourced stun interval after the cage rises."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     return {
         "name": ability.get("name", "Event Horizon"),
         "rank": rank,
@@ -93,12 +92,10 @@ def _primordial_burst_scaled(base: float) -> Callable[[float], float]:
 
 def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: minimum-damage row scaled by the missing-health execute curve."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     base = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     entry = {
         "name": ability.get("name", "Primordial Burst"),
@@ -151,13 +148,7 @@ SLOTS = {
     "R": _primordial_burst,
 }
 
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="PE")
 
 OPTIONS: list[dict[str, Any]] = []
 

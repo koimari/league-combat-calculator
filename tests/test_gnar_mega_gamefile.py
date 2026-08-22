@@ -991,9 +991,9 @@ class TestRegressionSurface:
             "test_twitch_ambush_and_cask.py",
             "test_udyr_stampede_and_monk_training.py",
             "test_wave2_stat_buffs.py",
-            # weekly_ingest fetches the gnar/gnarbig authority pair, so its
-            # test module names them (added 2026-08-20 with weekly_ingest.py).
-            "test_weekly_ingest.py",
+            # The patch-day orchestrator fetches the gnar/gnarbig authority
+            # pair, so its test module names them.
+            "test_patch_update.py",
         }
 
     def test_parse_and_fight_entry_points_are_the_named_modules(self) -> None:

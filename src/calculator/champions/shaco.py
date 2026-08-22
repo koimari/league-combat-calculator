@@ -105,12 +105,10 @@ _backstab.phase = ONHIT
 
 def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the sprung box's single-target attack volley."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     attacks = min(
         max(int(ctx.options.get("w_box_attacks", _BOX_MAX_ATTACKS)), 1),
         _BOX_MAX_ATTACKS,
@@ -150,12 +148,10 @@ def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: the base Magic Damage row, or the <30%-HP execute row."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     execute = bool(ctx.options.get("e_execute", False))
     attribute = "Increased Damage" if execute else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -182,12 +178,10 @@ def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the death-explosion Magic Damage plus commanded clone attacks."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     clone_attacks = min(max(int(ctx.option("r_clone_attacks")), 0), 30)
     ad = float(ctx.stat("attack_damage"))

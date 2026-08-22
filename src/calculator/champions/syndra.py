@@ -53,6 +53,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 # HARDCODED: verify on patch updates — Transcendent's 120-splinter
 # upgrade multiplies TOTAL ability power by 15% (stacks multiplicatively
@@ -193,12 +194,10 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     """
     if _splinters(ctx) < SPLINTERS_Q_SECOND_CHARGE:
         return None
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     name = ability.get("name", "Dark Sphere")
@@ -231,12 +230,10 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: base magic damage; at 60+ splinters a bonus TRUE damage part
     equal to (12% + 2% per 100 AP) of the magic damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
@@ -278,12 +275,10 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
 def _unleashed_power(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: sphere-count option x "Magic Damage per Sphere" (one hit per
     sphere; the Min/Max JSON rows are derived totals, never read)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_sphere = extract_named(
         ability, "Magic Damage per Sphere", rank, ctx.stats, ctx.target
@@ -306,26 +301,22 @@ def _unleashed_power(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "splinters",
-        "type": "int",
-        "default": _DEFAULT_SPLINTERS,
-        "min": 0,
-        "max": _MAX_SPLINTERS,
-        "label": (
-            "Splinters of Wrath stacks (40: Q gains a 2nd charge; 60: W "
-            "bonus true damage; 100: R executes below 15% max HP; 120: +15% "
-            "total AP)"
-        ),
-    },
-    {
-        "key": "r_spheres",
-        "type": "int",
-        "default": _DEFAULT_R_SPHERES,
-        "min": _R_MIN_SPHERES,
-        "max": _R_MAX_SPHERES,
-        "label": "Dark Spheres hit by R (3 fired + up to 4 already on the field)",
-    },
+    int_option(
+        "splinters",
+        _DEFAULT_SPLINTERS,
+        minimum=0,
+        maximum=_MAX_SPLINTERS,
+        label="Splinters of Wrath stacks (40: Q gains a 2nd charge; 60: W "
+        "bonus true damage; 100: R executes below 15% max HP; 120: +15% "
+        "total AP)",
+    ),
+    int_option(
+        "r_spheres",
+        _DEFAULT_R_SPHERES,
+        minimum=_R_MIN_SPHERES,
+        maximum=_R_MAX_SPHERES,
+        label="Dark Spheres hit by R (3 fired + up to 4 already on the field)",
+    ),
 ]
 
 ASSUMPTIONS = [

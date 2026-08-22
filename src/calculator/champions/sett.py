@@ -23,9 +23,9 @@ import re
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -102,12 +102,10 @@ def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
     string (2/3/4/5/6% by rank), both priced against the target's max
     health and Sett's total AD.
     """
-    ability = ctx.ability("Q")
-    if ability is None:
+    ranked = ctx.ranked("Q")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     leveling = find_named_leveling(ability, _Q_TOTAL_ATTR)
     if leveling is None:
         raise ValueError("Sett Q Total Bonus Physical Damage row is unavailable")
@@ -164,12 +162,10 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ``w_grit`` is the explicit expended-Grit state that prices both the
     grit damage term and the self-shield.
     """
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     leveling = find_named_leveling(ability, "Damage")
     if leveling is None:
         raise ValueError("Sett W Damage leveling row is unavailable")
@@ -281,23 +277,34 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "p_right_punches",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 30,
-        "label": "Right Punch count (Pit Grit combo)",
-    },
-    {
-        "key": "w_grit",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 3000,
-        "label": "Expended Grit (Haymaker damage + shield)",
-    },
+    int_option(
+        "p_right_punches",
+        0,
+        minimum=0,
+        maximum=30,
+        label="Right Punch count (Pit Grit combo)",
+    ),
+    int_option(
+        "w_grit",
+        0,
+        minimum=0,
+        maximum=3000,
+        label="Expended Grit (Haymaker damage + shield)",
+    ),
 ]
+
+
+def _level_breakpoint_value(values: list[Any], level: int) -> float:
+    """Read a six-value Wiki row at levels 1, 6, 11, 16, 17, and 18."""
+    if not values:
+        return 0.0
+    if len(values) == 6:
+        breakpoints = (1, 6, 11, 16, 17, 18)
+        for index in range(len(breakpoints) - 1, -1, -1):
+            if level >= breakpoints[index]:
+                return float(values[index])
+        return float(values[0])
+    return float(values[min(max(level, 1) - 1, len(values) - 1)])
 
 
 def derive_self_healing(
@@ -313,7 +320,7 @@ def derive_self_healing(
     p_text = (
         " ".join(
             effect.get("description", "")
-            for effect in _healing._ability(champion_data, "P").get("effects", [])
+            for effect in _healing.ability_json(champion_data, "P").get("effects", [])
         )
         .replace("[", " ")
         .replace("]", " ")
@@ -339,8 +346,8 @@ def derive_self_healing(
         float(value) for value in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))
     ]
     level = max(1, int(champion_stat(champion_stats, "level")))
-    base = _healing._level_breakpoint_value(base_values, level)
-    maximum = _healing._level_breakpoint_value(max_values, level)
+    base = _level_breakpoint_value(base_values, level)
+    maximum = _level_breakpoint_value(max_values, level)
     segments_cap = int(round(maximum / base)) if base > 0.0 else 0
     duration = max(0.0, float(fight_duration_seconds or 0.0))
     if duration <= 0.0 or base <= 0.0:
@@ -372,4 +379,4 @@ def derive_self_healing(
     return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Sett", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Sett")(derive_self_healing)

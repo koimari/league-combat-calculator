@@ -32,6 +32,8 @@ from typing import Any
 from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
+from .inputs import bool_option, float_option, int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
 
@@ -153,36 +155,30 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "p_style_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 6,
-        "label": "Style stacks (6 = S rank, R ready)",
-    },
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": False,
-        "label": "W (Blade Whirl) active against selected skillshots",
-    },
-    {
-        "key": "w_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "W active start time in seconds",
-    },
-    {
-        "key": "w_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 0.75,
-        "label": "W active seconds; zero uses the sourced 0.75 second duration",
-    },
+    int_option(
+        "p_style_stacks",
+        0,
+        minimum=0,
+        maximum=6,
+        label="Style stacks (6 = S rank, R ready)",
+    ),
+    bool_option(
+        "w_active", False, label="W (Blade Whirl) active against selected skillshots"
+    ),
+    float_option(
+        "w_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="W active start time in seconds",
+    ),
+    float_option(
+        "w_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=0.75,
+        label="W active seconds; zero uses the sourced 0.75 second duration",
+    ),
     {
         "key": "w_blocked_skillshots",
         "type": "string_list",
@@ -195,6 +191,4 @@ OPTIONS = [
 ]
 
 
-MODULE_COVERAGE = {
-    slot: ("out_of_scope" if slot == "P" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(out_of_scope="P")

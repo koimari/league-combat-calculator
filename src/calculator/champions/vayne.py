@@ -47,6 +47,8 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
+from .module_contract import coverage
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3
@@ -86,12 +88,10 @@ def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: %maxHP true damage every 3rd hit, in the on-hit shell."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_hit = pct_health_per_hit(
         ability,
@@ -119,26 +119,15 @@ def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "condemn_wall",
-        "type": "bool",
-        "default": True,
-        "label": "E Condemn into wall",
-    },
-    {
-        "key": "q_tumble_reset",
-        "type": "bool",
-        "default": False,
-        "label": (
-            "Model Tumble's attack-reset throughput: each accepted Q cast "
-            "buys one extra basic attack (the wiki: 'Tumble resets Vayne's "
-            "basic attack timer'; the binary Trait_AttackReset tag; the "
-            "acceleration magnitude is script-side)"
-        ),
-        # NO rotation metadata — a throughput assertion is not a rotation
-        # edge (centrally classified irrelevant, the w_kill_assertion
-        # precedent).
-    },
+    bool_option("condemn_wall", True, label="E Condemn into wall"),
+    bool_option(
+        "q_tumble_reset",
+        False,
+        label="Model Tumble's attack-reset throughput: each accepted Q cast "
+        "buys one extra basic attack (the wiki: 'Tumble resets Vayne's "
+        "basic attack timer'; the binary Trait_AttackReset tag; the "
+        "acceleration magnitude is script-side)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -218,9 +207,4 @@ SOURCES = load_champion_sources("Vayne")
 
 # P damages nothing and is deliberately off the slot map, so it is a
 # reviewed no-damage slot rather than the unmodeled gap SLOTS derives.
-MODULE_COVERAGE = {
-    slot: (
-        "modeled" if slot in SLOTS else "no_damage" if slot == "P" else "out_of_scope"
-    )
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

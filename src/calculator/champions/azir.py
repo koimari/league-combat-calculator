@@ -44,6 +44,8 @@ from typing import Any
 from .engine import SlotCtx, build_parser
 from .slotlib import extract_cooldown, extract_value, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 
 # HARDCODED: wiki-prose soldier mechanics with no JSON home — verify on
 # patch updates. https://wiki.leagueoflegends.com/en-us/Azir
@@ -71,12 +73,10 @@ def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: zero-damage entry carrying the Sand Soldier auto replacement."""
     if not bool(ctx.options.get("soldier_autos", True)):
         return None  # Azir autos normally (physical, crits, full on-hit)
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_soldier = _soldier_attack_damage(
         ability, rank, ctx.level, ctx.stat("ability_power")
@@ -111,20 +111,16 @@ def _arise(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "soldier_count",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": 3,
-        "label": "Sand Soldiers attacking the target",
-    },
-    {
-        "key": "soldier_autos",
-        "type": "bool",
-        "default": True,
-        "label": "Replace basic attacks with Sand Soldier attacks",
-    },
+    int_option(
+        "soldier_count",
+        1,
+        minimum=1,
+        maximum=3,
+        label="Sand Soldiers attacking the target",
+    ),
+    bool_option(
+        "soldier_autos", True, label="Replace basic attacks with Sand Soldier attacks"
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -177,6 +173,4 @@ SOURCES = load_champion_sources("Azir")
 
 # P is not absent for want of a parser: Sun Disc is a separate destroyed-tower
 # entity that deals no enemy damage, which the derived map cannot say.
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in SLOTS else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

@@ -39,7 +39,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
     damage_entry,
@@ -49,7 +49,7 @@ from .slotlib import (
     with_control,
 )
 
-from ..healing_helpers import HealAnchor, _heal_from_damage, _payments
+from ..healing_helpers import HealAnchor, heal_from_damage, payments
 
 # Sourced storm cadence (wiki W): "take magic damage on-cast and every
 # 0.5 seconds thereafter" over the 5-second desecrated area -> 10 ticks
@@ -65,12 +65,10 @@ _R_TETHER_SECONDS = 3.0
 
 def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: 10 ticks of Maximum Damage Per Tick == Maximum Total Damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Maximum Damage Per Tick", rank, ctx.stats, ctx.target
@@ -101,12 +99,10 @@ def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _soul_shackles(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: initial hit + the same damage again at the 3s tether break."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -234,22 +230,22 @@ def derive_self_healing(
     monsters" (wiki P).  In a champion duel every Q/W/R damage event is
     ability damage against the champion target (W's storm ticks included);
     E is a shield and deals no damage.  The anchor is the damaging hit, so
-    the rule takes its occasions from ``_payments`` rather than counting
+    the rule takes its occasions from ``payments`` rather than counting
     ledger rows.
     """
     healing: list[dict] = []
-    for payment in _payments(
+    for payment in payments(
         HealAnchor.DAMAGING_HIT,
         lambda source: source in {"Q", "W", "R"},
         damage_events,
     ):
-        _heal_from_damage(
+        heal_from_damage(
             healing,
             payment.event,
             0.18 * max(0.0, float(payment.event.get("damage", 0.0))),
             "Soul Siphon",
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Morgana", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Morgana")(derive_self_healing)

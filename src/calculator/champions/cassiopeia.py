@@ -50,6 +50,8 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
+from .module_contract import coverage
 
 
 def _bonus_magic_damage_levelings(
@@ -71,12 +73,10 @@ def _bonus_magic_damage_levelings(
 
 def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: per-level base + 10% AP; poisoned targets add rank bonus + 55% AP."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     base_leveling, poison_leveling = _bonus_magic_damage_levelings(ability)
     # Base scales per champion LEVEL: modifier 0 is the 40-entry array
@@ -120,12 +120,10 @@ def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
     is its rounded 1/7th, which would drift by ~0.03 per rank.  The seven
     ticks are still emitted as events for the coupled ledger.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Noxious Blast"),
@@ -158,12 +156,10 @@ def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
     19 x per-second/4 = 95% of the total — the round-off the worklist
     targets.)
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Miasma"),
@@ -242,18 +238,12 @@ def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "target_poisoned",
-        "type": "bool",
-        "default": True,
-        "label": "Target poisoned (E enhanced damage)",
-    },
-    {
-        "key": "r_target_facing",
-        "type": "bool",
-        "default": True,
-        "label": "R target faces Cassiopeia (stun instead of slow)",
-    },
+    bool_option("target_poisoned", True, label="Target poisoned (E enhanced damage)"),
+    bool_option(
+        "r_target_facing",
+        True,
+        label="R target faces Cassiopeia (stun instead of slow)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -309,10 +299,4 @@ parse_abilities = build_parser(SLOTS, "Cassiopeia", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Cassiopeia")
 
 # P is emitted, but its row is a sourced zero — not a fact SLOTS derives.
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="P")

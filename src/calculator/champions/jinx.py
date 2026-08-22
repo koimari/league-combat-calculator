@@ -11,6 +11,8 @@ from typing import Any
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_value
+from .inputs import int_option
+from ..stats import calculate_attack_speed
 
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
 
@@ -26,12 +28,10 @@ _E_ARMING_SECONDS = 0.5
 
 
 def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     weapon = str(ctx.options.get("jinx_weapon", "minigun")).lower()
     entry = damage_entry(
         ability.get("name", "Switcheroo!"),
@@ -53,8 +53,8 @@ def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
         first = extract_value(ability, "Bonus Attack Speed", rank)
         subsequent = extract_value(ability, "Attack Speed per Subsequent Stack", rank)
         bonus_as = 0.0 if stacks <= 0 else first + max(0, stacks - 1) * subsequent
-        ctx.stats["attack_speed"] = (
-            ctx.stat("attack_speed") + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
+        ctx.stats["attack_speed"] = calculate_attack_speed(
+            ctx.stat("attack_speed"), ctx.stat("attack_speed_ratio"), bonus_as
         )
         entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
         entry["detail"] = (
@@ -136,20 +136,14 @@ OPTIONS = [
             {"value": "rocket", "label": "Fishbones rocket launcher"},
         ],
     },
-    {
-        "key": "jinx_rev_up_stacks",
-        "type": "int",
-        "default": 3,
-        "min": 0,
-        "max": 3,
-        "label": "Pow-Pow Rev'd Up stacks",
-    },
-    {
-        "key": "jinx_get_excited_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": "Get Excited! champion stacks",
-    },
+    int_option(
+        "jinx_rev_up_stacks", 3, minimum=0, maximum=3, label="Pow-Pow Rev'd Up stacks"
+    ),
+    int_option(
+        "jinx_get_excited_stacks",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Get Excited! champion stacks",
+    ),
 ]

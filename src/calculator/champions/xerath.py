@@ -22,6 +22,8 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764db"
 
@@ -41,12 +43,10 @@ _R_BARRAGE_INTERVAL_SECONDS = 0.627
 
 def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: every Arcane Barrage of the channel, plus Arcane Perfection stacks."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     recasts = int(round(extract_named(ability, "Number of Recasts", rank)))
     per_shot = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     stacks = min(max(int(ctx.option("r_arcane_perfection")), 0), 6)
@@ -131,14 +131,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "r_arcane_perfection",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 6,
-        "label": "Arcane Perfection stacks (R barrage bonus)",
-    },
+    int_option(
+        "r_arcane_perfection",
+        0,
+        minimum=0,
+        maximum=6,
+        label="Arcane Perfection stacks (R barrage bonus)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -164,7 +163,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "a sourced no-damage classification rather than an unmodeled gap "
     "(no_damage, not out_of_scope).",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

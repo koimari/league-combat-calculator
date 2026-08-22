@@ -35,6 +35,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 # HARDCODED: verify on patch updates — the Ablaze DoT is prose-only in
 # the JSON (P effect[1] has no leveling entry): each stack deals 2% of
@@ -63,12 +64,10 @@ def _r_bounces(ctx: SlotCtx) -> int:
 
 def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: per-bounce damage x the r_bounces option (never the JSON total)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total = per_bounce * _r_bounces(ctx)
     entry = damage_entry(
@@ -156,14 +155,9 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "r_bounces",
-        "type": "int",
-        "default": 3,
-        "label": "R bounces hitting the target",
-        "min": 1,
-        "max": 3,
-    },
+    int_option(
+        "r_bounces", 3, minimum=1, maximum=3, label="R bounces hitting the target"
+    ),
 ]
 
 ASSUMPTIONS = [

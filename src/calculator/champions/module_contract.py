@@ -65,6 +65,30 @@ class ChampionModuleContractError(ValueError):
     """A registered champion module does not publish a valid contract."""
 
 
+def coverage(*, no_damage: str = "", out_of_scope: str = "") -> dict[str, str]:
+    """A module's own five-slot reading, named by exception.
+
+    ``modeled`` is what a registered module claims for a slot unless it says
+    otherwise, so a declaration states only the slots it reads differently:
+    ``coverage(no_damage="PW")`` is a kit whose passive and W price nothing
+    the enemy takes, and everything else modelled.
+    """
+    named = no_damage + out_of_scope
+    unknown = sorted(set(named) - set(REQUIRED_CHAMPION_SLOTS))
+    if unknown:
+        raise ChampionModuleContractError(
+            f"coverage() named {unknown}, which are not champion slots"
+        )
+    if len(set(named)) != len(named):
+        raise ChampionModuleContractError(
+            "coverage() named one slot twice: "
+            f"no_damage={no_damage!r} out_of_scope={out_of_scope!r}"
+        )
+    stated = {slot: "no_damage" for slot in no_damage}
+    stated.update({slot: "out_of_scope" for slot in out_of_scope})
+    return {slot: stated.get(slot, "modeled") for slot in REQUIRED_CHAMPION_SLOTS}
+
+
 @dataclass(frozen=True, slots=True)
 class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     """The single runtime and review view of one registered champion."""

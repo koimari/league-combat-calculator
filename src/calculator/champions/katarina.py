@@ -30,15 +30,14 @@ from .slotlib import (
     with_item_on_hits,
 )
 from .source_receipts import load_champion_sources
+from .module_contract import coverage
 
 
 def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     daggers = max(1, min(15, int(ctx.option("r_daggers"))))
     physical = extract_named(
         ability, "Physical Damage Per Dagger", rank, ctx.stats, ctx.target
@@ -187,6 +186,4 @@ ASSUMPTIONS = list(_packet_assumptions) + [
     "40% window per hit",
 ]
 SOURCES = load_champion_sources("Katarina")
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot != "W" else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="W")

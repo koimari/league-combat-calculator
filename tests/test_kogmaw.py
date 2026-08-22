@@ -512,30 +512,6 @@ class TestFightEngineIntegration:
 # Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
-# Every control word the Wiki uses for the classes an item passive keys on.
-CONTROL_WORDS = (
-    "stun",
-    "root",
-    "snare",
-    "charm",
-    "fear",
-    "flee",
-    "taunt",
-    "sleep",
-    "suppress",
-    "knock",
-    "airborne",
-    "pull",
-    "slow",
-    "immobiliz",
-    "stasis",
-    "drowsy",
-    "cripple",
-    "polymorph",
-    "disarm",
-    "silence",
-)
-
 
 class TestReviewedCrowdControl:
     """Kog'Maw's kit facts, held to the cached text and to the ledger.
@@ -556,11 +532,7 @@ class TestReviewedCrowdControl:
         for slot, kind in kogmaw.MODULE_CC.items():
             if kind != "none":
                 continue
-            hits = [
-                word
-                for word in CONTROL_WORDS
-                if word in cc_review.slot_text(kogmaw_data, slot)
-            ]
+            hits = cc_review.any_control_hits(kogmaw_data, slot)
             assert hits == [], slot
 
     def test_every_ability_event_carries_the_review(self, kogmaw_data):

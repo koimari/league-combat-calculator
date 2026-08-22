@@ -30,6 +30,7 @@ from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry, extract_cooldown
+from .inputs import int_option
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
@@ -158,12 +159,10 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: per-Feather damage x recalled Feather count (stack detonation)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     base_source = "Xayah.E[0].effects[0].leveling[0].modifiers[0]"
     ratio_source = "Xayah.E[0].effects[0].leveling[0].modifiers[1]"
@@ -270,34 +269,29 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "clean_cuts_secondary_targets",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 5,
-        "label": (
-            "Other enemies hit by each Clean Cuts Feather (level-scaled "
-            "35/45/55% AD, per empowered auto)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "P"},
-    },
-    {
-        "key": "clean_cuts_stacks",
-        "type": "int",
-        "default": _CLEAN_CUTS_MAX_STACKS,
-        "min": 0,
-        "max": _CLEAN_CUTS_MAX_STACKS,
-        "label": "Clean Cuts stacks",
-    },
-    {
-        "key": "bladecaller_feathers",
-        "type": "int",
-        "default": _DEFAULT_FEATHERS,
-        "min": 0,
-        "max": _MAX_FEATHERS,
-        "label": "Feathers recalled by Bladecaller",
-    },
+    int_option(
+        "clean_cuts_secondary_targets",
+        0,
+        minimum=0,
+        maximum=5,
+        label="Other enemies hit by each Clean Cuts Feather (level-scaled "
+        "35/45/55% AD, per empowered auto)",
+        rotation={"role": "irrelevant", "slot": "P"},
+    ),
+    int_option(
+        "clean_cuts_stacks",
+        _CLEAN_CUTS_MAX_STACKS,
+        minimum=0,
+        maximum=_CLEAN_CUTS_MAX_STACKS,
+        label="Clean Cuts stacks",
+    ),
+    int_option(
+        "bladecaller_feathers",
+        _DEFAULT_FEATHERS,
+        minimum=0,
+        maximum=_MAX_FEATHERS,
+        label="Feathers recalled by Bladecaller",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

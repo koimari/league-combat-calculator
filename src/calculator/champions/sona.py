@@ -21,11 +21,13 @@ which ``slotlib``'s ``stat_buff`` dispatch has no key for.
 
 from typing import Any
 
-from ..healing_helpers import _ability, _rank
+from ..healing_helpers import ability_json, parsed_rank
 from .engine import ONHIT, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import extract_named, on_hit_entry
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "c78392f6b8f667c85594d31be2e6a9c1b7c6504d5cd02e3c5b385271dafc6c06"
 
@@ -81,14 +83,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_power_chords",
-        "type": "int",
-        "default": _POWER_CHORDS_PER_ROTATION,
-        "min": 0,
-        "max": 10,
-        "label": "Power Chords landed",
-    },
+    int_option(
+        "p_power_chords",
+        _POWER_CHORDS_PER_ROTATION,
+        minimum=0,
+        maximum=10,
+        label="Power Chords landed",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -103,9 +104,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "1.5s (shield:W:<cast> key); the in-game 'most wounded allied "
     "champion nearby' selection is the explicit roster teammate choice.",
 ]
-MODULE_COVERAGE = {
-    slot: ("out_of_scope" if slot == "E" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(out_of_scope="E")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -126,9 +125,9 @@ def derive_self_healing(
     """
     del damage_events, fight_duration_seconds
     heal = extract_named(
-        _ability(champion_data, "W"),
+        ability_json(champion_data, "W"),
         "Heal",
-        _rank(ability_damages, "W"),
+        parsed_rank(ability_damages, "W"),
         champion_stats,
     )
     if heal <= 0.0:
@@ -146,7 +145,7 @@ def derive_self_healing(
         for cast_index, cast in enumerate(cast_timeline or [])
         if cast.get("slot") == "W"
     ]
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Sona", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Sona")(derive_self_healing)

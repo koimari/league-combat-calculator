@@ -95,6 +95,8 @@ from .slotlib import (
     stat_buff,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Deadly Venom per-stack total true damage over 6 seconds by level
@@ -180,12 +182,10 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: base + per-stack physical (+35% bonus AD) + per-stack 35% AP magic."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     base = extract_named(ability, "Base Physical Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(
@@ -311,26 +311,20 @@ def _venom_cask(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "poison_stacks",
-        "type": "int",
-        "default": _POISON_MAX_STACKS,
-        "min": 0,
-        "max": _POISON_MAX_STACKS,
-        "label": (
-            "Deadly Venom stacks on the target when the fight opens "
-            "(6 = fully stacked)"
-        ),
-    },
-    {
-        "key": "q_ambush_break",
-        "type": "bool",
-        "default": False,
-        "label": (
-            "Twitch opens the fight by breaking Ambush "
-            "(Element of Surprise: bonus attack speed for 6s)"
-        ),
-        "rotation": {
+    int_option(
+        "poison_stacks",
+        _POISON_MAX_STACKS,
+        minimum=0,
+        maximum=_POISON_MAX_STACKS,
+        label="Deadly Venom stacks on the target when the fight opens "
+        "(6 = fully stacked)",
+    ),
+    bool_option(
+        "q_ambush_break",
+        False,
+        label="Twitch opens the fight by breaking Ambush "
+        "(Element of Surprise: bonus attack speed for 6s)",
+        rotation={
             "role": "self_state",
             "slot": "Q",
             "note": (
@@ -341,7 +335,7 @@ OPTIONS: list[dict[str, Any]] = [
                 "not faster, which is why this is off by default."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -402,8 +396,6 @@ parse_abilities = build_parser(SLOTS, "Twitch", cc_kinds=MODULE_CC)
 
 # W is emitted and grants nothing the engine prices: its slow has no
 # magnitude field, and the poison stacks it applies are the P option's.
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "W" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="W")
 
 SOURCES = load_champion_sources("Twitch")

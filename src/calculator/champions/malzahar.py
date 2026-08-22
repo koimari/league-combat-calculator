@@ -48,7 +48,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .module_helpers import rank
 from .packet_module import build_packet_module
@@ -61,6 +61,7 @@ from .slotlib import (
     fixed_count_pet_row,
     with_control,
 )
+from .module_contract import coverage
 
 # E: 16 ticks over 4s (every 0.25s); R: 10 ticks over 2.5s (every 0.25s).
 _E_TICKS = 16
@@ -140,12 +141,10 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     the Zz'Rot stacks come from casting another ability and the Voidlings
     from W's Active, neither of which a basic attack does.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    w_rank = ctx.rank_for()
-    if w_rank < 1:
-        return None
+    ability, w_rank = ranked
     if ctx.option("auto_attacks_only"):
         return None
 
@@ -300,28 +299,22 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 OPTIONS = [
     *OPTIONS,
-    {
-        "key": "voidling_count",
-        "type": "int",
-        "default": 3,
-        "min": 2,
-        "max": 4,
-        "label": (
-            "Active Voidlings (3 = one full W cast at 2 Zz'Rot stacks; "
-            "4 models an overlapping second wave in a sustained window)"
-        ),
-    },
-    {
-        "key": "voidling_attacks",
-        "type": "int",
-        "default": 8,
-        "label": (
-            "Attacks per Voidling (0 = none; defaults to the sourced "
-            "attack-speed cadence over the fight window)"
-        ),
-        "min": 0,
-        "max": 40,
-    },
+    int_option(
+        "voidling_count",
+        3,
+        minimum=2,
+        maximum=4,
+        label="Active Voidlings (3 = one full W cast at 2 Zz'Rot stacks; "
+        "4 models an overlapping second wave in a sustained window)",
+    ),
+    int_option(
+        "voidling_attacks",
+        8,
+        minimum=0,
+        maximum=40,
+        label="Attacks per Voidling (0 = none; defaults to the sourced "
+        "attack-speed cadence over the fight window)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -348,7 +341,4 @@ ASSUMPTIONS = [
     "out_of_scope). P is not a cast slot in this engine's rotation.",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

@@ -28,8 +28,8 @@ import re
 from dataclasses import replace
 from typing import Any
 
-from .healing_contract import declare_healing_rule
-from .inputs import champion_stat
+from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, SlotParser, build_parser
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
@@ -242,20 +242,8 @@ def _sundering_slam(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "sweetspot",
-        "type": "bool",
-        "default": True,
-        "label": "Q/Q2 Sweetspot (doubled damage)",
-    },
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 4,
-        "label": "Passive procs",
-        "min": 0,
-        "max": 20,
-    },
+    bool_option("sweetspot", True, label="Q/Q2 Sweetspot (doubled damage)"),
+    int_option("passive_procs", 4, minimum=0, maximum=20, label="Passive procs"),
 ]
 
 ASSUMPTIONS = [
@@ -338,7 +326,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 SOURCES = load_champion_sources("Ambessa")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -350,13 +338,13 @@ def derive_self_healing(
     """Resolve Ambessa self-healing events from its authored packet."""
     healing = []
     r_rank = int(ability_damages.get("R", {}).get("rank", 0) or 0)
-    ratio = _healing._leveling_value(
-        _healing._ability(champion_data, "R"), "Healing Percentage", r_rank
+    ratio = _healing.leveling_value(
+        _healing.ability_json(champion_data, "R"), "Healing Percentage", r_rank
     )
     # Public Execution heals from post-mitigation active ability damage: a
     # share of each hit's own damage, so one payment per hit that dealt some.
     if ratio > 0:
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             lambda source: source in {"Q", "Q2", "W", "E", "R"},
             damage_events,
@@ -370,10 +358,10 @@ def derive_self_healing(
                         "amount": amount,
                         "source": "Public Execution",
                         "kind": "champion_passive",
-                        **_healing._trigger_fields(event),
+                        **_healing.trigger_fields(event),
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Ambessa", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Ambessa")(derive_self_healing)

@@ -34,6 +34,7 @@ from .slotlib import (
     extract_cooldown,
     extract_value,
 )
+from .module_contract import coverage
 
 PACKET_SHA256 = "d6e04f1cd92d4f7ddd569c7ba4bb306cdd06c18e230c7ed2a57ef89ba45b3c9c"
 
@@ -60,12 +61,10 @@ _INSANITY_POTION_STATS = (
 
 def _insanity_potion(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: one Bonus Stats row granted as AP, resistances and move speed."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Stats", rank)
     bonus = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
@@ -144,6 +143,4 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 # P and W are emitted and grant nothing the engine prices.
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot in {"P", "W"} else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="PW")

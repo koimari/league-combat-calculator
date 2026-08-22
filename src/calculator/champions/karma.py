@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import (
     damage_entry,
@@ -104,14 +104,9 @@ MODULE_CC = {"Q": "slow", "W": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Karma", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {"key": "q_mantra", "type": "bool", "default": False, "label": "Mantra Soulflare"},
-    {"key": "w_renewal", "type": "bool", "default": False, "label": "Mantra Renewal"},
-    {
-        "key": "w_tether_holds",
-        "type": "bool",
-        "default": True,
-        "label": "Focused Resolve tether completes",
-    },
+    bool_option("q_mantra", False, label="Mantra Soulflare"),
+    bool_option("w_renewal", False, label="Mantra Renewal"),
+    bool_option("w_tether_holds", True, label="Focused Resolve tether completes"),
 ]
 ASSUMPTIONS = [
     "Mantra is an explicit next-ability state; Soulflare and Renewal use the Mantra rank rather than silently changing base ranks.",
@@ -138,7 +133,7 @@ SOURCES = load_champion_sources("Karma")
 # timestamp (Darius pattern); the Mantra variant only exists when the
 # parse picked it (its parsed name is "Renewal").  The heal lands on cast,
 # even if the paired W packet was fully blocked.
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -171,7 +166,7 @@ def derive_self_healing(
                         "actor_wide": True,
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Karma", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Karma")(derive_self_healing)

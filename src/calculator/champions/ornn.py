@@ -20,15 +20,14 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 
 def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
@@ -56,12 +55,10 @@ _R_PASS_CC_KINDS = ("slow", "immobilize")
 
 
 def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     attr = "Total Magic Damage" if passes == 2 else "Magic Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -123,16 +120,7 @@ MODULE_CC = {"Q": "slow", "W": "none", "E": "none", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Ornn", cc_kinds=MODULE_CC)
 
-OPTIONS = [
-    {
-        "key": "r_passes",
-        "type": "int",
-        "default": 2,
-        "min": 1,
-        "max": 2,
-        "label": "R elemental passes",
-    }
-]
+OPTIONS = [int_option("r_passes", 2, minimum=1, maximum=2, label="R elemental passes")]
 
 ASSUMPTIONS = [
     "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout Brittle state in its detail receipt.",

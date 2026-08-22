@@ -59,12 +59,10 @@ def _blade_of_the_exile(ctx: SlotCtx):
     bonus AD within the ult window.  The amount is snapshot at cast
     ("factored upon cast, and does not change" — cached R[0] notes).
     """
-    ability = ctx.ability("R", 0)
-    if ability is None:
+    ranked = ctx.ranked("R", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = _R_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
     ctx.stats["attack_damage"] = float(ctx.stat("attack_damage") or 0.0) + value
     ctx.stats["bonus_attack_damage"] = (

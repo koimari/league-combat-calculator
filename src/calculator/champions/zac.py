@@ -38,7 +38,7 @@ channels, not through its packet row.
 from dataclasses import replace
 
 from ..ability_spec import DamagePart
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .engine import CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module, full_plus_reduced_parser
@@ -86,12 +86,10 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 # 0.25-second cast time.
 def _stretching_strikes(ctx: SlotCtx):
     """Q: both Stretching Strikes — 2 x the sourced per-hit Magic Damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Stretching Strikes"),
@@ -211,7 +209,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -222,7 +220,7 @@ def derive_self_healing(
 ):
     """Resolve Zac self-healing events from its authored packet."""
     healing = []
-    p = _healing._ability(champion_data, "P")
+    p = _healing.ability_json(champion_data, "P")
     level = int(champion_stat(champion_stats, "level"))
     chunk_pct = _healing.extract_named(
         p, "Max Health Damage", level, champion_stats, {}
@@ -235,7 +233,7 @@ def derive_self_healing(
     ) -> float:
         return maximum_health * pct / 100.0
 
-    for event in _healing._attributed_events(
+    for event in _healing.attributed_events(
         damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
     ):
         healing.append(
@@ -245,10 +243,10 @@ def derive_self_healing(
                 "amount_formula": cell_division_heal,
                 "source": "Cell Division",
                 "kind": "champion_passive",
-                **_healing._trigger_fields(event),
+                **_healing.trigger_fields(event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Zac", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Zac")(derive_self_healing)

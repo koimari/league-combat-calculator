@@ -35,10 +35,11 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import typed_damage
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .. import healing_helpers as _healing
+from .inputs import int_option
 
 PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
 
@@ -79,12 +80,10 @@ def _queens_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: physical bite, or the 120% true-damage variant at max Fury."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     fury = max(0, min(100, int(ctx.option("e_fury"))))
     if fury >= 100:
         value = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
@@ -145,27 +144,23 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "e_fury",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 100,
-        "step": 25,
-        "label": (
-            "Fury (0-100): at 100, Furious Bite deals 120% damage as true "
-            "damage (the cached True Damage row)"
-        ),
-    },
-    {
-        "key": "p_burrow_fury",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 100,
-        "step": 25,
-        "label": "Fury consumed by the burrow that opens the fight (P heal)",
-        "rotation": {
+    int_option(
+        "e_fury",
+        0,
+        minimum=0,
+        maximum=100,
+        label="Fury (0-100): at 100, Furious Bite deals 120% damage as true "
+        "damage (the cached True Damage row)",
+        step=25,
+    ),
+    int_option(
+        "p_burrow_fury",
+        0,
+        minimum=0,
+        maximum=100,
+        label="Fury consumed by the burrow that opens the fight (P heal)",
+        step=25,
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -173,7 +168,7 @@ OPTIONS = list(OPTIONS) + [
                 "the rotation starts; no cast orders it."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -205,7 +200,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # is what the contract derives.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -225,7 +220,7 @@ def derive_self_healing(
     """
     healing: list[dict[str, Any]] = []
     burrow = ability_damages.get("passive", {}).get("self_heal_state")
-    w_casts = _healing._cast_slot_times(cast_timeline, "W")
+    w_casts = _healing.cast_slot_times(cast_timeline, "W")
     if isinstance(burrow, dict) and w_casts:
         amount = float(burrow.get("amount", 0.0) or 0.0)
         if amount > 0.0:
@@ -238,7 +233,7 @@ def derive_self_healing(
                     "actor_wide": True,
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Rek'Sai", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Rek'Sai")(derive_self_healing)

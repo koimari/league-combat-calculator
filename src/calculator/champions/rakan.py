@@ -22,10 +22,11 @@ from typing import Any
 
 from .inputs import champion_stat
 from .engine import build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import attach_self_shield, simple_damage, support_cast, with_control
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from .module_contract import coverage
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -142,11 +143,11 @@ parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
 # P emits no cast row of its own — a passive is never cast — so the
 # derivation would call it out_of_scope; the shield Q carries is what the
 # engine prices (247.94 for 10s at level 18 with no items).
-MODULE_COVERAGE = dict.fromkeys("PQWER", "modeled")
+MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -159,10 +160,10 @@ def derive_self_healing(
     healing = []
     level = max(1, int(champion_stat(champion_stats, "level")))
     heal = _healing.extract_named(
-        _healing._ability(champion_data, "Q"), "Heal", level, champion_stats
+        _healing.ability_json(champion_data, "Q"), "Heal", level, champion_stats
     )
     if heal > 0.0:
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
         ):
             event = payment.event
@@ -175,7 +176,7 @@ def derive_self_healing(
                     "actor_wide": True,
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Rakan", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Rakan")(derive_self_healing)

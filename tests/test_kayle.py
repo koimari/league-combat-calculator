@@ -14,30 +14,6 @@ from src.calculator.champions import kayle
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
 
-# Every control word the Wiki uses for the classes an item passive keys on.
-CONTROL_WORDS = (
-    "stun",
-    "root",
-    "snare",
-    "charm",
-    "fear",
-    "flee",
-    "taunt",
-    "sleep",
-    "suppress",
-    "knock",
-    "airborne",
-    "pull",
-    "slow",
-    "immobiliz",
-    "stasis",
-    "drowsy",
-    "cripple",
-    "polymorph",
-    "disarm",
-    "silence",
-)
-
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"Q": "slowed for 2 seconds"}
 
@@ -61,11 +37,7 @@ class TestReviewedCrowdControl:
         for slot, kind in kayle.MODULE_CC.items():
             if kind != "none":
                 continue
-            hits = [
-                word
-                for word in CONTROL_WORDS
-                if word in cc_review.slot_text(cached, slot)
-            ]
+            hits = cc_review.any_control_hits(cached, slot)
             assert hits == UNCONTROLLED_MENTIONS.get(slot, []), slot
 
     def test_every_ability_event_carries_the_review(self, cached):

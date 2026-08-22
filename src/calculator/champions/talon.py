@@ -25,11 +25,12 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import find_named_leveling, sum_modifiers
+from .module_contract import coverage
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
 # (+ 13.125% bonus AD) physical damage every 0.125 seconds" — 16 ticks
@@ -132,14 +133,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 10,
-        "label": "Blade's End 3-stack consumes",
-    },
+    int_option(
+        "passive_procs", 1, minimum=0, maximum=10, label="Blade's End 3-stack consumes"
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -168,13 +164,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "reflects a sourced no-damage classification rather than an "
     "unmodeled gap (no_damage, not out_of_scope).",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -186,15 +179,15 @@ def derive_self_healing(
     """Resolve Talon self-healing events from its authored packet."""
     healing = []
     level = max(1, int(champion_stat(champion_stats, "level")))
-    heal = _healing._leveling_value(
-        _healing._ability(champion_data, "Q"), "Heal", level
+    heal = _healing.leveling_value(
+        _healing.ability_json(champion_data, "Q"), "Heal", level
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
         event = payment.event
-        _healing._heal_from_damage(healing, event, heal, "Noxian Diplomacy")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        _healing.heal_from_damage(healing, event, heal, "Noxian Diplomacy")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Talon", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Talon")(derive_self_healing)

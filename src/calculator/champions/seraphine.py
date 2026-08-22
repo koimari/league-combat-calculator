@@ -85,6 +85,7 @@ from .slotlib import (
     on_hit_entry,
     with_control,
 )
+from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
@@ -137,12 +138,10 @@ _stage_presence.phase = ONHIT
 
 def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: flat base + 0%:75% missing-health amplifier (hp-scaled part)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     maximum = extract_named(
         ability, "Maximum Enhanced Damage", rank, ctx.stats, ctx.target
@@ -207,20 +206,18 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_notes",
-        "type": "int",
-        "default": _NOTE_CAP,
-        "min": 0,
-        "max": _NOTE_CAP,
-        "label": "Notes on the empowered attack",
-    },
-    {
-        "key": "w_already_shielded",
-        "type": "bool",
-        "default": False,
-        "label": "W caster already has a shield for the first pulse",
-    },
+    int_option(
+        "p_notes",
+        _NOTE_CAP,
+        minimum=0,
+        maximum=_NOTE_CAP,
+        label="Notes on the empowered attack",
+    ),
+    bool_option(
+        "w_already_shielded",
+        False,
+        label="W caster already has a shield for the first pulse",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

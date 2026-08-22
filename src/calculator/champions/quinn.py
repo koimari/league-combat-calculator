@@ -67,12 +67,10 @@ _harrier.phase = ONHIT
 
 def _heightened_senses(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the Harrier-auto attack-speed buff (28-80%), refreshed per auto."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)

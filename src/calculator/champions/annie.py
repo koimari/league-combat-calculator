@@ -36,6 +36,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.
 # Tibbers pet numbers come from the LoL Wiki "Annie#Pets" entry:
@@ -139,12 +140,10 @@ def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
     Supports the ``tibbers_aura_seconds`` option (default 5.0) — how
     many seconds of aura damage to include in the R total.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     # R passive: % magic penetration, applied to the shared stats
     # context (BUFF phase runs before every damage slot) and reported
@@ -213,12 +212,10 @@ def _pyromania_placeholder(ctx: SlotCtx) -> None:
 
 def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: ranked zero-damage row with the real cooldown."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     return damage_entry(
         ability.get("name", "Molten Shield"),
         rank,
@@ -229,26 +226,22 @@ def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "tibbers_aura_seconds",
-        "type": "float",
-        "default": 5.0,
-        "label": "Tibbers aura duration (seconds)",
-        "min": 0,
-        "max": 45,
-        "step": 0.5,
-    },
-    {
-        "key": "tibbers_attacks",
-        "type": "int",
-        "default": 5,
-        "label": (
-            "Tibbers auto attacks (0 = none; defaults to the fight "
-            "window at the sourced enrage + 0.625 AS cadence)"
-        ),
-        "min": 0,
-        "max": 30,
-    },
+    float_option(
+        "tibbers_aura_seconds",
+        5.0,
+        minimum=0,
+        maximum=45,
+        label="Tibbers aura duration (seconds)",
+        step=0.5,
+    ),
+    int_option(
+        "tibbers_attacks",
+        5,
+        minimum=0,
+        maximum=30,
+        label="Tibbers auto attacks (0 = none; defaults to the fight "
+        "window at the sourced enrage + 0.625 AS cadence)",
+    ),
 ]
 
 ASSUMPTIONS = [

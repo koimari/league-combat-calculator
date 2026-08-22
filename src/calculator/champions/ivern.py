@@ -16,6 +16,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -43,12 +44,10 @@ _brushmaker.phase = ONHIT
 
 
 def _triggerseed(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Triggerseed"),
@@ -89,12 +88,10 @@ _DAISY_SMASH_AP_RATIO = 0.50
 
 def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: Daisy! — basic attacks plus the 3-hit Daisy Smash knockup."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     attacks = min(max(int(ctx.option("daisy_attacks")), 0), 20)
     if attacks <= 0:
         return no_damage(
@@ -178,20 +175,10 @@ MODULE_CC = {"Q": "root", "E": "slow", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Ivern", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "w_in_brush",
-        "type": "bool",
-        "default": True,
-        "label": "Ivern is in brush",
-    },
-    {
-        "key": "daisy_attacks",
-        "type": "int",
-        "default": 6,
-        "label": "Daisy attacks (5s window)",
-        "min": 0,
-        "max": 20,
-    },
+    bool_option("w_in_brush", True, label="Ivern is in brush"),
+    int_option(
+        "daisy_attacks", 6, minimum=0, maximum=20, label="Daisy attacks (5s window)"
+    ),
 ]
 ASSUMPTIONS = [
     "Ivern's non-epic monster prohibition and grove economics are preserved as utility/state.",

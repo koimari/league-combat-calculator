@@ -16,7 +16,7 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
-from src.calculator.healing_helpers import _taric_starlights_touch
+from src.calculator.champions.taric import _starlights_touch
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
@@ -99,14 +99,10 @@ def test_taric_starlights_touch_formula_matches_pinned_amount():
     amount = min(stock × per-charge, the maximum row)."""
     taric = get_champion("Taric")
     q = taric["abilities"]["Q"][0]
-    amount, charges = _taric_starlights_touch(
-        q, 5, {"health": 2000.0, "ability_power": 0.0}
-    )
+    amount, charges = _starlights_touch(q, 5, {"health": 2000.0, "ability_power": 0.0})
     assert charges == 5
     assert amount == pytest.approx(225.0)
-    amount_ap, _ = _taric_starlights_touch(
-        q, 5, {"health": 2000.0, "ability_power": 100.0}
-    )
+    amount_ap, _ = _starlights_touch(q, 5, {"health": 2000.0, "ability_power": 100.0})
     assert amount_ap == pytest.approx(225.0 + 5 * 15.0)
 
 

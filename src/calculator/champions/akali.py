@@ -28,16 +28,15 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 
 def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: emit the sourced energy restore and temporary maximum increase."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     duration = extract_value(ability, "Shroud Duration", rank)
     return {
         "name": ability.get("name", "Twilight Shroud"),
@@ -68,12 +67,10 @@ def _assassins_mark_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
 
 def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: R1 dash damage plus R2 execute bounds for missing-HP scaling."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     r1_damage = extract_named(ability, "Magic Damage", rank, ctx.stats)
     r2_min = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats)
@@ -105,14 +102,7 @@ def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 4,
-        "label": "Passive procs",
-        "min": 0,
-        "max": 20,
-    },
+    int_option("passive_procs", 4, minimum=0, maximum=20, label="Passive procs"),
 ]
 
 ASSUMPTIONS = [

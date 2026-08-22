@@ -1,4 +1,4 @@
-"""Patch-day pipeline: re-pull wiki data, audit what we implement, run the gates.
+"""The patch-day orchestrator: detect, re-pull, rebuild, gate, re-capture.
 
 When a new LoL patch drops, this script does the mechanical part of the
 update so the judgment part (deciding whether code must change, explaining
@@ -14,44 +14,85 @@ golden diffs in the commit) starts from a focused report:
                champions and items in the parse config, plus net-new /
                removed items shop-wide and a roster add/remove roll-call.
                The economics file is audited for currency the same way.
-  3. Gates   — reviewed-packet freshness, full-entry audit, staleness
-               (patch_regression), the coverage census, then pytest and
-               golden compare. The baseline is re-captured only when every
+  3. Rebuild — the derived catalogues the browser fetches, static/bis-profiles.json
+               included.
+  4. Gates   — reviewed-packet currency, full-entry audit, a game-file refresh,
+               staleness (patch_regression), the coverage census, then pytest
+               and golden compare. The baseline is re-captured only when every
                gate is green: a stale packet asset, a review-pending entry,
                a stale wiki cache, or an unacknowledged coverage frontier
                entry aborts the run before capture.
 
-Reviewed-packet gate: the checked-in
-``static/reviewed-packets.json`` must prove it was built from the current
-sources — the ``data/champions.json`` sha256 and Axword Meraki kit sha256
-receipts plus a current per-champion wiki revision receipt.  On a real patch
-day the pull changes those sources and the gate fails closed with the exact
-rebuild command; regenerate, re-review, and commit the packets before
-re-running.  Sources resolve portably: ``--wiki-db`` / ``LCC_WIKI_DB`` and
-``--axword-source`` / ``LCC_AXWORD_SOURCE``.
+Reviewed-packet gate: the checked-in ``static/reviewed-packets.json`` must
+prove *both* that it was built from the current sources (the
+``data/champions.json`` sha256 and Axword Meraki kit sha256 receipts plus a
+current per-champion wiki revision receipt) *and* that a fresh build still
+reproduces its slot declarations.  The two catch disjoint drift — changed
+sources versus a changed builder — so both run and report together
+(``reviewed_packet_report``).  On a real patch day the pull changes those
+sources and the gate fails closed with the exact rebuild command; regenerate,
+re-review, and commit the packets before re-running.  Sources resolve
+portably: ``--wiki-db`` / ``LCC_WIKI_DB`` and ``--axword-source`` /
+``LCC_AXWORD_SOURCE``.
 
 Interpreting the report and finishing the update is the `patch-update`
 skill's job (.claude/skills/patch-update/SKILL.md).
 
 Usage:
-    python scripts/patch_update.py run             # pull + audit + rebuild + gates
+    python scripts/patch_update.py run             # the full day-0 pipeline
+    python scripts/patch_update.py detect          # is a new patch live? (read-only)
     python scripts/patch_update.py audit           # re-print audit, no pull
     python scripts/patch_update.py detail NAME...  # full leaf diff for any
                                                    # champion/item vs HEAD
-    python scripts/patch_update.py run --patch 26.16  # public patch label
+    python scripts/patch_update.py fetch --patch 16.16   # game-file evidence only
+    python scripts/patch_update.py bis                   # bis-profiles only
+    python scripts/patch_update.py packets               # packet currency only
+    python scripts/patch_update.py run --patch 26.16     # public patch label
+
+``detect`` exits 1 when a new patch is live, so cron is
+``detect; [ $? -eq 1 ] && ... run``.
+
+Import contract
+---------------
+Siblings are imported **only** as ``scripts.X``, and the only ``sys.path``
+entry this file adds is the repo root (needed to run as ``python
+scripts/patch_update.py``).  Putting ``<repo>/scripts`` on the path as well
+would make a bare ``import patch_regression`` bind a *second, distinct*
+module object; the fine-grained game-file calls below would then run against
+a module no test can reach, downloading a live roster into the real
+``data/gamefiles/``.  Every network and filesystem edge is additionally an
+injected parameter defaulted to the live value, so tests supply their own
+rather than monkeypatching a module attribute.
 """
 
 import argparse
+import hashlib
 import json
 import numbers
+import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Callable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+from scripts import patch_regression
+from scripts.build_bis_profiles import build_profiles
+from scripts.build_reviewed_modules import (
+    _wiki_revisions,
+    build as build_reviewed_packets,
+    resolve_axword_source,
+    resolve_wiki_db,
+)
+from scripts.refresh_economics_data import stale_reasons
+from scripts.source_receipt import cache_patch, source_receipt, source_sha256
 from src.calculator.champions import registered_champion_names
 from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.item_effects import (
@@ -59,7 +100,11 @@ from src.calculator.item_effects import (
     _STATIC_VALUE_KEYS_BY_ITEM,
 )
 from src.calculator.item_source import branch_losses, source_audit
-from src.calculator.patch_identity import client_patch
+from src.calculator.patch_identity import (
+    PatchIdentityError,
+    canonical_patch,
+    client_patch,
+)
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 REVIEWED_PACKETS = REPO_ROOT / "static" / "reviewed-packets.json"
@@ -69,33 +114,152 @@ ESCALATED_CACHED_DATA = (
     REPO_ROOT / "docs" / "receipts" / "escalated-defects-cached-data.json"
 )
 DEFAULT_AUDIT_OUTPUT = REPO_ROOT / "docs" / "wiki-full-entry-audit.json"
-DEFAULT_STALENESS_OUT = REPO_ROOT / "data" / "staleness.json"
+DEFAULT_STALENESS = REPO_ROOT / "data" / "staleness.json"
 DEFAULT_CENSUS_OUTPUT = REPO_ROOT / "docs" / "coverage-census.json"
+DEFAULT_CHAMPIONS = REPO_ROOT / "data" / "champions.json"
+DEFAULT_GAME_DIR = REPO_ROOT / "data" / "gamefiles"
+DEFAULT_BIN_DIR = REPO_ROOT / "data" / "bin" / "characters"
+DEFAULT_BIS_OUTPUT = REPO_ROOT / "static" / "bis-profiles.json"
 ECONOMICS_TABLES = REPO_ROOT / "data" / "economics-sourced.json"
+CDRAGON_CONTENT_METADATA = (
+    "https://raw.communitydragon.org/latest/content-metadata.json"
+)
+USER_AGENT = patch_regression.USER_AGENT
 # Wiki noise: cosmetic/bookkeeping fields whose churn never affects math.
 NOISE_SUBSTRINGS = ("icon", "releaseDate", "patchLastChanged", "price", "salePrice")
 # The two provenance keys every hand-authored ally record carries; the rest
 # of the record is the sourced numbers patch day must re-read.
 _ALLY_SOURCE_KEYS = frozenset({"source_url", "source_revision_id"})
 
-try:
-    from build_reviewed_modules import (  # pylint: disable=import-error
-        _wiki_revisions,
-        resolve_axword_source,
-        resolve_wiki_db,
+# Tracked game-file authority pair: force-added despite the `data/bin/`
+# gitignore rule so the Gnar Mega-form gate has committed ground truth
+# (data/bin/README.md). `renata.bin.json` is a one-off provenance spot-check
+# documented in that README and deliberately NOT git-tracked — fetched here
+# for the same spot-check, reported separately, never committed.
+AUTHORITY_FILES: dict[str, dict[str, Any]] = {
+    "gnar": {
+        "url": "https://raw.communitydragon.org/{patch}/game/data/characters/gnar/gnar.bin.json",
+        "tracked": True,
+    },
+    "gnarbig": {
+        # Not its own WAD unit — data/bin/README.md's documented fallback:
+        # fetched from /latest/ rather than the pinned patch tag.
+        "url": "https://raw.communitydragon.org/latest/game/data/characters/gnarbig/gnarbig.bin.json",
+        "tracked": True,
+    },
+    "renata": {
+        "url": "https://raw.communitydragon.org/{patch}/game/data/characters/renata/renata.bin.json",
+        "tracked": False,
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Digest / git / download helpers
+# ---------------------------------------------------------------------------
+
+
+def _sha256_bytes(data: bytes) -> str:
+    """LF-normalised digest, matching source_receipt.source_sha256's convention."""
+    return hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def _sha256_path(path: Path) -> str | None:
+    """source_sha256, but None for a file that does not (yet) exist."""
+    if not path.is_file():
+        return None
+    return source_sha256(path)
+
+
+def _git_head_sha256(relative_path: str) -> str | None:
+    """sha256 of the LF-normalised bytes tracked at git HEAD, or None if untracked."""
+    result = subprocess.run(
+        ["git", "show", f"HEAD:{relative_path}"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=False,
     )
-    from patch_regression import extract_ddragon_version
-    from refresh_economics_data import stale_reasons
-    from source_receipt import source_receipt
-except ImportError:  # imported as scripts.patch_update in tests
-    from scripts.build_reviewed_modules import (
-        _wiki_revisions,
-        resolve_axword_source,
-        resolve_wiki_db,
+    if result.returncode != 0:
+        return None
+    return _sha256_bytes(result.stdout)
+
+
+def _git_dirty_paths(
+    relative_paths: list[str], *, repo_root: Path = REPO_ROOT
+) -> list[str]:
+    """Which of ``relative_paths`` have uncommitted index/worktree changes.
+
+    Fails closed: a git invocation that cannot answer raises rather than
+    reporting "clean" (a false "clean" is exactly the answer that would let a
+    fetch overwrite un-committed human evidence).
+    """
+    if not relative_paths:
+        return []
+    result = subprocess.run(
+        ["git", "status", "--porcelain", "--", *relative_paths],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
     )
-    from scripts.patch_regression import extract_ddragon_version
-    from scripts.refresh_economics_data import stale_reasons
-    from scripts.source_receipt import source_receipt
+    if result.returncode != 0:
+        raise RuntimeError(
+            "cannot determine whether the tracked authority files are dirty: "
+            f"git status failed ({result.stderr.strip() or result.stdout.strip()})"
+        )
+    dirty = []
+    for line in result.stdout.splitlines():
+        entry = line[3:].strip()
+        if entry:
+            # rename entries read "old -> new"; the destination is what matters
+            dirty.append(entry.split(" -> ")[-1].strip('"'))
+    return sorted(dirty)
+
+
+def authority_dirty_conflicts(
+    dest_dir: Path,
+    *,
+    repo_root: Path = REPO_ROOT,
+    tracked_dir: Path = DEFAULT_BIN_DIR,
+) -> list[str]:
+    """Tracked authority files a fetch into ``dest_dir`` would clobber while dirty.
+
+    Empty for any scratch destination — only a fetch aimed at the committed
+    ``data/bin/characters/`` location can destroy un-committed evidence.
+    """
+    if Path(dest_dir).resolve() != Path(tracked_dir).resolve():
+        return []
+    return _git_dirty_paths(
+        [
+            f"data/bin/characters/{name}.bin.json"
+            for name, spec in AUTHORITY_FILES.items()
+            if spec["tracked"]
+        ],
+        repo_root=repo_root,
+    )
+
+
+def jq_validate(path: Path, jq_bin: str = "jq") -> None:
+    """Validate one fetched JSON file with `jq empty` — fail closed on malformed JSON."""
+    try:
+        result = subprocess.run(
+            [jq_bin, "empty", str(path)], capture_output=True, text=True, check=False
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError(
+            f"jq is not installed / not on PATH (jq_bin={jq_bin!r}): {exc}"
+        ) from exc
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"jq validation failed for {path}: "
+            f"{result.stderr.strip() or result.stdout.strip()}"
+        )
+
+
+def _download_bytes(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return response.read()
 
 
 # ---------------------------------------------------------------------------
@@ -463,7 +627,7 @@ def print_audit():
     economics, economics_ok = economics_lines(
         json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8")),
         new_items,
-        extract_ddragon_version(new_champs),
+        patch_regression.extract_ddragon_version(new_champs),
     )
     for line in economics:
         print(line)
@@ -492,6 +656,125 @@ def print_detail(names):
             print(
                 f"  {path}:\n    OLD {_format_leaf(old_v)}\n    NEW {_format_leaf(new_v)}"
             )
+
+
+# ---------------------------------------------------------------------------
+# Detect: is a new patch live? (read-only, no side effects)
+# ---------------------------------------------------------------------------
+
+
+def _extract_client_patch(version_text: str) -> str:
+    """Pull a 'MM.mm' client patch label out of a CDragon version string.
+
+    e.g. "16.16.8049184+branch.releases-16-16.content.release" -> "16.16".
+    """
+    match = re.match(r"^(\d{2})\.(\d{1,2})\b", version_text.strip())
+    if not match:
+        raise RuntimeError(
+            f"unrecognized CommunityDragon version string: {version_text!r}"
+        )
+    return f"{match.group(1)}.{match.group(2)}"
+
+
+def fetch_cdragon_live_patch(fetch: Callable[[], bytes] | None = None) -> str:
+    """Resolve the live client patch via CDragon's content-metadata endpoint.
+
+    Fallback path when cdtb is not importable/on PATH (verified 2026-08-20:
+    cdtb is absent from both .venv and PATH on this machine, so this is the
+    live path in practice, not a theoretical one). ``fetch`` is injectable
+    for tests — it must return the raw response body bytes.
+    """
+    if fetch is None:
+        fetch = lambda: _download_bytes(CDRAGON_CONTENT_METADATA)
+    try:
+        payload = json.loads(fetch())
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(
+            f"CommunityDragon content-metadata fetch failed: HTTP {exc.code} "
+            f"{exc.reason} ({exc.url})"
+        ) from exc
+    except (urllib.error.URLError, OSError, ValueError) as exc:
+        raise RuntimeError(
+            f"CommunityDragon content-metadata fetch failed: {exc}"
+        ) from exc
+    version = payload.get("version") if isinstance(payload, dict) else None
+    if not version:
+        raise RuntimeError(
+            f"CommunityDragon content-metadata carried no 'version' field: {payload!r}"
+        )
+    return _extract_client_patch(str(version))
+
+
+def resolve_live_patch(
+    *,
+    cdtb_bin: str | None = None,
+    cdragon_fetch: Callable[[], bytes] | None = None,
+    cdtb_resolver: Callable[..., str] | None = None,
+) -> tuple[str, str]:
+    """The live client patch as ``(patch, source)``, cdtb first and CDragon
+    content-metadata as the fallback.  ``cdtb_resolver`` is the injectable
+    seam for the cdtb probe, so tests need no monkeypatching."""
+    resolver = cdtb_resolver or patch_regression.resolve_patch
+    try:
+        return resolver(cdtb_bin), "cdtb"
+    except RuntimeError:
+        pass
+    return fetch_cdragon_live_patch(cdragon_fetch), "communitydragon_content_metadata"
+
+
+def read_cached_patch(staleness_path: Path = DEFAULT_STALENESS) -> str:
+    """Read the last-recorded patch from the committed staleness report."""
+    staleness_path = Path(staleness_path)
+    try:
+        raw = json.loads(staleness_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            f"cached staleness report unreadable ({staleness_path}): {exc}"
+        ) from exc
+    patch = raw.get("patch") if isinstance(raw, dict) else None
+    if not patch:
+        raise RuntimeError(f"{staleness_path} carries no 'patch' field")
+    return str(patch)
+
+
+def detect_report(
+    live_patch: str, live_source: str, cached_patch: str
+) -> dict[str, Any]:
+    """Pure comparison: normalises both labels through patch_identity and compares."""
+    try:
+        live_identity = canonical_patch(live_patch)
+        cached_identity = canonical_patch(cached_patch)
+    except PatchIdentityError as exc:
+        raise RuntimeError(f"cannot compare patch labels: {exc}") from exc
+    is_new = live_identity.client_patch != cached_identity.client_patch
+    return {
+        "status": "new_patch_available" if is_new else "current",
+        "live_patch": live_identity.client_patch,
+        "live_patch_source": live_source,
+        "cached_patch": cached_identity.client_patch,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def run_detect(
+    *,
+    cdtb_bin: str | None = None,
+    staleness_path: Path = DEFAULT_STALENESS,
+    cdragon_fetch: Callable[[], bytes] | None = None,
+    cdtb_resolver: Callable[..., str] | None = None,
+) -> tuple[dict[str, Any], int]:
+    """Returns (report, exit_code): 0 current, 1 new patch available, 2 infra failure."""
+    try:
+        live_patch, live_source = resolve_live_patch(
+            cdtb_bin=cdtb_bin,
+            cdragon_fetch=cdragon_fetch,
+            cdtb_resolver=cdtb_resolver,
+        )
+        cached_patch = read_cached_patch(staleness_path)
+        report = detect_report(live_patch, live_source, cached_patch)
+    except RuntimeError as exc:
+        return {"status": "error", "reason": str(exc)}, 2
+    return report, (1 if report["status"] == "new_patch_available" else 0)
 
 
 # ---------------------------------------------------------------------------
@@ -552,11 +835,261 @@ def refresh_economics() -> int:
 
 
 # ---------------------------------------------------------------------------
+# Game-file evidence: refresh data/gamefiles/ + the tracked authority pair
+# ---------------------------------------------------------------------------
+
+
+def refresh_authority_files(
+    patch: str,
+    *,
+    dest_dir: Path = DEFAULT_BIN_DIR,
+    downloader: Callable[[str], bytes] | None = None,
+    jq_bin: str = "jq",
+) -> dict[str, Any]:
+    """Refresh the Gnar/GnarBig/Renata game-file evidence, reporting sha256 deltas.
+
+    Fails closed per file (404/malformed JSON/jq failure are collected, never
+    silently skipped); the caller decides whether any failure blocks the run.
+    """
+    downloader = downloader or _download_bytes
+    dest_dir = Path(dest_dir)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    files: dict[str, Any] = {}
+    failures: list[dict[str, str]] = []
+    for name, spec in AUTHORITY_FILES.items():
+        dest = dest_dir / f"{name}.bin.json"
+        url = spec["url"].format(patch=patch)
+        before = _sha256_path(dest)
+        # The git-tracked path is fixed (data/bin/characters/<name>.bin.json)
+        # regardless of dest_dir — callers (tests) may fetch into a scratch
+        # directory, but the HEAD comparison is always against the real
+        # tracked location.
+        head_sha = (
+            _git_head_sha256(f"data/bin/characters/{name}.bin.json")
+            if spec["tracked"]
+            else None
+        )
+        try:
+            data = downloader(url)
+        except urllib.error.HTTPError as exc:
+            failures.append(
+                {
+                    "file": name,
+                    "url": url,
+                    "reason": f"HTTP {exc.code} {exc.reason}",
+                }
+            )
+            continue
+        except (urllib.error.URLError, OSError) as exc:
+            failures.append({"file": name, "url": url, "reason": str(exc)})
+            continue
+        if not data:
+            failures.append({"file": name, "url": url, "reason": "empty response body"})
+            continue
+        try:
+            json.loads(data)
+        except ValueError as exc:
+            failures.append(
+                {"file": name, "url": url, "reason": f"malformed JSON: {exc}"}
+            )
+            continue
+        dest.write_bytes(data)
+        try:
+            jq_validate(dest, jq_bin=jq_bin)
+        except RuntimeError as exc:
+            failures.append({"file": name, "url": url, "reason": str(exc)})
+            continue
+        after = _sha256_path(dest)
+        dest_label = (
+            str(dest.relative_to(REPO_ROOT))
+            if dest.is_relative_to(REPO_ROOT)
+            else str(dest)
+        )
+        files[name] = {
+            "path": dest_label,
+            "tracked": spec["tracked"],
+            "sha256_before_fetch": before,
+            "sha256_after_fetch": after,
+            "changed_locally": before != after,
+            "changed_vs_git_head": (
+                (after != head_sha) if head_sha is not None else None
+            ),
+        }
+    return {"files": files, "failures": failures, "ok": not failures}
+
+
+def _champion_names(champions_path: Path = DEFAULT_CHAMPIONS) -> list[str]:
+    try:
+        raw = json.loads(Path(champions_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            f"champion cache unreadable ({champions_path}): {exc}"
+        ) from exc
+    if not isinstance(raw, dict):
+        raise RuntimeError(f"champion cache is not a mapping ({champions_path})")
+    return list(raw)
+
+
+def refresh_gamefiles(
+    patch: str,
+    *,
+    game_dir: Path = DEFAULT_GAME_DIR,
+    champion_names: list[str] | None = None,
+    champions_path: Path = DEFAULT_CHAMPIONS,
+    limit: int | None = None,
+    jq_bin: str = "jq",
+    game_file_downloader: Callable[[str, Path, list[str]], Any] | None = None,
+) -> dict[str, Any]:
+    """Refresh data/gamefiles/ — the exact cache the staleness gate reads.
+
+    Clears each destination before fetching: patch_regression._download()
+    skips a file that already exists (its filenames are not patch-versioned),
+    so a stale copy from a prior patch would otherwise be served silently to
+    the staleness gate — the same reason the wiki pull cache is cleared before
+    re-pulling.
+
+    ``game_file_downloader`` defaults to ``patch_regression.download_game_files``
+    so this refreshes the exact cache the staleness gate reads (same URLs, same
+    atomic-write helper). It is a parameter, not a monkeypatch target: an
+    injected fake is the only thing standing between a test and a full live
+    roster download into the real ``data/gamefiles/``.
+    """
+    names = (
+        list(champion_names)
+        if champion_names is not None
+        else _champion_names(champions_path)
+    )
+    if limit:
+        names = names[:limit]
+    if not names:
+        raise RuntimeError("no champions to fetch (empty roster / --champions list)")
+
+    download = game_file_downloader or patch_regression.download_game_files
+    game_dir = Path(game_dir)
+    champions_dir = game_dir / "characters"
+    items_path = game_dir / "items.bin.json"
+    champions_dir.mkdir(parents=True, exist_ok=True)
+
+    before: dict[str, str | None] = {}
+    for name in names:
+        target = champions_dir / f"{patch_regression.champion_dir(name)}.bin.json"
+        before[name] = _sha256_path(target)
+        if target.exists():
+            target.unlink()
+    items_before = _sha256_path(items_path)
+    if items_path.exists():
+        items_path.unlink()
+
+    try:
+        download(patch, game_dir, names)
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(
+            f"game-file fetch failed for patch {patch}: HTTP {exc.code} "
+            f"{exc.reason} ({exc.url})"
+        ) from exc
+    except (urllib.error.URLError, OSError) as exc:
+        raise RuntimeError(f"game-file fetch failed for patch {patch}: {exc}") from exc
+
+    changed = []
+    unchanged = []
+    for name in names:
+        target = champions_dir / f"{patch_regression.champion_dir(name)}.bin.json"
+        jq_validate(target, jq_bin=jq_bin)
+        after = _sha256_path(target)
+        (changed if after != before[name] else unchanged).append(name)
+    jq_validate(items_path, jq_bin=jq_bin)
+    items_changed = _sha256_path(items_path) != items_before
+
+    game_dir_label = (
+        str(game_dir.relative_to(REPO_ROOT))
+        if game_dir.is_relative_to(REPO_ROOT)
+        else str(game_dir)
+    )
+    return {
+        "patch": patch,
+        "champion_count": len(names),
+        "changed_champions": changed,
+        "unchanged_champions": unchanged,
+        "items_changed": items_changed,
+        "game_dir": game_dir_label,
+    }
+
+
+def run_fetch(
+    *,
+    patch: str,
+    game_dir: Path = DEFAULT_GAME_DIR,
+    bin_dir: Path = DEFAULT_BIN_DIR,
+    champions_path: Path = DEFAULT_CHAMPIONS,
+    champion_names: list[str] | None = None,
+    limit: int | None = None,
+    jq_bin: str = "jq",
+    authority_downloader: Callable[[str], bytes] | None = None,
+    game_file_downloader: Callable[[str, Path, list[str]], Any] | None = None,
+    dirty_check: Callable[[Path], list[str]] | None = None,
+    force: bool = False,
+) -> tuple[dict[str, Any], int]:
+    """Returns (report, exit_code): 0 clean, 1 partial (some file failed), 2 hard error.
+
+    Refuses (status "refused", exit 2) when the fetch is aimed at the committed
+    ``data/bin/characters/`` pair and those files already carry uncommitted
+    changes: a re-fetch would silently destroy hand-verified evidence mid-triage
+    (the Gnar Mega delta gate reads exactly those bytes). ``force=True`` is the
+    documented escape hatch for "yes, throw my local edits away".
+    """
+    if not force:
+        check = dirty_check or authority_dirty_conflicts
+        try:
+            conflicts = check(bin_dir)
+        except RuntimeError as exc:
+            return {"status": "error", "reason": str(exc)}, 2
+        if conflicts:
+            return (
+                {
+                    "status": "refused",
+                    "reason": (
+                        "tracked game-file authority files have uncommitted "
+                        "changes and this fetch would overwrite them: "
+                        + ", ".join(conflicts)
+                        + " — commit or stash them, or re-run with --force"
+                    ),
+                    "dirty_paths": conflicts,
+                    "patch": patch,
+                },
+                2,
+            )
+
+    try:
+        gamefiles = refresh_gamefiles(
+            patch,
+            game_dir=game_dir,
+            champion_names=champion_names,
+            champions_path=champions_path,
+            limit=limit,
+            jq_bin=jq_bin,
+            game_file_downloader=game_file_downloader,
+        )
+    except RuntimeError as exc:
+        return {"status": "error", "reason": str(exc)}, 2
+
+    authority = refresh_authority_files(
+        patch, dest_dir=bin_dir, downloader=authority_downloader, jq_bin=jq_bin
+    )
+    report = {
+        "status": "ok" if authority["ok"] else "partial",
+        "patch": patch,
+        "gamefiles": gamefiles,
+        "authority_files": authority,
+    }
+    return report, (0 if authority["ok"] else 1)
+
+
+# ---------------------------------------------------------------------------
 # Gates
 # ---------------------------------------------------------------------------
 
 
-def rebuild_static_artifacts():
+def rebuild_static_artifacts(patch: str | None = None):
     """Rebuild the derived catalogues the web UI fetches at runtime.
 
     app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
@@ -564,10 +1097,12 @@ def rebuild_static_artifacts():
     the UI serving the previous patch's champions, abilities and item effects.
     Skipping this step is what left them stale before.
 
-    bis-profiles is deliberately not rebuilt here: it merges an Axword Meraki
-    kit reference from a sibling repo that supplies damage packets the wiki
-    parser cannot read, and rebuilding without that repo silently drops them.
-    Rebuild it by hand, with the sibling checked out, when its wiki inputs move.
+    bis-profiles is rebuilt here too.  It merges an Axword Meraki kit reference
+    from a sibling repo supplying damage packets the wiki parser cannot read,
+    so ``run_bis`` guards it: an absent kit source, zero champions, zero merged
+    packets, or a merged count below the checked-in asset each refuse to write.
+    Those invariants are why the rebuild belongs in the run — without them a
+    build against a missing sibling drops the packets in silence.
     """
     print("== Rebuilding static catalogues ==", flush=True)
     for builder in (
@@ -591,48 +1126,121 @@ def rebuild_static_artifacts():
             print(f"FAIL: scripts/{builder} exited {result.returncode}")
             return result.returncode
 
-    auxiliary = (
-        REPO_ROOT.parent
-        / "lol-strength-analysis"
-        / "src"
-        / "data"
-        / "generated"
-        / "merakiAbilityKits.ts"
-    )
+    print("== Rebuilding static/bis-profiles.json ==", flush=True)
+    try:
+        report = run_bis(patch=patch)
+    except RuntimeError as exc:
+        print(f"FAIL: bis-profiles rebuild refused: {exc}")
+        return 1
     print(
-        "NOTE: static/bis-profiles.json not rebuilt (needs the Axword Meraki\n"
-        f"      sibling repo, {'present' if auxiliary.exists() else 'absent'}). "
-        "Rebuild manually if its wiki\n"
-        "      inputs changed:\n"
-        "          python scripts/build_bis_profiles.py"
+        f"  {report['output']}: {report['champion_count']} champions, "
+        f"{report['merged_damage_packets']} merged Meraki damage packets "
+        f"(checked-in asset carried {report['baseline_merged_damage_packets']})"
     )
     return 0
 
 
 # ---------------------------------------------------------------------------
-# Reviewed-packet freshness gate
+# bis-profiles rebuild
 # ---------------------------------------------------------------------------
 
 
-def check_reviewed_packets_current(
+def run_bis(
     *,
-    asset_path: Path | None = None,
-    champions_source: Path | None = None,
+    patch: str | None = None,
+    output: Path = DEFAULT_BIS_OUTPUT,
+    source: Path = DEFAULT_CHAMPIONS,
     axword_source: Path | None = None,
-    wiki_db: Path | None = None,
+    baseline: Path | None = DEFAULT_BIS_OUTPUT,
+    profile_builder: Callable[[Path, str, Path], dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Rebuild static/bis-profiles.json (build_bis_profiles.py wrapper).
+
+    Fails closed if the Axword Meraki merge invariant regresses: the sibling
+    repo (LCC_AXWORD_SOURCE) supplies damage packets the wiki parser cannot
+    read (24 as of 2026-08-20, tests/test_bis_profiles.py), and a rebuild run
+    without the sibling checked out — or against a stale/trimmed copy of it
+    — must never silently write fewer packets than the checked-in asset.
+
+    ``patch`` defaults to the patch the cache pins, so a rebuild cannot stamp
+    a stale version onto the asset.
+    """
+    build = profile_builder or build_profiles
+    axword_source = Path(axword_source) if axword_source else resolve_axword_source()
+    source = Path(source)
+    if not axword_source.is_file():
+        raise RuntimeError(
+            f"Axword Meraki kit source not found: {axword_source}\n"
+            "Supply --axword-source or the LCC_AXWORD_SOURCE environment "
+            "variable (repo convention: the sibling lol-strength-analysis checkout)."
+        )
+    if not source.is_file():
+        raise RuntimeError(f"champion cache not found: {source}")
+
+    baseline_count = 0
+    baseline_path = Path(baseline) if baseline else None
+    if baseline_path and baseline_path.is_file():
+        try:
+            baseline_doc = json.loads(baseline_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            baseline_doc = {}
+        baseline_count = int(
+            (baseline_doc.get("auxiliary_source") or {}).get("merged_damage_packets", 0)
+        )
+
+    profiles = build(source, patch or cache_patch(), axword_source)
+    if not profiles["champions"]:
+        raise RuntimeError(
+            "rebuild produced zero champions — refusing to write an empty "
+            "BIS profiles asset"
+        )
+    merged = int(
+        (profiles.get("auxiliary_source") or {}).get("merged_damage_packets", 0)
+    )
+    if merged == 0:
+        raise RuntimeError(
+            "auxiliary merge produced zero Meraki damage packets — the "
+            f"sibling repo kit source ({axword_source}) may be stale, absent "
+            "in content, or the merge silently dropped them; refusing to write"
+        )
+    if baseline_count and merged < baseline_count:
+        raise RuntimeError(
+            f"Meraki packet invariant regressed: {merged} merged this run vs "
+            f"{baseline_count} in the checked-in asset — packets vanished; "
+            "refusing to write"
+        )
+
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(profiles, ensure_ascii=False, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "output": str(output),
+        "champion_count": profiles["champion_count"],
+        "merged_damage_packets": merged,
+        "baseline_merged_damage_packets": baseline_count,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Reviewed-packet currency gate: source receipts + a rebuild that reproduces
+# ---------------------------------------------------------------------------
+
+
+def _receipt_problems(
+    asset_path: Path,
+    champions_source: Path,
+    axword_source: Path,
+    wiki_db: Path,
 ) -> list[str]:
-    """Return staleness reasons for the checked-in reviewed-packet asset.
+    """Reasons the asset's source receipts do not match the tree's sources.
 
     Empty list means the asset proves it was built from the current sources:
     the ``data/champions.json`` and Axword kit sha256 receipts plus a current
-    per-champion wiki revision receipt.  Any mismatch is a hard pre-capture
-    failure — a frozen asset plus green tests must never re-bless stale
-    numbers into the golden baseline.
+    per-champion wiki revision receipt.
     """
-    asset_path = Path(asset_path or REVIEWED_PACKETS)
-    champions_source = Path(champions_source or REPO_ROOT / "data" / "champions.json")
-    axword_source = Path(axword_source or resolve_axword_source())
-    wiki_db = Path(wiki_db or resolve_wiki_db())
     try:
         asset = json.loads(asset_path.read_text(encoding="utf-8"))
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
@@ -735,6 +1343,171 @@ def check_reviewed_packets_current(
     return problems
 
 
+def diff_reviewed_packets(
+    fresh: dict[str, Any], checked_in: dict[str, Any]
+) -> dict[str, Any]:
+    """Per-champion drift between a fresh reviewed-packet build and the checked-in asset.
+
+    Compares each champion's ``slots`` sub-object only — the packet contract
+    the engine actually reads — plus ``review_status`` (reviewed_packet vs
+    generated_packet). Provenance fields (``sources``, receipts) legitimately
+    change on every rebuild and are excluded from drift on purpose; the source
+    receipts are what ``_receipt_problems`` answers for.
+    """
+    fresh_champs = fresh.get("champions", {}) if isinstance(fresh, dict) else {}
+    checked_champs = (
+        checked_in.get("champions", {}) if isinstance(checked_in, dict) else {}
+    )
+    names = sorted(set(fresh_champs) | set(checked_champs))
+    drifted = []
+    review_status_changes = []
+    missing = []
+    added = []
+    for name in names:
+        fresh_entry = fresh_champs.get(name)
+        checked_entry = checked_champs.get(name)
+        if fresh_entry is None:
+            missing.append(name)  # rebuild dropped a champion entirely
+            continue
+        if checked_entry is None:
+            added.append(name)  # champion is new since the checked-in asset
+            continue
+        if fresh_entry.get("review_status") != checked_entry.get("review_status"):
+            review_status_changes.append(
+                {
+                    "champion": name,
+                    "checked_in": checked_entry.get("review_status"),
+                    "fresh": fresh_entry.get("review_status"),
+                }
+            )
+        slot_diffs = list(
+            leaf_diffs(checked_entry.get("slots"), fresh_entry.get("slots"))
+        )
+        if slot_diffs:
+            drifted.append(
+                {
+                    "champion": name,
+                    "diff_count": len(slot_diffs),
+                    "diffs": [
+                        {"path": path, "checked_in": old, "fresh": new}
+                        for path, old, new in slot_diffs[:20]
+                    ],
+                    "truncated": len(slot_diffs) > 20,
+                }
+            )
+    return {
+        "champion_count": len(names),
+        "drifted_champion_count": len(drifted),
+        "drifted": drifted,
+        "review_status_changes": review_status_changes,
+        "champions_missing_from_rebuild": missing,
+        "champions_new_in_rebuild": added,
+        "clean": not (drifted or review_status_changes or missing or added),
+    }
+
+
+def reviewed_packet_report(
+    *,
+    asset_path: Path | None = None,
+    champions_source: Path | None = None,
+    axword_source: Path | None = None,
+    wiki_db: Path | None = None,
+    rebuild: bool = True,
+    tmp_output: Path | None = None,
+    packet_builder: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    """One currency verdict on ``static/reviewed-packets.json``, from two checks.
+
+    They catch disjoint drift, so neither replaces the other and neither is
+    made redundant by the import-time ``PACKET_SHA256`` pin (which proves only
+    that the 76 packet-backed modules accepted *this* asset, and says nothing
+    about whether the asset itself is current):
+
+    * source receipts — the asset was built from different sources than the
+      tree now carries (champions.json / Axword kit sha256, per-champion wiki
+      revision, roster membership). Catches a data pull; costs a hash.
+    * rebuild drift — a fresh build disagrees with the asset's ``slots``.
+      Catches a changed *builder* with the sources unchanged, which no receipt
+      can see.
+
+    Never writes ``asset_path``: splicing a drifted champion's sub-object back
+    in stays a human step through build_reviewed_modules.py, because the other
+    suspected drifts have to be re-checked by hand first.
+    """
+    asset_path = Path(asset_path or REVIEWED_PACKETS)
+    champions_source = Path(champions_source or DEFAULT_CHAMPIONS)
+    axword_source = Path(axword_source or resolve_axword_source())
+    wiki_db = Path(wiki_db or resolve_wiki_db())
+
+    receipts = _receipt_problems(asset_path, champions_source, axword_source, wiki_db)
+    report: dict[str, Any] = {
+        "asset": str(asset_path),
+        "receipt_problems": receipts,
+        "rebuild": None,
+        "rebuild_skipped": None,
+    }
+    problems = list(receipts)
+
+    if not rebuild:
+        report["rebuild_skipped"] = "rebuild diff not requested"
+    else:
+        try:
+            checked_in = json.loads(asset_path.read_text(encoding="utf-8"))
+            fresh = _build_fresh_packets(
+                champions_source,
+                axword_source,
+                wiki_db,
+                tmp_output=tmp_output,
+                packet_builder=packet_builder,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            # The sources the rebuild needs are the same ones the receipt check
+            # already named; record why it could not run rather than inventing
+            # a clean verdict.
+            report["rebuild_skipped"] = str(exc)
+            problems.append(f"reviewed-packet rebuild could not run: {exc}")
+        else:
+            drift = diff_reviewed_packets(fresh, checked_in)
+            report["rebuild"] = drift
+            if not drift["clean"]:
+                problems.append(
+                    f"a fresh reviewed-packet build no longer reproduces the "
+                    f"checked-in asset: {drift['drifted_champion_count']} "
+                    f"champion(s) drifted, "
+                    f"{len(drift['review_status_changes'])} review-status "
+                    f"change(s), "
+                    f"{len(drift['champions_missing_from_rebuild'])} dropped, "
+                    f"{len(drift['champions_new_in_rebuild'])} new"
+                )
+
+    report["problems"] = problems
+    report["clean"] = not problems
+    return report
+
+
+def _build_fresh_packets(
+    champions_source: Path,
+    axword_source: Path,
+    wiki_db: Path,
+    *,
+    tmp_output: Path | None = None,
+    packet_builder: Callable[..., Any] | None = None,
+) -> dict[str, Any]:
+    """Regenerate the reviewed packets to a scratch path and read them back."""
+    build = packet_builder or build_reviewed_packets
+    if tmp_output is None:
+        tmp_output = (
+            Path(tempfile.mkdtemp(prefix="patch-update-packets-"))
+            / "reviewed-packets.fresh.json"
+        )
+    tmp_output = Path(tmp_output)
+    # build (build_reviewed_modules.build) is already fail closed: missing
+    # source/axword, or zero wiki revision receipts, raises RuntimeError naming
+    # the exact gap. Let it propagate.
+    build(Path(champions_source), axword_source, tmp_output, wiki_db=wiki_db)
+    return json.loads(tmp_output.read_text(encoding="utf-8"))
+
+
 # ---------------------------------------------------------------------------
 # Patch-day gates: audit + staleness run before golden capture
 # ---------------------------------------------------------------------------
@@ -770,37 +1543,43 @@ def run_full_entry_audit(output: Path | None = None) -> int:
 
 
 def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int:
-    """Compare the wiki cache against game files; non-zero aborts the run."""
-    out = out or DEFAULT_STALENESS_OUT
+    """Compare the wiki cache against game files; non-zero aborts the run.
+
+    ``patch_regression`` is reached one way throughout this module — imported,
+    never shelled out to — because the game-file refresh above needs its
+    ``champion_dir`` mapping and ``download_game_files`` at function
+    granularity, and a second integration style for the same dependency would
+    put that mapping in two places.  ``main`` returns 0/1/2 and raises nothing
+    but OSError on an unreadable cache, so it composes as a gate directly.
+    """
+    out = out or DEFAULT_STALENESS
     print("== Gate: staleness vs game files (patch_regression check) ==", flush=True)
-    command = [
-        sys.executable,
-        "scripts/patch_regression.py",
-        "check",
-        "--out",
-        str(out),
-    ]
+    argv = ["check", "--out", str(out)]
     if patch:
         try:
             patch = client_patch(patch)
         except ValueError as exc:
             print(f"\nFAIL: invalid public patch label: {exc}", flush=True)
             return 2
-        command += ["--patch", patch]
-    result = subprocess.run(command, cwd=REPO_ROOT, check=False)
-    if result.returncode == 2:
+        argv += ["--patch", patch]
+    try:
+        returncode = patch_regression.main(argv)
+    except OSError as exc:
+        print(f"\nFAIL: staleness gate could not read its inputs: {exc}", flush=True)
+        return 2
+    if returncode == 2:
         print(
             "\nFAIL: staleness gate could not run — cdtb is missing. Install it\n"
             "and set CDTB_BIN, or pin the comparison with --patch <version>.",
             flush=True,
         )
-    elif result.returncode != 0:
+    elif returncode != 0:
         print(
             "\nFAIL: the wiki cache is stale vs the game files — update the cache\n"
             "before re-capturing golden.",
             flush=True,
         )
-    return result.returncode
+    return returncode
 
 
 def run_coverage_census(output: Path | None = None) -> int:
@@ -869,6 +1648,39 @@ def run_gates():
     return capture.returncode
 
 
+def run_gamefile_refresh(patch: str | None, *, force: bool = False) -> int:
+    """Re-download data/gamefiles/ before the staleness gate compares against it.
+
+    Not optional and not a convenience: ``patch_regression._download`` skips
+    any file that already exists and its filenames are not patch-versioned, so
+    without this clearing refresh the staleness gate silently re-compares the
+    new wiki cache against the *previous* patch's game files.  Same hazard, and
+    the same remedy, as clearing the wiki page cache before the pull.
+    """
+    print("== Gate: refreshing game-file evidence ==", flush=True)
+    if patch:
+        try:
+            patch = client_patch(patch)
+        except ValueError as exc:
+            print(f"\nFAIL: invalid public patch label: {exc}", flush=True)
+            return 2
+    else:
+        detect, detect_rc = run_detect()
+        if detect_rc == 2:
+            print(f"\nFAIL: cannot resolve the live patch: {detect['reason']}")
+            return 2
+        patch = detect["live_patch"]
+    report, returncode = run_fetch(patch=patch, force=force)
+    print(json.dumps(report, indent=2, sort_keys=True), flush=True)
+    if returncode:
+        print(
+            "\nFAIL: the game-file evidence refresh did not complete — the\n"
+            "staleness gate would compare against a stale or partial cache.",
+            flush=True,
+        )
+    return returncode
+
+
 def run_full(
     *,
     wiki_db: Path | None = None,
@@ -880,11 +1692,12 @@ def run_full(
     """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
 
     Order (issue #134 — golden capture stays last and conditional): wiki pull,
-    economics refresh, source-completeness audit, catalogue rebuild,
-    reviewed-packet freshness, full parent-entry audit, staleness vs game
-    files, coverage census, then pytest + capture.  Any gate failure aborts
-    before ``run_gates()`` so a stale packet asset or a review-pending entry
-    can never be re-blessed into the new baseline.
+    economics refresh, source-completeness audit, catalogue rebuild
+    (bis-profiles included), reviewed-packet currency, full parent-entry audit,
+    game-file refresh, staleness vs game files, coverage census, then pytest +
+    capture.  Any gate failure aborts before ``run_gates()`` so a stale packet
+    asset or a review-pending entry can never be re-blessed into the new
+    baseline.
     """
     clear_wiki_caches()
     pulled_patch = run_pull()
@@ -898,16 +1711,14 @@ def run_full(
             "rebuilding artifacts or re-capturing golden."
         )
         return 1
-    rebuild_failed = rebuild_static_artifacts()
+    rebuild_failed = rebuild_static_artifacts(pulled_patch)
     if rebuild_failed:
         return rebuild_failed
 
-    packet_problems = check_reviewed_packets_current(
-        axword_source=axword_source, wiki_db=wiki_db
-    )
-    if packet_problems:
-        print("\nFAIL: reviewed packets are stale (issue #134):", flush=True)
-        for problem in packet_problems:
+    packets = reviewed_packet_report(axword_source=axword_source, wiki_db=wiki_db)
+    if not packets["clean"]:
+        print("\nFAIL: reviewed packets are not current (issue #134):", flush=True)
+        for problem in packets["problems"]:
             print(f"  - {problem}", flush=True)
         print(
             "\nRebuild them with:\n"
@@ -922,6 +1733,9 @@ def run_full(
     audit_rc = run_full_entry_audit(audit_output)
     if audit_rc:
         return audit_rc
+    gamefile_rc = run_gamefile_refresh(patch)
+    if gamefile_rc:
+        return gamefile_rc
     staleness_rc = run_staleness_gate(staleness_out, patch)
     if staleness_rc:
         return staleness_rc
@@ -931,11 +1745,7 @@ def run_full(
     return run_gates()
 
 
-def main():
-    """CLI entry point: run | audit | detail NAME..."""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    commands = parser.add_subparsers(dest="command", required=True)
-    run = commands.add_parser("run")
+def _add_run_arguments(run: argparse.ArgumentParser) -> None:
     run.add_argument(
         "--wiki-db",
         type=Path,
@@ -963,26 +1773,136 @@ def main():
     run.add_argument(
         "--patch",
         default=None,
-        help="pin the staleness gate to this patch instead of resolving cdtb",
+        help="pin the game-file and staleness gates to this patch instead of cdtb",
     )
-    commands.add_parser("audit")
-    commands.add_parser("detail").add_argument("names", nargs="+")
-    args = parser.parse_args()
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    """The one CLI: run | detect | audit | detail | fetch | bis | packets."""
+    parser = argparse.ArgumentParser(
+        description=__doc__.splitlines()[0],
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    _add_run_arguments(commands.add_parser("run", help="the full day-0 pipeline"))
+    commands.add_parser("audit", help="re-print the audit, no pull")
+    commands.add_parser("detail", help="full leaf diff vs HEAD").add_argument(
+        "names", nargs="+"
+    )
+
+    detect = commands.add_parser("detect", help="is a new patch live? (read-only)")
+    detect.add_argument("--cdtb-bin", default=None, help="path to the cdtb CLI")
+    detect.add_argument("--staleness-path", type=Path, default=DEFAULT_STALENESS)
+
+    fetch = commands.add_parser("fetch", help="refresh game-file evidence")
+    fetch.add_argument("--patch", required=True, help="client patch label, e.g. 16.16")
+    fetch.add_argument("--game-dir", type=Path, default=DEFAULT_GAME_DIR)
+    fetch.add_argument("--bin-dir", type=Path, default=DEFAULT_BIN_DIR)
+    fetch.add_argument("--champions-path", type=Path, default=DEFAULT_CHAMPIONS)
+    fetch.add_argument(
+        "--champions", help="comma-separated champion names (default: full roster)"
+    )
+    fetch.add_argument("--limit", type=int, default=None)
+    fetch.add_argument("--jq-bin", default="jq")
+    fetch.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "overwrite the tracked authority pair even when it has "
+            "uncommitted changes (destroys those local edits)"
+        ),
+    )
+
+    bis = commands.add_parser("bis", help="rebuild static/bis-profiles.json")
+    bis.add_argument("--patch", default=None, help="default: the patch the cache pins")
+    bis.add_argument("--output", type=Path, default=DEFAULT_BIS_OUTPUT)
+    bis.add_argument("--source", type=Path, default=DEFAULT_CHAMPIONS)
+    bis.add_argument("--axword-source", type=Path, default=None)
+
+    packets = commands.add_parser("packets", help="reviewed-packet currency report")
+    packets.add_argument("--source", type=Path, default=DEFAULT_CHAMPIONS)
+    packets.add_argument("--axword-source", type=Path, default=None)
+    packets.add_argument("--wiki-db", type=Path, default=None)
+    packets.add_argument("--static-path", type=Path, default=REVIEWED_PACKETS)
+    packets.add_argument(
+        "--no-rebuild",
+        action="store_true",
+        help="check the source receipts only; skip the rebuild-and-diff half",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Parse one subcommand, run it, return its exit code.
+
+    The live defaults (DEFAULT_* paths, real downloaders) are bound here and
+    only here — library callers and tests pass their own.  ``run``, ``audit``
+    and ``detail`` print for a human; ``detect``, ``fetch``, ``bis`` and
+    ``packets`` print one JSON report so they compose with ``jq``.
+    """
+    args = _build_parser().parse_args(argv)
+
     if args.command == "run":
-        sys.exit(
-            run_full(
-                wiki_db=args.wiki_db,
-                axword_source=args.axword_source,
-                audit_output=args.audit_output,
-                staleness_out=args.staleness_out,
-                patch=args.patch,
-            )
+        return run_full(
+            wiki_db=args.wiki_db,
+            axword_source=args.axword_source,
+            audit_output=args.audit_output,
+            staleness_out=args.staleness_out,
+            patch=args.patch,
         )
     if args.command == "audit":
-        sys.exit(0 if print_audit() else 1)
-    print_detail(args.names)
-    sys.exit(0)
+        return 0 if print_audit() else 1
+    if args.command == "detail":
+        print_detail(args.names)
+        return 0
+
+    if args.command == "detect":
+        report, code = run_detect(
+            cdtb_bin=args.cdtb_bin, staleness_path=args.staleness_path
+        )
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return code
+
+    if args.command == "fetch":
+        report, code = run_fetch(
+            patch=args.patch,
+            game_dir=args.game_dir,
+            bin_dir=args.bin_dir,
+            champions_path=args.champions_path,
+            champion_names=args.champions.split(",") if args.champions else None,
+            limit=args.limit,
+            jq_bin=args.jq_bin,
+            force=args.force,
+        )
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return code
+
+    if args.command == "bis":
+        try:
+            report = run_bis(
+                patch=args.patch,
+                output=args.output,
+                source=args.source,
+                axword_source=args.axword_source,
+            )
+        except RuntimeError as exc:
+            print(json.dumps({"status": "error", "reason": str(exc)}, indent=2))
+            return 2
+        print(json.dumps({"status": "ok", **report}, indent=2, sort_keys=True))
+        return 0
+
+    # args.command == "packets"
+    report = reviewed_packet_report(
+        asset_path=args.static_path,
+        champions_source=args.source,
+        axword_source=args.axword_source,
+        wiki_db=args.wiki_db,
+        rebuild=not args.no_rebuild,
+    )
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["clean"] else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

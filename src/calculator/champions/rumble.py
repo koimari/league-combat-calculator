@@ -93,6 +93,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import extract_named, on_hit_entry, simple_damage
+from .inputs import int_option
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 
@@ -242,15 +243,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "overheat_autos",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": _MAX_OVERHEAT_AUTOS,
-        "label": "Basic attacks landed while Overheated",
-        "rotation": {"role": "self_state", "slot": "P"},
-    },
+    int_option(
+        "overheat_autos",
+        0,
+        minimum=0,
+        maximum=_MAX_OVERHEAT_AUTOS,
+        label="Basic attacks landed while Overheated",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
 ]
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q (Flamespitter) prices the cached Maximum Magic Damage row "

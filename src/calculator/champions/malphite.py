@@ -93,12 +93,10 @@ def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
 
     BUFF phase so E (40% armor ratio) parses after the armor grant.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     # W passive: bonus armor, tripled while Granite Shield is active.  The
     # cached "Increased Bonus Armor" row (30/45/60/75/90 % armor) IS the
     # tripled value; the module treats the shield as active for the whole

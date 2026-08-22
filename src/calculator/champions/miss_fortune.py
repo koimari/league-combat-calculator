@@ -115,12 +115,10 @@ _STRUT_ACTIVE_SECONDS = 4.0
 
 def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: per-wave damage x sourced Total Waves (14/16/18 by rank)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_wave = extract_named(
         ability, "Physical Damage per Wave", rank, ctx.stats, ctx.target
@@ -188,12 +186,10 @@ def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
     active does not hold full uptime of a longer fight.  The two
     movement-speed rows have no ``stat_buff`` key to land in.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)

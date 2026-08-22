@@ -35,6 +35,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores
 # Short Fuse's per-level base but drops its AP modifier entirely.
@@ -99,12 +100,10 @@ def _short_fuse(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: 1 full mine + (mines_hit - 1) reduced mines, capped by JSON."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     mines = max(1, int(ctx.option("mines_hit")))
     full = extract_named(ability, "Magic Damage per Mine", rank, ctx.stats, ctx.target)
@@ -127,28 +126,9 @@ def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 2,
-        "label": "Short Fuse procs",
-        "min": 0,
-        "max": 10,
-    },
-    {
-        "key": "mines_hit",
-        "type": "int",
-        "default": 4,
-        "label": "E mines hit",
-        "min": 1,
-        "max": 11,
-    },
-    {
-        "key": "r_sweet_spot",
-        "type": "bool",
-        "default": True,
-        "label": "R hits epicenter (sweet spot)",
-    },
+    int_option("passive_procs", 2, minimum=0, maximum=10, label="Short Fuse procs"),
+    int_option("mines_hit", 4, minimum=1, maximum=11, label="E mines hit"),
+    bool_option("r_sweet_spot", True, label="R hits epicenter (sweet spot)"),
 ]
 
 ASSUMPTIONS = [

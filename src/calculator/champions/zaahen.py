@@ -33,9 +33,9 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import BUFF, CC_PER_PART, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -113,12 +113,10 @@ _cultivation_of_war.phase = BUFF
 
 def _darkin_glaive(ctx: SlotCtx) -> dict[str, Any] | None:
     """Price the selected Q row from Zaahen's three sourced Q variants."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     try:
         variant = int(ctx.option("q_variant"))
@@ -212,22 +210,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "q_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Q damage variant",
-    },
-    {
-        "key": "p_determination_stacks",
-        "type": "int",
-        "default": _P_MAX_STACKS,
-        "min": 0,
-        "max": _P_MAX_STACKS,
-        "label": ("Determination stacks (12 = filled, which doubles the bonus)"),
-        "rotation": {
+    int_option("q_variant", 0, minimum=0, maximum=2, label="Q damage variant"),
+    int_option(
+        "p_determination_stacks",
+        _P_MAX_STACKS,
+        minimum=0,
+        maximum=_P_MAX_STACKS,
+        label="Determination stacks (12 = filled, which doubles the bonus)",
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -235,7 +225,7 @@ OPTIONS = list(OPTIONS) + [
                 "buff is self-state, not a consumed setup."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -255,7 +245,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -271,18 +261,18 @@ def derive_self_healing(
     # minions/monsters; champion targets assumed).  The Wiki unit ("% of
     # his maximum health") is not a slotlib-recognised unit, so the percent
     # is read raw and priced against the sourced max health.
-    q_rank = _healing._rank(ability_damages, "Q")
-    q_heal_pct = _healing._leveling_value(
-        _healing._ability(champion_data, "Q"), "Champion Healing", q_rank
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
+    q_heal_pct = _healing.leveling_value(
+        _healing.ability_json(champion_data, "Q"), "Champion Healing", q_rank
     )
     q_heal = q_heal_pct / 100.0 * champion_stat(champion_stats, "health")
     # One payment per cast: the empowered attack strikes twice and the
     # cache grants one heal, and the heal lands on-attack even when the
     # paired strike packet was fully blocked.
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing,
             payment.event,
             q_heal,
@@ -292,25 +282,25 @@ def derive_self_healing(
     # Grim Deliverance (R): flat heal per champion hit
     # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
     # AD)); the 1v1 pair fight sees exactly one hit per R cast.
-    r_rank = _healing._rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     r_heal = _healing.extract_named(
-        _healing._ability(champion_data, "R"),
+        _healing.ability_json(champion_data, "R"),
         "Healing per Champion hit",
         r_rank,
         champion_stats,
         {},
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
     ):
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing,
             payment.event,
             r_heal,
             "Grim Deliverance",
             link_to_damage=False,
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Zaahen", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Zaahen")(derive_self_healing)

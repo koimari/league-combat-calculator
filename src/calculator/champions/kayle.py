@@ -11,9 +11,9 @@ module declares W in SLOTS so the fight rotation casts it.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..healing_helpers import _ability, _cast_slot_times, _rank
+from ..healing_helpers import ability_json, cast_slot_times, parsed_rank
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import (
     ability_on_hit_entry,
@@ -23,6 +23,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
 
 
 def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -49,12 +50,10 @@ def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _kayle_e(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     passive = extract_named(ability, "Passive Damage", rank, ctx.stats, ctx.target)
     active = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
@@ -102,18 +101,8 @@ SLOTS = {
     "R": _kayle_r,
 }
 OPTIONS = [
-    {
-        "key": "p_exalted",
-        "type": "bool",
-        "default": True,
-        "label": "Exalted Aflame wave",
-    },
-    {
-        "key": "e_empowered",
-        "type": "bool",
-        "default": True,
-        "label": "Starfire empowered attack",
-    },
+    bool_option("p_exalted", True, label="Exalted Aflame wave"),
+    bool_option("e_empowered", True, label="Starfire empowered attack"),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kayle")
@@ -164,8 +153,10 @@ def derive_self_healing(
     timeline and carries ``actor_wide`` for the ally copy.
     """
     del damage_events, fight_duration_seconds
-    w_rank = _rank(ability_damages, "W")
-    w_heal = extract_named(_ability(champion_data, "W"), "Heal", w_rank, champion_stats)
+    w_rank = parsed_rank(ability_damages, "W")
+    w_heal = extract_named(
+        ability_json(champion_data, "W"), "Heal", w_rank, champion_stats
+    )
     healing = [
         {
             "time": cast_time,
@@ -174,9 +165,9 @@ def derive_self_healing(
             "kind": "champion_ability",
             "actor_wide": True,
         }
-        for cast_time in _cast_slot_times(cast_timeline, "W")
+        for cast_time in cast_slot_times(cast_timeline, "W")
     ]
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Kayle", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Kayle")(derive_self_healing)

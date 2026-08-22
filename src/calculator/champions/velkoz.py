@@ -130,12 +130,10 @@ _R_CHANNEL_SECONDS = 2.6
 
 def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the full 13-tick channel (per-tick x 13 == the Maximum Damage row)."""
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     per_tick = extract_named(ability, "Damage Per Tick", rank, ctx.stats, ctx.target)
     total = per_tick * _R_TICKS
     entry = damage_entry(

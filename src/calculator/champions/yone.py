@@ -42,6 +42,7 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .inputs import int_option
 
 # P4: the crit-conversion rule is the shared module_helpers rule (the
 # 0.9 factor's atom hash is 1142fbe0a600fcc8 for Yone).
@@ -125,12 +126,10 @@ def _q3_knockup_duration(ability: dict[str, Any]) -> float:
 
 def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Mortal Steel, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -196,12 +195,10 @@ def _mixed_damage_entry(
     two-part mixed entry cannot use the single-part ``single_hit``
     certification.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     parts = tuple(
         DamagePart(
             damage_type,
@@ -250,12 +247,10 @@ def _fate_sealed(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: declare a post-mitigation damage store for the fight engine."""
-    ability = ctx.ability("E")
-    if ability is None:
+    ranked = ctx.ranked("E")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     ratio = extract_value(ability, "Damage Stored", rank, 0) / 100.0
     entry = damage_entry(
         ability.get("name", "Soul Unbound"),
@@ -322,12 +317,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "q_gathering_storm",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Gathering Storm stacks (2 = Q3 ready)",
-    },
+    int_option(
+        "q_gathering_storm",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Gathering Storm stacks (2 = Q3 ready)",
+    ),
 ]

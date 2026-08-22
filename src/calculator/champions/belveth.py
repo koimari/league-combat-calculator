@@ -46,6 +46,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
@@ -128,12 +129,10 @@ _death_in_lavender.phase = BUFF
 
 def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: ``q_casts`` directional dashes, each 12-20 + 105% AD, can crit."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_dash = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     casts = min(max(int(ctx.option("q_casts")), 1), 4)
@@ -173,12 +172,10 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
 def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: slash count from final bonus AS; per-slash damage interpolates
     between the JSON min/max attributes by target missing health."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     missing = missing_hp_fraction(ctx)
     min_hit = extract_named(
@@ -235,12 +232,10 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
 def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
     """R active: Void Coral explosion (true damage + 20% missing health),
     plus the True Form stat buff when the ``true_form`` option is on."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     missing = missing_hp_fraction(ctx)
     max_hp = ctx.target_stat("target_max_health")
@@ -295,12 +290,10 @@ def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
     the fight engine owns the hit sequence, and each carrier's on-hit
     modifier (100% autos/Q, 12-24% E) applies to that instance.
     """
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_stack = extract_named(ability, "Bonus True Damage", rank, ctx.stats, ctx.target)
     name = "Endless Banquet (ramping on-hit)"
@@ -323,36 +316,24 @@ _endless_banquet_onhit.phase = ONHIT
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "target_missing_hp_pct",
-        "type": "int",
-        "default": 50,
-        "min": 0,
-        "max": 100,
-        "label": "Target missing health %",
-    },
-    {
-        "key": "lavender_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 200,
-        "label": "Permanent Lavender stacks (takedowns)",
-    },
-    {
-        "key": "q_casts",
-        "type": "int",
-        "default": 4,
-        "min": 1,
-        "max": 4,
-        "label": "Q casts (directional charges used)",
-    },
-    {
-        "key": "true_form",
-        "type": "bool",
-        "default": False,
-        "label": "True Form active (consumed Void Coral)",
-    },
+    int_option(
+        "target_missing_hp_pct",
+        50,
+        minimum=0,
+        maximum=100,
+        label="Target missing health %",
+    ),
+    int_option(
+        "lavender_stacks",
+        0,
+        minimum=0,
+        maximum=200,
+        label="Permanent Lavender stacks (takedowns)",
+    ),
+    int_option(
+        "q_casts", 4, minimum=1, maximum=4, label="Q casts (directional charges used)"
+    ),
+    bool_option("true_form", False, label="True Form active (consumed Void Coral)"),
 ]
 
 ASSUMPTIONS = [

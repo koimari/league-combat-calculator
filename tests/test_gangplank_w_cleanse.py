@@ -116,7 +116,7 @@ from src.calculator.healing import derive_self_healing
 # MERGE: the shared healing readers moved out of ``healing.py`` into
 # ``healing_helpers.py`` (HEALING-API); ``healing.py`` only loads
 # declarations and sorts receipts now.
-from src.calculator.healing_helpers import _leveling_ratio
+from src.calculator.healing_helpers import leveling_ratio
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.survival_probe import simulate_survival
@@ -401,7 +401,7 @@ class TestSourceAndTypedValues:
             assert extract_named(w, "Heal", rank, {"ability_power": 100.0}) == (
                 _w_flat(rank) + _W_HEAL_AP_PERCENT
             )
-            assert _leveling_ratio(w, "Heal", "missing health", rank) == (
+            assert leveling_ratio(w, "Heal", "missing health", rank) == (
                 _W_HEAL_MISSING_PERCENT
             )
         # The full formula the declaration must publish.

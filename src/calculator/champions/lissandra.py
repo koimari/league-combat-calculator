@@ -24,7 +24,7 @@ from typing import Any
 
 from .engine import SlotCtx, build_parser
 from .. import healing_helpers as _healing
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import damage_entry, extract_named, simple_damage, with_control
 from .source_receipts import load_champion_sources
 
@@ -119,7 +119,7 @@ MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow"}
 parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -130,24 +130,24 @@ def derive_self_healing(
 ):
     """Resolve Lissandra self-healing events from its authored packet."""
     healing = []
-    r = _healing._ability(champion_data, "R")
-    r_rank = _healing._rank(ability_damages, "R")
+    r = _healing.ability_json(champion_data, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     min_tick = _healing.extract_named(
         r, "Minimum Heal per Tick", r_rank, champion_stats
     )
     max_tick = _healing.extract_named(
         r, "Maximum Heal per Tick", r_rank, champion_stats
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST_SCHEDULE, "R", damage_events, cast_timeline
     ):
-        trigger = _healing._trigger_fields(payment.event)
+        trigger = _healing.trigger_fields(payment.event)
         for index in range(1, 11):
             healing.append(
                 {
                     "time": payment.cast_time + index * 0.25,
                     "amount": 0.0,
-                    "amount_formula": _healing._missing_health_scaled_heal(
+                    "amount_formula": _healing.missing_health_scaled_heal(
                         min_tick, max_tick
                     ),
                     "source": "Frozen Tomb",
@@ -155,7 +155,7 @@ def derive_self_healing(
                     **trigger,
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Lissandra", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Lissandra")(derive_self_healing)

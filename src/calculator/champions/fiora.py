@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, proc_damage
 from .source_receipts import load_champion_sources
@@ -29,12 +29,10 @@ _vital_proc = proc_damage(
 
 
 def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Lunge"),
@@ -57,12 +55,10 @@ def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _riposte(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Riposte"),
@@ -79,12 +75,10 @@ def _riposte(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,
@@ -130,44 +124,27 @@ MODULE_CC = {"Q": "none", "W": "slow", "E": "slow"}
 parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "p_vitals",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 4,
-        "label": "Duelist's Dance vitals triggered",
-    },
-    {
-        "key": "e_attacks",
-        "type": "int",
-        "default": 2,
-        "min": 1,
-        "max": 2,
-        "label": "Bladework attacks",
-    },
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": False,
-        "label": "W (Riposte) active against selected incoming events",
-    },
-    {
-        "key": "w_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "W active start time in seconds",
-    },
-    {
-        "key": "w_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 0.75,
-        "label": "W active seconds; zero uses the sourced 0.75 second duration",
-    },
+    int_option(
+        "p_vitals", 0, minimum=0, maximum=4, label="Duelist's Dance vitals triggered"
+    ),
+    int_option("e_attacks", 2, minimum=1, maximum=2, label="Bladework attacks"),
+    bool_option(
+        "w_active", False, label="W (Riposte) active against selected incoming events"
+    ),
+    float_option(
+        "w_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="W active start time in seconds",
+    ),
+    float_option(
+        "w_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=0.75,
+        label="W active seconds; zero uses the sourced 0.75 second duration",
+    ),
     {
         "key": "w_blocked_sources",
         "type": "string_list",
@@ -193,7 +170,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Fiora")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -206,13 +183,16 @@ def derive_self_healing(
     healing = []
     p_level = int(champion_stat(champion_stats, "level"))
     p_heal = _healing.extract_named(
-        _healing._ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+        _healing.ability_json(champion_data, "P"),
+        "Bonus Damage",
+        p_level,
+        champion_stats,
     )
-    for event in _healing._attributed_events(
+    for event in _healing.attributed_events(
         damage_events, lambda source, _event: source == "passive"
     ):
-        _healing._heal_from_damage(healing, event, p_heal, "Duelist's Dance")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        _healing.heal_from_damage(healing, event, p_heal, "Duelist's Dance")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Fiora", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Fiora")(derive_self_healing)

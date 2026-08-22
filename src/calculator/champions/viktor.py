@@ -34,6 +34,7 @@ from .slotlib import (
     is_flat_unit,
     resolve_scaling,
 )
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the shield window (2.5s) and the
 # Discharge window (4s) are wiki Q prose; the shield base row and the
@@ -187,6 +188,4 @@ OPTIONS.append(
         "label": "Q Discharge empowered next basic attack",
     }
 )
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "E", "R"} else "out_of_scope") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(out_of_scope="PW")

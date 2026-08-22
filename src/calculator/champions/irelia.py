@@ -7,7 +7,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -17,6 +17,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
 
 
 def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
@@ -50,12 +51,10 @@ _fervor.phase = BUFF
 
 
 def _bladesurge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Bladesurge"),
@@ -79,12 +78,10 @@ def _bladesurge(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
@@ -106,12 +103,10 @@ def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _flawless_duet(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Flawless Duet"),
@@ -125,12 +120,10 @@ def _flawless_duet(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -169,31 +162,16 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Irelia", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "p_stacks",
-        "type": "int",
-        "default": 4,
-        "min": 0,
-        "max": 4,
-        "label": "Ionian Fervor stacks",
-    },
-    {
-        "key": "w_charge",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-        "label": "Defiant Dance charge fraction",
-    },
-    {
-        "key": "r_passes",
-        "type": "int",
-        "default": 2,
-        "min": 1,
-        "max": 2,
-        "label": "Vanguard's Edge passes",
-    },
+    int_option("p_stacks", 4, minimum=0, maximum=4, label="Ionian Fervor stacks"),
+    float_option(
+        "w_charge",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Defiant Dance charge fraction",
+        step=0.25,
+    ),
+    int_option("r_passes", 2, minimum=1, maximum=2, label="Vanguard's Edge passes"),
 ]
 ASSUMPTIONS = [
     "Ionian Fervor's per-stack attack speed is applied before damage and its max-stack on-hit is explicit.",
@@ -203,7 +181,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Irelia")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -214,13 +192,13 @@ def derive_self_healing(
 ):
     """Resolve Irelia self-healing events from its authored packet."""
     healing = []
-    ability = _healing._ability(champion_data, "Q")
-    rank = _healing._rank(ability_damages, "Q")
+    ability = _healing.ability_json(champion_data, "Q")
+    rank = _healing.parsed_rank(ability_damages, "Q")
     amount = _healing.extract_named(ability, "Heal", rank, champion_stats, {})
     for event in damage_events:
-        if _healing._event_source(event) == "Q":
-            _healing._heal_from_damage(healing, event, amount, "Bladesurge")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+        if _healing.event_source(event) == "Q":
+            _healing.heal_from_damage(healing, event, amount, "Bladesurge")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Irelia", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Irelia")(derive_self_healing)

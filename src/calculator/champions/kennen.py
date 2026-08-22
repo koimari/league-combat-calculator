@@ -15,15 +15,15 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 
 
 def _electrical_surge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     active = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     passive = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
@@ -48,12 +48,10 @@ def _electrical_surge(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _slicing_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bolts = max(1, min(6, int(ctx.option("r_bolts"))))
     per = extract_named(ability, "Magic Damage Per Bolt", rank, ctx.stats, ctx.target)
     return {
@@ -85,20 +83,8 @@ SLOTS = {
     "R": _slicing_maelstrom,
 }
 OPTIONS = [
-    {
-        "key": "w_empowered",
-        "type": "bool",
-        "default": True,
-        "label": "Four-stack Electrical Surge attack",
-    },
-    {
-        "key": "r_bolts",
-        "type": "int",
-        "default": 6,
-        "min": 1,
-        "max": 6,
-        "label": "Slicing Maelstrom bolts",
-    },
+    bool_option("w_empowered", True, label="Four-stack Electrical Surge attack"),
+    int_option("r_bolts", 6, minimum=1, maximum=6, label="Slicing Maelstrom bolts"),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kennen")
@@ -121,6 +107,4 @@ MODULE_CC: dict[str, str] = {}
 
 parse_abilities = build_parser(SLOTS, "Kennen", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot != "P" else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

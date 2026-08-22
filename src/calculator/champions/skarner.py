@@ -43,12 +43,10 @@ _W_SHIELD_DURATION = 2.5
 
 def _seismic_bastion(ctx: SlotCtx):
     """W: shockwave magic damage + the 8%-max-health self-shield."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Seismic Bastion"),
@@ -75,12 +73,10 @@ def _seismic_bastion(ctx: SlotCtx):
 
 def _ixtals_impact(ctx: SlotCtx):
     """E: terrain-collision physical damage (flat + bAD + % max health)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     leveling = find_named_leveling(ability, "Physical Damage")
     if leveling is None:
         return None

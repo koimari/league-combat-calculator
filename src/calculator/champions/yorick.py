@@ -44,13 +44,14 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..stats import growth_multiplier
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import damage_entry, extract_cooldown
 from .. import healing_helpers as _healing
+from .module_contract import coverage
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 
@@ -141,12 +142,10 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: Eulogy of the Isles — Maiden basic attacks over the window."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     attacks = min(max(int(ctx.option("maiden_attacks")), 0), 10)
     if attacks <= 0:
         return no_damage(
@@ -213,40 +212,53 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = [
-    {
-        "key": "mist_walkers",
-        "type": "int",
-        "default": 4,
-        "label": "Mist Walkers attacking the target",
-        "min": 0,
-        "max": 4,
-    },
-    {
-        "key": "mist_walker_attacks",
-        "type": "int",
-        "default": 5,
-        "label": "Mist Walker attacks per walker (5s window)",
-        "min": 0,
-        "max": 12,
-    },
-    {
-        "key": "maiden_attacks",
-        "type": "int",
-        "default": 5,
-        "label": "Maiden of the Mist attacks (5s window)",
-        "min": 0,
-        "max": 10,
-    },
+    int_option(
+        "mist_walkers",
+        4,
+        minimum=0,
+        maximum=4,
+        label="Mist Walkers attacking the target",
+    ),
+    int_option(
+        "mist_walker_attacks",
+        5,
+        minimum=0,
+        maximum=12,
+        label="Mist Walker attacks per walker (5s window)",
+    ),
+    int_option(
+        "maiden_attacks",
+        5,
+        minimum=0,
+        maximum=10,
+        label="Maiden of the Mist attacks (5s window)",
+    ),
 ]
 
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="W")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def _leveling_flat_at_level(
+    ability: dict[str, Any], attribute: str, level: int
+) -> float:
+    """Read the flat (unit-less) modifier of one attribute at champion level."""
+    for effect in ability.get("effects", []):
+        for leveling in effect.get("leveling", []):
+            if leveling.get("attribute") != attribute:
+                continue
+            for modifier in leveling.get("modifiers", []):
+                values = modifier.get("values", [])
+                units = modifier.get("units", [])
+                if not values:
+                    continue
+                if units and str(units[0]).strip():
+                    continue
+                return float(values[min(max(level, 1) - 1, len(values) - 1)])
+    return 0.0
+
+
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -257,12 +269,12 @@ def derive_self_healing(
 ):
     """Resolve Yorick self-healing events from its authored packet."""
     healing = []
-    q = _healing._ability(champion_data, "Q")
-    q_rank = _healing._rank(ability_damages, "Q")
+    q = _healing.ability_json(champion_data, "Q")
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_level = int(champion_stat(champion_stats, "level"))
-    q_flat = _healing._leveling_flat_at_level(q, "Heal", q_level)
+    q_flat = _leveling_flat_at_level(q, "Heal", q_level)
     q_missing_ratio = (
-        _healing._leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
+        _healing.leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
     )
 
     def last_rites_heal(
@@ -273,7 +285,7 @@ def derive_self_healing(
     ) -> float:
         return flat + max(0.0, maximum_health - current_health) * missing_ratio
 
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
         event = payment.event
@@ -284,10 +296,10 @@ def derive_self_healing(
                 "amount_formula": last_rites_heal,
                 "source": "Last Rites",
                 "kind": "champion_ability",
-                **_healing._trigger_fields(event),
+                **_healing.trigger_fields(event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Yorick", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Yorick")(derive_self_healing)

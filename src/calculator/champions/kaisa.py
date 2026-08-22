@@ -66,6 +66,9 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
+from .module_contract import coverage
+from ..stats import calculate_attack_speed
 
 _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
@@ -353,12 +356,10 @@ def _timed_plasma_proc(
 
 
 def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     distance, hit_time = _w_hit_time(ctx)
@@ -404,12 +405,10 @@ def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     evolved, evolution_note = _evolution_state(
         ctx,
@@ -512,12 +511,10 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
     window = _timed_window(ctx)
     if window is None:
         return None
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     duration, uptime = window
 
     bonus_percent = extract_value(ability, "Bonus Attack Speed", rank)
@@ -529,7 +526,9 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
         )
     casts, duty_cycle = _supercharge_uptime(ctx, ability, rank, duration, uptime)
     granted = bonus_percent * duty_cycle
-    ctx.bump_stat("attack_speed", ctx.stat("attack_speed_ratio") * granted / 100.0)
+    ctx.stats["attack_speed"] = calculate_attack_speed(
+        ctx.stat("attack_speed"), ctx.stat("attack_speed_ratio"), granted
+    )
     return {
         "name": ability.get("name", "Supercharge"),
         "rank": rank,
@@ -564,12 +563,10 @@ def _killer_instinct(ctx: SlotCtx) -> dict[str, Any] | None:
     window = _timed_window(ctx)
     if window is None:
         return None
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     entry = damage_entry(
         ability.get("name", "Killer Instinct"),
@@ -620,24 +617,22 @@ OPTIONS = [
             {"value": "evolved", "label": "Evolved"},
         ],
     },
-    {
-        "key": "plasma_starting_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 4,
-        "step": 1,
-        "label": "Plasma stacks already on each target",
-    },
-    {
-        "key": "w_target_distance",
-        "type": "float",
-        "default": 800.0,
-        "min": 0.0,
-        "max": 3000.0,
-        "step": 50.0,
-        "label": "Void Seeker target distance",
-    },
+    int_option(
+        "plasma_starting_stacks",
+        0,
+        minimum=0,
+        maximum=4,
+        label="Plasma stacks already on each target",
+        step=1,
+    ),
+    float_option(
+        "w_target_distance",
+        800.0,
+        minimum=0.0,
+        maximum=3000.0,
+        label="Void Seeker target distance",
+        step=50.0,
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -694,12 +689,6 @@ parse_abilities = build_parser(SLOTS, "Kai'Sa", cc_kinds=MODULE_CC)
 # E and R emit rows and neither deals damage, so both are ``no_damage``;
 # P has no slot of its own and can therefore only read ``out_of_scope``,
 # which under-reports it — see the module docstring.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "no_damage",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="ER")
 
 COVERAGE_CHANNELS = {"P": ("post_hit_proc",)}

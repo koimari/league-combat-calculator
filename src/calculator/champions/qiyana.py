@@ -13,6 +13,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -41,12 +42,10 @@ _Q_CC_BY_VARIANT = ("none", None, "none")
 
 def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
     ability_index = 1 if int(ctx.option("q_variant")) > 0 else 0
-    ability = ctx.ability("Q", ability_index)
-    if ability is None:
+    ranked = ctx.ranked("Q", ability_index)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("Q")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     variant = min(max(int(ctx.option("q_variant")), 0), 2)
     low_health = bool(ctx.options.get("q_target_below_half", False))
     attr = "Increased Damage" if variant == 2 and low_health else "Physical Damage"
@@ -77,12 +76,10 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
     """Terrashape's bonus is an on-hit rider, not a direct spell hit."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     entry = ability_on_hit_entry(
         "Terrashape element",
@@ -101,12 +98,10 @@ _terrashape.phase = ONHIT
 
 
 def _supreme_display(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("R")
-    if ability is None:
+    ranked = ctx.ranked("R")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("R")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Supreme Display of Talent"),
@@ -145,20 +140,16 @@ MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "stun"}
 parse_abilities = build_parser(SLOTS, "Qiyana", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "q_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "Q element (edge, brush/river, terrain)",
-    },
-    {
-        "key": "q_target_below_half",
-        "type": "bool",
-        "default": False,
-        "label": "Terrain Q target below 50% health",
-    },
+    int_option(
+        "q_variant",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Q element (edge, brush/river, terrain)",
+    ),
+    bool_option(
+        "q_target_below_half", False, label="Terrain Q target below 50% health"
+    ),
 ]
 
 ASSUMPTIONS = [

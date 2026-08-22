@@ -30,9 +30,11 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from .engine import AMP, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import damage_entry
+from .inputs import bool_option, float_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
 
@@ -177,12 +179,10 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     champion's OWN maximum health (``ctx.stats["health"]``), the same
     ``health`` stat the pinned packet maps it to.
     """
-    ability = ctx.ability("E", 0)
-    if ability is None:
+    ranked = ctx.ranked("E", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     raw_fraction = ctx.option("e_charge_fraction")
     if isinstance(raw_fraction, bool):
@@ -359,28 +359,22 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "e_charge_fraction",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.1,
-        "label": (
-            "Tides of Blood charge (0 = uncharged minimum, 1 = fully "
-            "charged after 1s of the 1.5s channel)"
-        ),
-        "rotation": {"role": "irrelevant", "slot": "E"},
-    },
-    {
-        "key": "r_hemoplague_debuff",
-        "type": "bool",
-        "default": True,
-        "label": (
-            "Hemoplague mark active: the target takes 10% increased "
-            "damage from all sources while marked (R-first opening)"
-        ),
-    },
+    float_option(
+        "e_charge_fraction",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Tides of Blood charge (0 = uncharged minimum, 1 = fully "
+        "charged after 1s of the 1.5s channel)",
+        step=0.1,
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
+    bool_option(
+        "r_hemoplague_debuff",
+        True,
+        label="Hemoplague mark active: the target takes 10% increased "
+        "damage from all sources while marked (R-first opening)",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -413,13 +407,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "no-damage classification rather than an unmodeled gap (no_damage, "
     "not out_of_scope).",
 ]
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"Q", "W", "E", "R"} else "no_damage")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -430,27 +421,27 @@ def derive_self_healing(
 ):
     """Resolve Vladimir self-healing events from its authored packet."""
     healing = []
-    q_rank = _healing._rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_heal = _healing.extract_named(
-        _healing._ability(champion_data, "Q"), "Heal", q_rank, champion_stats
+        _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):
         event = payment.event
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing, event, q_heal, "Transfusion", link_to_damage=False
         )
     # Sanguine Pool (W): heals for 30% of pre-mitigation damage dealt
     # (patch 12.13: "Healing increased to 30% of damage dealt from 15%";
     # 18% against minions — champion targets assumed here).
-    for event in _healing._attributed_events(
+    for event in _healing.attributed_events(
         damage_events, lambda source, _event: source == "W"
     ):
         # Pre-mitigation damage per the wiki ("30% of the pre-mitigation
         # damage dealt"); the engine exposes it as event["raw_damage"].
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
-        _healing._heal_from_damage(healing, event, 0.30 * dealt, "Sanguine Pool")
+        _healing.heal_from_damage(healing, event, 0.30 * dealt, "Sanguine Pool")
     # Hemoplague (R): flat heal per infected champion, reduced for later
     # targets (wiki: "Heal: 150 / 250 / 350 (+ 70% AP)" and
     # "Reduced Heal: 60 / 100 / 140 (+ 28% AP)").  Each pair fight sees
@@ -459,18 +450,21 @@ def derive_self_healing(
     # coupled participant ledger re-prices later roster targets so the
     # first infected champion pays the full heal and each additional
     # champion pays the reduced heal.
-    r_rank = _healing._rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     r_heal = _healing.extract_named(
-        _healing._ability(champion_data, "R"), "Heal", r_rank, champion_stats
+        _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
     )
     r_reduced = _healing.extract_named(
-        _healing._ability(champion_data, "R"), "Reduced Heal", r_rank, champion_stats
+        _healing.ability_json(champion_data, "R"),
+        "Reduced Heal",
+        r_rank,
+        champion_stats,
     )
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
     ):
         event = payment.event
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing,
             event,
             r_heal,
@@ -478,7 +472,7 @@ def derive_self_healing(
             later_target_amount=r_reduced,
             link_to_damage=False,
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Vladimir", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Vladimir")(derive_self_healing)

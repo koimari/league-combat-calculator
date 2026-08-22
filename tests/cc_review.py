@@ -47,6 +47,18 @@ CONTROL_WORDS = (
     "taunt",
 )
 
+# The wider screen a reviewed "none" is held to: every control word the
+# Wiki uses at all, not just the classes an item passive keys on.  A slot
+# reviewed as uncontrolled whose text carries one of these owes the
+# reader a named reason (its test's ``UNCONTROLLED_MENTIONS``).
+ANY_CONTROL_WORDS = CONTROL_WORDS + (
+    "cripple",
+    "disarm",
+    "drowsy",
+    "polymorph",
+    "silence",
+)
+
 _PROBE = {
     "level": 18,
     "items": ["Fimbulwinter"],
@@ -76,6 +88,12 @@ def slot_text(champion_data, slot):
 def control_words(text):
     """The control vocabulary present in *text*, sorted."""
     return sorted(word for word in CONTROL_WORDS if word in text)
+
+
+def any_control_hits(champion_data, slot):
+    """One slot's cached text screened against :data:`ANY_CONTROL_WORDS`."""
+    text = slot_text(champion_data, slot)
+    return sorted(word for word in ANY_CONTROL_WORDS if word in text)
 
 
 def fimbulwinter_coverage(champion, **window):

@@ -34,16 +34,16 @@ from .module_helpers import no_damage_parser
 from .source_receipts import load_champion_sources
 from .slotlib import extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
+from .inputs import float_option
+from .module_contract import coverage
 
 
 def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: minimum/maximum physical damage interpolated by charge time."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     fraction = max(0.0, min(1.0, float(ctx.option("q_charge_fraction"))))
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
@@ -84,12 +84,10 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
     AFTER this ability's own damage, so every later physical hit (autos,
     Q, R) benefits but the E hit itself does not.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = {
         "name": ability.get("name", "Roar of the Slayer"),
@@ -154,24 +152,17 @@ SLOTS = {
 # not place.  Q's answer is charge-dependent and is authored on its part.
 MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "slow"}
 
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="P")
 
 OPTIONS = [
-    {
-        "key": "q_charge_fraction",
-        "type": "float",
-        "default": 1.0,
-        "label": "Q charge fraction",
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-    },
+    float_option(
+        "q_charge_fraction",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Q charge fraction",
+        step=0.25,
+    ),
 ]
 
 parse_abilities = build_parser(SLOTS, "Sion", cc_kinds=MODULE_CC)

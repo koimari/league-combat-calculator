@@ -48,6 +48,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
 
 # Caustic Spittle's shred lasts 4s ("reduces their armor and magic
 # resistance for 4 seconds") — it is not permanent.
@@ -56,12 +57,10 @@ Q_SHRED_DURATION = 4.0
 
 def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: magic damage + bonus-AS stat buff + resistance shred debuff."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry: dict[str, Any] = {
@@ -102,12 +101,10 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: on-hit %maxHP magic damage in a castable shell."""
     if not ctx.options.get("w_active", True):
         return None
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_hit = pct_health_per_hit(
         ability,
@@ -196,18 +193,8 @@ def _living_artillery(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "q_shred",
-        "type": "bool",
-        "default": True,
-        "label": "Apply Q Resistance Shred",
-    },
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": True,
-        "label": "W Active (Bio-Arcane Barrage)",
-    },
+    bool_option("q_shred", True, label="Apply Q Resistance Shred"),
+    bool_option("w_active", True, label="W Active (Bio-Arcane Barrage)"),
 ]
 
 ASSUMPTIONS = [

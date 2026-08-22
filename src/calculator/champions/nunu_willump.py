@@ -23,13 +23,13 @@ from typing import Any
 
 from ..healing_helpers import (
     HealAnchor,
-    _ability,
-    _payments,
-    _rank,
-    _trigger_fields,
+    ability_json,
+    payments,
+    parsed_rank,
+    trigger_fields,
 )
 from .engine import BUFF, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -73,12 +73,10 @@ _call_of_the_freljord.phase = BUFF
 
 def _consume(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Champion Magic Damage (60-220 + 65% AP + 5% bonus health)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     damage = extract_named(
         ability, "Champion Magic Damage", rank, ctx.stats, ctx.target
@@ -189,9 +187,9 @@ def derive_self_healing(
     """
     del fight_duration_seconds
     base = extract_named(
-        _ability(champion_data, "Q"),
+        ability_json(champion_data, "Q"),
         "Base Champion Heal",
-        _rank(ability_damages, "Q"),
+        parsed_rank(ability_damages, "Q"),
         champion_stats,
         {},
     )
@@ -212,11 +210,11 @@ def derive_self_healing(
             "amount_formula": consume_heal,
             "source": "Consume",
             "kind": "champion_ability",
-            **_trigger_fields(payment.event),
+            **trigger_fields(payment.event),
         }
-        for payment in _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+        for payment in payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
     ]
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Nunu & Willump", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Nunu & Willump")(derive_self_healing)

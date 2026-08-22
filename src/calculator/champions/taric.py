@@ -45,16 +45,18 @@ from functools import partial
 from typing import Any
 
 from .engine import ONHIT, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import (
+    extract_named,
     find_named_leveling,
     on_hit_entry,
     simple_damage,
     sum_modifiers,
     with_control,
 )
-from ..healing_helpers import _ability, _rank, _taric_starlights_touch
+from ..healing_helpers import ability_json, parsed_rank
+from .inputs import champion_stat
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
 
@@ -238,6 +240,67 @@ COVERAGE_CHANNELS = {"Q": ("self_healing_rule",)}
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+def _starlights_touch(
+    q_ability: dict[str, Any],
+    q_rank: int,
+    champion_stats: dict[str, float],
+) -> tuple[float, int]:
+    """Price one Taric Q (Starlight's Touch) cast from the cached data.
+
+    The per-charge and maximum formulas are wiki description text in
+    ``data/champions.json``; the stock is the rank-scaled "Maximum Charges"
+    leveling attribute.  Returns ``(heal_amount, charges_used)`` — the
+    amount at the sourced stock, capped at the "maximum of ... at 5
+    charges" row, with zero when no per-charge formula or stock exists.
+    This is the single formula source for the Q heal; the support scanner
+    never re-prices the slot.
+    """
+    charges = extract_named(q_ability, "Maximum Charges", q_rank, champion_stats, {})
+    descriptions = [
+        effect.get("description", "") for effect in q_ability.get("effects", [])
+    ]
+    per_charge_match = re.search(
+        r"for\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
+        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)\s*per charge",
+        " ".join(descriptions),
+        flags=re.IGNORECASE,
+    )
+    maximum_match = re.search(
+        r"maximum of\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
+        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)",
+        " ".join(descriptions),
+        flags=re.IGNORECASE,
+    )
+    if per_charge_match is None or charges <= 0.0:
+        return 0.0, max(0, int(round(charges)))
+    maximum_health = champion_stat(champion_stats, "health", champion="Taric")
+    ability_power = champion_stat(champion_stats, "ability_power", champion="Taric")
+
+    def _charge_heal(flat: float, ap_percent: float, hp_percent: float) -> float:
+        return (
+            flat
+            + ability_power * ap_percent / 100.0
+            + maximum_health * hp_percent / 100.0
+        )
+
+    per_charge = _charge_heal(
+        float(per_charge_match.group(1)),
+        float(per_charge_match.group(2)),
+        float(per_charge_match.group(3)),
+    )
+    heal = charges * per_charge
+    if maximum_match is not None:
+        heal = min(
+            heal,
+            _charge_heal(
+                float(maximum_match.group(1)),
+                float(maximum_match.group(2)),
+                float(maximum_match.group(3)),
+            ),
+        )
+    return max(0.0, heal), max(0, int(round(charges)))
+
+
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -256,9 +319,9 @@ def derive_self_healing(
     used (``charges``) for the public receipt.
     """
     healing: list[dict] = []
-    heal, charges = _taric_starlights_touch(
-        _ability(champion_data, "Q"),
-        _rank(ability_damages, "Q"),
+    heal, charges = _starlights_touch(
+        ability_json(champion_data, "Q"),
+        parsed_rank(ability_damages, "Q"),
         champion_stats,
     )
     if heal > 0.0:
@@ -277,7 +340,7 @@ def derive_self_healing(
                     "_event_id": f"taric:q:{cast_index}",
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Taric", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Taric")(derive_self_healing)

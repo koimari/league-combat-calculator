@@ -10,6 +10,7 @@ from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from .inputs import int_option
 
 
 def _nimble_fighter(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -22,12 +23,10 @@ def _nimble_fighter(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     attack_damage = ctx.stat("attack_damage")
     entry = damage_entry(
@@ -68,12 +67,10 @@ _W_PASSIVE_TICK_INTERVAL = _W_PASSIVE_DURATION / _W_PASSIVE_TICKS
 
 
 def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     active = extract_named(ability, "Active Magic Damage", rank, ctx.stats, ctx.target)
     passive_per_tick = extract_named(
         ability, "Passive Magic Damage per Tick", rank, ctx.stats, ctx.target
@@ -129,12 +126,10 @@ def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _playful(ctx: SlotCtx) -> dict[str, Any] | None:
     variant = min(max(int(ctx.option("e_variant")), 0), 1)
-    ability = ctx.ability("E", variant)
-    if ability is None:
+    ranked = ctx.ranked("E", variant)
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Playful" if variant == 0 else "Trickster"),
@@ -159,12 +154,10 @@ def _playful(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _chum_the_waters(ctx: SlotCtx) -> dict[str, Any] | None:
     size = min(max(int(ctx.option("r_size")), 0), 2)
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     attributes = ("Guppy Damage", "Chomper Damage", "Gigalodon Damage")
     value = extract_named(ability, attributes[size], rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -198,22 +191,16 @@ MODULE_CC = {"Q": "none", "W": "none", "E": CC_PER_PART, "R": "knockback"}
 parse_abilities = build_parser(SLOTS, "Fizz", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "e_variant",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 1,
-        "label": "E variant (0 Playful, 1 Trickster)",
-    },
-    {
-        "key": "r_size",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 2,
-        "label": "R lure size (0 Guppy, 1 Chomper, 2 Gigalodon)",
-    },
+    int_option(
+        "e_variant", 0, minimum=0, maximum=1, label="E variant (0 Playful, 1 Trickster)"
+    ),
+    int_option(
+        "r_size",
+        0,
+        minimum=0,
+        maximum=2,
+        label="R lure size (0 Guppy, 1 Chomper, 2 Gigalodon)",
+    ),
 ]
 
 ASSUMPTIONS = [

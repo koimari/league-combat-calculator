@@ -29,6 +29,7 @@ from .slotlib import (
     with_control_event,
     with_item_on_hits,
 )
+from .inputs import bool_option
 
 PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b8"
 
@@ -68,12 +69,10 @@ def _tether_fear(compiled):
 
 def _shroud_of_darkness(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the permanent 30-50% attack speed, doubled on a blocked cast."""
-    ability = ctx.ability("W")
-    if ability is None:
+    ranked = ctx.ranked("W")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("W")
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     passive_as = extract_value(ability, "Bonus Attack Speed", rank)
     enhanced_as = extract_value(ability, "Enhanced Bonus Attack Speed", rank)
@@ -141,12 +140,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "e_tether_holds",
-        "type": "bool",
-        "default": True,
-        "label": "Unspeakable Horror tether holds",
-        "rotation": {
+    bool_option(
+        "e_tether_holds",
+        True,
+        label="Unspeakable Horror tether holds",
+        rotation={
             "role": "self_state",
             "slot": "E",
             "note": (
@@ -154,13 +152,12 @@ OPTIONS = list(OPTIONS) + [
                 "breaking the tether is the enemy's answer, not a cast edge."
             ),
         },
-    },
-    {
-        "key": "w_spellshield_block",
-        "type": "bool",
-        "default": False,
-        "label": "Shroud of Darkness blocked a hostile spell (doubles its AS)",
-        "rotation": {
+    ),
+    bool_option(
+        "w_spellshield_block",
+        False,
+        label="Shroud of Darkness blocked a hostile spell (doubles its AS)",
+        rotation={
             "role": "self_state",
             "slot": "W",
             "note": (
@@ -168,7 +165,7 @@ OPTIONS = list(OPTIONS) + [
                 "enemy creates, not a cross-slot cast edge."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [

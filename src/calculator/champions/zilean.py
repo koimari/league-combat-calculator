@@ -24,11 +24,12 @@ they are ``no_damage`` rather than unmodelled mechanics:
 from dataclasses import replace
 
 from .engine import CC_PER_PART
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat
 from .packet_module import build_packet_module
 
 from ..champions.skill_orders import get_ability_rank
 from .slotlib import with_control
+from .module_contract import coverage
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
 
@@ -97,12 +98,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "q_second_bomb",
-        "type": "bool",
-        "default": False,
-        "label": "Q second bomb attached to the target",
-        "rotation": {
+    bool_option(
+        "q_second_bomb",
+        False,
+        label="Q second bomb attached to the target",
+        rotation={
             "role": "self_state",
             "slot": "Q",
             "note": (
@@ -111,7 +111,7 @@ OPTIONS = list(OPTIONS) + [
                 "and no cast order the engine walks can derive it."
             ),
         },
-    },
+    ),
 ]
 
 # E8d: sourced Chronoshift revive values.  Cached R leveling (data/
@@ -142,13 +142,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 
 # R's own packet row prices nothing; the revive above is what the engine
 # prices for the slot (1100.0 at rank 3 with no AP).
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "no_damage",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="PWE")
 COVERAGE_CHANNELS = {"R": ("starting_revive_defense",)}
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "Q's stun is emitted only when the explicit second-bomb state is selected; "

@@ -103,8 +103,10 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 
@@ -233,15 +235,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "passive_procs",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": _MAX_UNSHACKLED_STACKS,
-        "label": "Unshackled attacks spent (each replaces one swing)",
-        "rotation": {"role": "self_state", "slot": "P"},
-    },
+    int_option(
+        "passive_procs",
+        0,
+        minimum=0,
+        maximum=_MAX_UNSHACKLED_STACKS,
+        label="Unshackled attacks spent (each replaces one swing)",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -297,16 +298,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "a cross-champion ultimate-import kernel, which is a project rather "
     "than a slot.",
 ]
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "out_of_scope",
-}
+MODULE_COVERAGE = coverage(out_of_scope="R")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -317,11 +312,11 @@ def derive_self_healing(
 ):
     """Resolve Sylas self-healing events from its authored packet."""
     healing = []
-    w = _healing._ability(champion_data, "W")
-    w_rank = _healing._rank(ability_damages, "W")
+    w = _healing.ability_json(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
     min_heal = _healing.extract_named(w, "Minimum Heal", w_rank, champion_stats)
     max_heal = _healing.extract_named(w, "Maximum Heal", w_rank, champion_stats)
-    for payment in _healing._payments(
+    for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
         event = payment.event
@@ -331,18 +326,18 @@ def derive_self_healing(
             {
                 "time": float(event.get("time", 0.0)),
                 "amount": 0.0,
-                "amount_formula": _healing._missing_health_scaled_heal(
+                "amount_formula": _healing.missing_health_scaled_heal(
                     min_heal, max_heal
                 ),
                 "source": "Kingslayer",
                 "kind": "champion_ability",
-                **_healing._trigger_fields(event),
+                **_healing.trigger_fields(event),
             }
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Sylas", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Sylas")(derive_self_healing)
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
     "E (Abscond/Abduct) carries no shield in the current kit: the CP-era "

@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -83,12 +83,10 @@ def _snip_times(ability: dict[str, Any], bonus: int) -> tuple[float, ...]:
 
 
 def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("q_snippy_stacks")), 0), 4)
     center = bool(ctx.options.get("q_center", True))
     # Gwen "snips at least twice", and "if Gwen has any Snippy stacks, she
@@ -143,12 +141,10 @@ _hallowed_mist.phase = BUFF
 
 
 def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     bonus = 15.0 + 0.20 * ctx.stat("ability_power")
     entry = damage_entry(
         ability.get("name", "Skip 'n Slash"),
@@ -167,12 +163,10 @@ def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _needlework(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     casts = min(max(int(ctx.option("r_casts")), 1), 3)
     attrs = (
         "Damage with A Thousand Cuts",
@@ -216,45 +210,28 @@ MODULE_CC = {"E": "none", "Q": "none", "R": "slow"}
 parse_abilities = build_parser(SLOTS, "Gwen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "q_snippy_stacks",
-        "type": "int",
-        "default": 4,
-        "min": 0,
-        "max": 4,
-        "label": "Snippy stacks consumed by Q",
-    },
-    {"key": "q_center", "type": "bool", "default": True, "label": "Q center hit"},
-    {
-        "key": "r_casts",
-        "type": "int",
-        "default": 3,
-        "min": 1,
-        "max": 3,
-        "label": "Needlework casts",
-    },
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": False,
-        "label": "W (Hallowed Mist) active against selected skillshots",
-    },
-    {
-        "key": "w_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "W active start time in seconds",
-    },
-    {
-        "key": "w_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 4.0,
-        "label": "W active seconds; zero uses the sourced four-second duration",
-    },
+    int_option(
+        "q_snippy_stacks", 4, minimum=0, maximum=4, label="Snippy stacks consumed by Q"
+    ),
+    bool_option("q_center", True, label="Q center hit"),
+    int_option("r_casts", 3, minimum=1, maximum=3, label="Needlework casts"),
+    bool_option(
+        "w_active", False, label="W (Hallowed Mist) active against selected skillshots"
+    ),
+    float_option(
+        "w_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="W active start time in seconds",
+    ),
+    float_option(
+        "w_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=4.0,
+        label="W active seconds; zero uses the sourced four-second duration",
+    ),
     {
         "key": "w_blocked_skillshots",
         "type": "string_list",
@@ -281,7 +258,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Gwen")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -294,20 +271,23 @@ def derive_self_healing(
     healing = []
     p_level = int(champion_stat(champion_stats, "level"))
     per_instance_cap = _healing.extract_named(
-        _healing._ability(champion_data, "P"), "Bonus Damage", p_level, champion_stats
+        _healing.ability_json(champion_data, "P"),
+        "Bonus Damage",
+        p_level,
+        champion_stats,
     )
-    for event in _healing._attributed_events(
+    for event in _healing.attributed_events(
         damage_events,
         lambda source, _event: source == "on_hit_ability_passive",
     ):
         dealt = float(event.get("damage", 0.0))
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing,
             event,
             min(0.50 * dealt, per_instance_cap),
             "A Thousand Cuts",
         )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Gwen", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Gwen")(derive_self_healing)

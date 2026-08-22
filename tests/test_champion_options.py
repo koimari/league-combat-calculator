@@ -17,6 +17,7 @@ from src.calculator.champions import (
     get_champion_options_meta,
     registered_champion_names,
 )
+from src.calculator.champions.inputs import bool_option, float_option, int_option
 
 _OPTION_TYPES = {
     "bool": bool,
@@ -270,3 +271,89 @@ class TestRotationDeclarations:
                     )
                 else:
                     assert "setup_slot" not in decl, (name, key, decl)
+
+
+class TestOptionConstructors:
+    """The typed builders every OPTIONS row is written through."""
+
+    def test_a_bool_row_carries_no_range(self) -> None:
+        assert bool_option("q_active", True, label="Q active") == {
+            "key": "q_active",
+            "type": "bool",
+            "default": True,
+            "label": "Q active",
+        }
+
+    def test_an_int_row_states_its_range(self) -> None:
+        assert int_option("stacks", 3, minimum=0, maximum=6, label="Stacks") == {
+            "key": "stacks",
+            "type": "int",
+            "default": 3,
+            "min": 0,
+            "max": 6,
+            "label": "Stacks",
+        }
+
+    def test_a_float_row_states_its_range(self) -> None:
+        assert float_option(
+            "uptime", 0.5, minimum=0.0, maximum=1.0, label="Uptime"
+        ) == {
+            "key": "uptime",
+            "type": "float",
+            "default": 0.5,
+            "min": 0.0,
+            "max": 1.0,
+            "label": "Uptime",
+        }
+
+    def test_the_key_order_is_canonical_whatever_the_call_order(self) -> None:
+        """The row's shape is the builder's, not the caller's: extras follow
+        the canonical five however they were passed."""
+        row = int_option(
+            "stacks", 3, minimum=0, maximum=6, label="Stacks", rotation={}, step=1
+        )
+        assert list(row) == [
+            "key",
+            "type",
+            "default",
+            "min",
+            "max",
+            "label",
+            "step",
+            "rotation",
+        ]
+
+    def test_extras_ride_through_untouched(self) -> None:
+        rotation = {"role": "self_state", "slot": "E"}
+        assert bool_option("e", False, label="E", rotation=rotation)["rotation"] is (
+            rotation
+        )
+
+    def test_every_registered_row_matches_its_builder(self) -> None:
+        """Whatever a module wrote, the published row is a builder's shape."""
+        builders = {"bool": bool_option, "int": int_option, "float": float_option}
+        for name in registered_champion_names():
+            for row in get_champion_options_meta(name)["options"]:
+                builder = builders.get(row["type"])
+                if builder is None or ("min" in row) != ("max" in row):
+                    continue
+                extra = {
+                    k: v
+                    for k, v in row.items()
+                    if k not in ("key", "type", "default", "min", "max", "label")
+                }
+                ranges = (
+                    {}
+                    if row["type"] == "bool"
+                    else {"minimum": row["min"], "maximum": row["max"]}
+                )
+                assert (
+                    builder(
+                        row["key"],
+                        row["default"],
+                        label=row["label"],
+                        **ranges,
+                        **extra,
+                    )
+                    == row
+                ), (name, row["key"])

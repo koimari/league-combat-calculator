@@ -48,6 +48,7 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option
 
 # HARDCODED: verify on patch updates — Concussive Blows' trigger damage,
 # stack count, stack duration, and immunity period exist only in
@@ -198,12 +199,10 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: base magic damage + 2.5% of Braum's OWN built max health."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
@@ -235,12 +234,10 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: self 20-40 (+36% bonus) armor AND magic resist; zero damage."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     entry = damage_entry(
         ability.get("name", "Stand Behind Me"),
@@ -308,37 +305,29 @@ _unbreakable.phase = BUFF
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "w_active",
-        "type": "bool",
-        "default": True,
-        "label": (
-            "W (Stand Behind Me) active: grants self 20-40 (+36% bonus) "
-            "armor and magic resistance"
-        ),
-    },
-    {
-        "key": "e_active",
-        "type": "bool",
-        "default": False,
-        "label": "E (Unbreakable) active against selected skillshots",
-    },
-    {
-        "key": "e_active_from",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 120.0,
-        "label": "E active start time in seconds",
-    },
-    {
-        "key": "e_active_seconds",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 4.0,
-        "label": "E active seconds; zero uses the sourced rank duration",
-    },
+    bool_option(
+        "w_active",
+        True,
+        label="W (Stand Behind Me) active: grants self 20-40 (+36% bonus) "
+        "armor and magic resistance",
+    ),
+    bool_option(
+        "e_active", False, label="E (Unbreakable) active against selected skillshots"
+    ),
+    float_option(
+        "e_active_from",
+        0.0,
+        minimum=0.0,
+        maximum=120.0,
+        label="E active start time in seconds",
+    ),
+    float_option(
+        "e_active_seconds",
+        0.0,
+        minimum=0.0,
+        maximum=4.0,
+        label="E active seconds; zero uses the sourced rank duration",
+    ),
     {
         "key": "e_blocked_skillshots",
         "type": "string_list",

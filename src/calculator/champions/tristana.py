@@ -78,6 +78,8 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
+from .inputs import int_option
+from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the 4-stack cap is wiki prose
 # ("stacking up to 4 times for a maximum 100% increase"); the damage
@@ -91,12 +93,10 @@ _Q_DURATION_SOURCE = "Tristana.Q[0].effects[0].description"
 
 def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: the detonation — base + e_stacks x per-stack bonus."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     stacks = min(_E_MAX_STACKS, max(0, int(ctx.options.get("e_stacks", _E_MAX_STACKS))))
     base = extract_named(
@@ -132,12 +132,10 @@ def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     :func:`required_ranked_attribute_atom` and the window through
     :func:`required_ability_atom`.  Nothing here is a literal.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     bonus_as_pct, _as_atom = required_ranked_attribute_atom(
@@ -214,17 +212,14 @@ def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "e_stacks",
-        "type": "int",
-        "default": _E_MAX_STACKS,
-        "min": 0,
-        "max": _E_MAX_STACKS,
-        "label": (
-            "Explosive Charge stacks when it detonates "
-            "(4 = max 100% increase, instant detonation)"
-        ),
-    },
+    int_option(
+        "e_stacks",
+        _E_MAX_STACKS,
+        minimum=0,
+        maximum=_E_MAX_STACKS,
+        label="Explosive Charge stacks when it detonates "
+        "(4 = max 100% increase, instant detonation)",
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -286,8 +281,6 @@ parse_abilities = build_parser(SLOTS, "Tristana", cc_kinds=MODULE_CC)
 
 # P is emitted and grants nothing the engine prices (attack range), which
 # is what ``no_damage`` states; Q now carries a priced stat_buff row.
-MODULE_COVERAGE = {
-    slot: ("no_damage" if slot == "P" else "modeled") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")
 
 SOURCES = load_champion_sources("Tristana")

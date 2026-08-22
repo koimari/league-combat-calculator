@@ -20,6 +20,7 @@ from .engine import DEBUFF, SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 _W_MR_REDUCTION_PERCENT = 25.0
 _W_DEBUFF_DURATION = 5.0
@@ -39,12 +40,10 @@ _R_CAST_TIME = 0.25
 
 
 def _wall_of_pain(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     entry: dict[str, Any] = {
         "name": ability.get("name", "Wall of Pain"),
         "rank": rank,
@@ -68,12 +67,10 @@ _wall_of_pain.phase = DEBUFF
 
 
 def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     requested_isolated = bool(ctx.options.get("q_isolated", True))
     roster_count = int(ctx.target_stat("roster_target_count"))
@@ -170,12 +167,10 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
 
 
 def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     if ctx.options.get("fight_duration_seconds") is not None:
         return _defile_timed(ctx, ability, rank)
 
@@ -216,12 +211,10 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _requiem(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     hit_time = _R_CAST_START + _R_CAST_TIME + _R_CHANNEL_DURATION
     entry = damage_entry(
@@ -244,27 +237,16 @@ CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
 )
 
 OPTIONS = [
-    {
-        "key": "wall_contact",
-        "type": "bool",
-        "default": True,
-        "label": "Target crosses Wall of Pain",
-    },
-    {
-        "key": "q_isolated",
-        "type": "bool",
-        "default": True,
-        "label": "Lay Waste hits only one target",
-    },
-    {
-        "key": "e_ticks",
-        "type": "int",
-        "default": 5,
-        "min": 0,
-        "max": _E_MAX_SELECTED_TICKS,
-        "step": 1,
-        "label": "Defile damage ticks (one rotation)",
-    },
+    bool_option("wall_contact", True, label="Target crosses Wall of Pain"),
+    bool_option("q_isolated", True, label="Lay Waste hits only one target"),
+    int_option(
+        "e_ticks",
+        5,
+        minimum=0,
+        maximum=_E_MAX_SELECTED_TICKS,
+        label="Defile damage ticks (one rotation)",
+        step=1,
+    ),
 ]
 
 ASSUMPTIONS = [

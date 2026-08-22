@@ -15,6 +15,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 
 def _level_scaling(
@@ -57,12 +58,10 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     initial = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     detonation = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -83,12 +82,10 @@ def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _smoke_screen(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Smoke Screen"),
@@ -105,12 +102,10 @@ def _smoke_screen(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("e_true_grit_stacks")), 0), 8)
     armor = extract_named(ability, "Bonus Armor", rank, ctx.stats, ctx.target) * stacks
     mr = (
@@ -131,12 +126,10 @@ _quickdraw.phase = BUFF
 
 
 def _collateral_damage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     secondary = bool(ctx.options.get("r_secondary_target", False))
     attr = "Reduced Damage" if secondary else "Physical Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -170,26 +163,9 @@ MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Graves", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "p_critical_pellets",
-        "type": "bool",
-        "default": False,
-        "label": "Critical pellet branch",
-    },
-    {
-        "key": "e_true_grit_stacks",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 8,
-        "label": "True Grit stacks",
-    },
-    {
-        "key": "r_secondary_target",
-        "type": "bool",
-        "default": False,
-        "label": "Collateral Damage secondary cone",
-    },
+    bool_option("p_critical_pellets", False, label="Critical pellet branch"),
+    int_option("e_true_grit_stacks", 1, minimum=0, maximum=8, label="True Grit stacks"),
+    bool_option("r_secondary_target", False, label="Collateral Damage secondary cone"),
 ]
 
 ASSUMPTIONS = [

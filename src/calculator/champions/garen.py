@@ -6,9 +6,9 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import bool_option, champion_stat
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -24,12 +24,10 @@ def _perseverance(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _decisive_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Decisive Strike"),
@@ -59,12 +57,10 @@ _courage.phase = BUFF
 
 
 def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     nearest = bool(ctx.options.get("e_nearest_target", True))
     spins = 7 + int(max(0.0, ctx.stat("bonus_attack_speed")) // 25.0)
     spins = min(max(spins, 7), 15)
@@ -94,12 +90,10 @@ def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _demacian_justice(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability.get("name", "Demacian Justice"),
@@ -134,12 +128,7 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Garen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    {
-        "key": "e_nearest_target",
-        "type": "bool",
-        "default": True,
-        "label": "Judgment nearest-target branch",
-    },
+    bool_option("e_nearest_target", True, label="Judgment nearest-target branch"),
 ]
 
 ASSUMPTIONS = [
@@ -151,7 +140,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Garen")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -162,7 +151,7 @@ def derive_self_healing(
 ):
     """Resolve Garen self-healing events from its authored packet."""
     healing = []
-    p = _healing._ability(champion_data, "P")
+    p = _healing.ability_json(champion_data, "P")
     p_level = int(champion_stat(champion_stats, "level"))
     per_tick = 0.0
     for effect in p.get("effects", []):
@@ -199,7 +188,7 @@ def derive_self_healing(
             )
             sequence += 1
             tick += 0.5
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Garen", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Garen")(derive_self_healing)

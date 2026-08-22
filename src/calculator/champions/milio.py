@@ -19,10 +19,11 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .engine import ONHIT, SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .module_helpers import rank_gated_no_damage_parser
 from .packet_module import build_packet_module
 from .slotlib import extract_named, on_hit_entry
+from .inputs import int_option
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
 
@@ -89,14 +90,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_procs",
-        "type": "int",
-        "default": _FIRED_UP_PROCS_PER_CAST,
-        "min": 0,
-        "max": 10,
-        "label": "Fired Up! hits landed",
-    },
+    int_option(
+        "p_procs",
+        _FIRED_UP_PROCS_PER_CAST,
+        minimum=0,
+        maximum=10,
+        label="Fired Up! hits landed",
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -130,7 +130,7 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 ]
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -141,9 +141,9 @@ def derive_self_healing(
 ):
     """Resolve Milio self-healing events from its authored packet."""
     healing = []
-    r_rank = _healing._rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ability_damages, "R")
     heal = _healing.extract_named(
-        _healing._ability(champion_data, "R"), "Heal", r_rank, champion_stats
+        _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
     )
     if heal > 0.0:
         for cast_index, cast in enumerate(cast_timeline or []):
@@ -170,8 +170,8 @@ def derive_self_healing(
     # ticks, so the ratio-derived count wins, exactly as Janna's Monsoon
     # is handled.  W deals no enemy damage, so the W cast timeline is
     # the sourced trigger.
-    w_rank = _healing._rank(ability_damages, "W")
-    w_ability = _healing._ability(champion_data, "W")
+    w_rank = _healing.parsed_rank(ability_damages, "W")
+    w_ability = _healing.ability_json(champion_data, "W")
     w_per_tick = _healing.extract_named(
         w_ability, "Heal per Tick", w_rank, champion_stats
     )
@@ -196,7 +196,7 @@ def derive_self_healing(
                         "actor_wide": True,
                     }
                 )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Milio", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Milio")(derive_self_healing)

@@ -11,6 +11,8 @@ from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .inputs import bool_option
+from .module_contract import coverage
 
 
 def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -50,12 +52,10 @@ _E_TETHER_SECONDS = 1.5
 
 def _ethereal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: the chain's hit, then the tether's fracture 1.5s later."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     completes = bool(ctx.options.get("e_chain_complete", True))
     parts = [DamagePart("magic", initial, time_offset=0.0, cc_kind="none")]
@@ -156,18 +156,8 @@ SLOTS = {
     "R": _mimic,
 }
 OPTIONS = [
-    {
-        "key": "q_consume",
-        "type": "bool",
-        "default": True,
-        "label": "Sigil mark is consumed",
-    },
-    {
-        "key": "e_chain_complete",
-        "type": "bool",
-        "default": True,
-        "label": "Ethereal Chains completes",
-    },
+    bool_option("q_consume", True, label="Sigil mark is consumed"),
+    bool_option("e_chain_complete", True, label="Ethereal Chains completes"),
     {
         "key": "r_mimic",
         "type": "select",
@@ -203,6 +193,4 @@ MODULE_CC = {"W": "none", "E": CC_PER_PART, "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "LeBlanc", cc_kinds=MODULE_CC)
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot != "P" else "no_damage") for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(no_damage="P")

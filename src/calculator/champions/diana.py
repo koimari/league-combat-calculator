@@ -53,6 +53,7 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, int_option
 
 # Mechanic constants anchored in the ability descriptions (not leveling
 # data): the cleave's 2-stack cycle empowers every 3rd basic attack, and
@@ -173,12 +174,10 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _lunar_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: dash damage, twice per activation when Moonlight resets it."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_dash = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     dashes = 2 if ctx.options.get("moonlight_reset", True) else 1
@@ -198,12 +197,10 @@ def _lunar_rush(ctx: SlotCtx) -> dict[str, Any] | None:
 def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: the delayed beam — base plus a bonus per champion pulled
     beyond the first (the pull itself deals no damage)."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     pulled = int(ctx.option("champions_pulled"))
     pulled = min(max(pulled, 1), _R_MAX_CHAMPIONS_PULLED)
@@ -226,12 +223,11 @@ def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "moonlight_reset",
-        "type": "bool",
-        "default": True,
-        "label": "E consumes Q's Moonlight and resets (2 dashes per activation)",
-        "rotation": {
+    bool_option(
+        "moonlight_reset",
+        True,
+        label="E consumes Q's Moonlight and resets (2 dashes per activation)",
+        rotation={
             "role": "consume",
             "slot": "E",
             "condition": "moonlight",
@@ -242,18 +238,15 @@ OPTIONS: list[dict[str, Any]] = [
                 "the dash count (2 vs 1 damage instances), not the Q->E edge."
             ),
         },
-    },
-    {
-        "key": "champions_pulled",
-        "type": "int",
-        "default": 1,
-        "min": 1,
-        "max": _R_MAX_CHAMPIONS_PULLED,
-        "label": (
-            "Champions pulled by R (beam gains 35/60/85 +15% AP per "
-            "champion beyond the first)"
-        ),
-    },
+    ),
+    int_option(
+        "champions_pulled",
+        1,
+        minimum=1,
+        maximum=_R_MAX_CHAMPIONS_PULLED,
+        label="Champions pulled by R (beam gains 35/60/85 +15% AP per "
+        "champion beyond the first)",
+    ),
 ]
 
 ASSUMPTIONS = [

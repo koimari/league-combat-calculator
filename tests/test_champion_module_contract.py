@@ -15,9 +15,11 @@ from src.calculator.champions import (
 )
 from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.module_contract import (
+    REQUIRED_CHAMPION_SLOTS,
     VALID_COVERAGE,
     ChampionModuleContractError,
     contract_from_module,
+    coverage,
     default_coverage,
 )
 from src.calculator.champions.packet_module import (
@@ -596,3 +598,34 @@ def test_the_add_champion_skill_describes_the_single_module_flow():
     assert "Two implementation lanes" not in skill
     assert "ChampionModuleContract" in skill
     assert "reviewed_batch_" not in skill
+
+
+class TestCoverageBuilder:
+    """``coverage()`` — the five-slot map a module states by exception."""
+
+    def test_an_unnamed_slot_is_modeled(self) -> None:
+        assert coverage() == dict.fromkeys("PQWER", "modeled")
+
+    def test_named_slots_take_their_status(self) -> None:
+        assert coverage(no_damage="PW", out_of_scope="E") == {
+            "P": "no_damage",
+            "Q": "modeled",
+            "W": "no_damage",
+            "E": "out_of_scope",
+            "R": "modeled",
+        }
+
+    def test_it_returns_the_five_slots_in_contract_order(self) -> None:
+        assert tuple(coverage(no_damage="R")) == REQUIRED_CHAMPION_SLOTS
+
+    def test_every_status_it_emits_is_in_the_vocabulary(self) -> None:
+        built = coverage(no_damage="Q", out_of_scope="W")
+        assert set(built.values()) <= VALID_COVERAGE
+
+    def test_a_slot_outside_the_kit_is_refused(self) -> None:
+        with pytest.raises(ChampionModuleContractError, match="not champion slots"):
+            coverage(no_damage="PX")
+
+    def test_one_slot_may_not_hold_two_statuses(self) -> None:
+        with pytest.raises(ChampionModuleContractError, match="named one slot twice"):
+            coverage(no_damage="P", out_of_scope="P")

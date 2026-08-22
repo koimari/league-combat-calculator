@@ -39,6 +39,8 @@ from .slotlib import (
     extract_resource_cost,
 )
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
+from .module_contract import coverage
 
 _E_CAST_START = 0.0
 _W_CAST_START = 0.25
@@ -187,12 +189,10 @@ def _timed_threaded_volley(
 
 
 def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     ground = str(ctx.options.get("q_ground", "normal"))
     if ground not in {"normal", "worked"}:
@@ -247,12 +247,10 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
     """W deals no damage but spends its sourced cast and mana cost."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     return {
         "name": ability.get("name", "Seismic Shove"),
         "rank": rank,
@@ -265,12 +263,10 @@ def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     requested = int(ctx.option("e_detonations"))
     detonations = int(clamp(float(requested), 0.0, 4.0))
@@ -326,24 +322,22 @@ OPTIONS = [
             {"value": "worked", "label": "Worked Ground · boulder"},
         ],
     },
-    {
-        "key": "e_detonations",
-        "type": "int",
-        "default": 4,
-        "min": 0,
-        "max": 4,
-        "step": 1,
-        "label": "E stones detonated by the target",
-    },
-    {
-        "key": "q_target_distance",
-        "type": "float",
-        "default": 800.0,
-        "min": 0.0,
-        "max": 1000.0,
-        "step": 50.0,
-        "label": "Threaded Volley target distance",
-    },
+    int_option(
+        "e_detonations",
+        4,
+        minimum=0,
+        maximum=4,
+        label="E stones detonated by the target",
+        step=1,
+    ),
+    float_option(
+        "q_target_distance",
+        800.0,
+        minimum=0.0,
+        maximum=1000.0,
+        label="Threaded Volley target distance",
+        step=50.0,
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -446,10 +440,4 @@ parse_abilities = build_parser(SLOTS, "Taliyah", cc_kinds=MODULE_CC)
 # Olaf-R rule reserves that for a real sourced mechanic that WOULD change
 # damage): P's payload is percent move speed and R's is terrain plus an
 # undurationed knockback, so nothing damage-relevant is withheld.
-MODULE_COVERAGE = {
-    "P": "no_damage",
-    "Q": "modeled",
-    "W": "modeled",
-    "E": "modeled",
-    "R": "no_damage",
-}
+MODULE_COVERAGE = coverage(no_damage="PR")

@@ -15,6 +15,7 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
+from .inputs import bool_option, float_option, int_option
 
 # HARDCODED: verify on patch updates — All Out's omnivamp is prose in the
 # cached R fourth effect: "he gains bonus attack speed, 50% bonus-armor
@@ -177,12 +178,10 @@ KSANTE_PATH_MAKER_RULE = _PathMakerRule()
 
 
 def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     for attribute in (
         "Physical Damage",
@@ -239,12 +238,10 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if bool(ctx.options.get("r_terrain", False)):
         strike = extract_named(
@@ -308,31 +305,20 @@ MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "R": "stun"}
 
 parse_abilities = build_parser(SLOTS, "K'Sante", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "p_marks",
-        "type": "int",
-        "default": 1,
-        "min": 0,
-        "max": 8,
-        "label": "Dauntless Instinct marked attacks",
-    },
-    {
-        "key": "w_charge",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-        "label": "Path Maker charge fraction",
-        "state": KSANTE_PATH_MAKER_RULE.public_receipt(),
-    },
-    {
-        "key": "r_terrain",
-        "type": "bool",
-        "default": False,
-        "label": "All Out terrain strike",
-    },
-    {"key": "all_out", "type": "bool", "default": False, "label": "All Out state"},
+    int_option(
+        "p_marks", 1, minimum=0, maximum=8, label="Dauntless Instinct marked attacks"
+    ),
+    float_option(
+        "w_charge",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Path Maker charge fraction",
+        step=0.25,
+        state=KSANTE_PATH_MAKER_RULE.public_receipt(),
+    ),
+    bool_option("r_terrain", False, label="All Out terrain strike"),
+    bool_option("all_out", False, label="All Out state"),
 ]
 ASSUMPTIONS = [
     "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",

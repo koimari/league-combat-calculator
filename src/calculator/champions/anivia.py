@@ -64,11 +64,12 @@ hardcoded.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat
+from .inputs import champion_stat, float_option
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import damage_entry, extract_named, simple_damage
 from .source_receipts import load_champion_sources
+from .module_contract import coverage
 
 # Glacial Storm's own cadence: the blizzard "deal[s] magic damage every 0.5
 # seconds to enemies within and slow[s] them for 1 second, refreshing every
@@ -82,12 +83,10 @@ _R_GROWTH_SECONDS = 1.5
 
 def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: three initial half-second ticks, then empowered ticks."""
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     duration = max(float(ctx.option("r_duration")), 1.5)
     total_ticks = int(duration / 0.5)
@@ -166,15 +165,14 @@ def _crystallize(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    {
-        "key": "r_duration",
-        "type": "float",
-        "default": 5.0,
-        "label": "R duration (seconds)",
-        "min": 1.5,
-        "max": 30,
-        "step": 0.5,
-    },
+    float_option(
+        "r_duration",
+        5.0,
+        minimum=1.5,
+        maximum=30,
+        label="R duration (seconds)",
+        step=0.5,
+    ),
 ]
 
 # E8d: sourced Rebirth revive values.  The cached passive prose (data/
@@ -256,11 +254,5 @@ SOURCES = load_champion_sources("Anivia")
 # P emits no cast row, so the derivation would call it out_of_scope; the
 # revive above is what the engine prices (2114.0 restored at level 18 with
 # no items).  W is the explicit zero-damage row ``_crystallize`` authors.
-MODULE_COVERAGE = {
-    "P": "modeled",
-    "Q": "modeled",
-    "W": "no_damage",
-    "E": "modeled",
-    "R": "modeled",
-}
+MODULE_COVERAGE = coverage(no_damage="W")
 COVERAGE_CHANNELS = {"P": ("starting_revive_defense",)}

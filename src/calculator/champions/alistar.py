@@ -55,11 +55,11 @@ from ..ability_atoms import (
     required_ranked_attribute_atom,
 )
 from ..ability_spec import AttackClass, DamageClass, DamagePart
-from ..healing_helpers import HealAnchor, _payments, _ability, _trigger_fields
+from ..healing_helpers import HealAnchor, payments, ability_json, trigger_fields
 from ..survival.actions import TransitionRank
-from .inputs import champion_stat
+from .inputs import champion_stat, int_option
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -133,12 +133,10 @@ def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
     every rank, so the fight prices the full cast total across the
     tick timeline instead of one lump.
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -250,12 +248,10 @@ def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
     Unbreakable Will."  The self-CC-cleanse has no channel in this engine
     and stays unmodeled (see the module docstring).
     """
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
 
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     reduction_percent, reduction_atom = required_ranked_attribute_atom(
@@ -326,15 +322,14 @@ def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    {
-        "key": "p_triumph_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": _TRIUMPH_CARRY_MAX,
-        "step": 1,
-        "label": "Triumph stacks carried into the fight (P Triumphant Roar)",
-        "rotation": {
+    int_option(
+        "p_triumph_stacks",
+        0,
+        minimum=0,
+        maximum=_TRIUMPH_CARRY_MAX,
+        label="Triumph stacks carried into the fight (P Triumphant Roar)",
+        step=1,
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -343,7 +338,7 @@ OPTIONS: list[dict[str, Any]] = [
                 "no cast order changes them."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = [
@@ -399,7 +394,7 @@ parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Alistar")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,protected-access
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
@@ -424,7 +419,7 @@ def derive_self_healing(
     healing: list[dict[str, Any]] = []
     p_text = " ".join(
         effect.get("description", "")
-        for effect in _ability(champion_data, "P").get("effects", [])
+        for effect in ability_json(champion_data, "P").get("effects", [])
     )
     stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
     stack_cap = int(stack_match.group(1)) if stack_match else 0
@@ -437,8 +432,8 @@ def derive_self_healing(
     )
     self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
     casts = sorted(
-        _payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
-        + _payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
+        payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+        + payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
         key=lambda payment: float(payment.event.get("time", 0.0)),
     )
     carried = ability_damages.get("passive", {}).get("self_heal_state")
@@ -453,10 +448,10 @@ def derive_self_healing(
                     "amount": self_ratio * champion_stat(champion_stats, "health"),
                     "source": "Triumphant Roar",
                     "kind": "champion_passive",
-                    **_trigger_fields(event),
+                    **trigger_fields(event),
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Alistar", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Alistar")(derive_self_healing)

@@ -7,9 +7,10 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .slotlib import damage_entry, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
+from .inputs import float_option, int_option
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -37,12 +38,10 @@ _warpath.phase = BUFF
 
 
 def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     stacks = min(max(int(ctx.option("q_stacks")), 0), 3)
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
@@ -66,12 +65,10 @@ _W_TICKS = 5
 
 
 def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     ticks = min(max(int(ctx.options.get("w_ticks", _W_TICKS)), 1), _W_TICKS)
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -93,12 +90,10 @@ def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     distance = min(max(float(ctx.option("e_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
@@ -137,12 +132,10 @@ SLOTS = {
 
 
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
+    ranked = ctx.ranked()
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     return damage_entry(
         ability.get("name", "Onslaught of Shadows"),
         rank,
@@ -162,39 +155,25 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear"}
 
 parse_abilities = build_parser(SLOTS, "Hecarim", cc_kinds=MODULE_CC)
 OPTIONS = [
-    {
-        "key": "bonus_movement_speed",
-        "type": "float",
-        "default": 0.0,
-        "min": 0.0,
-        "max": 500.0,
-        "label": "Bonus movement speed",
-    },
-    {
-        "key": "q_stacks",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 3,
-        "label": "Rampage stacks",
-    },
-    {
-        "key": "w_ticks",
-        "type": "int",
-        "default": _W_TICKS,
-        "min": 1,
-        "max": _W_TICKS,
-        "label": "Spirit of Dread ticks",
-    },
-    {
-        "key": "e_charge",
-        "type": "float",
-        "default": 1.0,
-        "min": 0.0,
-        "max": 1.0,
-        "step": 0.25,
-        "label": "Devastating Charge distance fraction",
-    },
+    float_option(
+        "bonus_movement_speed",
+        0.0,
+        minimum=0.0,
+        maximum=500.0,
+        label="Bonus movement speed",
+    ),
+    int_option("q_stacks", 0, minimum=0, maximum=3, label="Rampage stacks"),
+    int_option(
+        "w_ticks", _W_TICKS, minimum=1, maximum=_W_TICKS, label="Spirit of Dread ticks"
+    ),
+    float_option(
+        "e_charge",
+        1.0,
+        minimum=0.0,
+        maximum=1.0,
+        label="Devastating Charge distance fraction",
+        step=0.25,
+    ),
 ]
 ASSUMPTIONS = [
     "Warpath reads the explicit bonus-movement-speed input and updates bonus AD before later casts.",
@@ -212,7 +191,7 @@ _SPIRIT_OF_DREAD_SHARE = 0.25
 _SPIRIT_OF_DREAD_WINDOW_SECONDS = 4.0
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -233,7 +212,7 @@ def derive_self_healing(
         if cast.get("slot") == "W"
     ]
     if w_casts:
-        for payment in _healing._payments(
+        for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
         ):
             event = payment.event
@@ -244,8 +223,8 @@ def derive_self_healing(
             ):
                 continue
             amount = _SPIRIT_OF_DREAD_SHARE * max(0.0, float(event.get("damage", 0.0)))
-            _healing._heal_from_damage(healing, event, amount, "Spirit of Dread")
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+            _healing.heal_from_damage(healing, event, amount, "Spirit of Dread")
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Hecarim", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Hecarim")(derive_self_healing)

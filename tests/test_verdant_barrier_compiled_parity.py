@@ -211,8 +211,13 @@ ASSUMPTION = (
 
 
 @pytest.fixture(autouse=True)
-def _disable_rate_limits():
-    with app_config(RATE_LIMIT_ENABLED=False):
+def _borrowed_app_config():
+    """The route parities run under TESTING, with the shared bucket off.
+
+    Borrowed, not assigned: ``src.app.app`` is a process singleton, and
+    test_app.py's rate-limit tests need both keys back afterwards.
+    """
+    with app_config(RATE_LIMIT_ENABLED=False, TESTING=True):
         yield
 
 
@@ -1145,7 +1150,6 @@ def test_regression_surface_issues_46_annul_blocks_one_typed_ability():
     blocks_one_typed_ability) for Verdant Barrier through /api/calculate:
     the shield is ready at fight start, exactly one ability packet is
     blocked, and the blocked packet carries the sourced label."""
-    app_module.app.config["TESTING"] = True
     ranks = {"Q": 5, "W": 5, "E": 5, "R": 3}
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -1187,7 +1191,6 @@ def test_regression_surface_spell_shield_eligibility_auto_attack_gate():
     """Mirrors test_spell_shield_eligibility.py (R3): in an app fight with
     autos enabled, no basic-attack packet is ever spell-shield-skipped or
     annotated, and the shield is spent only by an ability packet."""
-    app_module.app.config["TESTING"] = True
     ranks = {"Q": 5, "W": 5, "E": 5, "R": 3}
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -1277,7 +1280,6 @@ def test_regression_surface_app_opening_enemy_spell_shield():
     """Mirrors test_app.py (test_calculate_applies_an_opening_enemy_spell_
     shield): an enemy Galio holding the Annul item blocks the first hostile
     ability in the coupled ledger."""
-    app_module.app.config["TESTING"] = True
     ranks = {"Q": 5, "W": 5, "E": 5, "R": 3}
     response = app_module.app.test_client().post(
         "/api/calculate",

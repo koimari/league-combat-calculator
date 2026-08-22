@@ -20,9 +20,11 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .engine import SlotCtx
-from .healing_contract import declare_healing_rule
+from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value, stat_buff
+from .inputs import int_option
+from .module_contract import coverage
 
 PACKET_SHA256 = "0346556b3577caf70cd1fadf59cbec2eb38d07d723625a473330e5c2618b0d4b"
 
@@ -102,15 +104,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 
 OPTIONS = list(OPTIONS) + [
-    {
-        "key": "p_nearby_deaths",
-        "type": "int",
-        "default": 0,
-        "min": 0,
-        "max": 10,
-        "step": 1,
-        "label": "Nearby enemy deaths during the fight (P King's Tribute)",
-        "rotation": {
+    int_option(
+        "p_nearby_deaths",
+        0,
+        minimum=0,
+        maximum=10,
+        label="Nearby enemy deaths during the fight (P King's Tribute)",
+        step=1,
+        rotation={
             "role": "self_state",
             "slot": "P",
             "note": (
@@ -118,7 +119,7 @@ OPTIONS = list(OPTIONS) + [
                 "orders; the count is player state, not a rotation edge."
             ),
         },
-    },
+    ),
 ]
 
 ASSUMPTIONS = list(ASSUMPTIONS) + [
@@ -138,13 +139,10 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "magnitude, so the slot prices nothing",
 ]
 
-MODULE_COVERAGE = {
-    slot: ("modeled" if slot in {"P", "Q", "W", "R"} else "out_of_scope")
-    for slot in "PQWER"
-}
+MODULE_COVERAGE = coverage(out_of_scope="E")
 
 
-# pylint: disable=protected-access,too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
     champion_data,
     champion_stats,
@@ -160,11 +158,11 @@ def derive_self_healing(
     # Damage share the same % of the target's maximum health leveling values.
     # The engine's R event carries the drain's pre-mitigation damage, which is
     # exactly the heal amount — the heal does not pass through magic resistance.
-    for event in _healing._attributed_events(
+    for event in _healing.attributed_events(
         damage_events, lambda source, _event: source == "R"
     ):
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
-        _healing._heal_from_damage(
+        _healing.heal_from_damage(
             healing, event, dealt, "Subjugate", link_to_damage=False
         )
     # King's Tribute (P): "Whenever a nearby enemy dies, Trundle heals himself
@@ -176,7 +174,7 @@ def derive_self_healing(
     tribute = ability_damages.get("passive", {}).get("self_heal_state")
     if isinstance(tribute, dict):
         amount = float(tribute.get("amount", 0.0) or 0.0)
-        for payment in _healing._takedown_payments(
+        for payment in _healing.takedown_payments(
             int(tribute.get("deaths", 0) or 0), damage_events
         ):
             healing.append(
@@ -186,10 +184,10 @@ def derive_self_healing(
                     "source": "King's Tribute",
                     "kind": "champion_passive",
                     "actor_wide": True,
-                    **_healing._trigger_fields(payment.event),
+                    **_healing.trigger_fields(payment.event),
                 }
             )
-    return sorted(healing, key=lambda event: (event["time"], event["source"]))
+    return healing
 
 
-SELF_HEALING_RULE = declare_healing_rule("Trundle", derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Trundle")(derive_self_healing)
