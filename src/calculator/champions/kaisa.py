@@ -640,6 +640,17 @@ ASSUMPTIONS = [
     "split the volley",
     "Q/W evolutions follow permanent item stats and level growth automatically; "
     "the selector can reproduce a not-yet-evolved or forced test state",
+    "plasma_starting_stacks is deliberately NOT monotonic, and the two "
+    "reasons compound. Seeding 4 makes the very next application the fifth, "
+    "so the flat ramp resets and the applications after it price the BOTTOM "
+    "of the per-prior-stack ladder instead of its top; and the rupture is a "
+    "share of MISSING health, so firing it that early prices it against a "
+    "target the rotation has barely damaged. Probe (level 18, "
+    "Luden's Echo / Shadowflame / Rabadon's Deathcap, one rotation, "
+    "85 effective MR) — the passive_plasma row at 0 / 2 / 4 seeded stacks is "
+    "169.1 / 347.7 / 268.7, and both halves of the drop from 2 to 4 are "
+    "real: flat damage 238.1 -> 192.1 and rupture 109.6 -> 76.6. Seeding "
+    "more Plasma is not the same question as dealing more damage.",
     "W applies each Plasma stack successively; a fifth-stack rupture uses "
     "health remaining under the engine's running-damage model (one-rotation: "
     "after W and the preceding Caustic Wounds hit; timed: after the priced "
