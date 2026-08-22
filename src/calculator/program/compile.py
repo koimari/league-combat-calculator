@@ -91,6 +91,7 @@ from ..survival.compile import (
 from ..survival.pricing import (
     AuthoredDeclaration,
     DeclaredPacket,
+    RoutingProvenance,
     route_declared_packet,
 )
 from ..ledger_projection import LightRow
@@ -1728,21 +1729,49 @@ class WalkCompiler:
                     order.append((aidx, strike_time))
 
 
-def _knight_target_factor(
-    action: SurvivalAction,
+class TargetMitigation(NamedTuple):
+    """One recipient's share of a redirected packet, and at what resistance.
+
+    ``effective_resistance`` is ``None`` for true damage, which met none.  It
+    is the recipient's own baseline: the split hands it to the redirected
+    child so the walk prices that child against the resistance it actually
+    met rather than the Worthy's, which is what the child inherited while the
+    two lanes each computed the factor for themselves.
+    """
+
+    factor: float
+    effective_resistance: float | None
+
+
+# The routing family a Knight's Vow split records on the declarations it
+# re-delivers.  Sacrifice declares a share and a second subject and no
+# magnitude of its own, so the routed packet keeps the source mechanic's
+# ``rule_id`` and names this as its router.
+KNIGHTS_VOW_ROUTER = "knights_vow.sacrifice"
+
+
+def knights_vow_target_factor(
+    *,
+    damage_type: str,
+    basic_attack: bool,
+    damage_over_time: bool,
     source: Any,
     target: Any,
     raw_amount: float,
-) -> float | None:
-    """One recipient's mitigation factor for a Knight's Vow split.
+) -> TargetMitigation | None:
+    """One recipient's mitigation of a Knight's Vow split, at its own
+    resistance.
 
-    The receipt walk computes it from the target's combatant stats (dynamic
-    bonuses are zero before the walk runs), the attacker's penetration, and
-    the target's basic-damage / flat-reduction defenses.  ``None`` is "this
-    packet's mitigation cannot be reconstructed", which leaves the packet
-    unsplit rather than splitting it at a guessed factor.
+    Computed from the recipient's combatant stats, the attacker's
+    penetration, and the recipient's basic-damage / flat-reduction defenses.
+    Dynamic combat-state bonuses are deliberately absent: they are armed by
+    the walk, which runs after the split, and the walk prices them onto the
+    child itself from the baseline this returns.
+
+    ``None`` is "this packet's mitigation cannot be reconstructed", which
+    leaves the packet unsplit rather than splitting it at a guessed factor.
+    Both lanes call this one function, so a split cannot be priced two ways.
     """
-    damage_type = str(action.damage_type)
     if damage_type == "physical":
         effective = apply_armor_penetration(
             float(target.stats.get("armor", 0.0) or 0.0),
@@ -1759,49 +1788,45 @@ def _knight_target_factor(
             float(source.stats.get("magic_penetration_percent", 0.0) or 0.0) / 100.0,
         )
     elif damage_type == "true":
-        return 1.0
+        return TargetMitigation(1.0, None)
     else:
         return None
     factor = apply_resistance(1.0, effective)
     if not math.isfinite(factor) or factor < 0.0:
         return None
-    if action.basic_attack and damage_type != "true":
-        defenses = target.defenses
-        factor *= max(
-            0.0, float(getattr(defenses, "basic_damage_multiplier", 1.0) or 1.0)
-        )
-        flat = max(
-            0.0,
-            float(getattr(defenses, "basic_damage_flat_reduction", 0.0) or 0.0),
-        )
-        cap = max(
-            0.0,
-            float(getattr(defenses, "basic_damage_flat_reduction_cap", 0.0) or 0.0),
-        )
+    defenses = target.defenses
+    if basic_attack:
+        # Basic-damage defenses are post-mitigation and belong to the
+        # recipient of each split, not the Worthy.
+        factor *= max(0.0, float(defenses.basic_damage_multiplier))
+        flat = max(0.0, float(defenses.basic_damage_flat_reduction))
+        cap = max(0.0, float(defenses.basic_damage_flat_reduction_cap))
         if flat > 0.0 and cap > 0.0:
             mitigated = raw_amount * factor
             factor = max(0.0, (mitigated - min(flat, mitigated * cap)) / raw_amount)
-    if damage_type != "true":
-        defenses = target.defenses
-        flat = max(
-            0.0,
-            float(
-                getattr(
-                    defenses,
-                    (
-                        "champion_dot_damage_flat_reduction"
-                        if action.damage_over_time
-                        else "champion_damage_flat_reduction"
-                    ),
-                    0.0,
-                )
-                or 0.0
-            ),
-        )
-        if flat > 0.0:
-            mitigated = raw_amount * factor
-            factor = max(0.0, (mitigated - min(flat, mitigated)) / raw_amount)
-    return factor
+    flat = max(
+        0.0,
+        float(
+            (
+                defenses.champion_dot_damage_flat_reduction
+                if damage_over_time
+                else defenses.champion_damage_flat_reduction
+            )
+            or 0.0
+        ),
+    )
+    if flat > 0.0:
+        mitigated = raw_amount * factor
+        factor = max(0.0, (mitigated - min(flat, mitigated)) / raw_amount)
+    return TargetMitigation(factor, effective)
+
+
+def routed_declaration(declared: Any, share: float) -> Any:
+    """One packet's declaration re-delivered at ``share`` of its magnitude;
+    ``None`` when its family declared none and the pair engine priced it."""
+    if declared is None:
+        return None
+    return route_declared_packet(declared, RoutingProvenance(KNIGHTS_VOW_ROUTER, share))
 
 
 def stage_knights_vow_redirect_actions(
@@ -1874,6 +1899,12 @@ def stage_knights_vow_redirect_actions(
         if source is None or str(source.participant_id) == target_id:
             rebuilt.append(action)
             continue
+        if action.declared is not None and action.declared.routing is not None:
+            # A packet another family already re-delivered carries one route
+            # and one share; splitting it again would either lose that
+            # provenance or pay a share of a share nobody declared.
+            rebuilt.append(action)
+            continue
         original_amount = max(0.0, float(action.amount))
         raw_amount: float | None = None
         try:
@@ -1898,18 +1929,31 @@ def stage_knights_vow_redirect_actions(
         if raw_amount is None or not math.isfinite(raw_amount):
             rebuilt.append(action)
             continue
-        protected_factor = _knight_target_factor(action, source, target, raw_amount)
-        holder_factor = _knight_target_factor(action, source, holder, raw_amount)
-        if protected_factor is None or holder_factor is None:
+        split = dict(
+            damage_type=str(action.damage_type),
+            basic_attack=bool(action.basic_attack),
+            damage_over_time=bool(action.damage_over_time),
+            source=source,
+            raw_amount=raw_amount,
+        )
+        protected_share = knights_vow_target_factor(target=target, **split)
+        holder_share = knights_vow_target_factor(target=holder, **split)
+        if protected_share is None or holder_share is None:
             rebuilt.append(action)
             continue
-        direct_amount = max(0.0, raw_amount * (1.0 - fraction) * protected_factor)
-        redirected_amount = max(0.0, raw_amount * fraction * holder_factor)
+        direct_amount = max(0.0, raw_amount * (1.0 - fraction) * protected_share.factor)
+        redirected_amount = max(0.0, raw_amount * fraction * holder_share.factor)
+        # A declaration reaches the walk as the WHOLE mechanic's magnitude, so
+        # each side of the split carries its own share of it.  Left untouched
+        # it would be re-priced in full at both recipients, which is what made
+        # one immolate tick cost the roster nearly two.
         parent = action._replace(
             amount=direct_amount,
+            declared=routed_declaration(action.declared, 1.0 - fraction),
             redirect_original_damage=original_amount,
             redirect_holder_health_ratio=threshold,
         )
+        holder_resistance = holder_share.effective_resistance
         child_text = f"{EVENT_SLOTS.text(action.event_slot)}:redirect"
         child = SurvivalAction(
             sort_key=action_key(
@@ -1942,8 +1986,24 @@ def stage_knights_vow_redirect_actions(
             skillshot=action.skillshot,
             damage_over_time=action.damage_over_time,
             basic_attack=action.basic_attack,
-            baseline_effective_armor=action.baseline_effective_armor,
-            baseline_effective_mr=action.baseline_effective_mr,
+            # The redirected share met the HOLDER's resistance, so the walk's
+            # dynamic reprice and declared pricing read the holder's baseline
+            # here.  The parent's baseline is the Worthy's and belongs to the
+            # direct share alone.
+            baseline_effective_armor=(
+                holder_resistance
+                if str(action.damage_type) == "physical"
+                else action.baseline_effective_armor
+            ),
+            baseline_effective_mr=(
+                holder_resistance
+                if str(action.damage_type) == "magic"
+                else action.baseline_effective_mr
+            ),
+            declared=routed_declaration(action.declared, fraction),
+            is_ability=action.is_ability,
+            ability_instance=action.ability_instance,
+            area_damage=action.area_damage,
         )
         aidx += 1
         if action.event_slot != NO_SLOT:

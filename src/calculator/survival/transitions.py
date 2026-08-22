@@ -3531,6 +3531,18 @@ def run_survival_walk(
                         _redirect_fraction=0.0,
                         redirect_skipped_reason="holder_health_gate",
                     )
+                    # The redirect did not happen, so the Worthy meets the
+                    # whole packet: the direct share goes back to the
+                    # pre-split amount and the declaration back to the share
+                    # the router took from it.  Put both on the action, not
+                    # only on the event the receipt adapter holds -- a
+                    # compiled action has no event, and a restore only one
+                    # lane can read is how the same cancelled redirect came
+                    # to charge the Worthy two different numbers.
+                    action = action._replace(
+                        amount=restored,
+                        declared=pricing.unroute_declared_packet(action.declared),
+                    )
         if state["death_time"] is not None:
             # Preserve the scheduled source in the receipt, but do not let
             # a dead target contribute post-death damage to TTD/BIS.

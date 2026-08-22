@@ -161,6 +161,7 @@ from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.program.compile import knights_vow_target_factor
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.interpreters import uncompilable_item_receipt
@@ -1475,3 +1476,212 @@ def test_regression_surface_app_option_schema_stays_green():
     assert ITEM_NAME in options
     assert options[ITEM_NAME]["options"]["worthy_target_index"]["max"] == 4
     assert options[ITEM_NAME]["source_revision_id"] == SOURCE_REVISION
+
+
+# ---------------------------------------------------------------------------
+# 12. The split's two lanes over a DECLARED source (SD8)
+# ---------------------------------------------------------------------------
+#
+# The fixtures above redirect only pair-engine-priced packets at a holder
+# whose resistances never move, so three everyday cases went uncovered and
+# each one made the two lanes pay a different number for one fight:
+#
+#   * a source family that declares its own magnitude (Sunfire Aegis's
+#     immolate aura) — the split has to route the DECLARATION, or the walk
+#     re-prices the whole packet at both recipients;
+#   * a holder whose combat state arms live resistance (Jak'Sho) — the
+#     redirected share meets the holder's baseline, not the Worthy's;
+#   * the holder-health gate firing mid-fight — the cancelled redirect puts
+#     the whole packet back on the Worthy in BOTH lanes, not only in the one
+#     holding the event dict the restore was written onto.
+
+DECLARED_SOURCE_ITEMS = ("Sunfire Aegis",)
+DYNAMIC_RESIST_ITEM = "Jak'Sho, The Protean"
+IMMOLATE_DECLARED_RAW = 25.25
+
+
+def _declared_source_fight(
+    ally_items: tuple[str, ...],
+    *,
+    include_receipt: bool = True,
+    search_context: CoupledSearchContext | None = None,
+    duration: float = 20.0,
+) -> dict:
+    """A coupled fight whose enemy damage is DECLARATION-priced.
+
+    Ahri is the Worthy main, Ashe the roster ally, and the enemy Sion carries
+    Sunfire Aegis so its immolate aura reaches both of them as a declared
+    packet.  The window is long enough for the aura to drive the holder under
+    Knight's Vow's 30% gate, so the fixture exercises the cancel path too.
+    """
+    champion = get_champion("Ahri")
+    stats = calculate_total_stats(champion, 18, [], role="mid")
+    defenses = resolve_starting_defenses("Ahri", 18, stats, [])
+    params = FightParams.from_request(
+        {
+            "fight_mode": "time_based",
+            "fight_duration": duration,
+            "role": "mid",
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        },
+        deterministic=True,
+    )
+    enemies = [
+        ChampionLoadout(
+            champion="Sion", level=18, role="top", items=DECLARED_SOURCE_ITEMS
+        ).resolve()
+    ]
+    allies = [
+        ChampionLoadout(
+            champion="Ashe",
+            level=18,
+            role="bottom",
+            items=ally_items,
+            item_options=(
+                {ITEM_NAME: {"worthy_target_index": 0}}
+                if ITEM_NAME in ally_items
+                else {}
+            ),
+        ).resolve()
+    ]
+    return build_participant_timeline(
+        champion,
+        18,
+        [],
+        params,
+        main_stats=stats,
+        main_defenses=defenses,
+        enemies=enemies,
+        allies=allies,
+        include_receipt=include_receipt,
+        pair_result_cache={} if search_context is not None else None,
+        search_context=search_context,
+    )
+
+
+def _damage_taken(result: dict) -> list[float]:
+    return [
+        float(participant["survival"].get("damage_taken") or 0.0)
+        for participant in result["participants"][:2]
+    ]
+
+
+def test_a_redirected_declaration_is_routed_not_paid_twice():
+    """The redirect splits a declared packet's magnitude; it does not hand
+    the whole declaration to both recipients.
+
+    Sion's immolate aura declares 25.25 raw magic per tick.  The Worthy's
+    direct share and the holder's redirected share add up to one tick, so the
+    tether can move damage between two participants and never manufacture
+    it."""
+    without = _declared_source_fight(())
+    with_vow = _declared_source_fight((ITEM_NAME,))
+    # The tether moves a share onto a holder whose armour is higher (Knight's
+    # Vow itself grants 40), so the team total may fall; it may never rise.
+    assert sum(_damage_taken(with_vow)) < sum(_damage_taken(without))
+    redirected = [
+        event
+        for event in with_vow["events"]
+        if event.get("redirect_source") == REDIRECT_SOURCE
+        and event.get("redirected_from")
+        and "immolate" in str(event.get("source", ""))
+    ]
+    assert redirected, "the fixture must actually redirect immolate ticks"
+    for event in redirected:
+        # Published to one decimal, so 3.535 reads as 3.5.
+        assert float(event.get("raw_damage") or 0.0) == pytest.approx(
+            IMMOLATE_DECLARED_RAW * REDIRECT_FRACTION, abs=0.05
+        )
+
+
+def test_the_two_lanes_agree_with_a_declared_source_and_a_dynamic_resist_holder():
+    """SD8's missing scenario: a Knight's Vow redirect combined with a
+    declaration-priced damage source AND a holder whose combat state arms a
+    live resistance bonus.
+
+    Jak'Sho reaches its five stacks inside the window and multiplies the
+    holder's bonus resistances, so the redirected share meets a resistance
+    that only exists once the walk is running.  The receipt walk, the shared
+    score walk and the compiled panel walk still publish one number."""
+    items = (ITEM_NAME, DYNAMIC_RESIST_ITEM)
+    receipt = _declared_source_fight(items)
+    shared_score = _declared_source_fight(items, include_receipt=False)
+    context = CoupledSearchContext()
+    compiled = _declared_source_fight(
+        items, include_receipt=False, search_context=context
+    )
+    holder = receipt["participants"][1]["survival"]
+    # The fixture is only worth anything if the dynamic bonus actually armed.
+    assert holder["jaksho"]["stacks"] == 5
+    assert holder["jaksho"]["dynamic_bonus_armor"] > 0.0
+    assert holder["jaksho"]["dynamic_bonus_magic_resistance"] > 0.0
+    for surface in (shared_score, compiled):
+        for index in range(3):
+            assert (
+                surface["participants"][index]["survival"]
+                == receipt["participants"][index]["survival"]
+            )
+        assert surface["duration"] == receipt["duration"]
+    assert context.uncompilable is False
+    assert context.panels
+
+
+def test_the_cancelled_gate_restores_the_direct_share_in_both_lanes():
+    """When the holder falls under 30% the redirect is cancelled and the
+    Worthy meets the whole packet again — in the compiled lane too, which
+    holds no event dict for the restore to be written onto."""
+    receipt = _declared_source_fight((ITEM_NAME,))
+    cancelled = [
+        event
+        for event in receipt["events"]
+        if event.get("skipped_reason") == "holder_health_gate"
+    ]
+    assert cancelled, "the fixture must drive the holder under the gate"
+    for event in cancelled:
+        assert event.get("redirected_from") == "main"
+        assert float(event.get("damage") or 0.0) == 0.0
+    context = CoupledSearchContext()
+    compiled = _declared_source_fight(
+        (ITEM_NAME,), include_receipt=False, search_context=context
+    )
+    assert _damage_taken(compiled) == _damage_taken(receipt)
+
+
+def test_one_owner_prices_both_lanes_splits():
+    """The mitigation factor has one implementation, and it reports the
+    resistance it priced at so the redirected child can carry the holder's
+    own baseline instead of inheriting the Worthy's."""
+    source = _combatant("source", "red")
+    target = _combatant("protected", "blue", armor=100.0)
+    share = knights_vow_target_factor(
+        damage_type="physical",
+        basic_attack=False,
+        damage_over_time=False,
+        source=source,
+        target=target,
+        raw_amount=100.0,
+    )
+    assert share.effective_resistance == pytest.approx(100.0)
+    assert share.factor == pytest.approx(0.5)
+    true_share = knights_vow_target_factor(
+        damage_type="true",
+        basic_attack=False,
+        damage_over_time=False,
+        source=source,
+        target=target,
+        raw_amount=100.0,
+    )
+    assert true_share.factor == 1.0
+    assert true_share.effective_resistance is None
+    assert (
+        knights_vow_target_factor(
+            damage_type="",
+            basic_attack=False,
+            damage_over_time=False,
+            source=source,
+            target=target,
+            raw_amount=100.0,
+        )
+        is None
+    )

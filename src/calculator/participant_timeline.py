@@ -81,11 +81,7 @@ from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
 )
-from .resistance import (
-    apply_armor_penetration,
-    apply_magic_penetration,
-    apply_resistance,
-)
+from .resistance import apply_resistance
 from .survival import (
     BARRIER_GRANT_KINDS,
     EVENT_SLOTS,
@@ -154,8 +150,10 @@ from .program.compile import (
     action_from_event,
     grey_health_heal_action,
     is_authored_ability_event,
+    knights_vow_target_factor,
     modifier_delivery_receipt,
     pair_view,
+    routed_declaration,
     revive_candidate_actions,
     stage_knights_vow_heals,
     stage_knights_vow_redirect_actions,
@@ -2994,117 +2992,29 @@ def _simulate_survival(
                         expanded_incoming[target_id].append(event)
                         continue
 
-                    def _target_factor(target: Combatant) -> float | None:
-                        if damage_type == "physical":
-                            effective = apply_armor_penetration(
-                                float(target.stats.get("armor", 0.0) or 0.0)
-                                + float(
-                                    states[target.participant_id].get(
-                                        "dynamic_bonus_armor", 0.0
-                                    )
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("flat_armor_penetration", 0.0)
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("armor_penetration_percent", 0.0)
-                                    or 0.0
-                                )
-                                / 100.0,
-                                float(
-                                    source.stats.get(
-                                        "armor_penetration_bonus_percent", 0.0
-                                    )
-                                    or 0.0
-                                )
-                                / 100.0,
-                                float(target.stats.get("bonus_armor", 0.0) or 0.0)
-                                + float(
-                                    states[target.participant_id].get(
-                                        "dynamic_bonus_armor", 0.0
-                                    )
-                                    or 0.0
-                                ),
-                            )
-                        elif damage_type == "magic":
-                            effective = apply_magic_penetration(
-                                float(target.stats.get("magic_resistance", 0.0) or 0.0)
-                                + float(
-                                    states[target.participant_id].get(
-                                        "dynamic_bonus_magic_resistance", 0.0
-                                    )
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("magic_penetration_flat", 0.0)
-                                    or 0.0
-                                ),
-                                float(
-                                    source.stats.get("magic_penetration_percent", 0.0)
-                                    or 0.0
-                                )
-                                / 100.0,
-                            )
-                        elif damage_type == "true":
-                            return 1.0
-                        else:
-                            return None
-                        factor = apply_resistance(1.0, effective)
-                        if not math.isfinite(factor) or factor < 0.0:
-                            return None
-                        # Basic-damage defenses are post-mitigation and belong
-                        # to the recipient of each split, not the Worthy.
-                        if event.get("basic_attack") and damage_type != "true":
-                            defenses = target.defenses
-                            factor *= max(
-                                0.0,
-                                float(defenses.basic_damage_multiplier),
-                            )
-                            flat = max(
-                                0.0,
-                                float(defenses.basic_damage_flat_reduction),
-                            )
-                            cap = max(
-                                0.0,
-                                float(defenses.basic_damage_flat_reduction_cap),
-                            )
-                            if flat > 0.0 and cap > 0.0:
-                                mitigated = raw_amount * factor
-                                factor = max(
-                                    0.0,
-                                    (mitigated - min(flat, mitigated * cap))
-                                    / raw_amount,
-                                )
-                        if damage_type != "true":
-                            defenses = target.defenses
-                            flat = max(
-                                0.0,
-                                float(
-                                    getattr(
-                                        defenses,
-                                        (
-                                            "champion_dot_damage_flat_reduction"
-                                            if event.get("damage_over_time")
-                                            else "champion_damage_flat_reduction"
-                                        ),
-                                        0.0,
-                                    )
-                                    or 0.0
-                                ),
-                            )
-                            if flat > 0.0:
-                                mitigated = raw_amount * factor
-                                factor = max(
-                                    0.0,
-                                    (mitigated - min(flat, mitigated)) / raw_amount,
-                                )
-                        return factor
+                    declared = event.get("_declared")
+                    if declared is not None and declared.routing is not None:
+                        # A packet another family already re-delivered carries
+                        # one route and one share; splitting it again would
+                        # either lose that provenance or pay a share of a
+                        # share nobody declared.
+                        event["redirect_skipped_reason"] = "packet_already_routed"
+                        event["redirect_fraction"] = 0.0
+                        expanded_incoming[target_id].append(event)
+                        continue
 
-                    protected_factor = _target_factor(protected)
-                    holder_factor = _target_factor(holder)
-                    if protected_factor is None or holder_factor is None:
+                    split = {
+                        "damage_type": damage_type,
+                        "basic_attack": bool(event.get("basic_attack")),
+                        "damage_over_time": bool(event.get("damage_over_time")),
+                        "source": source,
+                        "raw_amount": raw_amount,
+                    }
+                    protected_share = knights_vow_target_factor(
+                        target=protected, **split
+                    )
+                    holder_share = knights_vow_target_factor(target=holder, **split)
+                    if protected_share is None or holder_share is None:
                         event["redirect_skipped_reason"] = (
                             "target_mitigation_receipt_unavailable"
                         )
@@ -3112,9 +3022,11 @@ def _simulate_survival(
                         expanded_incoming[target_id].append(event)
                         continue
                     direct_amount = (
-                        raw_amount * (1.0 - redirect_fraction) * protected_factor
+                        raw_amount * (1.0 - redirect_fraction) * protected_share.factor
                     )
-                    redirected_amount = raw_amount * redirect_fraction * holder_factor
+                    redirected_amount = (
+                        raw_amount * redirect_fraction * holder_share.factor
+                    )
                 else:
                     direct_amount = original_amount * (1.0 - redirect_fraction)
                     redirected_amount = original_amount * redirect_fraction
@@ -3134,6 +3046,29 @@ def _simulate_survival(
                     redirected["redirect_attributed_to"] = str(
                         event.get("attacker", "")
                     )
+                    redirected["_redirect_original_damage"] = original_amount
+                    # The redirected share met the HOLDER's resistance: its
+                    # own baseline, and its own share of any declaration the
+                    # source family handed the walk.  Inheriting the Worthy's
+                    # baseline and the whole declaration made the walk price
+                    # this share a second time, at the wrong resistance.
+                    if holder_share.effective_resistance is not None:
+                        redirected.pop("_baseline_effective_armor", None)
+                        redirected.pop("_baseline_effective_mr", None)
+                        redirected[
+                            (
+                                "_baseline_effective_armor"
+                                if damage_type == "physical"
+                                else "_baseline_effective_mr"
+                            )
+                        ] = holder_share.effective_resistance
+                    if declared is not None:
+                        redirected["_declared"] = routed_declaration(
+                            declared, redirect_fraction
+                        )
+                        original["_declared"] = routed_declaration(
+                            declared, 1.0 - redirect_fraction
+                        )
                 redirected["_sk"] = _action_key(
                     float(redirected.get("time", 0.0)),
                     TransitionRank.REACTIVE,
