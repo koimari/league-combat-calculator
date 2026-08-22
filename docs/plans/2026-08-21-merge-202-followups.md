@@ -32,3 +32,21 @@ post-merge slice, not a defect the merge left red. Delete a row when it lands.
 | F-5 (strict xfail): Vi Blast Shield rider attaches to first Q even when that cast is attacker_state_blocked; needs walk-side re-anchor to first unblocked cast (damage.py:1864 binding) |
 | ASIDE: ControlEvent has no target field — an enemy-cast control reaches every enemy (Lulu W polymorph); engine change post-merge |
 | PERF DEBT: optimize_build Ahri/18/5 = 2.40 s merged vs 1.58 s main-alone (event-row schema: ~22 fields/row, +22% rows); CI smoke cap raised 5->8 s with the figures in the test docstring; the `lean` row shape is reserved for score-only and requested 0 times — adopting it for the optimizer is a shape decision (~40 ms) |
+
+## Coordination note (2026-08-21, from the roadmap-closeout session)
+
+Proposed split to avoid collisions while we both drive the closeout:
+
+- **Roadmap session (this side)**: the final champion out_of_scope slots
+  (Shyvana P, Sivir R, Sona E, Soraka P, Sylas R, Teemo P, Udyr P,
+  Viktor P, Warwick E, Wukong W, Yuumi P/W), the goal's final
+  verification sweep, and the reviewed-packets gate once a 16.16-current
+  wiki sqlite exists.
+- **Yours (suggested)**: the engine-side ledger rows above — ControlEvent
+  target field, per-recipient support pricing, the A3 AllyProducer
+  4-file change, F-2 rule compilers, F-9 cleanse vocabulary, optimizer
+  perf debt.
+- Milio p_procs/doubled-cleanse (ledger) overlaps our Milio P blocker
+  receipt (tests/test_milio_fired_up_blocker.py) - flag before taking it.
+- We push small commits to main frequently; ping via commit notes here
+  if you want the split adjusted.
