@@ -9,6 +9,7 @@ buy maximum health, which the fight's stat block does read.
 
 from typing import Any, Callable, Mapping
 
+from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
@@ -130,9 +131,9 @@ def _compile_shield_bash(entry: Mapping[str, Any]) -> RuneProcEffect:
     shield_ratio = effects.number("shield_amount_ratio")
 
     def raw(inputs: DamageInputs) -> float:
-        bonus_health = inputs.champion_stats.get(
-            "health", 0.0
-        ) - inputs.champion_stats.get("base_health", 0.0)
+        bonus_health = champion_stat(inputs.champion_stats, "health") - champion_stat(
+            inputs.champion_stats, "base_health"
+        )
         return at_level(base_by_level, inputs.level) + bonus_health_ratio * max(
             0.0, bonus_health
         )

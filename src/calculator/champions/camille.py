@@ -186,7 +186,7 @@ def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
 
     damage = extract_named(wall_dive, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
-        hookshot.get("name", "Hookshot"),
+        ability_name(hookshot),
         rank,
         extract_cooldown(hookshot, rank),
         damage,

@@ -21,7 +21,13 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
-from .slotlib import damage_entry, extract_cooldown, extract_named, simple_damage
+from .slotlib import (
+    ability_name,
+    damage_entry,
+    extract_cooldown,
+    extract_named,
+    simple_damage,
+)
 from .source_receipts import load_champion_sources
 from .inputs import bool_option
 from .module_contract import coverage
@@ -71,7 +77,7 @@ def _sonic_wave_and_resonating_strike(ctx: SlotCtx) -> dict[str, Any] | None:
         total += minimum
 
     entry = damage_entry(
-        wave.get("name", "Sonic Wave"),
+        ability_name(wave),
         rank,
         extract_cooldown(wave, rank),
         total,
