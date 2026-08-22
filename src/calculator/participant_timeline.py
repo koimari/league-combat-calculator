@@ -71,7 +71,14 @@ from .interpreters.sustain import SustainSlot, walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
-from .item_behavior import BelowHalfHealingRule, RegenerationRule, ThresholdRegenRule
+from .item_behavior import (
+    BelowHalfHealingRule,
+    PacketKind,
+    RegenerationRule,
+    ThresholdRegenRule,
+    is_denial_receipt,
+    is_packet_kind,
+)
 from .ability_spec import AttackClass, DamageClass
 from .interpreters.delta_amp import (
     StaticHolderAmps,
@@ -1074,7 +1081,7 @@ def _schedule_glacial_events(
         support_effects[target_id].append(
             {
                 "time": activation_time,
-                "kind": "slow",
+                "kind": PacketKind.SLOW.value,
                 "amount": slow_percent,
                 "slow_percent": slow_percent,
                 "duration": zone_duration,
@@ -1097,7 +1104,7 @@ def _schedule_glacial_events(
             support_effects[ally.participant_id].append(
                 {
                     "time": activation_time,
-                    "kind": "damage_modifier",
+                    "kind": PacketKind.DAMAGE_MODIFIER.value,
                     "amount": effect.damage_reduction_ratio,
                     "duration": zone_duration,
                     "multiplier": 1.0 - effect.damage_reduction_ratio,
@@ -1212,7 +1219,7 @@ def _schedule_stormraider_events(
         seen_events.add(trigger_id)
         event = {
             "time": trigger_time + 1e-9,
-            "kind": "movement",
+            "kind": PacketKind.MOVEMENT.value,
             "amount": move_speed,
             "bonus_move_speed_percent": move_speed,
             "slow_resist_percent": slow_resist_percent,
@@ -1428,7 +1435,7 @@ def _support_effect_templates(
             # withheld lethal-damage half) is a RECEIPT, not an applied
             # packet — it rides the same split the item scan already uses so
             # the survival walk can never misread it as a shield or heal.
-            if resolved_template.get("kind") == "item_denial":
+            if is_denial_receipt(resolved_template):
                 if denial_receipts is not None:
                     denial_receipts.append(resolved_template)
                 continue
@@ -1527,7 +1534,7 @@ def _support_effect_templates(
     # they are routed there for the public denial-receipt section; otherwise
     # they are dropped from the applied stream entirely.
     for template in item_templates:
-        if template.get("kind") == "item_denial":
+        if is_denial_receipt(template):
             if denial_receipts is not None:
                 denial_receipts.append(dict(template))
             continue
@@ -1553,7 +1560,7 @@ def _support_effect_templates(
             cast_time = float(cast.get("time", 0.0))
             templates.append(
                 {
-                    "kind": "cleanse",
+                    "kind": PacketKind.CLEANSE.value,
                     "time": cast_time,
                     "amount": 1.0,
                     "target_scope": "self",
@@ -1603,7 +1610,7 @@ def _support_effect_templates(
                 cast_time = float(cast.get("time", 0.0))
                 templates.append(
                     {
-                        "kind": "cleanse",
+                        "kind": PacketKind.CLEANSE.value,
                         "time": cast_time,
                         "amount": 1.0,
                         "target_scope": "self",
@@ -1633,7 +1640,7 @@ def _support_effect_templates(
             for recipient_index, recipient_id in enumerate(recipients):
                 templates.append(
                     {
-                        "kind": "cleanse",
+                        "kind": PacketKind.CLEANSE.value,
                         "time": cast_time,
                         "amount": 1.0,
                         "target_scope": "self_and_all_teammates",
@@ -1703,7 +1710,7 @@ def _support_effect_templates(
             cast_index = int(cast.get("ordinal", 0) or 0)
             templates.append(
                 {
-                    "kind": "cleanse",
+                    "kind": PacketKind.CLEANSE.value,
                     "time": cast_time,
                     "amount": 1.0,
                     "target_scope": "self",
@@ -1751,7 +1758,7 @@ def _support_effect_templates(
             )
             templates.append(
                 {
-                    "kind": "movement",
+                    "kind": PacketKind.MOVEMENT.value,
                     "time": cast_time,
                     "amount": _OLAF_R_FIRST_SECOND_MS,
                     "duration": 1.0,
@@ -1853,7 +1860,9 @@ def _utility_outcome_receipt(
         if event.get("kind") != "damage"
         if float(event.get("applied_amount", event.get("amount", 0.0)) or 0.0) > 0.0
     ]
-    movement = [event for event in support if event.get("kind") == "movement"]
+    movement = [
+        event for event in support if is_packet_kind(event, PacketKind.MOVEMENT)
+    ]
     # A Purify cast rides a heal packet carrying the ``cleanse`` marker
     # (kind "heal", cleanse=True), so the marker counts alongside the
     # dedicated kind=="cleanse" packets.  ``cleanse_group`` then folds one
@@ -1863,7 +1872,7 @@ def _utility_outcome_receipt(
     cleanse_packets = [
         event
         for event in support
-        if event.get("kind") == "cleanse" or bool(event.get("cleanse"))
+        if is_packet_kind(event, PacketKind.CLEANSE) or bool(event.get("cleanse"))
     ]
     cleanse = list(
         {
@@ -1876,18 +1885,18 @@ def _utility_outcome_receipt(
             for event in cleanse_packets
         }.values()
     )
-    slow = [event for event in support if event.get("kind") == "slow"]
+    slow = [event for event in support if is_packet_kind(event, PacketKind.SLOW)]
     # A movement packet that also names a slow-resist share is two
     # utility facts in one packet: the burst and the resistance that
     # rides it (Stormraider's Surge grants both from one trigger).
     slow_resistance = [
         event
         for event in support
-        if event.get("kind") == "movement"
+        if is_packet_kind(event, PacketKind.MOVEMENT)
         and event.get("slow_resist_percent") is not None
     ]
-    economy = [event for event in support if event.get("kind") == "economy"]
-    vision = [event for event in support if event.get("kind") == "vision"]
+    economy = [event for event in support if is_packet_kind(event, PacketKind.ECONOMY)]
+    vision = [event for event in support if is_packet_kind(event, PacketKind.VISION)]
     # Umbral Glaive's Blackout is a vision packet that applies no amount to
     # anybody -- it denies the enemy's wards rather than granting the holder
     # anything -- so it is read off the AUTHORED stream rather than the
@@ -1896,14 +1905,14 @@ def _utility_outcome_receipt(
     blackout = [
         event
         for event in authored
-        if event.get("kind") == "vision" and bool(event.get("ward_only"))
+        if is_packet_kind(event, PacketKind.VISION) and bool(event.get("ward_only"))
     ]
     # A damage modifier is an outcome whether or not it applied an amount:
     # the window it opened is the fact.  ``ratio_seconds`` prices only the
     # ones carrying a positive share, while the event count stays honest
     # about the windows.
     damage_modifiers = [
-        event for event in authored if event.get("kind") == "damage_modifier"
+        event for event in authored if is_packet_kind(event, PacketKind.DAMAGE_MODIFIER)
     ]
     damage_reduction = [
         event
@@ -1914,7 +1923,9 @@ def _utility_outcome_receipt(
     # native mana units (including the zero-amount Helping Hand boundary,
     # which is read from the authored stream so the named boundary stays
     # visible even though it never applies to a champion target).
-    resource = [event for event in authored if event.get("kind") == "resource"]
+    resource = [
+        event for event in authored if is_packet_kind(event, PacketKind.RESOURCE)
+    ]
     movement_speed_percent_seconds = sum(
         abs(
             float(
@@ -4586,7 +4597,7 @@ def _self_shield_carrier_denials(
         denials.append(
             {
                 "time": round(carrier_time, 3),
-                "kind": "item_denial",
+                "kind": PacketKind.ITEM_DENIAL.value,
                 "source": str(rider.get("source", "")),
                 "reason": SELF_SHIELD_CARRIER_DENIAL,
                 "attacker": holder,
@@ -4912,7 +4923,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                     "time": round(
                                         float(enriched.get("time", 0.0) or 0.0), 3
                                     ),
-                                    "kind": "item_denial",
+                                    "kind": PacketKind.ITEM_DENIAL.value,
                                     "source": str(
                                         shield_payload.get(
                                             "source", "Eclipse (Ever Rising Moon)"

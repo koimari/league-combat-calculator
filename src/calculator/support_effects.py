@@ -14,6 +14,7 @@ from .ability_atoms import (
     required_ability_atom,
 )
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
+from .item_behavior import PacketKind
 from .data_registry import data_version, store_for_generation
 from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from .champions.slotlib import extract_named, find_named_leveling
@@ -1127,7 +1128,7 @@ def _bailout_denial_rows(
     return [
         {
             "time": time,
-            "kind": "item_denial",
+            "kind": PacketKind.ITEM_DENIAL.value,
             "source": _BAILOUT_DENIAL_SOURCE,
             "reason": reason,
             "denied_component": component,

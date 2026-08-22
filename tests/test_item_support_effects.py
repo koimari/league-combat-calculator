@@ -692,7 +692,7 @@ def _damage_modifier_call_sites() -> dict[str, str]:
         ):
             continue
         kind = _packet_keyword(node, "kind")
-        if not (isinstance(kind, ast.Constant) and kind.value == "damage_modifier"):
+        if not _is_packet_kind_node(kind, "damage_modifier"):
             continue
         source = _packet_keyword(node, "source")
         assert isinstance(source, ast.Constant) and isinstance(source.value, str), (
@@ -718,10 +718,14 @@ class TestCrossParticipantAuthorities:
     """One authority table, and the packets are bound to it."""
 
     def test_every_damage_modifier_packet_is_a_row(self):
-        """One row per ``kind="damage_modifier"`` construction site."""
+        """One row per ``kind=PacketKind.DAMAGE_MODIFIER`` construction site."""
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
         call_sites = len(
-            re.findall(r'^\s*kind="damage_modifier",$', body, flags=re.MULTILINE)
+            re.findall(
+                r"^\s*kind=PacketKind\.DAMAGE_MODIFIER\.value,$",
+                body,
+                flags=re.MULTILINE,
+            )
         )
         assert call_sites == len(_declared_authorities())
 
@@ -899,6 +903,23 @@ class TestOwnerIsPresentIffSplit:
         assert "authority" not in self._modifier()
 
 
+def _is_packet_kind_node(node, kind: str) -> bool:
+    """Whether a ``_packet(kind=...)`` node names ``PacketKind.<KIND>.value``.
+
+    The kind used to be a bare string literal at every site; ER1 moved it
+    onto the enum, so the three source walks below ask this one question
+    instead of each matching a spelling.
+    """
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr == "value"
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == kind.upper()
+        and isinstance(node.value.value, ast.Name)
+        and node.value.value.id == "PacketKind"
+    )
+
+
 def _packet_keyword(call, name):
     """The value node of one keyword argument of a ``_packet(...)`` call.
 
@@ -937,7 +958,7 @@ def declared_packet_keywords(*names):
         ):
             continue
         kind = _packet_keyword(node, "kind")
-        if not (isinstance(kind, ast.Constant) and kind.value == "damage_modifier"):
+        if not _is_packet_kind_node(kind, "damage_modifier"):
             continue
         source = _packet_keyword(node, "source").value
         declared[source] = {
@@ -1058,7 +1079,7 @@ class TestDeclaredDamageAndAttackClasses:
             ):
                 continue
             kind = _packet_keyword(node, "kind")
-            if isinstance(kind, ast.Constant) and kind.value == "damage_modifier":
+            if _is_packet_kind_node(kind, "damage_modifier"):
                 sites.append(node)
         assert len(sites) == len(_declared_authorities())
         for node in sites:
