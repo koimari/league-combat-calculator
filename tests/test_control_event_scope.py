@@ -37,9 +37,15 @@ def test_an_unscoped_control_reaches_every_target() -> None:
 
 
 def test_a_one_target_control_reaches_only_the_allocated_target() -> None:
-    """One enemy holds a single-target cast, like a target-limited proc."""
+    """One enemy holds a single-target cast, like a target-limited proc.
+
+    The allocated index is exactly zero: the engine clamps the roster index
+    with ``max(0, ...)`` before the fight state holds it, so a negative one
+    is a caller bug rather than a second spelling of "the first enemy".
+    """
     assert ControlScope.ONE_TARGET.reaches(0)
     assert not ControlScope.ONE_TARGET.reaches(1)
+    assert not ControlScope.ONE_TARGET.reaches(-1)
 
 
 def test_a_single_target_cast_polymorphs_one_enemy_not_the_roster() -> None:

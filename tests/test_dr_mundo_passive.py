@@ -166,9 +166,11 @@ from src.calculator.cleanse_eligibility import (
     resolve_cleanse_item,
     truncate_intervals,
 )
+from src.calculator.ability_spec import (
+    ACTION_BLOCKING_CC_KINDS,
+    NON_BLOCKING_CC_KINDS,
+)
 from src.calculator.crowd_control_eligibility import (
-    CONTROL_BLOCKING_KINDS,
-    CONTROL_SOFT_KINDS,
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
@@ -1027,9 +1029,9 @@ class TestNonTriggerControls:
         # "disarm" from this list: no champion module can author either,
         # so the soft set carried two kinds that could never be classified.
         for kind in ("slow", "cripple", "silence", "blind"):
-            assert kind in CONTROL_SOFT_KINDS
+            assert kind in NON_BLOCKING_CC_KINDS
             assert kind in KNOWN_CONTROL_KINDS
-            assert kind not in CONTROL_BLOCKING_KINDS
+            assert kind not in ACTION_BLOCKING_CC_KINDS
             profile = classify_control(SimpleNamespace(cc_kind=kind))
             assert profile.blocking is False
             assert profile.unknown is False
@@ -1342,7 +1344,7 @@ class TestSuppressionAndCastability:
         # suppression WOULD qualify as a "hostile immobilizing effect"
         # if the coordinator adopts the blocking set as the trigger
         # classification.
-        assert "suppression" in CONTROL_BLOCKING_KINDS
+        assert "suppression" in ACTION_BLOCKING_CC_KINDS
         assert "suppression" in KNOWN_CONTROL_KINDS
         profile = classify_control(SimpleNamespace(cc_kind="suppression"))
         assert profile.blocking is True

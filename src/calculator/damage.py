@@ -173,10 +173,10 @@ from .ability_atoms import (
     ability_sub_payload,
 )
 from .ability_spec import (
-    ACTION_BLOCKING_CC_KINDS,
     AttackClass,
     ControlEvent,
     DamagePart,
+    cc_kind_reviewed,
 )
 from .cleanse_eligibility import merged_spans
 from .interpreters import (
@@ -3994,19 +3994,7 @@ def _evaluate_cast_parts(
                             ),
                             **(
                                 {"cc_reviewed": True}
-                                if (
-                                    cc_reviewed
-                                    and (
-                                        part.cc_kind is None
-                                        or str(part.cc_kind).lower().strip()
-                                        in (ACTION_BLOCKING_CC_KINDS | {"slow"})
-                                    )
-                                )
-                                or (
-                                    part.cc_kind is not None
-                                    and str(part.cc_kind).lower().strip()
-                                    in (ACTION_BLOCKING_CC_KINDS | {"slow"})
-                                )
+                                if cc_reviewed or cc_kind_reviewed(part.cc_kind)
                                 else {}
                             ),
                             **(
@@ -6644,6 +6632,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                         else 0.0
                     )
                     interval = float(control.hit_interval or 0.0)
+                    reviewed = cc_kind_reviewed(control.kind)
                     for control_index in range(control.count):
                         result.control_events.append(
                             {
@@ -6666,12 +6655,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                                 "cast_id": cast_id,
                                 "application_id": cast_id,
                                 "target_id": target_id,
-                                **(
-                                    {"cc_reviewed": True}
-                                    if control.kind.lower().strip()
-                                    in (ACTION_BLOCKING_CC_KINDS | {"slow"})
-                                    else {}
-                                ),
+                                **({"cc_reviewed": True} if reviewed else {}),
                                 "skillshot": bool(
                                     control.skillshot or ability_info.get("skillshot")
                                 ),

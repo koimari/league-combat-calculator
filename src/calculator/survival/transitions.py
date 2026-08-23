@@ -79,6 +79,7 @@ from ..cleanse_eligibility import (
     item_declaration,
     movement_entry,
     resolve_cleanse_item,
+    resolve_excluded_kinds,
     truncate_intervals,
 )
 from ..healing_reduction import (
@@ -1922,10 +1923,13 @@ def _apply_cleanse(
             "movement": movement_entry(declaration),
         }
         return
-    # One kernel truncation on BOTH ledgers (identical cc entries; the
-    # action-downtime ledger may carry death/stasis rows the kernel never
-    # touches — their kinds are outside the known control set).
-    eligible_kinds = frozenset(KNOWN_CONTROL_KINDS) - frozenset(
+    # One kernel truncation on BOTH ledgers.  The cc entries are identical;
+    # the action-downtime ledger also carries death rows, whose kind is
+    # outside the known control set, and stasis rows, which the carve-out
+    # resolver protects because no cleanse removes a stasis.  That resolver
+    # is the only reader of the carve-out, so the Airborne umbrella cannot
+    # mean one thing here and another to the decision above.
+    eligible_kinds = frozenset(KNOWN_CONTROL_KINDS) - resolve_excluded_kinds(
         declaration.get("excluded_control_kinds", ())
     )
     kept_downtime, _ = truncate_intervals(

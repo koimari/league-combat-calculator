@@ -1221,5 +1221,6 @@ __all__ = [
     "merged_interval_duration",
     "merged_spans",
     "resolve_cleanse_item",
+    "resolve_excluded_kinds",
     "truncate_intervals",
 ]

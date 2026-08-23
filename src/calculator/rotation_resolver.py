@@ -63,6 +63,7 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, Mapping
 
+from .ability_spec import NO_CONTROL_KIND
 from .cast_dependency import (
     CastDependency,
     ConflictingInferenceError,
@@ -743,7 +744,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
             # question, asked once at the fan-out
             # (:func:`_cc_orders_the_burst`).
             kind = getattr(part, "cc_kind", None)
-            if kind and kind != "none":
+            if kind and kind != NO_CONTROL_KIND:
                 atoms.append(f"cc_kind={kind}")
         if _P_APPLIES_STACK.search(texts[s]):
             atoms.append("phrase:applies-stack")

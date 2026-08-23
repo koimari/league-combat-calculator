@@ -5,12 +5,13 @@ classification and Black-Shield-style immunity, orthogonal to delivery
 type (:mod:`delivery_eligibility`) and state lifecycle
 (:mod:`state_lifecycle`).  Four orthogonal concerns:
 
-- CONTROL CLASSIFICATION — :data:`CONTROL_BLOCKING_KINDS` (the sourced
-  hard set that adds action downtime, mirroring
-  ``ability_spec.ACTION_BLOCKING_CC_KINDS``) and :data:`CONTROL_SOFT_KINDS`
-  (its complement, ``ability_spec.NON_BLOCKING_CC_KINDS``).  The two
-  partition :data:`KNOWN_CONTROL_KINDS`, which IS the authoring vocabulary
-  ``ability_spec.CC_KIND_VOCABULARY`` — there is no second list of kinds.
+- CONTROL CLASSIFICATION — ``ability_spec.ACTION_BLOCKING_CC_KINDS`` (the
+  sourced hard set that adds action downtime) and its complement
+  ``ability_spec.NON_BLOCKING_CC_KINDS``.  This module classifies with
+  those two names rather than aliasing them: one classification, one
+  name-pair.  The two partition :data:`KNOWN_CONTROL_KINDS`, which IS the
+  authoring vocabulary ``ability_spec.CC_KIND_VOCABULARY`` — there is no
+  second list of kinds.
   :func:`classify_control` is a deterministic pure function of the
   action's ``cc_kind``; a kind outside the known set is ``unknown`` and
   FAILS CLOSED with the named ``unknown_control`` reason
@@ -80,19 +81,6 @@ _EPS = 1e-9
 # Control classification
 # ---------------------------------------------------------------------------
 
-#: The sourced hard control set — kinds that lock a champion's actions and
-#: therefore add action downtime in the survival model.  Mirrors
-#: ``ability_spec.ACTION_BLOCKING_CC_KINDS`` exactly (one source of truth
-#: for the typed table and the walk's pinned downtime gate).
-CONTROL_BLOCKING_KINDS: frozenset[str] = frozenset(ACTION_BLOCKING_CC_KINDS)
-
-#: Known crowd-control kinds the model tracks as control but that do NOT
-#: add action downtime (and are therefore never eligible for a
-#: downtime-blocking immunity decision).  Mirrors
-#: ``ability_spec.NON_BLOCKING_CC_KINDS`` — the other half of the same
-#: classification, so the two cannot drift apart.
-CONTROL_SOFT_KINDS: frozenset[str] = frozenset(NON_BLOCKING_CC_KINDS)
-
 #: Every kind the contract can classify: exactly what a champion module can
 #: author (``ability_spec.CC_KIND_VOCABULARY`` less its reviewed "no
 #: control" member, which reaches the classifier as the empty kind).
@@ -110,9 +98,9 @@ class ControlProfile:
 
     ``kind`` is the lowercased authored ``cc_kind`` ("" for a packet with
     no control markers — a plain damage packet).  ``blocking`` is True
-    for :data:`CONTROL_BLOCKING_KINDS`; ``unknown`` is True for kinds
-    outside :data:`KNOWN_CONTROL_KINDS` (fail-closed marker).  A packet
-    with no control markers is never unknown.
+    for ``ability_spec.ACTION_BLOCKING_CC_KINDS``; ``unknown`` is True for
+    kinds outside :data:`KNOWN_CONTROL_KINDS` (fail-closed marker).  A
+    packet with no control markers is never unknown.
     """
 
     kind: str = ""
@@ -153,9 +141,9 @@ def classify_control(action: Any) -> ControlProfile:
     kind = _action_cc_kind(action)
     if not kind:
         return ControlProfile(kind="", blocking=False, unknown=False)
-    if kind in CONTROL_BLOCKING_KINDS:
+    if kind in ACTION_BLOCKING_CC_KINDS:
         return ControlProfile(kind=kind, blocking=True, unknown=False)
-    if kind in CONTROL_SOFT_KINDS:
+    if kind in NON_BLOCKING_CC_KINDS:
         return ControlProfile(kind=kind, blocking=False, unknown=False)
     return ControlProfile(
         kind=kind,
@@ -378,8 +366,6 @@ def same_hit_ordering() -> tuple[str, SourceReceipt]:
 
 
 __all__ = [
-    "CONTROL_BLOCKING_KINDS",
-    "CONTROL_SOFT_KINDS",
     "CrowdControlDecision",
     "CrowdControlEligibility",
     "ControlProfile",
