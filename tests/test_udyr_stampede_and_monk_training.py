@@ -521,7 +521,14 @@ class TestBridgeBetweenStaysReceiptedOpen:
 
         assert "Q-slot-only" in detail
         assert "bounded by attack count" in detail
-        assert "cooldown refund has no engine channel" in detail
+        # The refund blocker is the SHAPE of the one authoring surface, not
+        # its absence: Ezreal proves a champion can author a refund, and the
+        # receipt has to name that before claiming this one cannot.  The
+        # older, weaker wording ("no engine channel at all") was false.
+        assert "cooldown refund has no channel that fits" in detail
+        assert "_with_q_refund" in detail
+        assert "nothing mutates a cooldown mid-fight" in detail
+        assert "no engine channel at all" not in detail
 
     def test_monk_training_is_sourced_by_the_tracked_wiki_prose(self):
         """The PRIMARY receipt — runs everywhere, tracked source."""

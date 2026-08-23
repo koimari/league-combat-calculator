@@ -15,15 +15,26 @@ SLOTS so the fight rotation casts it.
 P (Power Chord) is ``modeled``: the sourced chord (240.0 bonus magic damage
 at level 18, 0 AP) rides the attack three basic abilities empower.
 
-E (Song of Celerity) stays ``out_of_scope`` on the movement-speed axis,
-which ``slotlib``'s ``stat_buff`` dispatch has no key for.
+E (Song of Celerity) is ``no_damage``: movement only, with no
+enemy-damage clause anywhere in the slot.  The movement half IS priced,
+because ``slotlib``'s ``stat_buff`` dispatch carries the key it needs:
+``move_speed_percent`` is a term in the shared ``resolve_move_speed``
+fold (``damage._apply_stat_buff_ultimates``), published by Teemo W,
+Seraphine W, Sivir R, Naafiri W, Udyr E and Singed.  Seraphine W is the
+same grant shape to the digit (20% + 2% per 100 AP, self half published,
+ally half withheld), so E follows that wiring: the self grant is
+published time-weighted over the fight window through
+``buff_window_share``, and the ranked ally half (Melody Bonus
+10/12/14/16/18%) is withheld for want of a teammate the parse can see.
 """
 
+import re
 from typing import Any
 
 from ..healing_helpers import ability_json, parsed_rank
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import ability_name, extract_named, on_hit_entry
 from .inputs import int_option
@@ -64,6 +75,96 @@ def _power_chord(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _power_chord.phase = ONHIT
 
+
+# Song of Celerity's SELF grant has no leveling row of any kind — the
+# active's whole magnitude and both of its windows are one cached
+# sentence, so the sentence is read rather than copied (the Shyvana-P
+# shape).  Only the ranked ALLY row ("Melody Bonus", 10/12/14/16/18 +
+# 2% per 100 AP) is a leveling row, and that half has no 1v1 channel.
+_E_ACTIVE_MARKER = "bonus movement speed"
+_E_GRANT_RE = re.compile(
+    r"Sona gains\s+(?P<base>\d+(?:\.\d+)?)%\s*\(\+\s*"
+    r"(?P<per_100_ap>\d+(?:\.\d+)?)%\s*per 100 AP\)\s*bonus movement speed"
+    r"\s*for\s+(?P<undisturbed>\d+(?:\.\d+)?)\s*seconds",
+    re.IGNORECASE,
+)
+_E_DAMAGED_WINDOW_RE = re.compile(
+    r"If she takes damage during this time.*?"
+    r"(?P<damaged>\d+(?:\.\d+)?)\s*seconds have elapsed",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _celerity_grant(ability: dict[str, Any] | None) -> tuple[float, float, float]:
+    """E's self grant: ``(base %, % per 100 AP, damaged window seconds)``.
+
+    Both windows are stated in the same sentence — 7 seconds undisturbed,
+    cut to 3 once she takes damage.  A modelled fight is by construction a
+    state in which she takes damage, so the DAMAGED window is the one this
+    surface can source; it is also the shorter of the two, so reading it
+    can only understate the grant, never overstate it.  This is the same
+    call Teemo W makes when it refuses the passive branch whose
+    "5 seconds without taking damage" condition a fight never satisfies.
+    """
+    # Direct indexing: a cache-shape break raises KeyError loudly here
+    # rather than falling through silently (the loop's own fail-closed
+    # raise below still guards the no-match case).
+    for effect in ability["effects"]:
+        text = str(effect["description"])
+        if _E_ACTIVE_MARKER not in text:
+            continue
+        grant = _E_GRANT_RE.search(text)
+        window = _E_DAMAGED_WINDOW_RE.search(text)
+        if grant is None or window is None:
+            continue
+        return (
+            float(grant.group("base")),
+            float(grant.group("per_100_ap")),
+            float(window.group("damaged")),
+        )
+    raise ValueError(
+        "Sona E (Song of Celerity): the cached active no longer states "
+        "'Sona gains <n>% (+ <n>% per 100 AP) bonus movement speed for <n> "
+        "seconds' together with the damaged window '<n> seconds have "
+        "elapsed' — the self grant cannot be sourced"
+    )
+
+
+def _song_of_celerity(packet_e):
+    """E: movement only — a sourced zero-enemy-damage row.
+
+    Replaces the packet's generic "no enemy-damage formula" stub with the
+    sourced grant, published as a ``move_speed_percent`` stat buff (the
+    Teemo-W / Seraphine-W wiring).  Only Sona's own half is published: the
+    ranked Melody Bonus goes to tagged allied champions, which the 1v1
+    surface has no room for.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_e(ctx)
+        if entry is None:
+            return None
+        base, per_100_ap, window = _celerity_grant(ctx.ability())
+        granted = base + per_100_ap * (float(ctx.stat("ability_power") or 0.0) / 100.0)
+        # The cast expires, and a stat_buff is one scalar for the whole
+        # fight, so the grant lands time-weighted by the share of the
+        # window it covers (module_helpers.buff_window_share).
+        published = granted * buff_window_share(ctx, window)
+        entry["stat_buff"] = {"move_speed_percent": published}
+        entry["detail"] = (
+            f"Movement only: the cast's own {base:g}% "
+            f"(+ {per_100_ap:g}% per 100 AP) grant ({granted:g}% at this "
+            f"build, {published:g}% over the fight window at the sourced "
+            f"{window:g}s damaged duration) is published as a "
+            "move_speed_percent stat buff, a term in the shared "
+            "movement-speed fold. The ranked Melody Bonus to tagged allies "
+            "is not published: it needs allied champions."
+        )
+        return entry
+
+    return parse
+
+
 # Reviewed crowd control, read from the cached kit.  Q (Hymn of Valor)
 # "sends out bolts of sound to the two nearest visible enemies ... Each
 # bolt deals magic damage" and applies no control (Power Chord's Tempo
@@ -79,6 +180,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # part and one hit, so the reviewed answer reaches the event ledger.
     single_hit_slots=frozenset({"Q", "R"}),
     slot_parsers={"P": _power_chord},
+    slot_wrappers={"E": _song_of_celerity},
     cc_kinds=MODULE_CC,
 )
 
@@ -103,8 +205,23 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "teammate the sourced Melody Shield Strength (25-105 + 25% AP) for "
     "1.5s (shield:W:<cast> key); the in-game 'most wounded allied "
     "champion nearby' selection is the explicit roster teammate choice.",
+    "E (Song of Celerity) deals no damage; its SELF grant (20% + 2% per "
+    "100 AP) is published as a move_speed_percent stat buff, a term in "
+    "the shared resolve_move_speed fold (soft caps included), "
+    "time-weighted by buff_window_share over the sourced window: a "
+    "stat_buff is one scalar for the whole fight, so an unweighted term "
+    "would read the same in a 5s fight and a 30s one. The grant and both "
+    "of its windows are cached PROSE with no leveling row of any kind, so "
+    "the sentence is READ (no module literal, the Shyvana-P shape) and a "
+    "sentence that stops stating them raises. The DAMAGED window (3s) is "
+    "the one priced, not the undisturbed 7s: a modelled fight is a state "
+    "in which she takes damage, and the shorter window can only "
+    "understate the grant — the same call Teemo W makes against its own "
+    "5s-undamaged passive branch. The ranked Melody Bonus "
+    "(10/12/14/16/18% + 2% per 100 AP) is NOT published: it goes to "
+    "tagged allied champions, which the 1v1 surface has no room for.",
 ]
-MODULE_COVERAGE = coverage(out_of_scope="E")
+MODULE_COVERAGE = coverage(no_damage="E")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments

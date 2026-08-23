@@ -869,6 +869,8 @@ CACHED_SOURCE_ROW = frozenset(
         ("champions/slotlib.py", "sum_modifiers", "dict.get", '"modifiers"', 1),
         ("champions/slotlib.py", "sum_modifiers", "dict.get", '"units"', 1),
         ("champions/slotlib.py", "sum_modifiers", "dict.get", '"values"', 1),
+        # Sona E's traversal defaults retired 2026-08-21: _celerity_grant
+        # now indexes directly (KeyError is the fail-closed path).
         (
             "champions/syndra.py",
             "_dark_sphere_second_charge",

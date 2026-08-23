@@ -27783,12 +27783,15 @@
         "E": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Movement only: the cast's own 20% (+ 2% per 100 AP) grant (20% at this build, 20% over the fight window at the sourced 3s damaged duration) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold. The ranked Melody Bonus to tagged allies is not published: it needs allied champions.",
           "name": "Song of Celerity",
           "parts": [],
           "rank": 1,
           "resource_cost": 65.0,
           "resource_type": "MANA",
+          "stat_buff": {
+            "move_speed_percent": 20.0
+          },
           "total_raw": 0.0
         },
         "Q": {
@@ -31255,7 +31258,7 @@
         "passive": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "Awakened Spirit (stance swaps, a 1.5s global cooldown and the Awaken recast window) carries no damage instance. Monk Training does move damage and is NOT modeled: after any cast, the next two basic attacks within 4s gain 30% bonus attack speed and refund 5% of Awakened Spirit's cooldown (wiki prose plus the binary's UdyrPassive AttackSpeed calculation 0.30, AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, not called no_damage, on three counts. The engine's only WINDOWED attack-speed path resolves its window start by walking cast_order to the Q slot, so it is Q-slot-only (the Miss Fortune W precedent) and a P-slot steroid cannot reach it. The unwindowed self-buff channel (module_helpers.buff_window_share) weights a bonus purely by TIME, while this window is bounded by attack count as well as time \u2014 it closes on the second empowered attack or at 4s, whichever comes first \u2014 so a time-weighted share would over-credit it whenever the attacks land early. And the cooldown refund has no engine channel at all (the one per-attack refund path is item_effects' CooldownProcEffect, read only by the item-proc scheduler).",
+          "detail": "Awakened Spirit (stance swaps, a 1.5s global cooldown and the Awaken recast window) carries no damage instance. Monk Training does move damage and is NOT modeled: after any cast, the next two basic attacks within 4s gain 30% bonus attack speed and refund 5% of Awakened Spirit's cooldown (wiki prose plus the binary's UdyrPassive AttackSpeed calculation 0.30, AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, not called no_damage, on three counts. The engine's only WINDOWED attack-speed path resolves its window start by walking cast_order to the Q slot, so it is Q-slot-only (the Miss Fortune W precedent) and a P-slot steroid cannot reach it. The unwindowed self-buff channel (module_helpers.buff_window_share) weights a bonus purely by TIME, while this window is bounded by attack count as well as time \u2014 it closes on the second empowered attack or at 4s, whichever comes first \u2014 so a time-weighted share would over-credit it whenever the attacks land early. And the cooldown refund has no channel that fits: a champion CAN author one (Ezreal's _with_q_refund divides each emitted entry's cooldown by a refund rate factor), but every such rewrite is static and parse-time, sound only because Ezreal's refund stream is always on, while this one is bounded by the same 4s/2-attack window \u2014 nothing mutates a cooldown mid-fight (item_effects' CooldownProcEffect is read only by the item-proc scheduler).",
           "name": "Bridge Between",
           "parts": [],
           "rank": 0,
@@ -35801,7 +35804,7 @@
         "W": {
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
+          "detail": "Attachment and the Best Friend Bonus: no damage row exists in the slot. The active dashes to a target ALLIED champion and attaches, so a 1v1 surface cannot cast it at all. Its Best Friend Bonus grants Yuumi 6% heal and shield power and her Best Friend 5 (+3% AP) healing on-hit at this rank. Neither is published: the heal-and-shield-power channel EXISTS (heal_and_shield_power_percent, folded back for the caster by healing_reduction.heal_and_shield_power_factor), but the grant is gated on being attached to a Best Friend, which no module-visible state can establish; the on-hit half goes to the ally. Attached Yuumi is also untargetable and casts from her anchor, which the engine has no participant state to express.",
           "name": "You and Me!",
           "parts": [],
           "rank": 3,
@@ -52932,18 +52935,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60000,
-      "numeric_leaves": 46188,
+      "leaves": 60001,
+      "numeric_leaves": 46189,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "fee0b7167750bd2b2c2ae5d931e54800b4d9e629",
+    "git_head": "d665e6df3aa117016ba73dee79019314f3748c45",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "46520f9de31d7d9e53d60e5643e0649835f143c6"
+    "src_tree_sha": "ee97c5f974780dde985af612730ec30c4f4a0003"
   },
   "registered_champion_fights": {
     "Aatrox": {

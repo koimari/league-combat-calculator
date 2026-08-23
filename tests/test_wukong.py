@@ -4,7 +4,7 @@ Cyclone knocks up; Crushing Blow's armor reduction is a shred, not
 control.
 """
 
-from src.calculator.champions import get_champion_module_contract, wukong
+from src.calculator.champions import get_champion_module_contract, shaco, wukong
 from tests import cc_review, coverage_truth, row_review
 
 
@@ -50,9 +50,12 @@ class TestCoverageMap:
     P emits a ``stat_buff`` of bonus armor with a zero damage part — a
     priced row under the campaign's vocabulary (a state row the engine
     consumes), so the derivation from ``SLOTS`` is the map and no map is
-    declared.  W is the real gap and the missing axis is a pet timeline: the cached "Clone Outgoing
+    declared.  W is the real gap, and the missing axis is the clone's
+    SWING COUNT rather than its output: the cached "Clone Outgoing
     Damage" row (40/45/50/55/60%) scales a *second attacker's* autos and
-    copied casts, and the engine prices one attacker's timeline.
+    copied casts, but no clone attack rate is cached to turn 4 seconds
+    into a number of swings, and the engine prices one attacker's cast
+    timeline.
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
@@ -87,3 +90,63 @@ class TestCoverageMap:
         assert "can basic attack autonomously" in cc_review.slot_text(
             cc_review.kit("Wukong"), "W"
         )
+
+    def test_the_ratio_is_cached_and_the_rate_is_not(self):
+        """The receipt's exact split: output sourced, swing count not.
+
+        The ratio is a real row this test reads back; the rate would have
+        to be a second row, and the slot has none.  A patch that starts
+        publishing an attack rate for the clone should turn this red so
+        the out_of_scope receipt gets re-adjudicated rather than kept.
+        """
+        levelings = [
+            level
+            for ability in cc_review.kit("Wukong")["abilities"]["W"]
+            for effect in ability["effects"]
+            for level in effect["leveling"] or []
+        ]
+        assert len(levelings) == 1
+        modifiers = levelings[0]["modifiers"]
+        assert len(modifiers) == 1
+        assert modifiers[0]["values"] == [40, 45, 50, 55, 60]
+        assert set(modifiers[0]["units"]) == {"%"}
+
+    def test_the_receipt_quotes_the_cached_sentences_it_leans_on(self):
+        """Every clone claim in the docstring is the cache's own wording.
+
+        The prior text compressed the cached sentence into "takes Crushing
+        Blow and Nimbus Strike's attack speed", which reads as Crushing
+        Blow granting attack speed.  Pinning the source sentence keeps the
+        receipt honest if the wiki rewords it.
+        """
+        # The raw descriptions, not cc_review.slot_text — that helper folds
+        # case, and the wording is what is being pinned.
+        text = " ".join(
+            effect["description"]
+            for ability in cc_review.kit("Wukong")["abilities"]["W"]
+            for effect in ability["effects"]
+        )
+        for quoted in (
+            "leaving behind a clone of himself at his casting position for 4 seconds",
+            "can basic attack autonomously",
+            "gain the effects of Crushing Blow and Nimbus Strike's bonus attack speed",
+            "casts Cyclone whenever Wukong does",
+            "The clone deals reduced damage",
+        ):
+            assert quoted in text, quoted
+        receipt = " ".join(wukong.__doc__.split())
+        assert "Clone Outgoing Damage" in receipt
+        assert "SWING COUNT, not its per-hit output" in receipt
+        assert "Crushing Blow grants no attack speed" in receipt
+
+    def test_the_shaco_contrast_the_receipt_draws_is_real(self):
+        """Shaco R prices a clone by option; Wukong exposes no such option.
+
+        The receipt's reason for not copying it is that Shaco's clone is
+        commanded and Wukong's is autonomous, so the asymmetry in the two
+        modules' option lists is the thing to pin.
+        """
+        assert "r_clone_attacks" in {option["key"] for option in shaco.OPTIONS}
+        assert not [
+            option for option in wukong.OPTIONS if "clone" in option["key"].lower()
+        ]

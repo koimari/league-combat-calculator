@@ -48,14 +48,26 @@ packet's ``ad`` ratio was the neighbouring **Bonus Attack Speed** row
     Teemo-W channel, which ``damage._apply_stat_buff_ultimates`` re-folds
     through ``stats.resolve_move_speed`` so the soft caps are re-applied
     rather than bypassed.  The slot stays OPEN ``out_of_scope`` (the
-    Olaf-R rule) because its other sourced combat effect still has no
-    channel at all: "Sivir's basic attacks on-attack reduce her basic
-    abilities' current cooldowns by 0.5 seconds each" —
-    ``on_attack_cooldown_refund`` is a field of
-    ``item_effects.CooldownProcEffect`` (Scout's Slingshot) read only by
-    the item-proc scheduler, so there is no ability-cooldown refund
-    surface for a champion to author.  The ally share of the buff is
-    unmodeled too.
+    Olaf-R rule) because its other sourced combat effect is real and
+    still unpriced: "While active, Sivir's basic attacks on-attack reduce
+    her basic abilities' current cooldowns by 0.5 seconds each".
+    A champion-authored cooldown-refund surface DOES exist — Ezreal's
+    ``_with_q_refund`` divides each emitted entry's cooldown by a refund
+    rate factor (the Gnar Q pickup-refund precedent), and Darius' W
+    multiplies its own — so the blocker is not "no channel"; both are
+    STATIC parse-time rewrites of one entry's cooldown, valid for Ezreal
+    because his refund stream is always on.  Sivir's is not: the cache
+    gates it on "while active", i.e. R's own 8/10/12s Buff Duration, and
+    drives it off the auto-attack rate, so a fight-wide divisor would
+    credit the refund outside the window — the over-credit that the
+    movement grant right above is time-weighted to avoid.  There is no
+    mid-fight cooldown-mutation surface to gate it with
+    (``item_effects.CooldownProcEffect.on_attack_cooldown_refund`` is
+    read only by the item-proc scheduler, and a champion entry's
+    ``cooldown`` is fixed once the parse returns), and time-weighting a
+    COOLDOWN is not the sourced operation time-weighting a movement
+    scalar is: a refund lands only on an ability actually on cooldown.
+    The ally share of the buff is unmodeled too.
     One further binary row is a genuine SOURCE CONFLICT and is recorded
     rather than used: ``SivirR`` carries ``HuntAttackSpeed`` (rank 1-3 =
     5%/6%/7%) that the cached wiki text does not mention at all.
@@ -393,13 +405,25 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "The slot still stays out_of_scope, NOT no_damage (the Olaf-R rule: "
     "a real, sourced, unmodeled mechanic is out_of_scope). There is no "
     "damage to miss - the binary's SivirR carries an empty "
-    "mSpellCalculations - but its other sourced combat effect still has "
-    "no channel: 'Sivir's basic attacks on-attack reduce her basic "
-    "abilities' current cooldowns by 0.5 seconds each' - "
-    "on_attack_cooldown_refund is a field of "
-    "item_effects.CooldownProcEffect read only by the item-proc "
-    "scheduler, so no ability-cooldown-refund surface exists for a "
-    "champion to author. The ally share of the buff is unmodeled too. "
+    "mSpellCalculations - but its other sourced combat effect is real and "
+    "unpriced: 'While active, Sivir's basic attacks on-attack reduce her "
+    "basic abilities' current cooldowns by 0.5 seconds each'. The blocker "
+    "is NOT that no channel exists - a champion-authored cooldown refund "
+    "does exist and Ezreal rides it (_with_q_refund divides each emitted "
+    "entry's cooldown by a refund rate factor; Darius W multiplies its "
+    "own) - it is that every such rewrite is STATIC and parse-time, which "
+    "is sound for Ezreal because his refund stream is always on. Sivir's "
+    "is gated on 'while active' (R's own 8/10/12s Buff Duration) and "
+    "driven by the auto-attack rate, so a fight-wide divisor would credit "
+    "it outside the window - the over-credit the movement grant above is "
+    "time-weighted to avoid - and no mid-fight cooldown-mutation surface "
+    "exists to gate it with (item_effects.CooldownProcEffect's "
+    "on_attack_cooldown_refund is read only by the item-proc scheduler, "
+    "and an entry's cooldown is fixed once the parse returns). "
+    "Time-weighting a COOLDOWN is also not the sourced operation "
+    "time-weighting a movement scalar is: a refund lands only on an "
+    "ability that is actually on cooldown. The ally share of the buff is "
+    "unmodeled too. "
     "SOURCE CONFLICT recorded, not used: SivirR also "
     "carries HuntAttackSpeed (rank 1-3 = 5%/6%/7%) that the cached wiki "
     "text does not mention at all; fail-closed, an uncorroborated "

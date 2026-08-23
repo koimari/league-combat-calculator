@@ -17,10 +17,20 @@ P1-2 fixes:
   option (default True).  The "Total Magic Damage" row is the
   projectile + discharge sum and is not read separately.
 
-Coverage: P (Glorious Evolution) spends Hex Fragments on augments that
-change how the other abilities behave, and W (Gravity Field) slows and
-then stuns on the fifth stack. Transform and CC magnitude are axes the
-engine does not have, so both slots are out of scope.
+Coverage: the two slots read differently, for two separate reasons.
+W (Gravity Field) is ``no_damage``: it carries no damage row, and its
+sourced slow IS priced — ``with_control_event`` publishes the cached
+"Slow" row (33/36/39/42/45%) against the slot's prose control duration,
+so CC magnitude is an axis this kit reaches after all.  Only the
+fifth-stack 1.5s stun stays unpriced, and it has no atom.
+P (Glorious Evolution) stays OPEN ``out_of_scope`` (the Olaf-R rule):
+its augments really do change what the other slots do, and the innate
+prices them in Hex Fragments earned from kills over a game (1 per minion
+or monster, 10 per siege/super/epic, 20 per champion takedown), an
+accumulation a single modeled fight has no room for and that the cache
+carries as pure prose — the entry has no leveling row anywhere and no
+augment's magnitude is cached at all, so pricing one would mean
+inventing both the fragment count and the effect.
 """
 
 from typing import Any

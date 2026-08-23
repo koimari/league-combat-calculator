@@ -2,8 +2,8 @@
 
 Every heal amount below is computed from data/champions.json — flat
 leveling values and % AP ratios for the implemented champions — and the
-engine's resolved ability power for the fight.  The other three champions
-in the batch have a self-heal component in the Wiki data but no sourced
+engine's resolved ability power for the fight.  Two other champions in
+the batch have a self-heal component in the Wiki data but no sourced
 trigger in the 1v1 fight model, so their rules are deliberately not
 authored and the tests pin the absence instead:
 
@@ -12,15 +12,17 @@ authored and the tests pin the absence instead:
   shrine gathered power (Minimum/Maximum Heal).  Bard's module does not
   declare W, so the fight ledger has no W cast rows, no W damage events,
   and no shrine/walk-over state to trigger the heal from.
-- Yuumi P (Feline Friendship): heals Yuumi herself only when the
-  periodically-stocked empowerment buff is consumed (empowered basic
-  attack, Q hit while buffed, or R ally hit while attached).  The module
-  models P as a no-damage slot and the ledger contains no empowerment
-  state, so every auto/Q event is an unfaithful trigger.
 - Zilean R (Chronoshift): heals the target only upon resurrection after
   fatal damage during the duration (a champion-ability revive, which the
   fight engine does not simulate for abilities); it is not a sustain
   self-heal that fires on cast.
+
+Yuumi P (Feline Friendship) was a third such absence and no longer is.
+The cached innate spends its buff "upon hitting them with the basic
+attack or Prowling Projectile", which is a damaging-hit anchor over the
+``auto_attacks`` and ``Q`` source keys, and the innate carries its own
+per-level recharge row; both are read live by ``yuumi.derive_self_healing``,
+so the tests below pin the amount and the gate rather than the absence.
 """
 
 import json
@@ -47,6 +49,7 @@ def _fight(
     *,
     ap_item: str | None = None,
     ranks: dict | None = None,
+    duration: int = 10,
 ) -> dict:
     payload = {
         "champion": champion,
@@ -55,7 +58,7 @@ def _fight(
         "role": "mid",
         "ability_ranks": ranks or _FULL_RANKS,
         "fight_mode": "time_based",
-        "fight_duration": 10,
+        "fight_duration": duration,
         "include_auto_attacks": True,
         "enemies": [_ENEMY],
     }
@@ -249,16 +252,52 @@ def test_bard_caretakers_shrine_has_no_sourced_fight_trigger():
     ]
 
 
-def test_yuumi_feline_friendship_has_no_sourced_fight_trigger():
-    """Yuumi P heals only when the periodic empowerment buff is consumed.
+def test_yuumi_feline_friendship_pays_the_level_row_on_a_damaging_hit():
+    """Yuumi P moved OUT of this file's absence list: it is now sourced.
 
-    The model carries no empowerment state (P is a no-damage slot), so
-    every Q/auto event would be an unfaithful trigger.
+    The absence this used to pin rested on "the ledger contains no
+    empowerment state, so every auto/Q event is an unfaithful trigger".
+    That is retired: the cached innate spends the buff on hitting with a
+    basic attack or Prowling Projectile, which is exactly
+    ``HealAnchor.DAMAGING_HIT`` over those two source keys, and the
+    innate's own per-level cooldown row is the recharge.  The heal is
+    per-LEVEL (20 entries for levels 1-20): 20 : 120.59 (+ 30% AP), so
+    level 18 -> 110 (+ 30% AP).
     """
-    combat = _fight("Yuumi")
-    assert not [
+    combat = _fight("Yuumi", ap_item="Rabadon's Deathcap")
+    heals = [
         event for event in _main_heals(combat) if event["source"] == "Feline Friendship"
     ]
+    assert heals, "Feline Friendship heal missing"
+    expected = (
+        _flat_value("Yuumi", "P", "Heal", 18)
+        + _main_ap(combat) * _ap_ratio_percent("Yuumi", "P", "Heal", 18) / 100.0
+    )
+    assert heals[0]["time"] == pytest.approx(0.0)
+    assert heals[0]["amount"] == pytest.approx(expected, abs=0.06)
+
+
+def test_yuumi_feline_friendship_is_gated_by_its_own_recharge_row():
+    """The gate is the innate's per-level cooldown, not the fight cadence.
+
+    Without it the heal would pay on every damaging hit, which is the
+    overstatement the rule's recharge exists to prevent.  ``affectedByCdr``
+    is false on that row, so no haste term belongs in the gate either.
+    """
+    cooldown = _CHAMPION_DATA["Yuumi"]["abilities"]["P"][0]["cooldown"]
+    assert cooldown["affectedByCdr"] is False
+    recharge = float(cooldown["modifiers"][0]["values"][17])
+
+    combat = _fight("Yuumi", duration=30)
+    times = [
+        float(event["time"])
+        for event in _main_heals(combat)
+        if event["source"] == "Feline Friendship"
+    ]
+    assert len(times) >= 2, "a 30s fight should re-arm the gate at least once"
+    assert all(
+        later - earlier >= recharge - 1e-6 for earlier, later in zip(times, times[1:])
+    )
 
 
 def test_zilean_chronoshift_has_no_sourced_fight_trigger():

@@ -250,7 +250,10 @@ def _bridge_between(packet_p):
 
     Three blockers: the windowed path, the cooldown refund, and
     ``buff_window_share``.  All three hold — the windowed kernel in
-    ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``.
+    ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``, and the
+    refund blocker is the SHAPE of the one authoring surface (a static
+    parse-time divisor on an entry's own cooldown, Ezreal's
+    ``_with_q_refund``), not its absence.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -275,9 +278,14 @@ def _bridge_between(packet_p):
             "time — it closes on the second empowered attack or at 4s, "
             "whichever comes first — so a time-weighted share would "
             "over-credit it whenever the attacks land early. And the "
-            "cooldown refund has no engine channel at all (the one "
-            "per-attack refund path is item_effects' CooldownProcEffect, "
-            "read only by the item-proc scheduler)."
+            "cooldown refund has no channel that fits: a champion CAN "
+            "author one (Ezreal's _with_q_refund divides each emitted "
+            "entry's cooldown by a refund rate factor), but every such "
+            "rewrite is static and parse-time, sound only because "
+            "Ezreal's refund stream is always on, while this one is "
+            "bounded by the same 4s/2-attack window — nothing mutates a "
+            "cooldown mid-fight (item_effects' CooldownProcEffect is read "
+            "only by the item-proc scheduler)."
         )
         return entry
 
@@ -396,7 +404,11 @@ ASSUMPTIONS = ASSUMPTIONS + [
     "resolves its window start from the Q slot (the Miss Fortune W "
     "precedent), because the unwindowed self-buff channel weights purely "
     "by time whereas this window is bounded by attack count as well, and "
-    "because the cooldown refund has no engine channel.",
+    "because the cooldown refund has no channel that FITS: a champion can "
+    "author a refund (Ezreal's _with_q_refund), but only as a static "
+    "parse-time divisor on an entry's own cooldown, which is sound for an "
+    "always-on stream and not for this 4s/2-attack window; nothing "
+    "mutates a cooldown mid-fight.",
 ]
 MODULE_COVERAGE = coverage(no_damage="E", out_of_scope="P")
 

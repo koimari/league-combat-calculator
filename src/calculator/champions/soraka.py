@@ -10,8 +10,15 @@ sourced team heal (350.0 to Soraka and every selected teammate at rank 3,
 0 AP); its "+50% on targets below 40% of their maximum health" is a
 live-health condition the scan cannot establish and is not priced.
 
-P (Salvation) stays ``out_of_scope`` on the movement-speed axis: its 90%
-bonus toward wounded allies has no ``stat_buff`` key at all.
+P (Salvation) is ``no_damage``: movement only, with no enemy-damage clause
+anywhere in the slot.  Its 90% bonus toward wounded allies is withheld on
+its CONDITION, not for want of a channel — ``move_speed_percent`` is a live
+``stat_buff`` key, folded through ``stats.resolve_move_speed`` by
+``damage._apply_stat_buff_ultimates``.  The condition is "while facing
+nearby allied champions below 40% of their maximum health", which needs
+both an allied champion (a 1v1 surface has none) and live ally health;
+this module withholds R's "+50% below 40% maximum health" on exactly that
+ground.  See ASSUMPTIONS.
 
 E8d: W (Astral Infusion) is an ally-only heal with no enemy damage.  The slot
 is declared here so the ability is CAST in the fight rotation; the engine's
@@ -27,6 +34,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -86,6 +94,31 @@ ASSUMPTIONS = [
     "Starcall counts one enemy-champion hit.",
     "Equinox's eruption is counted only when its target-remains option is on.",
     "Passive and Wish are excluded because they deal no enemy damage.",
+    "P (Salvation) is no_damage, NOT out_of_scope. Its single cached effect "
+    "grants Soraka '90% bonus movement speed while facing nearby allied "
+    "champions that are below 40% of their maximum health' (damageType null, "
+    "affects Self, leveling []) — there is no enemy-damage clause anywhere in "
+    "the slot, so there is no damage to miss. The grant is NOT published as a "
+    "move_speed_percent stat_buff, and the blocker is the CONDITION, not the "
+    "channel: the channel exists and Sivir R rides it. Two cached conditions "
+    "gate it and this surface can establish neither — it needs nearby ALLIED "
+    "CHAMPIONS (a 1v1 fight has none), each below 40% of maximum health (a "
+    "live-health state the scan cannot establish; this module already "
+    "withholds R's '+50% on targets below 40% of their maximum health' on "
+    "exactly that ground). Publishing 90% unconditionally would assert a "
+    "buff that is off for the whole fight — the Akshan-W rider convention, "
+    "which documents a conditional movement grant instead of emitting it. "
+    "The label is no_damage rather than an Olaf-R open because an ability "
+    "movement stat_buff does not become damage here: Swiftmarch's "
+    "adaptive_force_per_total_move_speed is resolved inside "
+    "calculate_total_stats from the BUILD's move speed (stats.py, "
+    "final_move_speed -> resolve_stat_effects) before any cast, while an "
+    "ability stat_buff rewrites stats['move_speed'] afterwards, so the grant "
+    "could only move champion_stats and the descriptive item_state_receipts, "
+    "never a damage row (verified live: Teemo with Swiftmarch reads "
+    "move_speed 395.0 at W0 and 452.088 at W5 with attack_damage, "
+    "ability_power and total_damage identical). This is the Sivir-P verdict "
+    "on the same axis.",
     "Astral Infusion (W) is declared as a zero-damage cast so the ally-support "
     "scanner emits its sourced heal (90-170 + 50% AP); its 10%-of-max-health "
     "cost per cast is documented, not modeled as mana.",
@@ -147,6 +180,13 @@ SLOTS = {
 MODULE_CC = {"Q": "slow", "E": "root"}
 
 parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
+
+# P is unemitted AND no_damage — the Azir-P direction, which
+# ``module_contract`` blesses explicitly: no rule ties either label to
+# whether the slot map emits the slot.  Salvation carries no enemy-damage
+# clause at all, and its one grant is movement gated on a condition this
+# surface cannot establish (see ASSUMPTIONS).
+MODULE_COVERAGE = coverage(no_damage="P")
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
