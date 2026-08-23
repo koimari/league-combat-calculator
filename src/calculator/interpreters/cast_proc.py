@@ -35,7 +35,7 @@ from ..item_behavior import (
     RuleFamily,
     UltimateProcRule,
 )
-from ..item_behavior_catalog import build_context, family_rules
+from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import (
     CooldownProcEffect,
     DamageSource,
@@ -262,7 +262,12 @@ class CastProcSlots:
 
 def cast_proc_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every cast-triggered proc *owners* declare, in build order."""
-    return family_rules(owners, RuleFamily.CAST_PROC)
+    return tuple(
+        rule
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.CAST_PROC
+    )
 
 
 def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:

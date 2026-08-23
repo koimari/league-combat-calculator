@@ -71,7 +71,7 @@ from ..item_behavior import (
     WindowMerge,
     chain_rank,
 )
-from ..item_behavior_catalog import build_context, family_rules
+from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
 
 # The field names a delta-amp rule compiles to.  A slot's magnitude is a
@@ -620,8 +620,9 @@ def _part_amps(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every per-part amp *owners* bring, in build order, whatever it prices."""
     return tuple(
         rule
-        for rule in family_rules(owners, RuleFamily.DELTA_AMP)
-        if isinstance(rule.payload, PartAmpRule)
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DELTA_AMP and isinstance(rule.payload, PartAmpRule)
     )
 
 
@@ -854,8 +855,10 @@ def slot_rules(owners: Sequence[str], slot: AmpChainSlot) -> tuple[BehaviorRule,
     rank = chain_rank(slot)
     return tuple(
         rule
-        for rule in family_rules(owners, RuleFamily.DELTA_AMP)
-        if isinstance(rule.payload, DeltaAmpRule)
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DELTA_AMP
+        and isinstance(rule.payload, DeltaAmpRule)
         and rule.payload.lane_chain_rank == rank
     )
 

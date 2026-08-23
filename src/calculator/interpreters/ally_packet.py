@@ -42,7 +42,7 @@ from ..item_behavior import (
     Recipients,
     RuleFamily,
 )
-from ..item_behavior_catalog import family_rules
+from ..item_behavior_catalog import behavior_rules
 from ..value_ref import LevelValueRef, ValueRef
 
 
@@ -185,13 +185,19 @@ def resolve_slots(
 ) -> Mapping[AllyProducer, tuple[AllyPacketSlot, ...]]:
     """Every ally-packet producer this build's items declare, by producer.
 
-    A tuple per producer, because two items can carry one mechanic: the
-    support quest is the same quest whichever transformed item is equipped.
-    Sorted, so a build holding both emits in a stated order."""
+    A tuple per producer rather than one slot, because two items really can
+    carry one mechanic: the support quest is the same quest whichever
+    transformed item is equipped.  Owners are walked in sorted order so a
+    build holding both emits in a stated order rather than in whichever order
+    the caller's set happened to iterate.
+    """
     slots: dict[AllyProducer, tuple[AllyPacketSlot, ...]] = {}
-    for rule in family_rules(sorted(frozenset(names)), RuleFamily.ALLY_PACKET):
-        producer = _payload(rule).producer
-        slots[producer] = slots.get(producer, ()) + (AllyPacketSlot(rule),)
+    for owner in sorted(frozenset(names)):
+        for rule in behavior_rules(owner):
+            if rule.family is not RuleFamily.ALLY_PACKET:
+                continue
+            producer = _payload(rule).producer
+            slots[producer] = slots.get(producer, ()) + (AllyPacketSlot(rule),)
     return slots
 
 

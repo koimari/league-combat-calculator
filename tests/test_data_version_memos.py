@@ -489,9 +489,6 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
         "calculator.economy._ITEM_BY_ID_MEMO",
         "calculator.pipeline._CAST_ORDER_PARAMS_MEMO",
         "calculator.survival.receipt_state._STATE_PROTO_MEMO",
-        # Keyed by build, so a search would grow it by thousands; it clears
-        # wholesale at 512 entries for the same reason the two above do.
-        "calculator.item_behavior_catalog._BUILD_RULES_MEMO",
         # One entry per mechanic per generation, and one mechanic declared,
         # so the generation prefix costs it nothing either.  Same key, same
         # bound, for the cadence its heal is delivered on.

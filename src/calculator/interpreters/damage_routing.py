@@ -43,7 +43,7 @@ from ..item_behavior import (
     RuleFamily,
     ShieldBypassRule,
 )
-from ..item_behavior_catalog import build_context, family_rules
+from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
@@ -411,8 +411,18 @@ class Deferral:
 
 
 def walk_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every routing rule *owners* bring — all three shapes, deferral too."""
-    return family_rules(owners, RuleFamily.DAMAGE_ROUTING)
+    """Every routing rule *owners* bring, in build order, for the walk lane.
+
+    All three payload shapes: the walk stages the deferral as well, and
+    reading only the two the pair engine prices is how the third would
+    quietly keep arriving from somewhere else.
+    """
+    return tuple(
+        rule
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.DAMAGE_ROUTING
+    )
 
 
 def _walk_fields(  # pylint: disable=too-many-arguments

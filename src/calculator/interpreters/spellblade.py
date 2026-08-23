@@ -30,7 +30,7 @@ from ..item_behavior import (
     RuleFamily,
     SpellbladeRule,
 )
-from ..item_behavior_catalog import build_context, family_rules
+from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import SpellbladeEffect, damage_source
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
@@ -111,7 +111,12 @@ def spellblade_mechanic_id(owner: str) -> str:
 
 def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every spellblade *owners* declare, in build order."""
-    return family_rules(owners, RuleFamily.SPELLBLADE)
+    return tuple(
+        rule
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.SPELLBLADE
+    )
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:

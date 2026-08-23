@@ -30,7 +30,7 @@ from ..item_behavior import (
     PeriodicRule,
     RuleFamily,
 )
-from ..item_behavior_catalog import build_context, family_rules
+from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import BurnEffect, DamageSource, PeriodicEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -157,7 +157,12 @@ class PeriodicSlots:
 
 def periodic_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every periodic strike *owners* declare, in build order."""
-    return family_rules(owners, RuleFamily.PERIODIC)
+    return tuple(
+        rule
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if rule.family is RuleFamily.PERIODIC
+    )
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:
