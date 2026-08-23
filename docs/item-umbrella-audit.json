@@ -1113,7 +1113,7 @@
         "name": "Doran's Helm",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions (a minion-class fight arms it through CLASS_RESTRICTED_ON_HITS); the full Wiki entry has no champion-facing sustain branch.",
+        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions (a minion-class fight arms it from the item's own restricted-channel declaration); the full Wiki entry has no champion-facing sustain branch.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
