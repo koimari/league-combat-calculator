@@ -216,6 +216,7 @@ from .item_behavior import (
     Probe,
     Recipients,
     Resistance,
+    ResourceRestoreRule,
     SustainStat,
 )
 from .program.build import dropped_preview_mechanics
@@ -704,6 +705,10 @@ class FightState:
     # defaulted them to an empty tuple would price a whole family at zero with
     # nothing saying so.
     per_hit_strikes: tuple[item_effects.PerHitEffect, ...]
+    # The declared on-hits this fight's own target class arms, already
+    # filtered to it: a champion-class fight arms none, because no
+    # declaration names the champion class.
+    class_restricted_strikes: tuple[item_effects.PerHitEffect, ...]
     # The actives this build declares, resolved through their rules.  Off the
     # registry's build projection for the same reason the strikes are: a
     # projection field that defaulted to an empty tuple would price the whole
@@ -3053,6 +3058,9 @@ def _resolve_combat_state(
             target_bonus_health=max(0.0, config.target_bonus_health),
             holder_is_melee=bool(is_melee),
         ),
+        class_restricted_strikes=on_hit_strike.class_restricted_per_hit_effects(
+            owners, target_class=config.target_class
+        ),
         item_actives=active_cast.active_sources(
             owners,
             level=level,
@@ -4975,27 +4983,28 @@ def _enlighten_decl_for(
 ) -> resource_ledger.EnlightenDeclaration | None:
     """Return Lost Chapter's sourced Enlighten declaration, or None.
 
-    The 20%-over-3-seconds restore is a typed rule declaration backed by
-    the wiki branch and the client binary (ManaRestorePercent=0.2,
-    RestorationDuration=3.0 in data/bin/items.bin.json 16.15.8024387); the
-    atom hash is Lost Chapter's verified stat.mana catalog hash.
+    The 20%-over-3-seconds restore is read off the holder's own
+    ``ResourceRestoreRule``, which is what makes the catalog declaration the
+    number's one home rather than a second statement of the three registry
+    keys.  It is backed by the wiki branch and the client binary
+    (ManaRestorePercent=0.2, RestorationDuration=3.0 in
+    data/bin/items.bin.json 16.15.8024387); the atom hash is Lost Chapter's
+    verified stat.mana catalog hash.
     """
     if not item_effects.has_item(state.items, "Lost Chapter"):
         return None
+    slot = stat_derivation.sole_declared_derivation(
+        ["Lost Chapter"], ResourceRestoreRule
+    )
+    if slot is None:
+        raise ValueError(
+            "Lost Chapter is equipped and declares no resource-restore rule, "
+            "so Enlighten has no sourced schedule to run"
+        )
     return resource_ledger.EnlightenDeclaration(
-        restore_percent=float(
-            item_effects.required_effect_value(
-                "Lost Chapter", "enlighten_restore_percent"
-            )
-        ),
-        duration_seconds=float(
-            item_effects.required_effect_value(
-                "Lost Chapter", "enlighten_duration_seconds"
-            )
-        ),
-        ticks=int(
-            item_effects.required_effect_value("Lost Chapter", "enlighten_ticks")
-        ),
+        restore_percent=slot.value("share_of_maximum"),
+        duration_seconds=slot.value("duration"),
+        ticks=int(slot.value("ticks")),
         source_url=str(item_effects.ITEM_INPUT_OPTIONS["Lost Chapter"]["source_url"]),
         source_revision_id=int(
             item_effects.ITEM_INPUT_OPTIONS["Lost Chapter"]["source_revision_id"]
@@ -5682,15 +5691,19 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         )
 
         # Tear of the Goddess: only an ACCEPTED cast with a PROVEN
-        # champion-affecting identity can consume a Manaflow charge.  The
+        # target-affecting identity can consume a Manaflow charge.  The
         # granted bonus maximum mana enters the authoritative account; a
         # missing identity fails closed with a receipt and no charge is
-        # spent.
+        # spent.  The fight's own target class picks which of Manaflow's two
+        # sourced amounts is paid — the declaration carries both, so a
+        # minion-class fight pays the trigger amount rather than the
+        # champion one.
         if tear is not None:
             identity = _tear_hit_identity(key, accepted_ordinal, info)
             hit_receipt, tear_event = tear.hit(
                 time=cast_time,
                 hit_identity=identity if identity is not None else "",
+                target_kind=state.target_class,
                 sequence=sequence,
             )
             sequence += 1
@@ -9055,21 +9068,6 @@ def _add_empower_window_on_hit(
     return total
 
 
-def _armed_class_restricted_per_hits(
-    state: FightState,
-) -> tuple[item_effects.PerHitEffect, ...]:
-    """The build's class-restricted on-hits this target class arms.
-
-    A champion-class fight, which is the default and the only class every
-    existing caller authors, arms nothing.  A minion-class fight arms exactly
-    the branches whose sourced text names that class."""
-    return tuple(
-        effect
-        for effect in state.damage_effects.class_restricted_per_hits
-        if effect.target_class == state.target_class
-    )
-
-
 def _declared_slot_stacks(
     on_hit_data: Mapping[str, Any],
     ability_hit_ledger: list[tuple[str, float]],
@@ -9277,7 +9275,7 @@ def _layer_on_hit_effects(
     damage_inputs = _damage_inputs(state)
     for effect in (
         *state.per_hit_strikes,
-        *_armed_class_restricted_per_hits(state),
+        *state.class_restricted_strikes,
     ):
         if effect.tracks_current_health:
             continue
@@ -17690,7 +17688,7 @@ def _collect_fight_notes(
     notes.extend(state.damage_effects.conditional_notes)
 
     if state.target_class != item_effects.DEFAULT_TARGET_CLASS:
-        armed = _armed_class_restricted_per_hits(state)
+        armed = state.class_restricted_strikes
         armed_names = ", ".join(sorted(effect.source.item_name for effect in armed))
         notes.append(
             f"Target class '{state.target_class}': the sourced class-restricted "
@@ -18054,7 +18052,11 @@ def _require_target_class_support(
     adjudicated for would be priced with the champion-class reading (Statikk
     Shiv's Electrospark is 60 magic damage on a champion and a sourced 90 on a
     non-champion), so the fight fails closed naming every offending clause."""
-    denials = item_effects.target_class_denials(items, config.target_class)
+    denials = item_effects.target_class_denials(
+        items,
+        config.target_class,
+        adjudicated_classes=on_hit_strike.adjudicated_target_classes,
+    )
     if denials:
         raise ValueError(
             f"target_class={config.target_class!r} is not supported by this "

@@ -345,17 +345,43 @@ def _ramp_value(
 #: recipient is chosen downstream, so the price has to move with the choice.
 RECIPIENT_RAMP_KEY = "_recipient_level_ramp"
 
+#: The ``target_scope`` values whose recipient a request can still move after
+#: the packet was priced — the one condition under which
+#: :data:`RECIPIENT_RAMP_KEY` is ever read back.  Declared beside the stamp and
+#: consumed by ``participant_timeline._apply_item_support_selection``: a scope
+#: that lands on the whole team was already priced at each member's own level,
+#: so stamping it would promise a re-read that can never happen.
+RETARGETABLE_SCOPES: frozenset[str] = frozenset(
+    {
+        "one_teammate",
+        "explicit_selected_ally",
+        "healed_or_shielded_ally",
+        "most_wounded_ally",
+        "nearest_most_wounded_ally",
+        "other_nearest_wounded_ally",
+    }
+)
+
 
 def _recipient_amount(
-    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any
+    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any, scope: str
 ) -> dict[str, Any]:
-    """The *key* ramp's amount, stamped when it belongs to *recipient*."""
+    """The *key* ramp's amount, stamped when *scope* can still re-target it."""
     fields: dict[str, Any] = {
         "amount": _ramp_value(slot, key, holder=holder, recipient=recipient)
     }
-    if slot.level_subject(key) is LevelSubject.RECIPIENT:
+    if (
+        slot.level_subject(key) is LevelSubject.RECIPIENT
+        and scope in RETARGETABLE_SCOPES
+    ):
         fields[RECIPIENT_RAMP_KEY] = (slot.producer.value, key)
     return fields
+
+
+@lru_cache(maxsize=None)
+def reprice_slot(owner: str, producer_value: str) -> AllyPacketSlot | None:
+    """*owner*'s declared producer, compiled once per owner and producer."""
+    return _producer(resolve_slots({owner}), AllyProducer(producer_value))
 
 
 def repriced_for_recipient(
@@ -367,6 +393,11 @@ def repriced_for_recipient(
     can change hands after it was priced.  An unstamped template comes back
     unchanged; a stamp naming a producer the holder's build does not declare
     is a stop, never the default ally's amount.
+
+    The producer is compiled through :func:`reprice_slot`, whose cache holds
+    the DECLARATION and not a number — the slot's amounts stay live
+    ``ValueRef`` reads taken at ``level_value`` time — so only a registry
+    refresh moving an owner's producers can stale it.
     """
     stamp = template.get(RECIPIENT_RAMP_KEY)
     if stamp is None:
@@ -374,7 +405,7 @@ def repriced_for_recipient(
     producer_value, key = stamp
     source = str(template["source"])
     owner = producer_item(source)
-    slot = _producer(resolve_slots({owner}), AllyProducer(producer_value))
+    slot = reprice_slot(owner, producer_value)
     if slot is None:
         raise ValueError(
             f"{source!r} is priced at its recipient's level, but {owner!r} "
@@ -1856,7 +1887,11 @@ def derive_item_support_effects(
                     kind="shield",
                     source="Locket of the Iron Solari — Devotion",
                     **_recipient_amount(
-                        devotion, "shield_min", holder=attacker, recipient=target
+                        devotion,
+                        "shield_min",
+                        holder=attacker,
+                        recipient=target,
+                        scope="all_selected_teammates",
                     ),
                     duration=devotion.value("shield_duration"),
                     target_scope="all_selected_teammates",
@@ -1875,7 +1910,11 @@ def derive_item_support_effects(
                 kind="heal",
                 source="Mikael's Blessing — Purify",
                 **_recipient_amount(
-                    purify, "heal_min", holder=attacker, recipient=target
+                    purify,
+                    "heal_min",
+                    holder=attacker,
+                    recipient=target,
+                    scope="explicit_selected_ally",
                 ),
                 target_scope="explicit_selected_ally",
                 cleanse=True,
@@ -1934,7 +1973,11 @@ def derive_item_support_effects(
                     kind="heal",
                     source="Redemption — Intervention",
                     **_recipient_amount(
-                        intervention, "heal_min", holder=attacker, recipient=target
+                        intervention,
+                        "heal_min",
+                        holder=attacker,
+                        recipient=target,
+                        scope="redemption_allies_in_radius",
                     ),
                     target_scope="redemption_allies_in_radius",
                     beam_delay=beam_delay,
@@ -2301,8 +2344,11 @@ def producer_item(source: str) -> str:
 
 
 __all__ = [
+    "RECIPIENT_RAMP_KEY",
+    "RETARGETABLE_SCOPES",
     "derive_item_support_effects",
     "producer_item",
+    "reprice_slot",
     "repriced_for_recipient",
     "require_event_view",
     "schedule_knights_vow",

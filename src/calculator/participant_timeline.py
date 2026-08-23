@@ -43,6 +43,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .support_effects import derive_ally_effects
 from .item_support_effects import (
     derive_item_support_effects,
+    RETARGETABLE_SCOPES,
     repriced_for_recipient,
     resolve_knights_vow_tether,
     schedule_knights_vow,
@@ -663,14 +664,7 @@ def _apply_item_support_selection(
     """
     kind = str(template.get("kind", ""))
     scope = str(template.get("target_scope", ""))
-    if kind not in {"shield", "heal"} or scope not in {
-        "one_teammate",
-        "explicit_selected_ally",
-        "healed_or_shielded_ally",
-        "most_wounded_ally",
-        "nearest_most_wounded_ally",
-        "other_nearest_wounded_ally",
-    }:
+    if kind not in {"shield", "heal"} or scope not in RETARGETABLE_SCOPES:
         return dict(template)
     selected_index, selected_explicit = _support_selection(attacker, template)
     if not selected_explicit:

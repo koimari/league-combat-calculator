@@ -5578,11 +5578,11 @@ RESOURCE_RESTORE_KEYS = (
     "enlighten_ticks",
 )
 
-# Which key states a number whose channel this fight model never runs, and
-# which channel that is.  Keyed by the registry key rather than by the item,
-# so both entries carrying Helping Hand declare the one mechanic — a
-# declaration here schedules nothing and is what keeps the number from being
-# read into a channel the block *does* hold.
+# Which key states a number no stat block holds, and which channel it
+# reaches.  Keyed by the registry key rather than by the item, so both
+# entries carrying Helping Hand declare the one mechanic and a fight whose
+# target class arms it arms both — which is what keeps "who pays this" from
+# being a second name list beside the declaration.
 RESTRICTED_CHANNELS: Mapping[str, RestrictedChannel] = {
     "summoner_spell_haste": RestrictedChannel.SUMMONER_SPELL_HASTE,
     "helping_hand_minion_damage": RestrictedChannel.MINION_CLASS_ON_HIT,

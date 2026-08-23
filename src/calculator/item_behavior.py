@@ -1811,13 +1811,17 @@ class PenetrationChannelRule:
 
 
 class RestrictedChannel(Enum):
-    """A channel a sourced item number reaches that this fight model never runs.
+    """A channel a sourced item number reaches that no stat block holds.
 
-    The champion-versus-champion stream is not a member, and that is the
+    The champion-versus-champion stat block is not a member, and that is the
     point: a number declared here is real and sourced, and what the
-    declaration says is that it lands somewhere the modelled fight does not
-    look — so reading it into an ability haste pool or a champion-class
-    on-hit packet would be the silent mis-channelling this enum refuses.
+    declaration says is that it lands somewhere the block does not — so
+    reading it into an ability haste pool or a champion-class on-hit packet
+    would be the silent mis-channelling this enum refuses.
+
+    A member either runs nowhere this model reaches at all, or runs only for
+    a fight whose own target class selects it; which of the two is
+    :data:`RESTRICTED_CHANNEL_PACKETS`, not a reader's memory.
     """
 
     SUMMONER_SPELL_HASTE = "summoner_spell_haste"
@@ -1825,19 +1829,51 @@ class RestrictedChannel(Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class RestrictedPacket:
+    """The damage row a restricted channel becomes when its class is the fight's.
+
+    Declared beside the channel rather than on the rule, because it is the
+    *channel's* shape: every entry routing a number down one channel pays the
+    same row, and a copy on each rule would be that many chances to disagree.
+    It says the row's target class, its damage class and the passive it
+    previews — never its number, which stays the rule's own ``amount``.
+    """
+
+    target_class: str
+    damage_class: DamageClass
+    mechanic: str
+
+
+# Which channels are a real packet, and what that packet is.  Total over the
+# enum — a member with no packet says ``None`` out loud — because "does this
+# channel arm anything" decided by a lookup miss is how a sourced number
+# starts riding a fight nobody declared it for.
+RESTRICTED_CHANNEL_PACKETS: dict[RestrictedChannel, RestrictedPacket | None] = {
+    RestrictedChannel.SUMMONER_SPELL_HASTE: None,
+    RestrictedChannel.MINION_CLASS_ON_HIT: RestrictedPacket(
+        target_class="minion",
+        damage_class=DamageClass.PHYSICAL,
+        mechanic="Helping Hand",
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
 class RestrictedChannelRule:
-    """Where a sourced number lands when its channel is off the modelled fight.
+    """Where a sourced number lands when no stat block holds its channel.
 
     The sibling of :class:`PenetrationChannelRule`: both say only *which
-    channel* a number reaches and schedule nothing, which is why neither
-    counts as runtime behaviour.  The difference is that a penetration
-    channel picks between two stat-block fields, and here one of the
-    channels is outside the block entirely — Ionian Insight's haste pays
+    channel* a number reaches and neither puts anything in the block, which
+    is why neither counts as runtime behaviour there.  The difference is that
+    a penetration channel picks between two stat-block fields, and here the
+    channel is outside the block entirely — Ionian Insight's haste pays
     summoner spells and Helping Hand's bonus damage pays minions.
 
     ``amount`` is carried rather than dropped so the sourced number has a
     declared home with its receipt, instead of living only in a sentence
-    beside the entry.
+    beside the entry.  Whether the channel is armed by any fight at all, and
+    what row it becomes there, is the channel's own answer in
+    :data:`RESTRICTED_CHANNEL_PACKETS`.
     """
 
     channel: RestrictedChannel
@@ -2607,11 +2643,23 @@ RulePayload = Union[
     ManaSpentHealRule,
     RegenerationRule,
     ReceivedHealingRule,
+    BelowHalfHealingRule,
+    StatConversionRule,
+    StatMultiplierRule,
+    PenetrationChannelRule,
+    RestrictedChannelRule,
+    ResourceRestoreRule,
+    ManaflowRule,
+    StackedStatRule,
+    FlatStatGrantRule,
+    StatAuraRule,
+    ThresholdRegenRule,
+    UltimateRefundRule,
+    ActiveWindowCastEconomyRule,
     OpeningDefenseRule,
     ThresholdDefenseRule,
     CombatStateRule,
     ReactiveRule,
-    ActiveWindowCastEconomyRule,
 ]
 
 # Which family each payload type belongs to.  One entry per payload; each
@@ -3862,6 +3910,7 @@ __all__ = [
     "PostMitigationHealRule",
     "Probe",
     "ProcTrigger",
+    "RESTRICTED_CHANNEL_PACKETS",
     "RULE_FAMILY_COUNT",
     "RampModel",
     "RampPerSecond",
@@ -3881,6 +3930,7 @@ __all__ = [
     "ResourceRestoreRule",
     "RestrictedChannel",
     "RestrictedChannelRule",
+    "RestrictedPacket",
     "RuleFamily",
     "RulePayload",
     "SCALING_TYPES",

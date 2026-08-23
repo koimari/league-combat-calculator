@@ -235,8 +235,8 @@ class ItemCoverage:
 # sourced number this fight model never runs goes; a channel schedules nothing.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions "
-    "(a minion-class fight arms it through CLASS_RESTRICTED_ON_HITS); the "
-    "full Wiki entry has no champion-facing sustain branch.",
+    "(a minion-class fight arms it from the item's own restricted-channel "
+    "declaration); the full Wiki entry has no champion-facing sustain branch.",
     "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Mosstomper Seedling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",

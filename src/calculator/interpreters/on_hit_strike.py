@@ -20,15 +20,19 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from ..item_behavior import (
+    RESTRICTED_CHANNEL_PACKETS,
     BehaviorRule,
     BuildContext,
     EngineLane,
     KernelField,
     OnHitStrikeRule,
+    RestrictedChannelRule,
+    RestrictedPacket,
     RuleFamily,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..item_effects import CLASS_RESTRICTED_ON_HITS, PerHitEffect, damage_source
+from ..item_effects import PerHitEffect, damage_source
+from ..value_ref import resolve
 from . import damage_formula
 
 # The field a strike rule compiles to for inspection: its term count.  A
@@ -41,6 +45,13 @@ STRIKE_TERM_COUNT_FIELD = "strike_terms"
 # the interpreter that builds the row rather than in the registry.
 ON_HIT_SUFFIX = "on-hit"
 ON_HIT_BREAKDOWN_PREFIX = "on_hit_"
+
+# How a class-restricted on-hit row is named and labelled.  Both carry the
+# packet's own target class, so the row of an item that has a champion-class
+# strike as well can never collide with it, and a channel armed for another
+# class would name that class rather than borrow this one's.
+CLASS_RESTRICTED_BREAKDOWN_KEY = "{prefix}{target_class}_{owner}"
+CLASS_RESTRICTED_SUFFIX = "{mechanic} vs {target_class}s"
 
 
 class OnHitStrikeInterpretationError(ValueError):
@@ -79,9 +90,77 @@ def strike_fields(
 
 
 # The mechanic slug a class-restricted on-hit row previews.  One prefix and
-# the entry's own target class, so the id follows the adjudication instead of
-# being a second spelling of it.
+# the declaration's own target class, so the id follows the declaration
+# instead of being a second spelling of it.
 CLASS_RESTRICTED_MECHANIC_PREFIX = "class_restricted_on_hit"
+
+
+def class_restricted_packets(
+    owners: Sequence[str],
+) -> tuple[tuple[BehaviorRule, RestrictedPacket], ...]:
+    """Every declared on-hit packet *owners* pay only against one target class.
+
+    Read off :class:`~..item_behavior.RestrictedChannelRule` — a stat
+    derivation by family, because it answers where a sourced number goes, and
+    interpreted here, because where this one goes is an on-hit row.  Every
+    entry routing a number down the channel pays it, in build order.
+    """
+    return tuple(
+        (rule, packet)
+        for owner in owners
+        for rule in behavior_rules(owner)
+        if isinstance(rule.payload, RestrictedChannelRule)
+        and (packet := RESTRICTED_CHANNEL_PACKETS[rule.payload.channel]) is not None
+    )
+
+
+def adjudicated_target_classes(owner: str) -> frozenset[str]:
+    """Every non-champion target class *owner* declares a packet for.
+
+    The reader ``item_effects.target_class_denials`` is handed."""
+    return frozenset(
+        packet.target_class for _, packet in class_restricted_packets([owner])
+    )
+
+
+def class_restricted_per_hit_effects(
+    owners: Sequence[str], *, target_class: str
+) -> tuple[PerHitEffect, ...]:
+    """The class-restricted on-hits a *target_class* fight arms, in build order.
+
+    A champion-class fight arms nothing: no declaration names it, which is
+    the enum's whole claim.  The amount is resolved from the declaration's
+    own reference, so the registry stays the number's one home.
+    """
+    effects: list[PerHitEffect] = []
+    for rule, packet in class_restricted_packets(owners):
+        if packet.target_class != target_class:
+            continue
+        amount = resolve(rule.payload.amount)
+        if amount <= 0.0:
+            raise OnHitStrikeInterpretationError(
+                f"{rule.mechanic_id} resolved a non-positive class-restricted "
+                f"on-hit value {amount!r}"
+            )
+        effects.append(
+            PerHitEffect(
+                damage_source(
+                    rule.owner,
+                    packet.damage_class.value,
+                    lambda _inputs, amount=amount: amount,
+                    suffix=CLASS_RESTRICTED_SUFFIX.format(
+                        mechanic=packet.mechanic, target_class=packet.target_class
+                    ),
+                    breakdown_key=CLASS_RESTRICTED_BREAKDOWN_KEY.format(
+                        prefix=ON_HIT_BREAKDOWN_PREFIX,
+                        target_class=packet.target_class,
+                        owner=rule.owner,
+                    ),
+                ),
+                target_class=packet.target_class,
+            )
+        )
+    return tuple(effects)
 
 
 def strike_mechanic_id(owner: str) -> str:
@@ -102,14 +181,13 @@ def strike_mechanic_id(owner: str) -> str:
     rules = strike_rules([owner])
     if rules:
         return rules[0].mechanic_id
-    restricted = CLASS_RESTRICTED_ON_HITS.get(owner)
-    if restricted is not None:
-        # A class-restricted branch is adjudicated rather than declared, and
-        # deliberately so: it is armed only by a fight whose own target class
-        # matches, never by the interpreter-owned strike stream, so it can
-        # never be the double count the stop below exists to prevent.  Its id
-        # is derived from the adjudication rather than spelled here.
-        return f"{CLASS_RESTRICTED_MECHANIC_PREFIX}.{restricted['target_class']}"
+    restricted = class_restricted_packets([owner])
+    if restricted:
+        # A class-restricted branch is armed only by a fight whose own target
+        # class matches, never by the interpreter-owned strike stream, so it
+        # can never be the double count the stop below exists to prevent.  Its
+        # id is derived from the declaration rather than spelled here.
+        return f"{CLASS_RESTRICTED_MECHANIC_PREFIX}.{restricted[0][1].target_class}"
     raise OnHitStrikeInterpretationError(
         f"{owner} authors an on-hit row and declares no on_hit_strike "
         "rule, so its pair row has no mechanic to be a preview of"
@@ -185,11 +263,16 @@ def per_hit_effects(
 
 
 __all__ = [
+    "CLASS_RESTRICTED_BREAKDOWN_KEY",
     "CLASS_RESTRICTED_MECHANIC_PREFIX",
+    "CLASS_RESTRICTED_SUFFIX",
     "ON_HIT_BREAKDOWN_PREFIX",
     "ON_HIT_SUFFIX",
     "STRIKE_TERM_COUNT_FIELD",
     "OnHitStrikeInterpretationError",
+    "adjudicated_target_classes",
+    "class_restricted_packets",
+    "class_restricted_per_hit_effects",
     "per_hit_effect",
     "per_hit_effects",
     "strike_fields",
