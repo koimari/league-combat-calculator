@@ -231,8 +231,9 @@ class ItemCoverage:
 # (``item_behavior_catalog.declares_runtime_behaviour``) — a compiled rule *is*
 # declared runtime behaviour, so an item holding one and sitting here would
 # assert two contradictory things at once.  A member may hold a registry entry
-# whose whole content is a *channel* — where a cached stat lands, or where a
-# sourced number this fight model never runs goes; a channel schedules nothing.
+# whose whole content is a *channel* — where a cached stat lands, or a
+# class-restricted packet no champion-class fight arms; coverage scores
+# champion-class candidates, so a channel adds no runtime behaviour here.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions "
     "(a minion-class fight arms it from the item's own restricted-channel "

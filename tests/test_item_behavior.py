@@ -33,9 +33,11 @@ from src.calculator.item_behavior import (
     POLICY_IDENTIFIER_FIELDS,
     Persist,
     Pool,
+    RESTRICTED_CHANNEL_PACKETS,
     RULE_FAMILY_COUNT,
     ReceiptOnly,
     ReceiptScope,
+    RestrictedChannel,
     RuleFamily,
     RulePayload,
     SUBJECT_AUTHORITY,
@@ -185,6 +187,15 @@ def test_the_payload_union_names_every_payload_a_family_claims() -> None:
     reader and a checker disagree about what a rule may hold.
     """
     assert set(PAYLOAD_FAMILY) - {BehaviorRule} == set(get_args(RulePayload))
+
+
+def test_every_restricted_channel_names_its_packet_or_none() -> None:
+    """``RESTRICTED_CHANNEL_PACKETS`` is total over ``RestrictedChannel``.
+
+    ``on_hit_strike`` indexes the map with a rule's channel; a member missing
+    from it is a ``KeyError`` mid-fight instead of a refusal at declaration.
+    """
+    assert set(RESTRICTED_CHANNEL_PACKETS) == set(RestrictedChannel)
 
 
 def test_a_receipt_only_rule_states_its_cause() -> None:

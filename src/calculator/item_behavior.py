@@ -3420,9 +3420,10 @@ STAT_DERIVATION_UNGRANTED_PAYLOADS: tuple[type, ...] = (
 
 # The payloads that only say where a number lands and schedule nothing.  The
 # payload-level twin of ``item_behavior_catalog.STAT_CHANNEL_TAGS``, and what
-# ``declares_runtime_behaviour`` reads: a channel is a declaration *about* a
-# number the modelled fight either already holds or never sees, so an item
-# whose whole entry is one has no runtime behaviour to publish.
+# ``declares_runtime_behaviour`` reads: a channel schedules nothing itself —
+# either the fight already holds its number as a cached stat, or only a fight
+# whose own target class selects the channel arms it — so no champion-class
+# fight gains runtime behaviour from an item whose whole entry is one.
 STAT_CHANNEL_PAYLOADS: tuple[type, ...] = (
     PenetrationChannelRule,
     RestrictedChannelRule,
