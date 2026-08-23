@@ -105,18 +105,23 @@ pre-merge engine replayed with this harness; both rows elect the same build and 
 The merged-vs-main gap is 1190 ms, wider than the 819 ms the merge-202 audit recorded
 (1584 → 2403 ms). That audit's own two trees replay here at 1627 and 2488 ms best-of-7,
 so the machine has not drifted. The `lean` row shape does not reach this path:
-`optimizer.py:442` calls `run_fight` without `score_only`, which only
-`participant_timeline.py:4256` passes, and forcing it on measures −0.7% with the answer
-unchanged — the lean adoption is a coupled-path win only.
+`optimizer._evaluate_build_uncached` calls `run_fight` without `score_only`, which only
+`participant_timeline._score_with_search_context` passes, and forcing it on measures
+−0.7% with the answer unchanged — the lean adoption is a coupled-path win only.
 
 ### Read the per-evaluation budget without the profiler
 
+```bash
+python scripts/bench_optimize_build.py --budget         # the table below
+python scripts/bench_optimize_build.py --by-build-size  # per-evaluation µs by items held
+```
+
 **cProfile's shares over-weight this engine's small helpers by roughly two to one**,
 because it charges about a microsecond to every call and the merged engine's cost is
-spread across millions of one-line ones. Take *call counts* from the profile, which it
-reports exactly, and *shares* from `timeit` best-of-7 against the whole evaluation.
-One evaluation is `run_fight` over the elected six-item build — 800 µs, and 3601 of them
-are most of the search's wall time. Every share below was measured that way:
+spread across millions of one-line ones. `--budget` takes *call counts* from the
+profile, which it reports exactly, and *shares* from `timeit` best-of-7 against the
+whole evaluation. One evaluation is `run_fight` over the elected six-item build —
+800 µs, and 3601 of them are most of the search's wall time:
 
 | term | calls per search | real share of one evaluation | profile said |
 |---|---|---|---|
@@ -126,33 +131,16 @@ are most of the search's wall time. Every share below was measured that way:
 | `item_behavior_catalog.behavior_rules` folds | 561,783 | 49 µs, 6.1% | 8% |
 | `item_effects.resolved_item_name` + `_item_names` | 908,617 | 0.073 µs each, 30 µs, 3.8% | 4% |
 
-**None of the five is a tuning target, and that is the answer to #213's remaining arm.**
-`parse_abilities` and `pre_combat_stats` read the build's own stats, so no two
-evaluations share inputs. `_damage_event_row` is the certified event-row schema: 15
-field reads per row is what the schema costs, and the light tuple row already prices at
-0.200 µs where a consumer can take it. `resolved_item_name` is 73 ns — a validated
-`item["name"]`, below the cost of memoizing it.
-
-`behavior_rules` was the one that looked recoverable, and it was tried: one memoized
-per-build pass bucketed by family, replacing the thirteen interpreter generator
-expressions that each re-open the same fold. It works and it does not pay — 561,783
-`behavior_rules` calls fall to 34,828 and the search does 23.23M function calls instead
-of 25.35M, but the wall time does not move on either bench. **A per-build cache has to
-re-verify its owners' registry records on every read, which costs about what the
-per-owner memo hits cost**, and the fixed per-call frames it adds do not shrink with the
-build. Measured per evaluation against build size, cold build memo, subprocesses
-interleaved so drift lands on both trees:
-
-| items held | 1 | 2 | 3 | 4 | 6 |
-|---|---|---|---|---|---|
-| per-owner fold (current) | 497.6 | 597.6 | 696.0 | 713.4 | 802.7 |
-| per-build fold (tried) | 508.4 | 608.3 | 689.9 | 717.0 | 785.7 |
-
-It wins at six items and loses at one, and a greedy multi-start search evaluates far
-more partial builds than full ones, so the two cancel. Run against each other in a
-quieter session than the row above was captured in, this tree read 2714 and 2720 ms
-best-of-7 against the attempt's 2726 and 2727, and the coupled `mundo_3champ` bench
-4081 against 4109 — the same answer from both, at the same speed. Reverted.
-The only shape that could win is hoisting the fold to the fight — resolving a build's
-buckets once where `held_owners` is resolved and handing them down — which changes
-thirteen selector signatures and is a design change, not a tuning pass.
+**None of the five is a tuning target.** `parse_abilities` and `pre_combat_stats` read
+the build's own stats, so no two evaluations share inputs; `_damage_event_row` is the
+certified event-row schema, whose 15 field reads per row is what the schema costs and
+whose light tuple row already prices at 0.200 µs where a consumer can take it;
+`resolved_item_name` is a validated `item["name"]` at 73 ns, below the cost of memoizing
+it. `behavior_rules`' fold is the one that looked recoverable: a memoized per-build pass
+was measured and does not pay, because a per-build cache re-verifies its owners'
+registry records on every read for about what the per-owner memo hits cost. It lives in
+`6dfef122`, reverted by `3c0d8df4`; `--by-build-size --against <checkout of 6dfef122>`
+reproduces the comparison — it wins at six items, loses at one, and the greedy search
+evaluates far more partial builds than full ones. The only shape that could win hoists
+the fold to the fight, resolving a build's buckets once where `held_owners` is resolved,
+which changes thirteen selector signatures and is a design change, not a tuning pass.
