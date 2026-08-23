@@ -698,6 +698,11 @@ class FightState:
     champion_stats: dict[str, float]
     ability_damages: dict[str, dict[str, Any]]
     items: list[dict[str, Any]]
+    # The same items under the name every declaration fold selects by, in
+    # build order.  Beside ``items`` rather than derived on demand: it is the
+    # same read-only fact in the spelling the catalog is keyed on, and the
+    # folds ask for it dozens of times per fight.
+    held_owners: tuple[str, ...]
     damage_effects: item_effects.BuildDamageEffects
     # The declared strikes this build brings, resolved through their rules.
     # They are not part of the registry's build projection: a projection that
@@ -2801,8 +2806,14 @@ def _resolve_combat_state(
     fight_duration_seconds = config.fight_duration_seconds
     auto_attack_uptime = config.auto_attack_uptime
     is_melee = champion_stats["is_melee"]
+    # The declared families this build brings, under the name every selector
+    # reads.  Resolved before the resistances, because Malignance's
+    # magic-resistance shred is one of the numbers the resistance ladder is
+    # built from — and once, because every selector below asks for the same
+    # list and each rebuild is a name resolution per held item.
+    owners = tuple(item_effects.resolved_item_name(item) for item in items)
     saturated_omnivamp = saturating_stat_percent(
-        [item_effects.resolved_item_name(item) for item in items],
+        owners,
         SustainStat.OMNIVAMP_PERCENT,
         fight_duration_seconds=fight_duration_seconds,
         holder_is_melee=bool(is_melee),
@@ -2818,10 +2829,6 @@ def _resolve_combat_state(
         )
     level = int(champion_stats["level"])
     damage_effects = item_effects.resolve_damage_effects(items)
-    # The declared families this build brings.  Resolved before the
-    # resistances, because Malignance's magic-resistance shred is one of the
-    # numbers the resistance ladder is built from.
-    owners = [item_effects.resolved_item_name(item) for item in items]
     item_cast_procs = cast_proc.resolve_slots(
         owners,
         level=level,
@@ -3045,6 +3052,7 @@ def _resolve_combat_state(
         champion_stats=champion_stats,
         ability_damages=ability_damages,
         items=items,
+        held_owners=owners,
         damage_effects=damage_effects,
         per_hit_strikes=on_hit_strike.per_hit_effects(
             owners,
@@ -3127,9 +3135,7 @@ def _resolve_combat_state(
         roster_target_count=max(1, int(config.roster_target_count)),
         target_class=config.target_class,
         resists=resists,
-        magic_amp=delta_amp.declared_magic_amp(
-            [item_effects.resolved_item_name(item) for item in items]
-        ),
+        magic_amp=delta_amp.declared_magic_amp(owners),
         ability_amp=ability_part_amp[0],
         ability_amp_owner=ability_part_amp[1],
         basic_amp=basic_part_amp[0],
@@ -16952,25 +16958,16 @@ def _hypershot_delta_events(
     )
 
 
-def _held_owners(state: FightState) -> list[str]:
-    """This build's item names in build order — the order a family's fold sums."""
-    return [item_effects.resolved_item_name(item) for item in state.items]
-
-
 def _crit_profile(state: FightState) -> "crit_profile.CritProfile":
     """What this build's crit declarations say — bonus, forced strike, refund."""
-    return crit_profile.declared_crit_profile(_held_owners(state))
+    return crit_profile.declared_crit_profile(state.held_owners)
 
 
 def _amp_slot(
     state: FightState, slot: AmpChainSlot, *extra_owners: str
 ) -> "delta_amp.AmpSlot | None":
-    """The declared amp occupying one chain slot for this build.  ``None``
-    means nothing the build holds declares the slot, an answer and not a zero.
-    ``extra_owners`` carries the keystone, an owner the item list cannot hold."""
-    owners = _held_owners(state)
-    owners.extend(extra_owners)
-    return _amp_slot_for(state, slot, owners)
+    """One chain slot's declared amp, plus the keystone the items cannot hold."""
+    return _amp_slot_for(state, slot, state.held_owners + extra_owners)
 
 
 def _amp_slot_for(
@@ -17657,7 +17654,7 @@ def _add_execute_display(state: FightState) -> None:
     The execute damage is NOT added to the total; the row displays the HP
     threshold at which the target would be executed.
     """
-    execute = damage_routing.declared_execution(_held_owners(state))
+    execute = damage_routing.declared_execution(state.held_owners)
     if execute is not None:
         collector_threshold = state.target_health * execute.threshold
         threshold_pct = (
@@ -18241,7 +18238,7 @@ def calculate_fight_damage(
     # thresholds apply only to their own cast. Item thresholds apply to every
     # authored packet. When both apply, keep the larger threshold.
     if not tuple_ledger:
-        item_execute = damage_routing.declared_execution(_held_owners(state))
+        item_execute = damage_routing.declared_execution(state.held_owners)
         for event in damage_events:
             if not isinstance(event, dict):
                 continue

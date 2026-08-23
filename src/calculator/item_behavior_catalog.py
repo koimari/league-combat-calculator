@@ -6104,21 +6104,37 @@ def registry_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any],
 # ones is also what makes an identity check safe from a recycled ``id()``.
 _BEHAVIOR_RULES_MEMO: dict[
     tuple[int, str],
-    tuple[Any, Any, Any, tuple[BehaviorRule, ...]],
+    tuple[tuple[Any, ...], tuple[int, ...], tuple[BehaviorRule, ...]],
 ] = {}
 
 
-def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
-    """The three registry records *owner*'s rules compile from, read raw.
+def _registry_fingerprint(  # pylint: disable=no-member
+    owners: Sequence[str],
+) -> tuple[tuple[Any, ...], tuple[int, ...]]:
+    """The registry records *owners*' rules compile from, and their addresses.
 
-    Everything :func:`registry_entries` builds is derived from these three.
-    ``None`` where the registry holds nothing or declares no amp-chain slot.
+    Everything :func:`registry_entries` and :func:`rune_amp_entries` build is
+    derived from these, so two compilations agree exactly when these do.  A
+    registry no owner appears in contributes nothing rather than a run of
+    ``None``, so gaining or losing an entry changes the tuple's length.
+
+    Both memos below hold the pair: the records because pinning them is what
+    makes their addresses safe to compare, and the addresses because one
+    tuple comparison answers "same objects?" in C.
     """
-    return (
-        item_effects.ITEM_EFFECTS.get(owner),
-        item_effects.ALLY_ITEM_EFFECTS.get(owner),
-        rune_effects.RUNE_EFFECTS.get(owner) if owner in RUNE_AMP_SLOTS else None,
-    )
+    # ``disable=no-member`` above: astroid infers a dict literal's ``.keys()``
+    # as a list, so it does not know the set view has ``isdisjoint``.
+    records = tuple(map(item_effects.ITEM_EFFECTS.get, owners))
+    ally = item_effects.ALLY_ITEM_EFFECTS
+    if not ally.keys().isdisjoint(owners):
+        records += tuple(map(ally.get, owners))
+    if not RUNE_AMP_SLOTS.keys().isdisjoint(owners):
+        records += tuple(
+            rune_effects.RUNE_EFFECTS.get(owner)
+            for owner in owners
+            if owner in RUNE_AMP_SLOTS
+        )
+    return records, tuple(map(id, records))
 
 
 def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
@@ -6129,23 +6145,19 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     family is not yet migrated also returns no rules, and that is a
     *refusal*, which is why :func:`undeclared_owners` names it.
 
-    Memoized within one cache generation and never across one: the optimizer
-    asks a quarter of a million times per request, and the answer can only
-    change when the registries do.  Both halves of that are checked, the
-    generation counter in the key and the registry records in the value,
-    because ``refresh_item_effects()`` rebuilds without writing a cache file.
+    Memoized within one cache generation and never across one, and checked
+    both ways — the counter in the key, the records in the value — because
+    ``refresh_item_effects()`` rebuilds without writing a cache file.
 
     The re-check is by entry object identity, the memo's one blind spot:
     mutating a live entry in place leaves the same object in the registry, so
     the memo serves its old contents until ``data_version()`` moves.
     """
     key = (data_registry.data_version(), owner)
+    records, addresses = _registry_fingerprint((owner,))
     cached = _BEHAVIOR_RULES_MEMO.get(key)
-    if cached is not None:
-        records = _live_registry_records(owner)
-        if cached[0] is records[0] and cached[1] is records[1]:
-            if cached[2] is records[2]:
-                return cached[3]
+    if cached is not None and cached[1] == addresses:
+        return cached[2]
     entries = registry_entries(owner) + rune_amp_entries(owner)
     rules: list[BehaviorRule] = []
     for registry, family, entry in entries:
@@ -6153,9 +6165,57 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     compiled = tuple(rules)
     data_registry.store_for_generation(
-        _BEHAVIOR_RULES_MEMO, key, _live_registry_records(owner) + (compiled,)
+        _BEHAVIOR_RULES_MEMO, key, (records, addresses, compiled)
     )
     return compiled
+
+
+# One build's compiled rules bucketed by family, keyed by cache generation and
+# the owners in build order.  Keyed and re-verified exactly as the memo above
+# is; bounded by a wholesale clear because its population is *builds* and a
+# search meets thousands, where the memo above meets one entry per item.
+#
+# Bucketing is what makes one pass serve every selector: a build asks a dozen
+# families inside one fight, and a fold per family walked its items a dozen
+# times to answer from a dozen single-family views of the same compilation.
+# A selector that narrows further — to a payload type, a chain rank, a
+# resistance — filters the bucket rather than re-opening the fold.
+_BUILD_RULES_MEMO: dict[
+    tuple[int, tuple[str, ...]],
+    tuple[
+        tuple[Any, ...],
+        tuple[int, ...],
+        Mapping[RuleFamily, tuple[BehaviorRule, ...]],
+    ],
+] = {}
+_BUILD_RULES_MEMO_LIMIT = 512
+
+
+def _build_rules(
+    names: tuple[str, ...],
+) -> Mapping[RuleFamily, tuple[BehaviorRule, ...]]:
+    """Every rule the build *names* declares, bucketed by family in build order."""
+    key = (data_registry.data_version(), names)
+    records, addresses = _registry_fingerprint(names)
+    cached = _BUILD_RULES_MEMO.get(key)
+    if cached is not None and cached[1] == addresses:
+        return cached[2]
+    buckets: dict[RuleFamily, list[BehaviorRule]] = {}
+    for owner in names:
+        for rule in behavior_rules(owner):
+            buckets.setdefault(rule.family, []).append(rule)
+    bucketed = {family: tuple(rules) for family, rules in buckets.items()}
+    if len(_BUILD_RULES_MEMO) > _BUILD_RULES_MEMO_LIMIT:
+        _BUILD_RULES_MEMO.clear()
+    data_registry.store_for_generation(
+        _BUILD_RULES_MEMO, key, (records, addresses, bucketed)
+    )
+    return bucketed
+
+
+def family_rules(owners: Sequence[str], family: RuleFamily) -> tuple[BehaviorRule, ...]:
+    """Every rule of *family* the build *owners* declares, in build order."""
+    return _build_rules(tuple(owners)).get(family, ())
 
 
 def rune_amp_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
@@ -6663,6 +6723,7 @@ __all__ = [
     "declares_runtime_behaviour",
     "declared_tags",
     "entry_families",
+    "family_rules",
     "rune_amp_entries",
     "owners_for",
     "producers_for",

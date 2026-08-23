@@ -30,7 +30,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context, family_rules
 from ..item_effects import DamageSource, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -107,12 +107,7 @@ def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
 
 def active_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every active *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.ACTIVE_CAST
-    )
+    return family_rules(owners, RuleFamily.ACTIVE_CAST)
 
 
 def active_mechanic_id(owner: str) -> str:

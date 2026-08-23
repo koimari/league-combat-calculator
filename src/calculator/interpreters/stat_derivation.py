@@ -37,7 +37,7 @@ from ..item_behavior import (
     STAT_DERIVATION_UNGRANTED_PAYLOADS,
     StatAvailability,
 )
-from ..item_behavior_catalog import behavior_rules
+from ..item_behavior_catalog import family_rules
 from ..value_ref import ValueRefError, resolve, resolve_flat
 
 
@@ -147,10 +147,8 @@ def stat_derivation_rules(
     """Every stat-derivation rule of one shape *owners* bring, in build order."""
     return tuple(
         rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.STAT_DERIVATION
-        and isinstance(rule.payload, payload_type)
+        for rule in family_rules(owners, RuleFamily.STAT_DERIVATION)
+        if isinstance(rule.payload, payload_type)
     )
 
 

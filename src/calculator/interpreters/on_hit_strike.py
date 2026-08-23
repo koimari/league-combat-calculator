@@ -27,7 +27,7 @@ from ..item_behavior import (
     OnHitStrikeRule,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context, family_rules
 from ..item_effects import CLASS_RESTRICTED_ON_HITS, PerHitEffect, damage_source
 from . import damage_formula
 
@@ -140,12 +140,7 @@ def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
 
 def strike_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every on-hit strike *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.ON_HIT_STRIKE
-    )
+    return family_rules(owners, RuleFamily.ON_HIT_STRIKE)
 
 
 def per_hit_effects(

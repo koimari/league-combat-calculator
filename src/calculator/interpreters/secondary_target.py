@@ -27,7 +27,7 @@ from ..item_behavior import (
     RuleFamily,
     SecondaryTargetRule,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context, family_rules
 from ..value_ref import resolve
 
 MAX_TARGETS_FIELD = "secondary_max_targets"
@@ -137,12 +137,7 @@ def resolve_slot(
     ``None`` is an answer and not a zero: the attack hits what it was aimed at
     and no rule had anything to add.
     """
-    rules = tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.SECONDARY_TARGET
-    )
+    rules = family_rules(owners, RuleFamily.SECONDARY_TARGET)
     if not rules:
         return None
     if len(rules) > 1:

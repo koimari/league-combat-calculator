@@ -100,22 +100,42 @@ pre-merge engine replayed with this harness; both rows elect the same build and 
 | tree | median ms | best ms | spread ms | evaluations |
 |---|---|---|---|---|
 | ahri_18_5 @2e5b3da6 (pre-merge main) | 1662.4 | 1627.5 | 144.1 | 3813 |
-| ahri_18_5 | 2852.9 | 2829.1 | 62.1 | 3848 |
+| ahri_18_5 | 2787.4 | 2758.3 | 52.5 | 3848 |
 
-The merged-vs-main gap is 1190 ms, wider than the 819 ms the merge-202 audit recorded
+The merged-vs-main gap is ~1100 ms, wider than the 819 ms the merge-202 audit recorded
 (1584 → 2403 ms). That audit's own two trees replay here at 1627 and 2488 ms best-of-7,
-so the machine has not drifted and the merged search has grown ~340 ms since. The `lean`
-row shape does not reach this path: `optimizer.py:442` calls `run_fight` without
-`score_only`, which only `participant_timeline.py:4256` passes, and forcing it on here
-measures −0.7% with the answer unchanged — the lean adoption is a coupled-path win only.
+so the machine has not drifted. The `lean` row shape does not reach this path:
+`optimizer.py:442` calls `run_fight` without `score_only`, which only
+`participant_timeline.py:4256` passes, and forcing it on measures −0.7% with the answer
+unchanged — the lean adoption is a coupled-path win only.
 
-What remains is the merged engine's per-evaluation cost: 25.4M function calls per search
-against the pre-merge engine's 13.7M for the same evaluation count, 0.74 ms against
-0.44 ms per evaluation. The three terms absent from the pre-merge profile, as shares of
-one warm profiled search: `item_behavior_catalog.behavior_rules` 8% (561,783 calls — one
-per held item per fight, from sixteen interpreter generator expressions, each rebuilding
-`_live_registry_records`), `damage._damage_event_row` 6% (142,974 calls, the certified
-event-row schema) and `item_effects.resolved_item_name` 4% (908,617 calls, 517,435 of
-them from `_item_names`). The largest term that is not merge-specific is
-`champions.engine.parse_abilities` at 10%, re-parsed on every one of the 3848
-evaluations on both engines.
+### Read the per-evaluation budget without the profiler
+
+**cProfile's shares over-weight this engine's small helpers by roughly three to one**,
+because it charges about a microsecond to each call and the merged engine's cost is
+spread across millions of one-line ones. Every share below is a `timeit` best-of-7
+against the whole evaluation, not a profile row; the profile is for *call counts*, which
+it reports exactly. One evaluation is `run_fight` over the elected six-item build,
+809 µs, and 3601 of them are what the search's wall time mostly is:
+
+| term | calls per search | real share of one evaluation |
+|---|---|---|
+| `champions.engine.parse_abilities` | 3,601 | 57 µs, 7.3% (profile: 10%) |
+| `FightParams.pre_combat_stats` | 3,601 | 50 µs, 6.4% |
+| `damage._damage_event_row` | 142,974 | 1.045 µs each, 39 µs, 4.9% (profile: 6%) |
+| `item_behavior_catalog` family folds | 126,161 | 38 µs, 4.7% (profile: 8%) |
+| `item_effects.resolved_item_name` + `_item_names` | 695,245 | 0.073 µs each, 30 µs, 3.8% (profile: 4%) |
+
+Three of the five are not recoverable as tuning. `parse_abilities` and
+`pre_combat_stats` both read the build's own stats, so no two evaluations share inputs.
+`_damage_event_row` is the certified event-row schema — 15 field reads per row is what
+the schema costs, and the light tuple row already prices at 0.200 µs where a consumer
+can take it.
+
+The family folds were: `behavior_rules` was called 561,783 times per search, once per
+held item per fight from thirteen interpreter generator expressions that each re-opened
+the same fold. `item_behavior_catalog.family_rules` is now the one fold, memoized per
+build and bucketed by family, so a build compiles once and each selector reads its
+bucket — 34,828 `behavior_rules` calls, and 25.35M → 23.23M function calls per search.
+Worth −22 µs per evaluation (−2.7%) on the cold-build path the search actually walks,
+which is under this bench's ±3% machine noise: the row above moved, the gap did not.

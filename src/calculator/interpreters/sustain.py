@@ -46,7 +46,7 @@ from ..item_behavior import (
     SustainStat,
     SustainStatRule,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context, family_rules
 from ..value_ref import ValueRefError, resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
@@ -167,9 +167,8 @@ def sustain_rules(
     """Every sustain rule of one shape *owners* bring, in build order."""
     return tuple(
         rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.SUSTAIN and isinstance(rule.payload, payload_type)
+        for rule in family_rules(owners, RuleFamily.SUSTAIN)
+        if isinstance(rule.payload, payload_type)
     )
 
 

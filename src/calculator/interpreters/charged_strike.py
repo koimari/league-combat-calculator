@@ -32,7 +32,7 @@ from ..item_behavior import (
     ShapedChargeRule,
     SwingScheduleRule,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context, family_rules
 from ..item_effects import (
     CooldownProcEffect,
     DamageSource,
@@ -357,12 +357,7 @@ class ChargedStrikeSlots:
 
 def charged_strike_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every charged strike *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.CHARGED_STRIKE
-    )
+    return family_rules(owners, RuleFamily.CHARGED_STRIKE)
 
 
 def resolve_slots(

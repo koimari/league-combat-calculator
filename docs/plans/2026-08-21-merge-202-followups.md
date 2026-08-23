@@ -22,7 +22,7 @@ Delete a row when it lands.
 | Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
 | F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up | #228 |
 | F-5: Vi Blast Shield rider binds to a carrier by ordinal before the walk decides (D-VI-1); the strict xfail is retired for a green denial-receipt test (test_w2_sustain.py:313); walk-side re-anchor to first unblocked cast still needed (old damage.py:1864 pin stale) | #229 |
-| PERF DEBT: measured, not recovered — the merged-vs-main optimize_build gap is 1190 ms, wider than the recorded 819 ms (numbers and profile: `benchmarks.md`, "Optimizer search — `optimize_build`, uncoupled"). `score_only`'s lean shape reaches only the coupled path; the residual is per-evaluation cost in `behavior_rules`, `_damage_event_row` and `resolved_item_name`. Act, or accept and close | #213 |
+| PERF DEBT: acted on, mostly not recoverable — `behavior_rules`' fold is fixed (one memoized per-build pass, 561,783 → 34,828 calls, 25.35M → 23.23M per search) but it is worth only −2.7% per evaluation. The other named terms were re-measured **without** the profiler and are not tuning targets: `parse_abilities` (7.3%) and `pre_combat_stats` (6.4%) read the build's own stats so no two evaluations share inputs, and `_damage_event_row` (4.9%) is the certified schema. cProfile over-weights this engine's one-line helpers ~3×; the real budget table is in `benchmarks.md`. Remaining gap is spread across the fight engine, not in a term | #213 |
 
 ## Coordination note (2026-08-21, from the roadmap-closeout session)
 

@@ -33,7 +33,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context, family_rules
 from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
 
 # The field names a crit-profile rule compiles to.  One per declared number,
@@ -181,12 +181,7 @@ class CritProfile:
 
 def crit_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     """Every crit-profile rule *owners* bring, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.CRIT_PROFILE
-    )
+    return family_rules(owners, RuleFamily.CRIT_PROFILE)
 
 
 def _field(fields: tuple[KernelField, ...], name: str) -> float:

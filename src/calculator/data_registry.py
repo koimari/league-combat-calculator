@@ -183,6 +183,12 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
         "held beside the key so a refresh that rebuilds them without writing "
         "a file misses too"
     ),
+    "calculator.item_behavior_catalog._BUILD_RULES_MEMO": _version_keyed(
+        "one build's compiled rules bucketed by family, holding the same "
+        "registry records the memo above holds and re-verifying every one of "
+        "them by identity on a hit; cleared wholesale past 512 entries "
+        "because its population is builds and a search scores thousands"
+    ),
     "calculator.economy._ITEM_BY_ID_MEMO": _version_keyed(
         "the id-keyed view of the item cache the optimizer prices plans through"
     ),
