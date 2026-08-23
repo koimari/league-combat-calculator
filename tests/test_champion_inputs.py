@@ -68,16 +68,22 @@ def _literal_default(node: ast.AST) -> bool:
     return False
 
 
-def _input_fallback_sites() -> list[str]:
-    """Every ``<input block>.get(key, <literal>)`` under ``champions/``.
+def _input_fallback_sites(root: Path = CHAMPIONS_ROOT) -> list[str]:
+    """Every ``<input block>.get(key, <literal>)`` under ``root``.
 
     Measured here independently of ``behavior_frontier`` — the same rule
     spelled twice, so the assertion does not reduce to "the tool agrees with
     itself" — and the two are asserted equal below.
+
+    ``root`` is a parameter for the same reason ``zero_policy_frontier``
+    takes one: the negative-fixture test plants into a throwaway tree.
+    Planting into the live ``champions/`` package raced every other worker
+    under ``pytest -n auto`` — a parallel scan saw the fixture mid-test and
+    failed on a gate that was working.
     """
     found: list[str] = []
-    for path in sorted(CHAMPIONS_ROOT.rglob("*.py")):
-        module = path.relative_to(CHAMPIONS_ROOT).as_posix()
+    for path in sorted(root.rglob("*.py")):
+        module = path.relative_to(root).as_posix()
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if not (
                 isinstance(node, ast.Call)
@@ -117,21 +123,22 @@ def test_the_gate_measures_the_same_population_this_file_does() -> None:
     )
 
 
-def test_the_assertion_sees_a_planted_site() -> None:
+def test_the_assertion_sees_a_planted_site(tmp_path: Path) -> None:
     """The check goes red on demand rather than being trusted (R-05)."""
-    planted = CHAMPIONS_ROOT / "_zero_policy_negative_fixture.py"
+    planted_root = tmp_path / "champions"
+    planted_root.mkdir()
+    planted = planted_root / "_zero_policy_negative_fixture.py"
     planted.write_text(
         "def read(ctx):\n"
         '    """A stack count nothing wired, defaulted to a literal."""\n'
         '    return ctx.options.get("q_stacks", 4)\n',
         encoding="utf-8",
     )
-    try:
-        sites = _input_fallback_sites()
-    finally:
-        planted.unlink()
+    sites = _input_fallback_sites(planted_root)
     assert any("_zero_policy_negative_fixture.py" in site for site in sites)
+    # Same rule, same instrument, against the shipped package: still clean.
     assert _input_fallback_sites() == []
+    assert list(zero_policy_frontier(planted_root).forbidden_input_fallbacks)
 
 
 def test_every_build_stat_is_a_key_its_producer_really_emits() -> None:
