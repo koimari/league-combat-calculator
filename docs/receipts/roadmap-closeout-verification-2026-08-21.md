@@ -105,12 +105,54 @@ survives any regeneration — the fix that ended the per-patch hash treadmill.
 | full suite | **15,147 passed, 0 failed, 0 xfailed** |
 | CI on `main` | 7/7 jobs green incl. 4 coverage-census shards |
 
+## 5.1 Interactions — the coverage frontier
+
+`scripts/coverage_census.py` sweeps every champion × fight mode, champion ×
+legally-slotted item, champion × keystone, certified-timeline item × enemy
+champion, item-on-enemy, comparison curve and a named BIS sample (~180k
+payload cells) through the real payload boundaries. Every refusal, withhold,
+coarse source or crash it can reach becomes a frontier entry.
+
+| Category | Count |
+|---|---:|
+| `item_pair_coarse` | 96 |
+| every other failure category (mode refusals, kit-coarse, pair failures, keystone failures/unmodeled, certified enemy withholds, crossover unavailable, bis errors, expiry refusals, enemy item entries) | **0 each** |
+| **Frontier total** | **96** |
+| Acknowledged residue rows covering them | 24 |
+
+The gate exits 0, and it fails **two ways** — on a frontier entry no residue
+row acknowledges, and on a residue row whose entry has stopped reproducing —
+so exit 0 proves the acknowledgement is both complete and still live. The
+list can neither grow in silence nor outlive its cause.
+
+All 24 rows belong to one scan, `fimbulwinter_everlasting`, which certifies a
+timed fight only when every damaging ability event carries a reviewed
+crowd-control kind. Each row names the champion, the blocking slots, the
+cached sentence, and precisely what that sentence omits.
+
+**Two distinct reasons sit in that list, and they are not equally permanent:**
+
+- **21 rows — the source is silent.** A slot's hits have no instant the cache
+  states (Ahri's later flames, Akali's recast timing). Authoring a cadence
+  would be inventing data, which the campaign's own banned-shortcuts rule
+  forbids. These cannot close until the source says more.
+- **3 rows — the certification rule refuses a shape the source *does* state**
+  (Aatrox Q/W, Darius R, Yone E). Their own `what_it_omits` text opens with
+  "nothing": Darius R's stack term is one strike whose damage scales with
+  stacks, but certification refuses a repeating part; Yone E's event is built
+  by the fight engine from stored damage, so the module authors no part for a
+  kind to ride; Aatrox's is a fight-window artifact. These are potentially
+  closable by a **rule** change rather than new data — a materially different
+  prospect from the other 21, filed as #240 rather than lumped in.
+
 ## 6. Remaining ledger — known, tracked, not failures
 
 - **6 receipted champion slots** (§1) — each blocked on a named kernel axis or
   an absent source, not on effort.
 - **#216 reviewed-packets gate** — needs a 16.16-current wiki revision sqlite;
   the local copy predates the patch. External input, not a code defect.
+- **#240 residue classification** — 3 of the 24 rows are rule-refusals, not
+  unsourced data (§5.1); a schema/prose split, not a defect.
 - **Coworker's open engine issues** (#217–#236) — ControlScope broadcast,
   QSS-during-stasis, restricted-channel adjudication, Manaflow/Mercurial
   accessor homes, and assorted cleanups. Owned on the engine side per the
