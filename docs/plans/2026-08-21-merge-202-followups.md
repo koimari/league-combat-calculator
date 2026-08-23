@@ -22,7 +22,7 @@ Delete a row when it lands.
 | Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
 | F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up | #228 |
 | F-5: Vi Blast Shield rider binds to a carrier by ordinal before the walk decides (D-VI-1); the strict xfail is retired for a green denial-receipt test (test_w2_sustain.py:313); walk-side re-anchor to first unblocked cast still needed (old damage.py:1864 pin stale) | #229 |
-| PERF DEBT: acted on, answer is **accept and close**. All four named terms re-measured without the profiler (cProfile over-weights this engine's one-line helpers ~2×; budget table in `benchmarks.md`). None is a tuning target: `parse_abilities` 7.3% and `pre_combat_stats` 6.4% read the build's own stats so no two evaluations share inputs, `_damage_event_row` 4.9% is the certified schema, `resolved_item_name` is 73 ns. `behavior_rules`' fold was tried as a memoized per-build pass — 561,783 → 34,828 calls, 25.35M → 23.23M per search — and reverted: it wins at six items, loses at one, and the search evaluates mostly partial builds, so both benches read flat. Only a design change (hoist the fold to the fight) could win | #213 |
+| PERF DEBT: measured — budget table in `benchmarks.md` ("Optimizer search — `optimize_build`, uncoupled"). Decide: accept and close, or take the design change (hoist the per-owner fold to the fight) | #213 |
 
 ## Coordination note (2026-08-21, from the roadmap-closeout session)
 
