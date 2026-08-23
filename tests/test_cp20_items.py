@@ -424,6 +424,96 @@ def test_tear_state_receipt_exposes_timing_triggers_cap_and_minion_boundary():
     assert receipt["helping_hand_minion_damage"] == pytest.approx(5.0)
 
 
+def test_tear_pays_helping_hand_in_a_minion_class_fight():
+    """Tear's Helping Hand is armed by the same declaration Doran's Helm's is.
+
+    Both entries carry ``helping_hand_minion_damage`` and both route it down
+    the one restricted channel, so a minion-class fight arms both.  Manaflow
+    is what makes admitting Tear honest: the ledger reads the fight's own
+    target class, so the 6-mana champion amount is not paid to a minion.
+    """
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.damage import FightConfig, calculate_fight_damage
+
+    champion = get_champion("Ahri")
+    abilities = parse_champion_abilities(champion, 18, 0.0, ability_ranks={"Q": 5})
+    tear = get_item_by_name("Tear of the Goddess")
+
+    def fight(items, target_class):
+        stats = calculate_total_stats(champion, 18, items)
+        return calculate_fight_damage(
+            dict(stats),
+            abilities,
+            list(items),
+            FightConfig(
+                target_health=1000.0,
+                target_armor=0.0,
+                target_magic_resistance=0.0,
+                fight_duration_seconds=5.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+                deterministic=True,
+                target_class=target_class,
+            ),
+        )
+
+    armed = fight([tear], "minion")
+    bare = fight([], "minion")
+    autos = armed["breakdown"]["auto_attacks"]["count"]
+    assert autos > 0
+    assert armed["total_damage"] - bare["total_damage"] == pytest.approx(5.0 * autos)
+    assert armed["breakdown"]["on_hit_minion_Tear of the Goddess"][
+        "total_damage"
+    ] == pytest.approx(5.0 * autos)
+    # A champion-class fight pays nothing and authors no row.
+    champion_fight = fight([tear], "champion")
+    assert "on_hit_minion_Tear of the Goddess" not in champion_fight["breakdown"]
+    assert champion_fight["total_damage"] == pytest.approx(
+        fight([], "champion")["total_damage"]
+    )
+
+
+def test_only_a_retargetable_scope_carries_the_recipient_ramp_stamp():
+    """The stamp is a promise the re-read can happen, so it is only made then.
+
+    ``participant_timeline`` re-reads ``RECIPIENT_RAMP_KEY`` for exactly the
+    scopes in ``RETARGETABLE_SCOPES``; a whole-team scope was already priced
+    at each recipient's own level, so stamping it promised a re-read that
+    could never run.
+    """
+    from src.calculator.item_support_effects import (
+        RECIPIENT_RAMP_KEY,
+        RETARGETABLE_SCOPES,
+    )
+
+    holder = _actor(
+        "main:Ahri",
+        "main",
+        ("Locket of the Iron Solari", "Redemption", "Mikael's Blessing"),
+        item_options={
+            "Locket of the Iron Solari": {"active_seconds": 1.0},
+            "Redemption": {"active_seconds": 1.0},
+            "Mikael's Blessing": {"active_seconds": 1.0},
+        },
+    )
+    ally = _actor("ally:Lulu", "ally", ())
+    packets = derive_item_support_effects(holder, {}, [holder, ally])
+
+    stamped = [p for p in packets if RECIPIENT_RAMP_KEY in p]
+    assert stamped, "the recipient-level ramp must still be stamped somewhere"
+    for packet in stamped:
+        assert packet["target_scope"] in RETARGETABLE_SCOPES
+    # The two whole-team actives are emitted and carry no stamp.
+    team_scoped = [
+        p
+        for p in packets
+        if p.get("target_scope")
+        in {"all_selected_teammates", "redemption_allies_in_radius"}
+    ]
+    assert team_scoped
+    assert all(RECIPIENT_RAMP_KEY not in p for p in team_scoped)
+
+
 # ---------------------------------------------------------------------------
 # Umbral Glaive — Blackout vision state + typed Nightstalker true damage
 # ---------------------------------------------------------------------------

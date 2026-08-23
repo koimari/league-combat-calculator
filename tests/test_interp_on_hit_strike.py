@@ -171,3 +171,72 @@ def test_a_rule_from_another_family_is_refused() -> None:
     )
     with pytest.raises(on_hit_strike.OnHitStrikeInterpretationError):
         on_hit_strike.per_hit_effect(amp, ctx)
+
+
+# ---------------------------------------------------------------------------
+# Class-restricted on-hits: the declaration is the one home for the packet
+# ---------------------------------------------------------------------------
+
+
+def _restricted_owners() -> tuple[str, ...]:
+    """Every registry owner declaring an on-hit restricted to a target class."""
+    return tuple(
+        sorted(
+            name
+            for name in ITEM_EFFECTS
+            if on_hit_strike.class_restricted_packets([name])
+        )
+    )
+
+
+def test_every_entry_carrying_the_channel_declares_the_packet() -> None:
+    """The reviewed set, held to what the registry actually carries.
+
+    Both Helping Hand holders route the same registry key down the same
+    channel, so both pay it.  The set is pinned because a new holder needs
+    its OTHER class clauses reviewed before a minion-class fight may hold it
+    — Tear's Manaflow reads the fight's own class, which is what makes
+    admitting Tear honest.
+    """
+    assert _restricted_owners() == ("Doran's Helm", "Tear of the Goddess")
+    for owner in _restricted_owners():
+        assert "helping_hand_minion_damage" in ITEM_EFFECTS[owner]
+        assert on_hit_strike.adjudicated_target_classes(owner) == frozenset({"minion"})
+
+
+def test_the_declared_amount_is_the_atom_checked_accessor() -> None:
+    """The declaration resolves the same 5.0 the atom-backed accessor does."""
+    from src.calculator.item_effects import dorans_helm_helping_hand_minion_damage
+
+    effects = on_hit_strike.class_restricted_per_hit_effects(
+        ["Doran's Helm"], target_class="minion"
+    )
+    assert len(effects) == 1
+    assert effects[0].source.raw_damage(_inputs()) == pytest.approx(
+        dorans_helm_helping_hand_minion_damage()
+    )
+
+
+def test_a_champion_class_fight_arms_no_restricted_packet() -> None:
+    """No declaration names the champion class, so it arms nothing."""
+    assert (
+        on_hit_strike.class_restricted_per_hit_effects(
+            _restricted_owners(), target_class="champion"
+        )
+        == ()
+    )
+
+
+def test_the_minion_row_is_named_after_the_declaration() -> None:
+    """Row key, label and damage class all follow the channel's packet."""
+    effects = on_hit_strike.class_restricted_per_hit_effects(
+        ["Doran's Helm", "Tear of the Goddess"], target_class="minion"
+    )
+    assert [effect.source.breakdown_key for effect in effects] == [
+        "on_hit_minion_Doran's Helm",
+        "on_hit_minion_Tear of the Goddess",
+    ]
+    for effect in effects:
+        assert effect.target_class == "minion"
+        assert effect.source.damage_type == "physical"
+        assert effect.source.display_name.endswith("(Helping Hand vs minions)")

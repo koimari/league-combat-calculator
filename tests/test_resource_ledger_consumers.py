@@ -179,6 +179,55 @@ def test_tear_missing_hit_identity_fails_closed_with_receipt():
 # ---------------------------------------------------------------------------
 
 
+def test_tear_manaflow_pays_the_fights_own_target_class():
+    """Manaflow's two sourced amounts are picked by the fight's target class.
+
+    "increased to 6 mana if they are a champion" is a class clause the ledger
+    already carried both readings of, and the driver used to pass none — so a
+    minion-class fight banked the champion amount.  Passing the fight's class
+    is what makes admitting Tear into a minion-class fight honest.
+    """
+
+    def banked(target_class):
+        result = run_fight(
+            get_champion("Ahri"),
+            13,
+            [get_item_by_name("Tear of the Goddess")],
+            _params(duration=20.0, target_class=target_class),
+        )
+        tear = result["resource_ledger"]["tear"]
+        accepted = [hit for hit in tear["hits"] if hit["accepted"]]
+        assert accepted
+        assert {hit["target_kind"] for hit in accepted} == {target_class}
+        return sorted({hit["bonus_delta"] for hit in accepted}), tear["bonus_total"]
+
+    assert banked("champion") == ([6.0], 12.0)
+    assert banked("minion") == ([3.0], 6.0)
+
+
+def test_enlighten_runs_the_declaration_and_not_a_second_registry_read():
+    """The three Enlighten numbers have one home: the ``ResourceRestoreRule``.
+
+    ``damage._enlighten_decl_for`` used to read the registry keys directly
+    while the compiled declaration was consumed by nothing — two homes for
+    one schedule.  It now resolves the rule, so the declaration's numbers ARE
+    the ones the ledger schedules.
+    """
+    from src.calculator.damage import _enlighten_decl_for
+    from src.calculator.interpreters.stat_derivation import sole_declared_derivation
+    from src.calculator.item_behavior import ResourceRestoreRule
+
+    items = [get_item_by_name("Lost Chapter")]
+    declaration = _enlighten_decl_for(SimpleNamespace(items=items))
+    slot = sole_declared_derivation(["Lost Chapter"], ResourceRestoreRule)
+    assert slot is not None
+    assert declaration.restore_percent == pytest.approx(slot.value("share_of_maximum"))
+    assert declaration.duration_seconds == pytest.approx(slot.value("duration"))
+    assert declaration.ticks == int(slot.value("ticks"))
+    assert (declaration.restore_percent, declaration.duration_seconds) == (20.0, 3.0)
+    assert declaration.ticks == 3
+
+
 def test_lost_chapter_absent_choice_creates_no_trigger():
     champ = get_champion("Ahri")
     items = [get_item_by_name("Lost Chapter")]

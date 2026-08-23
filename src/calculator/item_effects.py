@@ -1472,10 +1472,11 @@ def item_state_receipts(
             helping_hand_minion_only=True,
             helping_hand_boundary=(
                 "Helping Hand's sourced bonus damage applies to minions only; "
-                "a champion-class target never receives it.  Tear's other "
-                "class clauses are not adjudicated for a minion-class target, "
-                "so a minion-class fight holding Tear fails closed rather "
-                "than pricing this branch."
+                "a champion-class target never receives it.  A minion-class "
+                "fight (FightConfig.target_class='minion') arms the sourced "
+                "on-hit packet on every qualifying basic attack, and Manaflow "
+                "pays that fight the trigger amount rather than the champion "
+                "one."
             ),
             total_mana=max_mana,
         )
@@ -4311,8 +4312,9 @@ def dorans_helm_helping_hand_minion_damage() -> float:
 
     The registry value is validated against the catalog atoms so a stale
     static literal fails closed instead of riding silently.  A champion-class
-    target can never receive the bonus; a minion-class fight arms it as a
-    real on-hit packet through :data:`CLASS_RESTRICTED_ON_HITS`.
+    target can never receive the bonus; a minion-class fight arms it as a real
+    on-hit packet from the item's own ``RestrictedChannelRule`` declaration
+    (``interpreters.on_hit_strike.class_restricted_per_hit_effects``).
     """
     value = sustain_effect_value("Doran's Helm", "helping_hand_minion_damage")
     for atom in _DORANS_HELM_HELPING_HAND_ATOMS.values():
@@ -4335,28 +4337,11 @@ def dorans_helm_helping_hand_minion_damage() -> float:
 TARGET_CLASSES: tuple[str, ...] = ("champion", "minion")
 DEFAULT_TARGET_CLASS = "champion"
 
-# Sourced on-hit branches restricted to ONE target class.  The value is a
-# typed accessor (never a literal), so a parser refresh cannot silently
-# change the packet; the compiled effect is armed only when the fight's
-# ``target_class`` equals the entry's class.
-CLASS_RESTRICTED_ON_HITS: dict[str, dict[str, Any]] = {
-    "Doran's Helm": {
-        # Helping Hand: "Basic attacks deal 5 bonus physical damage on-hit
-        # against minions" (wiki revision 4034679, page 1726898; atom
-        # receipts damage.basic_attack f991d9ce51cb971b / damage.on_hit
-        # 0d448c6a3c15051e / damage.physical 9780d84ddfec7afe).
-        "target_class": "minion",
-        "damage_type": "physical",
-        "value": dorans_helm_helping_hand_minion_damage,
-        "suffix": "Helping Hand vs minions",
-        "breakdown_key": "on_hit_minion_Doran's Helm",
-    },
-}
-
 # Every target-class word a cached effect branch may restrict itself with.
 # A build item whose sourced text carries one of these has a class-specific
-# rule; unless it is adjudicated below, a non-champion-class fight is
-# DENIED rather than silently priced with the champion-class reading.
+# rule; unless the item declares a packet for the fight's class, a
+# non-champion-class fight is DENIED rather than silently priced with the
+# champion-class reading.
 _TARGET_CLASS_CLAUSE_PATTERN = re.compile(
     r"\b(?:non-)?(?:champion|minion|monster|structure|turret)s?\b",
     re.IGNORECASE,
@@ -4380,18 +4365,26 @@ def _cached_effect_text(item_name: str) -> str:
 
 
 def target_class_denials(
-    items: Sequence[Mapping[str, Any]], target_class: str
+    items: Sequence[Mapping[str, Any]],
+    target_class: str,
+    *,
+    adjudicated_classes: Callable[[str], frozenset[str]],
 ) -> tuple[str, ...]:
     """Named fail-closed denials for a non-champion-class fight.
 
     A champion-class fight is the historical model and is never denied.
     For any other class, an equipped item is admitted only when its cached
-    effect text names no target class at all, or when the item is
-    adjudicated in :data:`CLASS_RESTRICTED_ON_HITS` for that class.  Every
-    other class clause (Statikk Shiv's "increased to 90 against
-    non-champions", Blade of the Ruined King's minion/monster caps, every
-    "against champions" restriction) would be priced with the WRONG
-    reading, so the fight is refused with the item and clause named.
+    effect text names no target class at all, or when *adjudicated_classes*
+    reports that the item's own declarations price that class.  Every other
+    class clause (Statikk Shiv's "increased to 90 against non-champions",
+    Blade of the Ruined King's minion/monster caps, every "against champions"
+    restriction) would be priced with the WRONG reading, so the fight is
+    refused with the item and clause named.
+
+    The reader is injected rather than imported: the declarations live above
+    this module (``interpreters.on_hit_strike.adjudicated_target_classes``),
+    and asking for them by parameter is what keeps the one home for "which
+    items pay a class-restricted packet" from growing a copy here.
     """
     if target_class == DEFAULT_TARGET_CLASS:
         return ()
@@ -4404,8 +4397,7 @@ def target_class_denials(
                 f"{target_class}-class fight requires cached source text"
             )
             continue
-        adjudicated = CLASS_RESTRICTED_ON_HITS.get(item_name)
-        if adjudicated is not None and adjudicated["target_class"] == target_class:
+        if target_class in adjudicated_classes(item_name):
             continue
         try:
             text = _cached_effect_text(item_name)
@@ -4788,9 +4780,9 @@ class PerHitEffect:
     superseded_by_ability_proc: bool = False
     # P3-3M: the sourced target class this branch is restricted to
     # ("minion" for Helping Hand).  Empty = no class restriction.  A
-    # restricted effect never rides ``BuildDamageEffects.per_hits``; it
-    # lives in ``class_restricted_per_hits`` and is armed by the fight's
-    # own ``target_class``.
+    # restricted effect never rides the interpreter-owned strike stream; it
+    # is built for the fight's own ``target_class`` by
+    # ``interpreters.on_hit_strike.class_restricted_per_hit_effects``.
     target_class: str = ""
 
 
@@ -4952,11 +4944,6 @@ class StackingPenEffect:
 class BuildDamageEffects:
     """Typed item behaviors compiled once for one fight."""
 
-    # P3-3M: on-hit branches restricted to one target class.  Kept OUT of
-    # the interpreter-owned strike stream so no existing consumer can price
-    # them by accident — only the fight engine's class-aware auto stream
-    # arms them.
-    class_restricted_per_hits: tuple[PerHitEffect, ...] = ()
     auto_cooldowns: tuple[AutoCooldownEffect, ...] = ()
     per_ability_hits: tuple[DamageSource, ...] = ()
     phantom_hit: PhantomHitEffect | None = None
@@ -5012,45 +4999,6 @@ def damage_source(
         event_interval=event_interval,
         same_target_cast_lockout_seconds=same_target_cast_lockout_seconds,
     )
-
-
-def _compile_class_restricted_on_hit(
-    item_name: str,
-    values: Mapping[str, Any],
-) -> PerHitEffect:
-    """Compile one target-class restricted on-hit branch (P3-3M).
-
-    The flat damage comes from the entry's typed accessor, so a stale
-    registry literal fails closed inside the accessor's own atom check
-    instead of riding into a minion fight.
-    """
-    required = _RequiredValues(item_name, values)
-    target_class = str(required.value("target_class"))
-    if target_class not in TARGET_CLASSES:
-        raise ValueError(
-            f"CLASS_RESTRICTED_ON_HITS[{item_name!r}] target_class "
-            f"{target_class!r} is not one of {', '.join(TARGET_CLASSES)}"
-        )
-    damage_type = required.value("damage_type")
-    accessor = required.value("value")
-    amount = float(accessor())
-    if amount <= 0.0:
-        raise ValueError(
-            f"CLASS_RESTRICTED_ON_HITS[{item_name!r}] resolved a "
-            f"non-positive on-hit value {amount!r}"
-        )
-
-    def raw(_inputs: DamageInputs) -> float:
-        return amount
-
-    source = damage_source(
-        item_name,
-        damage_type,
-        raw,
-        suffix=str(required.value("suffix")),
-        breakdown_key=str(required.value("breakdown_key")),
-    )
-    return PerHitEffect(source, target_class=target_class)
 
 
 def _compile_auto_cooldown(
@@ -5232,7 +5180,6 @@ def _resolve_damage_effects_uncached(
     items: Sequence[Mapping[str, Any]],
 ) -> BuildDamageEffects:
     """Compile a build's registered damage behaviors from the live registry."""
-    class_restricted_per_hits: list[PerHitEffect] = []
     auto_cooldowns: list[AutoCooldownEffect] = []
     per_ability_hits: list[DamageSource] = []
     phantom_hit: PhantomHitEffect | None = None
@@ -5248,11 +5195,6 @@ def _resolve_damage_effects_uncached(
         if effect_type not in _KNOWN_EFFECT_TYPES:
             raise ValueError(
                 f"ITEM_EFFECTS[{item_name!r}] has unknown effect type {effect_type!r}"
-            )
-        restricted = CLASS_RESTRICTED_ON_HITS.get(item_name)
-        if restricted is not None:
-            class_restricted_per_hits.append(
-                _compile_class_restricted_on_hit(item_name, restricted)
             )
         if effect_type == "ult_empowered_autos":
             # The window itself is a declared charged strike; what stays here
@@ -5300,7 +5242,6 @@ def _resolve_damage_effects_uncached(
             )
 
     return BuildDamageEffects(
-        class_restricted_per_hits=tuple(class_restricted_per_hits),
         auto_cooldowns=tuple(auto_cooldowns),
         per_ability_hits=tuple(per_ability_hits),
         phantom_hit=phantom_hit,
