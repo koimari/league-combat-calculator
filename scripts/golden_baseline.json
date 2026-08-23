@@ -52939,14 +52939,14 @@
       "numeric_leaves": 46189,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "28b859fcded305deb01cdfa2f69bde754cc61522",
+    "git_head": "13941323668e32a160d71f43bd9d1912785180c7",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "fea8a83f1021346982670a0d554e1e9fc1d07db2"
+    "src_tree_sha": "f9e4a1b5f11b1a8a94beee464f8b6e59af143563"
   },
   "registered_champion_fights": {
     "Aatrox": {

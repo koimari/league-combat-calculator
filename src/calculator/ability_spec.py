@@ -372,38 +372,50 @@ NON_IMMOBILIZING_CC_KINDS = frozenset(
     {"slow", "cripple", "silence", "blind", "polymorph", "berserk"}
 )
 
-# Every value a module may author as a part's ``cc_kind``. "none" is an
-# explicit reviewed no-CC result. Anything else is a typo the engine rejects —
-# a misspelled kind must never author a no-op stun.
+# The reviewed *absence* of control, and the one vocabulary member that is
+# not a control kind: it reaches the classifiers as the empty kind.
+NO_CONTROL_KIND = "none"
+
+# Every value a module may author as a part's ``cc_kind`` — the ONE
+# vocabulary. Every other crowd-control set in the calculator is a
+# classification over this one and must stay closed and total over it
+# (tests/test_cc_kind_vocabulary.py is the guard). Anything outside it is a
+# typo the engine rejects — a misspelled kind must never author a no-op stun.
 CC_KIND_VOCABULARY = (
-    IMMOBILIZING_CC_KINDS | NON_IMMOBILIZING_CC_KINDS | frozenset({"none"})
+    IMMOBILIZING_CC_KINDS | NON_IMMOBILIZING_CC_KINDS | frozenset({NO_CONTROL_KIND})
 )
 
+# The Wiki's Airborne class: one forced displacement, named by the umbrella
+# ("airborne") or by the subtype a module actually authors. An item whose
+# tooltip carves out "Airborne" carves out all four, so the umbrella is
+# resolved here rather than re-spelled at each cleanse declaration.
+# https://wiki.leagueoflegends.com/en-us/Airborne
+DISPLACEMENT_CC_KINDS = frozenset({"airborne", "knockback", "knockup", "pull"})
 
-# The predicate that reads a raw row against the two constants above lives
-# in ``trigger_stream``, not here: authoring vocabulary belongs beside
-# ``DamagePart``, classification is transport.  This module keeps the
-# vocabulary and nothing that reads an event with it.
+
+def cc_kind_reviewed(kind: str | None) -> bool:
+    """Whether ``cc_kind`` is a reviewed classification — ``"none"`` included."""
+    return kind is not None and str(kind).lower().strip() in CC_KIND_VOCABULARY
+
+
+# The predicate that reads a raw event row against these classifications
+# lives in ``trigger_stream``, not here: authoring vocabulary belongs
+# beside ``DamagePart``, classification is transport.  This module keeps
+# the vocabulary and nothing that reads an event with it.
 
 # These control types stop a champion from taking a normal action for the
-# authored interval. Slow effects stay outside this set because they change
-# movement, not the ability to act.
-ACTION_BLOCKING_CC_KINDS = frozenset(
-    {
-        "airborne",
-        "charm",
-        "fear",
-        "immobilize",
-        "knockback",
-        "knockup",
-        "polymorph",
-        "root",
-        "sleep",
-        "stun",
-        "suppression",
-        "taunt",
-    }
-)
+# authored interval: every immobilize, plus the two kinds that lock a
+# champion's actions while it keeps moving — polymorph, and Renata's
+# berserk (a berserked champion's actions are the enemy's).
+# https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
+ACTION_BLOCKING_CC_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"polymorph", "berserk"})
+
+# The other half of the same classification: real control the target keeps
+# acting under. Slows change movement, cripple attack speed, blind the
+# outcome of a swing and silence the ability to cast — none of them is
+# action downtime. The two halves must partition the vocabulary
+# (tests/test_cc_kind_vocabulary.py), so a new kind cannot arrive unclassified.
+NON_BLOCKING_CC_KINDS = frozenset({"blind", "cripple", "silence", "slow"})
 
 
 @dataclass(frozen=True)
@@ -542,8 +554,29 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
         )
 
 
+class ControlScope(Enum):
+    """How many of the fight's enemies one authored control holds.
+
+    The roster evaluates the same damage package against every selected
+    enemy, so a control with no recipient of its own lands on all of them.
+    That is the area answer, and the wrong one for a targeted cast: Lulu's
+    Whimsy is cast "onto the target enemy champion".
+
+    ``ONE_TARGET`` is allocated exactly as a target-limited item proc is —
+    to the lowest roster index — so one enemy holds the control and the
+    rest of the roster is scored without it.
+    """
+
+    EVERY_TARGET = "every_target"
+    ONE_TARGET = "one_target"
+
+    def reaches(self, roster_target_index: int) -> bool:
+        """Whether the pair fight against this roster index holds the control."""
+        return self is ControlScope.EVERY_TARGET or roster_target_index == 0
+
+
 @dataclass(frozen=True)
-class ControlEvent:
+class ControlEvent:  # pylint: disable=too-many-instance-attributes
     """One authored control interval without a damage packet.
 
     Damage parts carry control metadata when damage and control land together.
@@ -559,10 +592,15 @@ class ControlEvent:
     count: int = 1
     hit_interval: float | None = None
     skillshot: bool = False
+    #: Who the control lands on.  Unscoped means every enemy the cast hit,
+    #: which is the area cast's reviewed answer.
+    scope: ControlScope = ControlScope.EVERY_TARGET
 
     def __post_init__(self) -> None:
         if not self.kind.strip():
             raise ValueError("ControlEvent kind must be a non-empty string")
+        if not isinstance(self.scope, ControlScope):
+            raise ValueError("ControlEvent scope must be a ControlScope")
         if self.duration <= 0.0:
             raise ValueError("ControlEvent duration must be positive")
         if self.magnitude < 0.0:
@@ -588,4 +626,6 @@ class ControlEvent:
             extras += f", hit_interval={self.hit_interval}"
         if self.skillshot:
             extras += ", skillshot=yes"
+        if self.scope is not ControlScope.EVERY_TARGET:
+            extras += f", scope={self.scope.value}"
         return f"ControlEvent({self.kind!r}, duration={self.duration}" f"{extras})"

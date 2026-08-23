@@ -123,6 +123,9 @@ from .item_behavior import (
     Resistance,
     ResistanceShredRule,
     ResourceDrainRule,
+    ResourceRestoreRule,
+    RestrictedChannel,
+    RestrictedChannelRule,
     RULE_FAMILY_COUNT,
     RuleFamily,
     Scaling,
@@ -132,6 +135,7 @@ from .item_behavior import (
     ShieldAbsorbs,
     ShieldBypassRule,
     SpellbladeRule,
+    STAT_CHANNEL_PAYLOADS,
     StackedStatRule,
     StackGate,
     StackRamp,
@@ -1481,6 +1485,11 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         "max_stack_omnivamp": RuleFamily.SUSTAIN,
         "max_mana_to_ad_ratio": RuleFamily.STAT_DERIVATION,
         "ultimate_haste": RuleFamily.STAT_DERIVATION,
+        # Slay's omnivamp, hung on an entry tagged for the sustain the
+        # vampirism is: what the mechanic *grants* is a stat that grows per
+        # takedown stack, so the stacked-stat shape is where it is declared
+        # and the sustain tag keeps naming the wiki's own reading.
+        "slay_omnivamp_per_takedown": RuleFamily.STAT_DERIVATION,
         # Where an item's cached percent armour penetration lands, hung on an
         # entry whose tag names the amplifier the item is bought for.  Lord
         # Dominik's Giant Slayer and its bonus-armour channel are two
@@ -4072,10 +4081,11 @@ def _saturating_stat_rules(
 # sustain rule on purpose rather than by a parse failure.
 SUSTAIN_DECLARED_ELSEWHERE: Mapping[str, str] = {
     "slay_omnivamp_per_takedown": (
-        "declared as the bounded ``slay_stacks`` scenario control and the "
-        "state receipt it arms (``item_effects.item_state_receipts``); "
-        "takedown-driven stacks are not pre-fight-projectable, so no sustain "
-        "formula may resolve them"
+        "declared as the stacked omnivamp grant of the stat-derivation "
+        "family, whose per-stack shape carries both of Slay's ceilings; a "
+        "takedown is not pre-fight-projectable, so the stacks arrive as the "
+        "bounded ``slay_stacks`` scenario control rather than from a sustain "
+        "formula resolving them"
     ),
 }
 
@@ -5466,6 +5476,21 @@ STACKED_STATS: Mapping[str, StackedStatSchema] = {
         None,
         StatAvailability.BUILD_OPTION,
     ),
+    # Slay's per-takedown omnivamp: both ceilings, because the registry states
+    # both and they are different claims — ten stacks, and the six percent
+    # those ten come to.  A takedown is not pre-fight-projectable, so the
+    # stacks arrive as the bounded scenario control.
+    "slay_omnivamp_per_takedown": StackedStatSchema(
+        DerivedStat.OMNIVAMP_PERCENT,
+        None,
+        "slay_max_stacks",
+        None,
+        "slay_max_omnivamp",
+        None,
+        None,
+        None,
+        StatAvailability.BUILD_OPTION,
+    ),
 }
 
 
@@ -5545,6 +5570,23 @@ ACTIVE_WINDOW_CAST_ECONOMY_KEYS = (
     "basic_cooldown_progress_multiplier",
     "mana_made_real_duration",
 )
+# A share of the holder's maximum resource, restored over a window in a stated
+# number of ticks.  Signature key first, as every group here.
+RESOURCE_RESTORE_KEYS = (
+    "enlighten_restore_percent",
+    "enlighten_duration_seconds",
+    "enlighten_ticks",
+)
+
+# Which key states a number no stat block holds, and which channel it
+# reaches.  Keyed by the registry key rather than by the item, so both
+# entries carrying Helping Hand declare the one mechanic and a fight whose
+# target class arms it arms both — which is what keeps "who pays this" from
+# being a second name list beside the declaration.
+RESTRICTED_CHANNELS: Mapping[str, RestrictedChannel] = {
+    "summoner_spell_haste": RestrictedChannel.SUMMONER_SPELL_HASTE,
+    "helping_hand_minion_damage": RestrictedChannel.MINION_CLASS_ON_HIT,
+}
 
 # Entries this family's tags claim whose *whole* mechanic another family
 # already declares, keyed by the signature key that proves it.  The same
@@ -5564,22 +5606,6 @@ STAT_DERIVATION_DECLARED_ELSEWHERE: Mapping[str, str] = {
     "health_threshold": (
         "declared as the threshold defence the resolver builds, together with "
         "the omnivamp its own Lifeline grants"
-    ),
-    "enlighten_restore_percent": (
-        "declared as the typed level-up restoration rule the resource ledger "
-        "schedules (``resource_ledger``); the restore is a mana event over a "
-        "sourced duration, never a number the stat block holds"
-    ),
-    "summoner_spell_haste": (
-        "declared as the named boundary its state receipt carries "
-        "(``item_effects.item_state_receipts``): the champion fight model has "
-        "no summoner-spell action state, so the haste is never an ability-haste "
-        "grant the stat block holds"
-    ),
-    "helping_hand_minion_damage": (
-        "declared as the class-restricted on-hit a minion-class fight arms "
-        "(item_effects.CLASS_RESTRICTED_ON_HITS); a champion-class target "
-        "never receives it and the stat block never holds it"
     ),
 }
 
@@ -5866,6 +5892,26 @@ def _keyed_stat_rules(
                 ),
             )
         )
+    if RESOURCE_RESTORE_KEYS[0] in schema:
+        share, duration, ticks = RESOURCE_RESTORE_KEYS
+        rules.append(
+            _stat_rule(
+                owner,
+                registry,
+                "resource_restore",
+                ResourceRestoreRule(
+                    granted=DerivedStat.MANA,
+                    share_of_maximum=ValueRef(registry, owner, share),
+                    duration=ValueRef(registry, owner, duration),
+                    ticks=ValueRef(registry, owner, ticks),
+                    # The level-up the restore is paid on is a moment the
+                    # fixed-level model cannot produce, so the request states
+                    # it or nothing is restored at all.
+                    availability=StatAvailability.BUILD_OPTION,
+                    subject=Subject.HOLDER,
+                ),
+            )
+        )
     if ACTIVE_WINDOW_CAST_ECONOMY_KEYS[0] in schema:
         cost, cooldown_progress, window = ACTIVE_WINDOW_CAST_ECONOMY_KEYS
         rules.append(
@@ -5888,6 +5934,27 @@ def _keyed_stat_rules(
             )
         )
     return rules
+
+
+def _restricted_channel_rules(
+    owner: str, registry: ValueRegistry, schema: frozenset[str]
+) -> list[BehaviorRule]:
+    """Every number one entry sends to a channel this model does not run."""
+    return [
+        _stat_rule(
+            owner,
+            registry,
+            f"{channel.value}_channel",
+            RestrictedChannelRule(
+                channel=channel,
+                amount=ValueRef(registry, owner, key),
+                availability=StatAvailability.ALWAYS,
+                subject=Subject.HOLDER,
+            ),
+        )
+        for key, channel in RESTRICTED_CHANNELS.items()
+        if key in schema
+    ]
 
 
 def _penetration_channel_rule(
@@ -5955,6 +6022,7 @@ def _compile_stat_derivation(
     rules.extend(_stacked_stat_rules(owner, registry, entry, schema))
     rules.extend(_flat_stat_grant_rules(owner, registry, entry, schema))
     rules.extend(_keyed_stat_rules(owner, registry, schema))
+    rules.extend(_restricted_channel_rules(owner, registry, schema))
     if ARMOR_PENETRATION_CHANNEL_KEY in schema:
         rules.append(_penetration_channel_rule(owner, registry, entry))
     if not rules:
@@ -6113,7 +6181,7 @@ def rune_amp_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any],
 
 def declares_runtime_behaviour(rule: BehaviorRule) -> bool:
     """Whether a compiled rule says its owner *does* something in a fight."""
-    return not isinstance(rule.payload, PenetrationChannelRule)
+    return not isinstance(rule.payload, STAT_CHANNEL_PAYLOADS)
 
 
 def rule_owners() -> frozenset[str]:

@@ -72,6 +72,7 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from .ability_spec import DISPLACEMENT_CC_KINDS
 from .crowd_control_eligibility import KNOWN_CONTROL_KINDS
 from .delivery_eligibility import stable_event_key
 from .item_effects import ally_item_effect_value
@@ -828,8 +829,35 @@ def truncate_intervals(
 #: Kinds a cleanse cannot be cast under (self-scope castability rule).
 #: Sourced from the wiki Cleanse atom + client binary flags: QSS and
 #: Mercurial carry canCastWhileDisabled and cannotBeSuppressed; Mikael's
-#: 3222Active carries neither.
-CAST_BLOCKING_CONTROL_KINDS: frozenset[str] = frozenset({"suppression"})
+#: 3222Active carries neither.  The atom's own wording — "castable while
+#: disabled, but not under suppression/stasis" — names both, and the wiki
+#: Stasis entry agrees: stasis "will prevent the activation of abilities
+#: that would usually remove crowd control effects".
+CAST_BLOCKING_CONTROL_KINDS: frozenset[str] = frozenset({"stasis", "suppression"})
+
+#: Kinds no cleanse removes, whatever its item declares — the wiki Stasis
+#: entry: "Cannot be removed by any means (except through death)".  This is
+#: a property of the kind, not of the item, so it lives here once instead of
+#: in every declaration's carve-out tuple.
+#: https://wiki.leagueoflegends.com/en-us/Stasis
+NEVER_CLEANSABLE_CONTROL_KINDS: frozenset[str] = frozenset({"stasis"})
+
+#: Words an item tooltip carves out that no champion module can author, so
+#: they never match an interval.  They stay in the declarations because the
+#: declaration IS the sourced transcription of the tooltip; naming them here
+#: is what keeps them from reading as a drifted kind
+#: (tests/test_cc_kind_vocabulary.py).
+TOOLTIP_ONLY_CONTROL_KINDS: frozenset[str] = frozenset({"disarm", "nearsight"})
+
+
+def resolve_excluded_kinds(declared: Iterable[str]) -> frozenset[str]:
+    """The kinds a declaration's carve-out protects — the ONE reader of
+    ``excluded_control_kinds``, so the umbrella cannot resolve two ways.
+    """
+    kinds = frozenset(str(kind) for kind in declared)
+    if kinds & DISPLACEMENT_CC_KINDS:
+        kinds |= DISPLACEMENT_CC_KINDS
+    return kinds | NEVER_CLEANSABLE_CONTROL_KINDS
 
 
 def _control_entries(interval: Mapping[str, Any]) -> dict[str, Any]:
@@ -865,7 +893,9 @@ class CleanseEligibility:
         return str(self.declaration.get("item", ""))
 
     def _excluded(self) -> frozenset[str]:
-        return frozenset(self.declaration.get("excluded_control_kinds", ()))
+        return resolve_excluded_kinds(
+            self.declaration.get("excluded_control_kinds", ())
+        )
 
     def _scope(self) -> str:
         return str(self.declaration.get("target_scope", ""))
@@ -876,7 +906,7 @@ class CleanseEligibility:
             "item": self._item(),
             "active_name": self.declaration.get("active_name"),
             "target_scope": self._scope(),
-            "excluded_control_kinds": list(self._excluded()),
+            "excluded_control_kinds": sorted(self._excluded()),
             "cooldown_seconds": self.declaration.get("cooldown_seconds"),
             "cooldown_source_gap": bool(self.declaration.get("cooldown_source_gap")),
             "source": self.source.public() if self.source is not None else None,
@@ -1191,5 +1221,6 @@ __all__ = [
     "merged_interval_duration",
     "merged_spans",
     "resolve_cleanse_item",
+    "resolve_excluded_kinds",
     "truncate_intervals",
 ]

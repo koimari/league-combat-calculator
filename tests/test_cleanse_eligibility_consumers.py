@@ -310,17 +310,114 @@ def test_mercurial_cleanse_and_movement_are_separate_effects():
     assert result["target"]["action_downtime"] == pytest.approx(0.5)
 
 
-def test_a_control_with_no_cleanse_declaration_fails_closed_at_the_walk():
-    """``pull`` is a real control kind the cleanse table does not carry."""
+def test_a_pull_survives_quicksilver_as_the_displacement_it_is():
+    """F-9: ``pull`` used to fail closed as ``unknown_control``.
+
+    The Wiki files a pull under Airborne, and Quicksilver's tooltip carves
+    Airborne out — so the interval survives for the game's reason, named
+    (``excluded_control_kind``), not because the kernel had never heard of
+    the kind.  An excluded kind still spends the activation.
+    """
     result = _run(
         [_control(1.0, "pull", 2.0)],
         [_cleanse(1.5)],
     )
     receipt = result["target"]["cleanse"]
-    assert receipt["decision"]["reason"] == "unknown_control"
+    assert receipt["decision"]["reason"] == "excluded_control_kind"
+    assert receipt["rejected_controls"][0]["reason"] == "excluded_control_kind"
     assert receipt["removed_controls"] == []
     assert result["target"]["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
-    assert result["target"]["cleanse_use"]["uses_after"] == 1  # not consumed
+    assert result["target"]["cleanse_use"]["uses_after"] == 0  # spent
+
+
+def test_the_walk_truncates_exactly_what_the_kernel_decided():
+    """The walk resolves the carve-out through
+    ``cleanse_eligibility.resolve_excluded_kinds``, so the Airborne
+    umbrella cannot mean one thing to the decision and another to the
+    ledgers.  A mixed activation is the only shape that shows it: an
+    excluded-only one denies before any truncation runs.
+    """
+    result = _run(
+        [
+            _control(0.5, "knockup", 2.5, source="Q", sequence=0),
+            _control(0.5, "stun", 2.5, source="W", sequence=1),
+        ],
+        [_cleanse(1.0, sequence=2)],
+    )
+    decision = result["target"]["cleanse"]["decision"]
+    assert decision["reason"] == ""
+    assert [
+        (row["control_kind"], row["end"]) for row in decision["intervals_after"]
+    ] == [
+        ("knockup", pytest.approx(3.0)),
+        ("stun", pytest.approx(1.0)),
+    ]
+    # The walk's own ledger, which the view republishes, says the same.
+    assert result["target"]["crowd_control_intervals"] == [
+        {
+            "recipient": "target",
+            "kind": "knockup",
+            "start": 0.5,
+            "end": 3.0,
+            "source": "Q",
+        },
+        {
+            "recipient": "target",
+            "kind": "stun",
+            "start": 0.5,
+            "end": 1.0,
+            "source": "W",
+        },
+    ]
+    assert result["target"]["crowd_control_until"] == pytest.approx(3.0)
+    assert result["target"]["action_downtime"] == pytest.approx(2.5)
+
+
+def test_a_stasis_downtime_row_survives_a_cleanse_inside_its_window():
+    """Stasis is never cleansable, and the downtime ledger is where the
+    only stasis row lives (the kernel is handed crowd-control intervals
+    only, so it never sees one).  Truncating the downtime ledger with a
+    set that forgot the rule silently ate a Time Stop.
+    """
+    stasis = {
+        "time": 0.8,
+        "kind": "stasis",
+        "amount": 0.0,
+        "duration": 1.5,
+        "attacker": "target",
+        "target": "target",
+        "source": "Zhonya's Hourglass — Time Stop",
+        "source_key": "Zhonya's Hourglass — Time Stop",
+        "utility_kind": "stasis",
+        "sequence": 5,
+        "_event_id": "stasis-5",
+    }
+    result = _run(
+        [_control(0.5, "stun", 2.5, source="W", sequence=0)],
+        [stasis, _cleanse(1.0, sequence=1)],
+    )
+    target = result["target"]
+    assert target["cleanse"]["decision"]["reason"] == ""
+    assert target["action_downtime_intervals"] == [
+        {
+            "recipient": "target",
+            "kind": "stun",
+            "start": 0.5,
+            "end": 1.0,
+            "source": "W",
+        },
+        {
+            "recipient": "target",
+            "kind": "stasis",
+            "start": 0.8,
+            "end": 2.3,
+            "source": "Zhonya's Hourglass — Time Stop",
+        },
+    ]
+    # [0.5, 1.0) ∪ [0.8, 2.3) is one 1.8 s block, and it agrees with the
+    # stasis window the state ledger kept.
+    assert target["action_downtime"] == pytest.approx(1.8)
+    assert target["stasis_until"] == pytest.approx(2.3)
 
 
 def test_a_kind_outside_the_vocabulary_never_reaches_the_walk():

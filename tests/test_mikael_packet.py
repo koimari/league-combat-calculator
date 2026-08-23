@@ -41,7 +41,8 @@ Contract pinned (typed source-backed values):
   named ValueErrors.  Boundary: 30.0 is schema-valid but a 30.0 activation
   in a shorter fight is skipped with the named "outside_window" reason.
 * Selected-ally targeting: the packet targets the selected teammate
-  (support_target_selections override honored; default roster order);
+  (support_target_selections override honored; default roster order) and is
+  priced at THAT ally's level, not at the first teammate's;
   target_scope "explicit_selected_ally"; NO teammates -> no packet (fail
   closed).
 * Cleanse decision + exclusions: an eligible control (stun/root/charm)
@@ -629,6 +630,31 @@ def test_packet_targets_the_selected_ally_and_override_is_honored():
     assert survival_of(overridden, "ally:Jinx")["healing_received"] == 0.0
 
 
+def test_heal_is_priced_at_the_selected_allys_own_level():
+    """The TARGET's level is the level of the ally the packet lands on, not
+    of the roster's first teammate.  With a level-1 Jinx and a level-18 Ashe
+    the default selection heals 100 and index 1 heals 250."""
+    allies = [_ally("Jinx", level=1), _ally("Ashe", level=18)]
+    default = _calculate(_main(enemies=[_enemy()], allies=allies))
+    (first,) = _purify_events(default)
+    assert first["target"] == "ally:Jinx"
+    assert first["amount"] == pytest.approx(
+        ally_item_level_value(MIKAELS, "heal_min", "heal_max", 1)
+    )
+
+    overridden = _calculate(
+        {
+            **_main(enemies=[_enemy()], allies=allies),
+            "support_target_selections": {f"heal:{MIKAELS_SOURCE}": 1},
+        }
+    )
+    (second,) = _purify_events(overridden)
+    assert second["target"] == "ally:Ashe"
+    assert second["amount"] == pytest.approx(
+        ally_item_level_value(MIKAELS, "heal_min", "heal_max", 18)
+    )
+
+
 def test_no_teammates_fails_closed():
     """Without a teammate roster Mikael's authors NO Purify packet and NO
     receipts (fail closed) — the item is present and the option is set,
@@ -780,7 +806,9 @@ def test_supported_controls_are_removed(kind):
     [
         ("airborne", "excluded_control_kind"),
         ("suppression", "excluded_control_kind"),
-        ("pull", "unknown_control"),
+        # F-9: a pull is an Airborne subtype, so Purify's "except Airborne"
+        # carve-out reaches it.  It used to read ``unknown_control``.
+        ("pull", "excluded_control_kind"),
     ],
 )
 def test_excluded_kinds_fail_closed_with_named_reason(kind, reason):
@@ -830,21 +858,21 @@ def test_soft_kinds_never_create_downtime(kind):
     assert target["cleanse"]["heal"]["amount"] == pytest.approx(100.0)
 
 
-def test_a_control_the_cleanse_table_does_not_carry_does_not_consume():
-    """``flee`` is a real control kind with no cleanse declaration: it
-    fails closed with the named unknown_control reason, truncates nothing,
-    and does NOT consume a use."""
+def test_purify_removes_a_flee():
+    """F-9: ``flee`` is the Wiki's own name for a fear, and Purify removes
+    every crowd control its tooltip does not carve out.  It used to fail
+    closed as ``unknown_control`` — one hand-written cleanse vocabulary
+    that had never heard of a kind champion modules may author."""
     result = _simulate([_control(1.0, "flee", 2.0)], [_purify(1.5)])
     target = result["target"]
     receipt = target["cleanse"]
-    assert receipt["decision"]["reason"] == "unknown_control"
-    assert receipt["removed_controls"] == []
-    assert target["crowd_control_intervals"][0]["end"] == pytest.approx(3.0)
-    assert target["action_downtime"] == pytest.approx(2.0)
-    # unknown_control does not consume the use (committed semantics).
+    assert receipt["decision"]["reason"] == ""
+    assert receipt["removed_controls"][0]["control_kind"] == "flee"
+    assert target["crowd_control_intervals"][0]["end"] == pytest.approx(1.5)
+    assert target["action_downtime"] == pytest.approx(0.5)
     caster = result["caster"]
     assert caster["cleanse_use"]["uses_before"] == 1
-    assert caster["cleanse_use"]["uses_after"] == 1
+    assert caster["cleanse_use"]["uses_after"] == 0
 
 
 def test_a_kind_outside_the_vocabulary_never_reaches_the_cleanse_layer():

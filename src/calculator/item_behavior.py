@@ -1810,6 +1810,97 @@ class PenetrationChannelRule:
     subject: Subject
 
 
+class RestrictedChannel(Enum):
+    """A channel a sourced item number reaches that no stat block holds.
+
+    The champion-versus-champion stat block is not a member, and that is the
+    point: a number declared here is real and sourced, and what the
+    declaration says is that it lands somewhere the block does not — so
+    reading it into an ability haste pool or a champion-class on-hit packet
+    would be the silent mis-channelling this enum refuses.
+
+    A member either runs nowhere this model reaches at all, or runs only for
+    a fight whose own target class selects it; which of the two is
+    :data:`RESTRICTED_CHANNEL_PACKETS`, not a reader's memory.
+    """
+
+    SUMMONER_SPELL_HASTE = "summoner_spell_haste"
+    MINION_CLASS_ON_HIT = "minion_class_on_hit"
+
+
+@dataclass(frozen=True, slots=True)
+class RestrictedPacket:
+    """The damage row a restricted channel becomes when its class is the fight's.
+
+    Declared beside the channel rather than on the rule, because it is the
+    *channel's* shape: every entry routing a number down one channel pays the
+    same row, and a copy on each rule would be that many chances to disagree.
+    It says the row's target class, its damage class and the passive it
+    previews — never its number, which stays the rule's own ``amount``.
+    """
+
+    target_class: str
+    damage_class: DamageClass
+    mechanic: str
+
+
+# Which channels are a real packet, and what that packet is.  Total over the
+# enum — a member with no packet says ``None`` out loud — because "does this
+# channel arm anything" decided by a lookup miss is how a sourced number
+# starts riding a fight nobody declared it for.
+RESTRICTED_CHANNEL_PACKETS: dict[RestrictedChannel, RestrictedPacket | None] = {
+    RestrictedChannel.SUMMONER_SPELL_HASTE: None,
+    RestrictedChannel.MINION_CLASS_ON_HIT: RestrictedPacket(
+        target_class="minion",
+        damage_class=DamageClass.PHYSICAL,
+        mechanic="Helping Hand",
+    ),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class RestrictedChannelRule:
+    """Where a sourced number lands when no stat block holds its channel.
+
+    The sibling of :class:`PenetrationChannelRule`: both say only *which
+    channel* a number reaches and neither puts anything in the block, which
+    is why neither counts as runtime behaviour there.  The difference is that
+    a penetration channel picks between two stat-block fields, and here the
+    channel is outside the block entirely — Ionian Insight's haste pays
+    summoner spells and Helping Hand's bonus damage pays minions.
+
+    ``amount`` is carried rather than dropped so the sourced number has a
+    declared home with its receipt, instead of living only in a sentence
+    beside the entry.  Whether the channel is armed by any fight at all, and
+    what row it becomes there, is the channel's own answer in
+    :data:`RESTRICTED_CHANNEL_PACKETS`.
+    """
+
+    channel: RestrictedChannel
+    amount: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceRestoreRule:
+    """A share of the holder's maximum resource restored over a sourced window.
+
+    Three references because the mechanic answers three questions: what share
+    of the maximum it restores, over how long, and in how many ticks.  The
+    tick count is declared rather than divided out of the duration, because
+    the registry states it and a derived count would silently re-time the
+    schedule whenever either of the other two moved.
+    """
+
+    granted: DerivedStat
+    share_of_maximum: AnyValueRef
+    duration: AnyValueRef
+    ticks: AnyValueRef
+    availability: StatAvailability
+    subject: Subject
+
+
 @dataclass(frozen=True, slots=True)
 class ManaflowRule:
     """The charge ledger that accrues permanent bonus mana.
@@ -2552,11 +2643,23 @@ RulePayload = Union[
     ManaSpentHealRule,
     RegenerationRule,
     ReceivedHealingRule,
+    BelowHalfHealingRule,
+    StatConversionRule,
+    StatMultiplierRule,
+    PenetrationChannelRule,
+    RestrictedChannelRule,
+    ResourceRestoreRule,
+    ManaflowRule,
+    StackedStatRule,
+    FlatStatGrantRule,
+    StatAuraRule,
+    ThresholdRegenRule,
+    UltimateRefundRule,
+    ActiveWindowCastEconomyRule,
     OpeningDefenseRule,
     ThresholdDefenseRule,
     CombatStateRule,
     ReactiveRule,
-    ActiveWindowCastEconomyRule,
 ]
 
 # Which family each payload type belongs to.  One entry per payload; each
@@ -2596,6 +2699,8 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     StatConversionRule: RuleFamily.STAT_DERIVATION,
     StatMultiplierRule: RuleFamily.STAT_DERIVATION,
     PenetrationChannelRule: RuleFamily.STAT_DERIVATION,
+    RestrictedChannelRule: RuleFamily.STAT_DERIVATION,
+    ResourceRestoreRule: RuleFamily.STAT_DERIVATION,
     ManaflowRule: RuleFamily.STAT_DERIVATION,
     StackedStatRule: RuleFamily.STAT_DERIVATION,
     FlatStatGrantRule: RuleFamily.STAT_DERIVATION,
@@ -3242,6 +3347,10 @@ STAT_DERIVATION_REQUIRED_REFERENCES: dict[type, tuple[str, ...]] = {
     # A channel carries no number: the percentage it routes is a cached stat
     # and the declaration says only where it lands.
     PenetrationChannelRule: (),
+    # A restricted channel does carry its number, because no stat block holds
+    # it: the declaration is the number's only home.
+    RestrictedChannelRule: ("amount",),
+    ResourceRestoreRule: ("share_of_maximum", "duration", "ticks"),
     ManaflowRule: (
         "charge_interval",
         "bonus_mana_per_trigger",
@@ -3274,6 +3383,8 @@ STAT_DERIVATION_OPTIONAL_REFERENCES: dict[type, tuple[str, ...]] = {
     StatConversionRule: ("basis_unit", "flat_base"),
     StatMultiplierRule: (),
     PenetrationChannelRule: (),
+    RestrictedChannelRule: (),
+    ResourceRestoreRule: (),
     ManaflowRule: ("max_charges", "transform_bonus_mana"),
     StackedStatRule: (
         "max_stacks",
@@ -3297,12 +3408,25 @@ STAT_DERIVATION_PAYLOADS: tuple[type, ...] = tuple(STAT_DERIVATION_REQUIRED_REFE
 STAT_DERIVATION_TARGET_PAYLOADS: tuple[type, ...] = (StatAuraRule,)
 
 # The payloads that grant no stat at all: an ultimate cooldown refund moves a
-# cooldown and an active window's cast economy moves a cost and a cooldown
-# progression, and naming a DerivedStat for either would invent a stat the
+# cooldown, an active window's cast economy moves a cost and a cooldown
+# progression, and a restricted channel's number lands off the block
+# altogether.  Naming a DerivedStat for any of them would invent a stat the
 # block does not hold.  Named for the same reason as the row above.
 STAT_DERIVATION_UNGRANTED_PAYLOADS: tuple[type, ...] = (
     UltimateRefundRule,
     ActiveWindowCastEconomyRule,
+    RestrictedChannelRule,
+)
+
+# The payloads that only say where a number lands and schedule nothing.  The
+# payload-level twin of ``item_behavior_catalog.STAT_CHANNEL_TAGS``, and what
+# ``declares_runtime_behaviour`` reads: a channel schedules nothing itself —
+# either the fight already holds its number as a cached stat, or only a fight
+# whose own target class selects the channel arms it — so no champion-class
+# fight gains runtime behaviour from an item whose whole entry is one.
+STAT_CHANNEL_PAYLOADS: tuple[type, ...] = (
+    PenetrationChannelRule,
+    RestrictedChannelRule,
 )
 
 
@@ -3350,6 +3474,14 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
     ):
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a conversion names the stat it reads"
+        )
+    if isinstance(payload, RestrictedChannelRule) and not isinstance(
+        payload.channel, RestrictedChannel
+    ):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a restricted channel names the channel its "
+            "number reaches; an unnamed one is the mis-channelling the "
+            "declaration exists to refuse"
         )
     if not isinstance(payload, STAT_DERIVATION_UNGRANTED_PAYLOADS) and not isinstance(
         getattr(payload, "granted", None), DerivedStat
@@ -3779,6 +3911,7 @@ __all__ = [
     "PostMitigationHealRule",
     "Probe",
     "ProcTrigger",
+    "RESTRICTED_CHANNEL_PACKETS",
     "RULE_FAMILY_COUNT",
     "RampModel",
     "RampPerSecond",
@@ -3795,9 +3928,14 @@ __all__ = [
     "Resistance",
     "ResistanceShredRule",
     "ResourceDrainRule",
+    "ResourceRestoreRule",
+    "RestrictedChannel",
+    "RestrictedChannelRule",
+    "RestrictedPacket",
     "RuleFamily",
     "RulePayload",
     "SCALING_TYPES",
+    "STAT_CHANNEL_PAYLOADS",
     "STAT_DERIVATION_OPTIONAL_REFERENCES",
     "STAT_DERIVATION_PAYLOADS",
     "STAT_DERIVATION_REQUIRED_REFERENCES",

@@ -497,6 +497,10 @@ def test_the_passive_is_not_compiled_into_any_damage_packet():
         holder_is_melee=True,
     )
     assert on_hit_strike.per_hit_effects(owners, **resolution) == ()
+    assert (
+        on_hit_strike.class_restricted_per_hit_effects(owners, target_class="minion")
+        == ()
+    )
     assert active_cast.active_sources(owners, **resolution) == ()
     charged = charged_strike.resolve_slots(owners, **resolution)
     assert charged.shaped_charges == ()
@@ -504,7 +508,6 @@ def test_the_passive_is_not_compiled_into_any_damage_packet():
     assert procs.cooldown_procs == ()
 
     resolved = resolve_damage_effects([_boots()])
-    assert resolved.class_restricted_per_hits == ()
     assert resolved.per_ability_hits == ()
     assert resolved.phantom_hit is None
     assert damage_routing.declared_execution(owners) is None

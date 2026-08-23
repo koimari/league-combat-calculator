@@ -1344,8 +1344,6 @@ AUTHORED_DECLARATION = frozenset(
         ("champions/volibear.py", "parse", "dict.get", '"name"', 1),
         ("champions/volibear.py", "parse", "dict.get", '"rank"', 1),
         ("champions/volibear.py", "parse", "or-default", '"rank"', 1),
-        # Warwick's hunger-share default retired 2026-08-21: the producer
-        # always publishes the key, so absence now raises.
         ("champions/zac.py", "parse", "or-default", '"parts"', 1),
         ("champions/zed.py", "_death_mark", "dict.get", '"total_raw"', 1),
         ("champions/zed.py", "_death_mark", "or-default", '"total_raw"', 1),

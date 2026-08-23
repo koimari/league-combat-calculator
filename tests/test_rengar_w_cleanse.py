@@ -1068,23 +1068,50 @@ class TestCrowdControlAndSuppression:
         assert result["main"]["cleanse_use"]["uses_after"] == 1
 
     def test_rengar_unknown_control_fails_closed(self):
-        # P2-6 contract: a control kind the cleanse table has no entry for
-        # fails closed at the activation with the named unknown_control
-        # denial, and nothing is truncated.
+        # P2-6 contract: a kind the classifier does not know fails closed
+        # at the activation with the named unknown_control denial, and
+        # nothing is truncated.
         #
-        # MERGE: the fixture kind is "cripple" rather than "dance".  A kind
-        # outside CC_KIND_VOCABULARY is now refused a whole layer earlier --
-        # the walk compiler raises rather than authoring a no-op stun (see
-        # the guard below) -- so it can no longer reach this kernel.
-        # "cripple" is a real authored kind that KNOWN_CONTROL_KINDS does
-        # not carry, which is exactly the case this contract is about.
+        # F-9: no *authored* kind can reach that branch any more — the
+        # cleanse's known set IS ability_spec.CC_KIND_VOCABULARY, and a
+        # kind outside the vocabulary is refused a whole layer earlier
+        # (the walk compiler raises, see the guard below).  The contract is
+        # therefore pinned at the kernel, where an interval carrying a kind
+        # from nowhere is the only way to reach it.
+        decision = CleanseEligibility(
+            declaration=CHAMPION_CLEANSE_DECLARATIONS["Rengar W"]
+        ).decide(
+            SimpleNamespace(
+                time=1.5,
+                source_key="Rengar W",
+                sequence=0,
+                event_id="w:0",
+                target=0,
+                holder=0,
+                active_controls=[
+                    {"kind": "mesmerize", "start": 1.0, "end": 3.0, "source": "E"}
+                ],
+            )
+        )
+        assert decision.reason == "unknown_control"
+        assert decision.eligible is False
+        assert decision.removed_controls == []
+
+    def test_rengar_cripple_is_soft_control_the_roar_never_sees(self):
+        # F-9: cripple is an attack-speed slow — real reviewed control, but
+        # not action downtime, so the walk arms no interval for it and
+        # Battle Roar reports control_not_active rather than pretending it
+        # removed something.  It used to read unknown_control, and the
+        # cripple used to add downtime it does not cause.
         result = _kernel_survival(
             controls=[_control_packet(1.0, "cripple", 2.0, source="E")],
             cleanses=[_rengar_cleanse_packet(1.5, 0)],
         )
         cleanse = result["main"]["cleanse"]
-        assert cleanse["decision"]["reason"] == "unknown_control"
+        assert cleanse["decision"]["reason"] == "control_not_active"
         assert cleanse["removed_controls"] == []
+        assert result["main"]["crowd_control_intervals"] == []
+        assert result["main"]["action_downtime"] == pytest.approx(0.0)
 
     def test_a_kind_outside_the_vocabulary_never_reaches_the_kernel(self):
         # The stricter half of the same fail-closed rule: a misspelled kind

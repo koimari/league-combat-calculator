@@ -1941,8 +1941,26 @@ def diff_snapshots(path, old, new, diffs):
         diffs.append(f"{path}: {_format_value(old)} -> {_format_value(new)}")
 
 
+def require_committed_src():
+    """Refuse to stamp a capture with a tree it did not read.
+
+    ``snapshot_provenance`` records ``git rev-parse HEAD:src``, so a capture
+    on a dirty or mid-merge ``src/`` reads one tree and names another — a
+    receipt no checkout can ever re-verify.  ``compare`` stays ungated: it
+    writes nothing, and running it mid-work is the point.
+    """
+    status = _git("status", "--porcelain", "--", "src")
+    if status:
+        raise SystemExit(
+            "capture refused: src/ differs from HEAD, so the recorded "
+            "src_tree_sha would name a tree this capture did not read. "
+            "Commit src/ first.\n" + status
+        )
+
+
 def capture(outfile):
     """Capture the pair-engine snapshot to ``outfile``."""
+    require_committed_src()
     started = time.perf_counter()
     snapshot = build_snapshot()
     Path(outfile).write_text(
@@ -1969,6 +1987,7 @@ def coupled_scenarios_for(*, exact):
 
 def capture_coupled_file(outfile, *, exact=False):
     """Capture the coupled roster baseline (or its exact per-attacker totals)."""
+    require_committed_src()
     started = time.perf_counter()
     snapshot = capture_coupled(
         coupled_scenarios_for(exact=exact),

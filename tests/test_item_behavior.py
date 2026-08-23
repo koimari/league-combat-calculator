@@ -13,6 +13,7 @@ a second vocabulary.
 import ast
 from dataclasses import replace
 from pathlib import Path
+from typing import get_args
 
 import pytest
 
@@ -28,13 +29,17 @@ from src.calculator.item_behavior import (
     EngineLane,
     Fixed,
     KernelField,
+    PAYLOAD_FAMILY,
     POLICY_IDENTIFIER_FIELDS,
     Persist,
     Pool,
+    RESTRICTED_CHANNEL_PACKETS,
     RULE_FAMILY_COUNT,
     ReceiptOnly,
     ReceiptScope,
+    RestrictedChannel,
     RuleFamily,
+    RulePayload,
     SUBJECT_AUTHORITY,
     Subject,
     TRIGGER_STREAM,
@@ -171,6 +176,26 @@ def test_an_undeclared_payload_type_is_refused() -> None:
     """A payload PAYLOAD_FAMILY does not know is a family nobody assigned."""
     with pytest.raises(BehaviorRuleError, match="not a declared"):
         validate_rule(_rule(payload=object()))
+
+
+def test_the_payload_union_names_every_payload_a_family_claims() -> None:
+    """``RulePayload`` and ``PAYLOAD_FAMILY`` are one roster, not two.
+
+    ``PAYLOAD_FAMILY`` is what the validator enforces and ``RulePayload`` is
+    what the type of ``BehaviorRule.payload`` says; a payload in one and not
+    the other is a shape the runtime accepts and the annotation denies, so a
+    reader and a checker disagree about what a rule may hold.
+    """
+    assert set(PAYLOAD_FAMILY) - {BehaviorRule} == set(get_args(RulePayload))
+
+
+def test_every_restricted_channel_names_its_packet_or_none() -> None:
+    """``RESTRICTED_CHANNEL_PACKETS`` is total over ``RestrictedChannel``.
+
+    ``on_hit_strike`` indexes the map with a rule's channel; a member missing
+    from it is a ``KeyError`` mid-fight instead of a refusal at declaration.
+    """
+    assert set(RESTRICTED_CHANNEL_PACKETS) == set(RestrictedChannel)
 
 
 def test_a_receipt_only_rule_states_its_cause() -> None:

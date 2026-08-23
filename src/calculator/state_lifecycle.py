@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Any, Literal, Mapping
 
-from .ability_spec import ACTION_BLOCKING_CC_KINDS
+from .ability_spec import IMMOBILIZING_CC_KINDS
 
 # Floating-point tolerance shared with the damage/survival walks.  All
 # kernel comparisons use the same 1e-9 convention as the engine receipts.
@@ -214,14 +214,14 @@ class CcTriggerRule:
 
     Everlasting fires only from an explicitly authored immobilize, or a
     slow for a melee holder.  ``immobilize_kinds`` is the sourced
-    action-blocking vocabulary (``ability_spec.ACTION_BLOCKING_CC_KINDS``);
-    a bare ``crowd_control`` flag is intentionally NOT enough to
-    distinguish the immobilize/slow branches.
+    immobilize vocabulary (``ability_spec.IMMOBILIZING_CC_KINDS``, the one
+    home the trigger bus already reads); a bare ``crowd_control`` flag is
+    intentionally NOT enough to distinguish the immobilize/slow branches.
     """
 
     name: str
     immobilize_kinds: frozenset[str] = field(
-        default_factory=lambda: frozenset(ACTION_BLOCKING_CC_KINDS)
+        default_factory=lambda: frozenset(IMMOBILIZING_CC_KINDS)
     )
     slow_kind: str = "slow"
     slow_melee_only: bool = True

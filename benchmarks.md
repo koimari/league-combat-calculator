@@ -82,3 +82,65 @@ returns the same answer, only faster.
 `syndra_mandate_3champ` is the outlier and only part of its −41% is this campaign's: the
 same scenario re-measured at the campaign base in the close session read 5671 ms, so
 −20% is code and the rest was load on the machine that took the `7bb9701e` capture.
+
+## Optimizer search — `optimize_build`, uncoupled
+
+```bash
+python scripts/bench_optimize_build.py            # table
+python scripts/bench_optimize_build.py --profile  # cProfile one warm search
+```
+
+Ahri level 18, five legendary slots, target 2000 HP / 50 armor / 40 MR — the scenario
+`tests/test_optimizer.py`'s smoke cap drives, and the one every figure in that cap's
+docstring was measured on. Warm process, `deterministic=True`, engine-reported
+`optimization_time_ms`, median of 7 after one warmup. `@2e5b3da6` is the retired
+pre-merge engine replayed with this harness; both rows elect the same build and the same
+5653.5 score, so the search returns the same answer either way.
+
+| tree | median ms | best ms | spread ms | evaluations |
+|---|---|---|---|---|
+| ahri_18_5 @2e5b3da6 (pre-merge main) | 1662.4 | 1627.5 | 144.1 | 3813 |
+| ahri_18_5 | 2852.9 | 2829.1 | 62.1 | 3848 |
+
+The merged-vs-main gap is 1190 ms, wider than the 819 ms the merge-202 audit recorded
+(1584 → 2403 ms). That audit's own two trees replay here at 1627 and 2488 ms best-of-7,
+so the machine has not drifted. The `lean` row shape does not reach this path:
+`optimizer._evaluate_build_uncached` calls `run_fight` without `score_only`, which only
+`participant_timeline._score_with_search_context` passes, and forcing it on measures
+−0.7% with the answer unchanged — the lean adoption is a coupled-path win only.
+
+### Read the per-evaluation budget without the profiler
+
+```bash
+python scripts/bench_optimize_build.py --budget         # the table below
+python scripts/bench_optimize_build.py --by-build-size  # per-evaluation µs by items held
+```
+
+**cProfile's shares over-weight this engine's small helpers by roughly two to one**,
+because it charges about a microsecond to every call and the merged engine's cost is
+spread across millions of one-line ones. `--budget` takes *call counts* from the
+profile, which it reports exactly, and *shares* from `timeit` best-of-7 against the
+whole evaluation. One evaluation is `run_fight` over the elected six-item build —
+800 µs, and 3601 of them are most of the search's wall time:
+
+| term | calls per search | real share of one evaluation | profile said |
+|---|---|---|---|
+| `champions.engine.parse_abilities` | 3,601 | 57 µs, 7.3% | 10% |
+| `FightParams.pre_combat_stats` | 3,601 | 50 µs, 6.4% | — |
+| `damage._damage_event_row` | 142,974 | 1.045 µs each, 39 µs, 4.9% | 6% |
+| `item_behavior_catalog.behavior_rules` folds | 561,783 | 49 µs, 6.1% | 8% |
+| `item_effects.resolved_item_name` + `_item_names` | 908,617 | 0.073 µs each, 30 µs, 3.8% | 4% |
+
+**None of the five is a tuning target.** `parse_abilities` and `pre_combat_stats` read
+the build's own stats, so no two evaluations share inputs; `_damage_event_row` is the
+certified event-row schema, whose 15 field reads per row is what the schema costs and
+whose light tuple row already prices at 0.200 µs where a consumer can take it;
+`resolved_item_name` is a validated `item["name"]` at 73 ns, below the cost of memoizing
+it. `behavior_rules`' fold is the one that looked recoverable: a memoized per-build pass
+was measured and does not pay, because a per-build cache re-verifies its owners'
+registry records on every read for about what the per-owner memo hits cost. It lives in
+`6dfef122`, reverted by `3c0d8df4`; `--by-build-size --against <checkout of 6dfef122>`
+reproduces the comparison — it wins at six items, loses at one, and the greedy search
+evaluates far more partial builds than full ones. The only shape that could win hoists
+the fold to the fight, resolving a build's buckets once where `held_owners` is resolved,
+which changes thirteen selector signatures and is a design change, not a tuning pass.

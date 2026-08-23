@@ -17,7 +17,13 @@ import re
 from dataclasses import dataclass, replace
 from typing import Any, Callable
 
-from ..ability_spec import ControlEvent, DamagePart, Disposition, ZeroPolicy
+from ..ability_spec import (
+    ControlEvent,
+    ControlScope,
+    DamagePart,
+    Disposition,
+    ZeroPolicy,
+)
 from .attribute_classifier import (
     classify_damage_type,
     is_damage_attribute,
@@ -1392,6 +1398,7 @@ def park_control_interval(
     *,
     time_offset: float | None = 0.0,
     magnitude: float = 0.0,
+    scope: ControlScope = ControlScope.EVERY_TARGET,
 ) -> None:
     """Park a sourced control interval for ``MODULE_CC`` to name.
 
@@ -1402,6 +1409,7 @@ def park_control_interval(
             "duration": float(duration),
             "time_offset": time_offset,
             "magnitude": float(magnitude),
+            "scope": scope,
         },
     )
 
@@ -1417,6 +1425,7 @@ def with_control_event(
     ranks: str = "rank",
     time_offset: float | None = 0.0,
     effect_index: int = 0,
+    scope: ControlScope = ControlScope.EVERY_TARGET,
 ) -> SlotParser:
     """Add one sourced control event, including to a utility-only slot.
 
@@ -1452,6 +1461,10 @@ def with_control_event(
 
     ``magnitude_attr`` sources the control's strength -- a slow's percent --
     off a named leveling attribute, through the same validated catalog.
+
+    ``scope`` names who the control lands on; the default reaches every
+    enemy the cast hit, which is the area answer (see
+    :class:`ability_spec.ControlScope`).
     """
     if kind is not None and not kind.strip():
         raise ValueError("with_control_event kind must be a non-empty string")
@@ -1513,7 +1526,11 @@ def with_control_event(
             }
         if kind is None:
             park_control_interval(
-                entry, duration, time_offset=time_offset, magnitude=magnitude
+                entry,
+                duration,
+                time_offset=time_offset,
+                magnitude=magnitude,
+                scope=scope,
             )
         else:
             controls = list(entry.get("control_events", ()))
@@ -1524,6 +1541,7 @@ def with_control_event(
                     magnitude=magnitude,
                     time_offset=time_offset,
                     skillshot=False,
+                    scope=scope,
                 )
             )
             entry["control_events"] = tuple(controls)

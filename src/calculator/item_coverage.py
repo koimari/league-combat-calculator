@@ -231,12 +231,13 @@ class ItemCoverage:
 # (``item_behavior_catalog.declares_runtime_behaviour``) — a compiled rule *is*
 # declared runtime behaviour, so an item holding one and sitting here would
 # assert two contradictory things at once.  A member may hold a registry entry
-# whose whole content is where one of its *cached stats* lands; that
-# declaration schedules nothing.
+# whose whole content is a *channel* — where a cached stat lands, or a
+# class-restricted packet no champion-class fight arms; coverage scores
+# champion-class candidates, so a channel adds no runtime behaviour here.
 NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions "
-    "(a minion-class fight arms it through CLASS_RESTRICTED_ON_HITS); the "
-    "full Wiki entry has no champion-facing sustain branch.",
+    "(a minion-class fight arms it from the item's own restricted-channel "
+    "declaration); the full Wiki entry has no champion-facing sustain branch.",
     "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
     "Mosstomper Seedling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
@@ -1192,12 +1193,15 @@ def _mechanic_list(rules: tuple[BehaviorRule, ...]) -> str:
 
     The mechanic's own name and never the item's: the receipt says *what* is
     priced, and the item is already the subject of the sentence around it.
+    A channel prices nothing, so it names nothing here — the same test the
+    family census reads, rather than a second opinion about one payload.
     """
     return ", ".join(
         sorted(
             {
                 rule.mechanic_id.rsplit(".", 1)[-1].replace("_", " ").title()
                 for rule in rules
+                if declares_runtime_behaviour(rule)
             }
         )
     )

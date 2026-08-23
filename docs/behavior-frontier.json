@@ -7,7 +7,7 @@
       "counter_1": 20
     },
     "calculator/damage.py": {
-      "counter_1": 18
+      "counter_1": 16
     },
     "calculator/interaction_effects.py": {
       "counter_1": 3
@@ -17,7 +17,7 @@
       "counter_2": 18
     },
     "calculator/item_effects.py": {
-      "class_c": 527
+      "class_c": 526
     },
     "calculator/item_outcomes.py": {
       "class_c": 44
@@ -65,7 +65,6 @@
       "Doran's Blade": [
         "sustain"
       ],
-      "Doran's Helm": [],
       "Doran's Ring": [
         "sustain"
       ],
@@ -78,18 +77,13 @@
       "Fimbulwinter": [
         "ally_packet"
       ],
-      "Gluttonous Greaves": [],
       "Immortal Path": [
         "sustain"
-      ],
-      "Ionian Boots of Lucidity": [],
-      "Lost Chapter": []
+      ]
     },
     "scope": "survival_ledger_transition",
     "symbol": "interpreters.compilability_for",
-    "undeclared_base": [
-      "counter_3 is not yet 0: Doran's Helm, Gluttonous Greaves, Ionian Boots of Lucidity, Lost Chapter carry a registry entry no family declares, so the declaration base this fold reads is knowingly incomplete."
-    ]
+    "undeclared_base": []
   },
   "counters": {
     "counter_1": {
@@ -97,7 +91,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 59
+      "value": 57
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -111,7 +105,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.2-3.7",
       "target": 0,
-      "value": 4
+      "value": 0
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
@@ -313,7 +307,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 812
+      "sites": 811
     },
     "class_d_non_behavioural": {
       "modules": {
@@ -447,8 +441,8 @@
       "counter_1": {
         "bound": 0,
         "criterion": "criterion 1: runtime item-name dispatch reaches zero",
-        "gap": 59,
-        "measured": 59,
+        "gap": 57,
+        "measured": 57,
         "met": false,
         "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
       },
@@ -463,10 +457,10 @@
       "counter_3": {
         "bound": 0,
         "criterion": "criterion 2: every registry entry declares a rule or a reviewed NO_RUNTIME_BEHAVIOR",
-        "gap": 4,
-        "measured": 4,
-        "met": false,
-        "owed_to": "post-merge lane: undeclared registry entries (frontier-open-debts.json)"
+        "gap": 0,
+        "measured": 0,
+        "met": true,
+        "owed_to": ""
       },
       "counter_4/pair_engine": {
         "bound": 0,

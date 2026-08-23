@@ -5229,6 +5229,49 @@ def test_search_context_score_walk_matches_legacy_score_receipts():
     assert len(context.panels) == 2, "expected one shared and one new signature"
 
 
+# The three entries whose only declaration is a channel or a level-up restore.
+# Each is `Compilable`, so a build holding one enters the compiled score walk
+# instead of falling back — which is a claim about numbers, pinned below.
+_CHANNEL_ONLY_ITEMS = (
+    "Lost Chapter",
+    "Doran's Helm",
+    "Ionian Boots of Lucidity",
+)
+
+
+@pytest.mark.parametrize("item_name", _CHANNEL_ONLY_ITEMS)
+def test_channel_only_items_score_identically_on_the_compiled_walk(item_name):
+    """A channel-only holder takes the compiled walk and scores the same.
+
+    ``compilability_for`` is keyed on family and lane and never on a payload,
+    so an entry whose whole declaration is a restricted channel, a penetration
+    channel or a level-up resource restore answers ``Compilable`` — the build
+    stops falling back to the legacy composition and rides the compiled score
+    walk instead.  That the two agree is what makes the answer safe, so both
+    halves are asserted: no refusal is named, and the compiled result
+    deep-equals the uncompiled one.
+    """
+    from src.calculator.interpreters import uncompilable_item_receipt
+    from src.calculator.participant_timeline import CoupledSearchContext
+
+    items = [get_item_by_name(item_name)]
+    assert uncompilable_item_receipt(items) is None
+
+    timeline = _coupled_fixture()
+    context = CoupledSearchContext()
+    compiled = timeline(
+        items,
+        pair_result_cache={},
+        search_context=context,
+        include_receipt=False,
+    )
+    # A silent fallback would make the equality below trivially true, so the
+    # compiled panel has to exist before the numbers are compared.
+    assert context.panels, "the build did not reach the compiled walk"
+    assert not context.uncompilable
+    assert compiled == timeline(items, include_receipt=False)
+
+
 def test_noxian_reactive_shield_is_granted_after_matching_damage_only():
     source = _dummy_combatant("source", "enemy", health=1000.0)
     target = Combatant(

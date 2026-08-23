@@ -19,12 +19,10 @@ The walk reuses ``delivery_eligibility.DefenseWindow`` +
 CONTRACT API THIS MATRIX COMMITS THE OWNER TO (six separation concerns):
 
 1. CONTROL CLASSIFICATION
-   - ``CONTROL_BLOCKING_KINDS``: the sourced hard set, mirroring
-     ``ability_spec.ACTION_BLOCKING_CC_KINDS`` (airborne, charm, fear,
-     immobilize, knockback, knockup, polymorph, root, sleep, stun,
-     suppression, taunt).
-   - ``CONTROL_SOFT_KINDS``: declared non-blocking kinds (blind, disarm,
-     ground, silence, slow) — known, never eligible.  Silence is authored
+   - ``ability_spec.ACTION_BLOCKING_CC_KINDS``: the sourced hard set —
+     every immobilize plus polymorph and berserk.
+   - ``ability_spec.NON_BLOCKING_CC_KINDS``: the other half (blind,
+     cripple, silence, slow) — known, never eligible.  Silence is authored
      by champion modules but excluded from ACTION_BLOCKING_CC_KINDS, so the
      contract classifies it as known-and-non-blocking, never unknown.
    - ``classify_control(action) -> ControlProfile(kind, blocking, unknown,
@@ -223,11 +221,6 @@ def _enemy(
 ) -> dict:
     enemy: dict = {"champion": champion, "level": 18, "items": []}
     enemy["ability_ranks"] = ranks or {"Q": 0, "W": 0, "E": 5, "R": 0}
-    if champion == "Lulu":
-        # Whimsy is one cast with two exclusive branches (cached effects[1]
-        # enemy polymorph vs effects[2] self/ally attack speed); these
-        # fixtures are about the control, so they cast it on the enemy.
-        enemy["champion_options"] = {"lulu_whimsy_target": "enemy"}
     if cast is not None:
         enemy["cast_order"] = cast
     return enemy
@@ -238,9 +231,14 @@ def _ahri_e() -> dict:
     return _enemy("Ahri", ranks={"Q": 0, "W": 0, "E": 5, "R": 0})
 
 
-def _lulu_qw() -> dict:
-    """Lulu Glitterlance (magic) + Whimsy polymorph (control-only)."""
-    return _enemy("Lulu", ranks={"Q": 5, "W": 5, "E": 0, "R": 0})
+def _veigar_qe() -> dict:
+    """Veigar Baleful Strike (magic) + Event Horizon stun (control-only).
+
+    The control-only half has to reach the shielded ALLY, so it must be an
+    area cast: a targeted one is allocated to the roster's first defender
+    (the main champion) and never reaches Lux at all.
+    """
+    return _enemy("Veigar", ranks={"Q": 5, "W": 0, "E": 5, "R": 0})
 
 
 def _two_allies() -> list[dict]:
@@ -555,46 +553,43 @@ def test_r2_damage_attached_cc_blocked_while_shield_remains():
 
 
 def test_r3_control_only_packet_blocked_while_shield_remains():
-    """Lulu Whimsy is a control-only ability packet (zero damage): while
-    the shield remains it is blocked with zero added downtime — the SAME
-    gate the damage-attached packet of R2 rides (R16 pins the single
-    contract identity)."""
+    """Veigar's Event Horizon is a control-only ability packet (zero
+    damage): while the shield remains it is blocked with zero added
+    downtime — the SAME gate the damage-attached packet of R2 rides (R16
+    pins the single contract identity)."""
     combat = _calculate(
         {
-            **_morgana(),
-            "enemies": [_lulu_qw()],
+            **_morgana(duration=4.0),
+            "enemies": [_veigar_qe()],
             "allies": _two_allies(),
         }
     )
 
     # CURRENT behavior: control-only packet blocked, zero downtime.
-    (whimsy,) = _cc_blocked(combat, "ally:Lux")
-    assert whimsy["source"] == "W"
-    assert whimsy["damage"] == pytest.approx(0.0)
-    assert whimsy["cc_kind"] == "polymorph"
-    assert whimsy["cc_duration"] == pytest.approx(2.0)
-    assert whimsy["crowd_control_blocked"]["source"] == "Black Shield"
+    (cage,) = _cc_blocked(combat, "ally:Lux")
+    assert cage["source"] == "E"
+    assert cage["damage"] == pytest.approx(0.0)
+    assert cage["cc_kind"] == "stun"
+    assert cage["cc_duration"] == pytest.approx(2.5)
+    assert cage["crowd_control_blocked"]["source"] == "Black Shield"
     assert survival_of(combat, "ally:Lux")["action_downtime"] == pytest.approx(0.0)
     jinx_cc = _cc_applied(combat, "ally:Jinx")
     assert len(jinx_cc) == 1
-    assert jinx_cc[0]["crowd_control"]["duration"] == pytest.approx(2.0)
-    assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(2.0)
+    assert jinx_cc[0]["crowd_control"]["duration"] == pytest.approx(2.5)
+    assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(2.5)
 
     # NEW-CONTRACT: identical decision receipt shape to R2 (same fields,
-    # polymorph kind; the control-only packet spends no shield amount).
-    # NOTE: Lulu Q (131.6 magic) sorts BEFORE the W control-only packet at
-    # t=0 (Q damage seq precedes the control packet seq), so the W decision
-    # sees the drained holder — 320 - 131.6 == 188.4, exactly the value R5
-    # pins for the same payload.
+    # stun kind; the control-only packet spends no shield amount).
+    # NOTE: Veigar Q (157.9 magic) lands at t=0 and the cage stuns at 0.75,
+    # so the E decision sees the drained holder — 320 - 157.9 == 162.1,
+    # exactly the value R5 pins for the same payload.
     cce = _require_contract()
-    decision = whimsy["crowd_control_blocked"]["decision"]
+    decision = cage["crowd_control_blocked"]["decision"]
     assert decision["eligible"] is True
     assert decision["reason"] == ""
-    assert decision["control"]["kind"] == "polymorph"
-    assert decision["shield_amount_before"] == pytest.approx(188.4)
-    assert whimsy["crowd_control_blocked"]["shield_amount_after"] == pytest.approx(
-        188.4
-    )
+    assert decision["control"]["kind"] == "stun"
+    assert decision["shield_amount_before"] == pytest.approx(162.1)
+    assert cage["crowd_control_blocked"]["shield_amount_after"] == pytest.approx(162.1)
 
 
 def test_r3_control_only_packet_blocked_timeline_level():
@@ -632,14 +627,14 @@ def test_r4_physical_before_control_does_not_consume_magic_pool():
             **_morgana(),
             "enemies": [
                 _enemy("Aatrox", ranks={"Q": 5, "W": 0, "E": 0, "R": 0}),
-                _enemy("Lulu", ranks={"Q": 0, "W": 5, "E": 0, "R": 0}),
+                _enemy("Veigar", ranks={"Q": 0, "W": 0, "E": 5, "R": 0}),
             ],
             "allies": _two_allies(),
         }
     )
 
     # CURRENT behavior: physical damage never touches the magic pool and
-    # the polymorph is still blocked.  Aatrox's Q is three strikes a second
+    # the cage stun is still blocked.  Aatrox's Q is three strikes a second
     # apart, so the last one lands inside Lux's own Prismatic Barrier
     # (200 general shield, granted at 1.5s) — a general pool, not Black
     # Shield's magic one, which the decision below still reads at full.
@@ -654,18 +649,18 @@ def test_r4_physical_before_control_does_not_consume_magic_pool():
     lux = survival_of(combat, "ally:Lux")
     assert lux["shield_absorbed"] == pytest.approx(200.0)
     assert lux["health_damage"] == pytest.approx(429.6)
-    (whimsy,) = [
+    (cage,) = [
         event
         for event in _events(combat, target="ally:Lux")
-        if event.get("attacker") == "enemy:Lulu" and event.get("source") == "W"
+        if event.get("attacker") == "enemy:Veigar" and event.get("source") == "E"
     ]
-    assert whimsy["crowd_control_blocked"]["source"] == "Black Shield"
+    assert cage["crowd_control_blocked"]["source"] == "Black Shield"
     assert lux["action_downtime"] == pytest.approx(0.0)
 
     # NEW-CONTRACT: the decision sees the FULL holder amount (physical
     # damage never touched the magic pool).
     cce = _require_contract()
-    assert whimsy["crowd_control_blocked"]["decision"]["shield_amount_before"] == (
+    assert cage["crowd_control_blocked"]["decision"]["shield_amount_before"] == (
         pytest.approx(320.0)
     )
 
@@ -712,33 +707,33 @@ def test_r5_magic_below_shield_strength_persists_immunity():
     immunity persists: the later control is blocked."""
     combat = _calculate(
         {
-            **_morgana(),
-            "enemies": [_lulu_qw()],
+            **_morgana(duration=4.0),
+            "enemies": [_veigar_qe()],
             "allies": _two_allies(),
         }
     )
 
-    # CURRENT behavior: Q (131.6 magic) drains the pool; W still blocked.
+    # CURRENT behavior: Q (157.9 magic) drains the pool; E still blocked.
     (q,) = [
         event
         for event in _events(combat, target="ally:Lux")
         if event.get("source") == "Q"
     ]
-    assert q["damage"] == pytest.approx(131.6)
+    assert q["damage"] == pytest.approx(157.9)
     assert "crowd_control_blocked" not in q
-    (whimsy,) = _cc_blocked(combat, "ally:Lux")
-    assert whimsy["source"] == "W"
-    assert whimsy["crowd_control_blocked"]["source"] == "Black Shield"
+    (cage,) = _cc_blocked(combat, "ally:Lux")
+    assert cage["source"] == "E"
+    assert cage["crowd_control_blocked"]["source"] == "Black Shield"
     lux = survival_of(combat, "ally:Lux")
-    assert lux["shield_absorbed"] == pytest.approx(131.6)
+    assert lux["shield_absorbed"] == pytest.approx(157.9)
     assert lux["health_damage"] == pytest.approx(0.0)
     assert lux["action_downtime"] == pytest.approx(0.0)
 
     # NEW-CONTRACT: the decision sees the drained-but-alive holder
-    # (320 - 131.6 == 188.4) and still blocks.
+    # (320 - 157.9 == 162.1) and still blocks.
     cce = _require_contract()
-    decision = whimsy["crowd_control_blocked"]["decision"]
-    assert decision["shield_amount_before"] == pytest.approx(188.4)
+    decision = cage["crowd_control_blocked"]["decision"]
+    assert decision["shield_amount_before"] == pytest.approx(162.1)
     assert decision["eligible"] is True
 
 
@@ -1353,7 +1348,7 @@ def test_r12_receipt_result_parity():
             **_morgana(),
             "enemies": [
                 _ahri_e(),
-                _enemy("Lulu", ranks={"Q": 0, "W": 5, "E": 0, "R": 0}),
+                _enemy("Veigar", ranks={"Q": 0, "W": 0, "E": 5, "R": 0}),
             ],
             "allies": _two_allies(),
         }
@@ -1363,9 +1358,9 @@ def test_r12_receipt_result_parity():
     # both intervals and the merged downtime equals their sourced sum.
     lux_blocked = _cc_blocked(combat, "ally:Lux")
     assert len(lux_blocked) == 2
-    assert {(event["time"], event["source"]) for event in lux_blocked} == {
-        (0.0, "E"),
-        (0.0, "W"),
+    assert {(event["time"], event["attacker"]) for event in lux_blocked} == {
+        (0.0, "enemy:Ahri"),
+        (0.5, "enemy:Veigar"),
     }
     lux = survival_of(combat, "ally:Lux")
     assert lux["crowd_control_intervals"] == []
@@ -1377,13 +1372,13 @@ def test_r12_receipt_result_parity():
     intervals = jinx["crowd_control_intervals"]
     assert {(entry["kind"], entry["source"]) for entry in intervals} == {
         ("immobilize", "E"),
-        ("polymorph", "Whimsy"),
+        ("stun", "Event Horizon"),
     }
-    assert jinx["action_downtime"] == pytest.approx(2.0)
+    assert jinx["action_downtime"] == pytest.approx(3.0)
     assert sum(
         event["crowd_control"]["duration"] for event in jinx_applied
-    ) == pytest.approx(3.8)
-    # Merged intervals: [0, 1.8] + [0, 2.0] overlap -> 2.0, not 3.8.
+    ) == pytest.approx(4.3)
+    # Merged intervals: [0, 1.8] + [0.5, 3.0] overlap -> 3.0, not 4.3.
     assert jinx["action_downtime"] < sum(
         event["crowd_control"]["duration"] for event in jinx_applied
     )
@@ -1407,13 +1402,12 @@ def test_r12_receipt_result_parity():
     assert {(entry["time"], entry["source"]) for entry in blocked_entries} == {
         (event["time"], event["source"]) for event in lux_blocked
     }
-    # The decisions carry the control kinds in walk order (Ahri E first).
-    # A control takes effect after everything that landed at its own
-    # timestamp (``TransitionRank.DEBUFF_ARM``), so Ahri's Charm resolves
-    # with the damage it rides and Lulu's control-only Whimsy follows it.
+    # The decisions carry the control kinds in walk order: Ahri's Charm
+    # resolves with the damage it rides at t=0 and Veigar's control-only
+    # cage stuns at its sourced 0.5s delay.
     assert [entry["control_kind"] for entry in blocked_entries] == [
         "immobilize",
-        "polymorph",
+        "stun",
     ]
     # Shield amounts before/after per blocked packet.
     assert [entry["shield_amount_before"] for entry in blocked_entries] == [
@@ -1424,16 +1418,19 @@ def test_r12_receipt_result_parity():
         pytest.approx(162.1),
         pytest.approx(162.1),
     ]
-    # Per-event decision receipts carry the same amounts.
-    by_source = {
-        event["source"]: event["crowd_control_blocked"] for event in lux_blocked
+    # Per-event decision receipts carry the same amounts.  Both casters use
+    # their E slot, so the caster is what tells the two packets apart.
+    by_attacker = {
+        event["attacker"]: event["crowd_control_blocked"] for event in lux_blocked
     }
-    assert by_source["E"]["decision"]["shield_amount_before"] == pytest.approx(320.0)
-    assert by_source["E"]["shield_amount_after"] == pytest.approx(162.1)
-    assert by_source["W"]["decision"]["shield_amount_before"] == pytest.approx(162.1)
-    assert by_source["W"]["shield_amount_after"] == pytest.approx(162.1)
-    assert by_source["E"]["decision"]["control"]["kind"] == "immobilize"
-    assert by_source["W"]["decision"]["control"]["kind"] == "polymorph"
+    ahri = by_attacker["enemy:Ahri"]
+    veigar = by_attacker["enemy:Veigar"]
+    assert ahri["decision"]["shield_amount_before"] == pytest.approx(320.0)
+    assert ahri["shield_amount_after"] == pytest.approx(162.1)
+    assert veigar["decision"]["shield_amount_before"] == pytest.approx(162.1)
+    assert veigar["shield_amount_after"] == pytest.approx(162.1)
+    assert ahri["decision"]["control"]["kind"] == "immobilize"
+    assert veigar["decision"]["control"]["kind"] == "stun"
 
 
 # ---------------------------------------------------------------------------

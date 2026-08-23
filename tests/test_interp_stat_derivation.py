@@ -33,6 +33,7 @@ from src.calculator.stats import get_item_stats
 from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
     ActiveWindowCastEconomyRule,
+    BehaviorRuleError,
     STAT_DERIVATION_OPTIONAL_REFERENCES,
     STAT_DERIVATION_PAYLOADS,
     STAT_DERIVATION_REQUIRED_REFERENCES,
@@ -43,6 +44,9 @@ from src.calculator.item_behavior import (
     EngineLane,
     FlatStatGrantRule,
     ManaflowRule,
+    ResourceRestoreRule,
+    RestrictedChannel,
+    RestrictedChannelRule,
     RuleFamily,
     StackedStatRule,
     StatAuraRule,
@@ -53,6 +57,7 @@ from src.calculator.item_behavior import (
     Subject,
     ThresholdRegenRule,
     UltimateRefundRule,
+    validate_rule,
 )
 
 CONVERSION_HOLDER = "Muramana"
@@ -544,3 +549,140 @@ def test_the_channel_declaration_is_not_counted_as_runtime_behaviour() -> None:
     ]
     assert rule.payload.granted is DerivedStat.ARMOR_PENETRATION_BONUS_PERCENT
     assert not catalog.declares_runtime_behaviour(rule)
+
+
+# ── F-2's four arrivals ───────────────────────────────────────────────────
+#
+# The entries `main` brought in with no rule compiler (issue #211).  Two send
+# a sourced number to a channel this fight model never runs, and the other
+# two are ordinary members of shapes the family already had.  Every case pins
+# the declaration's numbers against the typed accessors the engine reads,
+# because "a rule exists" is not the claim being made.
+
+CHANNEL_HASTE_HOLDER = "Ionian Boots of Lucidity"
+CHANNEL_MINION_HOLDERS = ("Doran's Helm", "Tear of the Goddess")
+RESTORE_HOLDER = "Lost Chapter"
+SLAY_HOLDER = "Gluttonous Greaves"
+
+
+def test_the_summoner_haste_channel_carries_the_sourced_number_it_routes() -> None:
+    """Ionian Insight's 10 has a declared home and no granted stat.
+
+    The block holds no summoner-spell haste, so the declaration is the
+    number's only home — and ``granted`` is ``None`` rather than ability
+    haste, which is the mis-channelling the entry's own comment warns about:
+    the item's separate 10 ability haste is a cached stat ``stats.py``
+    applies, and the passive must never reduce champion cooldowns.
+    """
+    slot = _slot(CHANNEL_HASTE_HOLDER, RestrictedChannelRule)
+    assert slot.rule.payload.channel is RestrictedChannel.SUMMONER_SPELL_HASTE
+    assert slot.granted is None
+    assert slot.availability is StatAvailability.ALWAYS
+    assert slot.value("amount") == pytest.approx(
+        item_effects.ionian_insight_summoner_spell_haste()
+    )
+
+
+@pytest.mark.parametrize("owner", CHANNEL_MINION_HOLDERS)
+def test_every_helping_hand_entry_declares_the_minion_class_channel(owner: str) -> None:
+    """Two items carry the passive, and the key is what declares it.
+
+    Keyed by the registry key rather than by the item, so Tear of the
+    Goddess's entry is declared by the same table row Doran's Helm's is —
+    which the name-keyed adjudication beside it reaches for only one of them.
+    """
+    slot = _slot(owner, RestrictedChannelRule)
+    assert slot.rule.payload.channel is RestrictedChannel.MINION_CLASS_ON_HIT
+    assert slot.granted is None
+    assert slot.value("amount") == pytest.approx(
+        item_effects.required_effect_value(owner, "helping_hand_minion_damage")
+    )
+
+
+@pytest.mark.parametrize("owner", (CHANNEL_HASTE_HOLDER, *CHANNEL_MINION_HOLDERS))
+def test_a_restricted_channel_is_not_counted_as_runtime_behaviour(owner: str) -> None:
+    """The sibling of the penetration channel's own clause.
+
+    A restricted channel schedules nothing, so an item whose whole entry is
+    one stays reviewed-inert on the coverage ladder instead of publishing a
+    modelled effect it never runs.
+    """
+    (rule,) = [
+        rule
+        for rule in catalog.behavior_rules(owner)
+        if isinstance(rule.payload, RestrictedChannelRule)
+    ]
+    assert not catalog.declares_runtime_behaviour(rule)
+
+
+def test_a_channel_that_names_no_channel_is_refused() -> None:
+    """R-05's red: the declaration's one structural field, emptied.
+
+    ``None`` and not a wrong string, because a string is already refused one
+    rung earlier by the policy walk — the branch this case exists for is the
+    one a *missing* channel reaches, where the number would otherwise ride a
+    declaration that never said where it goes.
+    """
+    rule = _slot(CHANNEL_HASTE_HOLDER, RestrictedChannelRule).rule
+    with pytest.raises(BehaviorRuleError, match="names the channel"):
+        validate_rule(replace(rule, payload=replace(rule.payload, channel=None)))
+
+
+def test_the_resource_restore_declares_the_schedule_the_engine_runs() -> None:
+    """Enlighten's three numbers, against the accessors ``damage.py`` reads.
+
+    The tick count is declared rather than divided out of the duration, so
+    all three are pinned: a schedule that re-derived one of them would drift
+    from the ledger the moment either of the others moved.
+    """
+    slot = _slot(RESTORE_HOLDER, ResourceRestoreRule)
+    assert slot.granted is DerivedStat.MANA
+    assert slot.availability is StatAvailability.BUILD_OPTION
+    for field, key in (
+        ("share_of_maximum", "enlighten_restore_percent"),
+        ("duration", "enlighten_duration_seconds"),
+        ("ticks", "enlighten_ticks"),
+    ):
+        assert slot.value(field) == pytest.approx(
+            item_effects.required_effect_value(RESTORE_HOLDER, key)
+        ), field
+
+
+def test_the_slay_grant_declares_both_ceilings_the_registry_states() -> None:
+    """Slay's omnivamp, and the two ceilings that are not the same claim.
+
+    Ten stacks, and the six percent those ten come to: the registry states
+    both, and their product is asserted so a patch moving one without the
+    other is a red here rather than a cap nobody could reach.
+    """
+    slot = _slot(SLAY_HOLDER, StackedStatRule)
+    assert slot.granted is DerivedStat.OMNIVAMP_PERCENT
+    assert slot.availability is StatAvailability.BUILD_OPTION
+    per_stack = item_effects.required_effect_value(
+        SLAY_HOLDER, "slay_omnivamp_per_takedown"
+    )
+    max_stacks = item_effects.required_effect_value(SLAY_HOLDER, "slay_max_stacks")
+    cap = item_effects.required_effect_value(SLAY_HOLDER, "slay_max_omnivamp")
+    assert slot.value("per_stack") == pytest.approx(per_stack)
+    assert slot.value("max_stacks") == pytest.approx(max_stacks)
+    assert slot.value("cap") == pytest.approx(cap)
+    assert cap == pytest.approx(per_stack * max_stacks)
+
+
+def test_the_slay_declaration_is_what_the_engines_omnivamp_accessor_pays() -> None:
+    """One mechanic, one set of numbers: the declaration and the fold agree."""
+    slot = _slot(SLAY_HOLDER, StackedStatRule)
+    stacks = int(slot.value("max_stacks"))
+    assert item_effects.gluttonous_greaves_slay_omnivamp(
+        [{"name": SLAY_HOLDER}], {SLAY_HOLDER: {"slay_stacks": stacks}}
+    ) == pytest.approx(slot.value("cap"))
+
+
+def test_every_registry_entry_compiles_at_least_one_rule() -> None:
+    """Counter 3, as a test rather than as a receipt (issue #211).
+
+    The four entries the merge brought in undeclared are declared, and the
+    population is read live so a fifth arriving undeclared fails here.
+    """
+    assert catalog.undeclared_owners() == frozenset()
+    assert catalog.undeclared_entry_count() == 0

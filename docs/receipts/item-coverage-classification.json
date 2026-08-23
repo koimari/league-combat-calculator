@@ -4,7 +4,7 @@
       "attacker": "src.calculator.item_coverage.item_model_coverage",
       "target": "src.calculator.item_coverage.target_item_model_coverage"
     },
-    "git_head": "8c7d82983302b09b072f2558f195904d918b5f98",
+    "git_head": "d665e6df3aa117016ba73dee79019314f3748c45",
     "item_count": 324,
     "items_fetched_at": 1787268672.008812,
     "lanes": [
@@ -699,7 +699,7 @@
         "name": "Doran's Helm",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions (a minion-class fight arms it through CLASS_RESTRICTED_ON_HITS); the full Wiki entry has no champion-facing sustain branch.",
+        "reason": "Helping Hand's 5 bonus physical damage is restricted to minions (a minion-class fight arms it from the item's own restricted-channel declaration); the full Wiki entry has no champion-facing sustain branch.",
         "review_issue_refs": [],
         "status": "stats_only"
       },
@@ -1139,7 +1139,7 @@
         "name": "Gluttonous Greaves",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Gluttonous Greaves's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Omnivamp Percent Per Stack is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
@@ -1741,7 +1741,7 @@
         "name": "Lost Chapter",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Lost Chapter's damage-relevant state is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Resource Restore is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
