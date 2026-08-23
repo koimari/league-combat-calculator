@@ -12,8 +12,9 @@ timeline tests through ``participant_timeline._simulate_survival``, and
 ``src.app`` -> ``POST /api/calculate`` consumer tests.
 
 The kernel reuses the P2 Slice 3 control classification
-(``crowd_control_eligibility.classify_control`` / ``CONTROL_BLOCKING_KINDS`` /
-``CONTROL_SOFT_KINDS`` / ``KNOWN_CONTROL_KINDS``), the P2 Slice 1/2
+(``crowd_control_eligibility.classify_control`` /
+``ability_spec.ACTION_BLOCKING_CC_KINDS`` / ``NON_BLOCKING_CC_KINDS`` /
+``KNOWN_CONTROL_KINDS``), the P2 Slice 1/2
 ``delivery_eligibility.DefenseWindow`` + ``stable_event_key``, the
 ``state_lifecycle.SourceReceipt`` shape, and the survival walk's
 ``action_key`` total order.
@@ -1110,6 +1111,94 @@ def test_r7_qss_and_mercurial_self_cast_denied_while_suppressed(item, source):
 # untouched, the use is not consumed, and excluded_control_kinds ==
 # ("airborne",) is asserted from the same declaration the alt row would
 # have re-read. Nothing about the primary/removal-set claim is lost.
+
+
+# ---------------------------------------------------------------------------
+# Stasis: never removable, and it blocks a self-cast
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_excluded_kinds_is_the_one_umbrella_reader():
+    """Every carve-out resolves here: naming any Airborne subtype protects
+    all four, stasis is protected whatever the declaration says, and a
+    declaration that names neither still gets the stasis rule."""
+    ce = _require_contract()
+    from src.calculator.ability_spec import DISPLACEMENT_CC_KINDS
+
+    assert ce.resolve_excluded_kinds(()) == ce.NEVER_CLEANSABLE_CONTROL_KINDS
+    for named in sorted(DISPLACEMENT_CC_KINDS):
+        assert (
+            ce.resolve_excluded_kinds((named,))
+            == DISPLACEMENT_CC_KINDS | ce.NEVER_CLEANSABLE_CONTROL_KINDS
+        )
+    assert ce.resolve_excluded_kinds(("stun",)) == (
+        frozenset({"stun"}) | ce.NEVER_CLEANSABLE_CONTROL_KINDS
+    )
+    # The resolver is exported, so a consumer cannot grow a second reader
+    # without reaching past the module's declared surface.
+    assert "resolve_excluded_kinds" in ce.__all__
+
+
+def test_a_stasis_is_refused_even_though_no_declaration_carves_it_out():
+    """Stasis is a property of the KIND, not of an item's tooltip: Mikael's
+    wording never mentions it, and Purify still cannot touch it."""
+    ce = _require_contract()
+    assert (
+        "stasis"
+        not in ce.ITEM_CLEANSE_DECLARATIONS["Mikael's Blessing"][
+            "excluded_control_kinds"
+        ]
+    )
+    decision = _eligibility("Mikael's Blessing").decide(
+        _CleanseAction(
+            item="Mikael's Blessing",
+            source_key=MIKAELS_SOURCE,
+            target="target",
+            holder="caster",
+            active_controls=[
+                _interval("stasis", 1.0, 3.0, source="Zhonya's Hourglass"),
+                _interval("stun", 1.0, 3.0),
+            ],
+        )
+    )
+    assert decision.eligible is True
+    assert [row["control_kind"] for row in decision.removed_controls] == ["stun"]
+    assert decision.rejected_controls == [
+        {
+            "control_kind": "stasis",
+            "source": "Zhonya's Hourglass",
+            "start": pytest.approx(1.0),
+            "end": pytest.approx(3.0),
+            "reason": "excluded_control_kind",
+        }
+    ]
+    assert [(row["control_kind"], row["end"]) for row in decision.intervals_after] == [
+        ("stasis", pytest.approx(3.0)),
+        ("stun", pytest.approx(1.5)),
+    ]
+
+
+def test_a_self_cast_is_denied_under_stasis_as_it_is_under_suppression():
+    """``CAST_BLOCKING_CONTROL_KINDS`` is both kinds, and only the
+    suppression half was pinned.  A champion in Time Stop casts nothing."""
+    ce = _require_contract()
+    assert ce.CAST_BLOCKING_CONTROL_KINDS == frozenset({"stasis", "suppression"})
+    decision = _eligibility("Quicksilver Sash").decide(
+        _CleanseAction(
+            active_controls=[
+                _interval("stasis", 1.0, 3.0, source="Zhonya's Hourglass"),
+                _interval("stun", 1.0, 3.0),
+            ]
+        )
+    )
+    assert decision.eligible is False
+    assert decision.reason == "caster_control_blocks_cleanse"
+    assert decision.use_consumed is False
+    assert decision.removed_controls == []
+    assert {row["control_kind"] for row in decision.rejected_controls} == {
+        "stasis",
+        "stun",
+    }
 
 
 # ---------------------------------------------------------------------------

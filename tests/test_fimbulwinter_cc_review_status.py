@@ -155,6 +155,28 @@ class TestMixedAbilityReviewStamps:
         assert events[1].get("cc_kind") == "stun"
         assert result["timeline_coverage"]["complete"] is True
 
+    @pytest.mark.parametrize(
+        "champion,slot,kind",
+        [
+            ("Teemo", "Q", "blind"),
+            ("Malphite", "E", "cripple"),
+            ("Malzahar", "Q", "silence"),
+        ],
+    )
+    def test_a_soft_control_row_is_certified_like_any_other(self, champion, slot, kind):
+        """The certification asks whether a module reviewed the row, so it
+        is decided by vocabulary membership and not by whether the kind
+        happens to block actions or slow."""
+        result = _fight(
+            champion,
+            slot,
+            ability_ranks={key: 5 if key == slot else 0 for key in "QWER"},
+        )
+        events = _ability_events(result, slot)
+        assert events
+        assert all(event.get("cc_kind") == kind for event in events)
+        assert all(event.get("cc_reviewed") is True for event in events)
+
     def test_karma_w_stamps_initial_hit_and_keeps_tether_root(self):
         result = _fight(
             "Karma",

@@ -19,12 +19,10 @@ The walk reuses ``delivery_eligibility.DefenseWindow`` +
 CONTRACT API THIS MATRIX COMMITS THE OWNER TO (six separation concerns):
 
 1. CONTROL CLASSIFICATION
-   - ``CONTROL_BLOCKING_KINDS``: the sourced hard set, mirroring
-     ``ability_spec.ACTION_BLOCKING_CC_KINDS`` (airborne, charm, fear,
-     immobilize, knockback, knockup, polymorph, root, sleep, stun,
-     suppression, taunt).
-   - ``CONTROL_SOFT_KINDS``: declared non-blocking kinds (blind, disarm,
-     ground, silence, slow) — known, never eligible.  Silence is authored
+   - ``ability_spec.ACTION_BLOCKING_CC_KINDS``: the sourced hard set —
+     every immobilize plus polymorph and berserk.
+   - ``ability_spec.NON_BLOCKING_CC_KINDS``: the other half (blind,
+     cripple, silence, slow) — known, never eligible.  Silence is authored
      by champion modules but excluded from ACTION_BLOCKING_CC_KINDS, so the
      contract classifies it as known-and-non-blocking, never unknown.
    - ``classify_control(action) -> ControlProfile(kind, blocking, unknown,

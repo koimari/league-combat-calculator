@@ -25,6 +25,7 @@ from typing import Any, Callable, Mapping
 
 from ..ability_spec import (
     CC_KIND_VOCABULARY,
+    NO_CONTROL_KIND,
     ControlEvent,
     DamagePart,
     Disposition,
@@ -738,7 +739,7 @@ def _apply_module_cc(
             )
         return
     parts = entry.get("parts") or ()
-    if kind == "none":
+    if kind == NO_CONTROL_KIND:
         # The reviewed no-CC statement: the fight engine's event rows read
         # it as ``cc_reviewed`` (a row with no kind at all is unreviewed).
         if entry.get("control_events") or entry.get(PENDING_CONTROL_EVENTS):

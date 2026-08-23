@@ -26,18 +26,19 @@ from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     DISPLACEMENT_CC_KINDS,
     IMMOBILIZING_CC_KINDS,
+    NON_BLOCKING_CC_KINDS,
     NON_IMMOBILIZING_CC_KINDS,
     NO_CONTROL_KIND,
+    cc_kind_reviewed,
 )
 from src.calculator.cleanse_eligibility import (
     CHAMPION_CLEANSE_DECLARATIONS,
     ITEM_CLEANSE_DECLARATIONS,
     NEVER_CLEANSABLE_CONTROL_KINDS,
     TOOLTIP_ONLY_CONTROL_KINDS,
+    resolve_excluded_kinds,
 )
 from src.calculator.crowd_control_eligibility import (
-    CONTROL_BLOCKING_KINDS,
-    CONTROL_SOFT_KINDS,
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
@@ -76,8 +77,7 @@ class TestTheVocabularyIsTheOnlyVocabulary:
             ("DISPLACEMENT_CC_KINDS", DISPLACEMENT_CC_KINDS),
             ("IMMOBILIZING_CC_KINDS", IMMOBILIZING_CC_KINDS),
             ("NON_IMMOBILIZING_CC_KINDS", NON_IMMOBILIZING_CC_KINDS),
-            ("CONTROL_BLOCKING_KINDS", CONTROL_BLOCKING_KINDS),
-            ("CONTROL_SOFT_KINDS", CONTROL_SOFT_KINDS),
+            ("NON_BLOCKING_CC_KINDS", NON_BLOCKING_CC_KINDS),
             ("NEVER_CLEANSABLE_CONTROL_KINDS", NEVER_CLEANSABLE_CONTROL_KINDS),
         ):
             stray = sorted(set(kinds) - CC_KIND_VOCABULARY)
@@ -87,8 +87,17 @@ class TestTheVocabularyIsTheOnlyVocabulary:
             )
 
     def test_blocking_and_soft_partition_the_known_kinds(self):
-        assert CONTROL_BLOCKING_KINDS | CONTROL_SOFT_KINDS == KNOWN_CONTROL_KINDS
-        assert CONTROL_BLOCKING_KINDS & CONTROL_SOFT_KINDS == frozenset()
+        assert ACTION_BLOCKING_CC_KINDS | NON_BLOCKING_CC_KINDS == KNOWN_CONTROL_KINDS
+        assert ACTION_BLOCKING_CC_KINDS & NON_BLOCKING_CC_KINDS == frozenset()
+
+    def test_the_action_blocking_half_is_derived_from_the_immobilizes(self):
+        """Every immobilize blocks actions; polymorph and berserk block
+        them without immobilizing.  Re-spelling the fifteen was how the two
+        drifted."""
+        assert ACTION_BLOCKING_CC_KINDS == IMMOBILIZING_CC_KINDS | {
+            "polymorph",
+            "berserk",
+        }
 
     def test_immobilizing_and_non_immobilizing_partition_the_vocabulary(self):
         assert (
@@ -110,6 +119,21 @@ class TestTheVocabularyIsTheOnlyVocabulary:
         assert profile.unknown is True
         assert profile.blocking is False
 
+    @pytest.mark.parametrize("kind", sorted(CC_KIND_VOCABULARY))
+    def test_every_vocabulary_member_certifies_its_row(self, kind):
+        """``cc_reviewed`` asks whether a reviewer classified the row, and
+        every vocabulary member IS that classification — ``"none"``
+        included, which certifies while narrowing nothing.  Answering it
+        with ``ACTION_BLOCKING_CC_KINDS`` instead left a reviewed blind,
+        cripple or silence publishing as unreviewed, and widened silently
+        the moment that set grew."""
+        assert cc_kind_reviewed(kind) is True
+        assert cc_kind_reviewed(f"  {kind.upper()} ") is True
+
+    @pytest.mark.parametrize("kind", [None, "", "   ", "mesmerize", "ground"])
+    def test_nothing_outside_the_vocabulary_certifies_a_row(self, kind):
+        assert cc_kind_reviewed(kind) is False
+
 
 class TestCleanseCarveOutsSpeakTheVocabulary:
     """A carve-out naming a kind nothing can author removes nothing."""
@@ -128,10 +152,21 @@ class TestCleanseCarveOutsSpeakTheVocabulary:
             "module can author nor a declared tooltip-only word"
         )
 
-    def test_the_displacement_umbrella_covers_every_displacement_kind(self):
-        """``airborne`` is the wiki's umbrella; the subtypes are what
-        modules actually author, so a carve-out naming the umbrella must
-        reach all four."""
-        assert DISPLACEMENT_CC_KINDS == frozenset(
-            {"airborne", "knockback", "knockup", "pull"}
-        )
+    def test_an_airborne_carve_out_reaches_every_subtype_a_module_authors(self):
+        """``airborne`` is the wiki's umbrella and the subtypes are what
+        modules author, so a declaration naming any part of it must protect
+        all of it — otherwise Quicksilver removes a knockup it cannot
+        remove a knockback from."""
+        for declaration in ALL_DECLARATIONS:
+            declared = frozenset(declaration["excluded_control_kinds"])
+            if not declared & DISPLACEMENT_CC_KINDS:
+                continue
+            assert DISPLACEMENT_CC_KINDS <= resolve_excluded_kinds(declared), (
+                f"{declaration['item']} carves out {sorted(declared)} but the "
+                "resolver leaves part of the Airborne class cleansable"
+            )
+
+    def test_the_umbrella_is_a_classification_over_the_vocabulary(self):
+        """A forced displacement is an immobilize, so the umbrella is a
+        subset of that classification rather than a list of its own."""
+        assert DISPLACEMENT_CC_KINDS <= IMMOBILIZING_CC_KINDS

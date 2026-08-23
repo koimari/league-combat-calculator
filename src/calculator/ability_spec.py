@@ -393,38 +393,22 @@ CC_KIND_VOCABULARY = (
 DISPLACEMENT_CC_KINDS = frozenset({"airborne", "knockback", "knockup", "pull"})
 
 
-# The predicate that reads a raw row against the two constants above lives
-# in ``trigger_stream``, not here: authoring vocabulary belongs beside
-# ``DamagePart``, classification is transport.  This module keeps the
-# vocabulary and nothing that reads an event with it.
+def cc_kind_reviewed(kind: str | None) -> bool:
+    """Whether ``cc_kind`` is a reviewed classification — ``"none"`` included."""
+    return kind is not None and str(kind).lower().strip() in CC_KIND_VOCABULARY
+
+
+# The predicate that reads a raw event row against these classifications
+# lives in ``trigger_stream``, not here: authoring vocabulary belongs
+# beside ``DamagePart``, classification is transport.  This module keeps
+# the vocabulary and nothing that reads an event with it.
 
 # These control types stop a champion from taking a normal action for the
-# authored interval: the displacement family, the forced actions (charm,
-# fear/flee, taunt, and Renata's berserk — a berserked champion's actions
-# are the enemy's), the roots (root/snare — the Wiki's two names for one
-# kind), sleep, stasis, stun, suppression and polymorph.
+# authored interval: every immobilize, plus the two kinds that lock a
+# champion's actions while it keeps moving — polymorph, and Renata's
+# berserk (a berserked champion's actions are the enemy's).
 # https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
-ACTION_BLOCKING_CC_KINDS = frozenset(
-    {
-        "airborne",
-        "berserk",
-        "charm",
-        "fear",
-        "flee",
-        "immobilize",
-        "knockback",
-        "knockup",
-        "polymorph",
-        "pull",
-        "root",
-        "sleep",
-        "snare",
-        "stasis",
-        "stun",
-        "suppression",
-        "taunt",
-    }
-)
+ACTION_BLOCKING_CC_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"polymorph", "berserk"})
 
 # The other half of the same classification: real control the target keeps
 # acting under. Slows change movement, cripple attack speed, blind the
@@ -588,7 +572,7 @@ class ControlScope(Enum):
 
     def reaches(self, roster_target_index: int) -> bool:
         """Whether the pair fight against this roster index holds the control."""
-        return self is ControlScope.EVERY_TARGET or roster_target_index <= 0
+        return self is ControlScope.EVERY_TARGET or roster_target_index == 0
 
 
 @dataclass(frozen=True)
