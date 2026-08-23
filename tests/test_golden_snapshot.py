@@ -1736,3 +1736,28 @@ class TestTheExactBaselineHoldsTheDerivedScenarioSet:
 
         rounded = _load(COUPLED_BASELINE)
         assert not set(rounded["coupled_scenarios"]) & set(SCENARIOS)
+
+
+class TestCaptureRefusesADirtySrcTree:
+    """A capture stamps ``rev-parse HEAD:src``; it must have read that tree.
+
+    Every uncommitted ``src_tree_sha`` in the fingerprints receipt came from
+    capturing over a dirty or mid-merge ``src/`` — the snapshot then names a
+    tree no checkout can produce, so the receipt can never be re-verified.
+    """
+
+    def test_a_dirty_src_refuses_and_names_the_reason(self, monkeypatch):
+        monkeypatch.setattr(gs, "_git", lambda *a: " M src/calculator/damage.py")
+        with pytest.raises(SystemExit, match="src_tree_sha"):
+            gs.require_committed_src()
+
+    def test_a_clean_src_captures(self, monkeypatch):
+        monkeypatch.setattr(gs, "_git", lambda *a: "")
+        gs.require_committed_src()
+
+    def test_both_write_paths_are_gated_and_compare_is_not(self):
+        import inspect
+
+        assert "require_committed_src" in inspect.getsource(gs.capture)
+        assert "require_committed_src" in inspect.getsource(gs.capture_coupled_file)
+        assert "require_committed_src" not in inspect.getsource(gs.compare)
