@@ -9,7 +9,7 @@ gunicorn==26.0.0  # production WSGI server (Linux/Docker only; run_web.bat uses 
 # Data fetching & parsing (used by lolstaticdata)
 requests==2.34.2
 beautifulsoup4==4.15.0
-lxml==6.1.1
+lxml==6.1.2
 SLPP==1.2.3
 dataclasses-json==0.6.7
 natsort==8.4.0
