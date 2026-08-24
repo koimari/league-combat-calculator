@@ -1811,6 +1811,7 @@ ROOTS = (
     "__init__.py",
     "ability_spec.py",
     "application_errors.py",
+    "binary_roots.py",
     "capabilities.py",
     "cast_dependency.py",
     "coverage_evidence.py",

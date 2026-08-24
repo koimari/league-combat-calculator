@@ -35,7 +35,13 @@ backups/
 .playwright-cli/
 output/
 .vercel
-data/bin/
+# data/bin: decomposed game binaries. The per-champion dumps are TRACKED
+# (runtime constants root in them; ~11 MB, one refresh per patch). The item
+# and map dumps stay ignored (regenerable, and nothing at runtime reads them).
+data/bin/*
+!data/bin/characters
+data/bin/characters/*
+!data/bin/characters/*.bin.json
 data/wiki-raw/
 data/atoms/*.atoms.json
 docs/receipts/champions/*.json

@@ -1,7 +1,11 @@
 # data/bin — decomposed game binaries (regenerable)
 
 Parsed output of the local League client binaries (16.15.8024387) — the exact
-numeric layer behind the wiki cache. **Gitignored** (17 MB, regenerable).
+numeric layer behind the wiki cache. `characters/*.bin.json` are **tracked**:
+runtime constants root in them (`src/calculator/binary_roots.py`), so a
+champion dump missing from the checkout fails closed instead of silently
+pricing from stale literals. The item and map dumps stay gitignored
+(regenerable; nothing at runtime reads them).
 
 Regenerate (requires the installed client + tool venv):
 
