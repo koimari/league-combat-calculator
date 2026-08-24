@@ -128,6 +128,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share
@@ -145,28 +146,26 @@ from .inputs import bool_option
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
 
-# HARDCODED: verify on patch updates — the sourced bleed tick count:
-# Total Bleed Physical Damage == Bleed Physical Damage per Tick x 10 at
-# every rank (E2 worklist, data/worklists/e2-dot-ticks.json), with the
-# wiki's 0.5s cadence over 5 seconds.  The recast fires 0.5s after the
-# first cast ("can be recast after 0.5 seconds and within 4 seconds").
-_BLEED_TICKS = 10
-_BLEED_FIRST_TICK = 0.5
-_BLEED_TICK_INTERVAL = 0.5
-_BLEED_DURATION = 5.0
-_RECAST_TIME_OFFSET = 0.5
+# The bleed cadence is binary DataValues (NaafiriQ.BleedInterval /
+# BleedDuration): 0.5s first tick, ten ticks over the 5-second window.
+# The recast fires one interval after the first cast ("can be recast
+# after 0.5 seconds and within 4 seconds").
+_NAAFIRI_Q_SPELL = spell_object("Naafiri", "NaafiriQ")
+_BLEED_TICK_INTERVAL = data_value(_NAAFIRI_Q_SPELL, "BleedInterval")
+_BLEED_DURATION = data_value(_NAAFIRI_Q_SPELL, "BleedDuration")
+_BLEED_TICKS = round(_BLEED_DURATION / _BLEED_TICK_INTERVAL)
+_BLEED_FIRST_TICK = _BLEED_TICK_INTERVAL
+_RECAST_TIME_OFFSET = _BLEED_TICK_INTERVAL
 
-# HARDCODED: verify on patch updates against the GAME FILES as well as the
-# wiki — and read the slot-swap warning in the module docstring first.
-# W (The Call of the Pack) grants "20% AD bonus attack damage" in wiki
-# prose only (no leveling row), corroborated by the binary's
-# NaafiriADPercentBoost = 0.20 on the SWAPPED record
+# W (The Call of the Pack) grants "20% AD bonus attack damage" — the
+# binary's NaafiriADPercentBoost on the SWAPPED record
 # Characters/Naafiri/Spells/NaafiriRAbility/NaafiriR, whose BonusAD
 # calculation reads stat 2 (attack damage) with no mStatFormula override,
-# i.e. 20% of TOTAL AD granted as bonus AD.  The hunt lasts 5 seconds
-# (wiki W text; binary Duration = 5.0).
-_HUNT_AD_PERCENT = 20.0
-_HUNT_DURATION = 5.0
+# i.e. 20% of TOTAL AD granted as bonus AD.  The hunt lasts the same
+# spell's Duration DataValue.
+_NAAFIRI_R_SPELL = spell_object("Naafiri", "NaafiriR")
+_HUNT_AD_PERCENT = data_value(_NAAFIRI_R_SPELL, "NaafiriADPercentBoost") * 100.0
+_HUNT_DURATION = data_value(_NAAFIRI_R_SPELL, "Duration")
 
 # Packmate counts by champion level, sourced three ways (wiki P text, the
 # binary's PackmateCap breakpoints at levels 9/12/15, and the wiki R
