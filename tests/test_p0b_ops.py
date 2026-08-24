@@ -168,13 +168,18 @@ def test_sentry_excludes_token_bucket_429_response(monkeypatch, fake_sentry):
 
 
 def test_sentry_in_dependency_manifests():
+    runtime_in = Path("requirements-runtime.in").read_text(encoding="utf-8")
+    sentry_pin = next(
+        line.strip()
+        for line in runtime_in.splitlines()
+        if line.startswith("sentry-sdk==")
+    )
     for manifest in (
         "requirements.txt",
-        "requirements-runtime.in",
         "requirements-runtime.txt",
         "pyproject.toml",
     ):
-        assert "sentry-sdk==2.66.1" in Path(manifest).read_text(
+        assert sentry_pin in Path(manifest).read_text(
             encoding="utf-8"
         ), manifest
     assert "--hash=sha256:" in Path("requirements-runtime.txt").read_text(
