@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_spec import ControlScope
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -136,6 +137,7 @@ SLOTS = {
     "E": with_control_event(
         _cocoon,
         duration_attr="Stun Duration",
+        scope=ControlScope.ONE_TARGET,
     ),
     "R": _form_toggle,
 }

@@ -176,6 +176,7 @@ from .ability_atoms import (
 from .ability_spec import (
     AttackClass,
     ControlEvent,
+    ControlScope,
     DamagePart,
     cc_kind_reviewed,
 )
@@ -2186,8 +2187,15 @@ def _ordered_damage_events(
         # that part's damage type — a two-typed cast must not publish one
         # stun twice.
         authored_parts = tuple(ability_field(info, "parts"))
+        cc_scope = _entry_control_scope(info)
         cc_part = next(
-            (part for part in authored_parts if part.cc_kind is not None), None
+            (
+                part
+                for part in authored_parts
+                if part.cc_kind is not None
+                and (cc_scope is None or cc_scope.reaches(state.roster_target_index))
+            ),
+            None,
         )
         cc_damage_type = cc_part.damage_type if cc_part is not None else None
         cc_fields: dict[str, Any] = {}
@@ -3914,6 +3922,7 @@ def _evaluate_cast_parts(
     ferocity_empowered: "tuple[bool, ...] | None" = None,
     empowered_parts: "tuple[DamagePart, ...] | None" = None,
     cc_reviewed: bool = False,
+    cc_scope: ControlScope | None = None,
     landed_by: "Callable[[float], float] | None" = None,
 ) -> tuple[float, float, dict[str, float], list[dict[str, Any]]]:
     """Evaluate an ability's typed damage parts over its casts.
@@ -4106,6 +4115,9 @@ def _evaluate_cast_parts(
                     damage_over_time=damage_over_time,
                 )
                 mitigated += hit_damage
+                cc_reaches_target = cc_scope is None or cc_scope.reaches(
+                    state.roster_target_index
+                )
                 if emit_events:
                     damage_events.append(
                         {
@@ -4126,12 +4138,15 @@ def _evaluate_cast_parts(
                                 {
                                     "cc_kind": str(part.cc_kind),
                                 }
-                                if part.cc_kind is not None
+                                if part.cc_kind is not None and cc_reaches_target
                                 else {}
                             ),
                             **(
                                 {"cc_reviewed": True}
-                                if cc_reviewed or cc_kind_reviewed(part.cc_kind)
+                                if (
+                                    cc_reaches_target
+                                    and (cc_reviewed or cc_kind_reviewed(part.cc_kind))
+                                )
                                 else {}
                             ),
                             **(
@@ -6845,6 +6860,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             ferocity_empowered=ferocity_empowered,
             empowered_parts=ferocity_parts,
             cc_reviewed=bool(ability_info.get("cc_reviewed")),
+            cc_scope=_entry_control_scope(ability_info),
             landed_by=_landed_by,
         )
         if ability_info.get("cast_while_disabled"):
@@ -17909,6 +17925,16 @@ def _declared_cc_kind(parts: Iterable[Any]) -> str | None:
         if kind is not None:
             return str(kind)
     return None
+
+
+def _entry_control_scope(info: Mapping[str, Any]) -> ControlScope | None:
+    """Return one authored scope when all control events share it."""
+    scopes = {
+        control.scope
+        for control in ability_field(info, "control_events")
+        if isinstance(control, ControlEvent)
+    }
+    return next(iter(scopes)) if len(scopes) == 1 else None
 
 
 def _declared_cc_marker(info: Mapping[str, Any]) -> dict[str, Any]:

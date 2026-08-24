@@ -32,7 +32,7 @@ scope; the stances' own damage is priced on Q/W/E/R.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlScope, DamagePart
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
@@ -329,6 +329,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             _blazing_stampede(parser),
             duration_attr="Stun Duration",
             time_offset=None,
+            scope=ControlScope.ONE_TARGET,
         ),
         "P": _bridge_between,
     },

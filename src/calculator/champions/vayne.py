@@ -37,6 +37,7 @@ absence of damage rather than an unmodeled gap.
 
 from typing import Any
 
+from ..ability_spec import ControlScope
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     ability_name,
@@ -179,6 +180,7 @@ SLOTS = {
                 kind="stun",
                 duration_attr="Stun Duration",
                 effect_index=1,
+                scope=ControlScope.ONE_TARGET,
             ),
             False: simple_damage(
                 attr="Physical Damage",

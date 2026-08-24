@@ -18,6 +18,7 @@ zero-damage row: this module replaces that slot.
 from functools import partial
 from typing import Any
 
+from ..ability_spec import ControlScope
 from .engine import BUFF, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -58,6 +59,7 @@ def _tether_fear(compiled):
         compiled,
         duration_attr="Disable Duration",
         time_offset=_E_TETHER_SECONDS,
+        scope=ControlScope.ONE_TARGET,
     )
 
     def parse(ctx):
