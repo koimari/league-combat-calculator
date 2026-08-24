@@ -560,3 +560,41 @@ class TestBatch12RootedConstants:
         assert data_value(spell_object("Shen", "ShenPassive"), "ShieldDuration") == (
             pytest.approx(shen._P_SHIELD_DURATION_SECONDS)
         )
+
+
+class TestBatch13RootedConstants:
+    """Batch 13: Nasus, Urgot and Bel'Veth constants resolve from binaries."""
+
+    def test_nasus(self):
+        import src.calculator.champions.nasus as nasus
+
+        assert data_value(spell_object("Nasus", "NasusR"), "QCDR") == pytest.approx(
+            nasus._R_Q_COOLDOWN_MULTIPLIER
+        )
+        assert data_value(spell_object("Nasus", "NasusE"), "Duration") == pytest.approx(
+            nasus._E_DOT_DURATION
+        )
+
+    def test_urgot(self):
+        import src.calculator.champions.urgot as urgot
+
+        w = spell_object("Urgot", "UrgotW")
+        assert data_value(w, "Duration") == pytest.approx(urgot._W_DURATION)
+        assert data_value(w, "WAttacksPerSecond") * urgot._W_TICK_INTERVAL == (
+            pytest.approx(1.0)
+        )
+        assert urgot._W_SHOTS == int(urgot._W_DURATION * urgot._W_ATTACKS_PER_SECOND)
+
+    def test_belveth(self):
+        import src.calculator.champions.belveth as belveth
+
+        p = spell_object("Bel'Veth", "BelvethPassive")
+        assert data_value(p, "AttackADRatio") == pytest.approx(
+            belveth.PASSIVE_BASIC_ATTACK_RATIO
+        )
+        assert data_value(p, "OnHitRatio") == pytest.approx(
+            belveth.PASSIVE_ON_HIT_RATIO
+        )
+        assert data_value(spell_object("Bel'Veth", "BelvethE"), "NumberOfStrikes") == (
+            belveth.E_BASE_SLASHES
+        )

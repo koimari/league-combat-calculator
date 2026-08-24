@@ -32,6 +32,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
@@ -51,12 +52,19 @@ from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
-PASSIVE_BASIC_ATTACK_RATIO = 1.0  # patch 26.15 restored full basic-attack damage
-PASSIVE_ON_HIT_RATIO = 1.0  # 26.15 removed the 75% on-hit rider modifier
+_BELVETH_P_SPELL = spell_object("Bel'Veth", "BelvethPassive")
+PASSIVE_BASIC_ATTACK_RATIO = data_value(
+    _BELVETH_P_SPELL, "AttackADRatio"
+)  # patch 26.15 restored full basic-attack damage
+PASSIVE_ON_HIT_RATIO = data_value(
+    _BELVETH_P_SPELL, "OnHitRatio"
+)  # 26.15 removed the 75% on-hit rider modifier
 PASSIVE_TEMP_BONUS_AS = 20.0  # refreshed for 3 seconds by every ability cast
 Q_DIRECTION_COOLDOWNS = (16.0, 15.0, 14.0, 13.0, 12.0)  # per-direction dash CD
 Q_ON_HIT_EFFECTIVENESS = 1.0  # 26.15 removed the 75% Q on-hit reduction
-E_BASE_SLASHES = 6  # base slash count
+E_BASE_SLASHES = int(  # base slash count
+    data_value(spell_object("Bel'Veth", "BelvethE"), "NumberOfStrikes")
+)
 E_BONUS_AS_PER_EXTRA_SLASH = 40.0  # +1 slash per 40% bonus attack speed
 # The frenzy's own length, which is also the slashes' schedule: "Bel'Veth
 # enters a frenzy for 1.5 seconds" and "she rapidly slashes at the nearest
