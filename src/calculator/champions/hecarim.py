@@ -6,6 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
@@ -191,8 +192,12 @@ SOURCES = load_champion_sources("Hecarim")
 # sources, for the 4 seconds a cast is active (cached W effect[1]).  The
 # sourced cap applies only to minions and monsters, so a champion duel
 # uses the uncapped share.
-_SPIRIT_OF_DREAD_SHARE = 0.25
-_SPIRIT_OF_DREAD_WINDOW_SECONDS = 4.0
+# Both rooted in the binary (HecarimW DamageLeechPerc / BuffDuration);
+# the cached W effect prose corroborates ("heals ... for 25% ... for
+# the 4 seconds a cast is active").
+_HECARIM_W_SPELL = spell_object("Hecarim", "HecarimW")
+_SPIRIT_OF_DREAD_SHARE = data_value(_HECARIM_W_SPELL, "DamageLeechPerc") / 100.0
+_SPIRIT_OF_DREAD_WINDOW_SECONDS = data_value(_HECARIM_W_SPELL, "BuffDuration")
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument

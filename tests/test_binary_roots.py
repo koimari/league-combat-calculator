@@ -678,3 +678,26 @@ class TestBatch15RootedConstants:
         assert data_value(spell_object("Viego", "ViegoR"), "ADRatio") == pytest.approx(
             viego._R_BASE_AD_RATIO
         )
+
+
+class TestBatch16RootedConstants:
+    """Batch 16: Hecarim's W heal shape and Corki's Valkyrie cadence
+    resolve from their binaries."""
+
+    def test_hecarim(self):
+        import src.calculator.champions.hecarim as hecarim
+
+        w = spell_object("Hecarim", "HecarimW")
+        assert data_value(w, "DamageLeechPerc") / 100.0 == pytest.approx(
+            hecarim._SPIRIT_OF_DREAD_SHARE
+        )
+        assert data_value(w, "BuffDuration") == pytest.approx(
+            hecarim._SPIRIT_OF_DREAD_WINDOW_SECONDS
+        )
+
+    def test_corki(self):
+        import src.calculator.champions.corki as corki
+
+        w = spell_object("Corki", "CarpetBomb")
+        assert data_value(w, "MaximumTicks") == corki._W_TICKS
+        assert corki._W_DURATION == pytest.approx(2.5)
