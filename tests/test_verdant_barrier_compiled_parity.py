@@ -57,26 +57,31 @@ Contract under test (current runtime facts, verified before pinning):
   cast.  The parent brief's "true damage / control effects pass
   through" reading is NOT the modeled rule for ABILITY packets — see
   the reply ambiguities; the ability-only gate is by cast identity.
-* 60s COOLDOWN + REARM: after consumption the shield is NOT rearmed
-  inside one modeled fight — even a fight longer than the sourced 60s
-  never re-arms (a second ability at t=65 lands).  The sourced 60.0s
-  cooldown and the "timer restarts upon taking damage from champions"
-  rule are RECEIPTED boundaries (survival-row cooldown_seconds +
-  cooldown_atom; SPELL_SHIELD_NO_REARM_RULE quotes the Verdant 60s);
-  the defensive_effects assumption pins "cooldown rearm is outside
-  the modeled exchange".  A second ability within the cooldown is NOT
-  blocked.
+* 60s COOLDOWN + REARM: the sourced 60.0s cooldown and the "timer
+  restarts upon taking damage from champions" clause are both ENFORCED
+  by the kernel rearm clock, not merely receipted.  A second ability
+  within the cooldown is NOT blocked.  Past it the shield rearms, and
+  the clock is anchored to the LATER of the consumption instant and the
+  last champion damage the holder took: in a 70s walk with a basic
+  attack at t=2.0 the timer starts at 2.0, ready_at is 62.0 and the
+  ability at t=65 IS blocked; move that basic attack to t=9.0 and
+  ready_at is 69.0, so t=65 lands.  The sourced numbers stay receipted
+  too (survival-row cooldown_seconds + cooldown_atom, the rearm clock
+  and its observed rearms; SPELL_SHIELD_REARM_RULE quotes Verdant's
+  60s).  NOTE the request bound: pipeline caps fight_duration at 30s,
+  under every Annul cooldown, so no API request reaches a rearm — the
+  70s walks below are direct-kernel, not request-reachable.
 * RECEIPT FIELDS + SOURCE EVIDENCE: the survival-row spell_shield
   receipt carries source "Verdant Barrier — Annul", the infinite
   window, the acceptance declaration, the block rule, the five
   categorical rules, uses_before/uses_after, selected_cast_identity,
   blocked_packets, decisions, triggered_heal None, cooldown_seconds
-  60.0 and the cooldown_atom hash.  The 3M/3N/3O-pattern
-  item_state_receipts row is LIVE post-completion: state "annul",
-  spell_shield_ready True, spell_shield_cooldown 60.0, the cooldown_atom
-  hash, source_url + source_revision_id 3957920, and the named
-  rearm_boundary that receipts the 60s cooldown and the damage-restart
-  rule (rearm is never modeled inside one fight).
+  60.0, the cooldown_atom hash, the rearm clock and its observed
+  rearms.  The 3M/3N/3O-pattern item_state_receipts row is LIVE
+  post-completion: state "annul", spell_shield_ready True,
+  spell_shield_cooldown 60.0, the cooldown_atom hash, source_url +
+  source_revision_id 3957920, and the named rearm_boundary that
+  receipts the 60s cooldown and the damage-restart rule as ENFORCED.
 * COMPILED VS RECEIPT PARITY: score path (include_receipt=False) and
   receipt walk agree on every observable (survival rows incl. the
   spell_shield lifecycle, breakdown, duration).  Today Verdant sits in
@@ -123,9 +128,11 @@ Coordinator ambiguities surfaced by this matrix (see the reply):
   and unclassifiable deliveries pass through.  The brief's "true
   damage and control effects pass through" reading only holds for
   non-ability packets.
-* Rearm is NEVER modeled inside a fight: the 60s cooldown (and the
-  "timer restarts upon taking damage from champions" rule) is a
-  receipted named boundary; a 70s fight does not re-arm.
+* Rearm IS modeled, anchored on the damage-restart clause: the 60s
+  cooldown runs from the later of the consumption instant and the last
+  champion damage the holder took, so a 70s walk re-arms only when that
+  anchor leaves 60s inside the window.  The request path caps
+  fight_duration at 30s and cannot reach it.
 * The receipt row state name is pinned "annul" provisionally; the
   named boundary key for the damage-restart rule is the coordinator's
   pin (this matrix requires SOME rearm/boundary-named key on the row).
@@ -205,8 +212,9 @@ BRANCH = (
 # The defensive_effects assumption stamped when the shield resolves.
 ASSUMPTION = (
     "Verdant Barrier's Annul spell shield is ready at the opening and "
-    "consumes the first authored hostile ability; cooldown rearm is "
-    "outside the modeled exchange."
+    "consumes the first authored hostile ability; its sourced cooldown "
+    "rearms the shield only once fully elapsed, and the timer restarts "
+    "on champion damage."
 )
 
 
@@ -709,12 +717,22 @@ def test_second_ability_within_the_cooldown_is_not_blocked():
     assert _row(result)["spell_shield_used"] is True
 
 
-def test_no_rearm_even_past_the_sourced_sixty_seconds():
-    """The fight model never re-arms a consumed shield: in a 70s window a
-    second ability at t=65 (after the sourced 60s cooldown) still lands.
-    The cooldown is receipted, never enforced (SPELL_SHIELD_NO_REARM_RULE;
-    the defensive_effects assumption: 'cooldown rearm is outside the
-    modeled exchange')."""
+def test_rearm_past_the_sourced_sixty_seconds_restarts_on_champion_damage():
+    """The rearm clock enforces the sourced 60s AND its restart clause.
+
+    Same 70s window this file used to pin as "never re-arms".  The
+    arithmetic, entirely from sourced numbers: the shield is consumed by
+    the ability at t=1.0; the basic attack at t=2.0 lands 20 damage on the
+    holder, which is what "timer restarts upon taking damage from
+    champions" measures, so the timer starts at max(1.0, 2.0) = 2.0 rather
+    than at the consumption instant; ready_at = 2.0 + 60.0 = 62.0; the
+    second ability at t=65.0 >= 62.0, so it IS blocked.  Surviving damage
+    is the two basic attacks only: 20.0 + 20.0 = 40.0.
+
+    The naive clock (consumed_at + cooldown = 61.0) would agree on THIS
+    packet's outcome, so the restart clause is pinned separately below on
+    a fight where the two disagree.
+    """
     result = _run_packets(
         _holder(),
         [
@@ -739,14 +757,77 @@ def test_no_rearm_even_past_the_sourced_sixty_seconds():
         ],
         duration=70.0,
     )
-    assert _row(result)["damage_taken"] == pytest.approx(140.0)
-    assert len(_blocked_packets(result)) == 1
+    assert _row(result)["damage_taken"] == pytest.approx(40.0)
+    assert len(_blocked_packets(result)) == 2
     assert _row(result)["spell_shield_used"] is True
+    rearms = _row(result)["spell_shield"]["rearms"]
+    assert len(rearms) == 1
+    assert rearms[0]["time"] == pytest.approx(65.0)
+    assert rearms[0]["consumed_at"] == pytest.approx(1.0)
+    assert rearms[0]["cooldown"] == pytest.approx(COOLDOWN)
+    assert rearms[0]["restarts_on_champion_damage"] is True
+    assert rearms[0]["timer_started_at"] == pytest.approx(2.0)
+    assert rearms[0]["ready_at"] == pytest.approx(62.0)
 
 
-def test_no_rearm_rule_is_receipted_with_the_sixty_second_cooldown():
+def test_champion_damage_after_consumption_delays_the_rearm_past_the_second_cast():
+    """The restart clause is enforced, not decorative.
+
+    Same 70s window, but a basic attack lands at t=9.0 instead of t=2.0.
+    Timer starts at max(1.0, 9.0) = 9.0, ready_at = 9.0 + 60.0 = 69.0, so
+    the second ability at t=65.0 < 69.0 is NOT blocked and lands for 100.
+    A clock anchored on the consumption instant alone would have been
+    ready at 61.0 and would have blocked it — this is the packet that
+    separates the two, and it is the direction that would over-credit the
+    defender.  Surviving damage: 20.0 (auto) + 100.0 (ability) = 120.0.
+
+    69.0 is still INSIDE this 70s window: what the t=65 cast misses is the
+    rearm instant, not the fight.  The case where the cooldown outlasts the
+    whole window is the 30s request-bound one, pinned on Banshee's 40s in
+    ``test_spell_shield_eligibility.py``.
+    """
+    result = _run_packets(
+        _holder(),
+        [
+            _packet(1.0, 0, damage=100.0, damage_type="magic", is_ability=True),
+            _packet(
+                9.0,
+                1,
+                damage=20.0,
+                damage_type="physical",
+                source_key="auto_attacks",
+                basic_attack=True,
+            ),
+            _packet(65.0, 2, damage=100.0, damage_type="magic", is_ability=True),
+        ],
+        duration=70.0,
+    )
+    assert _row(result)["damage_taken"] == pytest.approx(120.0)
+    assert len(_blocked_packets(result)) == 1
+    receipt = _row(result)["spell_shield"]
+    assert receipt["rearms"] == []
+    # The clock was present and sourced, so the miss is the arithmetic and
+    # not an absent cooldown, and the shield is still spent afterwards.
+    assert receipt["rearm"]["sourced"] is True
+    assert receipt["rearm"]["cooldown"] == pytest.approx(COOLDOWN)
+    assert _row(result)["spell_shield_used"] is True
+    assert receipt["uses_after"] == 0
+    # The t=65 cast was ELIGIBLE — the window and acceptance admitted it and
+    # only the unelapsed cooldown declined it.  Without this the "not
+    # blocked" assertions above would pass equally for a cast the shield
+    # never even considered.
+    late = [
+        entry for entry in receipt["decisions"] if entry["cast_identity"] == "Q:65.0"
+    ]
+    assert len(late) == 1
+    assert late[0]["eligible"] is True
+    assert late[0]["reason"] == ""
+
+
+def test_rearm_rule_is_receipted_with_the_sixty_second_cooldown():
     """The survival-row receipt carries cooldown_seconds 60.0, the catalog
-    atom hash, and the no-rearm categorical rule quoting Verdant's 60s."""
+    atom hash, the rearm categorical rule quoting Verdant's 60s, and the
+    sourced rearm clock itself."""
     result = _run_packets(
         _holder(),
         [_packet(1.0, 0, damage=100.0, damage_type="magic", is_ability=True)],
@@ -755,9 +836,16 @@ def test_no_rearm_rule_is_receipted_with_the_sixty_second_cooldown():
     assert receipt["cooldown_seconds"] == pytest.approx(COOLDOWN)
     assert receipt["cooldown_atom"]["hash"] == COOLDOWN_ATOM_HASH
     rules = " ".join(entry["rule"] for entry in receipt["rules"])
-    assert "not rearmed inside one modeled fight" in rules
+    assert "only once its sourced cooldown has fully elapsed" in rules
     assert "60 seconds — Verdant Barrier" in rules
     assert "timer restarts upon taking damage from champions" in rules
+    # The clock rides the same receipt, sourced by the same catalog atom.
+    assert receipt["rearm"]["cooldown"] == pytest.approx(COOLDOWN)
+    assert receipt["rearm"]["sourced"] is True
+    assert receipt["rearm"]["restarts_on_champion_damage"] is True
+    assert receipt["rearm"]["source_atom"]["hash"] == COOLDOWN_ATOM_HASH
+    # A default-length fight cannot reach the cooldown, so nothing rearmed.
+    assert receipt["rearms"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -801,7 +889,7 @@ def test_item_state_receipts_emits_the_verdant_annul_row():
     spell_shield_ready True, spell_shield_cooldown 60.0, the catalog atom
     hash, the wiki source receipt (revision 3957920), and the named
     rearm_boundary that receipts the 60s cooldown and the damage-restart
-    rule (rearm is never modeled inside one fight)."""
+    rule as ENFORCED, plus the 30s request bound no rearm can reach."""
     receipts = item_state_receipts(
         [_verdant_item()], {}, fight_duration_seconds=10.0, is_melee=False
     )

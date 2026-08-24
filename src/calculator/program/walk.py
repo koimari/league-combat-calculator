@@ -171,6 +171,17 @@ def _spell_shield(state: Mapping[str, Any]) -> dict[str, Any] | None:
             if state.get("spell_shield_cooldown_atom") is not None
             else None
         ),
+        # The rearm clock and every rearm the walk observed.  ``None`` is a
+        # shield that carries no clock at all (Sivir's timed shield); a clock
+        # with ``sourced`` False never rearms, and an empty ``rearms`` list on
+        # a sourced clock means the cooldown outlasted the fight.  Both are
+        # published so a second block is never an unexplained one.
+        "rearm": (
+            state["spell_shield_rearm"].public_receipt()
+            if state.get("spell_shield_rearm") is not None
+            else None
+        ),
+        "rearms": [dict(entry) for entry in state.get("spell_shield_rearm_events", [])],
     }
 
 

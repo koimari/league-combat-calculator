@@ -1738,10 +1738,12 @@ def item_state_receipts(
             cooldown_atom=annul_spell_shield_cooldown_atom("Verdant Barrier"),
             rearm_boundary=(
                 "Annul's 60s cooldown and the 'timer restarts upon taking "
-                "damage from champions' rule are receipted named boundaries: "
-                "the shield is ready at the opening, consumes the first "
-                "authored hostile ability (one use), and is NOT rearmed "
-                "inside one modeled fight."
+                "damage from champions' rule are ENFORCED: the shield is "
+                "ready at the opening, consumes the first authored hostile "
+                "ability (one use), and rearms once the cooldown has fully "
+                "elapsed from the later of that consumption and the last "
+                "champion damage the holder took.  A requested fight is "
+                "bounded to 30s, so no request reaches the 60s rearm."
             ),
             source_url="https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
             source_revision_id=3957920,
@@ -3291,9 +3293,9 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "defy_heal_ticks": 2,
     },
     # Annul is ready at the opening of a modeled exchange.  The timeline
-    # consumes it on the first authored hostile ability; cooldown/rearm is
-    # intentionally not inferred from an item's name or from unscheduled
-    # damage events.
+    # consumes it on the first authored hostile ability and rearms it on the
+    # typed cooldown below; neither the cooldown nor the timer-restart clause
+    # is ever inferred from an item's name — both are read from the cache.
     # Each of the three carries its own citation because they are one
     # mechanic with three revisions: a declaration whose family constant
     # named a single page could not say which revision the other two were
@@ -4270,6 +4272,42 @@ def spell_shield_cooldown_seconds(item_name: str) -> float:
             f"({atom_values!r})"
         )
     return value
+
+
+# The clause every cached Annul branch spells out beside its cooldown:
+# "(NN second cooldown, timer restarts upon taking damage from champions)".
+# The rearm clock anchors on it, so it is READ from the cache rather than
+# assumed — a silent False would bring the shield back sooner than any
+# source allows, which is the direction that over-credits the defender.
+_ANNUL_TIMER_RESTART_CLAUSE = "timer restarts upon taking damage from champions"
+
+#: The Annul items whose cached text declares NO timer restart.  Empty:
+#: all three cached branches carry the clause today.  An item that drops it
+#: joins this set deliberately, so a parser break shows up as a divergence
+#: rather than as a shield that rearms early.
+_ANNUL_NO_TIMER_RESTART: frozenset[str] = frozenset()
+
+
+def annul_spell_shield_timer_restarts(item_name: str) -> bool:
+    """Whether one Annul item's cooldown timer restarts on champion damage.
+
+    Fails closed twice: a non-Annul name raises through
+    :func:`annul_spell_shield_cooldown_atom`, and the cached text is
+    validated against the declared set above, so a text that stopped
+    carrying the clause raises naming the item instead of answering False.
+    """
+    annul_spell_shield_cooldown_atom(item_name)
+    cached = _ANNUL_TIMER_RESTART_CLAUSE in _cached_effect_text(item_name).casefold()
+    declared = item_name not in _ANNUL_NO_TIMER_RESTART
+    if cached != declared:
+        raise ValueError(
+            f"{item_name!r} cached spell-shield text "
+            f"{'carries' if cached else 'no longer carries'} "
+            f"{_ANNUL_TIMER_RESTART_CLAUSE!r} while the declaration says "
+            f"{'it does not' if cached else 'it does'}; the rearm clock "
+            "refuses an anchor the cache and the declaration disagree on"
+        )
+    return cached
 
 
 # Doran's Helm "Helping Hand": "Basic attacks deal 5 bonus physical damage

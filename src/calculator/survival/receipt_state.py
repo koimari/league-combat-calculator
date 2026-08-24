@@ -64,8 +64,8 @@ _STATE_KEY_STATS = (
 #: structurally cannot see it.  Now the prototype does not read health at
 #: all, so the key really is every input it has.
 #:
-#: The ten defence-contract fields joined for the same reason, and they are
-#: this merge's own finding: the resolvers behind them read the combatant's
+#: The eleven defence-contract fields joined for the same reason, and they
+#: are this merge's own finding: the resolvers behind them read the combatant's
 #: ``champion_data``, ``level``, ``request.champion_options`` and ``items``
 #: — four inputs the value key structurally cannot see — so resolving them
 #: inside the memoized construction would hand two combatants with one
@@ -85,11 +85,12 @@ _PER_CALL_FIELDS = (
     "spell_shield_uses_remaining",
     "spell_shield_cooldown_seconds",
     "spell_shield_cooldown_atom",
+    "spell_shield_rearm",
 )
 
 
 def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
-    """The ten :data:`_PER_CALL_FIELDS` a defence resolver decides.
+    """The eleven :data:`_PER_CALL_FIELDS` a defence resolver decides.
 
     One home for the resolution, so the prototype declares the slots and
     this fills them.  ``None`` throughout is "this combatant holds no such
@@ -120,6 +121,12 @@ def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
             dict(spell_shield.cooldown_atom)
             if spell_shield is not None and spell_shield.cooldown_atom is not None
             else None
+        ),
+        # The rearm clock rides the contract.  ``None`` is "this combatant
+        # holds no shield at all"; a shield whose cooldown is not sourced
+        # carries the default clock, which never rearms.
+        "spell_shield_rearm": (
+            spell_shield.rearm if spell_shield is not None else None
         ),
     }
 
@@ -327,6 +334,13 @@ def _build_state_uncached(
         "spell_shield_decisions": [],
         "spell_shield_cooldown_seconds": None,
         "spell_shield_cooldown_atom": None,
+        # The rearm clock and the two fight-relative instants it reads.
+        # ``spell_shield_consumed_at`` is ``None`` until a use is spent, and
+        # a clock with no consumption instant never rearms — the same
+        # fail-closed shape ``revive_ready_at`` uses for Rebirth.
+        "spell_shield_rearm": None,
+        "spell_shield_consumed_at": None,
+        "spell_shield_rearm_events": [],
         "projectile_defense": None,
         "projectile_defense_eligibility": None,
         "projectile_defense_composition": None,

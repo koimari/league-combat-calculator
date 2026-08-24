@@ -434,4 +434,170 @@ class TestComposition:
             de.UseBudget(action_mode="full_block", uses=0)
 
 
+# ---------------------------------------------------------------------------
+# Spell-shield rearm clock (the seventh lifecycle phase)
+# ---------------------------------------------------------------------------
+
+
+_BANSHEES_ATOM = {
+    "key": "timing.cooldown",
+    "values": [40.0],
+    "hash": "c020562aebacbe01",
+}
+_VERDANT_ATOM = {"key": "timing.cooldown", "values": [60.0], "hash": "2a40799f92fb6749"}
+
+
+def _clock(cooldown: float, *, restarts: bool = True) -> de.SpellShieldRearmClock:
+    """A clock at one of the two sourced cooldowns, with its atom."""
+    atom = _BANSHEES_ATOM if cooldown == 40.0 else _VERDANT_ATOM
+    return de.SpellShieldRearmClock(
+        cooldown=cooldown,
+        restarts_on_champion_damage=restarts,
+        source_atom=atom,
+    )
+
+
+class TestSpellShieldRearmClock:
+    def test_unsourced_clock_never_rearms(self) -> None:
+        """The fail-closed default: no sourced cooldown, no rearm, ever.
+
+        Sivir's timed shield is the live case — it is armed from an
+        authored packet and carries no item cooldown at all.  ``ready_at``
+        is +inf rather than 0.0 so no comparison can accidentally admit it.
+        """
+        clock = de.SpellShieldRearmClock()
+        assert clock.sourced() is False
+        assert clock.ready_at(0.0) == float("inf")
+        assert clock.rearmed_at(1e9, 0.0) is False
+        assert clock.rearms_within(1e9, 0.0) is False
+        assert clock.public_receipt()["sourced"] is False
+        assert clock.public_receipt()["source_atom"] is None
+
+    def test_a_positive_cooldown_without_its_atom_is_refused(self) -> None:
+        """Rule 5 at the kernel: a rearm number no source backs cannot be
+        declared at all, so it can never reach a decision."""
+        with pytest.raises(ValueError, match="catalog atom"):
+            de.SpellShieldRearmClock(cooldown=40.0)
+        with pytest.raises(ValueError, match="cooldown"):
+            de.SpellShieldRearmClock(cooldown=-1.0, source_atom=_BANSHEES_ATOM)
+
+    def test_sourced_cooldowns_are_pinned_at_their_endpoints(self) -> None:
+        """The two sourced cooldowns, each pinned start-inclusive.
+
+        Banshee's Veil / Edge of Night are 40.0s and Verdant Barrier is
+        60.0s.  Consumed at t=1.0 with no champion damage after it, the
+        timer runs from 1.0: ready at 41.0 and 61.0 exactly.  The instant
+        BEFORE is not rearmed and the instant AT it is (the walk's
+        start-inclusive convention, the same one DefenseWindow uses).
+        """
+        for cooldown, ready in ((40.0, 41.0), (60.0, 61.0)):
+            clock = _clock(cooldown)
+            assert clock.sourced() is True
+            assert clock.ready_at(1.0) == pytest.approx(ready)
+            assert clock.rearmed_at(ready - 0.001, 1.0) is False
+            assert clock.rearmed_at(ready, 1.0) is True
+            assert clock.rearmed_at(ready + 0.001, 1.0) is True
+
+    def test_champion_damage_restarts_the_timer(self) -> None:
+        """The cached clause is arithmetic, not prose.
+
+        Consumed at 1.0, last champion damage at 9.0, 40s cooldown: the
+        timer starts at max(1.0, 9.0) = 9.0 and ready_at is 49.0, not the
+        41.0 a consumption-anchored clock would give.  Damage BEFORE the
+        consumption cannot pull the anchor backwards.
+        """
+        clock = _clock(40.0)
+        assert clock.anchor(1.0, 9.0) == pytest.approx(9.0)
+        assert clock.ready_at(1.0, 9.0) == pytest.approx(49.0)
+        assert clock.rearmed_at(41.0, 1.0, 9.0) is False
+        assert clock.rearmed_at(49.0, 1.0, 9.0) is True
+        # Damage before the consumption leaves the consumption as the anchor.
+        assert clock.anchor(9.0, 1.0) == pytest.approx(9.0)
+        assert clock.ready_at(9.0, 1.0) == pytest.approx(49.0)
+
+    def test_a_clock_that_declares_no_restart_ignores_champion_damage(self) -> None:
+        """The clause is a declared field, so an item that ever drops it
+        anchors on the consumption instant alone — no item does today."""
+        clock = _clock(40.0, restarts=False)
+        assert clock.anchor(1.0, 9.0) == pytest.approx(1.0)
+        assert clock.ready_at(1.0, 9.0) == pytest.approx(41.0)
+
+    def test_rearm_inside_and_outside_the_fight_window(self) -> None:
+        """``rearms_within`` is end-exclusive, the walk's convention.
+
+        40s cooldown consumed at 1.0 is ready at 41.0: inside a 70s fight,
+        NOT inside a 41.0s one (a rearm exactly at the end is outside the
+        modeled exchange), and not inside the 30s the request path caps
+        fight_duration at — which is why no request can observe a rearm.
+        """
+        clock = _clock(40.0)
+        assert clock.rearms_within(70.0, 1.0) is True
+        assert clock.rearms_within(41.0, 1.0) is False
+        assert clock.rearms_within(30.0, 1.0) is False
+        # Verdant's 60s: champion damage at 9.0 pushes ready_at from 61.0 to
+        # 69.0, which still fits a 70s fight but no longer fits a 69s one —
+        # the restart clause moves the boundary, it does not only delay.
+        verdant = _clock(60.0)
+        assert verdant.ready_at(1.0, 2.0) == pytest.approx(62.0)
+        assert verdant.ready_at(1.0, 9.0) == pytest.approx(69.0)
+        assert verdant.rearms_within(70.0, 1.0, 9.0) is True
+        assert verdant.rearms_within(69.0, 1.0, 9.0) is False
+        assert verdant.rearms_within(69.0, 1.0, 2.0) is True
+
+    def test_block_decision_fails_closed_without_every_instant(self) -> None:
+        """The gate needs the clock AND both instants; any one missing
+        keeps the strict one-use rule rather than inventing a rearm."""
+        clock = _clock(40.0)
+        spent = ("Q:1",)
+        # Everything present and elapsed: rearmed.
+        assert de.spell_shield_block_decision(
+            True, spent, "Q:2", rearm=clock, event_time=50.0, consumed_at=1.0
+        ) == (True, "rearmed")
+        # No clock / no event time / no consumption instant: denied.
+        assert de.spell_shield_block_decision(True, spent, "Q:2") == (
+            False,
+            "use_consumed",
+        )
+        assert de.spell_shield_block_decision(
+            True, spent, "Q:2", rearm=clock, consumed_at=1.0
+        ) == (False, "use_consumed")
+        assert de.spell_shield_block_decision(
+            True, spent, "Q:2", rearm=clock, event_time=50.0
+        ) == (False, "use_consumed")
+        # Unsourced clock with both instants: still denied.
+        assert de.spell_shield_block_decision(
+            True,
+            spent,
+            "Q:2",
+            rearm=de.SpellShieldRearmClock(),
+            event_time=1e9,
+            consumed_at=1.0,
+        ) == (False, "use_consumed")
+
+    def test_block_decision_precedence_unused_then_same_cast_then_rearm(self) -> None:
+        """An unspent shield and a same-cast packet answer before the clock
+        is ever read, so a rearm never masks either."""
+        clock = _clock(40.0)
+        assert de.spell_shield_block_decision(
+            False, None, "Q:1", rearm=clock, event_time=0.0, consumed_at=None
+        ) == (True, "")
+        assert de.spell_shield_block_decision(
+            ("Q:1",), ("Q:1",), "Q:1", rearm=clock, event_time=2.0, consumed_at=1.0
+        ) == (True, "same_cast")
+        # Same cast LONG after the cooldown is still "same_cast", not a rearm:
+        # it never spent a second use.
+        assert de.spell_shield_block_decision(
+            True, ("Q:1",), "Q:1", rearm=clock, event_time=99.0, consumed_at=1.0
+        ) == (True, "same_cast")
+
+    def test_public_receipt_is_json_safe_and_carries_the_atom(self) -> None:
+        receipt = _clock(60.0).public_receipt()
+        assert receipt["cooldown"] == pytest.approx(60.0)
+        assert receipt["sourced"] is True
+        assert receipt["restarts_on_champion_damage"] is True
+        assert receipt["source_atom"]["hash"] == "2a40799f92fb6749"
+        assert "timer restarts upon taking damage from champions" in receipt["rule"]
+        assert receipt["rule"] == de.SPELL_SHIELD_REARM_RULE
+
+
 __all__ = []

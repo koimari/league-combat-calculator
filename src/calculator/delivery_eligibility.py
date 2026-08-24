@@ -37,11 +37,17 @@ are three orthogonal contracts:
   consumption, blocked effect, triggered heal) each have one typed
   kernel declaration; consumers never re-implement a decision.
 
+  The seventh lifecycle phase is REARM (:class:`SpellShieldRearmClock`):
+  a consumed shield comes back inside one fight when its sourced cooldown
+  elapses, anchored by the cached "timer restarts upon taking damage from
+  champions" clause to the later of the consumption instant and the last
+  champion damage the holder took.  A shield with no sourced cooldown
+  keeps the strict one-use-per-fight rule.
+
   SLICE BOUNDARY (documented follow-ups, deliberately NOT implemented):
   crowd-control immunity, cleanse, Morgana E, Mikael's Blessing,
   Quicksilver Sash, Mercurial Scimitar, and Nocturne W are separate P2
-  defenses; Annul rearm (cooldown-restart on champion damage) is not
-  modeled in one fight; item-effect packets and monster basic attacks
+  defenses; item-effect packets and monster basic attacks
   (Sivir's notes list both as blockable) have no model tag, so the
   ability-only gate is a declared narrowing; damage-over-time tick
   blocking (already-applied DoTs are not blocked per tick in-game, but
@@ -66,6 +72,7 @@ from __future__ import annotations
 
 # pylint: disable=too-many-lines  # one dependency-light leaf owns the typed
 # contracts; splitting it would create a second decision path.
+import math
 from dataclasses import dataclass
 from typing import Any, Literal, Mapping
 
@@ -749,11 +756,14 @@ SPELL_SHIELD_PRIOR_DISPOSAL_RULE = (
     "invulnerability, then projectile destroy/full block, then the spell "
     "shield gate)."
 )
-SPELL_SHIELD_NO_REARM_RULE = (
-    "A consumed shield is not rearmed inside one modeled fight; the "
-    "sourced cooldown remains receipted ('40 second cooldown, timer "
+SPELL_SHIELD_REARM_RULE = (
+    "A consumed shield rearms inside one modeled fight only once its "
+    "sourced cooldown has fully elapsed ('40 second cooldown, timer "
     "restarts upon taking damage from champions' — Banshee's Veil / Edge "
-    "of Night; 60 seconds — Verdant Barrier).  Rearm is follow-up work."
+    "of Night; 60 seconds — Verdant Barrier), and that restart clause "
+    "anchors the clock to the later of the consumption instant and the "
+    "last champion damage the holder took.  A shield whose cooldown is "
+    "not sourced never rearms."
 )
 _SPELL_SHIELD_WIKI = SourceReceipt(
     label="Local League Wiki cache — Sivir E and Annul item descriptions",
@@ -780,7 +790,7 @@ def spell_shield_rules_receipt() -> list[dict[str, Any]]:
         SpellShieldRuleDeclaration(SPELL_SHIELD_CONTROL_ONLY_RULE).public_receipt(),
         SpellShieldRuleDeclaration(SPELL_SHIELD_BASIC_ATTACK_RULE).public_receipt(),
         SpellShieldRuleDeclaration(SPELL_SHIELD_PRIOR_DISPOSAL_RULE).public_receipt(),
-        SpellShieldRuleDeclaration(SPELL_SHIELD_NO_REARM_RULE).public_receipt(),
+        SpellShieldRuleDeclaration(SPELL_SHIELD_REARM_RULE).public_receipt(),
     ]
 
 
@@ -1036,23 +1046,141 @@ def spell_shield_group_key(attacker: Any, cast_identity: str) -> tuple[str, ...]
     return (cast_identity,)
 
 
+@dataclass(frozen=True, slots=True)
+class SpellShieldRearmClock:
+    """One consumed shield's fight-window-relative rearm clock.
+
+    ``cooldown`` is the holder item's SOURCED cooldown in seconds and
+    ``source_atom`` is the catalog atom that evidences it: a positive
+    cooldown declared without its atom is refused, so the kernel can never
+    rearm on a number no source backs.  ``0.0`` is the declared "no sourced
+    cooldown" value and never rearms — that shield keeps the strict
+    one-use-per-fight rule (Sivir's timed shield is the live case).
+
+    ``restarts_on_champion_damage`` carries the cached clause every Annul
+    branch spells out, so the timer is anchored to the LATER of the
+    consumption instant and the last champion damage the holder took — not
+    to the consumption instant alone, which would rearm the shield sooner
+    than the source allows.
+    """
+
+    cooldown: float = 0.0
+    restarts_on_champion_damage: bool = True
+    source_atom: Mapping[str, Any] | None = None
+    rule: str = SPELL_SHIELD_REARM_RULE
+
+    def __post_init__(self) -> None:
+        """Fail closed on an impossible or unsourced clock declaration."""
+        if not self.cooldown >= 0.0:
+            raise ValueError(
+                "SpellShieldRearmClock: cooldown must be a number >= 0.0 "
+                f"(0.0 = not sourced, never rearms), got {self.cooldown!r}"
+            )
+        if self.cooldown > 0.0 and self.source_atom is None:
+            raise ValueError(
+                "SpellShieldRearmClock: a positive cooldown needs the "
+                f"catalog atom that sources it; {self.cooldown!r} arrived "
+                "with none"
+            )
+
+    def sourced(self) -> bool:
+        """Whether a sourced cooldown backs this clock."""
+        return self.cooldown > 0.0
+
+    def anchor(
+        self, consumed_at: float, last_champion_damage_at: float | None = None
+    ) -> float:
+        """The instant this shield's cooldown timer last (re)started."""
+        started = float(consumed_at)
+        if self.restarts_on_champion_damage and last_champion_damage_at is not None:
+            damaged_at = float(last_champion_damage_at)
+            if damaged_at > started:
+                started = damaged_at
+        return started
+
+    def ready_at(
+        self, consumed_at: float, last_champion_damage_at: float | None = None
+    ) -> float:
+        """The fight-relative instant the shield rearms; ``inf`` never."""
+        if not self.sourced():
+            return float("inf")
+        return self.anchor(consumed_at, last_champion_damage_at) + self.cooldown
+
+    def rearmed_at(
+        self,
+        event_time: float,
+        consumed_at: float,
+        last_champion_damage_at: float | None = None,
+    ) -> bool:
+        """Whether the shield is back by ``event_time`` (start inclusive)."""
+        ready = self.ready_at(consumed_at, last_champion_damage_at)
+        if not math.isfinite(ready):
+            return False
+        return float(event_time) >= ready - _EPS
+
+    def rearms_within(
+        self,
+        fight_until: float,
+        consumed_at: float,
+        last_champion_damage_at: float | None = None,
+    ) -> bool:
+        """Whether the rearm lands inside the fight window.
+
+        End-exclusive, the walk's convention (:meth:`DefenseWindow.active_at`).
+        """
+        ready = self.ready_at(consumed_at, last_champion_damage_at)
+        if not math.isfinite(ready):
+            return False
+        return ready < float(fight_until) - _EPS
+
+    def public_receipt(self) -> dict[str, Any]:
+        """JSON-safe rearm-clock receipt."""
+        return {
+            "cooldown": round(self.cooldown, 3),
+            "sourced": self.sourced(),
+            "restarts_on_champion_damage": self.restarts_on_champion_damage,
+            "rule": self.rule,
+            "source_atom": (
+                dict(self.source_atom) if self.source_atom is not None else None
+            ),
+        }
+
+
 def spell_shield_block_decision(
     used: bool,
     blocked_cast: tuple[str, ...] | None,
     cast_identity: str,
     attacker: Any = None,
+    *,
+    rearm: SpellShieldRearmClock | None = None,
+    event_time: float | None = None,
+    consumed_at: float | None = None,
+    last_champion_damage_at: float | None = None,
 ) -> tuple[bool, str]:
     """Whether one eligible cast may still be blocked by the shield.
 
     ``(True, "same_cast")`` groups every packet of an already-blocked cast
-    without spending another use; ``(False, "use_consumed")`` answers a
-    different cast arriving after the one use.
+    without spending another use; ``(True, "rearmed")`` answers a different
+    cast that arrives after the sourced cooldown brought the shield back
+    inside the fight; ``(False, "use_consumed")`` answers a different cast
+    arriving while the one use is still spent.
+
+    The rearm clock is optional and fails closed in every direction: no
+    clock, an unsourced clock, or a missing consumption/event timestamp all
+    keep the strict one-use-per-fight rule rather than inventing a rearm.
     """
     key = spell_shield_group_key(attacker, cast_identity)
     if not used:
         return True, ""
     if blocked_cast == key:
         return True, "same_cast"
+    if (
+        rearm is not None
+        and event_time is not None
+        and consumed_at is not None
+        and rearm.rearmed_at(event_time, consumed_at, last_champion_damage_at)
+    ):
+        return True, "rearmed"
     return False, "use_consumed"
 
 
@@ -1079,13 +1207,14 @@ __all__ = [
     "UnknownDeliveryError",
     "SPELL_SHIELD_BASIC_ATTACK_RULE",
     "SPELL_SHIELD_CONTROL_ONLY_RULE",
-    "SPELL_SHIELD_NO_REARM_RULE",
     "SPELL_SHIELD_ONE_USE_RULE",
     "SPELL_SHIELD_PRIOR_DISPOSAL_RULE",
+    "SPELL_SHIELD_REARM_RULE",
     "SpellShieldAcceptance",
     "SpellShieldComposition",
     "SpellShieldDecision",
     "SpellShieldEligibility",
+    "SpellShieldRearmClock",
     "SpellShieldRuleDeclaration",
     "TriggeredHealRule",
     "UseBudget",
