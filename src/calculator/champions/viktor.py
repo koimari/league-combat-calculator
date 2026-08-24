@@ -35,6 +35,7 @@ inventing both the fragment count and the effect.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .packet_module import build_packet_module, initial_plus_ticks_parser
 from .slotlib import (
@@ -50,7 +51,11 @@ from .module_contract import coverage
 # HARDCODED: verify on patch updates — the shield window (2.5s) and the
 # Discharge window (4s) are wiki Q prose; the shield base row and the
 # discharge damage are cached leveling rows read live below.
-_Q_SHIELD_DURATION_SECONDS = 2.5
+# ROOTED IN THE BINARY (ViktorQ.BuffDuration); the wiki Q prose
+# corroborates the window.
+_Q_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Viktor", "ViktorQ"), "BuffDuration"
+)
 
 PACKET_SHA256 = "542116107f7a930a0dbae3ed0dfb602d84d0b90cb6bf86f2b4832bae1c8ad13f"
 

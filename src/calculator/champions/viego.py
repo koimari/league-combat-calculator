@@ -27,6 +27,7 @@ which is inherently out of scope (E8d note).
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -45,9 +46,13 @@ from .module_contract import coverage
 # The mark-consuming second strike deals "20% AD (+ 15% AP) physical
 # damage" (Q description, cached JSON); Heartbreaker's base strike is
 # "120% AD physical damage" (R description, cached JSON).
+_VIEGO_Q_SPELL = spell_object("Viego", "ViegoQ")
+_VIEGO_R_SPELL = spell_object("Viego", "ViegoR")
+# The AD half of the second strike stays wiki prose (no binary row); the
+# AP half and R's base ratio are DataValues.
 _Q_SECOND_STRIKE_AD_RATIO = 0.20
-_Q_SECOND_STRIKE_AP_RATIO = 0.15
-_R_BASE_AD_RATIO = 1.20
+_Q_SECOND_STRIKE_AP_RATIO = data_value(_VIEGO_Q_SPELL, "SecondAttackAPRatio")
+_R_BASE_AD_RATIO = data_value(_VIEGO_R_SPELL, "ADRatio")
 
 PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756b"
 

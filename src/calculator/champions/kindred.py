@@ -51,6 +51,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .inputs import champion_stat, int_option
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .module_helpers import no_damage, typed_damage
@@ -98,7 +99,12 @@ _E_STACK_MAX = 3
 # Mounting Dread's third-stack pounce "increased by 0% : 50% (+ 0% :
 # 15%) (based on critical strike chance)" (the Akshan-R / Caitlyn-R
 # crit_effectiveness precedent).
-_E_POUNCE_CRIT_EFFECTIVENESS = 0.5
+# ROOTED IN THE BINARY (KindredEWrapper.CritMod); the wiki prose
+# ("+ 0% : 15% (based on critical strike chance)") corroborates the
+# crit_effectiveness semantics (the Akshan-R / Caitlyn-R precedent).
+_E_POUNCE_CRIT_EFFECTIVENESS = data_value(
+    spell_object("Kindred", "KindredEWrapper"), "CritMod"
+)
 
 
 def _marks(ctx: SlotCtx) -> int:

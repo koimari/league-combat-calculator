@@ -18,6 +18,7 @@ zero-damage row: this module replaces that slot.
 from functools import partial
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -37,7 +38,11 @@ PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b
 # HARDCODED: verify on patch updates — the enhanced window is cached W
 # prose ("Shroud of Darkness' bonus attack speed is doubled for 5
 # seconds"); both percentages are JSON leveling rows.
-_W_ENHANCED_SECONDS = 5.0
+# ROOTED IN THE BINARY (NocturneShroudofDarkness.DoubleASDuration);
+# the cached W prose ("doubled for 5 seconds") corroborates it.
+_W_ENHANCED_SECONDS = data_value(
+    spell_object("Nocturne", "NocturneShroudofDarkness"), "DoubleASDuration"
+)
 
 
 # Unspeakable Horror's fear lands when the tether completes: "if the tether
