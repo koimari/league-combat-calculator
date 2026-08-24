@@ -31,6 +31,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import ability_cast_times
 from .slotlib import (
@@ -62,8 +63,11 @@ _TIBBERS_AURA_BASE_PER_TICK = [2.0, 3.0, 4.0]
 _TIBBERS_AURA_AP_RATIO_PER_TICK = 0.01
 _TIBBERS_AURA_TICK_INTERVAL = 0.25
 _TIBBERS_AUTO_BASE = [30.0, 45.0, 60.0]
-_TIBBERS_AUTO_AP_RATIO = 0.10
+_TIBBERS_AUTO_AP_RATIO = data_value(
+    spell_object("Annie", "AnnieR"), "TibbersAttackAPRatio"
+)
 _TIBBERS_BASE_ATTACK_SPEED = 0.625
+_TIBBERS_ENRAGE_SECONDS = data_value(spell_object("Annie", "AnnieR"), "EnrageDuration")
 _TIBBERS_ENRAGE_ATTACK_COUNT = 5
 _TIBBERS_ENRAGE_BASE_AS = 1.736
 _TIBBERS_DEFAULT_WINDOW = 5.0  # one rotation; timed fights pass the real window

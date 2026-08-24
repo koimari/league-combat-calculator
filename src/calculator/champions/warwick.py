@@ -58,6 +58,7 @@ from ..ability_atoms import (
     required_ranked_attribute_atom,
 )
 from ..ability_spec import AttackClass, DamageClass, DamagePart
+from ..binary_roots import data_value, spell_object
 from ..survival.actions import TransitionRank
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
@@ -83,10 +84,13 @@ _R_CHANNEL_SECONDS = 1.5
 # PROSE, not a leveling row: "While below 50% maximum health, Warwick
 # also heals for 100% of the post-mitigation damage dealt by Eternal
 # Hunger, increased to 250% while below 25% maximum health."
-_HUNGER_HEAL_HEALTH_PERCENT = 50.0
-_HUNGER_HEAL_SHARE = 1.0
-_HUNGER_RAGE_HEALTH_PERCENT = 25.0
-_HUNGER_RAGE_SHARE = 2.5
+_WARWICK_P_SPELL = spell_object("Warwick", "WarwickP")
+_HUNGER_HEAL_HEALTH_PERCENT = data_value(_WARWICK_P_SPELL, "HealingThreshold") * 100.0
+_HUNGER_HEAL_SHARE = data_value(_WARWICK_P_SPELL, "HealingRatio")
+_HUNGER_RAGE_HEALTH_PERCENT = (
+    data_value(_WARWICK_P_SPELL, "EmpoweredHealingThreshold") * 100.0
+)
+_HUNGER_RAGE_SHARE = data_value(_WARWICK_P_SPELL, "EmpoweredHealingRatio")
 
 # Blood Hunt's two tiers are the TARGET's health: the passive triggers
 # below 50% maximum health and both bonuses are "doubled against enemies

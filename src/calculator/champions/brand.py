@@ -24,6 +24,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .module_helpers import delayed_damage
@@ -42,7 +43,9 @@ from .inputs import int_option
 # the JSON (P effect[1] has no leveling entry): each stack deals 2% of
 # the target's maximum health as magic damage over 4 seconds.
 # https://wiki.leagueoflegends.com/en-us/Brand
-_ABLAZE_DOT_PCT_MAX_HP = 0.02  # per stack, full 4 s burn
+_ABLAZE_DOT_PCT_MAX_HP = (
+    data_value(spell_object("Brand", "BrandPassive"), "PercentHealthDamage") / 100.0
+)  # per stack, full 4 s burn
 
 _ABLAZE_DURATION_S = 4.0  # every tick is ability damage: refreshes item burns
 _ABLAZE_MAX_STACKS = 3

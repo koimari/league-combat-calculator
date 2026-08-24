@@ -68,6 +68,7 @@ from ..ability_atoms import (
     required_ranked_attribute_atom,
 )
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     STEROID_ZERO,
@@ -85,7 +86,9 @@ from .module_contract import coverage
 # HARDCODED: verify on patch updates — the 4-stack cap is wiki prose
 # ("stacking up to 4 times for a maximum 100% increase"); the damage
 # rows themselves are read from the JSON.
-_E_MAX_STACKS = 4
+_E_MAX_STACKS = int(
+    data_value(spell_object("Tristana", "TristanaE"), "ActiveMaxStacks")
+)
 
 # Rapid Fire's window is NOT a literal: it is the typed
 # ``timing.active_duration`` atom, selected by this exact source path.

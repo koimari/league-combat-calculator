@@ -401,3 +401,50 @@ class TestBatch7RootedConstants:
         assert data_value(spell_object("Vex", "VexW"), "ShieldDuration") == (
             pytest.approx(vex._PERSONAL_SPACE_SHIELD_DURATION_SECONDS)
         )
+
+
+class TestBatch8RootedConstants:
+    """Batch 8: Annie, Brand, Warwick and Tristana constants resolve from
+    their binaries."""
+
+    def test_annie(self):
+        import src.calculator.champions.annie as annie
+
+        r = spell_object("Annie", "AnnieR")
+        assert data_value(r, "TibbersAttackAPRatio") == pytest.approx(
+            annie._TIBBERS_AUTO_AP_RATIO
+        )
+        assert data_value(r, "EnrageDuration") == pytest.approx(
+            annie._TIBBERS_ENRAGE_SECONDS
+        )
+
+    def test_brand(self):
+        import src.calculator.champions.brand as brand
+
+        assert data_value(
+            spell_object("Brand", "BrandPassive"), "PercentHealthDamage"
+        ) / 100.0 == pytest.approx(brand._ABLAZE_DOT_PCT_MAX_HP)
+
+    def test_warwick(self):
+        import src.calculator.champions.warwick as warwick
+
+        p = spell_object("Warwick", "WarwickP")
+        assert data_value(p, "HealingThreshold") * 100.0 == pytest.approx(
+            warwick._HUNGER_HEAL_HEALTH_PERCENT
+        )
+        assert data_value(p, "HealingRatio") == pytest.approx(
+            warwick._HUNGER_HEAL_SHARE
+        )
+        assert data_value(p, "EmpoweredHealingThreshold") * 100.0 == pytest.approx(
+            warwick._HUNGER_RAGE_HEALTH_PERCENT
+        )
+        assert data_value(p, "EmpoweredHealingRatio") == pytest.approx(
+            warwick._HUNGER_RAGE_SHARE
+        )
+
+    def test_tristana(self):
+        import src.calculator.champions.tristana as tristana
+
+        assert data_value(spell_object("Tristana", "TristanaE"), "ActiveMaxStacks") == (
+            tristana._E_MAX_STACKS
+        )
