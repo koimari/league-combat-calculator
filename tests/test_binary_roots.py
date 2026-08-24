@@ -634,3 +634,47 @@ class TestBatch14RootedConstants:
         p = spell_object("Lulu", "LuluPassive")
         assert data_value(p, "NumberOfBolts") == lulu._PIX_BOLTS_DEFAULT
         assert data_value(p, "APRatioPerHit") == pytest.approx(lulu._PIX_BOLT_AP_RATIO)
+
+
+class TestBatch15RootedConstants:
+    """Batch 15: Kindred, Nocturne, Riven, Viktor and Viego constants
+    resolve from their binaries."""
+
+    def test_kindred(self):
+        import src.calculator.champions.kindred as kindred
+
+        assert data_value(
+            spell_object("Kindred", "KindredEWrapper"), "CritMod"
+        ) == pytest.approx(kindred._E_POUNCE_CRIT_EFFECTIVENESS)
+
+    def test_nocturne(self):
+        import src.calculator.champions.nocturne as nocturne
+
+        assert data_value(
+            spell_object("Nocturne", "NocturneShroudofDarkness"),
+            "DoubleASDuration",
+        ) == pytest.approx(nocturne._W_ENHANCED_SECONDS)
+
+    def test_riven(self):
+        import src.calculator.champions.riven as riven
+
+        r = spell_object("Riven", "RivenFengShuiEngine")
+        assert data_value(r, "PercentBonusAD") == pytest.approx(riven._R_BONUS_AD_RATIO)
+        assert data_value(r, "Duration") == pytest.approx(riven._R_BUFF_DURATION)
+
+    def test_viktor(self):
+        import src.calculator.champions.viktor as viktor
+
+        assert data_value(spell_object("Viktor", "ViktorQ"), "BuffDuration") == (
+            pytest.approx(viktor._Q_SHIELD_DURATION_SECONDS)
+        )
+
+    def test_viego(self):
+        import src.calculator.champions.viego as viego
+
+        assert data_value(spell_object("Viego", "ViegoQ"), "SecondAttackAPRatio") == (
+            pytest.approx(viego._Q_SECOND_STRIKE_AP_RATIO)
+        )
+        assert data_value(spell_object("Viego", "ViegoR"), "ADRatio") == pytest.approx(
+            viego._R_BASE_AD_RATIO
+        )

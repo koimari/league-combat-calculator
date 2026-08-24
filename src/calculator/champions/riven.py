@@ -36,6 +36,7 @@ an already-covered slot (the Malzahar/Nasus precedent, roadmap session
 4 batch D). Reclassified to "no_damage"; zero fight-computation change.
 """
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -49,12 +50,13 @@ from .slotlib import (
 PACKET_SHA256 = "efecdb1959bc6c813777c1d4cf4f8b8befcb4d93093c291c8cf973464d2226b8"
 
 
-# HARDCODED: verify on patch updates — the current R1 AD buff is a flat
-# 20% of bonus AD at every rank (riven.bin.json RivenFengShuiEngine
-# PercentBonusAD = 0.20; wiki patch history: "reduced to 20% bonus AD
-# from 25%").
-_R_BONUS_AD_RATIO = 0.20
-_R_BUFF_DURATION = 15.0  # wiki prose: "empowers her blade for 15 seconds"
+# Both rooted in the binary (RivenFengShuiEngine PercentBonusAD /
+# Duration DataValues); wiki patch history ("reduced to 20% bonus AD
+# from 25%") and the R prose ("empowers her blade for 15 seconds")
+# corroborate.
+_RIVEN_R_SPELL = spell_object("Riven", "RivenFengShuiEngine")
+_R_BONUS_AD_RATIO = data_value(_RIVEN_R_SPELL, "PercentBonusAD")
+_R_BUFF_DURATION = data_value(_RIVEN_R_SPELL, "Duration")
 
 # Runic Blade's own cached sentence: "The bonus damage is affected by
 # critical strike modifiers and applies life steal at 100% effectiveness"
