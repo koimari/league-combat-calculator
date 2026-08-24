@@ -139,3 +139,95 @@ class TestBatch2VladimirAndYone:
         live = q3_knockup_duration("Yone", q_ability)
         binary = data_value(spell_object("Yone", "YoneQ"), "Q3KnockupDuration")
         assert binary == pytest.approx(live)
+
+
+class TestBatch3RootedConstants:
+    """Batch 3: Varus, Udyr, Seraphine, Senna, Ezreal and Darius constants
+    resolve from their binaries; each test re-reads the root so a patch
+    moving either side trips."""
+
+    def test_varus(self):
+        import src.calculator.champions.varus as varus
+
+        w = spell_object("Varus", "VarusW")
+        p = spell_object("Varus", "VarusPassive")
+        assert data_value(w, "MaxStacks") == varus._BLIGHT_MAX_STACKS
+        assert data_value(p, "PassiveAS") * 100.0 == pytest.approx(
+            varus._P_TAKEDOWN_ATTACK_SPEED
+        )
+        assert data_value(p, "AStoADChampion") / 100.0 == pytest.approx(
+            varus._P_TAKEDOWN_DERIVED_RATIO
+        )
+
+    def test_udyr(self):
+        import src.calculator.champions.udyr as udyr
+
+        assert data_value(spell_object("Udyr", "UdyrQ"), "Bounces") == (
+            udyr._Q_LIGHTNING_STRIKES_PER_ATTACK
+        )
+        assert data_value(spell_object("Udyr", "UdyrE"), "MoveSpeedDuration") == (
+            pytest.approx(udyr._E_MOVE_SPEED_SECONDS)
+        )
+        # The strike interval stays prose-rooted (no binary home).
+        assert udyr._Q_LIGHTNING_HIT_INTERVAL == pytest.approx(0.2)
+
+    def test_seraphine(self):
+        import src.calculator.champions.seraphine as seraphine
+
+        q = spell_object("Seraphine", "SeraphineQ")
+        w = spell_object("Seraphine", "SeraphineW")
+        assert data_value(q, "DamageAmp") / 100.0 == pytest.approx(
+            seraphine._Q_MISSING_HEALTH_MAX_BONUS
+        )
+        assert data_value(w, "WMSBonus") * 100.0 == pytest.approx(
+            seraphine._W_MOVE_SPEED_PERCENT
+        )
+        assert data_value(w, "WMSBonusAPRatio") * 10000.0 == pytest.approx(
+            seraphine._W_MOVE_SPEED_PER_100_AP
+        )
+
+    def test_senna(self):
+        import src.calculator.champions.senna as senna
+
+        p = spell_object("Senna", "SennaPassive")
+        r = spell_object("Senna", "SennaR")
+        assert data_value(p, "ADPerStack") == pytest.approx(senna._MIST_AD_PER_STACK)
+        assert data_value(p, "StacksForBonus") == senna._MIST_STACKS_PER_THRESHOLD
+        assert data_value(p, "BonusRange") == pytest.approx(
+            senna._MIST_RANGE_PER_THRESHOLD
+        )
+        assert data_value(r, "ShieldDuration") == pytest.approx(
+            senna._DAWNING_SHADOW_SHIELD_DURATION_SECONDS
+        )
+
+    def test_ezreal(self):
+        import src.calculator.champions.ezreal as ezreal
+
+        p = spell_object("Ezreal", "EzrealPassive")
+        w = spell_object("Ezreal", "EzrealW")
+        assert data_value(p, "AttackSpeedPerStack") * 100.0 == pytest.approx(
+            ezreal.PASSIVE_AS_PER_STACK
+        )
+        assert data_value(p, "MaxStacks") == ezreal.PASSIVE_MAX_STACKS
+        assert data_value(spell_object("Ezreal", "EzrealQ"), "CDRefund") == (
+            pytest.approx(ezreal.Q_REFUND_SECONDS)
+        )
+        assert data_value(w, "ManaReturn") == pytest.approx(ezreal.W_MARK_REFUND_FLAT)
+        assert data_value(w, "DetonationTimeout") == pytest.approx(
+            ezreal.W_MARK_WINDOW_SECONDS
+        )
+
+    def test_darius(self):
+        import src.calculator.champions.darius as darius
+
+        hemo = spell_object("Darius", "DariusHemoMarker")
+        assert data_value(hemo, "BleedDuration") == pytest.approx(
+            darius.P_BLEED_DURATION
+        )
+        assert data_value(hemo, "MaxStacks") == darius.P_BLEED_MAX_STACKS
+        # DOCUMENTED DRIFT: the binary cadence reads 1.26; the module prices
+        # the wiki's 4-ticks-over-5s shape (1.25).  Pinned here so a patch
+        # that settles it flips this test deliberately.
+        assert data_value(hemo, "SecondsPerTick") != pytest.approx(
+            darius.P_BLEED_TICK_INTERVAL
+        )

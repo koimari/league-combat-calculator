@@ -33,6 +33,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .engine import ONHIT, SlotCtx
@@ -49,19 +50,20 @@ from .slotlib import (
 )
 from .module_contract import coverage
 
-# HARDCODED: verify on patch updates — wiki Q prose, not JSON:
-# the stance empowers the next two basic attacks; the Awaken lightning
-# chain fires 6 strikes per empowered attack at 0.2-second intervals.
+# The Awaken lightning chain's strike COUNT is the binary UdyrQ.Bounces
+# DataValue; the strike INTERVAL (0.2s) has no binary home (script-side)
+# and stays a documented prose constant.  The stance empowers the next
+# two basic attacks by cached prose.
+_UDYR_Q_SPELL = spell_object("Udyr", "UdyrQ")
 _Q_EMPOWERED_ATTACKS_DEFAULT = 2
-_Q_LIGHTNING_STRIKES_PER_ATTACK = 6
+_Q_LIGHTNING_STRIKES_PER_ATTACK = int(data_value(_UDYR_Q_SPELL, "Bounces"))
 _Q_LIGHTNING_HIT_INTERVAL = 0.2
 
-# HARDCODED: verify on patch updates — the Singed-R precedent, a window
-# that is cached PROSE rather than an atom.  E's movement grant lasts
-# "4 seconds" by the second effect's description; the slot's only
-# `timing.active_duration` atom is the 0.75s stun from the FIRST effect,
-# so there is no atom to read this window from.
-_E_MOVE_SPEED_SECONDS = 4.0
+# E's movement window is the binary UdyrE.MoveSpeedDuration DataValue;
+# the cached description ("4 seconds") corroborates it.  (The slot's only
+# timing.active_duration atom remains the 0.75s stun from the FIRST
+# effect.)
+_E_MOVE_SPEED_SECONDS = data_value(spell_object("Udyr", "UdyrE"), "MoveSpeedDuration")
 
 PACKET_SHA256 = "468fd3bf2d2dd7e836b89c0ae6eff50d844990c0c03442f7f864a2032525dd9c"
 

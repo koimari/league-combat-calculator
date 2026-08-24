@@ -33,6 +33,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
@@ -51,9 +52,9 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option, int_option
 
-# HARDCODED: verify on patch updates — wiki prose, not in the JSON.
-# Blight stacks to 3 on basic attacks; abilities detonate all stacks.
-_BLIGHT_MAX_STACKS = 3
+# Blight's stack cap is the binary VarusW.MaxStacks DataValue; the cached
+# prose corroborates ("stacks up to 3 times"); abilities detonate all stacks.
+_BLIGHT_MAX_STACKS = int(data_value(spell_object("Varus", "VarusW"), "MaxStacks"))
 _BLIGHT_DETONATION_ATTR = "Bonus Magic Damage per Stack"
 
 
@@ -208,16 +209,15 @@ def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-# HARDCODED: verify on patch updates — Living Vengeance carries no
-# leveling row at all; every number is cached P prose.  Only the
-# champion-takedown branch is priced, because it is the one whose
-# magnitudes the cache states without level breakpoints: "30% bonus
-# attack speed as well as bonus attack damage and ability power equal to
-# 33% of his total bonus attack speed".  The unit-kill branch's
-# "10% / 15% / 20% (based on level)" names no breakpoint levels, so
-# pricing it would mean inventing them.
-_P_TAKEDOWN_ATTACK_SPEED = 30.0
-_P_TAKEDOWN_DERIVED_RATIO = 0.33
+# Living Vengeance's champion-takedown numbers are binary DataValues
+# (VarusPassive.PassiveAS / AStoADChampion / AStoAPChampion); the cached P
+# prose corroborates ("30% bonus attack speed ... equal to 33% of his total
+# bonus attack speed").  The unit-kill branch's "10% / 15% / 20% (based on
+# level)" names no breakpoint levels, so pricing it would mean inventing
+# them.
+_VARUS_P_SPELL = spell_object("Varus", "VarusPassive")
+_P_TAKEDOWN_ATTACK_SPEED = data_value(_VARUS_P_SPELL, "PassiveAS") * 100.0
+_P_TAKEDOWN_DERIVED_RATIO = data_value(_VARUS_P_SPELL, "AStoADChampion") / 100.0
 
 
 def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:

@@ -82,6 +82,7 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -104,24 +105,19 @@ PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995
 # IS a modeled game value, so it doubles as the option's ceiling.
 _MAX_NOTES = 4
 
-# HARDCODED: verify on patch updates — the 0%:75% missing-health amplifier
-# is prose in the cached Q second effect ("Against champions and monsters,
-# the damage is increased by 0% : 75% (based on target's missing health)");
-# it is cross-checked by the cached "Maximum Enhanced Damage" row
-# (105-280 + 70% AP == 1.75 x the base row at every rank).
-_Q_MISSING_HEALTH_MAX_BONUS = 0.75
+# The Q missing-health amplifier and W's self movement grant are binary
+# DataValues (SeraphineQ.DamageAmp; SeraphineW.WMSBonus / WMSBonusAPRatio);
+# the cached sentences corroborate them.  The ally MS half (8% + 0.8% per
+# 100 AP) has no self channel.
+_SERAPHINE_Q_SPELL = spell_object("Seraphine", "SeraphineQ")
+_SERAPHINE_W_SPELL = spell_object("Seraphine", "SeraphineW")
+_Q_MISSING_HEALTH_MAX_BONUS = data_value(_SERAPHINE_Q_SPELL, "DamageAmp") / 100.0
+_W_MOVE_SPEED_PERCENT = data_value(_SERAPHINE_W_SPELL, "WMSBonus") * 100.0
+_W_MOVE_SPEED_PER_100_AP = data_value(_SERAPHINE_W_SPELL, "WMSBonusAPRatio") * 10000.0
 
 # Notes "stack up to 4 times on each unit" and every ability cast grants
 # one, so a full Q/W/E/R rotation puts the cap on Seraphine — the default.
 _NOTE_CAP = 4
-
-# HARDCODED: verify on patch updates — W's self movement grant is prose in
-# the cached W description ("she also gains 20% (+ 2% per 100 AP) decaying
-# bonus movement speed"), never a leveling row, so no accessor reaches it;
-# tests/test_seraphine_stage_presence.py pins the sentence.  The ally half
-# (8% + 0.8% per 100 AP) has no self channel.
-_W_MOVE_SPEED_PERCENT = 20.0
-_W_MOVE_SPEED_PER_100_AP = 2.0
 
 # The grant's window, read as an atom rather than pinned: the shield and
 # the movement share one sentence and one duration.
