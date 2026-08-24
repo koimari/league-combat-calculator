@@ -448,3 +448,14 @@ class TestBatch8RootedConstants:
         assert data_value(spell_object("Tristana", "TristanaE"), "ActiveMaxStacks") == (
             tristana._E_MAX_STACKS
         )
+
+
+class TestBatch9RootedConstants:
+    """Batch 9: Yorick's Maiden AD ratio resolves from the binary."""
+
+    def test_yorick(self):
+        import src.calculator.champions.yorick as yorick
+
+        assert data_value(spell_object("Yorick", "YorickR"), "MaidenADRatio") == (
+            pytest.approx(yorick._MAIDEN_AD_RATIO)
+        )
