@@ -1,0 +1,57 @@
+{
+  "slice": "232-targeted-control-scope",
+  "dated": "2026-08-24",
+  "correction": {
+    "what_changed": "Named targeted crowd-control abilities now carry one-target scope through their authored control events.",
+    "why_the_baseline_moves": "The pair baseline serializes the newly authored scope on seven champion ability control events; no coupled numeric result moves."
+  },
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17 -- the unit declares its moved leaves; the baseline is re-captured separately."
+  },
+  "expected_diff_paths": {
+    "golden": [
+      "/champion_baselines/Elise/abilities_level_11/E/control_events[0]",
+      "/champion_baselines/Nasus/abilities_level_11/W/control_events[0]",
+      "/champion_baselines/Nocturne/abilities_level_11/E/control_events[0]",
+      "/champion_baselines/Rammus/abilities_level_11/E/control_events[0]",
+      "/champion_baselines/Udyr/abilities_level_11/E/control_events[0]",
+      "/champion_baselines/Vayne/abilities_level_11/E/control_events[0]",
+      "/champion_baselines/Zilean/abilities_level_11/E/control_events[0]"
+    ],
+    "coupled_golden": [],
+    "golden_shape_counters": [],
+    "coupled_golden_shape_counters": []
+  },
+  "moved_values": {
+    "/champion_baselines/Elise/abilities_level_11/E/control_events[0]": {
+      "old": "ControlEvent('stun', duration=1.6, time_offset=0.0)",
+      "new": "ControlEvent('stun', duration=1.6, time_offset=0.0, scope=one_target)"
+    },
+    "/champion_baselines/Nasus/abilities_level_11/W/control_events[0]": {
+      "old": "ControlEvent('slow', duration=5.0, magnitude=71.0, time_offset=0.0)",
+      "new": "ControlEvent('slow', duration=5.0, magnitude=71.0, time_offset=0.0, scope=one_target)"
+    },
+    "/champion_baselines/Nocturne/abilities_level_11/E/control_events[0]": {
+      "old": "ControlEvent('fear', duration=1.25, time_offset=2.0)",
+      "new": "ControlEvent('fear', duration=1.25, time_offset=2.0, scope=one_target)"
+    },
+    "/champion_baselines/Rammus/abilities_level_11/E/control_events[0]": {
+      "old": "ControlEvent('taunt', duration=1.2, time_offset=0.0)",
+      "new": "ControlEvent('taunt', duration=1.2, time_offset=0.0, scope=one_target)"
+    },
+    "/champion_baselines/Udyr/abilities_level_11/E/control_events[0]": {
+      "old": "ControlEvent('stun', duration=0.75)",
+      "new": "ControlEvent('stun', duration=0.75, scope=one_target)"
+    },
+    "/champion_baselines/Vayne/abilities_level_11/E/control_events[0]": {
+      "old": "ControlEvent('stun', duration=1.5, time_offset=0.0)",
+      "new": "ControlEvent('stun', duration=1.5, time_offset=0.0, scope=one_target)"
+    },
+    "/champion_baselines/Zilean/abilities_level_11/E/control_events[0]": {
+      "old": "ControlEvent('slow', duration=2.5, magnitude=40.0, time_offset=0.0)",
+      "new": "ControlEvent('slow', duration=2.5, magnitude=40.0, time_offset=0.0, scope=one_target)"
+    }
+  }
+}

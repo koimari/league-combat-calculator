@@ -17928,16 +17928,10 @@ def _declared_cc_kind(parts: Iterable[Any]) -> str | None:
 
 
 def _entry_control_scope(info: Mapping[str, Any]) -> ControlScope | None:
-    """Return one authored scope when all control events share it.
-
-    Constant ``MODULE_CC`` kinds are stamped onto damage parts, while their
-    target allocation is authored by the paired ``ControlEvent``. Reusing
-    that scope keeps the damage event and its standalone control interval on
-    the same target without guessing when an entry contains mixed scopes.
-    """
+    """Return one authored scope when all control events share it."""
     scopes = {
         control.scope
-        for control in tuple(info.get("control_events") or ())
+        for control in ability_field(info, "control_events")
         if isinstance(control, ControlEvent)
     }
     return next(iter(scopes)) if len(scopes) == 1 else None
