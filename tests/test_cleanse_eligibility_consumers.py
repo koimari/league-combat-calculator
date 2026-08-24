@@ -373,12 +373,8 @@ def test_the_walk_truncates_exactly_what_the_kernel_decided():
     assert result["target"]["action_downtime"] == pytest.approx(2.5)
 
 
-def test_a_stasis_downtime_row_survives_a_cleanse_inside_its_window():
-    """Stasis is never cleansable, and the downtime ledger is where the
-    only stasis row lives (the kernel is handed crowd-control intervals
-    only, so it never sees one).  Truncating the downtime ledger with a
-    set that forgot the rule silently ate a Time Stop.
-    """
+def test_a_qss_self_cast_is_blocked_during_stasis():
+    """Stasis blocks QSS before the walk can consume or truncate anything."""
     stasis = {
         "time": 0.8,
         "kind": "stasis",
@@ -397,13 +393,15 @@ def test_a_stasis_downtime_row_survives_a_cleanse_inside_its_window():
         [stasis, _cleanse(1.0, sequence=1)],
     )
     target = result["target"]
-    assert target["cleanse"]["decision"]["reason"] == ""
+    assert target["cleanse"]["decision"]["reason"] == "caster_control_blocks_cleanse"
+    assert target["cleanse"]["removed_controls"] == []
+    assert target["cleanse_use"]["uses_after"] == 1
     assert target["action_downtime_intervals"] == [
         {
             "recipient": "target",
             "kind": "stun",
             "start": 0.5,
-            "end": 1.0,
+            "end": 3.0,
             "source": "W",
         },
         {
@@ -414,9 +412,9 @@ def test_a_stasis_downtime_row_survives_a_cleanse_inside_its_window():
             "source": "Zhonya's Hourglass — Time Stop",
         },
     ]
-    # [0.5, 1.0) ∪ [0.8, 2.3) is one 1.8 s block, and it agrees with the
-    # stasis window the state ledger kept.
-    assert target["action_downtime"] == pytest.approx(1.8)
+    # [0.5, 3.0) ∪ [0.8, 2.3) is one 2.5 s block because the denied cast
+    # leaves the stun intact as well as the stasis window.
+    assert target["action_downtime"] == pytest.approx(2.5)
     assert target["stasis_until"] == pytest.approx(2.3)
 
 
