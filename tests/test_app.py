@@ -191,7 +191,9 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
     assert calculate_response.status_code == 200
     assert optimize_response.status_code == 200
     assert captured["calculate"].auto_attack_uptime == 0.7
-    assert captured["calculate"] == replace(captured["optimize"], deterministic=False)
+    assert captured["calculate"].deterministic is True
+    assert captured["optimize"].deterministic is True
+    assert captured["calculate"] == captured["optimize"]
 
 
 @pytest.mark.parametrize(

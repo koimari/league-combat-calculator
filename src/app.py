@@ -1290,7 +1290,11 @@ _MISSING_SCENARIO_DATA = "Scenario data '{}' not found"
 @app.route("/api/calculate", methods=["POST"])
 def api_calculate():
     """Run the damage calculation and return results."""
-    return _pure_payload_response("calculate", calculate_payload)
+
+    def _deterministic_calculate(data: dict) -> dict:
+        return calculate_payload(data, deterministic=True)
+
+    return _pure_payload_response("calculate", _deterministic_calculate)
 
 
 @app.route("/api/compare", methods=["POST"])
