@@ -520,3 +520,43 @@ class TestBatch11JayceStance:
             )
             == CANNON_SHRED_PERCENT
         )
+
+
+class TestBatch12RootedConstants:
+    """Batch 12: Braum's passive shape, Volibear's E shield trio, Sett's
+    Haymaker window and Shen's Ki Barrier duration resolve from binaries."""
+
+    def test_braum(self):
+        import src.calculator.champions.braum as braum
+
+        p = spell_object("Braum", "BraumPassive")
+        assert data_value(p, "StackCap") == braum._STACKS_TO_PROC
+        assert data_value(p, "StackDuration") == pytest.approx(braum._STACK_DURATION)
+
+    def test_volibear(self):
+        import src.calculator.champions.volibear as volibear
+
+        e = spell_object("Volibear", "VolibearE")
+        assert data_value(e, "ShieldAmount") == pytest.approx(
+            volibear._SKY_SPLITTER_SHIELD_MAX_HP_RATIO
+        )
+        assert data_value(e, "ShieldAPRatio") == pytest.approx(
+            volibear._SKY_SPLITTER_SHIELD_AP_RATIO
+        )
+        assert data_value(e, "ShieldDuration") == pytest.approx(
+            volibear._SKY_SPLITTER_SHIELD_DURATION_SECONDS
+        )
+
+    def test_sett(self):
+        import src.calculator.champions.sett as sett
+
+        assert data_value(spell_object("Sett", "SettW"), "ShieldMaxDuration") == (
+            pytest.approx(sett._W_SHIELD_DURATION_SECONDS)
+        )
+
+    def test_shen(self):
+        import src.calculator.champions.shen as shen
+
+        assert data_value(spell_object("Shen", "ShenPassive"), "ShieldDuration") == (
+            pytest.approx(shen._P_SHIELD_DURATION_SECONDS)
+        )

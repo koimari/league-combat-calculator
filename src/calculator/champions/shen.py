@@ -51,6 +51,7 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .scaling import is_flat_unit, resolve_scaling
@@ -74,7 +75,9 @@ _E_BASE_SPEED = 800.0
 # HARDCODED: verify on patch updates — Ki Barrier's duration is prose
 # ("grants himself a shield for 47 : 128.59 (based on level) (+ 13% bonus
 # health) for 2.5 seconds"); the amount itself is the cached P "Shield" row.
-_P_SHIELD_DURATION_SECONDS = 2.5
+_P_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Shen", "ShenPassive"), "ShieldDuration"
+)
 
 
 def _named_level_rank_damage(
