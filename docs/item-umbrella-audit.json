@@ -2143,7 +2143,7 @@
         "name": "Immortal Path",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Below Half Healing, Whole Total Amp is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Below Half Healing, Omnivamp Percent Per Stack, Whole Total Amp is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },
