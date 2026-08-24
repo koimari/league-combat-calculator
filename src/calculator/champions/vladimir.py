@@ -29,6 +29,7 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import AMP, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -38,30 +39,34 @@ from .module_contract import coverage
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
 
+# The timing/amplification constants are ROOTED IN THE BINARY
+# (data/bin/characters/vladimir.bin.json): Tides of Blood's ramp and
+# channel are VladimirE DataValues, Hemoplague's mark duration and damage
+# amp are VladimirHemoplague DataValues.  A patch that moves a root moves
+# the module with it; a missing or malformed dump fails closed at import.
+_VLAD_E_SPELL = spell_object("Vladimir", "VladimirE")
+_VLAD_R_SPELL = spell_object("Vladimir", "VladimirHemoplague")
+
 # Hemoplague's damage lands at the end of the infection, not at the cast:
 # "infects enemies hit for 4 seconds ... After the duration, the infection
 # bursts to deal magic damage to all affected targets" (data/champions.json
 # Vladimir R).  The same 4 seconds is the mark's duration.
-_R_INFECTION_SECONDS = 4.0
+_R_INFECTION_SECONDS = data_value(_VLAD_R_SPELL, "Duration")
 
-# HARDCODED: verify on patch updates — Tides of Blood's charge ramp
-# ("increased based on charge time up to the first second" of the
-# 1.5-second channel) is wiki prose; the ramp's endpoints are the
-# sourced Minimum/Maximum Magic Damage rows, which do NOT scale
-# uniformly (flat x2, % max health x4, % AP ~x2.3), so each modifier
-# interpolates on its own between its min and max values.  The 1.5s
-# channel is atom-backed (timing.active_duration 367b90ae9fc5cf38); the
-# 1.0s ramp has NO atom anywhere (prose-only — the degraded "charge
-# time" row) and stays a documented hardcoded constant (the charge
-# fraction is the model's selection surface).  The engine does NOT time
-# the channel: the E damage lands at the cast start, and the 1.5s
-# auto-recast, the 20% channel self-slow tail, the health cost
-# (cached values zeroed, the 2/4/6/8% tiers in the units prose), the
-# below-12% free clause, and the enemy slow are named out-of-scope
-# boundaries (W stays usable mid-channel — a full 1.5s cast_time would
-# be wrong for this kit).
-_E_CHARGE_RAMP_SECONDS = 1.0  # damage maxes out after 1.0s of charging
-_E_CHANNEL_SECONDS = 1.5  # total charge window before the auto-recast
+# Tides of Blood's charge ramp ("increased based on charge time up to the
+# first second" of the 1.5-second channel) is wiki prose, but both endpoints
+# are BINARY DataValues (TimetoRampMaxDamage / MaxChannelTime) — read above,
+# not hand-copied.  The ramp's damage endpoints are the sourced
+# Minimum/Maximum Magic Damage rows, which do NOT scale uniformly (flat x2,
+# % max health x4, % AP ~x2.3), so each modifier interpolates on its own
+# between its min and max values.  The engine does NOT time the channel:
+# the E damage lands at the cast start, and the auto-recast, the 20%
+# channel self-slow tail, the health cost (cached values zeroed, the
+# 2/4/6/8% tiers in the units prose), the below-12% free clause, and the
+# enemy slow are named out-of-scope boundaries (W stays usable mid-channel
+# — a full-channel cast_time would be wrong for this kit).
+_E_CHARGE_RAMP_SECONDS = data_value(_VLAD_E_SPELL, "TimetoRampMaxDamage")
+_E_CHANNEL_SECONDS = data_value(_VLAD_E_SPELL, "MaxChannelTime")
 
 
 class _TidesOfBloodChargeRule:
@@ -71,8 +76,8 @@ class _TidesOfBloodChargeRule:
     charged, reproducing the reviewed packet's maximum-row numbers).
     The min/max rows are the atoms ability.minimum _magic _damage /
     ability.maximum _magic _damage (modifiers 0..2); the channel is the
-    timing.active_duration atom; the 1.0s ramp roots in the wiki prose
-    (no atom exists — the degraded "charge time" parse).
+    timing.active_duration atom; the ramp and channel seconds root in the
+    binary VladimirE DataValues (TimetoRampMaxDamage / MaxChannelTime).
     """
 
     def public_receipt(self) -> dict[str, Any]:
@@ -258,11 +263,10 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-# HARDCODED: verify on patch updates — wiki prose, not in the JSON
-# leveling rows.  Hemoplague: "increasing the damage they take from all
-# sources by 10%" (patch history: "Damage amplification reduced to 10%
-# from 12%", duration 4 seconds).
-_R_HEMOPLAGUE_INCREASE = 0.10
+# Hemoplague's increased-damage-taken is the binary DamageAmp DataValue
+# (10.0); the wiki prose and patch history ("reduced to 10% from 12%")
+# corroborate it.
+_R_HEMOPLAGUE_INCREASE = data_value(_VLAD_R_SPELL, "DamageAmp") / 100.0
 
 
 def _apply_hemoplague(result: dict[str, Any]) -> None:
