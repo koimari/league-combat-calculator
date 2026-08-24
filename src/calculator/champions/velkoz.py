@@ -23,6 +23,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .slotlib import (
     ability_name,
@@ -38,7 +39,7 @@ from .source_receipts import load_champion_sources
 # only in the passive's description prose; the leveling array carries
 # only the flat level values.
 _PROC_AP_RATIO = 0.6  # "35 : 197.06 (based on level) (+ 60% AP)"
-_PROC_STACKS = 3
+_PROC_STACKS = int(data_value(spell_object("Vel'Koz", "VelkozPassive"), "MaxStacks"))
 _PROC_LEVELING_ATTR = "Per-Level Scaling"
 
 

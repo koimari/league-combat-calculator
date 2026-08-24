@@ -364,3 +364,40 @@ class TestBatch6RootedConstants:
         assert data_value(
             spell_object("Master Yi", "MasterYiPassive"), "AttackCount"
         ) != (yi._DOUBLE_STRIKE_STACKS)
+
+
+class TestBatch7RootedConstants:
+    """Batch 7: Teemo, Twitch, Vel'Koz and Vex windows/shapes resolve from
+    their binaries."""
+
+    def test_teemo(self):
+        import src.calculator.champions.teemo as teemo
+
+        assert data_value(
+            spell_object("Teemo", "TeemoW"), "ActiveMoveSpeedBuffDuration"
+        ) == pytest.approx(teemo._W_ACTIVE_SECONDS)
+
+    def test_twitch(self):
+        import src.calculator.champions.twitch as twitch
+
+        assert data_value(
+            spell_object("Twitch", "TwitchHideInShadows"), "AttackSpeedDuration"
+        ) == pytest.approx(twitch._Q_ATTACK_SPEED_WINDOW)
+        assert (
+            data_value(spell_object("Twitch", "TwitchDeadlyVenomMarker"), "MaxStacks")
+            == twitch._POISON_MAX_STACKS
+        )
+
+    def test_velkoz(self):
+        import src.calculator.champions.velkoz as velkoz
+
+        assert data_value(spell_object("Vel'Koz", "VelkozPassive"), "MaxStacks") == (
+            velkoz._PROC_STACKS
+        )
+
+    def test_vex(self):
+        import src.calculator.champions.vex as vex
+
+        assert data_value(spell_object("Vex", "VexW"), "ShieldDuration") == (
+            pytest.approx(vex._PERSONAL_SPACE_SHIELD_DURATION_SECONDS)
+        )

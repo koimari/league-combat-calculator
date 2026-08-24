@@ -41,6 +41,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -109,7 +110,9 @@ PACKET_SHA256 = "82f4b06f86d7d9d576a27f3e9e4e639261e0bb5f50c969cd0592a0ff8459a2f
 # ``timing.active_duration`` atom reads 5.0 and must NOT be used: it is the
 # FIRST effect's passive condition ("after 5 seconds without taking ...
 # damage"), an idle requirement rather than the cast's window.
-_W_ACTIVE_SECONDS = 3.0
+_W_ACTIVE_SECONDS = data_value(
+    spell_object("Teemo", "TeemoW"), "ActiveMoveSpeedBuffDuration"
+)
 
 
 def _move_quick(packet_w):

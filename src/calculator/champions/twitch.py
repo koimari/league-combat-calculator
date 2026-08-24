@@ -86,6 +86,7 @@ from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     STEROID_ZERO,
@@ -103,7 +104,9 @@ from .module_contract import coverage
 # Deadly Venom per-stack total true damage over 6 seconds by level
 # breakpoint (1/6/11/16) and its AP ratio; Contaminate's per-stack 35%
 # AP magic damage; the sourced stack cap.
-_POISON_MAX_STACKS = 6
+_POISON_MAX_STACKS = int(
+    data_value(spell_object("Twitch", "TwitchDeadlyVenomMarker"), "MaxStacks")
+)
 _POISON_TOTAL_BREAKPOINTS = (6.0, 12.0, 18.0, 24.0, 30.0)
 _POISON_BREAKPOINT_LEVELS = (1, 6, 11, 16, 18)
 _POISON_AP_RATIO = 0.18  # (+ 18% AP) total per stack
@@ -116,7 +119,9 @@ _E_MAGIC_AP_RATIO = 0.35  # "and 35% AP magic damage for each stack"
 # tests/test_twitch_ambush_and_cask.py, which is what fails closed if a
 # patch moves the number.  (The magnitude, unlike the window, IS a typed
 # atom and is read as one.)
-_Q_ATTACK_SPEED_WINDOW = 6.0
+_Q_ATTACK_SPEED_WINDOW = data_value(
+    spell_object("Twitch", "TwitchHideInShadows"), "AttackSpeedDuration"
+)
 
 
 def _poison_stacks(options: dict[str, Any]) -> int:
