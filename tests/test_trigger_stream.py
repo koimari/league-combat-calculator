@@ -2696,7 +2696,7 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
             ts.is_immobilizing_event({"cc_kind": self.UNKNOWN_KIND})
         raised = excinfo.value
 
-        def _raise_the_walks_error(_data):
+        def _raise_the_walks_error(_data, **_kwargs):
             raise raised
 
         original = app_module.calculate_payload
