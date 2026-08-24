@@ -78,6 +78,7 @@ from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
@@ -115,12 +116,14 @@ HAMMER_EMPOWERED_AUTO_BONUS_AD_RATIO = 0.30
 CANNON_SHRED_PERCENT = (20.0, 25.0, 30.0, 35.0)
 CANNON_SHRED_DURATION = 5.0
 
-# HARDCODED: Hyper Charge's steroid and attack count have no JSON
-# leveling entry (only the per-attack AD ratio does). Same game file,
-# Spells/JayceHyperChargeAbility/JayceHyperCharge/mSpell/DataValues:
-# PercentIncreasedAS 3.6 (i.e. +360%, flat at all ranks), NumAttacks 3.
-HYPER_CHARGE_BONUS_ATTACK_SPEED = 360.0
-HYPER_CHARGE_ATTACKS = 3
+# Hyper Charge's steroid and attack count are binary DataValues
+# (JayceHyperCharge.PercentIncreasedAS = 3.6 i.e. +360% flat at all ranks;
+# NumAttacks = 3). The per-attack AD ratio rides the JSON leveling.
+_JAYCE_HC_SPELL = spell_object("Jayce", "JayceHyperCharge")
+HYPER_CHARGE_BONUS_ATTACK_SPEED = (
+    data_value(_JAYCE_HC_SPELL, "PercentIncreasedAS") * 100.0
+)
+HYPER_CHARGE_ATTACKS = int(data_value(_JAYCE_HC_SPELL, "NumAttacks"))
 
 # Lightning Field ticks once a second for 4 seconds (wiki prose; the
 # JSON's per-tick line is exactly a quarter of the total it reads).

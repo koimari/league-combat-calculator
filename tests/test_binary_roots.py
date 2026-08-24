@@ -231,3 +231,44 @@ class TestBatch3RootedConstants:
         assert data_value(hemo, "SecondsPerTick") != pytest.approx(
             darius.P_BLEED_TICK_INTERVAL
         )
+
+
+class TestBatch4MundoAndJayce:
+    """Batch 4: Dr. Mundo's W/E/R surfaces and Jayce's Hyper Charge read
+    their roots from the binary."""
+
+    def test_dr_mundo(self):
+        import src.calculator.champions.dr_mundo as mundo
+
+        w = spell_object("Dr. Mundo", "DrMundoW")
+        e = spell_object("Dr. Mundo", "DrMundoE")
+        r = spell_object("Dr. Mundo", "DrMundoR")
+        assert data_value(w, "Duration") == pytest.approx(mundo.W_DURATION)
+        assert data_value(w, "Duration") == pytest.approx(mundo.W_DETONATION_TIME)
+        assert data_value(e, "MaxMissingHealthThreshold") * 100.0 == pytest.approx(
+            mundo.E_MAX_AMP_MISSING_HEALTH_PERCENT
+        )
+        assert data_value(r, "BonusPerNearbyChampion") == pytest.approx(
+            mundo.R_NEARBY_CHAMPION_BONUS
+        )
+
+    def test_jayce_hyper_charge(self):
+        import src.calculator.champions.jayce as jayce
+
+        hc = spell_object("Jayce", "JayceHyperCharge")
+        assert data_value(hc, "PercentIncreasedAS") * 100.0 == pytest.approx(
+            jayce.HYPER_CHARGE_BONUS_ATTACK_SPEED
+        )
+        assert data_value(hc, "NumAttacks") == jayce.HYPER_CHARGE_ATTACKS
+
+
+def test_data_value_snaps_float32_storage_noise():
+    """The dumps are float32: an authored 0.7 arrives as
+    0.69999998807...  The read restores the authored decimal (six
+    significant digits) so downstream math divides by exactly what the
+    game authors — and the golden gate stays byte-exact."""
+    e = spell_object("Dr. Mundo", "DrMundoE")
+    assert repr(data_value(e, "MaxMissingHealthThreshold")) == "0.7"
+    q = spell_object("Aurelion Sol", "AurelionSolQ")
+    assert repr(data_value(q, "QMaxHealthTrueDamagePerStack")) == "0.00031"
+    assert repr(data_value(q, "APPerSecond")) == "0.55"

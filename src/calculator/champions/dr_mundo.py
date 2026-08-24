@@ -38,6 +38,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
@@ -53,38 +54,38 @@ from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 from .module_contract import coverage
 
-# HARDCODED: verify on patch updates — W's charge lasts 3.0s and ticks 4
-# times a second, so the charge total is per-tick x 12.
-#
-# DO NOT replace this with the JSON's "Total Magic Damage" attribute
-# (80/140/200/260/320). That attribute is STALE: the wiki's raw data
-# template still hardcodes ``{{ap|5*16 to 20*16}}`` = 16 ticks from W's
-# pre-V12.23 FOUR-second duration, and was never updated when V12.23 cut
-# the duration to 3s. Confirmed three ways — 3.0s / 0.25s per tick = 12;
-# the game file's ``Duration`` = 3.0; and the game's own damage formula
-# in ``drmundo.bin.json`` BotData is 4 (ticks/sec) x DamagePerTick x
-# Duration. Using the attribute overstates W's charge by a third.
+# ROOTED IN THE BINARY (data/bin/characters/drmundo.bin.json): W's field
+# duration and auto-detonation instant are DrMundoW DataValues (Duration);
+# the tick cadence (0.25s → 12 ticks) is the game formula "4 ticks/sec ×
+# Duration" with no DataValue home, so it stays a documented derived
+# constant.  DO NOT read W's total from the JSON's "Total Magic Damage"
+# attribute: that template still carries 16 ticks from the pre-V12.23
+# four-second duration (stale by a third).
 # https://wiki.leagueoflegends.com/en-us/Dr._Mundo
+_MUNDO_W_SPELL = spell_object("Dr. Mundo", "DrMundoW")
 W_CHARGE_TICKS = 12
-W_DURATION = 3.0  # seconds the field ticks; item burns ride the whole tail
-W_TICK_INTERVAL = 0.25
-W_DETONATION_TIME = 3.0
+W_DURATION = data_value(_MUNDO_W_SPELL, "Duration")
+W_TICK_INTERVAL = 0.25  # 4 ticks/sec, script-side — see above
+W_DETONATION_TIME = data_value(_MUNDO_W_SPELL, "Duration")
 
-# HARDCODED: verify on patch updates — E's bonus damage reaches its
-# maximum amp at 70% missing health, NOT 100%. The wiki ability page only
-# says "0% - 40% (based on missing health)" and never publishes the
-# threshold; it comes from the game files (``drmundo.bin.json``:
-# ``MaxMissingHealthThreshold`` 0.7, ``MaxDamageAmp`` 1.4) and is
-# confirmed by patch V25.23 ("Maximum bonus damage now correctly applies
-# at 70% missing health").
+# ROOTED IN THE BINARY: E's amp caps at 70% missing health
+# (DrMundoE.MaxMissingHealthThreshold; the wiki page publishes no
+# threshold — V25.23 patch notes corroborate), and at rank 3 R's base
+# health grows a further 5% per nearby enemy champion
+# (DrMundoR.BonusPerNearbyChampion).  The JSON leveling carries no trace
+# of either.
+_MUNDO_E_SPELL = spell_object("Dr. Mundo", "DrMundoE")
+_MUNDO_R_SPELL = spell_object("Dr. Mundo", "DrMundoR")
 E_MAX_DAMAGE_AMP = 0.4
-E_MAX_AMP_MISSING_HEALTH_PERCENT = 70.0
+E_MAX_AMP_MISSING_HEALTH_PERCENT = (
+    data_value(_MUNDO_E_SPELL, "MaxMissingHealthThreshold") * 100.0
+)
 
 # HARDCODED: verify on patch updates — at rank 3 ONLY, R's increased base
 # health is further increased by 5% per enemy champion within 1200 units
 # at cast time (game file ``BonusPerNearbyChampion`` = 0.05). The JSON
 # leveling carries no trace of it.
-R_NEARBY_CHAMPION_BONUS = 0.05
+R_NEARBY_CHAMPION_BONUS = data_value(_MUNDO_R_SPELL, "BonusPerNearbyChampion")
 R_NEARBY_BONUS_RANK = 3
 R_MAX_NEARBY_CHAMPIONS = 4
 

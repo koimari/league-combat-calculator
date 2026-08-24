@@ -72,6 +72,14 @@ def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
 
     Some rows legitimately carry no ``values`` key (the game leaves them
     unset); asking for one of those by name is a lookup error, not a zero.
+
+    The dumps store IEEE-754 *float32*, so an authored ``0.7`` arrives as
+    ``0.69999998807...``.  Riot authors these numbers at six significant
+    digits or fewer, so the read snaps back through ``%.6g``: that restores
+    the authored decimal exactly (0.7, 2.6, 360.0) while a genuine patch
+    change moves digits beyond storage noise and snaps to a different
+    number.  Without this, dividing by a stored percent drifts the ninth
+    decimal of downstream damage and trips the byte-exact golden gate.
     """
     spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
     rows = spell.get("DataValues") if isinstance(spell, dict) else None
@@ -89,7 +97,10 @@ def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
                     ) from exc
                 if not math.isfinite(value):
                     raise RuntimeError(f"DataValue {value_name!r}: non-finite")
-                return value
+                snapped = float(f"{value:.6g}")
+                if not math.isfinite(snapped):  # pragma: no cover - defensive
+                    raise RuntimeError(f"DataValue {value_name!r}: non-finite")
+                return snapped
             raise RuntimeError(
                 f"DataValue {value_name!r}: present but carries no values row"
             )
