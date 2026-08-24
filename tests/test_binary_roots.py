@@ -598,3 +598,39 @@ class TestBatch13RootedConstants:
         assert data_value(spell_object("Bel'Veth", "BelvethE"), "NumberOfStrikes") == (
             belveth.E_BASE_SLASHES
         )
+
+
+class TestBatch14RootedConstants:
+    """Batch 14: Akshan, Camille, Kai'Sa and Lulu constants resolve from
+    their binaries."""
+
+    def test_akshan(self):
+        import src.calculator.champions.akshan as akshan
+
+        assert data_value(spell_object("Akshan", "AkshanR"), "CritDamageMod") == (
+            pytest.approx(akshan._R_CRIT_EFFECTIVENESS)
+        )
+        assert data_value(
+            spell_object("Akshan", "AkshanPassive"), "ShieldDuration"
+        ) == pytest.approx(akshan._DIRTY_FIGHTING_SHIELD_DURATION_SECONDS)
+
+    def test_camille(self):
+        import src.calculator.champions.camille as camille
+
+        assert data_value(
+            spell_object("Camille", "CamillePassive"), "ShieldDuration"
+        ) == pytest.approx(camille.ADAPTIVE_DEFENSES_DURATION_SECONDS)
+
+    def test_kaisa(self):
+        import src.calculator.champions.kaisa as kaisa
+
+        assert data_value(spell_object("Kai'Sa", "KaisaPassive"), "PDuration") == (
+            pytest.approx(kaisa._PLASMA_STACK_DURATION)
+        )
+
+    def test_lulu(self):
+        import src.calculator.champions.lulu as lulu
+
+        p = spell_object("Lulu", "LuluPassive")
+        assert data_value(p, "NumberOfBolts") == lulu._PIX_BOLTS_DEFAULT
+        assert data_value(p, "APRatioPerHit") == pytest.approx(lulu._PIX_BOLT_AP_RATIO)

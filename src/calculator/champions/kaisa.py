@@ -55,6 +55,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import clamp
 from .slotlib import (
@@ -92,7 +93,8 @@ _EVOLUTION_THRESHOLD = 100.0
 #   current cooldown drops 0.5s on-attack, and the charge (castTime
 #   "1.2 : 0.6 (based on bonus attack speed)") scales 1.2s -> 0.6s over
 #   0-100% bonus attack speed.
-_PLASMA_STACK_DURATION = 4.0
+_KAISA_P_SPELL = spell_object("Kai'Sa", "KaisaPassive")
+_PLASMA_STACK_DURATION = data_value(_KAISA_P_SPELL, "PDuration")
 _W_EVOLVED_COOLDOWN_REFUND = 0.75
 _E_WINDOW_SECONDS = 4.0
 _E_ATTACK_CD_REFUND_SECONDS = 0.5
