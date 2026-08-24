@@ -4,7 +4,8 @@ Why each slot is non-generic:
 - Q (Breath of Light) is a channeled beam the classifier cannot model:
   the per-cast entry is one full 3.25s channel (beam per-second x 3.25
   plus 3 bursts), the burst's Stardust %maxHP component is a degraded
-  wiki parse (values all 0, garbage units) hardcoded below, the W toggle
+  wiki parse (values all 0, garbage units) with its value rooted in the
+  character binary below, the W toggle
   multiplies the beam's flat damage, and timed fights channel Q
   continuously for the whole fight (the pipeline injects the duration
   via the ``fight_duration_seconds`` option; see ``pipeline.run_fight``).
@@ -58,6 +59,7 @@ staying silently absent from the parse output.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import delayed_damage, no_damage
 from .slotlib import (
@@ -85,20 +87,26 @@ _Q_BURSTS_PER_CHANNEL = 3
 _Q_CANCEL_LOCKOUT = 0.25
 _RANK5_CHANNEL_CAP = 160.0
 
-# HARDCODED: verify on patch updates — wiki prose the modifier parser
-# degrades (Q burst: values [0,...], units "(3.1% Stardust)% of target's
-# maximum health"; E execute threshold has no JSON entry at all).
+# The Stardust/execute constants are ROOTED IN THE BINARY, not hand-copied:
+# the wiki modifier parser degrades (Q burst: values [0,...], units
+# "(3.1% Stardust)% of target's maximum health") and the E execute threshold
+# has no champion-JSON entry at all, so the values resolve through
+# ``binary_roots`` from data/bin/characters/aurelionsol.bin.json (client
+# 16.15.8024387).  A patch that moves a root moves the module with it; a dump
+# that goes missing fails closed at import.
 # https://wiki.leagueoflegends.com/en-us/Aurelion_Sol
-# All three numbers are BINARY-CONFIRMED in the local Community Dragon
-# cache (data/bin/characters/aurelionsol.bin.json, client 16.15.8024387):
-# QMaxHealthTrueDamagePerStack 0.00031, BaseExecutionThreshold 5.0,
-# ExecutionGrowthPerBreakpoint 0.026 — the rule receipt cites both roots.
-_Q_BURST_MAXHP_PCT_PER_STARDUST = 0.031  # % of target max HP per stack
-_E_EXECUTE_BASE_PCT = 5.0
-_E_EXECUTE_PCT_PER_100_STARDUST = 2.6
-# Stardust generation (game QMassStolen = 2.0; wiki: the beam burst
-# "generates 2 Stardust if they are a champion").
-_STARDUST_PER_Q_BURST = 2.0
+_Q_SPELL = spell_object("Aurelion Sol", "AurelionSolQ")
+_E_SPELL = spell_object("Aurelion Sol", "AurelionSolE")
+_Q_BURST_MAXHP_PCT_PER_STARDUST = (
+    data_value(_Q_SPELL, "QMaxHealthTrueDamagePerStack") * 100.0
+)  # % of target max HP per stack (binary stores the fraction)
+_E_EXECUTE_BASE_PCT = data_value(_E_SPELL, "BaseExecutionThreshold")
+_E_EXECUTE_PCT_PER_100_STARDUST = (
+    data_value(_E_SPELL, "ExecutionGrowthPerBreakpoint") * 100.0
+)  # per-stack growth, displayed per 100 Stardust
+# Stardust generation (wiki: the beam burst "generates 2 Stardust if they
+# are a champion").
+_STARDUST_PER_Q_BURST = data_value(_Q_SPELL, "QMassStolen")
 
 
 class _StardustRule:

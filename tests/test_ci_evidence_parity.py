@@ -489,7 +489,11 @@ def test_tracked_paths_lookup_matches_git_ls_files() -> None:
     assert TRACKED_PATHS == fresh
     assert "data/bin/characters/gnar.bin.json" in TRACKED_PATHS
     assert "data/gamefiles/ddragon/Milio.json" in TRACKED_PATHS
-    assert "data/bin/characters/ashe.bin.json" not in TRACKED_PATHS
+    # Every champion dump is tracked now (binary-rooted constants policy):
+    # the runtime resolves priced values from data/bin/characters/, so an
+    # untracked champion would 500 in production while passing locally.
+    assert "data/bin/characters/ashe.bin.json" in TRACKED_PATHS
+    assert "data/bin/characters/aurelionsol.bin.json" in TRACKED_PATHS
 
 
 def test_the_locally_built_receipt_trees_are_watched() -> None:
