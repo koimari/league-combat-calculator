@@ -40,6 +40,7 @@ All numeric values are read from the champion JSON data.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
@@ -245,8 +246,11 @@ OPTIONS: list[dict[str, Any]] = [
 # shield equal to 20% of her maximum health, lasting for 2 seconds and
 # absorbing damage from either exclusively physical damage or magic damage,
 # based on which type the target has previously dealt most of" (wiki text).
+_CAMILLE_P_SPELL = spell_object("Camille", "CamillePassive")
+# The duration is the binary CamillePassive.ShieldDuration DataValue; the
+# ratio stays wiki prose (no amount row in the dump).
 ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # 20% of maximum health
-ADAPTIVE_DEFENSES_DURATION_SECONDS = 2.0
+ADAPTIVE_DEFENSES_DURATION_SECONDS = data_value(_CAMILLE_P_SPELL, "ShieldDuration")
 
 
 def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:

@@ -34,6 +34,7 @@ cache, so it stays named rather than authored.
 from typing import Any
 
 from ..ability_spec import ControlScope
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -51,8 +52,9 @@ from .slotlib import (
 # HARDCODED: verify on patch updates — the 3-bolt barrage and each bolt's
 # 5% AP ratio are wiki P prose; the JSON carries the per-bolt and
 # 3-bolt-total flat per-level rows.
-_PIX_BOLTS_DEFAULT = 3
-_PIX_BOLT_AP_RATIO = 0.05
+_LULU_P_SPELL = spell_object("Lulu", "LuluPassive")
+_PIX_BOLTS_DEFAULT = int(data_value(_LULU_P_SPELL, "NumberOfBolts"))
+_PIX_BOLT_AP_RATIO = data_value(_LULU_P_SPELL, "APRatioPerHit")
 # Wild Growth's window is cached R prose ("For the next 7 seconds, the
 # target gains bonus health"); W's is the JSON's Effect Duration row.
 _R_DURATION_SECONDS = 7.0

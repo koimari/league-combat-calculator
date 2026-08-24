@@ -48,6 +48,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .inputs import champion_stat, int_option
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -69,7 +70,9 @@ from .module_contract import coverage
 # https://wiki.leagueoflegends.com/en-us/Akshan
 # R bullets can crit at 30% effectiveness (3% damage per 10% crit
 # chance) and scale up to +200% based on the target's missing health.
-_R_CRIT_EFFECTIVENESS = 0.3
+# ROOTED IN THE BINARY (AkshanR.CritDamageMod); the wiki prose
+# ("can crit at 30% effectiveness") corroborates the semantics.
+_R_CRIT_EFFECTIVENESS = data_value(spell_object("Akshan", "AkshanR"), "CritDamageMod")
 _R_MISSING_HP_MAX_BONUS = 2.0
 
 # Heroic Swing's shots are on a cached beat, not on Akshan's attack speed:
@@ -310,7 +313,9 @@ _dirty_fighting_packet = proc_damage(
 # breakpoints 6/11/16; 4s at level 18) — the fight's proc events all ride
 # the cast boundary, so the model grants one shield per proc burst and the
 # ICD is a documented boundary.
-_DIRTY_FIGHTING_SHIELD_DURATION_SECONDS = 2.0
+_DIRTY_FIGHTING_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Akshan", "AkshanPassive"), "ShieldDuration"
+)
 
 
 def _dirty_fighting_shield(passive: dict[str, Any], ctx: SlotCtx) -> float:
