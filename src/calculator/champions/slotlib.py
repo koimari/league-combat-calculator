@@ -1668,11 +1668,11 @@ def by_option(
 ) -> SlotParser:
     """Dispatch a slot to one of several parsers by a champion option.
 
-    The sweetspot/condemn_wall pattern: the option value picks which configured
-    parser runs (Aatrox Q's sweetspot triad vs its normal triad).  All cases
-    MUST emit the same entry keys, because an option may change values and
-    never the emitted shape, and must share one engine phase, which is checked
-    at factory time.
+    The q_variant/condemn_wall pattern: the option value picks which
+    configured parser runs (Vayne Q's condemn triad vs its plain strike).
+    All cases MUST emit the same entry keys, because an option may change
+    values and never the emitted shape, and must share one engine phase,
+    which is checked at factory time.
 
     Bool-keyed cases normalize the option value with ``bool()``, so a truthy
     int from the frontend selects the True case.  An unmatched selector emits

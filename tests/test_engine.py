@@ -781,7 +781,7 @@ class TestStatBuff:
 
 
 class TestByOption:
-    """Option-dispatched slot parsing (sweetspot / condemn_wall pattern)."""
+    """Option-dispatched slot parsing (the q_variant / condemn_wall pattern)."""
 
     def _toggle_champ(self) -> dict:
         return _champion(

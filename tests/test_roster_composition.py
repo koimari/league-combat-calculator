@@ -132,7 +132,7 @@ def test_main_and_actor_params_keep_their_own_request_controls():
             "fight_mode": "one_rotation",
             "role": "mid",
             "ability_ranks": {"Q": 5},
-            "champion_options": {"sweetspot": True},
+            "champion_options": {"q_variant": 7},
             "cast_order": ["Q", "W", "E", "R"],
         },
         deterministic=True,

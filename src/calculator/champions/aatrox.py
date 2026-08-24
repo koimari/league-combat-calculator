@@ -43,7 +43,7 @@ from typing import Any
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from .healing_contract import self_healing_rule
-from .inputs import bool_option, champion_stat, int_option
+from .inputs import champion_stat, int_option
 from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -150,7 +150,8 @@ def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         attrs = _Q_TRIAD_COMPONENTS.get(attribute, [attribute])
         detail = f"Q variant: {attribute}."
     else:
-        attrs = _Q_SWEETSPOT_ATTRS if bool(ctx.option("sweetspot")) else _Q_NORMAL_ATTRS
+        # The declared default (variant 7) is the full sweetspot triad.
+        attrs = _Q_SWEETSPOT_ATTRS
 
     parts = _q_strike_parts(ctx, ability, rank, attrs)
     entry = damage_entry(
@@ -262,9 +263,7 @@ OPTIONS = [
         minimum=0,
         maximum=7,
         label="Q damage variant",
-        legacy_keys=["sweetspot"],
     ),
-    bool_option("sweetspot", True, label="Q Sweetspot hits"),
 ]
 
 ASSUMPTIONS = [
@@ -296,9 +295,9 @@ SLOTS = {
 # times above, so a kind declared here would reach the ledger.
 #
 # Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of the
-# area" — this module's ``sweetspot`` option — so the knockup belongs to a
-# branch of the slot rather than to the slot, and ``MODULE_CC`` is a
-# per-slot map.
+# area" — the sweetspot rows of this module's ``q_variant`` option — so the
+# knockup belongs to a branch of the slot rather than to the slot, and
+# ``MODULE_CC`` is a per-slot map.
 #
 # W (Infernal Chains) applies two different kinds: the chain hit slows
 # ("slowing them for 1.5 seconds") and the tether hit pulls ("the target is
