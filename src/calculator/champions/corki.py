@@ -45,6 +45,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..damage import effective_cooldown
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
 from .slotlib import (
     ability_name,
@@ -68,8 +69,11 @@ _PASSIVE_TRUE_AD_RATIO = 0.20
 # W: "Each patch lasts 2.5 seconds" and ticks "every 0.5 seconds" -> 5
 # ticks; E: "for 4 seconds ... every 0.25 seconds" -> 16 ticks. Both tick
 # counts are also exactly Total / Per-Tick in the JSON (test-locked).
-_W_TICKS = 5
-_W_DURATION = 2.5
+# ROOTED IN THE BINARY: CarpetBomb MaximumTicks / TicksPerSecond —
+# the window is the ticks over the rate.  E stays JSON-test-locked.
+_CORKI_W_SPELL = spell_object("Corki", "CarpetBomb")
+_W_TICKS = int(data_value(_CORKI_W_SPELL, "MaximumTicks"))
+_W_DURATION = _W_TICKS / data_value(_CORKI_W_SPELL, "TicksPerSecond")
 _E_TICKS = 16
 _E_DURATION = 4.0
 # The engine authors per-tick damage events from these sourced cadences.
