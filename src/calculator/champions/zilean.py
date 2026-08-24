@@ -23,6 +23,7 @@ they are ``no_damage`` rather than unmodelled mechanics:
 
 from dataclasses import replace
 
+from ..ability_spec import ControlScope
 from .engine import CC_PER_PART
 from .inputs import bool_option, champion_stat
 from .packet_module import build_packet_module
@@ -112,6 +113,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             parser,
             duration_source="active",
             magnitude_attr="Movement Speed Modifier",
+            scope=ControlScope.ONE_TARGET,
         ),
     },
     cc_kinds=MODULE_CC,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import ControlEvent, ControlScope, DamagePart
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -88,6 +88,7 @@ def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
                     extract_value(ability, "Disable Duration", rank),
                     time_offset=2.5,
                     skillshot=bool(entry.get("skillshot", False)),
+                    scope=ControlScope.ONE_TARGET,
                 ),
             )
             entry["detail"] += (

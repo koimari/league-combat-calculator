@@ -36,7 +36,7 @@ unpriced; its kind rides ``MODULE_CC``.
 from typing import Any
 
 from ..ability_atoms import ability_payload
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlScope, DamagePart
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, build_parser
@@ -275,6 +275,7 @@ SLOTS = {
         _wither,
         duration_source="active",
         magnitude_attr="Maximum Slow",
+        scope=ControlScope.ONE_TARGET,
     ),
     "E": _spirit_fire,
     "R": _fury_of_the_sands,

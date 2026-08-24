@@ -54,7 +54,7 @@ Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
 
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlScope, DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -216,6 +216,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "E": lambda parser: with_control_event(
             parser,
             duration_attr="Taunt Duration",
+            scope=ControlScope.ONE_TARGET,
         ),
     },
     cc_kinds=MODULE_CC,

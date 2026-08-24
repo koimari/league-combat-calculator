@@ -19,6 +19,22 @@ TWO_ENEMIES = [
     {"champion": "Malphite", "level": 18, "items": []},
 ]
 
+TARGETED_CONTROL_CASES = [
+    ("Nasus", {}, "slow"),
+    ("Rammus", {}, "taunt"),
+    ("Vayne", {}, "knockback"),
+    ("Vayne", {}, "stun"),
+    ("Elise", {}, "stun"),
+    ("Zilean", {}, "slow"),
+    ("Udyr", {}, "stun"),
+    ("Nocturne", {}, "fear"),
+    (
+        "Evelynn",
+        {"champion_options": {"w_charmed": True, "w_charm_triggered": True}},
+        "charm",
+    ),
+]
+
 
 def _control_rows(payload: dict, kind: str) -> list[dict]:
     """The main champion's published control rows of one kind."""
@@ -88,3 +104,25 @@ def test_an_area_cast_still_roots_every_enemy() -> None:
         "enemy:Malphite",
     ]
     assert len(rows) == 4
+
+
+@pytest.mark.parametrize("champion, options, kind", TARGETED_CONTROL_CASES)
+def test_targeted_control_casts_do_not_broadcast(
+    champion: str, options: dict, kind: str
+) -> None:
+    """Targeted authored controls land on only the allocated enemy."""
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+            **options,
+        },
+        deterministic=True,
+    )
+    rows = _control_rows(payload, kind)
+    assert rows
+    assert {row["target"] for row in rows} == {"enemy:Garen"}
