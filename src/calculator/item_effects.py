@@ -1199,7 +1199,7 @@ def immortal_path_input_omnivamp(
     if "Immortal Path" not in _item_names(items):
         return 0.0
     stacks = input_option_value(items, item_options, "Immortal Path", "slay_stacks")
-    return stacks * required_effect_value("Immortal Path", "slay_omnivamp_per_stack")
+    return stacks * required_effect_value("Immortal Path", "slay_omnivamp_per_takedown")
 
 
 def gluttonous_greaves_slay_omnivamp(
@@ -2159,8 +2159,9 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "damage_amp",
         "health_state_damage_amp_above_half": 0.04,
         "health_state_healing_multiplier_below_half": 0.12,
-        "slay_omnivamp_per_stack": 0.6,
+        "slay_omnivamp_per_takedown": 0.6,
         "slay_max_stacks": 10,
+        "slay_max_omnivamp": 6.0,
     },
     "Gluttonous Greaves": {
         "type": "sustain",
@@ -3603,8 +3604,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         {
             "health_state_damage_amp_above_half",
             "health_state_healing_multiplier_below_half",
-            "slay_omnivamp_per_stack",
+            "slay_omnivamp_per_takedown",
             "slay_max_stacks",
+            "slay_max_omnivamp",
         }
     ),
     "Gluttonous Greaves": frozenset(

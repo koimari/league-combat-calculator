@@ -878,6 +878,9 @@ class TestResolveStatEffects:
         assert bonuses.permanent_bonus_ad == 0.0
 
     def test_immortal_path_slay_stacks_add_typed_omnivamp(self) -> None:
+        assert "slay_omnivamp_per_stack" not in ITEM_EFFECTS["Immortal Path"]
+        assert ITEM_EFFECTS["Immortal Path"]["slay_omnivamp_per_takedown"] == 0.6
+        assert ITEM_EFFECTS["Immortal Path"]["slay_max_omnivamp"] == 6.0
         bonuses = resolve_stat_effects(
             _build("Immortal Path"),
             bonus_mana=0.0,
