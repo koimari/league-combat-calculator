@@ -10,9 +10,9 @@ RUNTIME FACTS (verify-before-pin completed, all pinned in S1):
   the pipeline; cooldown 999 in timed mode), the sourced 50%-strength
   secondary beam via the declared ``q_secondary_targets``
   option (clamped 0..5), and W's 108-112% flat-beam modifier.  The burst's
-  Stardust %maxHP term is read from the binary root (0.031% of target max
-  HP per stack) beside the degraded wiki parse (values [0,...], units
-   "(3.1% Stardust)% of target's maximum health"), binary-confirmed
+  Stardust %maxHP term is a HARDCODED module constant (0.031% of target
+  max HP per stack) beside the degraded wiki parse (values [0,...],
+  units "(3.1% Stardust)% of target's maximum health"), binary-confirmed
   in the local Community Dragon cache (QMaxHealthTrueDamagePerStack
   0.00031); the E execute display is 5% + 2.6% per 100 stacks
   (BaseExecutionThreshold 5.0 / ExecutionGrowthPerBreakpoint 0.026
@@ -417,7 +417,7 @@ class TestSourceEvidence:
         assert burst["modifiers"][0]["values"] == [60.0, 70.0, 80.0, 90.0, 100.0]
         assert burst["modifiers"][1]["values"] == [30.0] * 5
         # The degraded Stardust modifier row: values all 0, units carry the
-        # prose; the module reads the binary root beside it.
+        # prose - the module hardcodes 0.031% beside it.
         stardust_modifier = burst["modifiers"][2]
         assert stardust_modifier["values"] == [0.0] * 5
         assert (
@@ -573,25 +573,6 @@ class TestSourceEvidence:
         if _ASOL_BIN is None:
             pytest.skip("local Aurelion Sol game-file evidence is unavailable")
         assert _find_threshold(_ASOL_BIN) == pytest.approx(0.25)
-
-    def test_module_constants_read_the_binary_roots(self):
-        from src.calculator.champions.aurelion_sol import (
-            _ASOL_BINARY_VALUES,
-            _STARDUST_PER_Q_BURST,
-        )
-
-        assert _ASOL_BINARY_VALUES[
-            "q:QMaxHealthTrueDamagePerStack"
-        ] * 100.0 == pytest.approx(_Q_BURST_MAXHP_PCT_PER_STARDUST)
-        assert _ASOL_BINARY_VALUES["e:BaseExecutionThreshold"] == pytest.approx(
-            _E_EXECUTE_BASE_PCT
-        )
-        assert _ASOL_BINARY_VALUES[
-            "e:ExecutionGrowthPerBreakpoint"
-        ] * 100.0 == pytest.approx(_E_EXECUTE_PCT_PER_100_STARDUST)
-        assert _ASOL_BINARY_VALUES["q:QMassStolen"] == pytest.approx(
-            _STARDUST_PER_Q_BURST
-        )
 
     def test_rule_declaration_and_option_state_receipt(self):
         # The typed rule's public_receipt rides the option's state receipt:
@@ -1229,7 +1210,7 @@ class TestSourceAndAtomReceipts:
         # The beam packet's atoms are stable source evidence (S1): the
         # primary/secondary per-second pair the completion should certify
         # the 50% split against, and the Stardust half-parse atom that
-        # documents the module's binary-backed root.
+        # documents the module's hardcode.
         assert (
             _atom("ability.magic _damage per _second.modifier_0")["hash"]
             == "c61d5c4ae23676fd"

@@ -402,9 +402,8 @@ ASSUMPTIONS = [
     "R grants BASE health, so it raises max health (feeding E's passive "
     "bonus AD) but does not feed bonus-health item conversions such as "
     "Overlord's Bloodmail",
-    "R's health regeneration is modeled by the self-healing rule; its bonus "
-    "movement speed and takedown duration extension are not modeled (no "
-    "damage impact)",
+    "R's bonus movement speed, health regeneration and takedown duration "
+    "extension are not modeled (no damage impact)",
     "Mundo's passive IMMUNITY (the next hostile immobilizing control is "
     "resisted — 4% current-health cost + canister drop) is modeled in the "
     "coupled survival walk; the canister pickup (4% max-health heal + "

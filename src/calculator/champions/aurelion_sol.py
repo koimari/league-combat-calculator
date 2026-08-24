@@ -4,8 +4,7 @@ Why each slot is non-generic:
 - Q (Breath of Light) is a channeled beam the classifier cannot model:
   the per-cast entry is one full 3.25s channel (beam per-second x 3.25
   plus 3 bursts), the burst's Stardust %maxHP component is a degraded
-  wiki parse (values all 0, garbage units) with its binary-backed root below,
-  the W toggle
+  wiki parse (values all 0, garbage units) hardcoded below, the W toggle
   multiplies the beam's flat damage, and timed fights channel Q
   continuously for the whole fight (the pipeline injects the duration
   via the ``fight_duration_seconds`` option; see ``pipeline.run_fight``).
@@ -56,9 +55,6 @@ staying silently absent from the parse output.
     slot only makes W's own zero-damage state visible.
 """
 
-import json
-import math
-from pathlib import Path
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -89,67 +85,20 @@ _Q_BURSTS_PER_CHANNEL = 3
 _Q_CANCEL_LOCKOUT = 0.25
 _RANK5_CHANNEL_CAP = 160.0
 
-# The wiki modifier parser degrades (Q burst: values [0,...], units
-# "(3.1% Stardust)% of target's maximum health"), while the E execute
-# threshold has no champion JSON entry. These values are therefore read from
-# the checked-in binary roots rather than copied into this module. Missing or
-# malformed roots fail closed at import instead of silently using stale values.
+# HARDCODED: verify on patch updates — wiki prose the modifier parser
+# degrades (Q burst: values [0,...], units "(3.1% Stardust)% of target's
+# maximum health"; E execute threshold has no JSON entry at all).
 # https://wiki.leagueoflegends.com/en-us/Aurelion_Sol
-# The local Community Dragon cache is client 16.15.8024387.
-_ASOL_BINARY_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "data"
-    / "bin"
-    / "characters"
-    / "aurelionsol.bin.json"
-)
-_ASOL_BINARY_OBJECTS = {
-    "q": "Characters/AurelionSol/Spells/AurelionSolQAbility/AurelionSolQ",
-    "e": "Characters/AurelionSol/Spells/AurelionSolEAbility/AurelionSolE",
-}
-
-
-def _load_binary_data_values() -> dict[str, float]:
-    try:
-        payload = json.loads(_ASOL_BINARY_PATH.read_text(encoding="utf-8"))
-        values: dict[str, float] = {}
-        for spell_key, object_path in _ASOL_BINARY_OBJECTS.items():
-            rows = payload[object_path]["mSpell"]["DataValues"]
-            for row in rows:
-                name = row.get("name")
-                raw_values = row.get("values")
-                if name and isinstance(raw_values, list) and raw_values:
-                    value = float(raw_values[0])
-                    if not math.isfinite(value):
-                        raise ValueError(f"non-finite value for {spell_key}:{name}")
-                    values[f"{spell_key}:{name}"] = value
-        required = {
-            "q:QMaxHealthTrueDamagePerStack",
-            "q:QMassStolen",
-            "e:BaseExecutionThreshold",
-            "e:ExecutionGrowthPerBreakpoint",
-        }
-        missing = sorted(required - values.keys())
-        if missing:
-            raise KeyError(", ".join(missing))
-        return values
-    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"Aurelion Sol binary roots unavailable or malformed: {_ASOL_BINARY_PATH}"
-        ) from exc
-
-
-_ASOL_BINARY_VALUES = _load_binary_data_values()
-_Q_BURST_MAXHP_PCT_PER_STARDUST = (
-    _ASOL_BINARY_VALUES["q:QMaxHealthTrueDamagePerStack"] * 100.0
-)  # % of target max HP per stack
-_E_EXECUTE_BASE_PCT = _ASOL_BINARY_VALUES["e:BaseExecutionThreshold"]
-_E_EXECUTE_PCT_PER_100_STARDUST = (
-    _ASOL_BINARY_VALUES["e:ExecutionGrowthPerBreakpoint"] * 100.0
-)
+# All three numbers are BINARY-CONFIRMED in the local Community Dragon
+# cache (data/bin/characters/aurelionsol.bin.json, client 16.15.8024387):
+# QMaxHealthTrueDamagePerStack 0.00031, BaseExecutionThreshold 5.0,
+# ExecutionGrowthPerBreakpoint 0.026 — the rule receipt cites both roots.
+_Q_BURST_MAXHP_PCT_PER_STARDUST = 0.031  # % of target max HP per stack
+_E_EXECUTE_BASE_PCT = 5.0
+_E_EXECUTE_PCT_PER_100_STARDUST = 2.6
 # Stardust generation (game QMassStolen = 2.0; wiki: the beam burst
 # "generates 2 Stardust if they are a champion").
-_STARDUST_PER_Q_BURST = _ASOL_BINARY_VALUES["q:QMassStolen"]
+_STARDUST_PER_Q_BURST = 2.0
 
 
 class _StardustRule:
