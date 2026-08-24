@@ -142,6 +142,7 @@ from src.calculator.champions.aurelion_sol import (
     _Q_BURSTS_PER_CHANNEL,
     _Q_BURST_MAXHP_PCT_PER_STARDUST,
     _Q_CHANNEL_SECONDS,
+    _STARDUST_PER_Q_BURST,
     AURELION_SOL_STARDUST_RULE,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
@@ -552,6 +553,25 @@ class TestSourceEvidence:
         assert _binary_data_values(spell="AurelionSolRAbility", name="MassStolen")[
             0
         ] == pytest.approx(5.0)
+
+        # The module's priced constants are exactly these binary roots: the
+        # per-stack burst term (x100 to percent), the execute base, the
+        # per-stack execute growth (x100 for the per-100 display step), and
+        # the Stardust grant per burst.  A patch that moves either side of a
+        # pair trips here (fail-closed staleness; the local cache is
+        # optional, so this certification is skipped where it is absent).
+        assert _binary_data_values(
+            spell="AurelionSolQAbility", name="QMaxHealthTrueDamagePerStack"
+        )[0] * 100.0 == pytest.approx(_Q_BURST_MAXHP_PCT_PER_STARDUST)
+        assert _binary_data_values(
+            spell="AurelionSolEAbility", name="BaseExecutionThreshold"
+        )[0] == pytest.approx(_E_EXECUTE_BASE_PCT)
+        assert _binary_data_values(
+            spell="AurelionSolEAbility", name="ExecutionGrowthPerBreakpoint"
+        )[0] * 100.0 == pytest.approx(_E_EXECUTE_PCT_PER_100_STARDUST)
+        assert _binary_data_values(spell="AurelionSolQAbility", name="QMassStolen")[
+            0
+        ] == pytest.approx(_STARDUST_PER_Q_BURST)
 
         # The 0.25 s cancel threshold is a mSpell scalar, not a DataValue:
         # locate it structurally.
