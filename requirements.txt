@@ -4,7 +4,7 @@
 
 # Web framework
 Flask==3.1.3
-gunicorn==26.0.0  # production WSGI server (Linux/Docker only; run_web.bat uses the Flask dev server)
+gunicorn==26.1.0  # production WSGI server (Linux/Docker only; run_web.bat uses the Flask dev server)
 
 # Data fetching & parsing (used by lolstaticdata)
 requests==2.34.2

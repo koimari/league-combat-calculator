@@ -25,7 +25,12 @@ def test_runtime_manifest_excludes_local_tools():
     runtime_lock = Path("requirements-runtime.txt").read_text(encoding="utf-8")
 
     assert "Flask==3.1.3" in runtime_input
-    assert "gunicorn==26.0.0" in runtime_input
+    gunicorn_pin = next(
+        line.strip()
+        for line in runtime_input.splitlines()
+        if line.startswith("gunicorn==")
+    )
+    assert gunicorn_pin in runtime_lock
     for local_only in ("pytest", "pylint", "bandit", "requests", "lxml"):
         assert local_only not in runtime_lock.lower()
     assert "--hash=sha256:" in runtime_lock
