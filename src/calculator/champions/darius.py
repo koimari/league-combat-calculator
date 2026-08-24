@@ -34,6 +34,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
@@ -50,18 +51,23 @@ from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 from .inputs import bool_option, int_option
 
-# HARDCODED: verify on patch updates — the passive's bonus-AD ratios
-# exist ONLY in the description prose; its modifier ``units`` are all
-# empty strings, so nothing in the JSON carries them. The per-level
-# VALUE arrays below ARE in the JSON and are read from it.
+# The passive's bonus-AD ratio exists ONLY in the description prose; its
+# modifier ``units`` are all empty strings, so nothing in the JSON carries
+# it.  The bleed window and stack cap are binary DataValues
+# (DariusHemoMarker.BleedDuration / MaxStacks); the per-level VALUE arrays
+# below ARE in the JSON and are read from it.
 # https://wiki.leagueoflegends.com/en-us/Darius
-P_BLEED_BONUS_AD_RATIO = 0.30  # per stack, over the full 5s
-P_BLEED_DURATION = 5.0  # seconds per (refreshing) stack window
+_DARIUS_HEMO_SPELL = spell_object("Darius", "DariusHemoMarker")
+P_BLEED_BONUS_AD_RATIO = 0.30  # per stack, over the full window (prose-only)
+P_BLEED_DURATION = data_value(_DARIUS_HEMO_SPELL, "BleedDuration")
 # The bleed ticks every 1.25s — the JSON's own per-tick arrays are exactly
 # quarters of the 5s totals (test-locked in test_darius.py), so the cadence
-# is sourced; the engine authors bleed tick events from it.
+# is sourced; the engine authors bleed tick events from it.  DOCUMENTED
+# DRIFT: the binary's DariusHemoMarker.SecondsPerTick reads 1.26; the wiki
+# cache and the module price 4 ticks over the 5s window (1.25s).  Kept on
+# the wiki root until a patch settles it — flagged for patch day.
 P_BLEED_TICK_INTERVAL = 1.25
-P_BLEED_MAX_STACKS = 5
+P_BLEED_MAX_STACKS = int(data_value(_DARIUS_HEMO_SPELL, "MaxStacks"))
 P_BLEED_EXTRA_STACK_EFFECTIVENESS = 1.0  # every stack ticks at full rate
 NOXIAN_MIGHT_DURATION = 5.0
 NOXIAN_MIGHT_TRIGGER_STACKS = 5

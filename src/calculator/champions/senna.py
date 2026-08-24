@@ -32,6 +32,7 @@ row rather than left unmodeled.
 from functools import partial
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
@@ -50,13 +51,13 @@ from .module_contract import coverage
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
 
-# HARDCODED: verify on patch updates — Mist's per-stack values (0.75 AD,
-# 20 range and 10% crit per 20 stacks) are wiki prose; the JSON only
-# carries the mark's Current Health Damage leveling and the Relic Cannon
-# description.
-_MIST_AD_PER_STACK = 0.75  # bonus AD per Mist stack
-_MIST_STACKS_PER_THRESHOLD = 20
-_MIST_RANGE_PER_THRESHOLD = 20.0  # bonus attack range
+# Mist's per-stack shape is binary DataValues (SennaPassive.ADPerStack /
+# StacksForBonus / BonusRange; CritDamageMod and BonusCritChance carry the
+# per-threshold crit terms); the cached prose corroborates.
+_SENNA_P_SPELL = spell_object("Senna", "SennaPassive")
+_MIST_AD_PER_STACK = data_value(_SENNA_P_SPELL, "ADPerStack")
+_MIST_STACKS_PER_THRESHOLD = int(data_value(_SENNA_P_SPELL, "StacksForBonus"))
+_MIST_RANGE_PER_THRESHOLD = data_value(_SENNA_P_SPELL, "BonusRange")
 _MIST_CRIT_PER_THRESHOLD = 10.0  # % crit chance
 _MARK_STACKS = 2  # apply on hit 1, consume on hit 2
 
@@ -148,13 +149,13 @@ class _RelicCannonRule:
 
 
 SENNA_RELIC_CANNON_RULE = _RelicCannonRule()
-# HARDCODED: verify on patch updates — Dawning Shadow's shield duration
-# (3s) and the 150% Mist scaling are cached leveling/prose (R "Shield
-# Strength": 120/160/200 + 50% AP + 150% Mist; description: "grants a
-# shield to Senna and allied champions hit for 3 seconds").  The Mist
-# term is 150% of the user-set Mist stack count (same ``senna_mist_stacks``
-# option as Absolution).
-_DAWNING_SHADOW_SHIELD_DURATION_SECONDS = 3.0
+# Dawning Shadow's shield duration is the binary SennaR.ShieldDuration
+# DataValue; the 150% Mist scaling stays cached prose (no binary home —
+# the term is 150% of the user-set Mist stack count, the same
+# ``senna_mist_stacks`` option as Absolution).
+_DAWNING_SHADOW_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Senna", "SennaR"), "ShieldDuration"
+)
 _DAWNING_SHADOW_MIST_RATIO = 1.5  # 150% of Mist stacks
 
 

@@ -33,31 +33,33 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import int_option
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — wiki-prose values with no JSON
-# home (P has no leveling data; the refund is prose on Q).
+# ROOTED IN THE BINARY (data/bin/characters/ezreal.bin.json): the passive
+# stack shape is EzrealPassive DataValues, Q's cooldown refund is
+# EzrealQ.CDRefund, and Essence Flux's mark lifetime/refund flat are
+# EzrealW.DetonationTimeout / ManaReturn.  A patch that moves a root moves
+# the module; a missing dump fails closed at import.
 # https://wiki.leagueoflegends.com/en-us/Ezreal
-PASSIVE_AS_PER_STACK = 10.0  # % bonus attack speed per passive stack
-PASSIVE_MAX_STACKS = 5
-Q_REFUND_SECONDS = 1.5  # each Q hit refunds this off every current cooldown
-Q_MIN_PERIOD = 1.0  # sanity floor on Q's post-refund cast period (seconds)
+_EZ_P_SPELL = spell_object("Ezreal", "EzrealPassive")
+_EZ_Q_SPELL = spell_object("Ezreal", "EzrealQ")
+_EZ_W_SPELL = spell_object("Ezreal", "EzrealW")
+PASSIVE_AS_PER_STACK = data_value(_EZ_P_SPELL, "AttackSpeedPerStack") * 100.0
+PASSIVE_MAX_STACKS = int(data_value(_EZ_P_SPELL, "MaxStacks"))
+Q_REFUND_SECONDS = data_value(_EZ_Q_SPELL, "CDRefund")
+Q_MIN_PERIOD = 1.0  # sanity floor on Q's post-refund cast period (model choice)
 
-# HARDCODED rule declaration — Essence Flux's mark-detonation refund flat
-# (wiki prose only: "If the mark was detonated with an ability, Ezreal
-# restores 60 mana plus the mana cost of that ability"; no leveling row,
-# so the atom catalog holds no atom for it — verified by the P3S2
-# provenance audit; the game binary's ManaReturn [60 x7] corroborates the
-# flat 60 at every rank, and the "+ mana cost of that ability" clause is
-# script-side, wiki-sourced only).
+# Essence Flux's mark-detonation refund flat: the binary ManaReturn
+# DataValue (the "+ mana cost of that ability" clause is script-side,
+# wiki-sourced only).
 # https://wiki.leagueoflegends.com/en-us/Ezreal (revision 4041697)
-W_MARK_REFUND_FLAT = 60.0
+W_MARK_REFUND_FLAT = data_value(_EZ_W_SPELL, "ManaReturn")
 
-# HARDCODED rule declaration for Essence Flux's mark lifetime.  Three sources
-# agree on 4s: the cached prose "marks ... for 4 seconds" (effects[0]), the
-# game file's DetonationTimeout [4.0 x7], and atom b32849b968950b8e
-# (``timing.active_duration`` [4.0]).  A detonation landing after the window
-# is receipted ``mark_expired`` and never refunds.
-W_MARK_WINDOW_SECONDS = 4.0
+# Essence Flux's mark lifetime: three roots agree — the cached prose
+# "marks ... for 4 seconds" (effects[0]), the binary DetonationTimeout, and
+# atom b32849b968950b8e (``timing.active_duration`` [4.0]).  A detonation
+# landing after the window is receipted ``mark_expired`` and never refunds.
+W_MARK_WINDOW_SECONDS = data_value(_EZ_W_SPELL, "DetonationTimeout")
 
 
 # ---------------------------------------------------------------------------
