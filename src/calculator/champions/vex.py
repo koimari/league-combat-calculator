@@ -37,6 +37,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -56,7 +57,9 @@ PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd1
 # prose in the cached ability description ("granting herself a shield for
 # 2.5 seconds"); the leveling row (data/champions.json, W "Shield
 # Strength": 50/75/100/125/150 + 75% AP) is read live below.
-_PERSONAL_SPACE_SHIELD_DURATION_SECONDS = 2.5
+_PERSONAL_SPACE_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Vex", "VexW"), "ShieldDuration"
+)
 
 
 def _personal_space(packet_w):
