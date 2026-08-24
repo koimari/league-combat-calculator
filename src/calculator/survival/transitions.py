@@ -1336,6 +1336,48 @@ def _apply_spell_shield(
     ctx.ledger.write(action, applied_amount=round(duration_value, 6))
 
 
+def _rearm_spell_shield(state: dict[str, Any], event_time: float) -> None:
+    """Put a consumed shield back on its holder at ``event_time``.
+
+    The kernel already decided the sourced cooldown elapsed
+    (:meth:`SpellShieldRearmClock.rearmed_at`); this writes the state that
+    decision implies and receipts the arithmetic behind it — the
+    consumption instant, the champion-damage instant that restarted the
+    timer, the cooldown, and the resulting ready instant — so a rearm is
+    never an unexplained second block.
+
+    The restored budget is READ from the composition's declared use budget
+    rather than reset to one, for the reason every other number here comes
+    from a declaration: a shield whose composition ever declares two uses
+    must not silently come back with one.
+    """
+    clock = state["spell_shield_rearm"]
+    consumed_at = state["spell_shield_consumed_at"]
+    composition = state["spell_shield_composition"]
+    spent_cast = state["spell_shield_blocked_cast"]
+    state["spell_shield_rearm_events"].append(
+        {
+            "time": round(float(event_time), 3),
+            "consumed_at": round(float(consumed_at), 3),
+            "cooldown": round(float(clock.cooldown), 3),
+            "restarts_on_champion_damage": bool(clock.restarts_on_champion_damage),
+            "timer_started_at": round(
+                clock.anchor(consumed_at, state["last_damage_time"]), 3
+            ),
+            "ready_at": round(
+                clock.ready_at(consumed_at, state["last_damage_time"]), 3
+            ),
+            "spent_cast": (str(spent_cast[-1]) if spent_cast else None),
+        }
+    )
+    state["spell_shield_used"] = False
+    state["spell_shield_blocked_cast"] = None
+    state["spell_shield_consumed_at"] = None
+    state["spell_shield_uses_remaining"] = (
+        composition.uses.initial_remaining() if composition is not None else None
+    )
+
+
 def _write_spell_shield_reduction_receipt(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any], attacker: Any
 ) -> None:
@@ -3692,16 +3734,34 @@ def run_survival_walk(
                 decision = eligibility.decide(action, attacker)
                 state["spell_shield_decisions"].append(decision.public_receipt())
                 if decision.eligible:
+                    # REARM: the kernel clock decides, this walk only supplies
+                    # the three instants it reads.  ``spell_shield_consumed_at``
+                    # is ``None`` until a use is spent and ``spell_shield_rearm``
+                    # is ``None`` for a shield that carries no clock at all
+                    # (Sivir's timed shield) — either one keeps the strict
+                    # one-use-per-fight rule, since the kernel fails closed on a
+                    # missing argument rather than assuming an instant.
                     block, block_reason = spell_shield_block_decision(
                         state["spell_shield_used"],
                         state["spell_shield_blocked_cast"],
                         decision.cast_identity,
                         attacker,
+                        rearm=state["spell_shield_rearm"],
+                        event_time=float(event_time),
+                        consumed_at=state["spell_shield_consumed_at"],
+                        # The restart anchor.  ``last_damage_time`` is the last
+                        # instant damage from a modeled combatant landed on this
+                        # holder, which is what the cached clause ("timer
+                        # restarts upon taking damage from champions") measures.
+                        last_champion_damage_at=state["last_damage_time"],
                     )
+                    if block_reason == "rearmed":
+                        _rearm_spell_shield(state, event_time)
                     if block:
                         uses_before = state["spell_shield_uses_remaining"]
                         if not state["spell_shield_used"]:
                             state["spell_shield_used"] = True
+                            state["spell_shield_consumed_at"] = float(event_time)
                             state["spell_shield_blocked_cast"] = spell_shield_group_key(
                                 attacker, decision.cast_identity
                             )

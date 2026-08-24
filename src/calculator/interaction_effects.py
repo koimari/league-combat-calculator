@@ -29,10 +29,12 @@ from .delivery_eligibility import (
     SourceReceipt,
     SpellShieldComposition,
     SpellShieldEligibility,
+    SpellShieldRearmClock,
     UseBudget,
 )
 from .item_effects import (
     annul_spell_shield_cooldown_atom,
+    annul_spell_shield_timer_restarts,
     spell_shield_cooldown_seconds,
 )
 from .champions.skill_orders import get_ability_rank
@@ -520,6 +522,7 @@ class SpellShieldContract:
     composition: SpellShieldComposition
     cooldown_seconds: float = 0.0
     cooldown_atom: dict[str, Any] | None = None
+    rearm: SpellShieldRearmClock = SpellShieldRearmClock()
 
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe contract receipt."""
@@ -530,6 +533,7 @@ class SpellShieldContract:
             "cooldown_atom": (
                 dict(self.cooldown_atom) if self.cooldown_atom is not None else None
             ),
+            "rearm": self.rearm.public_receipt(),
         }
 
 
@@ -538,11 +542,13 @@ def resolve_spell_shield(combatant: Any) -> SpellShieldContract | None:
 
     The starting defenses (:mod:`defensive_effects`) declare readiness
     and the source label; this resolver builds the kernel eligibility —
-    an infinite window until consumed (start inclusive) — and the
-    kernel composition — one use per hostile ability cast, no triggered
-    heal — and receipts the sourced cooldown through the
-    :mod:`item_effects` typed accessor.  Sivir's timed shield is armed
-    by the survival walk from its authored packet instead.
+    an infinite window until consumed (start inclusive) — the kernel
+    composition — one use per hostile ability cast, no triggered heal —
+    and the kernel rearm clock, whose cooldown and timer-restart clause
+    both come from the :mod:`item_effects` typed accessors.  A holder
+    whose Annul item cannot be named carries the default unsourced clock,
+    which never rearms.  Sivir's timed shield is armed by the survival
+    walk from its authored packet instead, and carries no clock at all.
     """
     defenses = getattr(combatant, "defenses", None)
     if defenses is None or not bool(getattr(defenses, "spell_shield_ready", False)):
@@ -558,23 +564,30 @@ def resolve_spell_shield(combatant: Any) -> SpellShieldContract | None:
     )
     cooldown = 0.0
     cooldown_atom: dict[str, Any] | None = None
+    rearm = SpellShieldRearmClock()
     if item_name:
         cooldown = spell_shield_cooldown_seconds(item_name)
         cooldown_atom = annul_spell_shield_cooldown_atom(item_name)
+        rearm = SpellShieldRearmClock(
+            cooldown=cooldown,
+            restarts_on_champion_damage=annul_spell_shield_timer_restarts(item_name),
+            source_atom=dict(cooldown_atom),
+        )
     return SpellShieldContract(
         eligibility=SpellShieldEligibility(
             name="annul",
             window=DefenseWindow(start=0.0, until=float("inf")),
             block_rule=(
                 "Annul: 'blocks the next hostile ability' — one use per "
-                "hostile ability instance; the fight model cannot rearm "
-                "the shield (cooldown remains receipted)."
+                "hostile ability instance, and the sourced cooldown rearms "
+                "the shield inside the fight only once it has fully elapsed."
             ),
             source=SourceReceipt(label=source, url="https://wiki.leagueoflegends.com"),
         ),
         composition=SpellShieldComposition(),
         cooldown_seconds=cooldown,
         cooldown_atom=cooldown_atom,
+        rearm=rearm,
     )
 
 

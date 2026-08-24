@@ -3,7 +3,7 @@
 # Ships only the runtime: src/, static/, templates/, and the data/ cache.
 # vendor/ (the wiki scraper) stays out — patch-day data updates run locally
 # and arrive here as committed changes to data/.
-FROM python:3.15.0rc1-slim@sha256:858b8c9b2c764d1a3076e2c2ed64fb3f76ca2ec068ec81c1c059d3a5fcc1088e
+FROM python:3.15.0rc1-slim@sha256:d66aca68fc851b8e5b1bc350f7154fe408cf0e85e70c37d18a385591d9bf2743
 
 WORKDIR /app
 

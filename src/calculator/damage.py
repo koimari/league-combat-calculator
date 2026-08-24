@@ -164,6 +164,7 @@ from types import MappingProxyType
 from typing import Any, Callable, NamedTuple, TypeVar
 
 from . import item_effects
+from . import minion_stats
 from . import resource_ledger
 from . import rune_effects
 from . import shield_ledger
@@ -572,6 +573,43 @@ def _apply_physical_damage_reduction(raw_damage: float, resists: Resists) -> flo
     return max(0.0, raw_damage - min(flat, raw_damage * cap))
 
 
+#: The ``FightConfig`` target fields a named lane minion decides, and the
+#: ``minion_stats`` stat each one reads.  ``None`` marks a field the source
+#: settles by construction rather than through a field of its own: a lane
+#: minion's character record states one stat block and no minion grants
+#: itself a bonus, so all of its health and armor is BASE and the bonus is
+#: 0.0.  That is a different claim from "unsourced, so assume zero" — magic
+#: resistance IS unsourced, and is absent from this table because
+#: ``minion_stats.sourced_stat`` raises for it rather than answering 0.0.
+#:
+#: One table, both directions: :meth:`FightConfig.for_minion` FILLS exactly
+#: these fields and :meth:`FightConfig._validate_minion_target` REFUSES any
+#: other answer for them, so a field cannot be filled without also being
+#: pinned, nor pinned without being filled.
+MINION_SOURCED_TARGET_FIELDS: Mapping[str, str | None] = MappingProxyType(
+    {
+        "target_health": "health",
+        "target_armor": "armor",
+        "target_bonus_health": None,
+        "target_bonus_armor": None,
+    }
+)
+
+
+def sourced_minion_target(minion_type: str) -> dict[str, float]:
+    """Every fight-target field the named lane minion decides for itself.
+
+    Raises through ``minion_stats`` for a type no character record names,
+    so a misspelling can never arrive as a silently caller-shaped target.
+    """
+    return {
+        field_name: (
+            0.0 if stat is None else minion_stats.sourced_stat(minion_type, stat)
+        )
+        for field_name, stat in MINION_SOURCED_TARGET_FIELDS.items()
+    }
+
+
 @dataclass(frozen=True)
 class FightConfig:
     """Everything configurable about one fight, in one spelling.
@@ -655,13 +693,63 @@ class FightConfig:
     # Explicit state inputs for the selected keystone. The parser validates
     # this mapping before it reaches the fight engine.
     keystone_options: Mapping[str, int | float] = field(default_factory=dict)
-    # P3-3M: the target's actor CLASS.  "champion" is the historical 1v1
-    # model and the default for every existing caller; "minion" arms the
-    # sourced minion-only item branches (Doran's Helm's Helping Hand).
-    # The label gates class-restricted EFFECTS only — the target's stats
-    # (health, armor, MR, shields) stay caller-supplied, because no minion
-    # base-stat block is cached.  Unknown spellings fail closed.
+    # P3-3M: the target's actor CLASS.  "champion" is the 1v1 model and the
+    # default for every existing caller; "minion" arms the sourced
+    # minion-only item branches (Doran's Helm's Helping Hand).  Unknown
+    # spellings fail closed.
     target_class: str = item_effects.DEFAULT_TARGET_CLASS
+    # Which lane minion, when the target class is "minion".  "" leaves the
+    # target caller-shaped (a minion LABEL over caller-supplied stats) and is
+    # the default for every existing caller.  A named type binds the fields
+    # MINION_SOURCED_TARGET_FIELDS lists to the minion's own spawn-time
+    # record: build such a config through FightConfig.for_minion, which fills
+    # them, and __post_init__ then REFUSES any config that claims a type
+    # while carrying some other target's numbers.  Magic resistance is NOT
+    # among them and stays caller-supplied, because no minion character
+    # record states one — see minion_stats.
+    minion_type: str = ""
+
+    @classmethod
+    def for_minion(
+        cls,
+        minion_type: str,
+        *,
+        target_magic_resistance: float,
+        fight_duration_seconds: float,
+        **overrides: Any,
+    ) -> "FightConfig":
+        """A fight whose target IS the named lane minion, at spawn-time stats.
+
+        The durability fields come from the minion's own character record —
+        no call site spells its health or armor — and supplying one of them
+        here is refused rather than merged, so "sourced" and "caller-supplied"
+        never both answer for one field.
+
+        ``target_magic_resistance`` is a required argument precisely because
+        it is the one durability stat no minion record states: the caller must
+        decide it in the open. Defaulting it here would put an invented magic
+        resistance behind a sourced-looking constructor, which is the failure
+        :mod:`minion_stats` exists to prevent.
+        """
+        sourced = sourced_minion_target(minion_type)
+        # "minion_type" needs no entry here: it is a named parameter above, so
+        # passing it again raises before this runs.
+        collisions = sorted(set(overrides) & (set(sourced) | {"target_class"}))
+        if collisions:
+            raise ValueError(
+                f"for_minion({minion_type!r}) decides {', '.join(collisions)}; "
+                "the sourced target fields are "
+                f"{', '.join(sorted(sourced))} and the class is fixed. "
+                "Pass a champion-class FightConfig instead of overriding them."
+            )
+        return cls(
+            target_magic_resistance=target_magic_resistance,
+            fight_duration_seconds=fight_duration_seconds,
+            target_class=item_effects.MINION_TARGET_CLASS,
+            minion_type=minion_type,
+            **sourced,
+            **overrides,
+        )
 
     @property
     def rune_page(self) -> "rune_effects.RunePage":
@@ -674,12 +762,53 @@ class FightConfig:
         )
 
     def __post_init__(self) -> None:
-        """Reject a target class the fight model cannot represent."""
+        """Reject a target the fight model cannot represent."""
         if self.target_class not in item_effects.TARGET_CLASSES:
             raise ValueError(
                 "target_class must be one of "
                 f"{', '.join(item_effects.TARGET_CLASSES)}; "
                 f"got {self.target_class!r}"
+            )
+        self._validate_minion_target()
+
+    def _validate_minion_target(self) -> None:
+        """Hold a named minion type to its own sourced stat block.
+
+        Three refusals, each a silent-error class: a type no character
+        record names, a minion type on a champion-class fight, and a target
+        field that disagrees with the source the type claims.
+        """
+        if not self.minion_type:
+            return
+        if self.minion_type not in minion_stats.MINION_TYPES:
+            raise ValueError(
+                "minion_type must be one of "
+                f"{', '.join(minion_stats.MINION_TYPES)}; "
+                f"got {self.minion_type!r}"
+            )
+        if self.target_class != item_effects.MINION_TARGET_CLASS:
+            raise ValueError(
+                f"minion_type={self.minion_type!r} requires "
+                f"target_class={item_effects.MINION_TARGET_CLASS!r}; "
+                f"got {self.target_class!r}"
+            )
+        record = minion_stats.base_stats(self.minion_type).record
+        for field_name, sourced in sourced_minion_target(self.minion_type).items():
+            supplied = getattr(self, field_name)
+            if supplied is not None and float(supplied) == sourced:
+                continue
+            stat = MINION_SOURCED_TARGET_FIELDS[field_name]
+            cited = (
+                f"{stat}={sourced!r}, {minion_stats.SOURCE_FIELDS[stat]} in {record}"
+                if stat is not None
+                else f"{sourced!r}, since all of a spawn-time minion's "
+                f"durability is base ({record} states no bonus)"
+            )
+            raise ValueError(
+                f"{field_name}={supplied!r} contradicts the sourced "
+                f"{self.minion_type} minion ({cited}). Build a sourced-minion "
+                "fight with FightConfig.for_minion, which fills these fields; "
+                "it does not accept a second answer for them."
             )
 
 

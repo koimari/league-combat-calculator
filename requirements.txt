@@ -9,7 +9,7 @@ gunicorn==26.1.0  # production WSGI server (Linux/Docker only; run_web.bat uses 
 # Data fetching & parsing (used by lolstaticdata)
 requests==2.34.2
 beautifulsoup4==4.15.0
-lxml==6.1.1
+lxml==6.1.2
 SLPP==1.2.3
 dataclasses-json==0.6.7
 natsort==8.4.0
@@ -23,12 +23,12 @@ pytest-xdist==3.8.0  # parallel test execution (CI runs `pytest -n auto`)
 
 # Code quality
 black==26.5.1
-pylint==4.0.6
+pylint==4.0.7
 bandit==1.9.4
 pip-audit==2.10.1
 
 # P6 persistence: PostgreSQL via SQLAlchemy 2.x with the psycopg3 driver.
-SQLAlchemy==2.0.51
+SQLAlchemy==2.0.52
 psycopg==3.3.4
 
 # P0a managed Redis result-cache backend.

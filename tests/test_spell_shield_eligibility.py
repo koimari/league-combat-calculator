@@ -4,8 +4,10 @@ This file is the RLM-2 acceptance-matrix suite for the spell-shield
 eligibility/use lifecycle added to ``src/calculator/delivery_eligibility.py``
 (P2 Slice 2; consumers: Sivir E timed 1.5s window + one on-block heal,
 Banshee's Veil / Edge of Night / Verdant Barrier Annul — ready at fight
-start, block one hostile ability, 40/40/60s cooldown receipted but never
-rearmed).  It follows the styles of ``test_delivery_interaction_eligibility.py``
+start, block one hostile ability, and rearm once their sourced 40/40/60s
+cooldown has fully elapsed from the later of the consumption instant and
+the last champion damage the holder took).  It follows the styles of
+``test_delivery_interaction_eligibility.py``
 and ``test_interaction_atoms.py``: kernel unit tests with minimal
 _Action/_Attacker classes for pure kernel cases, and ``src.app`` ->
 ``POST /api/calculate`` consumer tests for end-to-end cases.
@@ -39,6 +41,9 @@ R11 | score-path fail-closed receipts (Annul items, Sivir heal
      template)                                                    | unit
 R12 | kernel contract: receipt shapes, budget modes, decision
      reasons, cast-identity kinds                                 | kernel
+R13 | sourced rearm clock end to end on Banshee's 40s: endpoint
+     pins, a rearm inside the window, a cooldown that outlasts the
+     window, and the unsourced shield that never rearms          | walk
 """
 
 from types import SimpleNamespace
@@ -47,9 +52,17 @@ import pytest
 
 from src.app import app
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator import delivery_eligibility as de
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interaction_effects import resolve_spell_shield
+from src.calculator.item_effects import (
+    annul_spell_shield_cooldown_atom,
+    annul_spell_shield_timer_restarts,
+    spell_shield_cooldown_seconds,
+)
 from src.calculator.participant_timeline import Combatant
 from src.calculator.stats import calculate_total_stats
 from src.calculator.interpreters import uncompilable_item_receipt
@@ -1193,3 +1206,307 @@ def test_r12_stable_event_key_reused_for_blocked_bookkeeping():
     assert de.stable_event_key(action) == "Q:0.5:3"
     decision = _eligibility().decide(action, _Attacker())
     assert decision.event_key == de.stable_event_key(action)
+
+
+# ---------------------------------------------------------------------------
+# R13 — the sourced rearm clock, end to end on Banshee's Veil
+# ---------------------------------------------------------------------------
+#
+# Verdant Barrier's 60s clock is pinned packet-by-packet in
+# ``test_verdant_barrier_compiled_parity.py``; this row is the OTHER sourced
+# cooldown (40s, shared with Edge of Night) plus the two cases that file
+# cannot host: a cooldown that outlasts the whole fight window, and a shield
+# whose cooldown is not sourced at all.
+
+BANSHEES = "Banshee's Veil"
+#: Pinned literals, cross-checked against the typed accessors in the first
+#: test below — the pin is what would catch a silent cache drift, and the
+#: cross-check is what keeps the pin honest.
+BANSHEES_COOLDOWN = 40.0
+BANSHEES_ATOM_HASH = "c020562aebacbe01"
+#: ``pipeline._REQUEST_BOUNDS["fight_duration"]`` upper bound.  Every Annul
+#: cooldown is longer, so no API request can reach a rearm; the walks below
+#: that do reach one run the kernel directly.
+REQUEST_MAX_FIGHT_SECONDS = 30.0
+
+
+def _annul_stats() -> dict:
+    return {"health": 3000.0, "is_melee": False, "bonus_attack_damage": 0.0}
+
+
+def _annul_holder(champion: str = "Ahri") -> Combatant:
+    """A Banshee's Veil holder for the packet-level survival walk."""
+    stats = _annul_stats()
+    return Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": champion},
+        level=18,
+        items=(get_item_by_name(BANSHEES),),
+        stats=stats,
+        defenses=resolve_starting_defenses(champion, 18, stats, [{"name": BANSHEES}]),
+    )
+
+
+def _unsourced_shield_holder(champion: str = "Ahri") -> Combatant:
+    """A holder whose shield is ready but whose items name no Annul item.
+
+    This is ``resolve_spell_shield``'s fail-closed branch: with no item to
+    read a cooldown from it builds the default clock, which never rearms.
+    """
+    return Combatant(
+        participant_id="target",
+        team="enemy",
+        champion_data={"name": champion},
+        level=18,
+        items=(),
+        stats=_annul_stats(),
+        defenses=StartingDefenses(
+            spell_shield_ready=True,
+            spell_shield_source="Annul",
+            healing_received_multiplier=1.0,
+        ),
+    )
+
+
+def _annul_attacker() -> Combatant:
+    return Combatant(
+        participant_id="source",
+        team="main",
+        champion_data={"name": "source"},
+        level=18,
+        items=(),
+        stats={"health": 5000.0},
+        defenses=StartingDefenses(healing_received_multiplier=1.0),
+    )
+
+
+def _annul_packet(
+    time: float,
+    sequence: int,
+    *,
+    damage: float,
+    damage_type: str = "magic",
+    source_key: str = "Q",
+    **extra,
+) -> dict:
+    packet = {
+        "time": time,
+        "damage": damage,
+        "damage_type": damage_type,
+        "attacker": "source",
+        "target": "target",
+        "source_key": source_key,
+        "sequence": sequence,
+        "_event_id": f"{source_key}:{sequence}:{time}",
+    }
+    packet.update(extra)
+    return packet
+
+
+def _ability_at(time: float, sequence: int, damage: float = 100.0) -> dict:
+    return _annul_packet(time, sequence, damage=damage, is_ability=True)
+
+
+def _auto_at(time: float, sequence: int, damage: float = 20.0) -> dict:
+    return _annul_packet(
+        time,
+        sequence,
+        damage=damage,
+        damage_type="physical",
+        source_key="auto_attacks",
+        basic_attack=True,
+    )
+
+
+def _annul_walk(holder: Combatant, events: list[dict], duration: float) -> dict:
+    """One survival walk with *holder* as the packet target."""
+    return simulate_survival(
+        [_annul_attacker(), holder], {"target": events}, {}, {}, duration
+    )["target"]
+
+
+def _late_decision(row: dict, cast_identity: str) -> dict:
+    """The one eligibility decision recorded for *cast_identity*.
+
+    The decisions receipt records the ELIGIBILITY reason, never the block
+    reason, so "was this cast declined on the cooldown or never considered
+    at all?" is only answerable through it.
+    """
+    matches = [
+        entry
+        for entry in row["spell_shield"]["decisions"]
+        if entry["cast_identity"] == cast_identity
+    ]
+    assert len(matches) == 1
+    return matches[0]
+
+
+def test_r13_banshees_cooldown_and_restart_clause_are_sourced():
+    """Every number the clock reads comes from the cache, not this file.
+
+    The pinned 40.0s and the atom hash are cross-checked against the typed
+    accessors, and the resolved contract carries the same atom — so a cache
+    drift fails here rather than silently moving a rearm instant.
+    """
+    assert spell_shield_cooldown_seconds(BANSHEES) == pytest.approx(BANSHEES_COOLDOWN)
+    atom = annul_spell_shield_cooldown_atom(BANSHEES)
+    assert atom["hash"] == BANSHEES_ATOM_HASH
+    assert atom["values"] == [BANSHEES_COOLDOWN]
+    assert annul_spell_shield_timer_restarts(BANSHEES) is True
+
+    clock = resolve_spell_shield(_annul_holder()).rearm
+    assert clock.sourced() is True
+    assert clock.cooldown == pytest.approx(BANSHEES_COOLDOWN)
+    assert clock.restarts_on_champion_damage is True
+    assert clock.source_atom["hash"] == BANSHEES_ATOM_HASH
+
+
+def test_r13_a_rearm_inside_the_window_is_receipted_with_its_arithmetic():
+    """A rearm that lands inside the fight window, arithmetic and all.
+
+    60s walk.  The ability at t=1.0 is blocked and spends the use, so
+    consumed_at = 1.0.  Nothing damages the holder afterwards, so the timer
+    is never restarted and runs from 1.0: ready_at = 1.0 + 40.0 = 41.0.
+    The second ability at t=41.0 finds the shield back and is blocked too,
+    so the holder takes nothing at all across the whole walk.
+    """
+    row = _annul_walk(
+        _annul_holder(), [_ability_at(1.0, 0), _ability_at(41.0, 1)], 60.0
+    )
+    assert row["damage_taken"] == pytest.approx(0.0)
+    assert len(row["spell_shield"]["blocked_packets"]) == 2
+    rearms = row["spell_shield"]["rearms"]
+    assert len(rearms) == 1
+    assert rearms[0]["time"] == pytest.approx(41.0)
+    assert rearms[0]["consumed_at"] == pytest.approx(1.0)
+    assert rearms[0]["cooldown"] == pytest.approx(BANSHEES_COOLDOWN)
+    assert rearms[0]["timer_started_at"] == pytest.approx(1.0)
+    assert rearms[0]["ready_at"] == pytest.approx(41.0)
+    assert rearms[0]["restarts_on_champion_damage"] is True
+    assert rearms[0]["spent_cast"] == "Q:1.0"
+    # The rearm re-spends immediately on the cast that observed it, so the
+    # published budget still reads one use spent, not two available.
+    assert row["spell_shield_used"] is True
+    assert row["spell_shield"]["uses_after"] == 0
+
+
+def test_r13_the_rearm_instant_is_an_endpoint_start_inclusive():
+    """41.0 exactly rearms; one millisecond earlier does not.
+
+    Same 60s walk and the same consumed_at = 1.0, so ready_at = 41.0 in
+    both runs — only the second ability's instant moves.  Start-inclusive
+    is the walk's convention everywhere (``DefenseWindow.active_at``), and
+    pinning both sides is what keeps a future comparison from drifting to
+    strictly-greater or to a rounded second.
+    """
+    on_the_instant = _annul_walk(
+        _annul_holder(), [_ability_at(1.0, 0), _ability_at(41.0, 1)], 60.0
+    )
+    assert on_the_instant["damage_taken"] == pytest.approx(0.0)
+    assert len(on_the_instant["spell_shield"]["rearms"]) == 1
+
+    one_ms_early = _annul_walk(
+        _annul_holder(), [_ability_at(1.0, 0), _ability_at(40.999, 1)], 60.0
+    )
+    assert one_ms_early["damage_taken"] == pytest.approx(100.0)
+    assert one_ms_early["spell_shield"]["rearms"] == []
+    assert len(one_ms_early["spell_shield"]["blocked_packets"]) == 1
+    # Declined on the cooldown, not on eligibility.
+    assert _late_decision(one_ms_early, "Q:40.999")["eligible"] is True
+
+
+def test_r13_a_cooldown_that_outlasts_the_fight_never_rearms():
+    """The production case: 40s of cooldown, 30s of fight.
+
+    ``pipeline`` bounds a requested fight_duration to 30.0s and the
+    shortest Annul cooldown is 40.0s, so ready_at = 1.0 + 40.0 = 41.0 sits
+    past the end of every window a request can ask for.  The second ability
+    at t=29.0 lands for its full 100, exactly as it did before the rearm
+    clock existed — which is why no API response moved.
+    """
+    assert BANSHEES_COOLDOWN > REQUEST_MAX_FIGHT_SECONDS
+    row = _annul_walk(
+        _annul_holder(),
+        [_ability_at(1.0, 0), _ability_at(29.0, 1)],
+        REQUEST_MAX_FIGHT_SECONDS,
+    )
+    assert row["damage_taken"] == pytest.approx(100.0)
+    assert len(row["spell_shield"]["blocked_packets"]) == 1
+    assert row["spell_shield"]["rearms"] == []
+    assert row["spell_shield"]["rearm"]["sourced"] is True
+    assert row["spell_shield_used"] is True
+    assert _late_decision(row, "Q:29.0")["eligible"] is True
+    # The kernel agrees with the walk about why: the rearm is outside the
+    # window rather than merely unreached by a packet.
+    clock = resolve_spell_shield(_annul_holder()).rearm
+    assert clock.ready_at(1.0) == pytest.approx(41.0)
+    assert clock.rearms_within(REQUEST_MAX_FIGHT_SECONDS, 1.0) is False
+
+
+def test_r13_every_champion_hit_restarts_the_timer_including_one_that_got_through():
+    """ "Timer restarts upon taking damage from champions" means EVERY hit.
+
+    90s walk, four packets, and the clock is re-anchored twice:
+
+    * t=1.0 ability blocked; consumed_at = 1.0, ready_at = 41.0;
+    * t=9.0 basic attack lands 20 (a basic attack never spends the shield),
+      restarting the timer at 9.0 -> ready_at = 49.0;
+    * t=41.0 ability: 41.0 < 49.0, so it is NOT blocked and lands 100 —
+      and that landed damage restarts the timer again at 41.0, so
+      ready_at becomes 41.0 + 40.0 = 81.0;
+    * t=81.0 ability: 81.0 >= 81.0, so the shield is back and blocks it.
+
+    Surviving damage is the two hits that got through: 20.0 + 100.0 = 120.0.
+    The hit that got through is the load-bearing one — an implementation
+    that only re-anchored on basic attacks would have rearmed at 49.0 and
+    blocked the t=41 ability, taking 20.0 instead.
+    """
+    row = _annul_walk(
+        _annul_holder(),
+        [
+            _ability_at(1.0, 0),
+            _auto_at(9.0, 1),
+            _ability_at(41.0, 2),
+            _ability_at(81.0, 3),
+        ],
+        90.0,
+    )
+    assert row["damage_taken"] == pytest.approx(120.0)
+    blocked = row["spell_shield"]["blocked_packets"]
+    assert [entry["time"] for entry in blocked] == [1.0, 81.0]
+    rearms = row["spell_shield"]["rearms"]
+    assert len(rearms) == 1
+    assert rearms[0]["time"] == pytest.approx(81.0)
+    assert rearms[0]["consumed_at"] == pytest.approx(1.0)
+    assert rearms[0]["timer_started_at"] == pytest.approx(41.0)
+    assert rearms[0]["ready_at"] == pytest.approx(81.0)
+    # The t=41 ability was eligible and declined only by the restarted clock.
+    assert _late_decision(row, "Q:41.0")["eligible"] is True
+
+
+def test_r13_an_unsourced_shield_never_rearms():
+    """Fail-closed: no sourced cooldown, no rearm, at any elapsed time.
+
+    The holder's shield is ready with no Annul item to read a cooldown
+    from, so ``resolve_spell_shield`` builds the default clock: cooldown
+    0.0, ``sourced`` False, ready_at +inf.  In a 100s walk — longer than
+    every Annul cooldown put together — the second ability at t=99.0 still
+    lands for 100.  A clock that treated the unsourced 0.0 as a real
+    cooldown would have rearmed the shield at t=1.0 and blocked it.
+    """
+    holder = _unsourced_shield_holder()
+    clock = resolve_spell_shield(holder).rearm
+    assert clock.sourced() is False
+    assert clock.cooldown == pytest.approx(0.0)
+    assert clock.ready_at(1.0) == float("inf")
+    assert clock.rearms_within(100.0, 1.0) is False
+
+    row = _annul_walk(holder, [_ability_at(1.0, 0), _ability_at(99.0, 1)], 100.0)
+    assert row["damage_taken"] == pytest.approx(100.0)
+    assert len(row["spell_shield"]["blocked_packets"]) == 1
+    assert row["spell_shield"]["rearms"] == []
+    assert row["spell_shield"]["rearm"]["sourced"] is False
+    assert row["spell_shield"]["rearm"]["source_atom"] is None
+    assert row["spell_shield_used"] is True
+    assert _late_decision(row, "Q:99.0")["eligible"] is True

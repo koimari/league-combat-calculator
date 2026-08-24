@@ -24,23 +24,35 @@ is the modeling classification.
 | Bucket | Count | % of SR-admitted |
 |---|---|---|
 | SR-admitted items (total) | 209 | 100.0% |
-| `modeled_effect` (bespoke damage/proc formula) | 80 | 38.3% |
-| `modeled_state` (bounded scenario-control mechanic) | 36 | 17.2% |
-| **Modeled total** (`modeled_effect` + `modeled_state`) | **116** | **55.5%** |
-| `stats_only` (raw stat line only, no bespoke mechanic) | 92 | 44.0% |
-| `blocked` (mechanic identified, authority conflict) | 1 | 0.5% |
+| `modeled_effect` (bespoke damage/proc formula) | 58 | 27.8% |
+| `modeled_state` (bounded scenario-control mechanic) | 61 | 29.2% |
+| **Modeled total** (`modeled_effect` + `modeled_state`) | **119** | **56.9%** |
+| `stats_only` (raw stat line only, no bespoke mechanic) | 90 | 43.1% |
+| `blocked` (mechanic identified, authority conflict) | 0 | 0.0% |
 | `review_pending` | 0 | 0.0% |
 
-The `ITEM_EFFECTS` dict (`item_effects.py`) carries 128 entries total — that
-figure includes ally-only and non-SR effects outside this 209-item pool, which
-is why it does not equal the 116 SR-modeled count above. The one `blocked`
-item is **Fimbulwinter** (Winter's Approach's completed form): the mana-gate
-threshold and its comparison operator are untyped, so the optimizer withholds
-it (`item_coverage._PARTIAL_BLOCKED_REASONS`).
+Re-measured 2026-08-21 by the closeout sweep (issue #215) — see
+`docs/receipts/roadmap-closeout-verification-2026-08-21.md` for the command.
+Two things moved since the first census: **`blocked` is now empty**
+(Fimbulwinter's untyped mana gate was the sole entry and has cleared), and the
+`modeled_effect` / `modeled_state` split shifted as the declaration-driven
+classifier re-read items the earlier count had bucketed by formula presence
+alone. The modeled total rose 116 → 119; the `stats_only` set is 90.
 
-**Update (2026-08-20) — the 92 `stats_only` items are now formally
-certified.** `tests/test_stats_only_items.py` is the certification pass:
-every one of the 92 is machine-verified as genuinely `stats_only` /
+The `ITEM_EFFECTS` dict (`item_effects.py`) carries more entries than the
+modeled count above, because it includes ally-only and non-SR effects outside
+this 209-item pool.
+
+**Update (2026-08-20, re-measured 2026-08-21) — the `stats_only` items are
+now formally certified; the population is 90, not the 92 first counted.**
+`tests/test_stats_only_items.py::test_certified_count_matches_roadmap_100`
+names the drift item by item: six left (Diadem of Songs, Dream Maker, Echoes
+of Helia, Moonstone Renewer and Solstice Sleigh declare ally_packet mechanics
+the support ledger schedules; Spirit Visage declares a sustain multiplier) and
+four joined (Bramble Vest, Thornmail, Force of Nature, Jak'Sho — all-defence
+declarations). A further drift means the classifier moved again and must be
+re-read, not tolerated. `tests/test_stats_only_items.py` is the certification pass:
+every one of the 90 is machine-verified as genuinely `stats_only` /
 optimizer-eligible / calculation-eligible, an ordinary SR purchase per
 `item_source.is_ordinary_sr_item`, and — for the 41 that carry a real
 described passive/active (see §1.3) — its cached branch text is pinned
@@ -50,7 +62,7 @@ name-matched entry and keep sailing through unreviewed. Each item's own
 cached stat block is also spot-verified against `calculate_total_stats`
 through isolated output fields (no hardcoded item numbers; every expected
 value is read live from `data/items.json` via the existing `get_item_stats`
-accessor). **Zero misclassifications found**: none of the 92 add outgoing
+accessor). **Zero misclassifications found**: none of the 90 add outgoing
 damage to a champion target — the 41 described items' numeric mechanics are
 self-directed (shields: Bloodthirster, Hexdrinker, Kaenic Rookern, the
 Lifeline family, Guardian Angel) or non-damage debuffs/utility on the enemy
@@ -76,8 +88,10 @@ paths, and split-push bruisers are under-represented). Re-run with a larger,
 role-balanced sample before using this for anything but sequencing triage
 work.
 
-Of the 116 modeled items, 28 appeared at least once in the sample; the other
-88 modeled items never won a slot in this sample (not "unmodeled" — see §1.3).
+Of the modeled items as counted when this sample was run (116; now 119 —
+§1.1), 28 appeared at least once; the other 88 never won a slot in this
+sample (not "unmodeled" — see §1.3). The sample was not re-run for the
+2026-08-21 re-measure, so these tier tables remain as-sampled.
 
 **Tier 1 — core (≥13/60 builds, ≥21.7%).** 11 items (a tie at 13 puts two
 items at rank 10):
@@ -128,11 +142,12 @@ eligible; simply never won a slot against this sample's 30 champions and 2
 target profiles. Not a coverage gap — a sampling gap. Not enumerated here
 (reproduce via appendix §6.2 against a different roster to populate it).
 
-### 1.3 Stat-only list (`stats_only`, 92 items) — CERTIFIED (2026-08-20)
+### 1.3 Stat-only list (`stats_only`, 90 items) — CERTIFIED (2026-08-20,
+re-measured 2026-08-21)
 
 `stats_only` means `item_model_coverage` found no mechanic that adds
 **outgoing damage from the item's own holder** — corrected wording: this is
-narrower than "no bespoke formula at all". 51 of the 92 truly have no cached
+narrower than "no bespoke formula at all". 49 of the 90 truly have no cached
 passive/active. The other **41 do carry a real, numeric mechanic** (a self
 shield, Grievous Wounds, a slow, stasis, or an ally-directed heal/shield
 routed through the separate support ledger) — they are still correctly

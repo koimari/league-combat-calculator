@@ -31,8 +31,9 @@ from .defense_state import DefenseInterpretationError, DefenseSlot
 NOTES: Mapping[DefenseMechanic, str] = {
     DefenseMechanic.ANNUL: (
         "{owner}'s Annul spell shield is ready at the opening and "
-        "consumes the first authored hostile ability; cooldown rearm is "
-        "outside the modeled exchange."
+        "consumes the first authored hostile ability; its sourced cooldown "
+        "rearms the shield only once fully elapsed, and the timer restarts "
+        "on champion damage."
     ),
     DefenseMechanic.STEADFAST: (
         "{owner} Steadfast starts at zero stacks; the ordered ledger "

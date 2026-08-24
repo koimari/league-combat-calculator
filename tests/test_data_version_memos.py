@@ -404,7 +404,7 @@ is why their writes go through ``store_for_generation``.
 
 
 def test_a_superseded_generation_is_evicted_rather_than_retained(
-    bumped_version,
+    bumped_version, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Unreachable is not gone: the version prefix must also collect.
 
@@ -414,6 +414,16 @@ def test_a_superseded_generation_is_evicted_rather_than_retained(
     generations coexist and each holds a strong reference to the cached
     dict it was derived from, so every superseded generation is retained
     for the life of the process.
+
+    Measured over throwaway memos, one per member.  Every one of the five is
+    written by any test that prices an item or reads a declaration, so what
+    each holds on arrival is the session's history — under ``pytest -n auto``
+    a worker may run half the suite before this test and none of the sibling
+    tests above it.  Counting entries then compares "one touch" against
+    "everything this worker happened to memoize in the same generation" and
+    fails on an eviction that worked.  Fresh dicts make "one touch, one
+    entry" true of every member, and hand the session's warm caches back
+    untouched rather than leaving this test's next-generation writes in them.
     """
     item = {
         "id": 3031,
@@ -445,11 +455,12 @@ def test_a_superseded_generation_is_evicted_rather_than_retained(
         support_effects._has_support_attributes(champion)
         support_effects._support_profile(ability)
 
-    # The catalog memo is written by every test that reads a declaration, so
-    # it arrives here already full of this generation's entries.  Cleared so
-    # that "one touch, one entry" is true of every member and the comparison
-    # below measures eviction rather than the session's history.
-    item_behavior_catalog._BEHAVIOR_RULES_MEMO.clear()  # noqa: SLF001
+    # Derived from the table above rather than listed again: a memo that
+    # joins the unbounded set is isolated here by joining it, and one left
+    # out would be measured against the session's history instead.
+    for module, attribute in UNBOUNDED_KEYED_MEMOS.values():
+        monkeypatch.setattr(module, attribute, {})
+
     touch_every_memo()
     before = {
         name: len(getattr(module, attribute))
