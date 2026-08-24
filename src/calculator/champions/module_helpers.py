@@ -17,6 +17,7 @@ from .engine import SlotCtx, SlotParser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
+    extract_description_control_duration,
     extract_named,
     simple_damage,
 )
@@ -312,3 +313,25 @@ def crit_conversion_certification(
         },
     }
     return cert, atoms
+
+
+# The Yasuo/Yone Q3 knock-up has no cached leveling row: its only source
+# is the "Gathering Storm Bonus" branch of the Q description, which is
+# also the branch that states the empower exists at all.
+Q3_KNOCKUP_BRANCH = "Gathering Storm Bonus"
+
+
+def q3_knockup_duration(champion: str, ability: dict[str, Any]) -> float:
+    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
+    for index, effect in enumerate(ability.get("effects") or []):
+        if Q3_KNOCKUP_BRANCH not in str(effect.get("description") or ""):
+            continue
+        duration = extract_description_control_duration(ability, index)
+        if duration:
+            return float(duration)
+        break
+    raise ValueError(
+        f"{champion} Q: the cached {Q3_KNOCKUP_BRANCH!r} branch states no "
+        "knock-up duration, so the Q3 control fails closed rather than "
+        "shipping an invented interval"
+    )
