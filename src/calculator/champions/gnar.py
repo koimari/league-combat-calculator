@@ -37,6 +37,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
+from ..binary_roots import character_record_root, record_value
 from ..stats import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
@@ -54,37 +55,39 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
-# HARDCODED: verify on patch updates — against the GAME FILES, not the
-# wiki: https://raw.communitydragon.org/latest/game/data/characters/
-# gnarbig/gnarbig.bin.json (CharacterRecords/Root) minus gnar's. The
-# wiki's Mega stat box is stale (claims 5.7 AD growth; the game says
-# 5.5 — confirmed by in-game testing).
-# Mega Gnar (the in-game GnarBig unit) stat deltas vs Mini as
-# (base, growth) pairs through the standard growth formula — the Rage
-# Gene passive's JSON leveling is empty, so the values live here (see
-# CLAUDE.md "Known-degraded wiki parses"). These are BASE-stat deltas
-# (GnarBig's own base stat block): the AD counts as base AD, never
-# bonus AD — R's %bonus-AD ratios see 0 without items. Attack speed is
-# a LOSS in percentage points of bonus attack speed (it cancels Mini's
+# ROOTED IN THE BINARIES: the five Mega deltas are computed at import as
+# GnarBig's CharacterRecord root minus Mini Gnar's (both tracked under
+# data/bin/characters/).  The wiki's Mega stat box is stale (claims 5.7
+# AD growth; the game says 5.5 — confirmed by in-game testing), so the
+# roots are the authority.  The AD counts as base AD, never bonus AD —
+# R's %bonus-AD ratios see 0 without items.  Attack speed is a LOSS in
+# percentage points of bonus attack speed (it cancels Mini's
 # growth-derived bonus AS: 6%/level Mini vs 0.5%/level Mega).
-MEGA_BONUS_HEALTH = (100.0, 43.0)  # 640/122 vs 540/79: +831 at level 18
-MEGA_BONUS_AD = (6.0, 2.3)  # 66/5.5 vs 60/3.2: +45.1 at level 18
-MEGA_BONUS_ARMOR = (4.0, 3.0)  # 36/6.7 vs 32/3.7: +55 at level 18
-MEGA_BONUS_MR = (3.0, 3.5)  # 33/4.8 vs 30/1.3: +62.5 at level 18
-MEGA_ATTACK_SPEED_LOSS = (0.0, 5.5)  # 0.5 vs 6.0/lvl: -93.5 at level 18
-# P4 GAME-FILE AUTHORITY (verified 2026-08-09 against the local client
-# 16.15.8024387): all five constants PASS vs the GnarBig CharacterRecord
-# root minus Gnar's root — extracted from the local client WAD
-# (Gnar.wad.client -> data/characters/gnarbig/gnarbig.bin,
-# Characters/GnarBig/CharacterRecords/Root: HP 640/122, AD 66/5.5,
-# armor 36/6.7, MR 33/4.8, AS 0.625 + 0.5%/lvl) minus the Mini root
-# (540/79, 60/3.2, 32/3.7, 30 + 1.3/lvl, 0.625 + 6%/lvl).  The
-# GnarPassive in-repo tooltip calcs are STALE (AD 6.0->48.5 uses the
-# old 2.5/lvl delta; the wiki's 5.7 growth claim is wrong — the game
-# says 5.5); the root is the authority.  The REPO-LEVEL parsed GnarBig
-# root remains absent (decompose_binaries.py extracts one path per WAD
-# and gnarbig is not a WAD unit) — the fail-closed record: re-derive
-# the constants from the parsed root when it lands (tests flip).
+_MINI_ROOT = character_record_root("Gnar")
+_MEGA_ROOT = character_record_root("GnarBig")
+
+
+def _mega_delta(base_field: str, growth_field: str) -> tuple[float, float]:
+    """One (base, growth) delta, each term snapped back to authored digits."""
+    base = float(
+        f"{record_value(_MEGA_ROOT, base_field) - record_value(_MINI_ROOT, base_field):.6g}"
+    )
+    growth = float(
+        f"{record_value(_MEGA_ROOT, growth_field) - record_value(_MINI_ROOT, growth_field):.6g}"
+    )
+    return (base, growth)
+
+
+MEGA_BONUS_HEALTH = _mega_delta("baseHPModifiable", "hpPerLevelModifiable")
+MEGA_BONUS_AD = _mega_delta("baseDamageModifiable", "damagePerLevelModifiable")
+MEGA_BONUS_ARMOR = _mega_delta("baseArmorModifiable", "armorPerLevelModifiable")
+MEGA_BONUS_MR = _mega_delta("baseMR", "mrPerLevel")
+MEGA_ATTACK_SPEED_LOSS = (
+    0.0,
+    float(
+        f"{record_value(_MINI_ROOT, 'attackSpeedPerLevelModifiable') - record_value(_MEGA_ROOT, 'attackSpeedPerLevelModifiable'):.6g}"
+    ),
+)
 
 # HARDCODED: catching Q refunds 40% (Mini) / 70% (Mega) of the
 # cooldown (wiki prose) -> remaining-cooldown multiplier per form.

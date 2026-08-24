@@ -67,6 +67,38 @@ def spell_object(champion_name: str, script_name: str) -> dict[str, Any]:
     )
 
 
+def character_record_root(champion_name: str) -> dict[str, Any]:
+    """A champion's ``CharacterRecords/Root`` block (base stats)."""
+    payload = character_bin(champion_name)
+    wanted = f"{champion_key(champion_name)}/characterrecords/root"
+    for key, value in payload.items():
+        if isinstance(value, dict) and key.lower().endswith(wanted):
+            return value
+    raise RuntimeError(
+        f"{champion_name}: CharacterRecords/Root not found in its binary"
+    )
+
+
+def record_value(root: dict[str, Any], field: str) -> float:
+    """One ModifiableFloat-style record field's ``baseValue``, snapped the
+    same way :func:`data_value` snaps spell DataValues."""
+    value = root.get(field)
+    if isinstance(value, dict) and "baseValue" in value:
+        try:
+            number = float(value["baseValue"])
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(
+                f"record field {field!r}: unusable baseValue {value['baseValue']!r}"
+            ) from exc
+        if not math.isfinite(number):
+            raise RuntimeError(f"record field {field!r}: non-finite")
+        snapped = float(f"{number:.6g}")
+        if not math.isfinite(snapped):  # pragma: no cover - defensive
+            raise RuntimeError(f"record field {field!r}: non-finite")
+        return snapped
+    raise RuntimeError(f"record field {field!r} not found")
+
+
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
     """A spell's named DataValue, first entry of its rank row, finite or raise.
 
