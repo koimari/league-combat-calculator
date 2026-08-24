@@ -99,6 +99,69 @@ def record_value(root: dict[str, Any], field: str) -> float:
     raise RuntimeError(f"record field {field!r} not found")
 
 
+def _breakpoint_level(breakpoint: Any) -> float:
+    """One breakpoint's sort key: its numeric ``mLevel``, or raise."""
+    if isinstance(breakpoint, dict) and "mLevel" in breakpoint:
+        level = breakpoint["mLevel"]
+        if isinstance(level, (int, float)):
+            return float(level)
+    raise RuntimeError(
+        f"calculation breakpoint row without a numeric mLevel: {breakpoint!r}"
+    )
+
+
+def calculation_breakpoints(
+    spell_obj: dict[str, Any], calculation_name: str
+) -> tuple[float, ...]:
+    """A ``mSpellCalculations`` level-breakpoint node as cumulative tiers.
+
+    The game states many transform-stance numbers as ``mLevel1Value`` plus
+    one ``mAdditionalBonusAtThisLevel`` per breakpoint level; this returns
+    the cumulative value at each tier ``(tier0, tier1, ...)`` — the shape
+    champion modules index by level band.  Snap and fail-closed rules match
+    :func:`data_value`.
+    """
+    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
+    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
+    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
+    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
+    if not isinstance(parts, list):
+        raise RuntimeError(
+            f"calculation {calculation_name!r} not found or has no formula parts"
+        )
+    for part in parts:
+        if isinstance(part, dict) and "mLevel1Value" in part:
+            try:
+                current = float(part["mLevel1Value"])
+            except (TypeError, ValueError) as exc:
+                raise RuntimeError(
+                    f"calculation {calculation_name!r}: unusable mLevel1Value"
+                ) from exc
+            tiers = [current]
+            raw_breakpoints = part.get("mBreakpoints")
+            if raw_breakpoints is None:
+                raw_breakpoints = ()
+            if not isinstance(raw_breakpoints, list):
+                raise RuntimeError(
+                    f"calculation {calculation_name!r}: mBreakpoints is not a list"
+                )
+            for breakpoint in sorted(raw_breakpoints, key=_breakpoint_level):
+                try:
+                    current += float(breakpoint["mAdditionalBonusAtThisLevel"])
+                except (KeyError, TypeError, ValueError) as exc:
+                    raise RuntimeError(
+                        f"calculation {calculation_name!r}: unusable breakpoint row"
+                    ) from exc
+                tiers.append(current)
+            snapped = tuple(float(f"{tier:.6g}") for tier in tiers)
+            if not all(math.isfinite(tier) for tier in snapped):  # pragma: no cover
+                raise RuntimeError(f"calculation {calculation_name!r}: non-finite")
+            return snapped
+    raise RuntimeError(
+        f"calculation {calculation_name!r}: no level-breakpoint formula part"
+    )
+
+
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
     """A spell's named DataValue, first entry of its rank row, finite or raise.
 
