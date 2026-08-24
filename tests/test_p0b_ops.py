@@ -179,9 +179,7 @@ def test_sentry_in_dependency_manifests():
         "requirements-runtime.txt",
         "pyproject.toml",
     ):
-        assert sentry_pin in Path(manifest).read_text(
-            encoding="utf-8"
-        ), manifest
+        assert sentry_pin in Path(manifest).read_text(encoding="utf-8"), manifest
     assert "--hash=sha256:" in Path("requirements-runtime.txt").read_text(
         encoding="utf-8"
     )
