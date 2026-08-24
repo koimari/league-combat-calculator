@@ -4368,12 +4368,18 @@ def dorans_helm_helping_hand_minion_damage() -> float:
 
 # ── Target classes (P3-3M) ────────────────────────────────────────────────
 # The fight model's target carries an actor CLASS label.  "champion" is the
-# historical 1v1 model; "minion" arms the sourced minion-only item branches.
-# The label gates class-restricted EFFECTS only — the target's stats stay
-# caller-supplied, because no minion base-stat block is cached (a sourced
-# minion stat model is the roadmap's separate P3-3M half).
-TARGET_CLASSES: tuple[str, ...] = ("champion", "minion")
+# 1v1 model; "minion" arms the sourced minion-only item branches.  The label
+# gates class-restricted EFFECTS.  A minion-class fight may additionally name
+# WHICH lane minion it faces (``FightConfig.minion_type``), which sources the
+# target's durability from ``minion_stats``; without a named type the target's
+# stats stay caller-supplied and the class is a label over them.
+#
+# These two names are the one spelling of each class.  ``TARGET_CLASSES`` is
+# built from them rather than re-listing the words, so a comparison against a
+# class cannot drift from the tuple that admits it.
 DEFAULT_TARGET_CLASS = "champion"
+MINION_TARGET_CLASS = "minion"
+TARGET_CLASSES: tuple[str, ...] = (DEFAULT_TARGET_CLASS, MINION_TARGET_CLASS)
 
 # Every target-class word a cached effect branch may restrict itself with.
 # A build item whose sourced text carries one of these has a class-specific

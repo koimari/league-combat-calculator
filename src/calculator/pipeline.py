@@ -27,11 +27,14 @@ from .rotation_resolver import (
 from .champions.skill_orders import get_ability_rank
 from .damage import (
     FightConfig,
+    MINION_SOURCED_TARGET_FIELDS,
     calculate_fight_damage,
+    sourced_minion_target,
     split_auto_vs_ability,
     split_by_damage_type,
 )
 from . import item_effects
+from . import minion_stats
 from . import resource_ledger
 from .interpreters import sustain
 from .interpreters.sustain import declared_sustain
@@ -933,6 +936,75 @@ def _request_target_class(data: Mapping[str, Any]) -> str:
     return value
 
 
+def _request_minion_type(data: Mapping[str, Any], target_class: str) -> str:
+    """Read which lane minion the request faces, failing closed.
+
+    Omitting the key keeps the target caller-shaped, which is what every
+    request that predates the sourced stat block does. Naming a type requires
+    the minion target class, so a champion-class body cannot quietly carry a
+    minion selector that nothing would apply.
+    """
+    value = request_string(data, "minion_type")
+    if not value:
+        return ""
+    if target_class != item_effects.MINION_TARGET_CLASS:
+        raise ValueError(
+            f"minion_type={value!r} requires target_class="
+            f"{item_effects.MINION_TARGET_CLASS!r}; got {target_class!r}"
+        )
+    if value not in minion_stats.MINION_TYPES:
+        raise ValueError(
+            "minion_type must be one of "
+            + ", ".join(minion_stats.MINION_TYPES)
+            + f"; got {value!r}"
+        )
+    return value
+
+
+def _request_target_durability(
+    data: Mapping[str, Any], minion_type: str
+) -> dict[str, float | None]:
+    """The fight target's durability fields, from the request or the source.
+
+    Without a named minion type these are read from the body exactly as they
+    always are. With one, the fields ``MINION_SOURCED_TARGET_FIELDS`` names
+    come from that minion's own character record instead, and supplying one
+    of them in the body is REFUSED rather than overridden or ignored — a
+    request must not be able to claim a sourced minion and then hand it a
+    different target's health.
+
+    ``target_mr`` is never sourced: no minion character record states a magic
+    resistance, so it stays a request value for every target class.
+    """
+    supplied: dict[str, float | None] = {
+        "target_health": _bounded_request_float(
+            data, "target_health", DEFAULT_TARGET["health"]
+        ),
+        "target_bonus_health": _bounded_request_float(
+            data, "target_bonus_health", DEFAULT_TARGET["bonus_health"]
+        ),
+        "target_armor": _bounded_request_float(
+            data, "target_armor", DEFAULT_TARGET["armor"]
+        ),
+        "target_bonus_armor": _bounded_request_float(
+            data, "target_bonus_armor", None, allow_none=True
+        ),
+    }
+    if not minion_type:
+        return supplied
+    conflicting = sorted(set(data) & set(MINION_SOURCED_TARGET_FIELDS))
+    if conflicting:
+        raise ValueError(
+            f"minion_type={minion_type!r} sources "
+            + ", ".join(sorted(MINION_SOURCED_TARGET_FIELDS))
+            + f"; remove {', '.join(conflicting)} from the request. "
+            "Only target_mr is still yours to supply for a minion, because "
+            "no minion character record states a magic resistance."
+        )
+    supplied.update(sourced_minion_target(minion_type))
+    return supplied
+
+
 @dataclass(frozen=True)
 class FightParams(FightConfig):
     """FightConfig plus the parse-layer inputs the engine never sees.
@@ -1088,19 +1160,10 @@ class FightParams(FightConfig):
         if role_quest_complete and not role:
             raise ValueError("role is required when role_quest_complete is true")
 
+        target_class = _request_target_class(data)
+        minion_type = _request_minion_type(data, target_class)
         params = cls(
-            target_health=_bounded_request_float(
-                data, "target_health", DEFAULT_TARGET["health"]
-            ),
-            target_bonus_health=_bounded_request_float(
-                data, "target_bonus_health", DEFAULT_TARGET["bonus_health"]
-            ),
-            target_armor=_bounded_request_float(
-                data, "target_armor", DEFAULT_TARGET["armor"]
-            ),
-            target_bonus_armor=_bounded_request_float(
-                data, "target_bonus_armor", None, allow_none=True
-            ),
+            **_request_target_durability(data, minion_type),
             target_magic_resistance=_bounded_request_float(
                 data, "target_mr", DEFAULT_TARGET["mr"]
             ),
@@ -1123,7 +1186,8 @@ class FightParams(FightConfig):
             stat_shards=rune_page.stat_shards,
             rune_options=dict(rune_page.options) or None,
             keystone_options=keystone_options,
-            target_class=_request_target_class(data),
+            target_class=target_class,
+            minion_type=minion_type,
             role=role,
             role_quest_complete=role_quest_complete,
             enemies_attack=_request_bool(data, "enemies_attack", True),

@@ -1812,6 +1812,7 @@ ROOTS = (
     "coverage_evidence.py",
     "data_registry.py",
     "item_outcomes.py",
+    "minion_stats.py",
     "patch_identity.py",
     "program/__init__.py",
     "program/amp.py",
