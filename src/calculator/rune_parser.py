@@ -229,6 +229,8 @@ _GRASP_READY_WINDOW = re.compile(
     r"your next .*?basic attack.*?within ([\d.]+) seconds against an enemy .*?champion",
     re.DOTALL,
 )
+_GRASP_NAME = "Grasp of the Undying"
+_DARK_HARVEST_NAME = "Dark Harvest"
 _HAIL_ATTACK_SPEED = re.compile(
     r"gain \{\{as\|\{\{rd\|([\d.]+)%\|([\d.]+)%\}\}" r".*?bonus''' attack speed",
     re.DOTALL,
@@ -605,7 +607,9 @@ _IMPLICIT_LEVEL_RANGES: Mapping[str, str] = MappingProxyType(
 def parse_rune_effects(name: str, description: str) -> tuple[dict[str, Any], list[str]]:
     """Parse one *named* rune's description, applying its implicit level span."""
     return parse_effects(
-        description, implicit_level_range=_IMPLICIT_LEVEL_RANGES.get(name)
+        description,
+        implicit_level_range=_IMPLICIT_LEVEL_RANGES.get(name),
+        rune_name=name,
     )
 
 
@@ -931,7 +935,10 @@ class _EffectRecorder:
 
 
 def parse_effects(
-    description: str, *, implicit_level_range: str | None = None
+    description: str,
+    *,
+    implicit_level_range: str | None = None,
+    rune_name: str | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     """Extract the numeric effect values a description carries.
 
@@ -940,8 +947,8 @@ def parse_effects(
     """
     recorder = _EffectRecorder()
     _parse_leveling(description, recorder, implicit_level_range)
-    _parse_scalar_templates(description, recorder)
-    _parse_prose_rules(description, recorder)
+    _parse_scalar_templates(description, recorder, rune_name)
+    _parse_prose_rules(description, recorder, rune_name)
     return recorder.effects, recorder.warnings
 
 
@@ -1079,7 +1086,12 @@ def _parse_split_leveling(description: str, recorder: _EffectRecorder) -> None:
         recorder.record(key, pair)
 
 
-def _claim_split_pairs(text: str, recorder: _EffectRecorder) -> str:
+def _claim_split_pairs(
+    text: str,
+    recorder: _EffectRecorder,
+    *,
+    skip_keys: frozenset[str] = frozenset(),
+) -> str:
     """Record every classified ``{{rd|...}}`` pair and blank its text."""
 
     def claim(key: str):
@@ -1100,9 +1112,9 @@ def _claim_split_pairs(text: str, recorder: _EffectRecorder) -> str:
         return _claim
 
     for key, pattern in _RD_SPLIT_RULES:
-        text = pattern.sub(claim(key), text)
+        text = pattern.sub(" " if key in skip_keys else claim(key), text)
     for key, pattern in _RD_FLAT_RULES:
-        text = pattern.sub(claim_flat(key), text)
+        text = pattern.sub(" " if key in skip_keys else claim_flat(key), text)
 
     def claim_ratio_pair(match: re.Match) -> str:
         melee_percent, ranged_percent, bonus_marker, stat = match.groups()
@@ -1202,7 +1214,11 @@ def _parse_ultimate_haste_stacks(text: str, recorder: _EffectRecorder) -> None:
     recorder.record("max_stacks", int(ceiling))
 
 
-def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None:
+def _parse_scalar_templates(
+    description: str,
+    recorder: _EffectRecorder,
+    rune_name: str | None = None,
+) -> None:
     """Read the single-value template forms: ratios, gold, range splits.
 
     Works on resolved text (display wrappers inlined) with "up to ... at
@@ -1210,7 +1226,21 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     only effect would be conflicting with their sources.
     """
     text = _MAXIMUM_RESTATEMENT.sub(" ", _resolve_display_templates(description))
-    text = _claim_split_pairs(text, recorder)
+    text = _claim_split_pairs(
+        text,
+        recorder,
+        skip_keys=(
+            frozenset(
+                {
+                    "max_health_damage_ratios",
+                    "max_health_heal_ratios",
+                    "permanent_bonus_health",
+                }
+            )
+            if rune_name == _GRASP_NAME
+            else frozenset()
+        ),
+    )
     text = _claim_stack_gated_grants(text, recorder)
 
     for percent, bonus_marker, stat in _AS_RATIO.findall(text):
@@ -1270,21 +1300,29 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
     for leftover in _UNCLAIMED_RD.findall(text):
         recorder.warn(f"unclassified melee/ranged split: {leftover}")
 
-    grasp_damage = _GRASP_DAMAGE_RATIO.search(description)
+    grasp_damage = (
+        _GRASP_DAMAGE_RATIO.search(description) if rune_name == _GRASP_NAME else None
+    )
     if grasp_damage:
         recorder.record(
             "grasp_damage_melee_ranged_ratios",
             [float(value) / 100.0 for value in grasp_damage.groups()],
         )
 
-    grasp_heal = _GRASP_HEAL_RATIO.search(description)
+    grasp_heal = (
+        _GRASP_HEAL_RATIO.search(description) if rune_name == _GRASP_NAME else None
+    )
     if grasp_heal:
         recorder.record(
             "grasp_heal_melee_ranged_ratios",
             [float(value) / 100.0 for value in grasp_heal.groups()],
         )
 
-    grasp_health = _GRASP_PERMANENT_HEALTH.search(description)
+    grasp_health = (
+        _GRASP_PERMANENT_HEALTH.search(description)
+        if rune_name == _GRASP_NAME
+        else None
+    )
     if grasp_health:
         recorder.record(
             "grasp_bonus_health_melee_ranged",
@@ -1496,7 +1534,11 @@ def _parse_scalar_templates(description: str, recorder: _EffectRecorder) -> None
         recorder.record("deathfire_ap_ratios_by_state", deathfire_ratios["AP"][:2])
 
 
-def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
+def _parse_prose_rules(
+    description: str,
+    recorder: _EffectRecorder,
+    rune_name: str | None = None,
+) -> None:
     """Read the prose-form rules: buff windows, stack rules, proc delays."""
     window_match = _BUFF_WINDOW.search(description)
     if window_match:
@@ -1557,14 +1599,18 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     if max_stacks_match:
         recorder.record("max_stacks", int(max_stacks_match.group(1)))
 
-    grasp_stacks = _GRASP_COMBAT_STACKS.search(description)
+    grasp_stacks = (
+        _GRASP_COMBAT_STACKS.search(description) if rune_name == _GRASP_NAME else None
+    )
     if grasp_stacks:
         recorder.record(
             "combat_stack_cadence_seconds", float(grasp_stacks.group(1) or 1.0)
         )
         recorder.record("combat_stack_generation_seconds", float(grasp_stacks.group(2)))
 
-    grasp_window = _GRASP_READY_WINDOW.search(description)
+    grasp_window = (
+        _GRASP_READY_WINDOW.search(description) if rune_name == _GRASP_NAME else None
+    )
     if grasp_window:
         recorder.record("ready_window_seconds", float(grasp_window.group(1)))
 
@@ -1604,7 +1650,7 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
     if level_gates:
         recorder.record("ability_haste_level_gates", level_gates)
 
-    _parse_conditional_amp(description, recorder)
+    _parse_conditional_amp(description, recorder, rune_name)
 
     delay_match = (
         _PROC_DELAY.search(description)
@@ -1621,7 +1667,11 @@ def _parse_prose_rules(description: str, recorder: _EffectRecorder) -> None:
         recorder.record("tick_interval_seconds", float(tick_match.group(1)))
 
 
-def _parse_conditional_amp(description: str, recorder: _EffectRecorder) -> None:
+def _parse_conditional_amp(
+    description: str,
+    recorder: _EffectRecorder,
+    rune_name: str | None = None,
+) -> None:
     """Read a damage amplifier and, when it has one, the health gate it reads.
 
     Three keys rather than one because the amp is one fact and the condition
@@ -1669,18 +1719,30 @@ def _parse_conditional_amp(description: str, recorder: _EffectRecorder) -> None:
         recorder.record("self_health_gate", f"self_{self_gate.group(1)}")
         recorder.record("self_health_gate_ratio", float(self_gate.group(2)) / 100.0)
 
-    dark_harvest_damage = _DARK_HARVEST_DAMAGE.search(description)
+    dark_harvest_damage = (
+        _DARK_HARVEST_DAMAGE.search(description)
+        if rune_name == _DARK_HARVEST_NAME
+        else None
+    )
     if dark_harvest_damage:
         recorder.record("base_damage", float(dark_harvest_damage.group(1)))
         recorder.record("soul_damage", float(dark_harvest_damage.group(2)))
 
-    dark_harvest_threshold = _DARK_HARVEST_THRESHOLD.search(description)
+    dark_harvest_threshold = (
+        _DARK_HARVEST_THRESHOLD.search(description)
+        if rune_name == _DARK_HARVEST_NAME
+        else None
+    )
     if dark_harvest_threshold:
         recorder.record(
             "health_threshold_ratio", (float(dark_harvest_threshold.group(1)) / 100.0)
         )
 
-    dark_harvest_reset = _DARK_HARVEST_TAKEDOWN_RESET.search(description)
+    dark_harvest_reset = (
+        _DARK_HARVEST_TAKEDOWN_RESET.search(description)
+        if rune_name == _DARK_HARVEST_NAME
+        else None
+    )
     if dark_harvest_reset:
         recorder.record("takedown_reset_seconds", float(dark_harvest_reset.group(1)))
 
