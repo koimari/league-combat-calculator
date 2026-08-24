@@ -31,6 +31,7 @@ rather than priced (tests/test_olaf_r_cleanse.py is their receipt).
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -212,14 +213,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 # cache, and the cleanse + immunity receipts are authored per R cast by the
 # participant timeline.
 
-# HARDCODED: verify on patch updates — Tough It Out's 2.5s shield
-# duration and 17.5% missing-health ratio are prose/cached leveling
-# (data/champions.json, Olaf W): "grants himself a shield for 2.5
-# seconds" + Shield Strength 10/40/70/100/130 (+ 17.5% missing health),
-# capped at 70% missing health.  The scanner emits the flat component at
-# the full-health floor; the missing-health term is documented.
-TOUGH_IT_OUT_SHIELD_DURATION_SECONDS = 2.5
-TOUGH_IT_OUT_MISSING_HEALTH_RATIO = 0.175
+# Tough It Out's shield duration and missing-health ratio are binary
+# DataValues (OlafFrenziedStrikes — W — ShieldDuration /
+# ShieldPercMissingHP); the cached leveling corroborates ("grants himself
+# a shield for 2.5 seconds" + Shield Strength 10/40/70/100/130 (+ 17.5%
+# missing health)).  The 70% missing-health cap has no binary home (the
+# dump carries no cap row) and stays a documented prose constant.  The
+# scanner emits the flat component at the full-health floor; the
+# missing-health term is documented.
+_OLAF_W_SPELL = spell_object("Olaf", "OlafFrenziedStrikes")
+TOUGH_IT_OUT_SHIELD_DURATION_SECONDS = data_value(_OLAF_W_SPELL, "ShieldDuration")
+TOUGH_IT_OUT_MISSING_HEALTH_RATIO = data_value(_OLAF_W_SPELL, "ShieldPercMissingHP")
 TOUGH_IT_OUT_MISSING_HEALTH_CAP = 0.70
 
 OPTIONS = list(OPTIONS) + [

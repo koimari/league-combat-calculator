@@ -336,3 +336,31 @@ class TestBatch5RootedConstants:
             syndra.TRANSCENDENT_AP_MULTIPLIER
         )
         assert data_value(p, "MaxStackAmount") == syndra.SPLINTERS_FULL
+
+
+class TestBatch6RootedConstants:
+    """Batch 6: Olaf's W shield shape and Yi's Highlander window resolve
+    from their binaries; conflicts stay pinned."""
+
+    def test_olaf(self):
+        import src.calculator.champions.olaf as olaf
+
+        w = spell_object("Olaf", "OlafFrenziedStrikes")
+        assert data_value(w, "ShieldDuration") == pytest.approx(
+            olaf.TOUGH_IT_OUT_SHIELD_DURATION_SECONDS
+        )
+        assert data_value(w, "ShieldPercMissingHP") == pytest.approx(
+            olaf.TOUGH_IT_OUT_MISSING_HEALTH_RATIO
+        )
+
+    def test_master_yi(self):
+        import src.calculator.champions.master_yi as yi
+
+        assert data_value(spell_object("Master Yi", "Highlander"), "RDuration") == (
+            pytest.approx(yi._R_DURATION_SECONDS)
+        )
+        # DOCUMENTED CONFLICT: the binary AttackCount reads 4; the wiki
+        # prose (and the module) price a 3-hit cadence.
+        assert data_value(
+            spell_object("Master Yi", "MasterYiPassive"), "AttackCount"
+        ) != (yi._DOUBLE_STRIKE_STACKS)

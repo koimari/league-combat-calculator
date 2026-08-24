@@ -29,6 +29,7 @@ cooldown refund have no channel and stay named.
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share
@@ -58,7 +59,9 @@ _Q_REAPPEAR_SECONDS = 1.087
 
 # HARDCODED: verify on patch updates — Double Strike's 3-hit cadence and
 # the second strike's 50% AD are wiki prose; the JSON carries no
-# leveling for the passive.
+# leveling for the passive.  DOCUMENTED CONFLICT: the binary's
+# MasterYiPassive.AttackCount reads 4 — kept on the wiki root until a
+# patch settles it, pinned by test_binary_roots.
 _DOUBLE_STRIKE_STACKS = 3
 _SECOND_STRIKE_AD_RATIO = 0.5
 # "The second strike ... is affected by critical strike modifiers"
@@ -67,10 +70,10 @@ _SECOND_STRIKE_AD_RATIO = 0.5
 # which is the axis this key scales.
 _SECOND_STRIKE_CRIT_EFFECTIVENESS = 1.0
 
-# HARDCODED: verify on patch updates — Highlander's window is cached R
-# prose ("For the next 7 seconds, he gains ghosting, bonus attack speed,
-# ..."); the percentage is the JSON's "Bonus Attack Speed" row.
-_R_DURATION_SECONDS = 7.0
+# Highlander's window is the binary Highlander.RDuration DataValue; the
+# cached R prose ("For the next 7 seconds ...") corroborates it.  The
+# percentage rides the JSON's "Bonus Attack Speed" row.
+_R_DURATION_SECONDS = data_value(spell_object("Master Yi", "Highlander"), "RDuration")
 
 
 def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
