@@ -46,22 +46,17 @@ CURRENT RUNTIME FACTS (verified before pinning):
   (R cost 100).  RANK 0 IS NOT A CAST GATE today: the engine books the
   R cast at every rank (packet modules rotate every SLOT) and the heal
   fires with the rank-clamped value (extract_named rank 0 reads the
-  LAST row value 350) — the "R rank 0 -> no cast" contract is a
-  completion fix (xfailed below).
-- The Slice 4/5/6 champion-cleanse kernel (CHAMPION_CLEANSE_DECLARATIONS
-  — Gangplank W + Rengar W — + the per-cast packet authoring in
-  participant_timeline._support_effect_templates AFTER the heal fan-out
-  + _apply_cleanse + the per-fight one-use latch keyed by the
-  declaration item on the CASTER + the cleanse/cleanse_use/
-  cleanse_denied receipts) does NOT wire Milio today:
-  resolve_cleanse_item("Milio R") FAILS CLOSED with a KeyError naming
-  the source; the app-level fight carries NO cleanse keys anywhere and
-  utility_outcomes cleanse event_count is 0.  The kernel's decide()
-  knows only scopes "self" and "explicit_selected_ally" (no
-  self_and_all_teammates), the self-scope castability block is only
-  CAST_BLOCKING_CONTROL_KINDS = {"suppression"} (the QSS/Mercurial
-  cannotBeSuppressed rule), and each packet's decision consumes the
-  one use (a multi-recipient cast needs a shared-use decision).
+  LAST row value 350).
+- The Slice 4/5/6 champion-cleanse kernel wires Milio through the
+  CHAMPION_CLEANSE_DECLARATIONS "Milio R" row: resolve_cleanse_item
+  ("Milio R") resolves to the declaration; target_scope is
+  self_and_all_teammates (the same roster the heal fans out to); the
+  excluded control kinds are the airborne family (non-airborne CC only);
+  the cast-inhibiting gate blocks a crowd-controlled CASTER without
+  consuming the one use (the Mikael's-style gated path, the OPPOSITE of
+  the GP/Rengar utility-before-gate dispatch); the per-fight latch is
+  shared by one cast's recipients; the cooldown is receipted but never
+  enforced; and the score carries support_kind=cleanse fail-closed.
 - Game-file evidence (data/bin/characters/milio.bin.json MilioR):
   HealBase DataValues [50,150,250,350,...] (ranks 1..3 = 150/250/350),
   mSpellCalculations HealCalc = HealBase + StatByCoefficient 0.5 (50%
@@ -73,68 +68,60 @@ CURRENT RUNTIME FACTS (verified before pinning):
   Mercurial flag pair is ABSENT — consistent with the cast-inhibiting
   gate, the OPPOSITE of GP/Rengar).
 
-The coordinator's completion (P2-7) will (most likely) add the Milio R
-declaration + authoring: self AND all selected teammates scope (the
-same roster the heal fans out to), the non-airborne exclusion, the
-CASTABILITY GATE (the R cannot be used while the CASTER is
-crowd-controlled — the Mikael's-style gated path, use NOT consumed,
-the OPPOSITE of the GP/Rengar utility-before-gate dispatch), the heal
-(E8d fan-out) + cleanse separate, the per-fight one-use latch shared
-by one cast's recipients, the cooldown receipted but never enforced,
-and the score fails closed (support_kind=cleanse).  This matrix pins
-the CONTRACT; genuinely-absent mechanics are pytest.mark.xfail
-(non-strict) with reason "awaiting P2-7 ..." — the completion removes
-the markers.
+The P2-7 completion landed the Milio R declaration + authoring: self
+AND all selected teammates scope (the same roster the heal fans out
+to), the non-airborne exclusion, the CASTABILITY GATE (the R cannot be
+used while the CASTER is crowd-controlled — the Mikael's-style gated
+path, use NOT consumed, the OPPOSITE of the GP/Rengar
+utility-before-gate dispatch), the heal (E8d fan-out) + cleanse
+separate, the per-fight one-use latch shared by one cast's recipients,
+the cooldown receipted but never enforced, and the score fails closed
+(support_kind=cleanse).  This matrix pins the CONTRACT green.
 
 Contract sections (numbered as in the RLM-2 C brief):
   S1  Source evidence + typed values (cached R rows; the cleanse +
       castability wording; the game file; the module parse receipt;
       the R heal public receipt in parse + fight result; the source
-      receipts; the absent typed R declaration xfailed).
-  S2  No R (R rank 0; the option set unchanged; the rank-0 cast-gate
-      contract xfailed — the engine casts R at every rank today).
+      receipts; the typed R declaration).
+  S2  No R (R rank 0; the option set unchanged).
   S3  R timing (engine cast_timeline one_rotation 0.0 / timed 0.25;
-      the heal lands at the cast time; the activation-time == cast
-      time contract xfailed).
+      the heal lands at the cast time; activation time == cast time).
   S4  Heal + cleanse separate (the E8d ally heal receipts; the heal
-      fires with no control active; the cleanse receipts contract
-      xfailed).
+      fires with no control active; the cleanse receipts contract).
   S5  Self + all selected teammates scope (the heal fan-out roster;
-      per-recipient decisions xfailed; the kernel self-scope
+      per-recipient decisions; the kernel self-scope
       target_not_selected evidence).
   S6  Exact control exclusions (non-airborne wording; the kernel
-      excluded_control_kind evidence; the wired Milio exclusion
-      xfailed; the displacement-family boundary).
+      excluded_control_kind evidence; the wired Milio exclusion;
+      the displacement-family boundary).
   S7  Castability while crowd controlled (the heal attacker-gate pin —
       the OPPOSITE of the GP/Rengar carve-out; suppression kernel
-      evidence; the wired named-denial contract xfailed).
+      evidence; the wired named-denial contract).
   S8  One-use and cooldown boundaries (the kernel latch evidence; the
-      shared-per-cast latch + cooldown receipt xfailed; the heals fire
+      shared-per-cast latch + cooldown receipt; the heals fire
       per cast).
   S9  Same-time ordering (the kernel order — heal fan-out templates
       before the champion cleanse block; same-time heal + cleanse
       kernel evidence).
   S10 Repeated casts (kernel use_spent evidence; the Milio second-cast
-      contract xfailed).
+      contract).
   S11 Truncation (the truncate_intervals contract; per-recipient
-      truncation xfailed; historical downtime + later controls).
+      truncation; historical downtime + later controls).
   S12 Missing identity + rows (the unavailable-source KeyError pinned;
       the _require_row fail-loud precedent).
   S13 Score fail-closed (the generic gate receipts PASS; never a
       silent re-price).
   S14 Full vs score parity (byte-identical R surface today; the named
-      cleanse divergence xfailed).
+      cleanse divergence).
   S15 Unchanged boundaries (W/E ally support, Q damage, R out of
       damage, the GP/Rengar + item cleanse tables, the options meta).
   S16 Regression surface (the mandated sanity run list, footer).
 
 Expected heal values are recomputed from data/champions.json leveling
 rows — no literal damage constants.  The R heal/cost/cooldown arrays
-ARE the values under test (the typed declaration must publish them),
-so they appear as pinned cache rows (the K'Sante / Gangplank / Rengar
-matrix precedent).  The declaration item key below is a pinned
-CANDIDATE ("Milio R"); the coordinator's final spelling is a contract
-ambiguity reported to the parent.
+ARE the values under test (the typed declaration publishes them), so
+they appear as pinned cache rows (the K'Sante / Gangplank / Rengar
+matrix precedent).  The declaration item key is "Milio R".
 """
 
 import contextlib
@@ -173,10 +160,6 @@ _MILIO_DATA = _CHAMPION_DATA["Milio"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P2-7 coordinator wires the typed R declaration + the cleanse
-# packet authoring; genuinely-absent mechanics are xfailed with this
-# reason (never strict — the completion removes the markers).
-_AWAIT = "awaiting P2-7 wiring"
 
 # The cached R rows the typed declaration must publish (values under
 # test — pinned as cache evidence, never literal damage constants).
