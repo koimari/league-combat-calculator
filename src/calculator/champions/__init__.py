@@ -506,7 +506,6 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     # cast feeds these).
     "p_notes_fired": {"role": "self_state", "slot": "P"},
     "p_pre_stacks": {"role": "self_state", "slot": "P"},
-    "p_empowered_attacks": {"role": "self_state", "slot": "P"},
     "p_notes": {"role": "self_state", "slot": "P"},
     "p_power_chords": {"role": "self_state", "slot": "P"},
     "p_procs": {"role": "self_state", "slot": "P"},
