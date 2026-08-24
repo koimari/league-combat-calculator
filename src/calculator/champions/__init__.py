@@ -506,7 +506,6 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     # cast feeds these).
     "p_notes_fired": {"role": "self_state", "slot": "P"},
     "p_pre_stacks": {"role": "self_state", "slot": "P"},
-    "p_empowered_attacks": {"role": "self_state", "slot": "P"},
     "p_notes": {"role": "self_state", "slot": "P"},
     "p_power_chords": {"role": "self_state", "slot": "P"},
     "p_procs": {"role": "self_state", "slot": "P"},
@@ -684,6 +683,8 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "stardust_stacks": {"role": "self_state", "slot": "P"},
     "starting_hemorrhage_stacks": {"role": "self_state", "slot": "R"},
     "stone_skin_stacks": {"role": "self_state", "slot": "P"},
+    # Ambessa's Q/Q2 sweetspot toggle; the option changes no cast
+    # scheduling, so the rotation role stays irrelevant.
     "sweetspot": {"role": "irrelevant", "slot": "Q"},
     "target_cursed": {"role": "self_state", "slot": "R"},
     "target_missing_hp_pct": {

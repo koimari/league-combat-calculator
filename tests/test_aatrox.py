@@ -48,7 +48,7 @@ class TestQThreeCasts:
         _, abilities = parse_at(
             aatrox_data,
             9,
-            champion_options={"sweetspot": False},
+            champion_options={"q_variant": 6},
         )
         assert "Q" in abilities
         assert abilities["Q"]["damage_type"] == "physical"
@@ -57,12 +57,12 @@ class TestQThreeCasts:
         _, normal = parse_at(
             aatrox_data,
             9,
-            champion_options={"sweetspot": False},
+            champion_options={"q_variant": 6},
         )
         _, sweetspot = parse_at(
             aatrox_data,
             9,
-            champion_options={"sweetspot": True},
+            champion_options={"q_variant": 7},
         )
         assert sweetspot["Q"]["total_raw"] > normal["Q"]["total_raw"]
 
@@ -71,7 +71,7 @@ class TestQThreeCasts:
         _, sweetspot = parse_at(
             aatrox_data,
             9,
-            champion_options={"sweetspot": True},
+            champion_options={"q_variant": 7},
         )
         assert abs(default["Q"]["total_raw"] - sweetspot["Q"]["total_raw"]) < 0.1
 
@@ -84,7 +84,7 @@ class TestQThreeCasts:
         stats, abilities = parse_at(
             aatrox_data,
             1,
-            champion_options={"sweetspot": False},
+            champion_options={"q_variant": 6},
         )
         q = abilities["Q"]
         ad = stats["attack_damage"]
@@ -102,7 +102,7 @@ class TestQThreeCasts:
             aatrox_data,
             9,
             ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
-            champion_options={"sweetspot": False},
+            champion_options={"q_variant": 6},
         )
         parts = abilities["Q"]["parts"]
         assert [part.time_offset for part in parts] == [0.0, 1.0, 2.0]
@@ -165,7 +165,7 @@ class TestQThreeCasts:
         _, abilities = parse_at(
             aatrox_data,
             5,
-            champion_options={"sweetspot": False},
+            champion_options={"q_variant": 6},
         )
         assert abs(abilities["Q"]["total_raw"] - (first + second + third)) < 0.5
 
@@ -390,7 +390,7 @@ class TestReviewedCrowdControl:
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
         assert "enemies hit within a sweetspot of the area" in text
         assert "are also knocked up for 0.25 seconds" in text
-        assert any(row["key"] == "sweetspot" for row in aatrox.OPTIONS)
+        assert any(row["key"] == "q_variant" for row in aatrox.OPTIONS)
 
     def test_infernal_chains_two_hits_do_not_control_alike(self):
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "W")

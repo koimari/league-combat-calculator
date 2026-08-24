@@ -76,7 +76,7 @@ _WEAPON_LABELS = {
 #                 first enemy hit" — nothing else.
 #   Onslaught    "automatically performing up to 6 (+ 2 per 100% bonus
 #                 attack speed) attacks over the duration" — attacks only.
-#                 Absent from the map: see _Q_ONSLAUGHT_SECONDS_UNAUTHORED.
+#                 Absent from the map: see _Q_ONSLAUGHT_SECONDS.
 #   Binding Eclipse
 #                "dealing ... magic damage and rooting them for 1 second".
 #   Duskwave     "dealing ... physical damage to all enemies hit and

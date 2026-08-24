@@ -102,12 +102,26 @@ pre-merge engine replayed with this harness; both rows elect the same build and 
 | ahri_18_5 @2e5b3da6 (pre-merge main) | 1662.4 | 1627.5 | 144.1 | 3813 |
 | ahri_18_5 | 2852.9 | 2829.1 | 62.1 | 3848 |
 
-The merged-vs-main gap is 1190 ms, wider than the 819 ms the merge-202 audit recorded
+The merged-vs-main gap was 1190 ms, wider than the 819 ms the merge-202 audit recorded
 (1584 → 2403 ms). That audit's own two trees replay here at 1627 and 2488 ms best-of-7,
-so the machine has not drifted. The `lean` row shape does not reach this path:
-`optimizer._evaluate_build_uncached` calls `run_fight` without `score_only`, which only
-`participant_timeline._score_with_search_context` passes, and forcing it on measures
-−0.7% with the answer unchanged — the lean adoption is a coupled-path win only.
+so the machine has not drifted. At that point the `lean` row shape did not reach this
+path: `optimizer._evaluate_build_uncached` called `run_fight` without `score_only`,
+which only `participant_timeline._score_with_search_context` passed, and forcing it on
+measured −0.7% with the answer unchanged — a coupled-path win only.
+
+Re-measured after the optimizer adopted the lean row via `score_only`
+(optimizer.py → participant_timeline.py:4246 → damage.py): the gap is gone. Same
+harness, same scenario, alternating trees on one machine:
+
+| tree | median ms | best ms | spread ms | evaluations |
+|---|---|---|---|---|
+| ahri_18_5 (post-lean adoption, working tree @195a3c0a) | 1693.6 | 1681.8 | 22.1 | 3848 |
+| ahri_18_5 @1304424b (main alone, same day) | 1704.4 | 1700.2 | 11.9 | 3848 |
+
+Same evaluation count and the same 5653.5 score both sides, so it is the same search.
+The alternating `--by-build-size` run agrees: per-evaluation medians sit within ±2% at
+every held-item count (1/2/3/4/6 items), e.g. 501.9 vs 499.8 µs cold at one item and
+835.4 vs 828.2 µs at six. The merged-vs-main gap is closed; no residual to act on.
 
 ### Read the per-evaluation budget without the profiler
 

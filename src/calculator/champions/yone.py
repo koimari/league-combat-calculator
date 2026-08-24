@@ -33,13 +33,13 @@ from .module_helpers import (
     crit_conversion_certification,
     crit_conversion_payload,
     no_damage,
+    q3_knockup_duration,
 )
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
-    extract_description_control_duration,
     extract_named,
     extract_value,
 )
@@ -103,28 +103,6 @@ def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-# The Q3 knock-up has no cached leveling row: its only source is the
-# "Gathering Storm Bonus" branch of the Q description, which is also the
-# branch that states the empower exists at all.
-_Q3_BRANCH = "Gathering Storm Bonus"
-
-
-def _q3_knockup_duration(ability: dict[str, Any]) -> float:
-    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
-    for index, effect in enumerate(ability.get("effects") or []):
-        if _Q3_BRANCH not in str(effect.get("description") or ""):
-            continue
-        duration = extract_description_control_duration(ability, index)
-        if duration:
-            return float(duration)
-        break
-    raise ValueError(
-        f"Yone Q: the cached {_Q3_BRANCH!r} branch states no knock-up "
-        "duration, so the Q3 control fails closed rather than shipping an "
-        "invented interval"
-    )
-
-
 def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: Mortal Steel, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
     ranked = ctx.ranked()
@@ -156,7 +134,7 @@ def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
     # authored here rather than in MODULE_CC: only the 2-stack cast is the
     # whirlwind that "additionally knock[s] up enemies hit in their path",
     # and that sentence is where its duration is read from.
-    knockup = _q3_knockup_duration(ability) if stacks >= 2 else 0.0
+    knockup = q3_knockup_duration("Yone", ability) if stacks >= 2 else 0.0
     entry["parts"] = (
         DamagePart(
             "physical",

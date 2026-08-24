@@ -636,7 +636,7 @@
     "revive_source": "Rebirth",
     "death_time": 15.45,
     "revived": true,
-    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (death at 4.312 -> revive at 10.312 -> killed again at 15.45). Aatrox's Q now lands as three strikes a second apart and W as two hits 1.5s apart, which spreads the same incoming total later and pushes the second death out from 15.091."
+    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (death at 4.312 -> revive at 10.312 -> killed again at 15.45). Aatrox's Q now lands as three strikes a second apart and W as two hits 1.5s apart, which spreads the same incoming total later and pushes the second death out to 15.45."
    },
    "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
   },
