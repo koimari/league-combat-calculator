@@ -13,7 +13,9 @@ from src.calculator.binary_roots import (
     _BIN_DIR,
     champion_key,
     character_bin,
+    character_record_root,
     data_value,
+    record_value,
     spell_object,
 )
 
@@ -459,3 +461,36 @@ class TestBatch9RootedConstants:
         assert data_value(spell_object("Yorick", "YorickR"), "MaidenADRatio") == (
             pytest.approx(yorick._MAIDEN_AD_RATIO)
         )
+
+
+class TestBatch10GnarCrossFile:
+    """Batch 10: Gnar's Mega deltas are computed from the two tracked
+    binaries (GnarBig root minus Mini root) at import."""
+
+    def test_gnar_deltas_come_from_both_roots(self):
+        from src.calculator.champions.gnar import (
+            MEGA_ATTACK_SPEED_LOSS,
+            MEGA_BONUS_AD,
+            MEGA_BONUS_ARMOR,
+            MEGA_BONUS_HEALTH,
+            MEGA_BONUS_MR,
+        )
+
+        mini = character_record_root("Gnar")
+        mega = character_record_root("GnarBig")
+        assert (
+            record_value(mega, "baseHPModifiable")
+            - record_value(mini, "baseHPModifiable")
+        ) == MEGA_BONUS_HEALTH[0]
+        assert (
+            record_value(mega, "hpPerLevelModifiable")
+            - record_value(mini, "hpPerLevelModifiable")
+        ) == MEGA_BONUS_HEALTH[1]
+        assert (6.0, 2.3) == MEGA_BONUS_AD
+        assert (4.0, 3.0) == MEGA_BONUS_ARMOR
+        assert (3.0, 3.5) == MEGA_BONUS_MR
+        assert (0.0, 5.5) == MEGA_ATTACK_SPEED_LOSS
+
+    def test_character_record_root_fail_closed(self):
+        with pytest.raises(RuntimeError):
+            character_record_root("Nobody")
