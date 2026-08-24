@@ -37,6 +37,7 @@ from typing import Any
 
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, build_parser
@@ -59,11 +60,16 @@ from .module_contract import coverage
 # HARDCODED: verify on patch updates — wiki prose, not a leveling row:
 # the cached R description states "Siphoning Strike's cooldown is
 # halved" while Fury of the Sands is active (eff[1] prose).
-_R_Q_COOLDOWN_MULTIPLIER = 0.5
+# ROOTED IN THE BINARY: NasusR.QCDR / NasusE.Duration DataValues; the
+# cached R prose ("Siphoning Strike's cooldown is halved") corroborates
+# the multiplier.
+_NASUS_R_SPELL = spell_object("Nasus", "NasusR")
+_NASUS_E_SPELL = spell_object("Nasus", "NasusE")
+_R_Q_COOLDOWN_MULTIPLIER = data_value(_NASUS_R_SPELL, "QCDR")
 _E_INITIAL_DELAY = 0.264
 _E_TICKS = 10
 _E_TICK_INTERVAL = 0.5
-_E_DOT_DURATION = 5.0
+_E_DOT_DURATION = data_value(_NASUS_E_SPELL, "Duration")
 _R_TICKS = 30
 _R_TICK_INTERVAL = 0.5
 _R_DOT_DURATION = 15.0

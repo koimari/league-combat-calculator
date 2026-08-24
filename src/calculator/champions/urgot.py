@@ -19,6 +19,7 @@ E9-2 gap fixes over the packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -38,9 +39,14 @@ PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d
 # nearest enemy at a fixed 3.0 attack speed" for 4 seconds (cached W
 # description): 12 shots at a 1/3s cadence.  The leg on-hit reads the
 # cached Per-Level Scaling (% AD) and Max Health Damage (%) rows.
-_W_SHOTS = 12
-_W_TICK_INTERVAL = 1.0 / 3.0
-_W_DURATION = 4.0
+# ROOTED IN THE BINARY: UrgotW.Duration and WAttacksPerSecond; the
+# shot count is the rate times the window (12), the cadence its
+# reciprocal (1/3s) — the cached description corroborates all three.
+_URGOT_W_SPELL = spell_object("Urgot", "UrgotW")
+_W_DURATION = data_value(_URGOT_W_SPELL, "Duration")
+_W_ATTACKS_PER_SECOND = data_value(_URGOT_W_SPELL, "WAttacksPerSecond")
+_W_SHOTS = int(_W_DURATION * _W_ATTACKS_PER_SECOND)
+_W_TICK_INTERVAL = 1.0 / _W_ATTACKS_PER_SECOND
 
 
 def _purge(ctx: SlotCtx) -> dict[str, Any] | None:
