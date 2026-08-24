@@ -43,6 +43,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..stats import growth_multiplier
 from .inputs import champion_stat, int_option
 from .engine import SlotCtx
@@ -82,7 +83,9 @@ _MIST_WALKER_DAMAGE_END = 100.0  # level 18
 _MIST_WALKER_AD_RATIO = 0.20
 _MIST_WALKER_MAX = 4
 _MAIDEN_BASE_BY_RANK = (50.0, 75.0, 100.0)
-_MAIDEN_AD_RATIO = 0.30
+# ROOTED IN THE BINARY (data/bin/characters/yorick.bin.json,
+# YorickR.MaidenADRatio); the game-file prose above corroborates it.
+_MAIDEN_AD_RATIO = data_value(spell_object("Yorick", "YorickR"), "MaidenADRatio")
 
 
 def _mist_walker_attack_damage(ctx: SlotCtx) -> float:
