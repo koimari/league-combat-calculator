@@ -41,6 +41,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency, SuppressedInference
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
@@ -56,11 +57,12 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 
-# HARDCODED: verify on patch updates — Transcendent's 120-splinter
-# upgrade multiplies TOTAL ability power by 15% (stacks multiplicatively
-# with item AP like Rabadon's). The passive JSON carries no trace of it.
+# Transcendent's full-splinter upgrade multiplies TOTAL ability power by
+# the binary SyndraPassive.CapstoneAPPerc (stacks multiplicatively with
+# item AP like Rabadon's). The passive JSON carries no trace of it.
 # https://wiki.leagueoflegends.com/en-us/Syndra
-TRANSCENDENT_AP_MULTIPLIER = 0.15
+_SYNDRA_P_SPELL = spell_object("Syndra", "SyndraPassive")
+TRANSCENDENT_AP_MULTIPLIER = data_value(_SYNDRA_P_SPELL, "CapstoneAPPerc")
 
 # HARDCODED: verify on patch updates — W's 60-splinter bonus true damage
 # is (12% + 2% per 100 AP) of W's magic damage. Implemented from the
@@ -71,12 +73,12 @@ W_TRUE_RATIO_BASE = 0.12
 W_TRUE_RATIO_PER_100_AP = 0.02
 
 # Splinters of Wrath thresholds (wiki; the 80-stack E upgrade is
-# utility only).
+# utility only).  The full-splinter cap is the binary MaxStackAmount.
 SPLINTERS_Q_SECOND_CHARGE = 40
 SPLINTERS_W_TRUE_DAMAGE = 60
 SPLINTERS_R_EXECUTE = 100
-SPLINTERS_FULL = 120
-_MAX_SPLINTERS = 120
+SPLINTERS_FULL = int(data_value(_SYNDRA_P_SPELL, "MaxStackAmount"))
+_MAX_SPLINTERS = SPLINTERS_FULL
 
 R_EXECUTE_HEALTH_RATIO = 0.15
 

@@ -55,6 +55,7 @@ Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -67,23 +68,24 @@ from .slotlib import (
 from .inputs import int_option
 from .module_contract import coverage
 
-# HARDCODED: verify on patch updates — the thorns formula exists only in
-# the cached W description prose ("enemies that use a basic attack
-# on-hit against Rammus are dealt 15 (+ 10% total armor) (+ 10% total
-# magic resistance) magic damage"); there is no leveling row for it.
+# The thorns ratios are binary DataValues (DefensiveBallCurl — W —
+# DamageArmorRatio / DamageMRRatio); the cached W description prose
+# corroborates ("15 (+ 10% total armor) (+ 10% total magic resistance)").
+# The flat 15 stays wiki-prose-rooted: the binary's BaseDamage reads 10.0
+# and the spell's own TotalDamage calculation does not reference it (a
+# documented divergence, not a silent root).
+_RAMMUS_W_SPELL = spell_object("Rammus", "DefensiveBallCurl")
 _THORNS_BASE = 15.0
-_THORNS_ARMOR_RATIO = 0.10
-_THORNS_MAGIC_RESISTANCE_RATIO = 0.10
+_THORNS_ARMOR_RATIO = data_value(_RAMMUS_W_SPELL, "DamageArmorRatio")
+_THORNS_MAGIC_RESISTANCE_RATIO = data_value(_RAMMUS_W_SPELL, "DamageMRRatio")
 
-# HARDCODED: verify on patch updates — Spiked Shell (P) has an EMPTY
-# leveling array in the cache, so its two ratios live only in the cached P
-# description prose ("bonus attack damage equal to the sum of 15% total
-# armor and 15% total magic resistance").  Both are corroborated by the
-# game binary's RammusP DataValues (ArmorRatio / MagicResistRatio = 0.15);
-# the binary's unused BaseDamage (10.0) is deliberately not modeled — the
-# spell's own TotalDamage calculation does not reference it.
-_SPIKED_SHELL_ARMOR_RATIO = 0.15
-_SPIKED_SHELL_MAGIC_RESISTANCE_RATIO = 0.15
+# Spiked Shell's two ratios are binary DataValues (RammusP
+# ArmorRatio / MagicResistRatio); the cached P description corroborates
+# ("bonus attack damage equal to the sum of 15% total armor and 15% total
+# magic resistance").
+_RAMMUS_P_SPELL = spell_object("Rammus", "RammusP")
+_SPIKED_SHELL_ARMOR_RATIO = data_value(_RAMMUS_P_SPELL, "ArmorRatio")
+_SPIKED_SHELL_MAGIC_RESISTANCE_RATIO = data_value(_RAMMUS_P_SPELL, "MagicResistRatio")
 
 
 def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:

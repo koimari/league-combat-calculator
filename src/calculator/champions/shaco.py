@@ -46,6 +46,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -64,19 +65,19 @@ _BOX_ATTACK_INTERVAL = 0.5
 _BOX_SPRUNG_SECONDS = 5.0
 _BOX_MAX_ATTACKS = int(_BOX_SPRUNG_SECONDS / _BOX_ATTACK_INTERVAL)  # 10
 
-# HARDCODED: verify on patch updates — the clone's basic attacks deal
-# 75% of Shaco's total attack damage (wiki "Pets" page prose for
-# Hallucination; the cached R JSON carries no leveling row for it).
+# The clone's basic attacks deal 75% of Shaco's total attack damage
+# (wiki "Pets" page prose; the cached R JSON carries no leveling row).
+# DOCUMENTED CONFLICT: the binary's HallucinateFull.CloneAADamagePercent
+# reads 0.60 — kept on the wiki root until a patch settles it, pinned by
+# test_binary_roots so the divergence stays visible.
 _CLONE_ATTACK_AD_RATIO = 0.75
 
-# HARDCODED: verify on patch updates — the cached Backstab row carries
-# only the per-level flat term (20 : 31.18); the wiki sentence's
-# "(+ 20% bonus AD)" has no modifier in the cache at all.  The game file
-# corroborates the ratio: shaco.bin.json ShacoPassive's
-# mSpellCalculations.BasicAttackDamage sums the ByCharLevelInterpolation
-# flat term with StatByNamedDataValue(mStat=2, mStatFormula=2,
-# AttackBonusADRatio=0.2) — bonus AD, 0.2, matching the prose 1:1.
-_BACKSTAB_BONUS_AD_RATIO = 0.20
+# Backstab's bonus-AD ratio is the binary ShacoPassive
+# AttackBonusADRatio DataValue; the cached sentence's "(+ 20% bonus AD)"
+# corroborates it (the per-level flat term rides the cache row).
+_BACKSTAB_BONUS_AD_RATIO = data_value(
+    spell_object("Shaco", "ShacoPassive"), "AttackBonusADRatio"
+)
 
 # "This damage is affected by critical strike modifiers" (cached P effect
 # 0) — an ordinary crit, so the on-hit row crits at full effectiveness on

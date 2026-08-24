@@ -272,3 +272,67 @@ def test_data_value_snaps_float32_storage_noise():
     q = spell_object("Aurelion Sol", "AurelionSolQ")
     assert repr(data_value(q, "QMaxHealthTrueDamagePerStack")) == "0.00031"
     assert repr(data_value(q, "APPerSecond")) == "0.55"
+
+
+class TestBatch5RootedConstants:
+    """Batch 5: Naafiri, Rammus, Shaco and Syndra constants resolve from
+    their binaries."""
+
+    def test_naafiri(self):
+        import src.calculator.champions.naafiri as naafiri
+
+        q = spell_object("Naafiri", "NaafiriQ")
+        r = spell_object("Naafiri", "NaafiriR")
+        assert data_value(q, "BleedInterval") == pytest.approx(
+            naafiri._BLEED_TICK_INTERVAL
+        )
+        assert data_value(q, "BleedDuration") == pytest.approx(naafiri._BLEED_DURATION)
+        assert naafiri._BLEED_TICKS == 10
+        assert data_value(r, "NaafiriADPercentBoost") * 100.0 == pytest.approx(
+            naafiri._HUNT_AD_PERCENT
+        )
+        assert data_value(r, "Duration") == pytest.approx(naafiri._HUNT_DURATION)
+
+    def test_rammus(self):
+        import src.calculator.champions.rammus as rammus
+
+        w = spell_object("Rammus", "DefensiveBallCurl")
+        p = spell_object("Rammus", "RammusP")
+        assert data_value(w, "DamageArmorRatio") == pytest.approx(
+            rammus._THORNS_ARMOR_RATIO
+        )
+        assert data_value(w, "DamageMRRatio") == pytest.approx(
+            rammus._THORNS_MAGIC_RESISTANCE_RATIO
+        )
+        assert data_value(p, "ArmorRatio") == pytest.approx(
+            rammus._SPIKED_SHELL_ARMOR_RATIO
+        )
+        assert data_value(p, "MagicResistRatio") == pytest.approx(
+            rammus._SPIKED_SHELL_MAGIC_RESISTANCE_RATIO
+        )
+        # DOCUMENTED DIVERGENCE: the binary BaseDamage reads 10; the module
+        # prices the wiki prose's 15.
+        assert data_value(p, "BaseDamage") != pytest.approx(rammus._THORNS_BASE)
+
+    def test_shaco(self):
+        import src.calculator.champions.shaco as shaco
+
+        p = spell_object("Shaco", "ShacoPassive")
+        assert data_value(p, "AttackBonusADRatio") == pytest.approx(
+            shaco._BACKSTAB_BONUS_AD_RATIO
+        )
+        # DOCUMENTED CONFLICT: the binary clone ratio reads 0.60; the wiki
+        # Pets prose (and the module) price 0.75.
+        full = spell_object("Shaco", "HallucinateFull")
+        assert data_value(full, "CloneAADamagePercent") != pytest.approx(
+            shaco._CLONE_ATTACK_AD_RATIO
+        )
+
+    def test_syndra(self):
+        import src.calculator.champions.syndra as syndra
+
+        p = spell_object("Syndra", "SyndraPassive")
+        assert data_value(p, "CapstoneAPPerc") == pytest.approx(
+            syndra.TRANSCENDENT_AP_MULTIPLIER
+        )
+        assert data_value(p, "MaxStackAmount") == syndra.SPLINTERS_FULL
