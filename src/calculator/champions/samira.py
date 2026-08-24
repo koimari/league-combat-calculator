@@ -226,7 +226,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = [
+OPTIONS = list(OPTIONS) + [
     int_option(
         "p_style_stacks",
         0,
