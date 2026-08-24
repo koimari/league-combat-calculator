@@ -23,6 +23,7 @@ import re
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -43,7 +44,12 @@ from .slotlib import (
 # true ("those hit in a line in the middle are dealt true damage
 # instead"); the grit damage ratio is the cached "Damage" row's unit
 # string ("% (+ 25% per 100 bonus AD) of expended Grit").
-_W_SHIELD_DURATION_SECONDS = 3.0
+# Haymaker's shield window is the binary SettW.ShieldMaxDuration;
+# the cached prose ("equal to the expended Grit for 3 seconds")
+# corroborates it.
+_W_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Sett", "SettW"), "ShieldMaxDuration"
+)
 _W_GRIT_OPTION = "w_grit"
 _Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 

@@ -21,6 +21,7 @@ E3 additions over the CP10.9 packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
@@ -63,14 +64,14 @@ _STORM_AS_PER_STACK = 5.0  # % bonus attack speed per stack
 _STORM_AS_PER_100_AP = 3.0  # additional % per stack per 100 AP
 _WOUNDED_BONUS_BASE = 0.50  # +50% damage on the 2nd bite
 _WOUNDED_BONUS_PER_100_BONUS_AD = 0.25  # +25% per 100 bonus AD
-# HARDCODED: verify on patch updates — Sky Splitter's self shield is
-# prose-only in the cached ability description ("a shield equal to 14% of
-# his maximum health (+ 75% AP) for 3 seconds"); the JSON carries no
-# Shield leveling row, so the ratio and duration are pinned here from the
-# cached description (data/champions.json, Volibear E).
-_SKY_SPLITTER_SHIELD_MAX_HP_RATIO = 0.14
-_SKY_SPLITTER_SHIELD_AP_RATIO = 0.75
-_SKY_SPLITTER_SHIELD_DURATION_SECONDS = 3.0
+# Sky Splitter's self shield is the binary VolibearE DataValue trio
+# (ShieldAmount 0.14 / ShieldAPRatio 0.75 / ShieldDuration 3.0); the
+# cached description ("a shield equal to 14% of his maximum health
+# (+ 75% AP) for 3 seconds") corroborates it.
+_VOLIBEAR_E_SPELL = spell_object("Volibear", "VolibearE")
+_SKY_SPLITTER_SHIELD_MAX_HP_RATIO = data_value(_VOLIBEAR_E_SPELL, "ShieldAmount")
+_SKY_SPLITTER_SHIELD_AP_RATIO = data_value(_VOLIBEAR_E_SPELL, "ShieldAPRatio")
+_SKY_SPLITTER_SHIELD_DURATION_SECONDS = data_value(_VOLIBEAR_E_SPELL, "ShieldDuration")
 
 
 def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:

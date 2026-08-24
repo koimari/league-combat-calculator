@@ -36,6 +36,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
@@ -56,8 +57,11 @@ from .inputs import bool_option, float_option
 # description prose (the JSON's sole leveling array is the 40% bonus
 # with attribute=None, over-extended to 40 entries — trust the formula).
 # https://wiki.leagueoflegends.com/en-us/Braum
-_STACKS_TO_PROC = 4
-_STACK_DURATION = 4.0  # seconds, refreshing per application
+_BRAUM_P_SPELL = spell_object("Braum", "BraumPassive")
+_STACKS_TO_PROC = int(data_value(_BRAUM_P_SPELL, "StackCap"))
+_STACK_DURATION = data_value(
+    _BRAUM_P_SPELL, "StackDuration"
+)  # seconds, refreshing per application
 _TRIGGER_BASE = 16.0  # trigger magic damage = 16 + 10 x level
 _TRIGGER_PER_LEVEL = 10.0
 _BONUS_AUTO_RATIO = 0.4  # immunity-window autos deal 40% of the trigger
