@@ -25,6 +25,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
@@ -59,16 +60,17 @@ from .inputs import int_option
 CERTIFIED_CONSTANTS, ATOM_IDS = crit_conversion_certification("1142fbe0a600fcc8")
 certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 
-# HARDCODED: verify on patch updates — the 5-second Spirit Form window
-# and the +0.5s earliest recast are prose in the cached E description
-# ("entering Spirit Form for 5 seconds" / "can be recast after 0.5
-# seconds, and automatically does so after the duration"); the stored
-# percentage is the cached "Damage Stored" row read live.
-_E_SPIRIT_FORM_SECONDS = 5.0
+# The Spirit Form window is ROOTED IN THE BINARY
+# (data/bin/characters/yone.bin.json, YoneE ReturnTimer = 5.0): the cached
+# E description corroborates it ("entering Spirit Form for 5 seconds").
+# The +0.5s earliest recast is the same spell's RecastLockout DataValue;
+# the stored percentage is the cached "Damage Stored" row read live.
+_E_SPIRIT_FORM_SECONDS = data_value(spell_object("Yone", "YoneE"), "ReturnTimer")
 
 # Fate Sealed's damage is the gust's, not the mark's: "After 0.3 seconds, a
 # gust rushes along the same area that deals equal parts physical and magic
-# damage to marked enemies" (cached R prose).
+# damage to marked enemies" (cached R prose).  No binary root carries the
+# 0.3s gust delay (script-side), so it stays a documented prose constant.
 _R_GUST_DELAY_SECONDS = 0.3
 
 PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf1"

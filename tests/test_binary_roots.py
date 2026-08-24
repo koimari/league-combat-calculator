@@ -101,3 +101,41 @@ def test_aurelion_sol_module_constants_come_from_the_binary():
         _E_EXECUTE_PCT_PER_100_STARDUST
     )
     assert data_value(q, "QMassStolen") == pytest.approx(_STARDUST_PER_Q_BURST)
+
+
+class TestBatch2VladimirAndYone:
+    """Batch 2: Vladimir's timings/amp and Yone's Spirit Form window are
+    rooted in their binaries, not hand-copied."""
+
+    def test_vladimir_constants_come_from_the_binary(self):
+        import src.calculator.champions.vladimir as vlad
+
+        e = spell_object("Vladimir", "VladimirE")
+        r = spell_object("Vladimir", "VladimirHemoplague")
+        assert data_value(e, "TimetoRampMaxDamage") == pytest.approx(
+            vlad._E_CHARGE_RAMP_SECONDS
+        )
+        assert data_value(e, "MaxChannelTime") == pytest.approx(vlad._E_CHANNEL_SECONDS)
+        assert data_value(r, "Duration") == pytest.approx(vlad._R_INFECTION_SECONDS)
+        assert data_value(r, "DamageAmp") / 100.0 == pytest.approx(
+            vlad._R_HEMOPLAGUE_INCREASE
+        )
+
+    def test_yone_spirit_form_window_comes_from_the_binary(self):
+        import src.calculator.champions.yone as yone
+
+        e = spell_object("Yone", "YoneE")
+        assert data_value(e, "ReturnTimer") == pytest.approx(
+            yone._E_SPIRIT_FORM_SECONDS
+        )
+
+    def test_yone_q3_knockup_binary_agrees_with_the_cached_description(self):
+        """Two roots, one number: the binary Q3KnockupDuration and the live
+        description-branch read must agree — either drifting fails closed."""
+        from src.calculator.champions.module_helpers import q3_knockup_duration
+        from src.calculator.data_fetcher import get_champion
+
+        q_ability = get_champion("Yone")["abilities"]["Q"][0]
+        live = q3_knockup_duration("Yone", q_ability)
+        binary = data_value(spell_object("Yone", "YoneQ"), "Q3KnockupDuration")
+        assert binary == pytest.approx(live)
