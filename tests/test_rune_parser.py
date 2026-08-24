@@ -329,6 +329,18 @@ class TestRunePayload:
         assert effects["combat_stack_generation_seconds"] == 3.0
         assert effects["max_stacks"] == 4
         assert effects["ready_window_seconds"] == 5.0
+        assert (
+            not {
+                "max_health_damage_ratios",
+                "max_health_heal_ratios",
+                "permanent_bonus_health",
+            }
+            & effects.keys()
+        )
+
+    def test_grasp_patterns_do_not_leak_to_another_named_rune(self):
+        payload = rune_payload("Not Grasp", GRASP_WIKITEXT, path="Resolve", row=0)
+        assert not any(key.startswith("grasp_") for key in payload["effects"])
 
     def test_hail_of_blades_effects_keep_temporary_window_values(self):
         payload = rune_payload(
@@ -559,6 +571,15 @@ class TestDarkHarvestPayload:
         assert effects["proc_delay_seconds"] == pytest.approx(1.75)
         assert effects["takedown_reset_seconds"] == pytest.approx(1.0)
         assert "parse_warnings" not in payload
+
+    def test_dark_harvest_patterns_do_not_leak_to_another_named_rune(self):
+        payload = rune_payload(
+            "Not Dark Harvest", DARK_HARVEST_WIKITEXT, path="Domination", row=0
+        )
+        effects = payload["effects"]
+        assert "soul_damage" not in effects
+        assert "health_threshold_ratio" not in effects
+        assert "takedown_reset_seconds" not in effects
 
 
 GUARDIAN_WIKITEXT = """{{{{{1<noinclude>|Rune data</noinclude>}}}|Guardian|{{{2|}}}|{{{3|}}}|{{{4|}}}|{{{5|}}}
