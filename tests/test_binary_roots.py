@@ -11,6 +11,7 @@ import pytest
 
 from src.calculator.binary_roots import (
     _BIN_DIR,
+    calculation_breakpoints,
     champion_key,
     character_bin,
     character_record_root,
@@ -494,3 +495,28 @@ class TestBatch10GnarCrossFile:
     def test_character_record_root_fail_closed(self):
         with pytest.raises(RuntimeError):
             character_record_root("Nobody")
+
+
+class TestBatch11JayceStance:
+    """Batch 11: Jayce's transform-stance tuples come from the binary's
+    mSpellCalculations breakpoint nodes."""
+
+    def test_jayce_stance_breakpoints(self):
+        from src.calculator.champions.jayce import (
+            CANNON_SHRED_PERCENT,
+            HAMMER_BONUS_RESISTS,
+            HAMMER_EMPOWERED_AUTO_DAMAGE,
+        )
+
+        stance = spell_object("Jayce", "JayceStanceHtG")
+        assert calculation_breakpoints(stance, "Resists") == HAMMER_BONUS_RESISTS
+        assert calculation_breakpoints(stance, "Damage") == (
+            HAMMER_EMPOWERED_AUTO_DAMAGE
+        )
+        assert (
+            tuple(
+                value * 100.0
+                for value in calculation_breakpoints(stance, "RangedFormShred")
+            )
+            == CANNON_SHRED_PERCENT
+        )

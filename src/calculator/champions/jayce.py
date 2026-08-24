@@ -78,7 +78,7 @@ from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_breakpoints, data_value, spell_object
 from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
@@ -95,25 +95,23 @@ from .source_receipts import load_champion_sources
 from .inputs import bool_option
 from .module_contract import coverage
 
-# HARDCODED: verify on patch updates — against the GAME FILES, not the
-# wiki (a stale wiki transform box is exactly what burned Gnar):
-# https://raw.communitydragon.org/latest/game/data/characters/jayce/jayce.bin.json
-# Both R entries have empty ``leveling`` arrays, so every value here
-# lives only in tooltip prose. The game file states them as level
-# breakpoints under
-# Spells/JayceStanceHtGAbility/JayceStanceHtG/mSpell/mSpellCalculations:
-#   Resists         mLevel1Value 5.0,  +7.0  at levels 6/11/16
-#                   + 7.5% of bonus AD (StatByCoefficient, bonus-only)
-#   Damage          mLevel1Value 25.0, +35.0 at levels 6/11/16
-#                   + ADRatio 0.30 of bonus AD
-#   RangedFormShred mLevel1Value 0.20, +0.05 at levels 6/11/16
-# Each tuple below is indexed by ``_level_tier``.
+# The stance numbers are binary mSpellCalculations level-breakpoint nodes
+# from data/bin/characters/jayce.bin.json (JayceStanceHtG: Resists /
+# Damage / RangedFormShred), read as cumulative tier tuples; the tooltip
+# prose corroborates them.  Both R entries have empty ``leveling``
+# arrays, so this node is their only numeric home.  The two bonus-AD
+# ratios ride StatByCoefficient parts of the same nodes and stay
+# prose-cited (0.075 / 0.30).
+_JAYCE_STANCE_SPELL = spell_object("Jayce", "JayceStanceHtG")
 TRANSFORM_BREAKPOINTS = (6, 11, 16)
-HAMMER_BONUS_RESISTS = (5.0, 12.0, 19.0, 26.0)
+HAMMER_BONUS_RESISTS = calculation_breakpoints(_JAYCE_STANCE_SPELL, "Resists")
 HAMMER_RESISTS_BONUS_AD_RATIO = 0.075
-HAMMER_EMPOWERED_AUTO_DAMAGE = (25.0, 60.0, 95.0, 130.0)
+HAMMER_EMPOWERED_AUTO_DAMAGE = calculation_breakpoints(_JAYCE_STANCE_SPELL, "Damage")
 HAMMER_EMPOWERED_AUTO_BONUS_AD_RATIO = 0.30
-CANNON_SHRED_PERCENT = (20.0, 25.0, 30.0, 35.0)
+CANNON_SHRED_PERCENT = tuple(
+    value * 100.0
+    for value in calculation_breakpoints(_JAYCE_STANCE_SPELL, "RangedFormShred")
+)
 CANNON_SHRED_DURATION = 5.0
 
 # Hyper Charge's steroid and attack count are binary DataValues
