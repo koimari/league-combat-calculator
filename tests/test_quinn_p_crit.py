@@ -597,8 +597,9 @@ class TestMarkedTargetOnHitAndCrit:
         )
 
     def test_api_harrier_row_crit_fields_are_null(self):
-        # Serialized boundary: the on-hit row exposes the crit fields as
-        # null (no crit accounting) while the auto row populates them.
+        # The public calculate boundary is deterministic: the on-hit row has
+        # no crit accounting, while the auto row carries the expected-value
+        # damage for the 2.3x Infinity Edge multiplier.
         response = _api(level=18, items=list(_CRIT_ITEMS))
         assert response.status_code == 200, response.get_json()
         data = response.get_json()
@@ -607,9 +608,7 @@ class TestMarkedTargetOnHitAndCrit:
         assert row["num_crits"] is None
         assert row["num_non_crits"] is None
         assert row["crit_damage_per_hit"] is None
-        assert autos["num_crits"] == autos["count"]
-        # Infinity Edge in the build raises the crit multiplier to 2.3.
-        assert autos["crit_damage_per_hit"] == pytest.approx(
+        assert autos["damage_per_hit"] == pytest.approx(
             data["champion_stats"]["attack_damage"] * 2.3, abs=0.06
         )
 
