@@ -683,6 +683,9 @@ _ROTATION_CLASSIFICATIONS: dict[str, dict[str, Any]] = {
     "stardust_stacks": {"role": "self_state", "slot": "P"},
     "starting_hemorrhage_stacks": {"role": "self_state", "slot": "R"},
     "stone_skin_stacks": {"role": "self_state", "slot": "P"},
+    # Ambessa's Q/Q2 sweetspot toggle; the option changes no cast
+    # scheduling, so the rotation role stays irrelevant.
+    "sweetspot": {"role": "irrelevant", "slot": "Q"},
     "target_cursed": {"role": "self_state", "slot": "R"},
     "target_missing_hp_pct": {
         "condition": "execute",
