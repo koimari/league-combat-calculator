@@ -2511,7 +2511,9 @@ revive already rode the compiled path).
   the fix (Anivia/Zac/Zilean — their contracts are also lethal-anchored);
   the e9-e8-anivia-rebirth corpus pin was re-probed and re-pinned
   (revive_time 6.0 -> 10.312, death_time 11.858 -> 15.091) per the
-  corpus test's own re-pin rule.
+  corpus test's own re-pin rule.  (Both figures were later superseded:
+  Anivia's second death is now 15.45 and Sterak's death_time moved
+  11.858 -> 9.702 — see the current corpus entries.)
 - COMPILED PATH (Part A): "Guardian Angel" removed from
   COMPILED_WALK_UNREPRESENTABLE_ITEMS (compile.py) + the stale phase-2
   comment corrected; GA now compiles like Zac (compiled context clean,
