@@ -55,6 +55,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import int_option
+from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home
 # (the P entry has no leveling data; R's crit scaling is prose).
@@ -65,7 +66,9 @@ _HEADSHOT_CADENCE = 6  # every 6th basic attack is a Headshot
 _HEADSHOT_LEVEL_RATIOS = ((13, 1.00), (7, 0.80), (1, 0.60))
 # R's total damage is increased by 0-30% (+ bonus crit damage) based on
 # crit chance — the engine's part-level crit formula.
-_R_CRIT_EFFECTIVENESS = 0.3
+_R_CRIT_EFFECTIVENESS = data_value(
+    spell_object("Caitlyn", "CaitlynR"), "CriticalStrikeModifier"
+)
 
 
 def _headshot_level_ratio(level: int) -> float:

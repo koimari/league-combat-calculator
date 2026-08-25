@@ -46,11 +46,17 @@ from .slotlib import ability_name, extract_cooldown, extract_value, simple_damag
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 # HARDCODED: wiki-prose soldier mechanics with no JSON home — verify on
 # patch updates. https://wiki.leagueoflegends.com/en-us/Azir
-SOLDIER_EXTRA_DAMAGE = 0.25  # each soldier past the first adds 25% damage
-SOLDIER_ON_HIT_EFFECTIVENESS = 0.5  # on-hit items at 50% on soldier attacks
+_AZIR_W_SPELL = spell_object("Azir", "AzirW")
+SOLDIER_EXTRA_DAMAGE = (
+    data_value(_AZIR_W_SPELL, "SubsequentDamageMod") / 100.0
+)  # each soldier past the first adds 25% damage
+SOLDIER_ON_HIT_EFFECTIVENESS = data_value(
+    _AZIR_W_SPELL, "OnHitMultiplier"
+)  # on-hit items at 50% on soldier attacks
 
 
 def _soldier_attack_damage(

@@ -50,6 +50,7 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the
 # passive's monster damage cap (attribute "Bonus Damage", 100-270 by
@@ -58,7 +59,9 @@ from .module_contract import coverage
 # Spirit Abjuration: on the 3rd stack, all stacks consume dealing bonus
 # magic damage equal to 1% (+ 2.7% per 100 AP) of the target's MAX health.
 _SPIRIT_STACKS = 3
-_SPIRIT_PCT_BASE = 1.0  # % of target max health
+_SPIRIT_PCT_BASE = (
+    data_value(spell_object("Aurora", "AuroraPassive"), "BaseHPDamage") * 100.0
+)  # % of target max health
 _SPIRIT_PCT_PER_100_AP = 2.7  # additional % per 100 AP
 
 
