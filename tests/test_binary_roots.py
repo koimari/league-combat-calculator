@@ -17,6 +17,7 @@ from src.calculator.binary_roots import (
     character_bin,
     character_record_root,
     data_value,
+    data_value_at_rank,
     record_value,
     spell_object,
 )
@@ -84,6 +85,16 @@ def test_data_value_failures_are_named_not_zero():
         data_value(e, "GravityIncPerBreakpoint")
     with pytest.raises(RuntimeError, match="not found"):
         data_value(e, "NoSuchDataValue")
+
+
+def test_data_value_at_rank_is_one_based_and_fails_closed():
+    w = spell_object("Gangplank", "GangplankW")
+    assert data_value_at_rank(w, "BaseHeal", 1) == pytest.approx(45.0)
+    assert data_value_at_rank(w, "BaseHeal", 5) == pytest.approx(145.0)
+    with pytest.raises(RuntimeError, match="positive integer"):
+        data_value_at_rank(w, "BaseHeal", 0)
+    with pytest.raises(RuntimeError, match="unavailable"):
+        data_value_at_rank(w, "BaseHeal", 7)
 
 
 def test_aurelion_sol_module_constants_come_from_the_binary():
@@ -1296,3 +1307,16 @@ class TestBatch31RootedConstants:
         r = spell_object("MonkeyKing", "MonkeyKingSpinToWin")
         assert data_value(q, "ShredDuration") == pytest.approx(wukong.Q_SHRED_DURATION)
         assert data_value(r, "SecondsPerTick") == pytest.approx(wukong._R_TICK_INTERVAL)
+
+
+class TestBatch32RootedRankedConstants:
+    """Batch 32 ranked DataValues resolve from their champion binaries."""
+
+    def test_gangplank(self):
+        import src.calculator.champions.gangplank as gangplank
+
+        spell = spell_object("Gangplank", "GangplankW")
+        assert gangplank._W_HEAL_FLAT == (45.0, 70.0, 95.0, 120.0, 145.0)
+        assert data_value_at_rank(spell, "BaseHeal", 5) == pytest.approx(
+            gangplank._W_HEAL_FLAT[-1]
+        )

@@ -203,20 +203,10 @@ def calculation_coefficients(
     return tuple(coefficients)
 
 
-def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
-    """A spell's named DataValue, first entry of its rank row, finite or raise.
-
-    Some rows legitimately carry no ``values`` key (the game leaves them
-    unset); asking for one of those by name is a lookup error, not a zero.
-
-    The dumps store IEEE-754 *float32*, so an authored ``0.7`` arrives as
-    ``0.69999998807...``.  Riot authors these numbers at six significant
-    digits or fewer, so the read snaps back through ``%.6g``: that restores
-    the authored decimal exactly (0.7, 2.6, 360.0) while a genuine patch
-    change moves digits beyond storage noise and snaps to a different
-    number.  Without this, dividing by a stored percent drifts the ninth
-    decimal of downstream damage and trips the byte-exact golden gate.
-    """
+def _data_value_at_index(
+    spell_obj: dict[str, Any], value_name: str, value_index: int, index_label: str
+) -> float:
+    """Read one finite, snapped entry from a named DataValue row."""
     spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
     rows = spell.get("DataValues") if isinstance(spell, dict) else None
     if isinstance(rows, list):
@@ -225,11 +215,17 @@ def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
                 continue
             values = row.get("values")
             if isinstance(values, list) and values:
+                if value_index >= len(values):
+                    raise RuntimeError(
+                        f"DataValue {value_name!r}: {index_label} unavailable "
+                        f"in {len(values)}-entry row"
+                    )
                 try:
-                    value = float(values[0])
+                    value = float(values[value_index])
                 except (TypeError, ValueError) as exc:
                     raise RuntimeError(
-                        f"DataValue {value_name!r}: unusable first value {values[0]!r}"
+                        f"DataValue {value_name!r}: unusable {index_label} "
+                        f"{values[value_index]!r}"
                     ) from exc
                 if not math.isfinite(value):
                     raise RuntimeError(f"DataValue {value_name!r}: non-finite")
@@ -241,3 +237,15 @@ def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
                 f"DataValue {value_name!r}: present but carries no values row"
             )
     raise RuntimeError(f"DataValue {value_name!r} not found")
+
+
+def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
+    """Read the first finite, snapped entry of a named DataValue rank row."""
+    return _data_value_at_index(spell_obj, value_name, 0, "first value")
+
+
+def data_value_at_rank(spell_obj: dict[str, Any], value_name: str, rank: int) -> float:
+    """A named ranked DataValue using the game's one-based spell rank index."""
+    if isinstance(rank, bool) or not isinstance(rank, int) or rank < 1:
+        raise RuntimeError(f"DataValue {value_name!r}: rank must be a positive integer")
+    return _data_value_at_index(spell_obj, value_name, rank, f"rank {rank}")

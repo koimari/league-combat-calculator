@@ -12,7 +12,7 @@ from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import data_value, data_value_at_rank, spell_object
 
 _GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
 _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
@@ -85,7 +85,9 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
 # (healing.py: flat + 90% AP + 13% missing health, live); the cleanse
 # rides the Slice 4 item-cleanse kernel via one kind="cleanse" packet
 # per W cast.  W stays OUT of outgoing damage.
-_W_HEAL_FLAT = (45.0, 70.0, 95.0, 120.0, 145.0)
+_W_HEAL_FLAT = tuple(
+    data_value_at_rank(_GANGPLANK_W_SPELL, "BaseHeal", rank) for rank in range(1, 6)
+)
 _W_HEAL_AP_PERCENT = 90.0  # binary calculation coefficient; no direct DataValue
 _W_HEAL_MISSING_HEALTH_PERCENT = data_value(_GANGPLANK_W_SPELL, "PercentHeal")
 _W_COOLDOWN = (22.0, 20.0, 18.0, 16.0, 14.0)
