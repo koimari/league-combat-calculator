@@ -43,6 +43,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .slotlib import (
     ability_name,
@@ -69,7 +70,8 @@ _R_MAX_CHAMPIONS_PULLED = 5
 # nearby enemies" (data/champions.json Diana R).  The cached entry
 # attaches no cast-time qualifier to the number, so it is read from the
 # cast start as written.
-_R_BEAM_SECONDS = 1.0
+_DIANA_R_SPELL = spell_object("Diana", "DianaR")
+_R_BEAM_SECONDS = data_value(_DIANA_R_SPELL, "Delay")
 
 # P stores base and tripled attack speed as the 1st and 2nd
 # "Per-Level Scaling" leveling entries (both arrays run 40 entries,

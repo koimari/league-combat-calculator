@@ -1402,3 +1402,13 @@ class TestBatch37RootedKaisaConstants:
         assert data_value(spell, "PExecuteAPRatio") == pytest.approx(
             kaisa._RUPTURE_RATIO_PER_AP
         )
+
+
+class TestBatch38RootedDianaConstants:
+    """Batch 38 roots Diana's Moonfall beam delay."""
+
+    def test_diana(self):
+        import src.calculator.champions.diana as diana
+
+        spell = spell_object("Diana", "DianaR")
+        assert data_value(spell, "Delay") == pytest.approx(diana._R_BEAM_SECONDS)
