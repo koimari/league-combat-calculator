@@ -56,14 +56,19 @@ _W_BITE_SECONDS = 0.25
 
 
 # HARDCODED: verify on patch updates — The Relentless Storm's per-stack
-# attack speed (5% + 3% per 100 AP) and the Wounded bite's increase
-# (50% + 25% per 100 bonus AD) are wiki prose; the JSON only carries the
-# Lightning Claws on-hit damage row and the W base damage.
+# attack speed (5% + 3% per 100 AP) is wiki prose; the Wounded bite's binary
+# values are rooted below with the cached prose as semantic corroboration.
 _RELENTLESS_STORM_MAX_STACKS = 5
 _STORM_AS_PER_STACK = 5.0  # % bonus attack speed per stack
 _STORM_AS_PER_100_AP = 3.0  # additional % per stack per 100 AP
-_WOUNDED_BONUS_BASE = 0.50  # +50% damage on the 2nd bite
-_WOUNDED_BONUS_PER_100_BONUS_AD = 0.25  # +25% per 100 bonus AD
+_VOLIBEAR_W_SPELL = spell_object("Volibear", "VolibearW")
+# W2DamageMultiplier is a total multiplier; the module stores its additive
+# bonus. W2BonusADDamageMultiplier is per bonus-AD point; convert it to the
+# module's documented per-100-bonus-AD unit.
+_WOUNDED_BONUS_BASE = data_value(_VOLIBEAR_W_SPELL, "W2DamageMultiplier") - 1.0
+_WOUNDED_BONUS_PER_100_BONUS_AD = (
+    data_value(_VOLIBEAR_W_SPELL, "W2BonusADDamageMultiplier") * 100.0
+)
 # Sky Splitter's self shield is the binary VolibearE DataValue trio
 # (ShieldAmount 0.14 / ShieldAPRatio 0.75 / ShieldDuration 3.0); the
 # cached description ("a shield equal to 14% of his maximum health
@@ -244,7 +249,8 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "while at 5 stacks; the 450-range secondary-target chain is not "
     "modeled (single-target calc)",
     "Frenzied Maul's Wounded 2nd bite deals 50% (+ 25% per 100 bonus AD) "
-    "increased damage — wiki prose (module constant); the option picks "
+    "increased damage — binary-rooted W2 values, corroborated by cached "
+    "prose; the option picks "
     "the already-marked bite because the one-rotation model casts W once",
     "E (Sky Splitter) also shields Volibear for 14% max HP + 75% AP for "
     "3s at the cast (cached description prose, module constants); the "
