@@ -1153,3 +1153,52 @@ class TestBatch27RootedConstants:
         assert data_value(spell_object("Xayah", "XayahR"), "RAttackDelay") == (
             pytest.approx(xayah._R_LEAP_SECONDS)
         )
+
+
+class TestBatch28RootedConstants:
+    """Batch 28 constants resolve from their champion binaries."""
+
+    def test_ashe_focus(self):
+        import src.calculator.champions.ashe as ashe
+
+        spell = spell_object("Ashe", "AsheQ")
+        assert (
+            int(data_value(spell, "MaxStacks")) == ashe.ASHE_FOCUS_STACK_RULE.max_stacks
+        )
+        assert data_value(spell, "StackDuration") == pytest.approx(
+            ashe.ASHE_FOCUS_STACK_RULE.duration_seconds
+        )
+        assert data_value(spell, "StackFalloffDuration") == pytest.approx(
+            ashe.ASHE_FOCUS_STACK_RULE.expiry_step_seconds
+        )
+
+    def test_fizz(self):
+        import src.calculator.champions.fizz as fizz
+
+        spell = spell_object("Fizz", "FizzW")
+        rate = data_value(spell, "DoTTicksPerSecond")
+        assert data_value(spell, "PassiveDoTDuration") == pytest.approx(
+            fizz._W_PASSIVE_DURATION
+        )
+        assert fizz._W_PASSIVE_TICK_INTERVAL == pytest.approx(1.0 / rate)
+        assert fizz._W_PASSIVE_TICKS == int(
+            fizz._W_PASSIVE_DURATION / fizz._W_PASSIVE_TICK_INTERVAL
+        )
+
+    def test_jinx(self):
+        import src.calculator.champions.jinx as jinx
+
+        assert data_value(
+            spell_object("Jinx", "JinxPassiveMarker"), "ASBuff"
+        ) == pytest.approx(jinx._JINX_PASSIVE_AS_PERCENT)
+
+    def test_shen(self):
+        import src.calculator.champions.shen as shen
+
+        q = spell_object("Shen", "ShenQ")
+        e = spell_object("Shen", "ShenE")
+        assert int(data_value(q, "NumEnhancedAttacks")) == shen._Q_ATTACKS
+        assert data_value(q, "SteroidAS") == pytest.approx(
+            shen._Q_ENHANCED_BONUS_ATTACK_SPEED
+        )
+        assert data_value(e, "DashBonusSpeed") == pytest.approx(shen._E_BASE_SPEED)
