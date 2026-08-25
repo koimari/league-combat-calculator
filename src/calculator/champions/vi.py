@@ -46,12 +46,15 @@ from .source_receipts import load_champion_sources
 from .inputs import float_option, int_option
 from .module_contract import coverage
 
+_VI_Q_SPELL = spell_object("Vi", "ViQ")
 _Q_MAX_CHARGE_SECONDS = 1.25
-_Q_MIN_RANGE = 250.0
-_Q_MAX_RANGE = 725.0
+_Q_MIN_RANGE = data_value(_VI_Q_SPELL, "MinDashRange")
+# The named DataValue is the dash-range delta; mCastRangeGrowthMax is a
+# separate targeting field and is not the Q endpoint used by this module.
+_Q_MAX_RANGE = _Q_MIN_RANGE + data_value(_VI_Q_SPELL, "ExtraDashRangeAtMaxCharge")
 _Q_MIN_SPEED = 1450.0
 _Q_MAX_SPEED = 1540.0
-_Q_MAX_BONUS_MULTIPLIER = 1.5
+_Q_MAX_BONUS_MULTIPLIER = data_value(_VI_Q_SPELL, "MaxDamageMult") - 1.0
 
 _VI_W_SPELL = spell_object("Vi", "ViW")
 _W_STACKS_REQUIRED = int(data_value(_VI_W_SPELL, "StacksBeforeEffect")) + 1
