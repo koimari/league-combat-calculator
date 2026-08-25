@@ -62,7 +62,8 @@ from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
-_FEROCITY_MAX = 4
+_RENGAR_P_SPELL = spell_object("Rengar", "RengarPassive")
+_FEROCITY_MAX = int(data_value(_RENGAR_P_SPELL, "MaxFerocity"))
 
 # Rooted in RengarR.ArmorShredDuration; the cached R prose corroborates the
 # four-second armor-reduction window.
@@ -111,8 +112,9 @@ def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
 _thrill_of_the_hunt.phase = DEBUFF
 
 
-# Ferocity is a typed kernel state (state_lifecycle.StackRule).  The
-# numbers are prose in the reviewed cache entry (Rengar P effect 0:
+# Ferocity is a typed kernel state (state_lifecycle.StackRule).  The cap is
+# rooted in RengarPassive.MaxFerocity; the other numbers are prose in the
+# reviewed cache entry (Rengar P effect 0:
 # "Rengar generates a stack of Ferocity for 1 second, stacking up 4 times
 # but not refreshing on subsequent triggers (unexpected) ... Generated
 # Ferocity is prevented from expiring for 10 seconds after dealing or
@@ -364,7 +366,7 @@ OPTIONS = [
         "p_ferocity",
         0,
         minimum=0,
-        maximum=4,
+        maximum=_FEROCITY_MAX,
         label="Ferocity stacks (4 = empowered next)",
         state=RENGAR_FEROCITY_STACK_RULE.public_receipt(),
     ),

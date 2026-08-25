@@ -51,9 +51,10 @@ from .module_contract import coverage
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
 # "the target takes magic damage every second over 4 seconds" — 4 ticks
 # at 1s; per-tick x4 == the wiki Total Magic Damage row.
+_TEEMO_R_SPELL = spell_object("Teemo", "TeemoR")
 _R_TICKS = 4
 _R_TICK_INTERVAL = 1.0
-_R_DOT_SECONDS = 4.0
+_R_DOT_SECONDS = data_value(_TEEMO_R_SPELL, "DebuffDuration")
 
 
 def _shroom_detonations(ctx: SlotCtx) -> int:

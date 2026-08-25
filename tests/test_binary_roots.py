@@ -327,8 +327,8 @@ class TestBatch5RootedConstants:
         assert data_value(p, "MagicResistRatio") == pytest.approx(
             rammus._SPIKED_SHELL_MAGIC_RESISTANCE_RATIO
         )
-        # DOCUMENTED DIVERGENCE: the binary BaseDamage reads 10; the module
-        # prices the wiki prose's 15.
+        # DOCUMENTED DIVERGENCE: the binary's separate BaseDamage reads 10;
+        # the active ReturnDamageCalc uses FlatDamageReturn (15).
         assert data_value(p, "BaseDamage") != pytest.approx(rammus._THORNS_BASE)
 
     def test_shaco(self):
