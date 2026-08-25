@@ -70,9 +70,9 @@ _E_INITIAL_DELAY = 0.264
 _E_TICKS = 10
 _E_TICK_INTERVAL = 0.5
 _E_DOT_DURATION = data_value(_NASUS_E_SPELL, "Duration")
-_R_TICKS = 30
-_R_TICK_INTERVAL = 0.5
-_R_DOT_DURATION = 15.0
+_R_TICK_INTERVAL = data_value(_NASUS_R_SPELL, "TickRate")
+_R_DOT_DURATION = data_value(_NASUS_R_SPELL, "Duration")
+_R_TICKS = int(_R_DOT_DURATION / _R_TICK_INTERVAL)
 
 
 def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:

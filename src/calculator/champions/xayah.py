@@ -35,9 +35,9 @@ from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
-# Featherstorm's feathers fly after the leap: "Xayah leaps into the air ...
-# After 1 second, she shoots 5 Feathers" (cached R prose).
-_R_LEAP_SECONDS = 1.0
+# Rooted in XayahR.RAttackDelay; the cached R prose corroborates the
+# one-second delay before the five feathers launch.
+_R_LEAP_SECONDS = data_value(spell_object("Xayah", "XayahR"), "RAttackDelay")
 
 
 # HARDCODED: verify on patch updates — Clean Cuts' stack bookkeeping

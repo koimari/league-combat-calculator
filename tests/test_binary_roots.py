@@ -1127,3 +1127,29 @@ class TestBatch26RootedConstants:
         assert data_value(spell_object("Warwick", "WarwickR"), "RDuration") == (
             pytest.approx(warwick._R_CHANNEL_SECONDS)
         )
+
+
+class TestBatch27RootedConstants:
+    """Batch 27 constants resolve from their champion binaries."""
+
+    def test_malzahar_q(self):
+        import src.calculator.champions.malzahar as malzahar
+
+        assert data_value(
+            spell_object("Malzahar", "MalzaharQ"), "DelayPostCast"
+        ) == pytest.approx(malzahar._Q_PORTAL_SECONDS)
+
+    def test_nasus_r(self):
+        import src.calculator.champions.nasus as nasus
+
+        spell = spell_object("Nasus", "NasusR")
+        assert data_value(spell, "TickRate") == pytest.approx(nasus._R_TICK_INTERVAL)
+        assert data_value(spell, "Duration") == pytest.approx(nasus._R_DOT_DURATION)
+        assert nasus._R_TICKS == int(nasus._R_DOT_DURATION / nasus._R_TICK_INTERVAL)
+
+    def test_xayah_r(self):
+        import src.calculator.champions.xayah as xayah
+
+        assert data_value(spell_object("Xayah", "XayahR"), "RAttackDelay") == (
+            pytest.approx(xayah._R_LEAP_SECONDS)
+        )
