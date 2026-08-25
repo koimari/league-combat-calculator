@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
@@ -56,14 +57,11 @@ def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-# W's passive burn ticks 6 times over its 3-second duration — the JSON's
-# "Total Passive Magic Damage" row is exactly 6x the "Passive Magic
-# Damage per Tick" row at every rank (30/5 .. 90/15), so the tick count
-# is sourced rather than invented.  Each tick is one 0.5s step of the
-# burn.
-_W_PASSIVE_TICKS = 6
-_W_PASSIVE_DURATION = 3.0
-_W_PASSIVE_TICK_INTERVAL = _W_PASSIVE_DURATION / _W_PASSIVE_TICKS
+_FIZZ_W_SPELL = spell_object("Fizz", "FizzW")
+# W's passive burn cadence is rooted in the binary's duration and tick rate.
+_W_PASSIVE_DURATION = data_value(_FIZZ_W_SPELL, "PassiveDoTDuration")
+_W_PASSIVE_TICK_INTERVAL = 1.0 / data_value(_FIZZ_W_SPELL, "DoTTicksPerSecond")
+_W_PASSIVE_TICKS = int(_W_PASSIVE_DURATION / _W_PASSIVE_TICK_INTERVAL)
 
 
 def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:

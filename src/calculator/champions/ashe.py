@@ -61,12 +61,14 @@ ASHE_Q_ACTIVE_DURATION_SECONDS = data_value(
 
 ASHE_FOCUS_STACK_RULE = StackRule(
     name="Ashe — Ranger's Focus (Focus stacks)",
-    max_stacks=4,
+    max_stacks=int(data_value(spell_object("Ashe", "AsheQ"), "MaxStacks")),
     gain_per_application=1,
-    duration_seconds=4.0,
+    duration_seconds=data_value(spell_object("Ashe", "AsheQ"), "StackDuration"),
     refresh="refresh",
     expiry="step_down",
-    expiry_step_seconds=1.0,
+    expiry_step_seconds=data_value(
+        spell_object("Ashe", "AsheQ"), "StackFalloffDuration"
+    ),
     decay_stacks_per_step=1,
     cap_behavior="noop",
     source=SourceReceipt(

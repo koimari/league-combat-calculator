@@ -25,6 +25,9 @@ PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55caf
 # can land is the arming time — the 5-second figure is the untouched
 # timeout, not the champion case.
 _E_ARMING_SECONDS = data_value(spell_object("Jinx", "JinxE"), "GrenadeArmTime")
+_JINX_PASSIVE_AS_PERCENT = data_value(
+    spell_object("Jinx", "JinxPassiveMarker"), "ASBuff"
+)
 
 
 def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -74,7 +77,7 @@ def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
     stacks = min(max(stacks, 0), 5)
     if stacks == 0:
         return None
-    bonus_total_as = 25.0 * stacks
+    bonus_total_as = _JINX_PASSIVE_AS_PERCENT * stacks
     entry = damage_entry(
         ability_name(ability),
         1,

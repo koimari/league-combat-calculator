@@ -69,9 +69,11 @@ from .inputs import bool_option, float_option, int_option
 from .module_contract import coverage
 from ..stats import calculate_attack_speed
 
-_Q_ATTACKS = 3
-_Q_ENHANCED_BONUS_ATTACK_SPEED = 50.0
-_E_BASE_SPEED = 800.0
+_SHEN_Q_SPELL = spell_object("Shen", "ShenQ")
+_SHEN_E_SPELL = spell_object("Shen", "ShenE")
+_Q_ATTACKS = int(data_value(_SHEN_Q_SPELL, "NumEnhancedAttacks"))
+_Q_ENHANCED_BONUS_ATTACK_SPEED = data_value(_SHEN_Q_SPELL, "SteroidAS")
+_E_BASE_SPEED = data_value(_SHEN_E_SPELL, "DashBonusSpeed")
 # HARDCODED: verify on patch updates — Ki Barrier's duration is prose
 # ("grants himself a shield for 47 : 128.59 (based on level) (+ 13% bonus
 # health) for 2.5 seconds"); the amount itself is the cached P "Shield" row.
