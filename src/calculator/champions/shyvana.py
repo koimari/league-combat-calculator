@@ -42,12 +42,11 @@ from .slotlib import (
 )
 from .module_contract import coverage
 from .source_receipts import load_champion_sources
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — the shield window and the recast
-# window are prose in the cached W description ("shields herself for 2.5
-# seconds" / "After 1 second, Inferno Aegis can be recast while the
-# shield holds").  The shield amounts are cached leveling rows read live.
-_W_SHIELD_DURATION_SECONDS = 2.5
+# Rooted in ShyvanaW.Duration; the cached W description corroborates the
+# 2.5-second shield window. The 1-second recast window remains prose.
+_W_SHIELD_DURATION_SECONDS = data_value(spell_object("Shyvana", "ShyvanaW"), "Duration")
 _W_RECAST_WINDOW_SECONDS = 1.0
 
 

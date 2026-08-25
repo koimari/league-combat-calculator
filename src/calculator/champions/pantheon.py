@@ -34,6 +34,7 @@ from .slotlib import (
 )
 from .inputs import bool_option, float_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
 
@@ -45,7 +46,7 @@ PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771
 # "% per 100 bonus health" (0.4 at every rank).
 _MORTAL_WILL_BONUS_AD_RATIO = 1.15
 _W_BONUS_HEALTH_PER_100 = 0.4
-_W_STUN_SECONDS = 1.0
+_W_STUN_SECONDS = data_value(spell_object("Pantheon", "PantheonW"), "StunDuration")
 
 
 def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:

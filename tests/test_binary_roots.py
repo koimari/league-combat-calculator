@@ -844,3 +844,29 @@ class TestBatch19RootedConstants:
         assert data_value(spell_object("Malzahar", "MalzaharW"), "SummonDelay") == (
             pytest.approx(malzahar._VOIDLING_SUMMON_DELAY)
         )
+
+
+class TestBatch20RootedConstants:
+    """Batch 20: Pantheon, Rengar and Shyvana constants resolve from their
+    binaries."""
+
+    def test_pantheon(self):
+        import src.calculator.champions.pantheon as pantheon
+
+        assert data_value(
+            spell_object("Pantheon", "PantheonW"), "StunDuration"
+        ) == pytest.approx(pantheon._W_STUN_SECONDS)
+
+    def test_rengar(self):
+        import src.calculator.champions.rengar as rengar
+
+        assert data_value(
+            spell_object("Rengar", "RengarR"), "ArmorShredDuration"
+        ) == pytest.approx(rengar._R_SHRED_SECONDS)
+
+    def test_shyvana(self):
+        import src.calculator.champions.shyvana as shyvana
+
+        assert data_value(spell_object("Shyvana", "ShyvanaW"), "Duration") == (
+            pytest.approx(shyvana._W_SHIELD_DURATION_SECONDS)
+        )
