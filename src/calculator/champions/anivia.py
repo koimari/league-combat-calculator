@@ -64,6 +64,7 @@ hardcoded.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value_at_rank, spell_object
 from .inputs import champion_stat, float_option
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
@@ -77,8 +78,9 @@ from .module_contract import coverage
 # seconds", after which it "is empowered to deal 300% damage" (data/
 # champions.json Anivia R).  Both numbers are cached, so the ticks are
 # authored rather than summed onto the cast boundary.
-_R_TICK_INTERVAL = 0.5
-_R_GROWTH_SECONDS = 1.5
+_ANIVIA_R_SPELL = spell_object("Anivia", "GlacialStorm")
+_R_TICK_INTERVAL = data_value_at_rank(_ANIVIA_R_SPELL, "TickRate", 1)
+_R_GROWTH_SECONDS = data_value_at_rank(_ANIVIA_R_SPELL, "GrowthTime", 1)
 
 
 def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:

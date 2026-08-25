@@ -1335,3 +1335,18 @@ class TestBatch33RootedRankedConstants:
         assert data_value_at_rank(spell, "DaisyAD", 3) == pytest.approx(
             ivern._DAISY_AD_BY_RANK[-1]
         )
+
+
+class TestBatch34RootedTimingConstants:
+    """Batch 34 roots Anivia R timing rows from GlacialStorm."""
+
+    def test_anivia(self):
+        import src.calculator.champions.anivia as anivia
+
+        spell = spell_object("Anivia", "GlacialStorm")
+        assert data_value_at_rank(spell, "TickRate", 1) == pytest.approx(
+            anivia._R_TICK_INTERVAL
+        )
+        assert data_value_at_rank(spell, "GrowthTime", 1) == pytest.approx(
+            anivia._R_GROWTH_SECONDS
+        )
