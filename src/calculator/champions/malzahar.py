@@ -274,7 +274,7 @@ PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8
 # (data/champions.json Malzahar Q).  The cached entry attaches no
 # cast-time qualifier to the number, so it is read from the cast start as
 # written.
-_Q_PORTAL_SECONDS = 0.4
+_Q_PORTAL_SECONDS = data_value(spell_object("Malzahar", "MalzaharQ"), "DelayPostCast")
 
 
 # Reviewed crowd control, read from the cached kit.  Call of the Void's
