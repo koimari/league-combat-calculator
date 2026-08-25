@@ -53,9 +53,8 @@ from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option
 
 # HARDCODED: verify on patch updates — Concussive Blows' trigger damage,
-# stack count, stack duration, and immunity period exist only in
-# description prose (the JSON's sole leveling array is the 40% bonus
-# with attribute=None, over-extended to 40 entries — trust the formula).
+# stack count, stack duration, and immunity period remain description/prose
+# roots.  The binary's AlreadyStunnedDamageAmp roots the 40% bonus-autos term.
 # https://wiki.leagueoflegends.com/en-us/Braum
 _BRAUM_P_SPELL = spell_object("Braum", "BraumPassive")
 _STACKS_TO_PROC = int(data_value(_BRAUM_P_SPELL, "StackCap"))
@@ -64,7 +63,7 @@ _STACK_DURATION = data_value(
 )  # seconds, refreshing per application
 _TRIGGER_BASE = 16.0  # trigger magic damage = 16 + 10 x level
 _TRIGGER_PER_LEVEL = 10.0
-_BONUS_AUTO_RATIO = 0.4  # immunity-window autos deal 40% of the trigger
+_BONUS_AUTO_RATIO = data_value(_BRAUM_P_SPELL, "AlreadyStunnedDamageAmp")
 # Stack-immunity window after a proc: 8/6/4s at champion levels 1/6/11.
 _IMMUNITY_BREAKPOINTS = ((11, 4.0), (6, 6.0), (1, 8.0))
 # Event kinds for the passive's hit timeline; Q sorts before autos on

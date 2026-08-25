@@ -21,6 +21,7 @@ replaces that slot.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
@@ -39,11 +40,11 @@ from .slotlib import (
     extract_named,
 )
 
-# HARDCODED: verify on patch updates — Call of the Freljord's grants are
-# cached P prose only ("Gain 20% bonus attack speed and 10% bonus
-# movement speed"); the JSON carries no leveling row for the passive.
-_P_BONUS_ATTACK_SPEED = 20.0
-_P_BONUS_MOVEMENT_SPEED = 10.0
+# Call of the Freljord's grants are binary DataValues expressed as fractions;
+# the module's stat-buff/detail contract uses percentage points.
+_NUNU_PASSIVE_SPELL = spell_object("Nunu", "NunuPassive")
+_P_BONUS_ATTACK_SPEED = data_value(_NUNU_PASSIVE_SPELL, "ASIncrease") * 100.0
+_P_BONUS_MOVEMENT_SPEED = data_value(_NUNU_PASSIVE_SPELL, "MSIncrease") * 100.0
 
 
 def _call_of_the_freljord(ctx: SlotCtx) -> dict[str, Any] | None:
