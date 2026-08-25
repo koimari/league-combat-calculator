@@ -40,6 +40,7 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value_at_rank, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -104,12 +105,14 @@ def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
 # sources.  Keeping the ticks explicit lets the coupled fight ledger
 # order burns and incoming effects against Cassiopeia's damage instead
 # of marking Q/W as aggregate cast-boundary damage.
-_Q_TICKS = 7
+_CASSIOPEIA_Q_SPELL = spell_object("Cassiopeia", "CassiopeiaQ")
+_CASSIOPEIA_W_SPELL = spell_object("Cassiopeia", "CassiopeiaW")
+_Q_TICKS = int(data_value_at_rank(_CASSIOPEIA_Q_SPELL, "NumDamageTicks", 1))
 _Q_FIRST_TICK = 0.429
 _Q_TICK_INTERVAL = 0.429
-_Q_DURATION = 3.0
+_Q_DURATION = data_value_at_rank(_CASSIOPEIA_Q_SPELL, "PoisonDuration", 1)
 _W_TICKS = 5
-_W_DURATION = 5.0
+_W_DURATION = data_value_at_rank(_CASSIOPEIA_W_SPELL, "CloudDuration", 1)
 _W_TICK_INTERVAL = _W_DURATION / _W_TICKS  # "every 1.0 seconds"
 
 

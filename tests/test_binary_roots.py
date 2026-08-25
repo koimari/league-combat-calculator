@@ -1350,3 +1350,22 @@ class TestBatch34RootedTimingConstants:
         assert data_value_at_rank(spell, "GrowthTime", 1) == pytest.approx(
             anivia._R_GROWTH_SECONDS
         )
+
+
+class TestBatch35RootedTimingConstants:
+    """Batch 35 roots Cassiopeia's active poison timing rows."""
+
+    def test_cassiopeia(self):
+        import src.calculator.champions.cassiopeia as cassiopeia
+
+        q = spell_object("Cassiopeia", "CassiopeiaQ")
+        w = spell_object("Cassiopeia", "CassiopeiaW")
+        assert data_value_at_rank(q, "NumDamageTicks", 1) == pytest.approx(
+            cassiopeia._Q_TICKS
+        )
+        assert data_value_at_rank(q, "PoisonDuration", 1) == pytest.approx(
+            cassiopeia._Q_DURATION
+        )
+        assert data_value_at_rank(w, "CloudDuration", 1) == pytest.approx(
+            cassiopeia._W_DURATION
+        )
