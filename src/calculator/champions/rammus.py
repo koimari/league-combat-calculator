@@ -5,8 +5,8 @@ THORNS proc against basic-attacking enemies: "enemies that use a basic
 attack on-hit against Rammus are dealt 15 (+ 10% total armor) (+ 10%
 total magic resistance) magic damage".  The reviewed packet misread the
 stance's 'Bonus Armor' leveling row as magic damage (47 + 60% armor
-against MR at rank 5); the thorns formula has NO leveling row in the
-cache, so it is pinned here as wiki prose with the source cited.  The
+against MR at rank 5); the thorns formula has no leveling row in the
+cache, so its flat damage and ratios are rooted in named binary fields.  The
 module prices the thorns damage per enemy basic attack that lands
 during the stance via the ``w_thorns_autos`` option (0 by default — the
 fight engine has no incoming-auto hook, so the enemy's auto count is
@@ -68,14 +68,14 @@ from .slotlib import (
 from .inputs import int_option
 from .module_contract import coverage
 
-# The thorns ratios are binary DataValues (DefensiveBallCurl — W —
-# DamageArmorRatio / DamageMRRatio); the cached W description prose
+# The thorns flat damage and ratios are binary DataValues (DefensiveBallCurl
+# — W — FlatDamageReturn / DamageArmorRatio / DamageMRRatio); the cached W
+# description prose
 # corroborates ("15 (+ 10% total armor) (+ 10% total magic resistance)").
-# The flat 15 stays wiki-prose-rooted: the binary's BaseDamage reads 10.0
-# and the spell's own TotalDamage calculation does not reference it (a
-# documented divergence, not a silent root).
+# The binary's separate BaseDamage reads 10.0; the active ReturnDamageCalc
+# uses FlatDamageReturn instead.
 _RAMMUS_W_SPELL = spell_object("Rammus", "DefensiveBallCurl")
-_THORNS_BASE = 15.0
+_THORNS_BASE = data_value(_RAMMUS_W_SPELL, "FlatDamageReturn")
 _THORNS_ARMOR_RATIO = data_value(_RAMMUS_W_SPELL, "DamageArmorRatio")
 _THORNS_MAGIC_RESISTANCE_RATIO = data_value(_RAMMUS_W_SPELL, "DamageMRRatio")
 

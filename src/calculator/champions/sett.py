@@ -11,8 +11,8 @@ Stack mechanics modeled (E3):
 
 Q (Knuckle Down), W (Haymaker), E (Facebreaker) and R (The Show
 Stopper) keep the reviewed CP10.7 packet pricing. All numeric values
-are read from the champion JSON data; the 55% bonus AD ratio is wiki
-prose (the leveling array holds only the per-level flat value).
+are read from the champion JSON data; the 55% bonus AD ratio is corroborated
+by the binary RightPunchBonus coefficient.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import re
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -56,10 +56,10 @@ _Q_TOTAL_ATTR = "Total Bonus Physical Damage"
 PACKET_SHA256 = "122d6d40606b4b120f4fd94cc1ba7fa968cbda67af830338296f41fe94ca3820"
 
 
-# HARDCODED: verify on patch updates — wiki prose, not in the JSON.
-# Pit Grit's Right Punch: "deal 5 : 100 (based on level) (+ 55% bonus
-# AD) bonus physical damage"; the leveling array holds the flat part.
-_RIGHT_PUNCH_BONUS_AD_RATIO = 0.55
+# Pit Grit's Right Punch: the binary's RightPunchBonus calculation carries
+# the level-based flat values and the bonus-AD coefficient.
+_SETT_P_SPELL = spell_object("Sett", "SettPassive")
+_RIGHT_PUNCH_BONUS_AD_RATIO = calculation_coefficient(_SETT_P_SPELL, "RightPunchBonus")
 
 
 def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:

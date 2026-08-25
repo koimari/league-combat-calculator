@@ -27,7 +27,7 @@ which is inherently out of scope (E8d note).
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -42,15 +42,18 @@ from .slotlib import (
 from .inputs import int_option
 from .module_contract import coverage
 
-# HARDCODED: verify on patch updates — wiki prose, not leveling rows.
+# The Q second-strike ratios and R base ratio are rooted in named binary
+# calculation fields; the cached descriptions corroborate their semantics.
 # The mark-consuming second strike deals "20% AD (+ 15% AP) physical
 # damage" (Q description, cached JSON); Heartbreaker's base strike is
 # "120% AD physical damage" (R description, cached JSON).
 _VIEGO_Q_SPELL = spell_object("Viego", "ViegoQ")
 _VIEGO_R_SPELL = spell_object("Viego", "ViegoR")
-# The AD half of the second strike stays wiki prose (no binary row); the
-# AP half and R's base ratio are DataValues.
-_Q_SECOND_STRIKE_AD_RATIO = 0.20
+# The second-strike AD coefficient is a binary calculation coefficient; its AP
+# coefficient and R's base ratio are DataValues.
+_Q_SECOND_STRIKE_AD_RATIO = calculation_coefficient(
+    _VIEGO_Q_SPELL, "SecondAttackDamage"
+)
 _Q_SECOND_STRIKE_AP_RATIO = data_value(_VIEGO_Q_SPELL, "SecondAttackAPRatio")
 _R_BASE_AD_RATIO = data_value(_VIEGO_R_SPELL, "ADRatio")
 
