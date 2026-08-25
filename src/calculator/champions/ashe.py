@@ -33,6 +33,7 @@ left silently absent.
 from typing import Any
 
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
@@ -54,7 +55,9 @@ from ..stats import calculate_attack_speed
 # on the Q entry's auto_attack_override; the engine prices the per-swing
 # ratio (flurry inside [cast, cast+6), the normal 1.0 after) and the
 # Focus gains resume after the window (the "while inactive" clause).
-ASHE_Q_ACTIVE_DURATION_SECONDS = 6.0
+ASHE_Q_ACTIVE_DURATION_SECONDS = data_value(
+    spell_object("Ashe", "AsheQ"), "BuffDuration"
+)
 
 ASHE_FOCUS_STACK_RULE = StackRule(
     name="Ashe — Ranger's Focus (Focus stacks)",
