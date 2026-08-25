@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value_at_rank, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -79,11 +80,19 @@ def _triggerseed(ctx: SlotCtx) -> dict[str, Any] | None:
 # Daisy Smash!: every third basic attack is empowered (after 2 stacks) to
 # deal 90/140/190 (R rank) (+ 50% AP) magic damage and knock up — priced
 # as the sourced magic part below; the 3s post-smash lockout is state.
-_DAISY_AD_BY_RANK = (70.0, 100.0, 130.0)
+_IVERN_R_SPELL = spell_object("Ivern", "IvernR")
+_DAISY_AD_BY_RANK = tuple(
+    data_value_at_rank(_IVERN_R_SPELL, "DaisyAD", rank) for rank in range(1, 4)
+)
 _DAISY_AD_AP_RATIO = 0.15
-_DAISY_AS_BONUS_BY_RANK = (0.30, 0.45, 0.60)
+_DAISY_AS_BONUS_BY_RANK = tuple(
+    data_value_at_rank(_IVERN_R_SPELL, "DaisyAS", rank) / 100.0 for rank in range(1, 4)
+)
 _DAISY_BASE_AS = 0.75
-_DAISY_SMASH_BY_RANK = (90.0, 140.0, 190.0)
+_DAISY_SMASH_BY_RANK = tuple(
+    data_value_at_rank(_IVERN_R_SPELL, "ShockwaveBaseDamage", rank)
+    for rank in range(1, 4)
+)
 _DAISY_SMASH_AP_RATIO = 0.50
 
 
