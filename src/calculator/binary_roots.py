@@ -162,6 +162,47 @@ def calculation_breakpoints(
     )
 
 
+def calculation_coefficients(
+    spell_obj: dict[str, Any], calculation_name: str
+) -> tuple[float, ...]:
+    """A calculation's ordered numeric ``mCoefficient`` formula parts.
+
+    Some passive ratios are authored in ``mSpellCalculations`` rather than
+    ``DataValues``. Every formula part in this accessor must expose a finite
+    coefficient; missing or malformed coefficients fail closed instead of
+    silently dropping a component.
+    """
+    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
+    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
+    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
+    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
+    if not isinstance(parts, list) or not parts:
+        raise RuntimeError(
+            f"calculation {calculation_name!r} not found or has no formula parts"
+        )
+    coefficients = []
+    for index, part in enumerate(parts):
+        if not isinstance(part, dict) or "mCoefficient" not in part:
+            raise RuntimeError(
+                f"calculation {calculation_name!r}: formula part {index} "
+                "has no coefficient"
+            )
+        try:
+            value = float(part["mCoefficient"])
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(
+                f"calculation {calculation_name!r}: formula part {index} "
+                "has an unusable coefficient"
+            ) from exc
+        if not math.isfinite(value):
+            raise RuntimeError(
+                f"calculation {calculation_name!r}: formula part {index} "
+                "has a non-finite coefficient"
+            )
+        coefficients.append(float(f"{value:.6g}"))
+    return tuple(coefficients)
+
+
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
     """A spell's named DataValue, first entry of its rank row, finite or raise.
 
