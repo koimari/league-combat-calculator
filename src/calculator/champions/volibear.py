@@ -21,7 +21,7 @@ E3 additions over the CP10.9 packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
@@ -55,12 +55,14 @@ _R_IMPACT_SECONDS = 1.0
 _W_BITE_SECONDS = 0.25
 
 
-# HARDCODED: verify on patch updates — The Relentless Storm's per-stack
-# attack speed (5% + 3% per 100 AP) is wiki prose; the Wounded bite's binary
-# values are rooted below with the cached prose as semantic corroboration.
-_RELENTLESS_STORM_MAX_STACKS = 5
-_STORM_AS_PER_STACK = 5.0  # % bonus attack speed per stack
-_STORM_AS_PER_100_AP = 3.0  # additional % per stack per 100 AP
+_VOLIBEAR_P_SPELL = spell_object("Volibear", "VolibearP")
+# PAttackSpeed is a fractional per-stack grant; AttackSpeedCalc's coefficient
+# is fractional per AP. Convert both into the module's percentage units.
+_RELENTLESS_STORM_MAX_STACKS = int(data_value(_VOLIBEAR_P_SPELL, "BounceCounterMax"))
+_STORM_AS_PER_STACK = data_value(_VOLIBEAR_P_SPELL, "PAttackSpeed") * 100.0
+_STORM_AS_PER_100_AP = (
+    calculation_coefficient(_VOLIBEAR_P_SPELL, "AttackSpeedCalc") * 10000.0
+)
 _VOLIBEAR_W_SPELL = spell_object("Volibear", "VolibearW")
 # W2DamageMultiplier is a total multiplier; the module stores its additive
 # bonus. W2BonusADDamageMultiplier is per bonus-AD point; convert it to the

@@ -62,6 +62,8 @@ _W_ARMOR_REDUCTION_PERCENT = data_value(_VI_W_SPELL, "ShredAmount")
 _W_DEBUFF_DURATION = data_value(_VI_W_SPELL, "MarkerBuffDuration")
 _W_STACK_DURATION = data_value(_VI_W_SPELL, "SharedBuffsDuration")
 
+_VI_R_SPELL = spell_object("Vi", "ViR")
+
 # Hit kinds for the timed Denting Blows stream; ability hits sort before
 # ambient attacks on equal timestamps (the rotation leads the fight model).
 _ABILITY_HIT = 0
@@ -70,7 +72,7 @@ _ATTACK = 1
 _R_CAST_TIME = 0.25
 _R_GRAB_DAMAGE_DELAY = 0.75
 _R_GRAB_RANGE = 300.0
-_R_INITIAL_SPEED = 800.0
+_R_INITIAL_SPEED = data_value(_VI_R_SPELL, "RBaseSpeed")
 
 
 def _q_geometry(ctx: SlotCtx) -> tuple[float, float, float, float]:

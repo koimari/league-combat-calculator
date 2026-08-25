@@ -227,6 +227,44 @@ def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) ->
     return snapped
 
 
+def calculation_stat_coefficient(
+    spell_obj: dict[str, Any], calculation_name: str, stat: int
+) -> float:
+    """One calculation coefficient attached to an exact ``mStat`` part."""
+    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
+    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
+    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
+    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
+    if not isinstance(parts, list) or not parts:
+        raise RuntimeError(
+            f"calculation {calculation_name!r} not found or has no formula parts"
+        )
+    matches = [
+        part
+        for part in parts
+        if isinstance(part, dict)
+        and part.get("mStat") == stat
+        and "mCoefficient" in part
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: expected one coefficient for "
+            f"mStat {stat}, found {len(matches)}"
+        )
+    try:
+        value = float(matches[0]["mCoefficient"])
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: unusable mStat {stat} coefficient"
+        ) from exc
+    snapped = float(f"{value:.6g}")
+    if not math.isfinite(snapped):
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: mStat {stat} coefficient is non-finite"
+        )
+    return snapped
+
+
 def calculation_coefficients(
     spell_obj: dict[str, Any], calculation_name: str
 ) -> tuple[float, ...]:
