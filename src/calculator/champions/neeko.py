@@ -28,6 +28,7 @@ reads "no_damage", not "out_of_scope".
 """
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -41,6 +42,9 @@ from .slotlib import (
 from .module_contract import coverage
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
+
+_NEEKO_Q_SPELL = spell_object("Neeko", "NeekoQ")
+_Q_BLOOM_DELAY = data_value(_NEEKO_Q_SPELL, "RepeatDelay")
 
 
 # HARDCODED: verify on patch updates — game-file-sourced R shield rows
@@ -80,14 +84,14 @@ def _blooming_burst(ctx: SlotCtx):
             "magic",
             amount=subsequent,
             count=2,
-            time_offset=0.75,
-            hit_interval=0.75,
+            time_offset=_Q_BLOOM_DELAY,
+            hit_interval=_Q_BLOOM_DELAY,
         ),
     )
-    entry["dot_duration"] = 1.5
+    entry["dot_duration"] = 2 * _Q_BLOOM_DELAY
     entry["detail"] = (
         f"initial {initial:g} + 2 re-blooms of {subsequent:g} "
-        "(0.75s apart; the burst hits a champion, so both re-blooms fire)"
+        f"({_Q_BLOOM_DELAY:g}s apart; the burst hits a champion, so both re-blooms fire)"
     )
     return entry
 

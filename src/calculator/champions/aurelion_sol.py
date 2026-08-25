@@ -391,7 +391,7 @@ def _secondary_beam_per_second(
 # row at every rank (50/2.5 .. 150/7.5), so the tick count is sourced
 # rather than invented.  Each tick is one 0.25s step of the zone.
 _E_TICKS = 20
-_E_DURATION = 5.0
+_E_DURATION = data_value(_E_SPELL, "Duration")
 _E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
 
 
