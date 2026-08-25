@@ -81,8 +81,9 @@ _W_MAX_RANGE = 3000.0
 _W_NORMAL_STACKS = 2
 _W_EVOLVED_STACKS = 3
 _PLASMA_STACKS_TO_RUPTURE = 5
-_RUPTURE_BASE_MISSING_HEALTH_RATIO = 0.15
-_RUPTURE_RATIO_PER_AP = 0.0006
+_KAISA_P_SPELL = spell_object("Kai'Sa", "KaisaPassive")
+_RUPTURE_BASE_MISSING_HEALTH_RATIO = data_value(_KAISA_P_SPELL, "PExecuteRatio")
+_RUPTURE_RATIO_PER_AP = data_value(_KAISA_P_SPELL, "PExecuteAPRatio")
 _EVOLUTION_THRESHOLD = 100.0
 # HARDCODED: verify on patch updates — these live in cached description
 # prose (data/champions.json Kaisa P effect[1], W effect[1], E effects
@@ -93,7 +94,6 @@ _EVOLUTION_THRESHOLD = 100.0
 #   current cooldown drops 0.5s on-attack, and the charge (castTime
 #   "1.2 : 0.6 (based on bonus attack speed)") scales 1.2s -> 0.6s over
 #   0-100% bonus attack speed.
-_KAISA_P_SPELL = spell_object("Kai'Sa", "KaisaPassive")
 _PLASMA_STACK_DURATION = data_value(_KAISA_P_SPELL, "PDuration")
 _W_EVOLVED_COOLDOWN_REFUND = 0.75
 _E_WINDOW_SECONDS = 4.0

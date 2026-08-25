@@ -1387,3 +1387,18 @@ class TestBatch36RootedCorkiConstants:
         )
         assert data_value(spell, "ShredCap") == pytest.approx(corki._E_MAX_SHRED_STACKS)
         assert corki._E_TICKS == int(corki._E_DURATION * corki._E_TICKS_PER_SECOND)
+
+
+class TestBatch37RootedKaisaConstants:
+    """Batch 37 roots Kai'Sa's active Plasma Rupture coefficients."""
+
+    def test_kaisa(self):
+        import src.calculator.champions.kaisa as kaisa
+
+        spell = spell_object("Kai'Sa", "KaisaPassive")
+        assert data_value(spell, "PExecuteRatio") == pytest.approx(
+            kaisa._RUPTURE_BASE_MISSING_HEALTH_RATIO
+        )
+        assert data_value(spell, "PExecuteAPRatio") == pytest.approx(
+            kaisa._RUPTURE_RATIO_PER_AP
+        )
