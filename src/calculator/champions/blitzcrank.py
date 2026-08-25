@@ -48,6 +48,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Blitzcrank
@@ -56,15 +57,14 @@ from .module_contract import coverage
 # (only the cooldown scales). W's buff duration is prose too.
 POWER_FIST_TOTAL_AD_RATIO = 1.0
 POWER_FIST_AP_RATIO = 0.25
-OVERDRIVE_DURATION_SECONDS = 5.0
-# HARDCODED: verify on patch updates — Mana Barrier's shield amount and
-# duration are prose-only in the cached passive description (data/
-# champions.json, Blitzcrank P): "when damaged to 30% maximum health,
-# Blitzcrank generates a shield equal to 35% of maximum mana, lasting
-# for up to 10 seconds", on the cached 90-second cooldown.  The 35% is
-# the cached wiki value at the last data pull (patch 25.22).
-MANA_BARRIER_SHIELD_RATIO = 0.35  # 35% of maximum mana
-MANA_BARRIER_DURATION_SECONDS = 10.0
+OVERDRIVE_DURATION_SECONDS = data_value(
+    spell_object("Blitzcrank", "Overdrive"), "Duration"
+)
+# Mana Barrier's cached passive prose is corroborated by its dedicated
+# ManaBarrierIcon record: 35% maximum mana for 10 seconds.
+_MANA_BARRIER_SPELL = spell_object("Blitzcrank", "ManaBarrierIcon")
+MANA_BARRIER_SHIELD_RATIO = data_value(_MANA_BARRIER_SPELL, "ManaPercent")
+MANA_BARRIER_DURATION_SECONDS = data_value(_MANA_BARRIER_SPELL, "ShieldDuration")
 
 
 def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:

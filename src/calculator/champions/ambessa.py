@@ -44,12 +44,14 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — Repudiation's shield duration (1.5s)
-# is prose in the cached ability description ("shields herself ... for 1.5
-# seconds"); the shield base and 150% bonus-AD ratio are cached leveling
-# rows read live below.
-_REPUDIATION_SHIELD_DURATION_SECONDS = 1.5
+# Rooted in AmbessaW.Shield_Duration; the cached ability description
+# corroborates the 1.5-second shield window. The shield base and 150%
+# bonus-AD ratio remain cached leveling rows read live below.
+_REPUDIATION_SHIELD_DURATION_SECONDS = data_value(
+    spell_object("Ambessa", "AmbessaW"), "Shield_Duration"
+)
 
 
 def _repudiation_shield_amount(ctx: SlotCtx) -> float:

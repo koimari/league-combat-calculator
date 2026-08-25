@@ -59,22 +59,28 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — wiki values with no clean JSON
-# home (the P parse is degraded; R's resist buff is prose only).
+# The P/Q/R effect records carry the duration, stack, and ratio values; the
+# level-banded bleed base and bonus-AD ratio remain prose/leveling-backed.
 # https://wiki.leagueoflegends.com/en-us/Briar
 P_BLEED_BASE_MIN = 10.0  # single-stack total at level 1
 P_BLEED_BASE_MAX = 50.0  # single-stack total at level 18
 P_BLEED_LEVEL_CAP = 18  # wiki defines levels 1-18; clamp past that
 P_BLEED_BONUS_AD_RATIO = 0.5  # + 50% bonus AD per stack
-P_BLEED_DURATION = 5.0  # seconds per (refreshing) stack window
-P_BLEED_MAX_STACKS = 5
-P_BLEED_EXTRA_STACK_EFFECTIVENESS = 0.25  # stacks beyond the first
-R_RESIST_PER_TOTAL_AD = 0.20  # armor AND MR gained, as % of total AD
+_BRIAR_P_SPELL = spell_object("Briar", "BriarP")
+_BRIAR_Q_SPELL = spell_object("Briar", "BriarQ")
+_BRIAR_R_SPELL = spell_object("Briar", "BriarR")
+P_BLEED_DURATION = data_value(_BRIAR_P_SPELL, "BleedDuration")
+P_BLEED_MAX_STACKS = int(data_value(_BRIAR_P_SPELL, "MaxBleedStacks"))
+P_BLEED_EXTRA_STACK_EFFECTIVENESS = data_value(
+    _BRIAR_P_SPELL, "BleedPercentAdd"
+)  # stacks beyond the first
+R_RESIST_PER_TOTAL_AD = data_value(_BRIAR_R_SPELL, "ResistADRatio")
 
 
 # Head Rush shreds "for 5 seconds" — not the rest of the fight.
-Q_SHRED_DURATION = 5.0
+Q_SHRED_DURATION = data_value(_BRIAR_Q_SPELL, "ShredDuration")
 
 # This module always prices the fully-charged scream ("Maximum Magic
 # Damage"), and the cache says how long that charge takes: Briar "prepares

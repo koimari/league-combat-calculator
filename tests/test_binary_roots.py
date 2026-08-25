@@ -747,3 +747,70 @@ class TestBatch17RootedConstants:
         assert data_value(
             spell_object("Renata", "RenataW"), "Duration"
         ) == pytest.approx(renata._W_DURATION_SECONDS)
+
+
+class TestBatch18RootedConstants:
+    """Batch 18: Ambessa, Aphelios, Bard, Blitzcrank and Briar constants
+    resolve from their binaries."""
+
+    def test_ambessa(self):
+        import src.calculator.champions.ambessa as ambessa
+
+        assert data_value(
+            spell_object("Ambessa", "AmbessaW"), "Shield_Duration"
+        ) == pytest.approx(ambessa._REPUDIATION_SHIELD_DURATION_SECONDS)
+
+    def test_aphelios(self):
+        import src.calculator.champions.aphelios as aphelios
+
+        assert data_value(
+            spell_object("Aphelios", "ApheliosInfernumQ"),
+            "InfernumDamageMultiplier",
+        ) == pytest.approx(aphelios._INFERNUM_PRIMARY_AD_RATIO)
+        assert data_value(
+            spell_object("Aphelios", "ApheliosR"), "CritDamageMod"
+        ) == pytest.approx(aphelios._R_FOLLOWUP_CRIT_EXTRA)
+
+    def test_bard(self):
+        import src.calculator.champions.bard as bard
+
+        p = spell_object("Bard", "BardPTooltip_D_nS")
+        assert data_value(p, "BaseMeepDamage") == pytest.approx(bard._MEEP_BASE)
+        assert data_value(p, "DamagePerCheckpoint") == pytest.approx(
+            bard._MEEP_PER_TIER
+        )
+        assert data_value(p, "TooltipChimeDamageCheckpoint") == bard._CHIMES_PER_TIER
+        assert data_value(p, "MeepAPRatio") == pytest.approx(bard._MEEP_AP_RATIO)
+        assert data_value(p, "BaseMeepSpawnCD") == pytest.approx(
+            bard._MEEP_BASE_RECHARGE
+        )
+
+    def test_blitzcrank(self):
+        import src.calculator.champions.blitzcrank as blitzcrank
+
+        assert data_value(
+            spell_object("Blitzcrank", "Overdrive"), "Duration"
+        ) == pytest.approx(blitzcrank.OVERDRIVE_DURATION_SECONDS)
+        passive = spell_object("Blitzcrank", "ManaBarrierIcon")
+        assert data_value(passive, "ManaPercent") == pytest.approx(
+            blitzcrank.MANA_BARRIER_SHIELD_RATIO
+        )
+        assert data_value(passive, "ShieldDuration") == pytest.approx(
+            blitzcrank.MANA_BARRIER_DURATION_SECONDS
+        )
+
+    def test_briar(self):
+        import src.calculator.champions.briar as briar
+
+        p = spell_object("Briar", "BriarP")
+        assert data_value(p, "BleedDuration") == pytest.approx(briar.P_BLEED_DURATION)
+        assert data_value(p, "MaxBleedStacks") == briar.P_BLEED_MAX_STACKS
+        assert data_value(p, "BleedPercentAdd") == pytest.approx(
+            briar.P_BLEED_EXTRA_STACK_EFFECTIVENESS
+        )
+        assert data_value(
+            spell_object("Briar", "BriarQ"), "ShredDuration"
+        ) == pytest.approx(briar.Q_SHRED_DURATION)
+        assert data_value(
+            spell_object("Briar", "BriarR"), "ResistADRatio"
+        ) == pytest.approx(briar.R_RESIST_PER_TOTAL_AD)

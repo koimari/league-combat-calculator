@@ -51,6 +51,7 @@ from .slotlib import (
     extract_value,
 )
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -128,7 +129,9 @@ def _main_weapon(ctx: SlotCtx) -> str:
 #             swing, at the crit effectiveness a basic attack has.
 _CALIBRUM_MARK_FLAT = 15.0
 _CALIBRUM_MARK_BONUS_AD_RATIO = 0.15
-_INFERNUM_PRIMARY_AD_RATIO = 1.10
+_INFERNUM_PRIMARY_AD_RATIO = data_value(
+    spell_object("Aphelios", "ApheliosInfernumQ"), "InfernumDamageMultiplier"
+)
 
 # The three weapon branches that price no damage row of their own, and why.
 _P_BRANCH_UNPRICED = {
@@ -353,7 +356,9 @@ def _q(packet_q):
 # multiplier is 1 + (0.30 + 0.09) x crit^2 — the attacks are basic
 # attacks, not spells, but their crits are far weaker than the 200%
 # normal attacks use.
-_R_FOLLOWUP_CRIT_EXTRA = 0.30  # 100% : 130% ramp by crit chance
+_R_FOLLOWUP_CRIT_EXTRA = data_value(
+    spell_object("Aphelios", "ApheliosR"), "CritDamageMod"
+)  # 100% : 130% ramp by crit chance
 _R_FOLLOWUP_CRIT_CHANCE_BONUS = 0.09  # (+ 0% : 9%) by crit chance
 _R_FOLLOWUP_DELAY = 0.3  # "After 0.3 seconds of the illumination"
 
