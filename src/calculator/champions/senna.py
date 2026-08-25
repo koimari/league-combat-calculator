@@ -32,7 +32,7 @@ row rather than left unmodeled.
 from functools import partial
 from typing import Any
 
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
@@ -149,14 +149,12 @@ class _RelicCannonRule:
 
 
 SENNA_RELIC_CANNON_RULE = _RelicCannonRule()
-# Dawning Shadow's shield duration is the binary SennaR.ShieldDuration
-# DataValue; the 150% Mist scaling stays cached prose (no binary home —
-# the term is 150% of the user-set Mist stack count, the same
-# ``senna_mist_stacks`` option as Absolution).
-_DAWNING_SHADOW_SHIELD_DURATION_SECONDS = data_value(
-    spell_object("Senna", "SennaR"), "ShieldDuration"
-)
-_DAWNING_SHADOW_MIST_RATIO = 1.5  # 150% of Mist stacks
+# Dawning Shadow's shield duration and Mist scaling are the binary SennaR
+# ShieldDuration DataValue and TotalShield buff-counter coefficient; the
+# cached prose corroborates the 150% term applied to the user-set Mist count.
+_SENNA_R_SPELL = spell_object("Senna", "SennaR")
+_DAWNING_SHADOW_SHIELD_DURATION_SECONDS = data_value(_SENNA_R_SPELL, "ShieldDuration")
+_DAWNING_SHADOW_MIST_RATIO = calculation_coefficient(_SENNA_R_SPELL, "TotalShield")
 
 
 def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:

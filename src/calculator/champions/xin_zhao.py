@@ -44,6 +44,7 @@ from typing import Any
 from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
@@ -136,14 +137,16 @@ _determination.phase = ONHIT
 _Q_CRIT_EFFECTIVENESS = 1.0
 
 # W's thrust: "dealing physical damage to enemies hit, increased by
-# 0% : 33.3% (based on critical strike chance)".  A deterministic
+# 0% : 33.3% (based on critical strike chance)"; the binary CritChanceAmp
+# DataValue carries the endpoint.  A deterministic
 # amplifier, not a crit roll — it reaches +33.3% whatever the crit
 # multiplier is, so ``crit_effectiveness`` (which routes through
 # ``state.crit_multiplier``) would misprice an Infinity Edge build.  The
 # repo's key for this axis is the parser-level linear scale between the
 # sourced endpoints (Nilah Q, Smolder Q, Zeri E), on the thrust term
 # alone: the four slashes take no amplifier.
-_W_THRUST_CRIT_CHANCE_AMP = 0.333
+_XIN_ZHAO_W_SPELL = spell_object("Xin Zhao", "XinZhaoW")
+_W_THRUST_CRIT_CHANCE_AMP = data_value(_XIN_ZHAO_W_SPELL, "CritChanceAmp")
 
 
 def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:

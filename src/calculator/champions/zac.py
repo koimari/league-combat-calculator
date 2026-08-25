@@ -27,6 +27,7 @@ for it, through the two channels ``COVERAGE_CHANNELS`` names.
 from dataclasses import replace
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .engine import CC_PER_PART, SlotCtx
@@ -48,7 +49,8 @@ PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3
 # champions.json, Zac P Cell Division): "enters resurrection for 8 / 7 / 6 /
 # 5 / 4 (based on level) seconds, instantly restoring 50% of his maximum
 # health ... After the duration, Zac is revived with 10 : 50% maximum
-# health."  The wiki's pp level brackets (levels 1 / 6 / 10 / 13 / 17) map
+# health."  The binary ZacPassiveChunkDrop.ReviveCooldown corroborates the
+# 300-second cooldown; the wiki's level brackets (levels 1 / 6 / 10 / 13 / 17) map
 # to the 8 / 7 / 6 / 5 / 4 second resurrection windows, and the revive
 # restores between 10% and 50% maximum health based on how many of the four
 # bloblets survive.  The deterministic fight model assumes all four
@@ -56,7 +58,8 @@ PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3
 # 50% maximum health.  The engine's revive state transition consumes
 # ``StartingDefenses.revive_*`` fields; the shared defense resolver wires
 # these per champion.
-REVIVE_COOLDOWN_SECONDS = 300.0
+_ZAC_P_SPELL = spell_object("Zac", "ZacPassiveChunkDrop")
+REVIVE_COOLDOWN_SECONDS = data_value(_ZAC_P_SPELL, "ReviveCooldown")
 _REVIVE_MAX_HEALTH_RATIO = 0.50
 # (level, delay) brackets: 8 / 7 / 6 / 5 / 4 seconds at levels 1 / 6 / 10 / 13 / 17.
 _REVIVE_DELAY_BRACKETS = ((17, 4.0), (13, 5.0), (10, 6.0), (6, 7.0), (1, 8.0))
