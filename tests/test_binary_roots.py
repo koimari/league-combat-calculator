@@ -13,6 +13,7 @@ from src.calculator.binary_roots import (
     _BIN_DIR,
     calculation_breakpoints,
     calculation_coefficients,
+    calculation_interpolation,
     champion_key,
     character_bin,
     character_record_root,
@@ -1445,3 +1446,6 @@ class TestBatch40RootedMelConstants:
         assert data_value(spell, "BonusAttackDuration") == pytest.approx(
             mel._P_WINDOW_DURATION
         )
+        assert calculation_interpolation(
+            spell, "PassiveBonusMissileDamage"
+        ) == pytest.approx((mel._P_MISSILE_LEVEL_1, mel._P_MISSILE_LEVEL_18))

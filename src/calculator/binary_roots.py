@@ -162,6 +162,41 @@ def calculation_breakpoints(
     )
 
 
+def calculation_interpolation(
+    spell_obj: dict[str, Any], calculation_name: str
+) -> tuple[float, float]:
+    """A calculation's finite character-level interpolation endpoints."""
+    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
+    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
+    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
+    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
+    if not isinstance(parts, list) or not parts:
+        raise RuntimeError(
+            f"calculation {calculation_name!r} not found or has no formula parts"
+        )
+    matches = [
+        part
+        for part in parts
+        if isinstance(part, dict) and "mStartValue" in part and "mEndValue" in part
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: expected one interpolation part, "
+            f"found {len(matches)}"
+        )
+    try:
+        start = float(matches[0]["mStartValue"])
+        end = float(matches[0]["mEndValue"])
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: unusable interpolation endpoints"
+        ) from exc
+    snapped = (float(f"{start:.6g}"), float(f"{end:.6g}"))
+    if not all(math.isfinite(value) for value in snapped):
+        raise RuntimeError(f"calculation {calculation_name!r}: non-finite endpoints")
+    return snapped
+
+
 def calculation_coefficients(
     spell_obj: dict[str, Any], calculation_name: str
 ) -> tuple[float, ...]:
