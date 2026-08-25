@@ -51,6 +51,7 @@ from .slotlib import ability_name, with_item_on_hits
 from .. import healing_helpers as _healing
 from .inputs import int_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
@@ -62,9 +63,10 @@ PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d2
 # target's maximum health over 3 seconds (cached Q description prose).
 _Q_CRIT_INCREASE_PER_CRIT = 0.975
 _BURN_BONUS_AD_PER_100 = 2.5
-_BURN_STACKS_PER_100 = 0.5
-_TIER3_STACKS = 225
-_BURN_DURATION = 3.0
+_SMOLDER_Q_SPELL = spell_object("Smolder", "SmolderQ")
+_BURN_STACKS_PER_100 = data_value(_SMOLDER_Q_SPELL, "Tier3_Burn_Stack_Mult") * 10000.0
+_TIER3_STACKS = int(data_value(_SMOLDER_Q_SPELL, "StackTier3"))
+_BURN_DURATION = data_value(_SMOLDER_Q_SPELL, "Tier3_DotLength")
 
 
 def _dragon_practice(ctx: SlotCtx) -> dict[str, Any] | None:
