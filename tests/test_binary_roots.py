@@ -1320,3 +1320,18 @@ class TestBatch32RootedRankedConstants:
         assert data_value_at_rank(spell, "BaseHeal", 5) == pytest.approx(
             gangplank._W_HEAL_FLAT[-1]
         )
+
+
+class TestBatch33RootedRankedConstants:
+    """Batch 33 ranked DataValues resolve Ivern's Daisy payload."""
+
+    def test_ivern(self):
+        import src.calculator.champions.ivern as ivern
+
+        spell = spell_object("Ivern", "IvernR")
+        assert ivern._DAISY_AD_BY_RANK == (70.0, 100.0, 130.0)
+        assert ivern._DAISY_AS_BONUS_BY_RANK == (0.30, 0.45, 0.60)
+        assert ivern._DAISY_SMASH_BY_RANK == (90.0, 140.0, 190.0)
+        assert data_value_at_rank(spell, "DaisyAD", 3) == pytest.approx(
+            ivern._DAISY_AD_BY_RANK[-1]
+        )
