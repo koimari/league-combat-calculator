@@ -30,6 +30,7 @@ hardcoded.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
@@ -43,10 +44,11 @@ from .slotlib import (
 from ..ability_spec import DamagePart
 from .module_contract import coverage
 
-# Death Mark detonates at the end of its 3-second mark (wiki prose:
-# "renders the target Marked for Death for 3 seconds", "detonating at
-# the end of the duration").
-_DEATH_MARK_DETONATION_DELAY = 3.0
+# Death Mark detonates at the binary RDeathMarkDuration; the wiki prose
+# corroborates ("renders the target Marked for Death for 3 seconds",
+# "detonating at the end of the duration").
+_ZED_R_SPELL = spell_object("Zed", "ZedR")
+_DEATH_MARK_DETONATION_DELAY = data_value(_ZED_R_SPELL, "RDeathMarkDuration")
 
 
 def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
