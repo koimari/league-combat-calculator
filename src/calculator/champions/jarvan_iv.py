@@ -44,14 +44,18 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import bool_option
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — P (Martial Cadence) has no JSON
-# leveling; these values exist only in description prose. Source:
+# Martial Cadence's dedicated binary record carries the current-health
+# fraction and minimum damage; the cached prose corroborates both.
 # https://wiki.leagueoflegends.com/en-us/Jarvan_IV
 # 8% of the target's CURRENT health, minimum 20, uncapped vs champions
 # (the 400 cap applies only to non-champion targets, not modeled here).
-PASSIVE_CURRENT_HP_PERCENT = 8.0
-PASSIVE_MIN_DAMAGE = 20.0
+_JARVAN_PASSIVE_SPELL = spell_object("Jarvan IV", "JarvanIVMartialCadence")
+PASSIVE_CURRENT_HP_PERCENT = (
+    data_value(_JARVAN_PASSIVE_SPELL, "TooltipCurrentHealthDamage") * 100.0
+)
+PASSIVE_MIN_DAMAGE = data_value(_JARVAN_PASSIVE_SPELL, "MinimumCadenceDamage")
 # Per-target cooldown: 6/5/4/3s at champion levels 1/6/11/16.
 PASSIVE_COOLDOWN_BREAKPOINTS = ((16, 3.0), (11, 4.0), (6, 5.0), (1, 6.0))
 
