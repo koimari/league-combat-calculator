@@ -39,6 +39,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import calculation_interpolation, data_value, spell_object
 from .engine import SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
@@ -69,9 +70,11 @@ _Q_SPROUT_SECONDS = 0.625
 # Plant attack: 15 : 75 (based on level) (+ 20% AP) magic — the same for
 # Thorn Spitters (Q) and Vine Lashers (E); 0.8 attack speed -> 4 attacks
 # in the 5-second one-rotation window.
-_PLANT_DAMAGE_START = 15.0  # level 1
-_PLANT_DAMAGE_END = 75.0  # level 18
-_PLANT_AP_RATIO = 0.20
+_ZYRA_P_SPELL = spell_object("Zyra", "ZyraP")
+_PLANT_DAMAGE_START, _PLANT_DAMAGE_END = calculation_interpolation(
+    _ZYRA_P_SPELL, "PlantDamage"
+)
+_PLANT_AP_RATIO = data_value(_ZYRA_P_SPELL, "APRatio")
 _PLANT_AS = 0.8
 
 

@@ -17,6 +17,7 @@ Damage" 80-100%) are outside this single-target model.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
@@ -35,8 +36,11 @@ from .slotlib import (
 # prose-only (the binary MinDamage coefficient 0.03).  The binary's
 # PassiveExecuteThreshold 70.0->160.0 + coefficient 0.2 corroborates;
 # the wiki L20 extension (170.59) is the repo convention.
-_ZAP_AP_RATIO = 0.03
-_ZAP_EXECUTE_AP_RATIO = 0.20
+_ZERI_Q_SPELL = spell_object("Zeri", "ZeriQ")
+_ZAP_AP_RATIO = calculation_coefficient(_ZERI_Q_SPELL, "MinDamage")
+_ZAP_EXECUTE_AP_RATIO = calculation_coefficient(
+    _ZERI_Q_SPELL, "PassiveExecuteThreshold"
+)
 
 
 class _LivingBatteryExecuteRule:
@@ -92,7 +96,7 @@ PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c05
 # authored at the cast with no interval between rounds.  E's Lightning
 # Rounds bonus rides these same seven rounds, so both slots read the
 # placement from here — a rider on Burst Fire cannot land anywhere else.
-_BURST_ROUNDS = 7
+_BURST_ROUNDS = int(data_value(_ZERI_Q_SPELL, "NumberOfMissiles"))
 _BURST_ROUND_TIME_OFFSET = 0.0
 _BURST_ROUND_INTERVAL = 0.0
 

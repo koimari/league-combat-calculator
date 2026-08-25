@@ -43,7 +43,12 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, data_value_at_rank, spell_object
+from ..binary_roots import (
+    calculation_interpolation,
+    data_value,
+    data_value_at_rank,
+    spell_object,
+)
 from ..stats import growth_multiplier
 from .inputs import champion_stat, int_option
 from .engine import SlotCtx
@@ -75,13 +80,15 @@ PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f
 # Maiden attack: YorickBigGhoulDamage = RBigGhoulBonusAD
 # (50/75/100 at R rank 1/2/3, the 13.21 rank bases) (+ 30% bonus AD,
 # MaidenADRatio), magic.  Attack speed 1.0 -> 5 attacks in the 5s window.
-_MIST_WALKER_DAMAGE_START = 15.0  # level 1
-_MIST_WALKER_DAMAGE_END = 100.0  # level 18
+_YORICK_PASSIVE_SPELL = spell_object("Yorick", "YorickPassive")
+_MIST_WALKER_DAMAGE_START, _MIST_WALKER_DAMAGE_END = calculation_interpolation(
+    _YORICK_PASSIVE_SPELL, "YorickPassiveGhoulDamage"
+)
 # Pet AD ratios price BONUS AD, not total AD (autoresearch pass 35): the
 # game files / wiki patch history pin Mist Walker at 20% bonus AD and the
 # Maiden at 30% bonus AD; the Maiden rank base is 50/75/100 (13.21 change).
-_MIST_WALKER_AD_RATIO = 0.20
-_MIST_WALKER_MAX = 4
+_MIST_WALKER_AD_RATIO = data_value(_YORICK_PASSIVE_SPELL, "GhoulADRatio")
+_MIST_WALKER_MAX = int(data_value(_YORICK_PASSIVE_SPELL, "YorickPassiveGhoulMax"))
 _YORICK_R_SPELL = spell_object("Yorick", "YorickR")
 _MAIDEN_BASE_BY_RANK = tuple(
     data_value_at_rank(_YORICK_R_SPELL, "RBigGhoulBonusAD", rank)
