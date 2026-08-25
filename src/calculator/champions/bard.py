@@ -51,16 +51,16 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import int_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — Bard's P[0] "Traveler's Call" has
-# no effects/leveling in the wiki JSON at all (known-degraded parse), so
-# every passive number below is wiki prose:
-# https://wiki.leagueoflegends.com/en-us/Bard
-# Meep on-hit damage: 30 (+6 per 5 chimes) (+40% AP) magic damage.
-_MEEP_BASE = 30.0
-_MEEP_PER_TIER = 6.0
-_CHIMES_PER_TIER = 5
-_MEEP_AP_RATIO = 0.40
+# Bard's P[0] remains degraded in the wiki JSON, but the tracked
+# BardPTooltip_D_nS record carries the passive tooltip values directly.
+_BARD_P_SPELL = spell_object("Bard", "BardPTooltip_D_nS")
+_MEEP_BASE = data_value(_BARD_P_SPELL, "BaseMeepDamage")
+_MEEP_PER_TIER = data_value(_BARD_P_SPELL, "DamagePerCheckpoint")
+_CHIMES_PER_TIER = int(data_value(_BARD_P_SPELL, "TooltipChimeDamageCheckpoint"))
+_MEEP_AP_RATIO = data_value(_BARD_P_SPELL, "MeepAPRatio")
+_MEEP_BASE_RECHARGE = data_value(_BARD_P_SPELL, "BaseMeepSpawnCD")
 
 # Meep stock and recharge time are INDEPENDENT chime-breakpoint tables,
 # (min_chimes, value) checked top-down. Verbatim wiki pp templates:
@@ -84,7 +84,7 @@ _MEEP_RECHARGE_TIERS = (
     (55, 5.0),
     (40, 6.0),
     (20, 7.0),
-    (0, 8.0),
+    (0, _MEEP_BASE_RECHARGE),
 )
 
 _DEFAULT_CHIMES = 35
