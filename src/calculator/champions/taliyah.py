@@ -29,6 +29,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import clamp, no_damage
@@ -47,7 +48,8 @@ _E_CAST_START = 0.0
 _W_CAST_START = 0.25
 _Q_CAST_START = 0.5
 _W_ERUPTION_DELAY = 0.792
-_E_ROW_INTERVAL = 0.17
+_TALIYAH_E_SPELL = spell_object("Taliyah", "TaliyahE")
+_E_ROW_INTERVAL = data_value(_TALIYAH_E_SPELL, "DelayBetweenRows")
 _E_DETONATION_MULTIPLIERS = (1.0, 0.75, 0.5, 0.25)
 _Q_CAST_TIME = 0.25
 _Q_NORMAL_LAUNCH_OFFSETS = (0.25, 0.75, 1.25, 1.5, 1.75)
@@ -56,9 +58,10 @@ _Q_NORMAL_DECELERATION = 5000.0
 _Q_WORKED_SPEED = 2000.0
 _Q_ORIGIN_OFFSET = 50.0
 _Q_MAX_RANGE = 1000.0
-_Q_WORKED_COST = 10.0
-_Q_WORKED_COOLDOWN_MULTIPLIER = 0.5
-_Q_WORKED_MINIMUM_COOLDOWN = 0.75
+_TALIYAH_Q_SPELL = spell_object("Taliyah", "TaliyahQ")
+_Q_WORKED_COST = data_value(_TALIYAH_Q_SPELL, "BigRockManaCost")
+_Q_WORKED_COOLDOWN_MULTIPLIER = data_value(_TALIYAH_Q_SPELL, "WorkedGroundCDR")
+_Q_WORKED_MINIMUM_COOLDOWN = data_value(_TALIYAH_Q_SPELL, "MinimumWorkedGroundCD")
 
 
 def _normal_projectile_time(distance: float) -> float:

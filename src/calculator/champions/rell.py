@@ -6,8 +6,8 @@ E2 DoT fix: R (Magnet Storm) prices 8 sourced 0.25s ticks
 P1-2 fixes:
 - P (Break the Mold) is now an ONHIT slot: each basic attack deals
   bonus magic damage equal to 5% of Rell's total armor plus 5% of her
-  total magic resistance (wiki P prose — the JSON carries only the
-  minimum-reduction leveling row, so the ratios are module constants).
+  total magic resistance (the ordered pair is rooted in the binary's
+  OnHitDamage calculation).
 - W (Ferromancy: Crash Down) shield: the support scanner now targets
   Rell herself (its self-target marker list was missing the
   description's "granting herself" phrasing), emitting the sourced
@@ -20,16 +20,18 @@ P1-2 fixes:
 
 from typing import Any
 
+from ..binary_roots import calculation_coefficients, spell_object
 from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
 from .slotlib import ability_name, on_hit_entry
 
-# HARDCODED: verify on patch updates — Break the Mold's on-hit formula
-# ("5% of her total armor and 5% of her total magic resistance") is wiki
-# P prose; the cached JSON carries no leveling row for it (only the
-# minimum-resistance-reduction row, which is the debuff floor).
-_BREAK_THE_MOLD_ARMOR_RATIO = 0.05
-_BREAK_THE_MOLD_MR_RATIO = 0.05
+# Break the Mold's on-hit formula is the ordered armor/MR pair in the
+# binary's RellP.OnHitDamage calculation.
+_RELL_P_SPELL = spell_object("Rell", "RellP")
+(
+    _BREAK_THE_MOLD_ARMOR_RATIO,
+    _BREAK_THE_MOLD_MR_RATIO,
+) = calculation_coefficients(_RELL_P_SPELL, "OnHitDamage")
 
 PACKET_SHA256 = "c88088e022b4afb695def1471bb4068ad40512c06c50d5a43cd479eebd11445a"
 

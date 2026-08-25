@@ -57,11 +57,11 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
-# Mechanic constants anchored in the ability descriptions (not leveling
-# data): the cleave's 2-stack cycle empowers every 3rd basic attack, and
-# R's beam bonus counts champions pulled beyond the first, up to 5 total.
+# The binary roots the cleave's 2-stack cycle; R's beam bonus counts champions
+# pulled beyond the first, up to 5 total, which remains a mechanic cap.
 # https://wiki.leagueoflegends.com/en-us/Diana
-_CLEAVE_EVERY_N_ATTACKS = 3
+_DIANA_PASSIVE_SPELL = spell_object("Diana", "DianaPassive")
+_CLEAVE_EVERY_N_ATTACKS = int(data_value(_DIANA_PASSIVE_SPELL, "AttackCount"))
 _R_MAX_CHAMPIONS_PULLED = 5
 
 # Moonfall's damage is the beam, and the beam lands after the pull: "If an
