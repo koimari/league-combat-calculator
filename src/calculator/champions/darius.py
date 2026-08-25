@@ -34,7 +34,7 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
@@ -51,14 +51,15 @@ from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
 from .inputs import bool_option, int_option
 
-# The passive's bonus-AD ratio exists ONLY in the description prose; its
-# modifier ``units`` are all empty strings, so nothing in the JSON carries
-# it.  The bleed window and stack cap are binary DataValues
+# The passive's bonus-AD ratio is the coefficient on the binary's
+# BleedDamagePerStack calculation.  The bleed window and stack cap are binary DataValues
 # (DariusHemoMarker.BleedDuration / MaxStacks); the per-level VALUE arrays
 # below ARE in the JSON and are read from it.
 # https://wiki.leagueoflegends.com/en-us/Darius
 _DARIUS_HEMO_SPELL = spell_object("Darius", "DariusHemoMarker")
-P_BLEED_BONUS_AD_RATIO = 0.30  # per stack, over the full window (prose-only)
+P_BLEED_BONUS_AD_RATIO = calculation_coefficient(
+    _DARIUS_HEMO_SPELL, "BleedDamagePerStack"
+)  # per stack, over the full window
 P_BLEED_DURATION = data_value(_DARIUS_HEMO_SPELL, "BleedDuration")
 # The bleed ticks every 1.25s — the JSON's own per-tick arrays are exactly
 # quarters of the 5s totals (test-locked in test_darius.py), so the cadence
