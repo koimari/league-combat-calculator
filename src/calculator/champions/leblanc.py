@@ -19,6 +19,7 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import bool_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 
 def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -51,7 +52,7 @@ def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
 # seconds".  ``time_offset`` runs from the cast start and the cache states
 # no travel time for the chain, so the application sits at the cast and
 # the fracture 1.5 seconds after it.
-_E_TETHER_SECONDS = 1.5
+_E_TETHER_SECONDS = data_value(spell_object("LeBlanc", "LeblancE"), "TetherDuration")
 
 
 def _ethereal_chains(ctx: SlotCtx) -> dict[str, Any] | None:

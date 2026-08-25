@@ -32,6 +32,7 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 # Bear Trap on a Rope lands twice and the cache times the second hit: the
 # trap "collides with the first enemy champion ... forming a tether
@@ -40,7 +41,7 @@ from .module_contract import coverage
 # damage and slows them for 2.5 seconds".  ``time_offset`` runs from the
 # cast start, and the cache states no travel time for the trap itself, so
 # the throw sits at the cast and the pull 1.75 seconds after it.
-_Q_TETHER_SECONDS = 1.75
+_Q_TETHER_SECONDS = data_value(spell_object("Kled", "KledQ"), "TetherPopTime")
 
 
 def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:

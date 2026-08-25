@@ -21,9 +21,11 @@ from .module_helpers import clamp
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
+from ..binary_roots import data_value, spell_object
 
-_W_MR_REDUCTION_PERCENT = 25.0
-_W_DEBUFF_DURATION = 5.0
+_KARTHUS_W_SPELL = spell_object("Karthus", "KarthusWallOfPain")
+_W_MR_REDUCTION_PERCENT = data_value(_KARTHUS_W_SPELL, "MagicResistShred")
+_W_DEBUFF_DURATION = data_value(_KARTHUS_W_SPELL, "DebuffDuration")
 _W_CAST_TIME = 0.25
 _Q_CAST_TIME = 0.25
 _Q_CONSERVATIVE_DETONATION_DELAY = 0.75
