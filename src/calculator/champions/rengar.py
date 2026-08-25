@@ -58,15 +58,15 @@ from .slotlib import (
     sum_modifiers,
 )
 from .inputs import bool_option, int_option
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
 _FEROCITY_MAX = 4
 
-# HARDCODED: verify on patch updates — the shred's window is cached R
-# prose ("then inflicts armor reduction for 4 seconds"); the magnitude
-# is the JSON's "Armor Reduction" row.
-_R_SHRED_SECONDS = 4.0
+# Rooted in RengarR.ArmorShredDuration; the cached R prose corroborates the
+# four-second armor-reduction window.
+_R_SHRED_SECONDS = data_value(spell_object("Rengar", "RengarR"), "ArmorShredDuration")
 
 
 def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
