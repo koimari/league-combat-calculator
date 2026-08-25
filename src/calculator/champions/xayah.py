@@ -31,6 +31,7 @@ from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import ability_name, damage_entry, extract_cooldown
 from .inputs import int_option
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
@@ -48,7 +49,9 @@ _R_LEAP_SECONDS = 1.0
 # (200% + 30%) damage if the triggering attack does"), and
 # ``_secondary_feather_ratio`` / ``_secondary_feather_crit_extra`` read
 # them from that prose with the standard 1/7/13 level brackets.
-_CLEAN_CUTS_MAX_STACKS = 5
+_CLEAN_CUTS_MAX_STACKS = int(
+    data_value(spell_object("Xayah", "XayahPassive"), "PStackMax")
+)
 _DEFAULT_FEATHERS = 7  # 5 empowered autos + 2 Q daggers (expected)
 _MAX_FEATHERS = 12  # + 5 R feathers (sourced maximum)
 _CLEAN_CUTS_LEVEL_BRACKETS = ((13, 3), (7, 2), (1, 1))  # 1/7/13 -> index

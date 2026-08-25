@@ -925,3 +925,40 @@ class TestBatch21RootedConstants:
         assert data_value(
             spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio"
         ) == pytest.approx(ziggs.SHORT_FUSE_AP_RATIO)
+
+
+class TestBatch22RootedConstants:
+    """Batch 22: Caitlyn, Aurora, Azir and Xayah constants resolve from
+    their binaries."""
+
+    def test_caitlyn(self):
+        import src.calculator.champions.caitlyn as caitlyn
+
+        assert data_value(
+            spell_object("Caitlyn", "CaitlynR"), "CriticalStrikeModifier"
+        ) == pytest.approx(caitlyn._R_CRIT_EFFECTIVENESS)
+
+    def test_aurora(self):
+        import src.calculator.champions.aurora as aurora
+
+        assert data_value(
+            spell_object("Aurora", "AuroraPassive"), "BaseHPDamage"
+        ) * 100.0 == pytest.approx(aurora._SPIRIT_PCT_BASE)
+
+    def test_azir(self):
+        import src.calculator.champions.azir as azir
+
+        w = spell_object("Azir", "AzirW")
+        assert data_value(w, "SubsequentDamageMod") / 100.0 == pytest.approx(
+            azir.SOLDIER_EXTRA_DAMAGE
+        )
+        assert data_value(w, "OnHitMultiplier") == pytest.approx(
+            azir.SOLDIER_ON_HIT_EFFECTIVENESS
+        )
+
+    def test_xayah(self):
+        import src.calculator.champions.xayah as xayah
+
+        assert data_value(spell_object("Xayah", "XayahPassive"), "PStackMax") == (
+            xayah._CLEAN_CUTS_MAX_STACKS
+        )
