@@ -1427,3 +1427,21 @@ class TestBatch39RootedYorickConstants:
                 for rank in range(1, 4)
             )
         )
+
+
+class TestBatch40RootedMelConstants:
+    """Batch 40 roots Mel's Searing Brilliance window constants."""
+
+    def test_mel(self):
+        import src.calculator.champions.mel as mel
+
+        spell = spell_object("Mel", "MelPassive")
+        assert data_value(spell, "PassiveBonusMissiles") == pytest.approx(
+            mel._P_MISSILES_PER_CAST
+        )
+        assert data_value(spell, "MaxPassiveBonusMissiles") == pytest.approx(
+            mel._P_MAX_MISSILES
+        )
+        assert data_value(spell, "BonusAttackDuration") == pytest.approx(
+            mel._P_WINDOW_DURATION
+        )

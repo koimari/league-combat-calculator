@@ -46,6 +46,7 @@ Roadmap slot session (2026-08-21) closes this module's last two
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .packet_module import build_packet_module
 from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .slotlib import (
@@ -72,7 +73,7 @@ _R_DEFAULT_OVERWHELM_STACKS = 3
 _R_PER_STACK_AP_RATIO = 0.04
 
 # ---------------------------------------------------------------------------
-# P (Searing Brilliance) — HARDCODED game-file rule declaration.
+# P (Searing Brilliance) — game-file rule declaration.
 # Verify on patch updates against "MelPassive" {64e86cf4} in the game file
 # data/bin/characters/mel.bin.json:
 #   mSpell.DataValues       PassiveBonusMissiles      3.0 (every rank)
@@ -86,9 +87,10 @@ _R_PER_STACK_AP_RATIO = 0.04
 # prose; the 8 : 30 ramp and the 9x maximum as the two "Per-Level
 # Scaling" rows), so a patch that moves either source fails loudly.
 # ---------------------------------------------------------------------------
-_P_MISSILES_PER_CAST = 3
-_P_MAX_MISSILES = 9
-_P_WINDOW_DURATION = 5.0
+_MEL_P_SPELL = spell_object("Mel", "MelPassive")
+_P_MISSILES_PER_CAST = int(data_value(_MEL_P_SPELL, "PassiveBonusMissiles"))
+_P_MAX_MISSILES = int(data_value(_MEL_P_SPELL, "MaxPassiveBonusMissiles"))
+_P_WINDOW_DURATION = data_value(_MEL_P_SPELL, "BonusAttackDuration")
 _P_MISSILE_AP_RATIO = 0.04
 _P_MISSILE_LEVEL_1 = 8.0
 _P_MISSILE_LEVEL_18 = 30.0
