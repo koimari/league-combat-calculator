@@ -1069,3 +1069,61 @@ class TestBatch25RootedConstants:
         assert data_value(passive, "BleedDuration") == pytest.approx(
             talon._P_BLEED_DURATION
         )
+
+
+class TestBatch26RootedConstants:
+    """Batch 26 constants resolve from their champion binaries."""
+
+    def test_ashe(self):
+        import src.calculator.champions.ashe as ashe
+
+        assert data_value(spell_object("Ashe", "AsheQ"), "BuffDuration") == (
+            pytest.approx(ashe.ASHE_Q_ACTIVE_DURATION_SECONDS)
+        )
+
+    def test_aphelios(self):
+        import src.calculator.champions.aphelios as aphelios
+
+        assert data_value(
+            spell_object("Aphelios", "ApheliosSeverumQ"), "Duration"
+        ) == pytest.approx(aphelios._Q_ONSLAUGHT_SECONDS)
+
+    def test_malzahar(self):
+        import src.calculator.champions.malzahar as malzahar
+
+        e = spell_object("Malzahar", "MalzaharE")
+        r = spell_object("Malzahar", "MalzaharR")
+        assert data_value(e, "Duration") == pytest.approx(malzahar._E_DURATION)
+        assert data_value(e, "SecondsPerTick") == pytest.approx(
+            malzahar._E_TICK_INTERVAL
+        )
+        assert malzahar._E_TICKS == int(
+            malzahar._E_DURATION / malzahar._E_TICK_INTERVAL
+        )
+        assert data_value(r, "SuppressDuration") == pytest.approx(malzahar._R_DURATION)
+        assert int(data_value(r, "BeamDamageTicks")) == malzahar._R_TICKS
+        assert malzahar._R_TICK_INTERVAL == pytest.approx(
+            malzahar._R_DURATION / malzahar._R_TICKS
+        )
+
+    def test_vi(self):
+        import src.calculator.champions.vi as vi
+
+        w = spell_object("Vi", "ViW")
+        assert int(data_value(w, "StacksBeforeEffect")) + 1 == vi._W_STACKS_REQUIRED
+        assert data_value(w, "ShredAmount") == pytest.approx(
+            vi._W_ARMOR_REDUCTION_PERCENT
+        )
+        assert data_value(w, "MarkerBuffDuration") == pytest.approx(
+            vi._W_DEBUFF_DURATION
+        )
+        assert data_value(w, "SharedBuffsDuration") == pytest.approx(
+            vi._W_STACK_DURATION
+        )
+
+    def test_warwick(self):
+        import src.calculator.champions.warwick as warwick
+
+        assert data_value(spell_object("Warwick", "WarwickR"), "RDuration") == (
+            pytest.approx(warwick._R_CHANNEL_SECONDS)
+        )

@@ -104,7 +104,9 @@ _Q_CC_BY_WEAPON = {
 # mitigation damage dealt" is a share of each attack, and the rule is
 # declared ``HealAnchor.DAMAGING_HIT``, so six attacks pay six shares of
 # what they each dealt and an attack that dealt nothing pays nothing.
-_Q_ONSLAUGHT_SECONDS = 1.75
+_Q_ONSLAUGHT_SECONDS = data_value(
+    spell_object("Aphelios", "ApheliosSeverumQ"), "Duration"
+)
 
 # R's blast controls only under Gravitum, which "Increases the initial slow
 # to 99%"; every other weapon's follow-up is a mark, a heal, bonus damage

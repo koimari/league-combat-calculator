@@ -29,6 +29,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .module_helpers import clamp
@@ -52,10 +53,11 @@ _Q_MIN_SPEED = 1450.0
 _Q_MAX_SPEED = 1540.0
 _Q_MAX_BONUS_MULTIPLIER = 1.5
 
-_W_STACKS_REQUIRED = 3
-_W_ARMOR_REDUCTION_PERCENT = 20.0
-_W_DEBUFF_DURATION = 4.0
-_W_STACK_DURATION = 4.0  # stacks expire this long after the last application
+_VI_W_SPELL = spell_object("Vi", "ViW")
+_W_STACKS_REQUIRED = int(data_value(_VI_W_SPELL, "StacksBeforeEffect")) + 1
+_W_ARMOR_REDUCTION_PERCENT = data_value(_VI_W_SPELL, "ShredAmount")
+_W_DEBUFF_DURATION = data_value(_VI_W_SPELL, "MarkerBuffDuration")
+_W_STACK_DURATION = data_value(_VI_W_SPELL, "SharedBuffsDuration")
 
 # Hit kinds for the timed Denting Blows stream; ability hits sort before
 # ambient attacks on equal timestamps (the rotation leads the fight model).

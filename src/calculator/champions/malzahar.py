@@ -65,13 +65,17 @@ from .slotlib import (
 from .module_contract import coverage
 from ..binary_roots import data_value, spell_object
 
-# E: 16 ticks over 4s (every 0.25s); R: 10 ticks over 2.5s (every 0.25s).
-_E_TICKS = 16
-_E_DURATION = 4.0
-_E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
-_R_TICKS = 10
-_R_DURATION = 2.5
-_R_TICK_INTERVAL = _R_DURATION / _R_TICKS  # "every 0.25 seconds"
+_MALZAHAR_E_SPELL = spell_object("Malzahar", "MalzaharE")
+_MALZAHAR_R_SPELL = spell_object("Malzahar", "MalzaharR")
+# E: 16 ticks over 4s; R: 10 ticks over 2.5s.  The binary carries the
+# durations and E's explicit cadence; the remaining counts/cadence are
+# derived from those rooted fields.
+_E_DURATION = data_value(_MALZAHAR_E_SPELL, "Duration")
+_E_TICK_INTERVAL = data_value(_MALZAHAR_E_SPELL, "SecondsPerTick")
+_E_TICKS = int(_E_DURATION / _E_TICK_INTERVAL)
+_R_DURATION = data_value(_MALZAHAR_R_SPELL, "SuppressDuration")
+_R_TICKS = int(data_value(_MALZAHAR_R_SPELL, "BeamDamageTicks"))
+_R_TICK_INTERVAL = _R_DURATION / _R_TICKS
 
 # HARDCODED: verify on patch updates — pet attack-speed growth is not in
 # the champion JSON (the wiki's Malzahar#Pets entry):

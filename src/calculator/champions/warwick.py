@@ -78,7 +78,7 @@ from .slotlib import (
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
 # the up-to-1.5s suppress; "applies on-hit effects and triggers
 # on-attack effects 3 times over its duration".
-_R_CHANNEL_SECONDS = 1.5
+_R_CHANNEL_SECONDS = data_value(spell_object("Warwick", "WarwickR"), "RDuration")
 
 # HARDCODED: verify on patch updates — Eternal Hunger's heal is cached
 # PROSE, not a leveling row: "While below 50% maximum health, Warwick
