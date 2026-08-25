@@ -1284,3 +1284,15 @@ class TestBatch30RootedConstants:
             spell_object("Neeko", "NeekoQ"), "RepeatDelay"
         ) == pytest.approx(neeko._Q_BLOOM_DELAY)
         assert neeko._Q_BLOOM_DELAY * 2 == pytest.approx(1.5)
+
+
+class TestBatch31RootedConstants:
+    """Batch 31 constants resolve from Wukong's MonkeyKing binary."""
+
+    def test_wukong(self):
+        import src.calculator.champions.wukong as wukong
+
+        q = spell_object("MonkeyKing", "MonkeyKingDoubleAttack")
+        r = spell_object("MonkeyKing", "MonkeyKingSpinToWin")
+        assert data_value(q, "ShredDuration") == pytest.approx(wukong.Q_SHRED_DURATION)
+        assert data_value(r, "SecondsPerTick") == pytest.approx(wukong._R_TICK_INTERVAL)

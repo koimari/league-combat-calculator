@@ -46,6 +46,7 @@ Coverage:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .slotlib import (
     ability_name,
@@ -62,7 +63,10 @@ from .inputs import bool_option, int_option
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
 # seconds", wiki prose below) — it is not permanent.
-Q_SHRED_DURATION = 3.0
+_WUKONG_Q_SPELL = spell_object("MonkeyKing", "MonkeyKingDoubleAttack")
+_WUKONG_R_SPELL = spell_object("MonkeyKing", "MonkeyKingSpinToWin")
+Q_SHRED_DURATION = data_value(_WUKONG_Q_SPELL, "ShredDuration")
+_R_TICK_INTERVAL = data_value(_WUKONG_R_SPELL, "SecondsPerTick")
 
 
 def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -140,10 +144,16 @@ def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (
         DamagePart(
-            "physical", per_tick, count=ticks, time_offset=0.0, hit_interval=0.25
+            "physical",
+            per_tick,
+            count=ticks,
+            time_offset=0.0,
+            hit_interval=_R_TICK_INTERVAL,
         ),
     )
-    entry["detail"] = f"{casts} Cyclone cast(s), eight sourced 0.25-second ticks each"
+    entry["detail"] = (
+        f"{casts} Cyclone cast(s), eight sourced {_R_TICK_INTERVAL:g}-second ticks each"
+    )
     return entry
 
 
