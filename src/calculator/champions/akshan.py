@@ -13,9 +13,8 @@ Why each slot is non-generic:
   base, a prose per-100%-bonus-AS ratio) handled by the
   ``_extract_e_per_shot`` seam.
 - R (Comeuppance) is min-damage-per-bullet × stored bullets, plus two
-  fight-engine scaling constants from wiki prose (see below): crits
-  amplify at 30% effectiveness and missing HP scales the barrage up to
-  +200%.
+  fight-engine scaling constants: crits amplify at 30% effectiveness and
+  missing HP scales the barrage up to +200%.
 - P (Dirty Fighting) is TWO results entries from one JSON passive:
   ``passive_double_shot`` (every auto fires a second shot at a %AD
   ratio regex-read from the description) and ``passive`` (the 3-stack
@@ -25,8 +24,9 @@ Why each slot is non-generic:
   of its own.
 
 All numeric values are read from the champion JSON data (several from
-description text) except the two R scaling constants below, which are
-wiki prose with no JSON home.
+description text). The R scaling values below are rooted in AkshanR's binary;
+the missing-health value is converted from the binary's total multiplier to
+the additive bonus used by this module.
 
 Roadmap session (2026-08-21): closes the single out_of_scope slot (W).
 W (Going Rogue): ``data/champions.json`` Akshan W carries
@@ -66,14 +66,14 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .module_contract import coverage
 
-# HARDCODED: verify on patch updates — wiki prose, not in the JSON.
-# https://wiki.leagueoflegends.com/en-us/Akshan
-# R bullets can crit at 30% effectiveness (3% damage per 10% crit
-# chance) and scale up to +200% based on the target's missing health.
-# ROOTED IN THE BINARY (AkshanR.CritDamageMod); the wiki prose
-# ("can crit at 30% effectiveness") corroborates the semantics.
+# R bullets can crit at 30% effectiveness (3% damage per 10% crit chance) and
+# scale up to +200% based on the target's missing health. The binary stores
+# MaxIncrease as the total endpoint multiplier (3x), while this formula uses
+# the additive bonus (2x), so subtract one at the representation boundary.
 _R_CRIT_EFFECTIVENESS = data_value(spell_object("Akshan", "AkshanR"), "CritDamageMod")
-_R_MISSING_HP_MAX_BONUS = 2.0
+_R_MISSING_HP_MAX_BONUS = (
+    data_value(spell_object("Akshan", "AkshanR"), "MaxIncrease") - 1.0
+)
 
 # Heroic Swing's shots are on a cached beat, not on Akshan's attack speed:
 # "While swinging, he fires at the nearest visible enemy every 0.231
