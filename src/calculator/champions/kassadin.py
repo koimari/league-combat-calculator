@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -18,8 +19,9 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 
-PASSIVE_W_BASE = 25.0  # Full parent entry: Nether Blade passive, not a leveling row.
-PASSIVE_W_AP_RATIO = 0.10
+_KASSADIN_W_SPELL = spell_object("Kassadin", "NetherBlade")
+PASSIVE_W_BASE = data_value(_KASSADIN_W_SPELL, "PassiveBaseDamage")
+PASSIVE_W_AP_RATIO = calculation_coefficient(_KASSADIN_W_SPELL, "OnHitDamage")
 
 
 def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:

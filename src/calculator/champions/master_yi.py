@@ -29,7 +29,7 @@ cooldown refund have no channel and stay named.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share
@@ -57,13 +57,15 @@ PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb7678316
 _Q_REAPPEAR_SECONDS = 1.087
 
 
-# HARDCODED: verify on patch updates — Double Strike's 3-hit cadence and
-# the second strike's 50% AD are wiki prose; the JSON carries no
-# leveling for the passive.  DOCUMENTED CONFLICT: the binary's
-# MasterYiPassive.AttackCount reads 4 — kept on the wiki root until a
-# patch settles it, pinned by test_binary_roots.
+# HARDCODED: verify on patch updates — Double Strike's 3-hit cadence is wiki
+# prose.  The second-strike ratio is rooted in the passive calculation.
+# DOCUMENTED CONFLICT: the binary's MasterYiPassive.AttackCount reads 4 — kept
+# on the wiki root until a patch settles it, pinned by test_binary_roots.
 _DOUBLE_STRIKE_STACKS = 3
-_SECOND_STRIKE_AD_RATIO = 0.5
+_MASTER_YI_PASSIVE_SPELL = spell_object("Master Yi", "MasterYiPassive")
+_SECOND_STRIKE_AD_RATIO = calculation_coefficient(
+    _MASTER_YI_PASSIVE_SPELL, "TotalDamage"
+)
 # "The second strike ... is affected by critical strike modifiers"
 # (cached P effect 1), and the entry's notes add that it "separately
 # rolls a critical strike" — full crit probability on its own roll,

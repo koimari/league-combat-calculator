@@ -34,6 +34,7 @@ P1 addition over the reviewed packet:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import calculation_coefficient, spell_object
 from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -54,7 +55,10 @@ PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e
 # 10% of his maximum health. The shield lasts until it is broken, and
 # replenishes to full strength after a few seconds of not taking
 # damage."
-GRANITE_SHIELD_MAX_HP_RATIO = 0.10  # 10% of maximum health
+_MALPHITE_SHIELD_SPELL = spell_object("Malphite", "MalphiteShield")
+GRANITE_SHIELD_MAX_HP_RATIO = calculation_coefficient(
+    _MALPHITE_SHIELD_SPELL, "TotalShield"
+)  # 10% of maximum health
 _DEFAULT_FIGHT_WINDOW_SECONDS = 5.0  # one-rotation fallback
 
 

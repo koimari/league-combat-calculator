@@ -28,7 +28,12 @@ reads "no_damage", not "out_of_scope".
 """
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import (
+    calculation_coefficient,
+    data_value,
+    data_value_at_rank,
+    spell_object,
+)
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -51,11 +56,19 @@ _Q_BLOOM_DELAY = data_value(_NEEKO_Q_SPELL, "RepeatDelay")
 # (the cached wiki page omits the shield; neeko.bin.json NeekoR mSpell
 # DataValues + mSpellCalculations BaseShield / ShieldMultiplier).
 # https://raw.communitydragon.org/latest/game/data/characters/neeko/neeko.bin.json
-_R_SHIELD_AMOUNT = (75.0, 125.0, 175.0)  # by R rank (1-3)
-_R_SHIELD_PER_CHAMPION = (40.0, 60.0, 80.0)  # per nearby enemy champion
-_R_SHIELD_AP_RATIO = 0.75  # BaseShield: + 75% AP
-_R_SHIELD_PER_CHAMPION_AP_RATIO = 0.40  # ShieldMultiplier: + 40% AP per champion
-_R_SHIELD_DURATION = 2.0  # ShieldDuration, seconds
+_NEEKO_R_SPELL = spell_object("Neeko", "NeekoR")
+_R_SHIELD_AMOUNT = tuple(
+    data_value_at_rank(_NEEKO_R_SPELL, "ShieldAmount", index) for index in (1, 3, 5)
+)  # internal DataValue slots by R rank (1-3)
+_R_SHIELD_PER_CHAMPION = tuple(
+    data_value_at_rank(_NEEKO_R_SPELL, "ShieldPerChampion", rank)
+    for rank in range(1, 4)
+)  # per nearby enemy champion
+_R_SHIELD_AP_RATIO = calculation_coefficient(_NEEKO_R_SPELL, "BaseShield")
+_R_SHIELD_PER_CHAMPION_AP_RATIO = calculation_coefficient(
+    _NEEKO_R_SPELL, "ShieldMultiplier"
+)
+_R_SHIELD_DURATION = data_value_at_rank(_NEEKO_R_SPELL, "ShieldDuration", 1)
 
 
 def _blooming_burst(ctx: SlotCtx):
