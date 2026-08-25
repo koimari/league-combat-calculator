@@ -197,6 +197,36 @@ def calculation_interpolation(
     return snapped
 
 
+def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) -> float:
+    """A calculation's one finite scalar coefficient, or raise if ambiguous."""
+    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
+    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
+    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
+    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
+    if not isinstance(parts, list) or not parts:
+        raise RuntimeError(
+            f"calculation {calculation_name!r} not found or has no formula parts"
+        )
+    matches = [
+        part for part in parts if isinstance(part, dict) and "mCoefficient" in part
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: expected one coefficient part, "
+            f"found {len(matches)}"
+        )
+    try:
+        value = float(matches[0]["mCoefficient"])
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(
+            f"calculation {calculation_name!r}: unusable coefficient"
+        ) from exc
+    snapped = float(f"{value:.6g}")
+    if not math.isfinite(snapped):
+        raise RuntimeError(f"calculation {calculation_name!r}: non-finite coefficient")
+    return snapped
+
+
 def calculation_coefficients(
     spell_obj: dict[str, Any], calculation_name: str
 ) -> tuple[float, ...]:
