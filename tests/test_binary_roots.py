@@ -1369,3 +1369,21 @@ class TestBatch35RootedTimingConstants:
         assert data_value_at_rank(w, "CloudDuration", 1) == pytest.approx(
             cassiopeia._W_DURATION
         )
+
+
+class TestBatch36RootedCorkiConstants:
+    """Batch 36 roots Corki's Gatling Gun timing and shred rows."""
+
+    def test_corki(self):
+        import src.calculator.champions.corki as corki
+
+        spell = spell_object("Corki", "GGun")
+        assert data_value(spell, "SprayDuration") == pytest.approx(corki._E_DURATION)
+        assert data_value(spell, "TicksPerSecond") == pytest.approx(
+            corki._E_TICKS_PER_SECOND
+        )
+        assert data_value(spell, "ShredDuration") == pytest.approx(
+            corki._E_SHRED_LINGER
+        )
+        assert data_value(spell, "ShredCap") == pytest.approx(corki._E_MAX_SHRED_STACKS)
+        assert corki._E_TICKS == int(corki._E_DURATION * corki._E_TICKS_PER_SECOND)
