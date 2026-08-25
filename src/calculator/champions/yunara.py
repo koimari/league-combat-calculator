@@ -27,6 +27,7 @@ from .slotlib import (
     extract_named,
     with_item_on_hits,
 )
+from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
 # 0.25s over the 1-second linger) is wiki W prose, reconciled by
@@ -35,8 +36,9 @@ from .slotlib import (
 # cached W[1] description prose.
 _W_LINGER_TICKS = 4
 _W_LINGER_TICK_INTERVAL = 0.25
-_R_ARC_OF_RUIN_BONUS_AD_RATIO = 1.20
-_R_ARC_OF_RUIN_AP_RATIO = 0.75
+_YUNARA_R_SPELL = spell_object("Yunara", "YunaraR")
+_R_ARC_OF_RUIN_BONUS_AD_RATIO = data_value(_YUNARA_R_SPELL, "RW_ADRatio")
+_R_ARC_OF_RUIN_AP_RATIO = data_value(_YUNARA_R_SPELL, "RW_APRatio")
 
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
 

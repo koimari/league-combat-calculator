@@ -870,3 +870,58 @@ class TestBatch20RootedConstants:
         assert data_value(spell_object("Shyvana", "ShyvanaW"), "Duration") == (
             pytest.approx(shyvana._W_SHIELD_DURATION_SECONDS)
         )
+
+
+class TestBatch21RootedConstants:
+    """Batch 21: Singed, Thresh, Twitch, Yunara, Zaahen and Ziggs constants
+    resolve from their binaries."""
+
+    def test_singed(self):
+        import src.calculator.champions.singed as singed
+
+        assert data_value(
+            spell_object("Singed", "InsanityPotion"), "Duration"
+        ) == pytest.approx(singed._R_DURATION_SECONDS)
+
+    def test_thresh(self):
+        import src.calculator.champions.thresh as thresh
+
+        assert data_value(
+            spell_object("Thresh", "ThreshPassiveSouls"), "StatValuePerSoul"
+        ) == pytest.approx(thresh._AP_PER_SOUL)
+        assert thresh._ARMOR_PER_SOUL == pytest.approx(thresh._AP_PER_SOUL)
+
+    def test_twitch(self):
+        import src.calculator.champions.twitch as twitch
+
+        marker = spell_object("Twitch", "TwitchDeadlyVenomMarker")
+        assert data_value(marker, "Duration") == pytest.approx(twitch._POISON_DURATION)
+        assert data_value(marker, "APRatio") * twitch._POISON_DURATION == pytest.approx(
+            twitch._POISON_AP_RATIO
+        )
+        assert data_value(
+            spell_object("Twitch", "TwitchExpunge"), "APRatioPerStack"
+        ) == pytest.approx(twitch._E_MAGIC_AP_RATIO)
+
+    def test_yunara(self):
+        import src.calculator.champions.yunara as yunara
+
+        r = spell_object("Yunara", "YunaraR")
+        assert data_value(r, "RW_ADRatio") == pytest.approx(
+            yunara._R_ARC_OF_RUIN_BONUS_AD_RATIO
+        )
+        assert data_value(r, "RW_APRatio") == pytest.approx(
+            yunara._R_ARC_OF_RUIN_AP_RATIO
+        )
+
+    def test_zaahen(self):
+        assert data_value(
+            spell_object("Zaahen", "ZaahenPassive"), "MaxStacks"
+        ) == pytest.approx(12)
+
+    def test_ziggs(self):
+        import src.calculator.champions.ziggs as ziggs
+
+        assert data_value(
+            spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio"
+        ) == pytest.approx(ziggs.SHORT_FUSE_AP_RATIO)

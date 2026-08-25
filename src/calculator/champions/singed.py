@@ -38,13 +38,14 @@ from .slotlib import (
     extract_value,
 )
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "d6e04f1cd92d4f7ddd569c7ba4bb306cdd06c18e230c7ed2a57ef89ba45b3c9c"
 
-# HARDCODED: verify on patch updates — Insanity Potion's window is cached
-# R prose ("empowers himself for 25 seconds"); the magnitude is the
-# JSON's one "Bonus Stats" row, shared by every stat the cast grants.
-_R_DURATION_SECONDS = 25.0
+# Rooted in Singed.InsanityPotion.Duration; the cached R prose corroborates
+# the 25-second window. The magnitude remains the JSON's shared Bonus Stats
+# row.
+_R_DURATION_SECONDS = data_value(spell_object("Singed", "InsanityPotion"), "Duration")
 
 # The one "Bonus Stats" row grants the same flat number to four stats at
 # once.  Three of them have a consumer here: ability power (Q's poison
