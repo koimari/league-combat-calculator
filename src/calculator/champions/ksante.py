@@ -17,11 +17,12 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option, int_option
+from ..binary_roots import data_value, spell_object
 
-# HARDCODED: verify on patch updates — All Out's omnivamp is prose in the
-# cached R fourth effect: "he gains bonus attack speed, 50% bonus-armor
-# penetration, and 20% omnivamp" (no leveling row; flat at every R rank).
-_ALLOUT_OMNIVAMP_PERCENT = 20.0
+# Rooted in KSanteR.Omnivamp; the cached R prose corroborates the 20% value.
+_ALLOUT_OMNIVAMP_PERCENT = (
+    data_value(spell_object("K'Sante", "KSanteR"), "Omnivamp") * 100.0
+)
 
 
 def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:

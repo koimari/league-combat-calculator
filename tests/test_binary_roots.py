@@ -814,3 +814,33 @@ class TestBatch18RootedConstants:
         assert data_value(
             spell_object("Briar", "BriarR"), "ResistADRatio"
         ) == pytest.approx(briar.R_RESIST_PER_TOTAL_AD)
+
+
+class TestBatch19RootedConstants:
+    """Batch 19: Jarvan IV, K'Sante and Malzahar constants resolve from
+    their binaries."""
+
+    def test_jarvan_iv(self):
+        import src.calculator.champions.jarvan_iv as jarvan
+
+        p = spell_object("Jarvan IV", "JarvanIVMartialCadence")
+        assert data_value(p, "TooltipCurrentHealthDamage") * 100.0 == pytest.approx(
+            jarvan.PASSIVE_CURRENT_HP_PERCENT
+        )
+        assert data_value(p, "MinimumCadenceDamage") == pytest.approx(
+            jarvan.PASSIVE_MIN_DAMAGE
+        )
+
+    def test_ksante(self):
+        import src.calculator.champions.ksante as ksante
+
+        assert data_value(spell_object("K'Sante", "KSanteR"), "Omnivamp") * 100.0 == (
+            pytest.approx(ksante._ALLOUT_OMNIVAMP_PERCENT)
+        )
+
+    def test_malzahar(self):
+        import src.calculator.champions.malzahar as malzahar
+
+        assert data_value(spell_object("Malzahar", "MalzaharW"), "SummonDelay") == (
+            pytest.approx(malzahar._VOIDLING_SUMMON_DELAY)
+        )

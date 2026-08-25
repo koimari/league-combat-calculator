@@ -63,6 +63,7 @@ from .slotlib import (
     with_control,
 )
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 # E: 16 ticks over 4s (every 0.25s); R: 10 ticks over 2.5s (every 0.25s).
 _E_TICKS = 16
@@ -81,7 +82,9 @@ _R_TICK_INTERVAL = _R_DURATION / _R_TICKS  # "every 0.25 seconds"
 # from the champion JSON ("Magic Damage" leveling entry).
 _VOIDLING_AS_BASE = 0.665
 _VOIDLING_AS_GROWTH = 0.02
-_VOIDLING_SUMMON_DELAY = 0.5
+_VOIDLING_SUMMON_DELAY = data_value(
+    spell_object("Malzahar", "MalzaharW"), "SummonDelay"
+)
 _VOIDLING_SUMMON_STAGGER = 0.5
 _VOIDLING_DEFAULT_WINDOW = 5.0  # one rotation; timed fights pass the real window
 _VOIDLING_MAX_ATTACKS_PER_UNIT = 40
