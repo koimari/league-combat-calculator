@@ -1022,3 +1022,50 @@ class TestBatch24RootedConstants:
         assert data_value(
             spell_object("LeBlanc", "LeblancE"), "TetherDuration"
         ) == pytest.approx(leblanc._E_TETHER_SECONDS)
+
+
+class TestBatch25RootedConstants:
+    """Batch 25 constants resolve from their champion binaries."""
+
+    def test_lulu(self):
+        import src.calculator.champions.lulu as lulu
+
+        assert data_value(spell_object("Lulu", "LuluR"), "BuffDuration") == (
+            pytest.approx(lulu._R_DURATION_SECONDS)
+        )
+
+    def test_morgana(self):
+        import src.calculator.champions.morgana as morgana
+
+        w = spell_object("Morgana", "MorganaW")
+        assert data_value(w, "TickRate") == pytest.approx(morgana._W_TICK_INTERVAL)
+        assert data_value(w, "WDuration") == pytest.approx(morgana._W_DURATION)
+        assert morgana._W_TICKS == int(morgana._W_DURATION / morgana._W_TICK_INTERVAL)
+        assert data_value(
+            spell_object("Morgana", "MorganaR"), "ChainDuration"
+        ) == pytest.approx(morgana._R_TETHER_SECONDS)
+
+    def test_mordekaiser(self):
+        import src.calculator.champions.mordekaiser as mordekaiser
+
+        assert data_value(
+            spell_object("Mordekaiser", "MordekaiserE"), "DelayBeforeMovement"
+        ) == pytest.approx(mordekaiser._E_CLAW_SECONDS)
+
+    def test_rumble(self):
+        import src.calculator.champions.rumble as rumble
+
+        assert data_value(
+            spell_object("Rumble", "RumbleFlameThrower"), "TickRate"
+        ) == pytest.approx(rumble._Q_TICK_INTERVAL)
+
+    def test_talon(self):
+        import src.calculator.champions.talon as talon
+
+        passive = spell_object("Talon", "TalonPassive")
+        assert data_value(passive, "BonusADRatio") == pytest.approx(
+            talon._P_BLEED_BONUS_AD_RATIO
+        )
+        assert data_value(passive, "BleedDuration") == pytest.approx(
+            talon._P_BLEED_DURATION
+        )
