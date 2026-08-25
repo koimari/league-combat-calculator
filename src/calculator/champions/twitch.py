@@ -107,10 +107,14 @@ from .module_contract import coverage
 _POISON_MAX_STACKS = int(
     data_value(spell_object("Twitch", "TwitchDeadlyVenomMarker"), "MaxStacks")
 )
+_TWITCH_POISON_MARKER = spell_object("Twitch", "TwitchDeadlyVenomMarker")
+_POISON_DURATION = data_value(_TWITCH_POISON_MARKER, "Duration")
 _POISON_TOTAL_BREAKPOINTS = (6.0, 12.0, 18.0, 24.0, 30.0)
 _POISON_BREAKPOINT_LEVELS = (1, 6, 11, 16, 18)
-_POISON_AP_RATIO = 0.18  # (+ 18% AP) total per stack
-_E_MAGIC_AP_RATIO = 0.35  # "and 35% AP magic damage for each stack"
+_POISON_AP_RATIO = data_value(_TWITCH_POISON_MARKER, "APRatio") * _POISON_DURATION
+_E_MAGIC_AP_RATIO = data_value(
+    spell_object("Twitch", "TwitchExpunge"), "APRatioPerStack"
+)  # "and 35% AP magic damage for each stack"
 # HARDCODED: verify on patch updates — the Element of Surprise window is
 # wiki PROSE ("Upon breaking stealth, Twitch gains bonus attack speed for
 # 6 seconds"), with no leveling row and therefore no ability atom.  The
@@ -160,7 +164,7 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
         "proc_count": 1,
         # Every tick is ability damage for 6s past the last application,
         # so item burns stay refreshed through the poison tail.
-        "dot_duration": 6.0,
+        "dot_duration": _POISON_DURATION,
         "dot_tick_interval": 1.0,
         # One sourced event per fight: the poison packet is priced once
         # from the poison_stacks option.  The declared event is placed at

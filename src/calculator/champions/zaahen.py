@@ -38,6 +38,7 @@ from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
+from ..binary_roots import data_value, spell_object
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -59,7 +60,7 @@ _R_SLAM_DELAY_SECONDS = 0.6
 # HARDCODED: verify on patch updates — Determination's 12-stack cap is
 # cached P prose ("stacking up to 12 times"), and the two Per-Level
 # Scaling rows are ordered per-stack first, filled-at-maximum second.
-_P_MAX_STACKS = 12
+_P_MAX_STACKS = int(data_value(spell_object("Zaahen", "ZaahenPassive"), "MaxStacks"))
 _P_PER_STACK_OCCURRENCE = 0
 _P_MAX_STACK_OCCURRENCE = 1
 

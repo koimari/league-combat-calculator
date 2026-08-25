@@ -22,15 +22,16 @@ from .engine import BUFF, SlotCtx
 from .slotlib import ability_name
 from .packet_module import build_packet_module
 from .inputs import int_option
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
 
-# HARDCODED: verify on patch updates — Damnation's per-soul values
-# (1 AP, 1 bonus armor) are wiki prose; the JSON carries no leveling
-# for the passive at all.
-_AP_PER_SOUL = 1.0
-_ARMOR_PER_SOUL = 1.0
+# Rooted in ThreshPassiveSouls.StatValuePerSoul; the cached P prose
+# corroborates one AP and one bonus armor per soul.
+_THRESH_PASSIVE_SOULS = spell_object("Thresh", "ThreshPassiveSouls")
+_AP_PER_SOUL = data_value(_THRESH_PASSIVE_SOULS, "StatValuePerSoul")
+_ARMOR_PER_SOUL = data_value(_THRESH_PASSIVE_SOULS, "StatValuePerSoul")
 _DEFAULT_SOULS = 40
 _MAX_SOULS = 500
 # HARDCODED: verify on patch updates — Dark Passage's shield is an ALLY

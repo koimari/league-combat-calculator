@@ -37,11 +37,12 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
+from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores
 # Short Fuse's per-level base but drops its AP modifier entirely.
 # https://wiki.leagueoflegends.com/en-us/Ziggs (Short Fuse: 50% AP)
-SHORT_FUSE_AP_RATIO = 0.5
+SHORT_FUSE_AP_RATIO = data_value(spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio")
 
 
 def _short_fuse_refund_seconds(ability: dict[str, Any], level: int) -> float:
