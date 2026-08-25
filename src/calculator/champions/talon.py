@@ -31,6 +31,7 @@ from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import ability_name, find_named_leveling, sum_modifiers
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
 # (+ 13.125% bonus AD) physical damage every 0.125 seconds" — 16 ticks
@@ -39,8 +40,9 @@ from .module_contract import coverage
 # prose (the JSON carries only the flat per-level arrays), pinned here
 # with the source cited.
 _P_BLEED_TICKS = 16
-_P_BLEED_BONUS_AD_RATIO = 2.10
-_P_BLEED_DURATION = 2.0  # 16 x 0.125s
+_TALON_PASSIVE_SPELL = spell_object("Talon", "TalonPassive")
+_P_BLEED_BONUS_AD_RATIO = data_value(_TALON_PASSIVE_SPELL, "BonusADRatio")
+_P_BLEED_DURATION = data_value(_TALON_PASSIVE_SPELL, "BleedDuration")
 _P_BLEED_TICK_INTERVAL = 0.125
 
 

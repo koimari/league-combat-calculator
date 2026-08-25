@@ -135,6 +135,7 @@ from .slotlib import (
     simple_damage,
 )
 from .inputs import int_option
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 
@@ -231,7 +232,7 @@ def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
 # (Maximum Magic Damage == 15 x Magic Damage per Tick at every rank), the
 # equality ``_flamespitter_full_channel`` re-checks against the cache.
 _Q_TICKS = 15
-_Q_TICK_INTERVAL = 0.25
+_Q_TICK_INTERVAL = data_value(spell_object("Rumble", "RumbleFlameThrower"), "TickRate")
 
 _flamespitter = simple_damage(attr="Maximum Magic Damage", dmg_type="magic")
 

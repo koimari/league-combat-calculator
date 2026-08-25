@@ -51,17 +51,15 @@ from .slotlib import (
 )
 
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
+from ..binary_roots import data_value, spell_object
 
-# Sourced storm cadence (wiki W): "take magic damage on-cast and every
-# 0.5 seconds thereafter" over the 5-second desecrated area -> 10 ticks
-# of "Maximum Damage Per Tick" == "Maximum Total Damage".
-_W_TICKS = 10
-_W_TICK_INTERVAL = 0.5
-_W_DURATION = 5.0
-# R tether length (wiki R): the second hit lands when the 3-second
-# tether breaks ("If a target does not break their tether by the end of
-# its duration, they are dealt the same magic damage again").
-_R_TETHER_SECONDS = 3.0
+_MORGANA_W_SPELL = spell_object("Morgana", "MorganaW")
+_W_TICK_INTERVAL = data_value(_MORGANA_W_SPELL, "TickRate")
+_W_DURATION = data_value(_MORGANA_W_SPELL, "WDuration")
+_W_TICKS = int(_W_DURATION / _W_TICK_INTERVAL)
+# R tether length, rooted in MorganaR.ChainDuration; the cached R prose
+# corroborates the three-second fracture window.
+_R_TETHER_SECONDS = data_value(spell_object("Morgana", "MorganaR"), "ChainDuration")
 
 
 def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:

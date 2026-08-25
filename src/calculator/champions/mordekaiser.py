@@ -28,6 +28,7 @@ from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import simple_damage
 from .. import healing_helpers as _healing
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
 
@@ -37,7 +38,9 @@ PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d22
 # (data/champions.json Mordekaiser E).  The cached entry attaches no
 # cast-time qualifier to the number, so it is read from the cast start as
 # written.
-_E_CLAW_SECONDS = 0.5
+_E_CLAW_SECONDS = data_value(
+    spell_object("Mordekaiser", "MordekaiserE"), "DelayBeforeMovement"
+)
 
 # R carries no leveling row at all — the drain is one sentence of the
 # cached R prose, so the percentage is read from there rather than pinned

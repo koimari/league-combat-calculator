@@ -55,9 +55,9 @@ from .slotlib import (
 _LULU_P_SPELL = spell_object("Lulu", "LuluPassive")
 _PIX_BOLTS_DEFAULT = int(data_value(_LULU_P_SPELL, "NumberOfBolts"))
 _PIX_BOLT_AP_RATIO = data_value(_LULU_P_SPELL, "APRatioPerHit")
-# Wild Growth's window is cached R prose ("For the next 7 seconds, the
-# target gains bonus health"); W's is the JSON's Effect Duration row.
-_R_DURATION_SECONDS = 7.0
+# Rooted in LuluR.BuffDuration; the cached R prose corroborates the
+# seven-second bonus-health window.
+_R_DURATION_SECONDS = data_value(spell_object("Lulu", "LuluR"), "BuffDuration")
 # The two "herself or an ally" casts name their target the same way.
 _SELF_CAST = "self"
 _ALLY_CAST = "ally"
