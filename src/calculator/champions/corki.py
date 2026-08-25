@@ -70,21 +70,23 @@ _PASSIVE_TRUE_AD_RATIO = 0.20
 # ticks; E: "for 4 seconds ... every 0.25 seconds" -> 16 ticks. Both tick
 # counts are also exactly Total / Per-Tick in the JSON (test-locked).
 # ROOTED IN THE BINARY: CarpetBomb MaximumTicks / TicksPerSecond —
-# the window is the ticks over the rate.  E stays JSON-test-locked.
+# the window is the ticks over the rate.  E uses the same binary seam below.
 _CORKI_W_SPELL = spell_object("Corki", "CarpetBomb")
 _W_TICKS = int(data_value(_CORKI_W_SPELL, "MaximumTicks"))
 _W_DURATION = _W_TICKS / data_value(_CORKI_W_SPELL, "TicksPerSecond")
-_E_TICKS = 16
-_E_DURATION = 4.0
+_CORKI_E_SPELL = spell_object("Corki", "GGun")
+_E_DURATION = data_value(_CORKI_E_SPELL, "SprayDuration")
+_E_TICKS_PER_SECOND = data_value(_CORKI_E_SPELL, "TicksPerSecond")
+_E_TICKS = int(_E_DURATION * _E_TICKS_PER_SECOND)
 # The engine authors per-tick damage events from these sourced cadences.
 _W_TICK_INTERVAL = _W_DURATION / _W_TICKS  # "every 0.5 seconds"
 _E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
 # Each Gatling stack lasts 2s but REFRESHES on every tick, so the
 # shred is up until 2s after the last one ("applying a stack ... for
 # 2 seconds, refreshing with subsequent hits").
-_E_SHRED_LINGER = 2.0
+_E_SHRED_LINGER = data_value(_CORKI_E_SPELL, "ShredDuration")
 # E: "applying a stack ... stacking up to 4 times", one per tick.
-_E_MAX_SHRED_STACKS = 4
+_E_MAX_SHRED_STACKS = int(data_value(_CORKI_E_SPELL, "ShredCap"))
 # R: "up to a maximum of 4" charges; "every third missile ... is a Big
 # One"; basic attacks on-hit against champions cut 2-6s (scaling with
 # critical strike chance) off the remaining recharge.
