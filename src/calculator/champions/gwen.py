@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
@@ -12,6 +13,11 @@ from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .. import healing_helpers as _healing
+
+_GWEN_Q_SPELL = spell_object("Gwen", "GwenQ")
+_GWEN_E_SPELL = spell_object("Gwen", "GwenE")
+_Q_CENTER_TRUE_FRACTION = data_value(_GWEN_Q_SPELL, "TrueDamageConversion")
+_E_BASE_DAMAGE = data_value(_GWEN_E_SPELL, "BaseDamage")
 
 
 def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -114,8 +120,18 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         if center:
             # "The center of each snip converts 50% of the damage to true
             # damage" — the magic half leads, as a mixed entry requires.
-            parts.append(DamagePart("magic", amount * 0.5, time_offset=time_offset))
-            parts.append(DamagePart("true", amount * 0.5, time_offset=time_offset))
+            parts.append(
+                DamagePart(
+                    "magic",
+                    amount * (1.0 - _Q_CENTER_TRUE_FRACTION),
+                    time_offset=time_offset,
+                )
+            )
+            parts.append(
+                DamagePart(
+                    "true", amount * _Q_CENTER_TRUE_FRACTION, time_offset=time_offset
+                )
+            )
         else:
             parts.append(DamagePart("magic", amount, time_offset=time_offset))
     entry["parts"] = tuple(parts)
@@ -145,7 +161,7 @@ def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    bonus = 15.0 + 0.20 * ctx.stat("ability_power")
+    bonus = _E_BASE_DAMAGE + 0.20 * ctx.stat("ability_power")
     entry = damage_entry(
         ability_name(ability),
         rank,

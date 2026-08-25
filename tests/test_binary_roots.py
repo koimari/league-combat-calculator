@@ -1255,3 +1255,32 @@ class TestBatch29RootedConstants:
         )
         assert int(data_value(ultimate, "MinSpheresToUse")) == syndra._R_MIN_SPHERES
         assert int(data_value(ultimate, "MaxSpheresToUse")) == syndra._R_MAX_SPHERES
+
+
+class TestBatch30RootedConstants:
+    """Batch 30 constants resolve from their champion binaries."""
+
+    def test_aurelion_sol(self):
+        import src.calculator.champions.aurelion_sol as aurelion_sol
+
+        assert data_value(
+            spell_object("Aurelion Sol", "AurelionSolE"), "Duration"
+        ) == pytest.approx(aurelion_sol._E_DURATION)
+
+    def test_gwen(self):
+        import src.calculator.champions.gwen as gwen
+
+        assert data_value(
+            spell_object("Gwen", "GwenQ"), "TrueDamageConversion"
+        ) == pytest.approx(gwen._Q_CENTER_TRUE_FRACTION)
+        assert data_value(spell_object("Gwen", "GwenE"), "BaseDamage") == pytest.approx(
+            gwen._E_BASE_DAMAGE
+        )
+
+    def test_neeko(self):
+        import src.calculator.champions.neeko as neeko
+
+        assert data_value(
+            spell_object("Neeko", "NeekoQ"), "RepeatDelay"
+        ) == pytest.approx(neeko._Q_BLOOM_DELAY)
+        assert neeko._Q_BLOOM_DELAY * 2 == pytest.approx(1.5)
