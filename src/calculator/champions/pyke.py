@@ -38,6 +38,7 @@ axis, which the label does not close:
   no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
 """
 
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from ..stat_conversion import BonusHealthConversion
 from .packet_module import build_packet_module
 from .engine import SlotCtx
@@ -64,14 +65,14 @@ MODULE_STAT_CONVERSION = BonusHealthConversion(
 )
 
 
-# The non-execute damage row's scaling, from the wiki prose on R:
-# 50% of the threshold amount -> 40% bonus AD and 0.75 per 1 Lethality.
-_R_DAMAGE_BONUS_AD_RATIO = 0.40
-_R_DAMAGE_PER_LETHALITY = 0.75
-# The execute threshold itself (documented, not priced): 80% bonus AD
-# and 1.5 per 1 Lethality on the 250 : 550 per-level row.
-_R_THRESHOLD_BONUS_AD_RATIO = 0.80
-_R_THRESHOLD_PER_LETHALITY = 1.5
+# The binary owns the execute-threshold coefficients and the 50% reduced row;
+# the non-execute damage terms are their exact product.
+_PYKE_R_SPELL = spell_object("Pyke", "PykeR")
+_R_REDUCED_DAMAGE = data_value(_PYKE_R_SPELL, "ReducedDamage")
+_R_THRESHOLD_BONUS_AD_RATIO = calculation_coefficient(_PYKE_R_SPELL, "RADDamage")
+_R_THRESHOLD_PER_LETHALITY = calculation_coefficient(_PYKE_R_SPELL, "RLethalityDamage")
+_R_DAMAGE_BONUS_AD_RATIO = _R_THRESHOLD_BONUS_AD_RATIO * _R_REDUCED_DAMAGE
+_R_DAMAGE_PER_LETHALITY = _R_THRESHOLD_PER_LETHALITY * _R_REDUCED_DAMAGE
 
 
 def _death_from_below(ctx: SlotCtx):

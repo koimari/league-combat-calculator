@@ -34,19 +34,28 @@ from .slotlib import (
 )
 from .inputs import bool_option, float_option
 from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import (
+    calculation_coefficient,
+    calculation_stat_coefficient,
+    data_value,
+    spell_object,
+)
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
 
 
-# HARDCODED: verify on patch updates — wiki prose on Q: the Mortal Will
-# empowered term is "20 : 265.88 (based on level) (+ 115% bonus AD)"; the
-# per-level flat is the cached Per-Level Scaling row, the AD ratio is
-# prose.  W's "% per 100 Pantheon's bonus health" is a garbled variant of
-# "% per 100 bonus health" (0.4 at every rank).
-_MORTAL_WILL_BONUS_AD_RATIO = 1.15
-_W_BONUS_HEALTH_PER_100 = 0.4
-_W_STUN_SECONDS = data_value(spell_object("Pantheon", "PantheonW"), "StunDuration")
+# The cached prose identifies these terms; the binary owns their numeric
+# coefficients. The W coefficient is stored as a fraction per health point,
+# while the module's public unit is percentage points per 100 bonus health.
+_PANTHEON_Q_SPELL = spell_object("Pantheon", "PantheonQ")
+_PANTHEON_W_SPELL = spell_object("Pantheon", "PantheonW")
+_MORTAL_WILL_BONUS_AD_RATIO = calculation_coefficient(
+    _PANTHEON_Q_SPELL, "EmpoweredDamageCalc"
+)
+_W_BONUS_HEALTH_PER_100 = (
+    calculation_stat_coefficient(_PANTHEON_W_SPELL, "MaxHealthDamageCalc", 12) * 10000.0
+)
+_W_STUN_SECONDS = data_value(_PANTHEON_W_SPELL, "StunDuration")
 
 
 def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
