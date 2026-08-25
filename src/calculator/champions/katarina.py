@@ -32,6 +32,10 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
+
+_KATARINA_R_SPELL = spell_object("Katarina", "KatarinaR")
+_DEATH_LOTUS_DURATION = data_value(_KATARINA_R_SPELL, "Duration")
 
 
 def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -46,7 +50,7 @@ def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
     magic = extract_named(
         ability, "Magic Damage Per Dagger", rank, ctx.stats, ctx.target
     )
-    interval = 2.5 / daggers
+    interval = _DEATH_LOTUS_DURATION / daggers
     return {
         "name": ability_name(ability),
         "rank": rank,

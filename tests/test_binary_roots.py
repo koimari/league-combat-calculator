@@ -1202,3 +1202,56 @@ class TestBatch28RootedConstants:
             shen._Q_ENHANCED_BONUS_ATTACK_SPEED
         )
         assert data_value(e, "DashBonusSpeed") == pytest.approx(shen._E_BASE_SPEED)
+
+
+class TestBatch29RootedConstants:
+    """Batch 29 constants resolve from their champion binaries."""
+
+    def test_amumu(self):
+        import src.calculator.champions.amumu as amumu
+
+        assert data_value(
+            spell_object("Amumu", "AmumuP"), "DamageAmp"
+        ) == pytest.approx(amumu._CURSE_BONUS_FRACTION)
+
+    def test_gangplank(self):
+        import src.calculator.champions.gangplank as gangplank
+
+        assert data_value(
+            spell_object("Gangplank", "GangplankW"), "PercentHeal"
+        ) == pytest.approx(gangplank._W_HEAL_MISSING_HEALTH_PERCENT)
+        assert (
+            int(
+                data_value(spell_object("Gangplank", "GangplankR"), "TotalWavesTooltip")
+            )
+            == 12
+        )
+
+    def test_katarina(self):
+        import src.calculator.champions.katarina as katarina
+
+        assert data_value(
+            spell_object("Katarina", "KatarinaR"), "Duration"
+        ) == pytest.approx(katarina._DEATH_LOTUS_DURATION)
+
+    def test_syndra(self):
+        import src.calculator.champions.syndra as syndra
+
+        passive = spell_object("Syndra", "SyndraPassive")
+        ultimate = spell_object("Syndra", "SyndraR")
+        assert (
+            int(data_value(passive, "Q1UpgradeThreshold"))
+            == syndra.SPLINTERS_Q_SECOND_CHARGE
+        )
+        assert (
+            int(data_value(passive, "WUpgradeThreshold"))
+            == syndra.SPLINTERS_W_TRUE_DAMAGE
+        )
+        assert (
+            int(data_value(passive, "RUpgradeThreshold")) == syndra.SPLINTERS_R_EXECUTE
+        )
+        assert data_value(ultimate, "UpgradeExecuteThreshold") == pytest.approx(
+            syndra.R_EXECUTE_HEALTH_RATIO
+        )
+        assert int(data_value(ultimate, "MinSpheresToUse")) == syndra._R_MIN_SPHERES
+        assert int(data_value(ultimate, "MaxSpheresToUse")) == syndra._R_MAX_SPHERES

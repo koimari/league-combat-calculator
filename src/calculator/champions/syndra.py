@@ -62,6 +62,7 @@ from .inputs import int_option
 # item AP like Rabadon's). The passive JSON carries no trace of it.
 # https://wiki.leagueoflegends.com/en-us/Syndra
 _SYNDRA_P_SPELL = spell_object("Syndra", "SyndraPassive")
+_SYNDRA_R_SPELL = spell_object("Syndra", "SyndraR")
 TRANSCENDENT_AP_MULTIPLIER = data_value(_SYNDRA_P_SPELL, "CapstoneAPPerc")
 
 # HARDCODED: verify on patch updates — W's 60-splinter bonus true damage
@@ -72,20 +73,20 @@ TRANSCENDENT_AP_MULTIPLIER = data_value(_SYNDRA_P_SPELL, "CapstoneAPPerc")
 W_TRUE_RATIO_BASE = 0.12
 W_TRUE_RATIO_PER_100_AP = 0.02
 
-# Splinters of Wrath thresholds (wiki; the 80-stack E upgrade is
-# utility only).  The full-splinter cap is the binary MaxStackAmount.
-SPLINTERS_Q_SECOND_CHARGE = 40
-SPLINTERS_W_TRUE_DAMAGE = 60
-SPLINTERS_R_EXECUTE = 100
+# Splinters of Wrath thresholds (the 80-stack E upgrade is utility only).
+# The full-splinter cap is the binary MaxStackAmount.
+SPLINTERS_Q_SECOND_CHARGE = int(data_value(_SYNDRA_P_SPELL, "Q1UpgradeThreshold"))
+SPLINTERS_W_TRUE_DAMAGE = int(data_value(_SYNDRA_P_SPELL, "WUpgradeThreshold"))
+SPLINTERS_R_EXECUTE = int(data_value(_SYNDRA_P_SPELL, "RUpgradeThreshold"))
 SPLINTERS_FULL = int(data_value(_SYNDRA_P_SPELL, "MaxStackAmount"))
 _MAX_SPLINTERS = SPLINTERS_FULL
 
-R_EXECUTE_HEALTH_RATIO = 0.15
+R_EXECUTE_HEALTH_RATIO = data_value(_SYNDRA_R_SPELL, "UpgradeExecuteThreshold")
 
 _DEFAULT_SPLINTERS = 120
-_R_MIN_SPHERES = 3  # R always fires 3 of its own
-_R_MAX_SPHERES = 7  # plus up to 4 Dark Spheres already on the field
-_DEFAULT_R_SPHERES = 3
+_R_MIN_SPHERES = int(data_value(_SYNDRA_R_SPELL, "MinSpheresToUse"))
+_R_MAX_SPHERES = int(data_value(_SYNDRA_R_SPELL, "MaxSpheresToUse"))
+_DEFAULT_R_SPHERES = _R_MIN_SPHERES
 
 
 def _splinters(ctx: SlotCtx) -> int:

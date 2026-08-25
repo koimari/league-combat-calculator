@@ -12,6 +12,10 @@ from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
+from ..binary_roots import data_value, spell_object
+
+_GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
+_GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
 
 
 def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -82,8 +86,8 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
 # rides the Slice 4 item-cleanse kernel via one kind="cleanse" packet
 # per W cast.  W stays OUT of outgoing damage.
 _W_HEAL_FLAT = (45.0, 70.0, 95.0, 120.0, 145.0)
-_W_HEAL_AP_PERCENT = 90.0
-_W_HEAL_MISSING_HEALTH_PERCENT = 13.0
+_W_HEAL_AP_PERCENT = 90.0  # binary calculation coefficient; no direct DataValue
+_W_HEAL_MISSING_HEALTH_PERCENT = data_value(_GANGPLANK_W_SPELL, "PercentHeal")
 _W_COOLDOWN = (22.0, 20.0, 18.0, 16.0, 14.0)
 _W_COST = (60.0, 70.0, 80.0, 90.0, 100.0)
 _W_EXCLUDED_CONTROL_KINDS = ("airborne", "knockback", "knockup")
@@ -215,7 +219,9 @@ def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     ability, rank = ranked
     fire_at_will = bool(ctx.option("r_fire_at_will"))
     deaths_daughter = bool(ctx.option("r_deaths_daughter"))
-    waves = 18 if fire_at_will else 12
+    waves = (
+        18 if fire_at_will else int(data_value(_GANGPLANK_R_SPELL, "TotalWavesTooltip"))
+    )
     magic_attr = "Magic Damage Per Wave"
     per_wave = extract_named(ability, magic_attr, rank, ctx.stats, ctx.target)
     total = per_wave * waves

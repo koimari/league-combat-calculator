@@ -39,8 +39,10 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import bool_option, float_option
+from ..binary_roots import data_value, spell_object
 
-_CURSE_BONUS_FRACTION = 0.10  # 10% bonus true damage on magic damage
+_AMUMU_P_SPELL = spell_object("Amumu", "AmumuP")
+_CURSE_BONUS_FRACTION = data_value(_AMUMU_P_SPELL, "DamageAmp")
 _W_TICK_SECONDS = 0.5  # Despair "deal[s] magic damage every 0.5 seconds"
 
 
