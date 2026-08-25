@@ -35,14 +35,16 @@ from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import STEROID_ZERO, ability_name, damage_entry
 from .. import healing_helpers as _healing
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
 
-# HARDCODED: verify on patch updates — the per-fragment health is cached
-# P prose ("For each stack, Swain gains 15 bonus health permanently");
-# the passive carries no leveling row, and the cache states no cap, so
-# the option's ceiling is the module's declared input bound.
-_P_HEALTH_PER_FRAGMENT = 15.0
+# Rooted in SwainPassive.HealthIncrement; the passive carries no leveling row,
+# and the cache states no cap, so the option's ceiling remains the module's
+# declared input bound.
+_P_HEALTH_PER_FRAGMENT = data_value(
+    spell_object("Swain", "SwainPassive"), "HealthIncrement"
+)
 _P_MAX_FRAGMENTS = 30
 
 

@@ -57,20 +57,25 @@ from .slotlib import (
 )
 from .inputs import int_option
 from .module_contract import coverage
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "384ce3a01847e53d1b8cdaaa0d444174ecfba6cfb31d913a020a45fab7d189fa"
 
 
+# Rooted in RenataPassive.APToPercentRatio, converted from the binary's
+# fraction-per-AP representation to the module's percentage-per-100-AP unit.
+# The cached P prose corroborates the resulting 2% per 100 AP.
 # HARDCODED: verify on patch updates — wiki prose on P: the on-hit bonus
 # is "+ 2% per 100 AP" of the target's maximum health; the per-level base
 # is the cached Per-Level Scaling row (1% : 2%).
-_P_AP_RATIO_PER_100 = 2.0
+_RENATA_P_SPELL = spell_object("Renata", "RenataPassive")
+_P_AP_RATIO_PER_100 = data_value(_RENATA_P_SPELL, "APToPercentRatio") * 10000.0
 # E shield duration (cached E description: "granted a shield for 3
 # seconds").
-_E_SHIELD_DURATION = 3.0
+_E_SHIELD_DURATION = data_value(spell_object("Renata", "RenataE"), "ShieldDuration")
 # Bailout's window is cached W prose ("infuses ... for 5 seconds"); both
 # ends of its ramp are JSON leveling rows.
-_W_DURATION_SECONDS = 5.0
+_W_DURATION_SECONDS = data_value(spell_object("Renata", "RenataW"), "Duration")
 _W_SELF_CAST = "self"
 _W_ALLY_CAST = "ally"
 

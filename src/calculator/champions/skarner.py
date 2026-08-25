@@ -31,15 +31,16 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1f62c9ad3216116b491935d3b92ff91949b3bea5a6a7381af05e7b6cfcbf5577"
 
 
-# HARDCODED: verify on patch updates — wiki prose, not in the JSON
-# leveling rows.  Seismic Bastion's shield: "shielding himself equal to
-# 8% of his maximum health for 2.5 seconds" (cached W description).
-_W_SHIELD_MAX_HEALTH_RATIO = 0.08
-_W_SHIELD_DURATION = 2.5
+# Rooted in SkarnerW.InitialShieldRatio / ShieldDuration; the cached W
+# description corroborates the 8%-maximum-health shield over 2.5 seconds.
+_SKARNER_W_SPELL = spell_object("Skarner", "SkarnerW")
+_W_SHIELD_MAX_HEALTH_RATIO = data_value(_SKARNER_W_SPELL, "InitialShieldRatio")
+_W_SHIELD_DURATION = data_value(_SKARNER_W_SPELL, "ShieldDuration")
 
 
 def _seismic_bastion(ctx: SlotCtx):

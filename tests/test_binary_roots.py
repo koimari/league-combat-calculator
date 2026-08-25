@@ -701,3 +701,49 @@ class TestBatch16RootedConstants:
         w = spell_object("Corki", "CarpetBomb")
         assert data_value(w, "MaximumTicks") == corki._W_TICKS
         assert corki._W_DURATION == pytest.approx(2.5)
+
+
+class TestBatch17RootedConstants:
+    """Batch 17: Swain, Skarner, Smolder and Renata constants resolve from
+    their binaries."""
+
+    def test_swain(self):
+        import src.calculator.champions.swain as swain
+
+        assert data_value(
+            spell_object("Swain", "SwainPassive"), "HealthIncrement"
+        ) == pytest.approx(swain._P_HEALTH_PER_FRAGMENT)
+
+    def test_skarner(self):
+        import src.calculator.champions.skarner as skarner
+
+        w = spell_object("Skarner", "SkarnerW")
+        assert data_value(w, "InitialShieldRatio") == pytest.approx(
+            skarner._W_SHIELD_MAX_HEALTH_RATIO
+        )
+        assert data_value(w, "ShieldDuration") == pytest.approx(
+            skarner._W_SHIELD_DURATION
+        )
+
+    def test_smolder(self):
+        import src.calculator.champions.smolder as smolder
+
+        q = spell_object("Smolder", "SmolderQ")
+        assert data_value(q, "StackTier3") == smolder._TIER3_STACKS
+        assert data_value(q, "Tier3_DotLength") == pytest.approx(smolder._BURN_DURATION)
+        assert data_value(q, "Tier3_Burn_Stack_Mult") * 10000.0 == pytest.approx(
+            smolder._BURN_STACKS_PER_100
+        )
+
+    def test_renata(self):
+        import src.calculator.champions.renata_glasc as renata
+
+        assert data_value(
+            spell_object("Renata", "RenataPassive"), "APToPercentRatio"
+        ) * 10000.0 == pytest.approx(renata._P_AP_RATIO_PER_100)
+        assert data_value(
+            spell_object("Renata", "RenataE"), "ShieldDuration"
+        ) == pytest.approx(renata._E_SHIELD_DURATION)
+        assert data_value(
+            spell_object("Renata", "RenataW"), "Duration"
+        ) == pytest.approx(renata._W_DURATION_SECONDS)
