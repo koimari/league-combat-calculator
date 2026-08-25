@@ -978,3 +978,47 @@ class TestBatch23RootedConstants:
         assert calculation_coefficients(passive, "PassiveAoEDamage") == pytest.approx(
             (sylas._SECONDARY_TOTAL_AD_RATIO, sylas._SECONDARY_AP_RATIO)
         )
+
+
+class TestBatch24RootedConstants:
+    """Batch 24: Jinx, Karthus, Kled, Kog'Maw and LeBlanc constants resolve
+    from their binaries."""
+
+    def test_jinx(self):
+        import src.calculator.champions.jinx as jinx
+
+        assert data_value(spell_object("Jinx", "JinxE"), "GrenadeArmTime") == (
+            pytest.approx(jinx._E_ARMING_SECONDS)
+        )
+
+    def test_karthus(self):
+        import src.calculator.champions.karthus as karthus
+
+        w = spell_object("Karthus", "KarthusWallOfPain")
+        assert data_value(w, "MagicResistShred") == pytest.approx(
+            karthus._W_MR_REDUCTION_PERCENT
+        )
+        assert data_value(w, "DebuffDuration") == pytest.approx(
+            karthus._W_DEBUFF_DURATION
+        )
+
+    def test_kled(self):
+        import src.calculator.champions.kled as kled
+
+        assert data_value(spell_object("Kled", "KledQ"), "TetherPopTime") == (
+            pytest.approx(kled._Q_TETHER_SECONDS)
+        )
+
+    def test_kogmaw(self):
+        import src.calculator.champions.kogmaw as kogmaw
+
+        assert data_value(spell_object("Kog'Maw", "KogMawQ"), "ShredDuration") == (
+            pytest.approx(kogmaw.Q_SHRED_DURATION)
+        )
+
+    def test_leblanc(self):
+        import src.calculator.champions.leblanc as leblanc
+
+        assert data_value(
+            spell_object("LeBlanc", "LeblancE"), "TetherDuration"
+        ) == pytest.approx(leblanc._E_TETHER_SECONDS)

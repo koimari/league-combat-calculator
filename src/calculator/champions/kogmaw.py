@@ -50,10 +50,11 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 from .inputs import bool_option
+from ..binary_roots import data_value, spell_object
 
 # Caustic Spittle's shred lasts 4s ("reduces their armor and magic
 # resistance for 4 seconds") — it is not permanent.
-Q_SHRED_DURATION = 4.0
+Q_SHRED_DURATION = data_value(spell_object("Kog'Maw", "KogMawQ"), "ShredDuration")
 
 
 def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:

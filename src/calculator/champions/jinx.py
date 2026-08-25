@@ -12,6 +12,7 @@ from .engine import BUFF, SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_value
 from .inputs import int_option
+from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
 
@@ -23,7 +24,7 @@ PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55caf
 # explosion is the contact one, so the earliest instant this row's damage
 # can land is the arming time — the 5-second figure is the untouched
 # timeout, not the champion case.
-_E_ARMING_SECONDS = 0.5
+_E_ARMING_SECONDS = data_value(spell_object("Jinx", "JinxE"), "GrenadeArmTime")
 
 
 def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
