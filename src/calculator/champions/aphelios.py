@@ -51,7 +51,7 @@ from .slotlib import (
     extract_value,
 )
 from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 
 PACKET_SHA256 = "8a0a5d9fa966d29c754a5e4bc8ca56d541a843bb2af95c3266438556aebf499c"
 
@@ -130,7 +130,10 @@ def _main_weapon(ctx: SlotCtx) -> str:
 #             already deals, so the branch prices the difference on the same
 #             swing, at the crit effectiveness a basic attack has.
 _CALIBRUM_MARK_FLAT = 15.0
-_CALIBRUM_MARK_BONUS_AD_RATIO = 0.15
+_APHELIOS_CALIBRUM_Q_SPELL = spell_object("Aphelios", "ApheliosCalibrumQ")
+_CALIBRUM_MARK_BONUS_AD_RATIO = calculation_coefficient(
+    _APHELIOS_CALIBRUM_Q_SPELL, "BonusDamagePerMark"
+)
 _INFERNUM_PRIMARY_AD_RATIO = data_value(
     spell_object("Aphelios", "ApheliosInfernumQ"), "InfernumDamageMultiplier"
 )

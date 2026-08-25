@@ -78,7 +78,12 @@ from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
-from ..binary_roots import calculation_breakpoints, data_value, spell_object
+from ..binary_roots import (
+    calculation_breakpoints,
+    calculation_coefficient,
+    data_value,
+    spell_object,
+)
 from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .module_helpers import no_damage
@@ -100,19 +105,19 @@ from .module_contract import coverage
 # Damage / RangedFormShred), read as cumulative tier tuples; the tooltip
 # prose corroborates them.  Both R entries have empty ``leveling``
 # arrays, so this node is their only numeric home.  The two bonus-AD
-# ratios ride StatByCoefficient parts of the same nodes and stay
-# prose-cited (0.075 / 0.30).
+# ratios also live in the stance binary (the Resists coefficient and
+# the ADRatio DataValue).
 _JAYCE_STANCE_SPELL = spell_object("Jayce", "JayceStanceHtG")
 TRANSFORM_BREAKPOINTS = (6, 11, 16)
 HAMMER_BONUS_RESISTS = calculation_breakpoints(_JAYCE_STANCE_SPELL, "Resists")
-HAMMER_RESISTS_BONUS_AD_RATIO = 0.075
+HAMMER_RESISTS_BONUS_AD_RATIO = calculation_coefficient(_JAYCE_STANCE_SPELL, "Resists")
 HAMMER_EMPOWERED_AUTO_DAMAGE = calculation_breakpoints(_JAYCE_STANCE_SPELL, "Damage")
-HAMMER_EMPOWERED_AUTO_BONUS_AD_RATIO = 0.30
+HAMMER_EMPOWERED_AUTO_BONUS_AD_RATIO = data_value(_JAYCE_STANCE_SPELL, "ADRatio")
 CANNON_SHRED_PERCENT = tuple(
     value * 100.0
     for value in calculation_breakpoints(_JAYCE_STANCE_SPELL, "RangedFormShred")
 )
-CANNON_SHRED_DURATION = 5.0
+CANNON_SHRED_DURATION = data_value(_JAYCE_STANCE_SPELL, "ShredDuration")
 
 # Hyper Charge's steroid and attack count are binary DataValues
 # (JayceHyperCharge.PercentIncreasedAS = 3.6 i.e. +360% flat at all ranks;
@@ -123,9 +128,10 @@ HYPER_CHARGE_BONUS_ATTACK_SPEED = (
 )
 HYPER_CHARGE_ATTACKS = int(data_value(_JAYCE_HC_SPELL, "NumAttacks"))
 
-# Lightning Field ticks once a second for 4 seconds (wiki prose; the
-# JSON's per-tick line is exactly a quarter of the total it reads).
-LIGHTNING_FIELD_DURATION = 4.0
+# Lightning Field ticks once a second for the binary Duration; the
+# JSON's per-tick line is exactly a quarter of the total it reads.
+_JAYCE_STATIC_FIELD_SPELL = spell_object("Jayce", "JayceStaticField")
+LIGHTNING_FIELD_DURATION = data_value(_JAYCE_STATIC_FIELD_SPELL, "Duration")
 
 # R is never leveled: it is permanently rank 1.
 _TRANSFORM_RANK = 1
