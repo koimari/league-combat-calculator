@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value_at_rank, spell_object
+from ..binary_roots import calculation_coefficient, data_value_at_rank, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
@@ -84,7 +84,7 @@ _IVERN_R_SPELL = spell_object("Ivern", "IvernR")
 _DAISY_AD_BY_RANK = tuple(
     data_value_at_rank(_IVERN_R_SPELL, "DaisyAD", rank) for rank in range(1, 4)
 )
-_DAISY_AD_AP_RATIO = 0.15
+_DAISY_AD_AP_RATIO = calculation_coefficient(_IVERN_R_SPELL, "TotalDaisyAD")
 _DAISY_AS_BONUS_BY_RANK = tuple(
     data_value_at_rank(_IVERN_R_SPELL, "DaisyAS", rank) / 100.0 for rank in range(1, 4)
 )
@@ -93,7 +93,7 @@ _DAISY_SMASH_BY_RANK = tuple(
     data_value_at_rank(_IVERN_R_SPELL, "ShockwaveBaseDamage", rank)
     for rank in range(1, 4)
 )
-_DAISY_SMASH_AP_RATIO = 0.50
+_DAISY_SMASH_AP_RATIO = calculation_coefficient(_IVERN_R_SPELL, "TotalShockwaveDamage")
 
 
 def _daisy(ctx: SlotCtx) -> dict[str, Any] | None:

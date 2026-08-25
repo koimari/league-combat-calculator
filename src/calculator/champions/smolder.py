@@ -51,7 +51,7 @@ from .slotlib import ability_name, with_item_on_hits
 from .. import healing_helpers as _healing
 from .inputs import int_option
 from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
@@ -59,11 +59,13 @@ PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d2
 # HARDCODED: verify on patch updates — wiki prose on Q: "increased by
 # 0% : 75% (+ 0% : 22.5%) (based on critical strike chance)" -> the
 # damage multiplier is 1 + (0.75 + 0.225) x crit_chance.  The tier-3 burn
-# is 2.5% per 100 bonus AD (+ 0.5% per 100 Dragon Practice stacks) of the
-# target's maximum health over 3 seconds (cached Q description prose).
+# ratio is rooted in the Q binary below; its stack rider and duration remain
+# sourced from the binary/cache rows.
 _Q_CRIT_INCREASE_PER_CRIT = 0.975
-_BURN_BONUS_AD_PER_100 = 2.5
 _SMOLDER_Q_SPELL = spell_object("Smolder", "SmolderQ")
+_BURN_BONUS_AD_PER_100 = (
+    calculation_coefficient(_SMOLDER_Q_SPELL, "Tier3_Burn") * 10000.0
+)
 _BURN_STACKS_PER_100 = data_value(_SMOLDER_Q_SPELL, "Tier3_Burn_Stack_Mult") * 10000.0
 _TIER3_STACKS = int(data_value(_SMOLDER_Q_SPELL, "StackTier3"))
 _BURN_DURATION = data_value(_SMOLDER_Q_SPELL, "Tier3_DotLength")
