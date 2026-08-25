@@ -1412,3 +1412,18 @@ class TestBatch38RootedDianaConstants:
 
         spell = spell_object("Diana", "DianaR")
         assert data_value(spell, "Delay") == pytest.approx(diana._R_BEAM_SECONDS)
+
+
+class TestBatch39RootedYorickConstants:
+    """Batch 39 roots Yorick's Maiden rank bases."""
+
+    def test_yorick(self):
+        import src.calculator.champions.yorick as yorick
+
+        spell = spell_object("Yorick", "YorickR")
+        assert yorick._MAIDEN_BASE_BY_RANK == pytest.approx(
+            tuple(
+                data_value_at_rank(spell, "RBigGhoulBonusAD", rank)
+                for rank in range(1, 4)
+            )
+        )
