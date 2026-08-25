@@ -108,24 +108,22 @@ from .packet_module import build_packet_module
 from .inputs import int_option
 from .module_contract import coverage
 from .slotlib import ability_name
+from ..binary_roots import calculation_coefficients, spell_object
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 
-# HARDCODED: verify on patch updates — the Petricite Burst ratios exist
-# ONLY in the cached description prose. Every ``leveling`` array on
-# Sylas' P entry is empty, so nothing in the JSON carries them; the
-# binary ``SylasPassive`` record is the corroborating source
-# (``PassiveDamage`` / ``PassiveAoEDamage``), and the tests re-derive
-# these four numbers from it rather than trusting the constants.
-# https://wiki.leagueoflegends.com/en-us/Sylas
-_PRIMARY_TOTAL_AD_RATIO = 1.30
-_PRIMARY_AP_RATIO = 0.30
-# Withheld (secondary targets are outside the 1v1 surface) but kept here
-# so the withholding is a named, testable constant rather than silence.
-_SECONDARY_TOTAL_AD_RATIO = 0.40
-_SECONDARY_AP_RATIO = 0.20
+_SYLAS_PASSIVE_SPELL = spell_object("Sylas", "SylasPassive")
+_PRIMARY_COEFFICIENTS = calculation_coefficients(_SYLAS_PASSIVE_SPELL, "PassiveDamage")
+_SECONDARY_COEFFICIENTS = calculation_coefficients(
+    _SYLAS_PASSIVE_SPELL, "PassiveAoEDamage"
+)
+_PRIMARY_TOTAL_AD_RATIO = _PRIMARY_COEFFICIENTS[0]
+_PRIMARY_AP_RATIO = _PRIMARY_COEFFICIENTS[1]
+_SECONDARY_TOTAL_AD_RATIO = _SECONDARY_COEFFICIENTS[0]
+_SECONDARY_AP_RATIO = _SECONDARY_COEFFICIENTS[1]
 # Sourced cap on held Unshackled stacks: "stacking up to 3 times"
-# (cached P effect 0), corroborated by the binary's ``PassiveCharges``.
+# (cached P effect 0). The binary's ``PassiveCharges=2`` is not the gameplay
+# cap itself, so it remains a documented non-rooted boundary.
 _MAX_UNSHACKLED_STACKS = 3
 
 

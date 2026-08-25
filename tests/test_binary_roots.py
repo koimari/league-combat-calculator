@@ -12,6 +12,7 @@ import pytest
 from src.calculator.binary_roots import (
     _BIN_DIR,
     calculation_breakpoints,
+    calculation_coefficients,
     champion_key,
     character_bin,
     character_record_root,
@@ -961,4 +962,19 @@ class TestBatch22RootedConstants:
 
         assert data_value(spell_object("Xayah", "XayahPassive"), "PStackMax") == (
             xayah._CLEAN_CUTS_MAX_STACKS
+        )
+
+
+class TestBatch23RootedConstants:
+    """Batch 23: Sylas passive ratios resolve from spell calculations."""
+
+    def test_sylas(self):
+        import src.calculator.champions.sylas as sylas
+
+        passive = spell_object("Sylas", "SylasPassive")
+        assert calculation_coefficients(passive, "PassiveDamage") == pytest.approx(
+            (sylas._PRIMARY_TOTAL_AD_RATIO, sylas._PRIMARY_AP_RATIO)
+        )
+        assert calculation_coefficients(passive, "PassiveAoEDamage") == pytest.approx(
+            (sylas._SECONDARY_TOTAL_AD_RATIO, sylas._SECONDARY_AP_RATIO)
         )
