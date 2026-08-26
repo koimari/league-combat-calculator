@@ -2049,7 +2049,17 @@ def _cleanse_action_view(
         target=target_id,
         holder=holder_id,
         cleanse_group=action.cleanse_group,
-        active_controls=list(state["crowd_control_intervals"]),
+        # Mid-fight Time Stop is an action-downtime interval rather than a
+        # crowd-control interval, but QSS/Mercurial's castability contract
+        # explicitly blocks self-casts during stasis.
+        active_controls=[
+            *state["crowd_control_intervals"],
+            *[
+                interval
+                for interval in state["action_downtime_intervals"]
+                if interval.get("kind") == "stasis"
+            ],
+        ],
     )
 
 
