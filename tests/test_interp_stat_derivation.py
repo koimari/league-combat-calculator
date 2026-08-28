@@ -678,6 +678,22 @@ def test_the_slay_declaration_is_what_the_engines_omnivamp_accessor_pays() -> No
     ) == pytest.approx(slot.value("cap"))
 
 
+def test_immortal_path_uses_the_same_typed_slay_contract() -> None:
+    """Immortal Path's secondary Slay mechanic uses the canonical schema."""
+    slot = _slot("Immortal Path", StackedStatRule)
+    assert slot.granted is DerivedStat.OMNIVAMP_PERCENT
+    assert slot.availability is StatAvailability.BUILD_OPTION
+    per_stack = item_effects.required_effect_value(
+        "Immortal Path", "slay_omnivamp_per_takedown"
+    )
+    max_stacks = item_effects.required_effect_value("Immortal Path", "slay_max_stacks")
+    cap = item_effects.required_effect_value("Immortal Path", "slay_max_omnivamp")
+    assert slot.value("per_stack") == pytest.approx(per_stack)
+    assert slot.value("max_stacks") == pytest.approx(max_stacks)
+    assert slot.value("cap") == pytest.approx(cap)
+    assert cap == pytest.approx(per_stack * max_stacks)
+
+
 def test_every_registry_entry_compiles_at_least_one_rule() -> None:
     """Counter 3, as a test rather than as a receipt (issue #211).
 

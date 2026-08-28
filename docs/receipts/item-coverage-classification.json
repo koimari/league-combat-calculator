@@ -4,7 +4,7 @@
       "attacker": "src.calculator.item_coverage.item_model_coverage",
       "target": "src.calculator.item_coverage.target_item_model_coverage"
     },
-    "git_head": "d665e6df3aa117016ba73dee79019314f3748c45",
+    "git_head": "c38f9c08d5d68abcb7d3eb4efafd85a91c959778",
     "item_count": 324,
     "items_fetched_at": 1787268672.008812,
     "lanes": [
@@ -1458,7 +1458,7 @@
         "name": "Immortal Path",
         "optimizer_eligible": true,
         "outcome_dimensions": [],
-        "reason": "Below Half Healing, Whole Total Amp is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
+        "reason": "Below Half Healing, Omnivamp Percent Per Stack, Whole Total Amp is supplied through an explicit bounded scenario control, and its declared behaviour reads it.",
         "review_issue_refs": [],
         "status": "modeled_state"
       },

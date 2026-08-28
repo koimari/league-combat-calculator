@@ -469,7 +469,11 @@ def test_one_entry_declares_both_halves_of_a_health_state_passive() -> None:
     asserted, not just the count.
     """
     families = {rule.family for rule in catalog.behavior_rules("Immortal Path")}
-    assert families == {RuleFamily.DELTA_AMP, RuleFamily.SUSTAIN}
+    assert families == {
+        RuleFamily.DELTA_AMP,
+        RuleFamily.SUSTAIN,
+        RuleFamily.STAT_DERIVATION,
+    }
     assert (
         catalog.SECONDARY_KEY_FAMILY["ITEM_EFFECTS"][catalog.BELOW_HALF_HEALING_KEY]
         is RuleFamily.SUSTAIN
@@ -498,7 +502,7 @@ def test_the_two_halves_answer_in_two_scopes() -> None:
         rule.family
         for rule in catalog.behavior_rules("Immortal Path")
         if isinstance(rule.compilability, Compilable)
-    } == {RuleFamily.DELTA_AMP}
+    } == {RuleFamily.DELTA_AMP, RuleFamily.STAT_DERIVATION}
 
 
 # ── a dropped signature key is a stop, not an un-declaration ──────────────
