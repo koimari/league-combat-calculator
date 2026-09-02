@@ -393,12 +393,10 @@ class TestOptimizeFallbackParity:
 
     @pytest.fixture(autouse=True)
     def _disable_rate_limits(self):
-        import src.app as app_module
+        from tests.app_config import app_config
 
-        previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-        app_module.app.config["RATE_LIMIT_ENABLED"] = False
-        yield
-        app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+        with app_config(RATE_LIMIT_ENABLED=False):
+            yield
 
     @pytest.mark.parametrize(
         "keystone",

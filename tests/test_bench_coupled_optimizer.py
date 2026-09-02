@@ -15,6 +15,7 @@ import pytest
 from src.calculator.ability_spec import IMMOBILIZING_CC_KINDS
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
+from tests.app_config import app_config
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -313,7 +314,10 @@ class TestAllocationReading:
             "attach_allocation_peaks",
             lambda reports, **kwargs: probed.append(True),
         )
-        bench.main()
+        # main() puts the app in benchmark mode, which a script owns for its
+        # own process and a test has to give back.
+        with app_config():
+            bench.main()
         return probed
 
     def test_the_named_command_probes(self, bench, monkeypatch, capsys):

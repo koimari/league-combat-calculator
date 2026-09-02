@@ -14,6 +14,7 @@ from scripts.gate_receipt import (
     build_receipt,
     validate_receipt,
 )
+from tests.app_config import app_config
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -94,7 +95,10 @@ def test_acceptance_matrix_emits_boolean_passed(capsys, monkeypatch):
     monkeypatch.syspath_prepend(str(ROOT / "scripts"))
     monkeypatch.setattr(acceptance_matrix, "run_matrix", _canned_acceptance_results)
     monkeypatch.setattr(sys, "argv", ["acceptance_matrix.py", "--json"])
-    acceptance_matrix.main()
+    # main() puts the app in matrix mode, which a script owns for its own
+    # process and a test has to give back.
+    with app_config():
+        acceptance_matrix.main()
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["schema_version"] == SCHEMA_VERSION
     validate_receipt(receipt)

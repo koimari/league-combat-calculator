@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from tests.app_config import app_config
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -125,10 +127,9 @@ def test_api_config_counts_match_the_live_registry():
     from src import app as app_module
     from src.calculator.champions import registered_champion_names
 
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    engine = (
-        app_module.app.test_client().get("/api/config").get_json()["champion_engine"]
-    )
+    with app_config(RATE_LIMIT_ENABLED=False):
+        response = app_module.app.test_client().get("/api/config")
+    engine = response.get_json()["champion_engine"]
     assert engine["registered_count"] == len(registered_champion_names())
     assert "generated_count" not in engine
     assert "unreviewed_count" not in engine

@@ -899,7 +899,7 @@ def test_public_post_routes_accept_all_dedicated_champion_modules(
 
     limiter = RecordingLimiter()
     monkeypatch.setattr(app_module, "_rate_limiter", limiter)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+    monkeypatch.setitem(app_module.app.config, "RATE_LIMIT_ENABLED", True)
     payload = {
         "champion": "Kled",
         "level": 20,
@@ -983,7 +983,7 @@ def test_malformed_requests_do_not_spend_the_expensive_work_budget(monkeypatch):
 
     limiter = RecordingLimiter()
     monkeypatch.setattr(app_module, "_rate_limiter", limiter)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+    monkeypatch.setitem(app_module.app.config, "RATE_LIMIT_ENABLED", True)
 
     response = app_module.app.test_client().post("/api/optimize", json=[])
 

@@ -28,21 +28,6 @@ import src.app as app_module
 from scripts import backup_db, load_sanity
 
 
-@pytest.fixture(autouse=True)
-def _isolate_app_config():
-    """Restore shared app config (TESTING/PROPAGATE_EXCEPTIONS) after each test."""
-    previous = {
-        key: app_module.app.config.get(key)
-        for key in ("TESTING", "PROPAGATE_EXCEPTIONS", "RATE_LIMIT_ENABLED")
-    }
-    yield
-    for key, value in previous.items():
-        if value is None:
-            app_module.app.config.pop(key, None)
-        else:
-            app_module.app.config[key] = value
-
-
 class _FakeSentry:
     """Minimal sentry_sdk stand-in recording init/capture calls."""
 
@@ -98,7 +83,7 @@ def test_sentry_lazy_init_uses_dsn(monkeypatch, fake_sentry):
 def test_sentry_captures_route_500(monkeypatch, fake_sentry):
     monkeypatch.setattr(app_module, "_sentry", fake_sentry)
     monkeypatch.setitem(app_module.app.config, "TESTING", False)
-    app_module.app.config["PROPAGATE_EXCEPTIONS"] = False
+    monkeypatch.setitem(app_module.app.config, "PROPAGATE_EXCEPTIONS", False)
 
     def _broken_loader(_champion_name):
         raise RuntimeError("p0b deliberate boom")
@@ -157,7 +142,7 @@ def test_sentry_excludes_token_bucket_429_response(monkeypatch, fake_sentry):
     # The session holds TESTING on and the limiter no-ops under it, so this
     # test borrows it off.
     monkeypatch.setitem(app_module.app.config, "TESTING", False)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+    monkeypatch.setitem(app_module.app.config, "RATE_LIMIT_ENABLED", True)
     with app_module.app.test_request_context("/"):
         response = app_module._spend_rate_limit("calculate")
     assert response is not None
