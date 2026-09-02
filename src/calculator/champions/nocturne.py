@@ -18,6 +18,7 @@ zero-damage row: this module replaces that slot.
 from functools import partial
 from typing import Any
 
+from ..ability_spec import ControlScope
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import bool_option
@@ -54,11 +55,13 @@ def _tether_fear(compiled):
     so the interval and its source atom come from the same evidence the
     ticks do.  Breaking the tether is the enemy's answer, not the cast's,
     so it is the ``e_tether_holds`` state rather than a module default.
+    The tether binds "the target", so the first roster enemy holds the fear.
     """
     armed = with_control_event(
         compiled,
         duration_attr="Disable Duration",
         time_offset=_E_TETHER_SECONDS,
+        scope=ControlScope.ONE_TARGET,
     )
 
     def parse(ctx):

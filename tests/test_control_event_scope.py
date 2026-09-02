@@ -13,6 +13,7 @@ import pytest
 
 from src.calculator.ability_spec import ControlEvent, ControlScope
 from src.calculator.calculate import calculate_payload
+from src.calculator.data_fetcher import get_champion
 
 TWO_ENEMIES = [
     {"champion": "Garen", "level": 18, "items": []},
@@ -20,12 +21,39 @@ TWO_ENEMIES = [
 ]
 
 
+#: One row per targeted cast: the champion, the slot, the kind that slot
+#: authors, the options that select the branch authoring it, and the cached
+#: sentence that makes the cast one enemy's.
+ONE_TARGET_CASTS = [
+    ("Nasus", "W", "slow", {}, "ages the target enemy champion"),
+    ("Rammus", "E", "taunt", {}, "taunts the target enemy champion or monster"),
+    ("Vayne", "E", "stun", {"condemn_wall": True}, "at the target enemy"),
+    ("Elise", "E", "stun", {}, "stunning the first enemy hit"),
+    ("Zilean", "E", "slow", {}, "applies Time Warp to the target champion"),
+    ("Udyr", "E", "stun", {}, "pounce on the target to stun them"),
+    ("Nocturne", "E", "fear", {"e_tether_holds": True}, "torments the target"),
+    (
+        "Evelynn",
+        "W",
+        "charm",
+        {"w_charmed": True, "w_charm_triggered": True},
+        "curses the target enemy champion",
+    ),
+]
+
+
 def _control_rows(payload: dict, kind: str) -> list[dict]:
-    """The main champion's published control rows of one kind."""
+    """The main champion's published control intervals of one kind.
+
+    ``MODULE_CC`` stamps the slot's kind on every damage row of the cast
+    too, so the authored interval is the row that also carries a duration.
+    """
     return [
         event
         for event in payload["combat"]["events"]
-        if event.get("attacker") == "main" and event.get("cc_kind") == kind
+        if event.get("attacker") == "main"
+        and event.get("cc_kind") == kind
+        and event.get("cc_duration") is not None
     ]
 
 
@@ -88,3 +116,39 @@ def test_an_area_cast_still_roots_every_enemy() -> None:
         "enemy:Malphite",
     ]
     assert len(rows) == 4
+
+
+@pytest.mark.parametrize(
+    ("champion", "slot", "kind", "options", "sentence"),
+    ONE_TARGET_CASTS,
+    ids=[f"{champion}-{slot}" for champion, slot, *_ in ONE_TARGET_CASTS],
+)
+def test_a_targeted_cast_holds_one_roster_enemy(
+    champion: str, slot: str, kind: str, options: dict, sentence: str
+) -> None:
+    """Issue #232: each of these eight casts names one enemy in the cache.
+
+    The sentence is asserted with the allocation, so a patch that widens the
+    cast fails here instead of leaving a stale ``ONE_TARGET`` behind.
+    """
+    cached = " ".join(
+        effect.get("description") or ""
+        for ability in get_champion(champion)["abilities"][slot]
+        for effect in ability.get("effects") or ()
+    )
+    assert sentence in cached
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "champion_options": options,
+            "enemies": TWO_ENEMIES,
+        },
+        deterministic=True,
+    )
+    rows = _control_rows(payload, kind)
+    assert rows, f"{champion} {slot} published no {kind} interval"
+    assert {row["target"] for row in rows} == {"enemy:Garen"}
