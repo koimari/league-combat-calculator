@@ -296,7 +296,7 @@ def _compiled_lane_is_open(
     search_context: CoupledSearchContext | None,
     *,
     include_receipt: bool,
-    pair_result_cache: Mapping[tuple[Any, ...], PairView] | None,
+    pair_result_cache: Mapping[PairCacheKey, PairView] | None,
     enemies: Sequence[ResolvedLoadout],
     params: FightParams,
 ) -> bool:
@@ -320,12 +320,16 @@ def _compiled_lane_is_open(
     )
 
 
+#: Every input that priced one cached pair packet, restores included.
+PairCacheKey = tuple[str, str, tuple[float | str, ...], tuple[tuple[float, float], ...]]
+
+
 def _pair_cache_key(
     attacker_id: str,
     defender_id: str,
-    defensive: tuple[Any, ...],
+    defensive: tuple[float | str, ...],
     restores: tuple[tuple[float, float], ...],
-) -> tuple[Any, ...]:
+) -> PairCacheKey:
     """Every input that priced one cached pair packet, restores included."""
     return (attacker_id, defender_id, defensive, restores)
 
@@ -2579,7 +2583,7 @@ def _grey_health_receipts(
 ) -> tuple[
     list[tuple[float, str, float]],
     list[tuple[float, str, float, float]],
-    dict[str, float],
+    dict[str, float | str],
 ]:
     """Author the grey-health consumes for one grey-health main champion.
 
@@ -3783,7 +3787,7 @@ def _context_setup(
     allies: list[ResolvedLoadout],
     champion_name: str,
     level: int,
-    pair_result_cache: dict[tuple[Any, ...], PairView],
+    pair_result_cache: dict[PairCacheKey, PairView],
     all_actors_by_index: list[Combatant],
 ) -> None:
     """Derive the search-invariant roster state on the context's first use.
@@ -4038,8 +4042,8 @@ def _build_signature_panel(
     context: CoupledSearchContext,
     main: Combatant,
     params: FightParams,
-    pair_result_cache: dict[tuple[Any, ...], PairView],
-    signature: tuple[Any, ...],
+    pair_result_cache: dict[PairCacheKey, PairView],
+    signature: tuple[float | str, ...],
     all_actors: list[Combatant],
 ) -> _SignaturePanel:
     """Compile every roster pair fight for one main defensive signature.
@@ -4149,10 +4153,10 @@ def _score_with_search_context(
     params: FightParams,
     *,
     main_stats: dict[str, float],
-    main_defenses: Any,
+    main_defenses: StartingDefenses,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
-    pair_result_cache: dict[tuple[Any, ...], PairView],
+    pair_result_cache: dict[PairCacheKey, PairView],
     context: CoupledSearchContext,
     reuse_main_stats: bool,
     published: bool,
@@ -4396,7 +4400,7 @@ def _score_with_search_context(
     # (enemy -> main, plus enemy thorns) and outgoing (main) damage actions
     # the walk applies, with the candidate's own stats/ranks, so the
     # compiled score walk matches the ordered receipt's fixed amounts.
-    grey_summary: dict[str, float] = {}
+    grey_summary: dict[str, float | str] = {}
     if (
         str(champion_data.get("name", "")) in GREY_HEALTH_RULE_CHAMPIONS
         and enemy_actors
@@ -4806,11 +4810,11 @@ def build_participant_timeline(
     params: FightParams,
     *,
     main_stats: dict[str, float],
-    main_defenses: Any,
+    main_defenses: StartingDefenses,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str = "main",
-    pair_result_cache: dict[tuple[Any, ...], PairView] | None = None,
+    pair_result_cache: dict[PairCacheKey, PairView] | None = None,
     include_receipt: bool = True,
     reuse_main_stats: bool = False,
     search_context: CoupledSearchContext | None = None,
@@ -4870,11 +4874,11 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     params: FightParams,
     *,
     main_stats: dict[str, float],
-    main_defenses: Any,
+    main_defenses: StartingDefenses,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str,
-    pair_result_cache: dict[tuple[Any, ...], PairView] | None,
+    pair_result_cache: dict[PairCacheKey, PairView] | None,
     include_receipt: bool,
     reuse_main_stats: bool,
     search_context: CoupledSearchContext | None,
@@ -5350,7 +5354,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     # event set the walk applies; the consume heals carry fixed sourced
     # amounts and ride the ordinary heal application (Grievous, overheal
     # caps), matching the E1 ``_heal_from_damage`` plumbing.
-    grey_summary: dict[str, float] = {}
+    grey_summary: dict[str, float | str] = {}
     grey_heals: list[dict[str, Any]] = []
     main_name = str(champion_data.get("name", ""))
     if main_name in GREY_HEALTH_RULE_CHAMPIONS and enemy_actors:

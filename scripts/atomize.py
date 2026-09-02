@@ -20,6 +20,7 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -45,7 +46,7 @@ def _load_data() -> dict[str, Path]:
     }
 
 
-def atomize_champions(champions: dict) -> dict[str, list]:
+def atomize_champions(champions: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Delegate to the specialist classifier and normalize its atoms."""
     import importlib.util
 
@@ -187,7 +188,7 @@ def _source_ref(path: Path) -> str:
     return f"{path.relative_to(REPO_ROOT)}@sha256:{digest}"
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "domains", nargs="*", help="one of {} or 'all'".format("|".join(DOMAINS))

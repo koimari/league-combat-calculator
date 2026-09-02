@@ -252,7 +252,7 @@ async def _run_pass(
     base_url: str,
     plan: Iterable[tuple[str, dict]],
     concurrency: int,
-) -> tuple[list[tuple[str, float, int]], list[str]]:
+) -> list[tuple[str, float, int]]:
     """Execute the plan with a fixed worker pool; returns the result rows."""
     results: list[tuple[str, float, int]] = []
     queue: asyncio.Queue = asyncio.Queue()
@@ -306,7 +306,7 @@ async def _run(
 
         cold = await _run_pass(client, base_url, plan, concurrency=users)
         before = await _cache_counters(client, base_url)
-        warm, _ = await _run_pass(client, base_url, plan, concurrency=warm_concurrency)
+        warm = await _run_pass(client, base_url, plan, concurrency=warm_concurrency)
         after = await _cache_counters(client, base_url)
 
     hits_delta = int(after["hits"]) - int(before["hits"])

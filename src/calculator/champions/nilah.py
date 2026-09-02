@@ -25,6 +25,8 @@ damage-taken reduction remain axes the engine does not have, documented
 in ASSUMPTIONS.
 """
 
+from typing import Any
+
 from .. import healing_helpers as _healing
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -57,7 +59,7 @@ _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO = 0.20  # R: 20% : 50% by crit
 _NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 
-def _formless_blade(ctx: SlotCtx):
+def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: minimum-row physical damage, scaled linearly by crit chance."""
     ability = ctx.ability("Q", 0)
     if ability is None:
@@ -164,13 +166,13 @@ MODULE_COVERAGE = coverage(no_damage="PW")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Nilah self-healing events from its authored packet.
 
     Q passive: basic attacks and Formless Blade heal her for 0%-20%

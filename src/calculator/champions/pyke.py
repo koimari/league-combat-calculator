@@ -38,6 +38,8 @@ axis, which the label does not close:
   no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
 """
 
+from typing import Any
+
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from ..stat_conversion import BonusHealthConversion
 from .engine import SlotCtx
@@ -75,7 +77,7 @@ _R_DAMAGE_BONUS_AD_RATIO = _R_THRESHOLD_BONUS_AD_RATIO * _R_REDUCED_DAMAGE
 _R_DAMAGE_PER_LETHALITY = _R_THRESHOLD_PER_LETHALITY * _R_REDUCED_DAMAGE
 
 
-def _death_from_below(ctx: SlotCtx):
+def _death_from_below(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: level-based physical damage row + 40% bAD + 0.75 per Lethality."""
     ability = ctx.ability("R", 0)
     if ability is None:

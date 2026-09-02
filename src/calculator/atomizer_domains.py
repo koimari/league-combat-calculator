@@ -14,7 +14,7 @@ Each domain maps one cached data family to Atom records:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .atomizer import Atomizer, number_and_unit, split_effect_fragments
@@ -450,11 +450,12 @@ def atomize_abilities(
     return out
 
 
-def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
+def atomize_rune_catalogue(
+    runes: Mapping[str, Mapping[str, Any]] | Iterable[Mapping[str, Any]] | None,
+) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
-    if isinstance(runes, dict):
-        runes = list(runes.values())
-    for rune in runes or []:
+    records = runes.values() if isinstance(runes, Mapping) else runes or ()
+    for rune in records:
         a = Atomizer("runes", source_ref=str(rune.get("name", "?")))
         name = str(rune.get("name", "?"))
 

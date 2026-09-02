@@ -253,7 +253,7 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
     # Uncoerced: the regen condition treats an unparseable stat as a demand
     # and the vamp conditions treat it as no demand, so a shared coercion
     # here would silently pick one of them.
-    def raw_stat(self, condition: AdequacyCondition, field: str) -> Any:
+    def raw_stat(self, condition: AdequacyCondition, field: str) -> object:
         """One declared champion stat, uncoerced, or a refusal."""
         if field not in DECLARATIONS[condition].requires_fields:
             raise UndeclaredStatRead(condition, field)

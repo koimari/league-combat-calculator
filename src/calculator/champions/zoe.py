@@ -17,6 +17,8 @@ pinned packet declares the slot ``kind: "no_damage"``), so R is
 ``no_damage``.  Mobility itself stays an axis the engine does not have.
 """
 
+from typing import Any
+
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .inputs import int_option
@@ -49,7 +51,7 @@ _W_SUMMONER_VARIANTS = {
 }
 
 
-def _spell_thief(ctx: SlotCtx):
+def _spell_thief(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: three orbiting bolts, or a no-damage summoner Shard mimic."""
     ability = ctx.ability("W", 0)
     if ability is None:

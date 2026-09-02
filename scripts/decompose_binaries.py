@@ -24,6 +24,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # the tool venv's parsers; imported lazily where they run
+    from league_tools import WAD
 
 LO_APP = "/Applications/League of Legends.app"
 GAME_DIR = Path(LO_APP) / "Contents/LoL/Game"
@@ -67,13 +71,13 @@ def ensure_hash_tables() -> dict[int, str]:
     return table
 
 
-def open_wad(path: Path):
+def open_wad(path: Path) -> WAD:
     from league_tools import WAD
 
     return WAD(str(path))
 
 
-def extract_path(wad, table, path: str) -> bytes | None:
+def extract_path(wad: WAD, table: dict[int, str], path: str) -> bytes | None:
     h = wad.get_hash(path)
     for sec in wad.files:
         if sec.path_hash == h:
@@ -83,7 +87,7 @@ def extract_path(wad, table, path: str) -> bytes | None:
     return None
 
 
-def parse_bin(data: bytes, name: str):
+def parse_bin(data: bytes, name: str) -> dict[str, Any]:
     import io
 
     from cdtb.binfile import BinFile
@@ -119,7 +123,7 @@ def decompose_champions(table: dict[int, str], out: Path) -> list[str]:
     return done
 
 
-def decompose_items(table: dict[int, str], out: Path):
+def decompose_items(table: dict[int, str], out: Path) -> tuple[Path, int, int, str]:
     """Item data: local data/items/items.bin if present, else the pinned
     16.15 CommunityDragon dump (identical client version 16.15.8024387)."""
     w = open_wad(FINAL_DIR / "Global.wad.client")
@@ -154,7 +158,7 @@ def decompose_items(table: dict[int, str], out: Path):
     return dest, len(data), len(json.dumps(rec, default=str)), source
 
 
-def decompose_map11(table: dict[int, str], out: Path):
+def decompose_map11(table: dict[int, str], out: Path) -> tuple[Path | None, int]:
 
     map_wads = list((FINAL_DIR / "Maps/Shipping").glob("*.wad.client"))
     for mw in map_wads:

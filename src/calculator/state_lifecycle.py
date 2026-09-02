@@ -30,7 +30,7 @@ Design rules (HANDOVER §11):
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Hashable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -1254,14 +1254,14 @@ class TriggerGate:
         self.cooldown_seconds = cooldown_seconds
         self.inclusive = inclusive
         self._ready_at = float("-inf")
-        self._seen: set[Any] = set()
+        self._seen: set[Hashable] = set()
 
     @property
     def ready_at(self) -> float:
         """When the next trigger may be accepted."""
         return self._ready_at
 
-    def accepts(self, time: float, key: Any = None) -> bool:
+    def accepts(self, time: float, key: Hashable | None = None) -> bool:
         """Whether this trigger authors.  An accepted key is consumed."""
         if key is not None and key in self._seen:
             return False

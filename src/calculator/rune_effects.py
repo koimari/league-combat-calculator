@@ -510,7 +510,7 @@ class RuneOption:
             "disclosure": self.disclosure,
         }
 
-    def validated(self, value: Any) -> float:
+    def validated(self, value: object) -> float:
         """One requested value, or a refusal naming the option and its range."""
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"rune option {self.key!r} must be a number")
@@ -1341,7 +1341,7 @@ class RuneValues:
         self.rune_name = rune_name
         self.values = values
 
-    def value(self, key: str) -> Any:
+    def value(self, key: str) -> Any:  # sightline-ok: 1 key-typed read
         """Return one required value or raise with rune and key context."""
         if key not in self.values or self.values[key] is None:
             raise KeyError(
@@ -1721,10 +1721,10 @@ def _name_list(value: Any, field: str, limit: int, *, positional: bool) -> list[
 
 
 def validate_rune_page(
-    keystone: Any = "",
-    minor_runes: Any = None,
-    stat_shards: Any = None,
-    rune_options: Any = None,
+    keystone: object = "",
+    minor_runes: object = None,
+    stat_shards: object = None,
+    rune_options: object = None,
 ) -> RunePage:
     """Validate one requested rune page, or refuse it naming the rule broken.
 
@@ -1803,7 +1803,7 @@ def keystone_input_options_meta() -> dict[str, dict[str, Any]]:
     return options
 
 
-def validate_keystone_options(value: Any, rune_name: str) -> dict[str, int | float]:
+def validate_keystone_options(value: object, rune_name: str) -> dict[str, int | float]:
     """Validate the selected keystone's explicit state inputs."""
     if value is None:
         value = {}

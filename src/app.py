@@ -38,6 +38,7 @@ from flask import (
     request,
     url_for,
 )
+from flask.typing import ResponseReturnValue
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -479,12 +480,14 @@ def _safe_next_path(value: str | None) -> str:
     return path if path.startswith("/") and not path.startswith("//") else "/"
 
 
-def _auth_error(message: str, status: int = 503):
+def _auth_error(message: str, status: int = 503) -> tuple[Response, int]:
     """Return a concise setup/error response without leaking password data."""
     return jsonify({"error": message}), status
 
 
-def _login_page(message: str = "", status: int = 200, next_path: str = "/"):
+def _login_page(
+    message: str = "", status: int = 200, next_path: str = "/"
+) -> tuple[str, int]:
     """Render the invite-gated closed-beta landing page.
 
     Served pre-auth, so it deliberately carries no dependency on protected
@@ -703,7 +706,7 @@ def _run_data_update():
 
 
 @app.route("/auth/login", methods=["GET", "POST"])
-def auth_login():
+def auth_login() -> ResponseReturnValue:
     """Authenticate one of the explicitly configured private accounts.
 
     In invite-gated deployments (``SCRYGLASS_INVITE_CODES`` set on top of
@@ -754,7 +757,7 @@ def auth_login():
 
 
 @app.route("/auth/logout", methods=["GET", "POST"])
-def auth_logout():
+def auth_logout() -> ResponseReturnValue:
     """End the local approved-user session."""
     response = redirect("/")
     response.delete_cookie(_AUTH_COOKIE, path="/")
@@ -762,7 +765,7 @@ def auth_logout():
 
 
 @app.route("/auth/status")
-def auth_status():
+def auth_status() -> Response:
     """Expose the current local identity and gate configuration."""
     session = _current_session()
     return jsonify(
@@ -776,7 +779,7 @@ def auth_status():
 
 
 @app.route("/api/auth/invite", methods=["GET", "POST"])
-def api_auth_invite():
+def api_auth_invite() -> Response | tuple[Response, int]:
     """Validate one invite code without logging in.
 
     ``GET`` reports whether the deployment is invite-gated; ``POST`` with a
@@ -811,25 +814,25 @@ def api_auth_invite():
 
 
 @app.route("/privacy")
-def privacy():
+def privacy() -> str:
     """Public privacy summary for the closed beta."""
     return render_template("privacy.html")
 
 
 @app.route("/terms")
-def terms():
+def terms() -> str:
     """Public terms of use for the closed beta."""
     return render_template("terms.html")
 
 
 @app.route("/riot-disclaimer")
-def riot_disclaimer():
+def riot_disclaimer() -> str:
     """Public Riot Games disclaimer and data-source statement."""
     return render_template("riot_disclaimer.html")
 
 
 @app.route("/")
-def index():
+def index() -> str:
     """Serve the main calculator page."""
     session = _current_session()
     return render_template(
@@ -844,7 +847,7 @@ def index():
 
 
 @app.route("/healthz")
-def health():
+def health() -> Response:
     """Cheap liveness probe that avoids loading calculator data."""
     return jsonify({"status": "ok"})
 
@@ -950,7 +953,7 @@ def _health_engine_check() -> dict:
 
 
 @app.route("/api/health/deep")
-def api_health_deep():
+def api_health_deep() -> Response:
     """Deep health probe: db, result cache, golden staleness, engine.
 
     Public (like /healthz) so uptime monitors can reach it without a
@@ -1007,7 +1010,7 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 
 
 @app.route("/api/champions")
-def api_champions():
+def api_champions() -> Response:
     """Return champion identity and fail-closed attacker readiness.
 
     ``engine_registration`` is the module registry and the one field that
@@ -1090,7 +1093,7 @@ def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
 
 
 @app.route("/api/items")
-def api_items():
+def api_items() -> Response:
     """Return ordinary build items for manual attacker/roster loadouts."""
     result = sorted(
         [
@@ -1114,7 +1117,7 @@ def api_items():
 
 
 @app.route("/api/boots")
-def api_boots():
+def api_boots() -> Response:
     """Return tier-2 and quest-only tier-3 boots for the role-aware picker."""
     upgrade_pairs = boot_upgrade_contract()
     upgrade_from = {pair["upgraded"]: pair["base"] for pair in upgrade_pairs.values()}
@@ -1148,7 +1151,7 @@ def api_boots():
 
 
 @app.route("/api/config")
-def api_config():
+def api_config() -> Response:
     """Serve calculator config the frontend must share with the backend.
 
     Single source of truth for domain facts that would otherwise be
@@ -1242,7 +1245,7 @@ def api_config():
 
 
 @app.route("/api/loadout-stats", methods=["POST"])
-def api_loadout_stats():
+def api_loadout_stats() -> Response | tuple[Response, int]:
     """Return champion-derived stats for one level and item loadout."""
     try:
         data = _json_object()
@@ -1260,7 +1263,7 @@ def _pure_payload_response(
     payload_fn: Callable[[dict], dict],
     *,
     missing_data_message: str | None = None,
-):
+) -> Response | tuple[Response, int]:
     """Serve one deterministic payload under its ``_OPERATION_POLICY`` entry.
 
     Every pure JSON operation runs the same ladder: decode the body, answer
@@ -1309,7 +1312,7 @@ _MISSING_SCENARIO_DATA = "Scenario data '{}' not found"
 
 
 @app.route("/api/calculate", methods=["POST"])
-def api_calculate():
+def api_calculate() -> Response | tuple[Response, int]:
     """Run the damage calculation and return results."""
 
     def _deterministic_calculate(data: dict) -> dict:
@@ -1319,13 +1322,13 @@ def api_calculate():
 
 
 @app.route("/api/compare", methods=["POST"])
-def api_compare():
+def api_compare() -> Response | tuple[Response, int]:
     """Calculate Build A and Build B behind one request boundary."""
     return _pure_payload_response("compare", compare_payload)
 
 
 @app.route("/api/bis", methods=["POST"])
-def api_bis():
+def api_bis() -> Response | tuple[Response, int]:
     """Rank one slot through the pure BIS application boundary."""
     return _pure_payload_response(
         "bis", bis_payload, missing_data_message=_MISSING_SCENARIO_DATA
@@ -1333,7 +1336,7 @@ def api_bis():
 
 
 @app.route("/api/bis/batch", methods=["POST"])
-def api_bis_batch():
+def api_bis_batch() -> Response | tuple[Response, int]:
     """Score dependent BIS slots with one shared timeline cache."""
     return _pure_payload_response(
         "bis_batch", bis_batch_payload, missing_data_message=_MISSING_SCENARIO_DATA
@@ -1341,7 +1344,7 @@ def api_bis_batch():
 
 
 @app.route("/api/optimize", methods=["POST"])
-def api_optimize():  # pylint: disable=too-many-return-statements
+def api_optimize() -> Response | tuple[Response, int]:
     """Find the optimal item build for a champion.
 
     Request parsing and validation run through the shared scenario boundary
@@ -1351,6 +1354,7 @@ def api_optimize():  # pylint: disable=too-many-return-statements
     items, budgets) are parsed after the shared call, and the deterministic
     result is cached under the ``optimize`` namespace.
     """
+    # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
         request = parse_scenario_request(
@@ -1506,7 +1510,7 @@ def api_optimize():  # pylint: disable=too-many-return-statements
 
 
 @app.route("/api/builds", methods=["POST"])
-def api_save_build():
+def api_save_build() -> Response | tuple[Response, int]:
     """Persist one build scenario for later reload or sharing.
 
     The request mirrors the /api/calculate payload.  Dedicated columns take
@@ -1559,7 +1563,7 @@ def api_save_build():
 
 
 @app.route("/api/share", methods=["POST"])
-def api_create_share():
+def api_create_share() -> Response | tuple[Response, int]:
     """Create a public share link for a saved build."""
     try:
         data = _json_object()
@@ -1593,7 +1597,7 @@ def api_create_share():
 
 
 @app.route("/api/share/<token>")
-def api_get_share(token: str):
+def api_get_share(token: str) -> Response | tuple[Response, int]:
     """Resolve a share token to its build payload; counts one view."""
     if not token or len(token) > 100:
         return jsonify({"error": "Invalid share token"}), 404
@@ -1612,7 +1616,7 @@ _FEEDBACK_PAGE_MAX = 200
 
 
 @app.route("/api/feedback")
-def api_list_feedback():
+def api_list_feedback() -> Response | tuple[Response, int]:
     """Return recent validation feedback for the review loop."""
     try:
         champion = _request_string(request.args, "champion") or None
@@ -1634,7 +1638,7 @@ def api_list_feedback():
 
 @app.route("/api/receipts", methods=["POST"])
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
-def api_receipts():  # pylint: disable=too-many-return-statements
+def api_receipts() -> Response | tuple[Response, int]:
     """Record one game-receipt validation observation.
 
     Body: ``{"champion", "loadout" (mirror of the /api/calculate payload),
@@ -1651,6 +1655,7 @@ def api_receipts():  # pylint: disable=too-many-return-statements
     the stored receipt stays numeric.  When ``observed`` is omitted the
     receipt is a positive confirmation (observed := predicted).
     """
+    # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
         champion = _request_string(data, "champion", required=True)
@@ -1724,7 +1729,7 @@ def api_receipts():  # pylint: disable=too-many-return-statements
 
 
 @app.route("/api/validation")
-def api_validation():
+def api_validation() -> Response | tuple[Response, int]:
     """Recent receipts plus the systematic-bias summary.
 
     ``?champion=`` narrows both halves; ``?limit=`` pages the recent
@@ -1746,7 +1751,7 @@ def api_validation():
 
 
 @app.route("/api/validation/champions")
-def api_validation_champions():
+def api_validation_champions() -> Response | tuple[Response, int]:
     """Champions with feedback counts and bias, for a future dashboard."""
     try:
         summary = validation_summary()
@@ -1760,7 +1765,7 @@ def api_validation_champions():
 
 
 @app.route("/api/metrics/event", methods=["POST"])
-def api_metrics_event():
+def api_metrics_event() -> Response | tuple[Response, int]:
     """Record one anonymous, session-scoped product event (no PII).
 
     Body: ``{"event": "page_view", "took_ms": 0}`` where ``took_ms`` is the
@@ -1802,7 +1807,7 @@ def api_metrics_event():
 
 
 @app.route("/api/metrics")
-def api_metrics():
+def api_metrics() -> Response | tuple[Response, int]:
     """Beta success scorecard with the PASS/FAIL gate (auth-gated).
 
     The scorecard is computed by src/metrics.compute_scorecard so the
@@ -1830,7 +1835,7 @@ def api_metrics():
 
 
 @app.route("/api/certainty")
-def api_certainty():
+def api_certainty() -> Response | tuple[Response, int]:
     """Trust-label data: per-ability certainty for one champion.
 
     ``?champion=`` is required.  Certainty levels:
@@ -1861,7 +1866,7 @@ def api_certainty():
 
 
 @app.route("/api/not-modeled")
-def api_not_modeled():
+def api_not_modeled() -> Response | tuple[Response, int]:
     """Documented non-computed mechanics for one champion.
 
     Collects the module's ASSUMPTIONS lines that describe mechanics the
@@ -1895,7 +1900,7 @@ def _staleness_path() -> Path:
     return Path(__file__).resolve().parent.parent / "data" / "staleness.json"
 
 
-def _read_staleness():
+def _read_staleness() -> dict[str, Any] | None:
     """Load data/staleness.json, or None when it is missing/invalid."""
     path = _staleness_path()
     if not path.exists():
@@ -1908,7 +1913,7 @@ def _read_staleness():
 
 
 @app.route("/api/staleness")
-def api_staleness():
+def api_staleness() -> Response | tuple[Response, int]:
     """Serve the patch-regression report (wiki cache vs game files).
 
     The read-only face the STALE badge consumes; a missing report is a 404.
@@ -1920,7 +1925,7 @@ def api_staleness():
 
 
 @app.route("/api/update-data")
-def api_update_data():
+def api_update_data() -> Response | tuple[Response, int]:
     """Stream data update progress via Server-Sent Events. Dev-only: 404s
     unless LOL_CALC_DEV=1 (see _dev_mode) and LOL_CALC_DEV_UPDATE_TOKEN is
     configured (see _dev_update_token)."""

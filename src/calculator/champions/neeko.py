@@ -27,6 +27,8 @@ row (``build_packet_module``'s ``no_damage`` branch): MODULE_COVERAGE
 reads "no_damage", not "out_of_scope".
 """
 
+from typing import Any
+
 from ..ability_spec import DamagePart
 from ..binary_roots import (
     calculation_coefficient,
@@ -71,7 +73,7 @@ _R_SHIELD_PER_CHAMPION_AP_RATIO = calculation_coefficient(
 _R_SHIELD_DURATION = data_value_at_rank(_NEEKO_R_SPELL, "ShieldDuration", 1)
 
 
-def _blooming_burst(ctx: SlotCtx):
+def _blooming_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: initial burst + up to 2 re-blooms (Total Maximum Magic Damage)."""
     ranked = ctx.ranked()
     if ranked is None:
@@ -109,7 +111,7 @@ def _blooming_burst(ctx: SlotCtx):
     return entry
 
 
-def _pop_blossom(ctx: SlotCtx):
+def _pop_blossom(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: magic damage + the 2s self-shield (1 nearby enemy champion)."""
     ranked = ctx.ranked()
     if ranked is None:

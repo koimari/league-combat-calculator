@@ -42,6 +42,7 @@ from .loadout_rules import (
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .pipeline import FightParams, run_fight
 from .program.views import RankingWriter, name_every_number
+from .scenario import ResolvedLoadout
 from .timeline_coverage import (
     applicability_exclusion_sources,
     combine_timeline_coverages,
@@ -1316,8 +1317,8 @@ def optimize_purchase(
     target_fight_params: tuple[FightParams, ...] | None = None,
     boots_tier: int = 2,
     require_complete_timeline: bool = True,
-    enemy_loadouts: list[Any] | None = None,
-    ally_loadouts: list[Any] | None = None,
+    enemy_loadouts: list[ResolvedLoadout] | None = None,
+    ally_loadouts: list[ResolvedLoadout] | None = None,
     include_boots: bool = True,
     candidate_cap: int = 2000,
     allow_sell: bool = False,
@@ -1759,8 +1760,8 @@ def optimize_build(
     boots_tier: int = 2,
     gold_budget: int | None = None,
     require_complete_timeline: bool = False,
-    enemy_loadouts: list[Any] | None = None,
-    ally_loadouts: list[Any] | None = None,
+    enemy_loadouts: list[ResolvedLoadout] | None = None,
+    ally_loadouts: list[ResolvedLoadout] | None = None,
     include_boots: bool = True,
     work_counters: WorkCounterSink | None = None,
     use_compiled_walk: bool = True,

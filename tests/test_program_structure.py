@@ -22,6 +22,7 @@ from __future__ import annotations
 import ast
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -275,7 +276,7 @@ class TestEveryViewTakesTheWalkAndNothingElse:
     )
 
     @staticmethod
-    def _front_door(spec: str):
+    def _front_door(spec: str) -> Callable[..., object]:
         """One view function, imported the way its consumer imports it."""
         import importlib
 

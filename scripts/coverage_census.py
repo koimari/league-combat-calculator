@@ -34,7 +34,9 @@ import functools
 import json
 import multiprocessing
 import sys
+from collections.abc import Collection, Mapping
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -103,7 +105,9 @@ def _coarse(result):
     return {str(s) for s in _coverage(result["resp"]).get("coarse_sources", [])}
 
 
-def _slot_payload(record, role_default: str = ""):
+def _slot_payload(
+    record: Mapping[str, Any], role_default: str = ""
+) -> dict[str, Any] | None:
     """Route one item into its legal slot and role state."""
     name = str(record.get("name", ""))
     payload = {"items": [name], "role": role_default}
@@ -350,7 +354,9 @@ def _receipt(frontier):
     }
 
 
-def run_census(shard=(0, 1), workers=None):
+def run_census(
+    shard: tuple[int, int] = (0, 1), workers: int | None = None
+) -> dict[str, Any]:
     """Sweep every axis (or one shard of the champions) and return the receipt.
 
     Champions are swept one per worker process; the global buckets are swept
@@ -371,7 +377,7 @@ def run_census(shard=(0, 1), workers=None):
     return _receipt(frontier)
 
 
-def restrict(receipt, shard):
+def restrict(receipt: Mapping[str, Any], shard: tuple[int, int]) -> dict[str, Any]:
     """The part of a full receipt that ``run_census(shard)`` reproduces."""
     mine = set(_shard_champions(shard))
     frontier = {
@@ -391,7 +397,7 @@ def restrict(receipt, shard):
 RESIDUE_PATH = REPO_ROOT / "docs" / "coverage-residue.json"
 
 
-def _residue_rows():
+def _residue_rows() -> list[dict[str, str]]:
     """The committed acknowledgements, or none if the file is absent."""
     if not RESIDUE_PATH.exists():
         return []
@@ -408,7 +414,9 @@ def _frontier_pairs(frontier):
     return pairs
 
 
-def reconcile_residue(receipt, champions=None):
+def reconcile_residue(
+    receipt: Mapping[str, Any], champions: Collection[str] | None = None
+) -> dict[str, int | list[str]]:
     """Split the frontier into acknowledged rows and unacknowledged entries.
 
     Two failures, not one. An entry nothing acknowledges is the frontier
@@ -436,7 +444,7 @@ def _shard(text):
     return index, count
 
 
-def main(argv: list[str]):
+def main(argv: list[str]) -> int:
     """CLI: ``run [--output PATH]`` or ``check PATH``; exit 1 on any frontier."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

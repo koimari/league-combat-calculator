@@ -29,6 +29,7 @@ from ..item_behavior import (
     DefenseExclusivity,
     DefenseField,
     DefenseMechanic,
+    DefensePayload,
     EngineLane,
     KernelField,
 )
@@ -47,11 +48,12 @@ class DefenseInterpretationError(ValueError):
     """A defence was asked something its declaration does not answer."""
 
 
-def payload(rule: BehaviorRule):
+def payload(rule: BehaviorRule) -> DefensePayload:
     """*rule*'s defence payload, or a stop."""
-    if not isinstance(rule.payload, DEFENSE_PAYLOAD_TYPES):
-        raise DefenseInterpretationError(f"{rule.mechanic_id} is not a defence rule")
-    return rule.payload
+    candidate = rule.payload
+    if isinstance(candidate, DEFENSE_PAYLOAD_TYPES):
+        return candidate
+    raise DefenseInterpretationError(f"{rule.mechanic_id} is not a defence rule")
 
 
 class DefenseSlot:

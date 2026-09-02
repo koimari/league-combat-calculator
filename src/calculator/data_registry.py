@@ -42,10 +42,10 @@ def data_version() -> int:
     return _DATA_VERSION
 
 
-def store_for_generation(
-    memo: MutableMapping[tuple[int, Any], Any],
-    key: tuple[int, Any],
-    value: Any,
+def store_for_generation[K, V](
+    memo: MutableMapping[tuple[int, K], V],
+    key: tuple[int, K],
+    value: V,
 ) -> None:
     """Write one memo entry, dropping any superseded generation first.
 

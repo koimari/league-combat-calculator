@@ -434,7 +434,7 @@ def owners_by_family() -> dict[str, dict[str, list[str]]]:
     return grouped
 
 
-def population_size(node: Any) -> int:
+def population_size(node: object) -> int:
     """How many numbers a committed snapshot subtree holds.
 
     The bound, not the prediction.  A slice that moves a family's pricing into

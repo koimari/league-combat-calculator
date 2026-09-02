@@ -34,7 +34,7 @@ __all__ = [
 ]
 
 
-def outcome_quantity(value: Any, skipped_reason: str | None) -> Quantity:
+def outcome_quantity(value: float | None, skipped_reason: str | None) -> Quantity:
     """A refused zero is declared; any number a rule computed stays measured."""
     if skipped_reason is not None and not value:
         return StructuralZero(reason=str(skipped_reason))

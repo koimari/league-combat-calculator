@@ -18,6 +18,7 @@ import importlib
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -403,7 +404,7 @@ class TestRotationOrder:
 # ---------------------------------------------------------------------------
 
 
-def _coupled_baseline():
+def _coupled_baseline() -> dict[str, dict[str, Any]]:
     """The committed coupled baseline — the binding home of the totals."""
     path = _REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
     return json.loads(path.read_text(encoding="utf-8"))["coupled_scenarios"]

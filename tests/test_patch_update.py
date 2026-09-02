@@ -35,6 +35,7 @@ import subprocess
 import sys
 import urllib.error
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -1470,7 +1471,7 @@ class TestAllyEffectLines:
 class TestEconomicsLines:
     """The sourced gold table must be current for the cache it prices."""
 
-    def _tables(self):
+    def _tables(self) -> dict[str, Any]:
         import json
 
         return json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8"))

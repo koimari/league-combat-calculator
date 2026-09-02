@@ -35,7 +35,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, is_dataclass
 from dataclasses import fields as dataclass_fields
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, get_args
 
 from .ability_spec import (
     AttackClass,
@@ -2715,20 +2715,22 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ReactiveRule: RuleFamily.REACTIVE,
 }
 
-# The four defence payloads, as one tuple the validator and the resolver both
-# read: every defence declaration answers "which mechanic, which state, which
-# numbers" and the family it lands in says *when* rather than *what*.
-DEFENSE_PAYLOAD_TYPES: tuple[type, ...] = (
-    OpeningDefenseRule,
-    ThresholdDefenseRule,
-    CombatStateRule,
-    ReactiveRule,
-    # Shaped like a defence and filed under another family: the resolver
-    # builds them at the opening with every other defence, and what they do
-    # with the damage is a different question from where they are built.
-    DamageDeferralRule,
-    ReceivedHealingRule,
+# The defence payloads, one union the validator, the resolver and the
+# interpreter all read: every defence declaration answers "which mechanic,
+# which state, which numbers" and the family it lands in says *when* rather
+# than *what*.  DamageDeferralRule and ReceivedHealingRule are shaped like a
+# defence and filed under another family: the resolver builds them at the
+# opening with every other defence, and what they do with the damage is a
+# different question from where they are built.
+DefensePayload = (
+    OpeningDefenseRule
+    | ThresholdDefenseRule
+    | CombatStateRule
+    | ReactiveRule
+    | DamageDeferralRule
+    | ReceivedHealingRule
 )
+DEFENSE_PAYLOAD_TYPES: tuple[type[DefensePayload], ...] = get_args(DefensePayload)
 
 
 # ── the rule ──────────────────────────────────────────────────────────────
@@ -3879,6 +3881,7 @@ __all__ = [
     "DefenseMechanic",
     "DefenseOption",
     "DefenseOutcome",
+    "DefensePayload",
     "DefenseSubject",
     "DeltaAmpRule",
     "DerivedStat",

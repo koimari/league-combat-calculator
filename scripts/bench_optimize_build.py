@@ -83,7 +83,7 @@ BUILD_SIZES = (1, 2, 3, 4, 6)
 ROUNDS = 5
 
 
-def one_search() -> dict:
+def one_search() -> dict[str, Any]:
     """One full search, returning the optimizer's own response."""
     return optimize_build(
         get_champion(CHAMPION),
@@ -93,7 +93,7 @@ def one_search() -> dict:
     )
 
 
-def measure(repeats: int = REPEATS) -> dict:
+def measure(repeats: int = REPEATS) -> dict[str, Any]:
     """Warm once, then engine and wall readings over ``repeats`` searches.
 
     The warmup is not optional: the first search of a process pays the item
@@ -289,7 +289,7 @@ def _budget_terms(
     ]
 
 
-def budget(repeats: int = REPEATS) -> dict:
+def budget(repeats: int = REPEATS) -> dict[str, Any]:
     """Each term's real share of one evaluation, beside what the profiler says."""
     warmup = one_search()
     champion = get_champion(CHAMPION)
@@ -380,7 +380,7 @@ def _run_sample(tree: Path, size: int, names: list[str]) -> float:
     return float(json.loads(completed.stdout)["per_evaluation_us"])
 
 
-def by_build_size(rounds: int = ROUNDS, against: str | None = None) -> dict:
+def by_build_size(rounds: int = ROUNDS, against: str | None = None) -> dict[str, Any]:
     """Per-evaluation microseconds by items held, trees alternated round by round."""
     names = [item_effects.resolved_item_name(i) for i in _elected_build(one_search())]
     trees = [ROOT] + ([Path(against).resolve()] if against else [])

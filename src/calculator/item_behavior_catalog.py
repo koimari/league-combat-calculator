@@ -6071,14 +6071,16 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 # ── compilation ───────────────────────────────────────────────────────────
 
 
-def registry_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
+def registry_entries(
+    owner: str,
+) -> tuple[tuple[ValueRegistry, RuleFamily, Mapping[str, Any]], ...]:
     """Every registry entry that names *owner*, with the family it declares.
 
     An owner can appear in both registries — six do, because a dual-sided
     mechanic has a pair-side number and an ally-packet number — so this
     returns a tuple rather than an entry.
     """
-    found: list[tuple[ValueRegistry, RuleFamily, Any]] = []
+    found: list[tuple[ValueRegistry, RuleFamily, Mapping[str, Any]]] = []
     item_entry = item_effects.ITEM_EFFECTS.get(owner)
     if isinstance(item_entry, Mapping):
         tag = item_entry.get("type")
@@ -6161,7 +6163,9 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     return compiled
 
 
-def rune_amp_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
+def rune_amp_entries(
+    owner: str,
+) -> tuple[tuple[ValueRegistry, RuleFamily, Mapping[str, Any]], ...]:
     """The rune record *owner* declares an amp-chain slot from, if any.
 
     Deliberately not part of :func:`registry_entries`: counter 3's population

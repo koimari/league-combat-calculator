@@ -69,6 +69,7 @@ from .cast_dependency import (
     ConflictingInferenceError,
     MissingLatentReasonError,
     ResolvedCycleError,
+    SuppressedInference,
     active_dependencies,
 )
 from .damage import DEFAULT_CAST_ORDER, effective_cooldown
@@ -1190,7 +1191,9 @@ def _declaration_sentence(dep: CastDependency) -> str:
     )
 
 
-def _matching_suppression(dep: CastDependency, edge: _Edge):
+def _matching_suppression(
+    dep: CastDependency, edge: _Edge
+) -> SuppressedInference | None:
     """The nested suppression covering *edge*, or ``None``.
 
     Scope is structural (D-81): a suppression is its parent's exact
@@ -2002,7 +2005,7 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
     champion_name: str,
     *,
     cast_order: list[str],
-    cast_timeline: Iterable[Any],
+    cast_timeline: Iterable[Mapping[str, Any]],
     rule: ComboRule | None,
     certified_order: list[str] | None = None,
     user_order: list[str] | None = None,

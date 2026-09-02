@@ -20,8 +20,9 @@ import statistics
 import subprocess
 import sys
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -51,7 +52,7 @@ _IMPORT_PROBE = (
 )
 
 
-def request_for(golden: str, overrides: dict) -> dict:
+def request_for(golden: str, overrides: Mapping[str, Any]) -> dict[str, Any]:
     """The golden scenario's request with this bench row's overrides applied."""
     return {**_GOLDEN[golden], **overrides}
 
@@ -72,7 +73,7 @@ def import_ms(repeats: int = 3) -> float:
     return round(statistics.median(readings), 1)
 
 
-def measure(request: dict, *, repeats: int = REPEATS) -> dict:
+def measure(request: Mapping[str, Any], *, repeats: int = REPEATS) -> dict[str, float]:
     """Warm once, then median/p90 over ``repeats`` calls plus a 20-call loop."""
     calculate_payload(request, deterministic=True)
     samples = []
@@ -91,7 +92,9 @@ def measure(request: dict, *, repeats: int = REPEATS) -> dict:
     }
 
 
-def bench(selected: tuple, *, repeats: int = REPEATS) -> dict:
+def bench(
+    selected: Sequence[tuple[str, str, Mapping[str, Any]]], *, repeats: int = REPEATS
+) -> dict[str, Any]:
     """Every selected scenario, in declaration order, plus the import cost."""
     return {
         "import_calculator_ms": import_ms(),
@@ -103,7 +106,7 @@ def bench(selected: tuple, *, repeats: int = REPEATS) -> dict:
     }
 
 
-def committed_medians(path: str) -> dict:
+def committed_medians(path: str) -> dict[str, float]:
     """``{scenario: median ms}`` from ``benchmarks.md``'s request table."""
     known = {name for name, _, _ in SCENARIOS}
     rows = {}
@@ -114,7 +117,9 @@ def committed_medians(path: str) -> dict:
     return rows
 
 
-def regressions(measured: Mapping, committed: Mapping, tolerance: float = 1.25) -> list:
+def regressions(
+    measured: Mapping[str, Any], committed: Mapping[str, float], tolerance: float = 1.25
+) -> list[str]:
     """Scenarios whose median exceeds the committed one by more than 25%."""
     return [
         f"{name}: {committed[name]} -> {reading['median_ms']} ms median"

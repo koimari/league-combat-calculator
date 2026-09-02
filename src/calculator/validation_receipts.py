@@ -20,7 +20,7 @@ def receipt_tolerance(predicted_tdd: float) -> float:
     )
 
 
-def validate_damage_number(value: Any, label: str) -> float:
+def validate_damage_number(value: object, label: str) -> float:
     """Validate one finite, non-negative public damage amount."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{label} must be a number")

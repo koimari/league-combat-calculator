@@ -145,7 +145,7 @@ _ON_HIT_SPECS: dict[str, dict] = {
 _parse_abilities = parse_abilities
 
 
-def parse_abilities(*args, **kwargs):
+def parse_abilities(*args, **kwargs) -> dict[str, dict[str, Any]]:
     """Parse abilities, then declare wiki-sourced item on-hit application."""
     result = _parse_abilities(*args, **kwargs)
     for slot, spec in _ON_HIT_SPECS.items():

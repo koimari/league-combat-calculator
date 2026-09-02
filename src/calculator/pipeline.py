@@ -54,6 +54,7 @@ from .item_behavior import (
     SustainStat,
 )
 from .item_effects import (
+    BuildDamageEffects,
     resolve_damage_effects,
     resolved_item_name,
     validate_item_input_options,
@@ -690,7 +691,7 @@ def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arg
     params: "FightParams",
     champion_data: Mapping[str, Any],
     items: Iterable[dict[str, Any]],
-    item_damage_effects: Any,
+    item_damage_effects: BuildDamageEffects,
     fight_stats: Mapping[str, Any],
     ability_damages: Mapping[str, Any],
 ) -> LedgerInputs:
@@ -866,7 +867,7 @@ def _bounded_request_float(
     return parsed
 
 
-def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
+def validate_cast_order_shape(cast_order: object, *, field: str) -> None:
     """Reject a requested cast order no champion could satisfy.
 
     Champion-agnostic on purpose: a cast order is a non-empty list of distinct

@@ -56,7 +56,9 @@ def _span(nodes: list[ast.stmt]) -> int:
 def _docstring(node: ast.AST) -> ast.Constant | None:
     body = node.body if isinstance(node, SCOPES) else []
     head = body[0].value if body and isinstance(body[0], ast.Expr) else None
-    return head if isinstance(getattr(head, "value", None), str) else None
+    return (
+        head if isinstance(head, ast.Constant) and isinstance(head.value, str) else None
+    )
 
 
 def _comment_blocks(source: str) -> list[tuple[int, list[str]]]:

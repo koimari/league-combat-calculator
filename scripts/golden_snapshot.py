@@ -46,7 +46,7 @@ import math
 import subprocess
 import sys
 import time
-from collections.abc import Mapping
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any, Literal
@@ -264,7 +264,9 @@ def _fight_summary(result):
     return summary
 
 
-def snapshot_champion_baselines(champions: dict[str, Any]):
+def snapshot_champion_baselines(
+    champions: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
     """Section 1: stats at levels 1/11/18 and level-11 abilities, all champions."""
     out = {}
     for key in sorted(champions):
@@ -286,7 +288,11 @@ def snapshot_champion_baselines(champions: dict[str, Any]):
     return out
 
 
-def _resolve_build(requested_names: list[str], items_by_name, substitutions):
+def _resolve_build(
+    requested_names: list[str],
+    items_by_name: Mapping[str, dict[str, Any]],
+    substitutions: list[dict[str, str | None]],
+) -> list[dict[str, Any]]:
     """Resolve build item names against cached data, logging missing names."""
     build = []
     for name in requested_names:
@@ -299,8 +305,10 @@ def _resolve_build(requested_names: list[str], items_by_name, substitutions):
 
 
 def snapshot_registered_fights(
-    champions: dict[str, Any], items_by_name: dict[Any, Any], substitutions
-):
+    champions: dict[str, Any],
+    items_by_name: Mapping[str, dict[str, Any]],
+    substitutions: list[dict[str, str | None]],
+) -> dict[str, dict[str, Any]]:
     """Section 2: fights for every registered champion, 4 builds x 2 levels.
 
     Each level holds the original one-rotation entries under the build keys,
@@ -347,8 +355,10 @@ def snapshot_registered_fights(
 
 
 def snapshot_keystone_fights(
-    champions: dict[str, Any], items_by_name: dict[Any, Any], substitutions
-):
+    champions: dict[str, Any],
+    items_by_name: Mapping[str, dict[str, Any]],
+    substitutions: list[dict[str, str | None]],
+) -> dict[str, dict[str, Any]]:
     """Section 4: the two swing-scheduling keystones, armed.
 
     One melee and one ranged holder on the physical build, at both fight
@@ -402,7 +412,9 @@ def _sweep_entry(champion_data, item, **fight_kwargs):
     }
 
 
-def snapshot_item_sweep(champions: dict[str, Any], items: dict[str, Any]):
+def snapshot_item_sweep(
+    champions: dict[str, Any], items: dict[str, Any]
+) -> dict[str, dict[str, Any]]:
     """Section 3: every item, alone, at level 11, in two arms.
 
     The one-rotation arm runs Vayne and Ahri with auto_attack_uptime=1.0 —
@@ -438,7 +450,7 @@ def snapshot_item_sweep(champions: dict[str, Any], items: dict[str, Any]):
     return out
 
 
-def _git(*args):
+def _git(*args: str) -> str:
     """One git command's stdout, or "" when git rejects the request."""
     result = subprocess.run(
         ["git", *args], cwd=REPO_ROOT, capture_output=True, text=True, check=False
@@ -446,12 +458,12 @@ def _git(*args):
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
-def _meta_fetched_at(filename: str):
+def _meta_fetched_at(filename: str) -> str | None:
     meta_path = REPO_ROOT / "data" / f".{filename}.meta"
     return json.loads(meta_path.read_text(encoding="utf-8")).get("fetched_at")
 
 
-def snapshot_provenance():
+def snapshot_provenance() -> dict[str, str | None]:
     """Exactly the keys ``compare`` excludes — one producer, one exclusion set."""
     return {
         "git_head": _git("rev-parse", "HEAD"),
@@ -464,10 +476,10 @@ def snapshot_provenance():
 def snapshot_metadata(
     champions: dict[str, Any],
     items: dict[str, Any],
-    substitutions,
+    substitutions: list[dict[str, str | None]],
     sweep_error_count: int,
-    sections,
-):
+    sections: Mapping[str, Any],
+) -> dict[str, Any]:
     """Section 4: patch, provenance, counts, and the shape fingerprint.
 
     The fingerprint block is computed by ``fingerprint_counts`` over the
@@ -488,7 +500,7 @@ def snapshot_metadata(
     }
 
 
-def build_snapshot():
+def build_snapshot() -> dict[str, Any]:
     """Compute the full golden snapshot as a plain-JSON-serializable dict."""
     champions = fetch_champion_data()
     items = fetch_item_data()
@@ -528,7 +540,7 @@ COUPLED_SNAPSHOT_KIND = "coupled"
 FINGERPRINT_COUNT_FIELDS = ("sections", "entries", "leaves", "numeric_leaves")
 
 
-def numeric_sections(snapshot):
+def numeric_sections(snapshot: Mapping[str, Any]) -> dict[str, Any]:
     """Every top-level section ``fingerprint`` counts — ``metadata`` excluded."""
     return {
         key: value
@@ -549,7 +561,7 @@ def _count_leaves(value):
     return sum(pair[0] for pair in totals), sum(pair[1] for pair in totals)
 
 
-def fingerprint_counts(sections):
+def fingerprint_counts(sections: Mapping[str, Any]) -> dict[str, int | str]:
     """The shape figures for one set of numeric sections."""
     leaves, numeric = _count_leaves(sections)
     return {
@@ -560,7 +572,7 @@ def fingerprint_counts(sections):
     }
 
 
-def fingerprint(snapshot):
+def fingerprint(snapshot: Mapping[str, Any]) -> dict[str, int | str]:
     """The leaf/entry counts plus ``src_tree_sha`` — the one source of those figures.
 
     Domain: the numeric sections only.  ``metadata`` is excluded, because it
@@ -840,7 +852,7 @@ def _reportable(value):
     return _format_value(value)
 
 
-def leaf_report(old, new):
+def leaf_report(old: Mapping[str, Any], new: Mapping[str, Any]) -> tuple[LeafDiff, ...]:
     """Every difference as a LeafDiff, grouped by scenario, sorted by |percent|.
 
     List members carrying a record identity, an ``event_id`` or a ``slot`` beside
@@ -857,7 +869,7 @@ def leaf_report(old, new):
     )
 
 
-def qualifies_for_investigation(diff):
+def qualifies_for_investigation(diff: LeafDiff) -> bool:
     """R-15's threshold — the one predicate that decides an investigator is owed."""
     if diff.transition != "value":
         return True
@@ -868,7 +880,7 @@ def qualifies_for_investigation(diff):
     )
 
 
-def receipt_numeric_leaves(kind):
+def receipt_numeric_leaves(kind: str) -> int | None:
     """The numeric-leaf denominator R-15's ratio clause reads from the receipt.
 
     Never a figure written in a document: the receipt is the sole home of
@@ -905,7 +917,7 @@ class CoupledScenario:
     request: Mapping[str, Any]
     score_mode: bool = False
 
-    def equipped(self):
+    def equipped(self) -> frozenset[str]:
         """Every item name this scenario puts on any participant."""
         names = set()
         for loadout in (
@@ -1392,7 +1404,7 @@ COUPLED_SCENARIOS = (
 )
 
 
-def bench_roster_scenarios():
+def bench_roster_scenarios() -> tuple[CoupledScenario, ...]:
     """The four bench rosters, as coupled scenarios: read, never typed.
 
     They move the optimizer's work counters, where :data:`COUPLED_SCENARIOS` is
@@ -1419,7 +1431,7 @@ def _uncovered_producers(scenarios, producers):
     return tuple(sorted(p for p in producers if producer_item(p) not in equipped))
 
 
-def receipt_walk_families():
+def receipt_walk_families() -> dict[str, frozenset[str]]:
     """Every receipt-walk deferral family, mapped to the items that declare it.
 
     Read from ``docs/receipts/receipt-walk-retirement-schedule.json``, the derived
@@ -1432,7 +1444,9 @@ def receipt_walk_families():
     }
 
 
-def covering_scenarios(scenarios, families):
+def covering_scenarios(
+    scenarios: Collection[CoupledScenario], families: Mapping[str, Iterable[str]]
+) -> dict[str, tuple[str, ...]]:
     """Which scenarios put one of a family's declaring items on a participant.
 
     One home for the predicate, because two readers ask it: this module's
@@ -1458,7 +1472,7 @@ def _uncovered_families(scenarios, families):
     return tuple(sorted(family for family, names in covering.items() if not names))
 
 
-def holder_amp_declarations():
+def holder_amp_declarations() -> dict[str, frozenset[str]]:
     """Each static holder amp, mapped to the items whose declaration produces it.
 
     A family re-priced out of the pair engine's rows while no scenario arms an amp
@@ -1527,7 +1541,7 @@ def _threshold_health_raisers():
     )
 
 
-def repricing_window_declarations():
+def repricing_window_declarations() -> dict[str, tuple[frozenset[str], ...]]:
     """Each re-pricing window, mapped to the declaration sides a scenario must equip.
 
     A window no scenario arms prices every packet at the fight's baseline and
@@ -1537,7 +1551,7 @@ def repricing_window_declarations():
     attacker's max-health burn with a defender's threshold-health lifeline.  Each
     value is a tuple of *sides*, and a covering scenario equips one item of each.
     """
-    windows = {}
+    windows: dict[str, tuple[frozenset[str], ...]] = {}
     holders = _temporary_lethality_holders()
     if holders:
         windows[LETHALITY_WINDOW] = (holders,)
@@ -1548,7 +1562,10 @@ def repricing_window_declarations():
     return dict(sorted(windows.items()))
 
 
-def window_covering_scenarios(scenarios, windows):
+def window_covering_scenarios(
+    scenarios: Collection[CoupledScenario],
+    windows: Mapping[str, Sequence[Collection[str]]],
+) -> dict[str, tuple[str, ...]]:
     """Which scenarios equip a declaring item of *every* side of each window.
 
     One side is :func:`covering_scenarios` asked once; a window is the
@@ -1610,7 +1627,7 @@ def _swing_pricing_functions():
     return reached
 
 
-def swing_target_terms():
+def swing_target_terms() -> frozenset[DefenseField]:
     """Every defensive field the basic-attack swing pricing reads off its target.
 
     The pair engine holds a target's resolved defence as ``target_``-prefixed
@@ -1631,7 +1648,7 @@ def swing_target_terms():
     )
 
 
-def swing_term_declarations():
+def swing_term_declarations() -> dict[str, frozenset[str]]:
     """Each target-side swing term, mapped to the items that declare it.
 
     Keyed per field rather than per mechanic, because the field is the tree's own
@@ -1650,7 +1667,7 @@ def swing_term_declarations():
     return {term: frozenset(owners) for term, owners in sorted(terms.items())}
 
 
-def swing_delivering_scenarios(scenarios):
+def swing_delivering_scenarios(scenarios: Iterable[CoupledScenario]) -> frozenset[str]:
     """Which scenarios deliver a basic-attack swing at all.
 
     Read through ``FightParams.from_request``, which is the tree's own answer and
@@ -1669,7 +1686,9 @@ def swing_delivering_scenarios(scenarios):
     )
 
 
-def swing_term_covering_scenarios(scenarios, terms):
+def swing_term_covering_scenarios(
+    scenarios: Collection[CoupledScenario], terms: Mapping[str, Iterable[str]]
+) -> dict[str, tuple[str, ...]]:
     """Which scenarios arm a swing term *and* swing at the card that holds it.
 
     Armed means met: a defender holding the item in a fight nobody swings at is the
@@ -1748,7 +1767,7 @@ def _coupled_receipt(parsed, resolved, *, score_mode):
     )
 
 
-def coupled_entry(scenario):
+def coupled_entry(scenario: CoupledScenario) -> dict[str, Any]:
     """One scenario's raw (unrounded) fights and coupled receipt."""
     parsed = parse_scenario_request(dict(scenario.request), deterministic=True)
     resolved = resolve_scenario(parsed)
@@ -1803,7 +1822,7 @@ def _exact_totals(entry):
     return totals
 
 
-def cross_participant_producers():
+def cross_participant_producers() -> frozenset[str]:
     """Every packet source that modifies another participant's damage.
 
     Read from ``trigger_stream.CAPABILITIES`` through its own
@@ -1817,15 +1836,15 @@ def cross_participant_producers():
 
 
 def capture_coupled(
-    scenarios,
+    scenarios: Collection[CoupledScenario],
     *,
-    producers,
-    families=None,
-    amps=None,
-    windows=None,
-    swing_terms=None,
-    exact=False,
-):
+    producers: Collection[str],
+    families: Mapping[str, Iterable[str]] | None = None,
+    amps: Mapping[str, Iterable[str]] | None = None,
+    windows: Mapping[str, Sequence[Collection[str]]] | None = None,
+    swing_terms: Mapping[str, Iterable[str]] | None = None,
+    exact: bool = False,
+) -> dict[str, Any]:
     """Roster snapshots through the coupled path, covering every producer.
 
     ``producers`` is read, never typed: it was the ``ast`` table
@@ -1944,7 +1963,7 @@ def require_committed_src():
         )
 
 
-def capture(outfile):
+def capture(outfile: str | Path) -> int:
     """Capture the pair-engine snapshot to ``outfile``."""
     require_committed_src()
     started = time.perf_counter()
@@ -1964,14 +1983,14 @@ def capture(outfile):
     return 0
 
 
-def coupled_scenarios_for(*, exact):
+def coupled_scenarios_for(*, exact: bool) -> tuple[CoupledScenario, ...]:
     """Which scenario set a capture covers; the exact one adds the bench rosters."""
     if not exact:
         return COUPLED_SCENARIOS
     return (*COUPLED_SCENARIOS, *bench_roster_scenarios())
 
 
-def capture_coupled_file(outfile, *, exact=False):
+def capture_coupled_file(outfile: str | Path, *, exact: bool = False) -> int:
     """Capture the coupled roster baseline (or its exact per-attacker totals)."""
     require_committed_src()
     started = time.perf_counter()
@@ -1994,7 +2013,7 @@ def capture_coupled_file(outfile, *, exact=False):
     return 0
 
 
-def rebuild_for(baseline):
+def rebuild_for(baseline: Mapping[str, Any]) -> dict[str, Any]:
     """Recompute the snapshot a baseline is a capture of, in its own mode."""
     metadata = baseline.get("metadata", {})
     if metadata.get("snapshot_kind") != COUPLED_SNAPSHOT_KIND:
@@ -2035,7 +2054,7 @@ def _write_report(path, diffs, kind):
     return report
 
 
-def compare(baseline_path, report_path=None):
+def compare(baseline_path: str | Path, report_path: str | Path | None = None) -> int:
     """Recompute the baseline's own snapshot and report every differing leaf."""
     baseline = json.loads(Path(baseline_path).read_text(encoding="utf-8"))
     kind = baseline.get("metadata", {}).get("snapshot_kind", PAIR_SNAPSHOT_KIND)
@@ -2062,14 +2081,14 @@ def compare(baseline_path, report_path=None):
     return 0
 
 
-def print_fingerprint(snapshot_path):
+def print_fingerprint(snapshot_path: str | Path) -> int:
     """Print one snapshot's shape figures — the sole home of those numbers."""
     snapshot = json.loads(Path(snapshot_path).read_text(encoding="utf-8"))
     print(json.dumps(fingerprint(snapshot), indent=2, sort_keys=True))
     return 0
 
 
-def main():
+def main() -> None:
     """CLI entry point: capture | compare | capture-coupled | fingerprint."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     commands = parser.add_subparsers(dest="command", required=True)
