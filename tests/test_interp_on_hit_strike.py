@@ -204,8 +204,8 @@ def _restricted_owners() -> tuple[str, ...]:
 def test_every_entry_carrying_the_channel_declares_the_packet() -> None:
     """Every channel holder routes the same registry key down the same channel.
 
-    The holder set is no longer pinned: adjudication is per clause, so a third
-    holder admits its Helping Hand clause and nothing else, and its other class
+    The holder set is not pinned: adjudication is per clause, so a third holder
+    admits its Helping Hand clause and nothing else, and its other class
     clauses still refuse a minion-class fight on their own.
     """
     assert _restricted_owners()
