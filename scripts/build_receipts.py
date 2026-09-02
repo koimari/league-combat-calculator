@@ -22,6 +22,7 @@ import tempfile
 from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -92,7 +93,9 @@ def _family_of(atom: Mapping) -> str:
     return atom["atom_id"].split(".", 1)[0]
 
 
-def champion_receipt(name: str, champ: Mapping, audits: Mapping) -> dict:
+def champion_receipt(
+    name: str, champ: Mapping[str, Any], audits: Mapping[str, Any]
+) -> dict[str, Any]:
     atoms = []
     atoms_file = ATOMS_DIR / f"{name.lower()}.atoms.json"
     if atoms_file.exists():
@@ -121,7 +124,9 @@ def champion_receipt(name: str, champ: Mapping, audits: Mapping) -> dict:
     }
 
 
-def item_receipt(item_id: str, item: Mapping, atoms: list[dict] | None = None) -> dict:
+def item_receipt(
+    item_id: str, item: Mapping[str, Any], atoms: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
     """One item receipt from the Atomizer item domain.
 
     ``atoms`` may be injected for tests; the default loads and validates the
@@ -157,7 +162,7 @@ def _manifest_items() -> dict | None:
     return None
 
 
-def build() -> dict:
+def build() -> dict[str, dict[str, dict[str, Any]]]:
     """Compute every receipt and the summary; publish atomically."""
     champs = json.loads(CHAMPS_JSON.read_text())
     items = json.loads(ITEMS_JSON.read_text())

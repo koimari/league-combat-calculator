@@ -17,6 +17,7 @@ import json
 import re
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT = REPO_ROOT / "data" / "onhit-matrix.json"
@@ -47,7 +48,7 @@ def ability_text(entry: Mapping) -> str:
     return " ".join(parts)
 
 
-def build() -> dict:
+def build() -> dict[str, dict[str, list[dict[str, Any]]]]:
     champions = json.loads(
         (REPO_ROOT / "data" / "champions.json").read_text(encoding="utf-8")
     )

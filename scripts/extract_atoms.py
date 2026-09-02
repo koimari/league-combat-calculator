@@ -44,6 +44,7 @@ import re
 import sys
 from collections.abc import Collection, Iterable, Mapping
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 BIN_DIR = ROOT / "data" / "bin" / "characters"
@@ -381,7 +382,7 @@ def load_atom_relations() -> dict[str, list[str]]:
     return {}
 
 
-def load_tag_map() -> dict:
+def load_tag_map() -> dict[str, list[str]]:
     if TAG_MAP_FILE.exists():
         return json.loads(TAG_MAP_FILE.read_text())
     return {}
@@ -477,7 +478,9 @@ def strip_champ_prefix(name: str, champ_norm: str) -> str:
     return name
 
 
-def object_features(obj: Mapping, key: str, champ_norm: str) -> dict:
+def object_features(
+    obj: Mapping[str, Any], key: str, champ_norm: str
+) -> dict[str, Any]:
     sp = obj.get("mSpell") or {}
     name = obj.get("mScriptName") or obj.get("ObjectName") or key.rsplit("/", 1)[-1]
     alt = sp.get("mAlternateName") or ""
@@ -593,7 +596,11 @@ def infer_damage_type(feat: Mapping) -> str | None:
 # --------------------------------------------------------------------------
 # Wiki damage-type bridge (data-driven; data/champions.json)
 # --------------------------------------------------------------------------
-def load_wiki_damage_types() -> dict[str, list[tuple[str, str, str | None]]]:
+#: One wiki ability row: ``(slot, ability name, damage type or None)``.
+WikiEntry = tuple[str, str, str | None]
+
+
+def load_wiki_damage_types() -> dict[str, list[WikiEntry]]:
     """champion_key -> [(slot, ability_name, damage_type), ...].
 
     Each ability entry's damageType from the wiki champion cache
@@ -647,7 +654,9 @@ def _entry_token_hits(entry_toks: set[str], obj_toks: set[str]) -> int:
     return len(hits)
 
 
-def _best_entry_match(entries, obj_toks: set[str], champ_norm: str = "") -> list | None:
+def _best_entry_match(
+    entries: list[WikiEntry], obj_toks: set[str], champ_norm: str = ""
+) -> WikiEntry | None:
     """Best ability entry by name-token overlap with the object's name.
 
     Returns None when nothing matches or the best match is tied (ambiguous),
@@ -666,7 +675,7 @@ def _best_entry_match(entries, obj_toks: set[str], champ_norm: str = "") -> list
 
 
 def _slot_damage_type(
-    entries, slot: str, obj_toks: set[str], champ_norm: str = ""
+    entries: list[WikiEntry], slot: str, obj_toks: set[str], champ_norm: str = ""
 ) -> str | None:
     """Wiki damage type for one ability slot.
 
@@ -684,7 +693,9 @@ def _slot_damage_type(
     return None
 
 
-def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | None:
+def wiki_damage_type(
+    entries: list[WikiEntry], champ_norm: str, name: str, alt: str
+) -> str | None:
     """Best wiki damage type for a SpellObject, or None (never a guess).
 
     Matching order, all driven by data/champions.json (no champion names
@@ -725,7 +736,11 @@ def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | Non
 # --------------------------------------------------------------------------
 # Classification
 # --------------------------------------------------------------------------
-def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, str]]:
+def classify_object(
+    feat: dict[str, Any],
+    keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
+    tag_map: Mapping[str, list[str]] | None = None,
+) -> list[tuple[str, str]]:
     """Return [(atom_id, family), ...] for one SpellObject.
 
     Evidence order (a later tier never overrides an earlier one):
@@ -800,12 +815,12 @@ def extract_champion(
     champ_name: str,
     bin_path: Path,
     keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
-    vocab,
-    passive_map=None,
-    tag_map=None,
-    wiki_types: None | dict[str, list[tuple[str, str, str | None]]] = None,
+    vocab: Mapping[str, dict[str, Any]],
+    passive_map: Mapping[str, list[dict[str, Any]]] | None = None,
+    tag_map: Mapping[str, list[str]] | None = None,
+    wiki_types: None | dict[str, list[WikiEntry]] = None,
     atom_relations: None | dict[str, list[str]] = None,
-) -> dict:
+) -> dict[str, Any]:
     ser = json.loads(bin_path.read_text())
     atoms: dict[tuple[str, str], dict] = {}  # (atom_id, behavior) -> atom
     unclassified: list[dict] = []
@@ -1037,7 +1052,7 @@ def champion_key(name: str) -> str:
 # --------------------------------------------------------------------------
 # Outputs
 # --------------------------------------------------------------------------
-def build_summary(results: Iterable[dict]) -> dict:
+def build_summary(results: Iterable[dict[str, Any]]) -> dict[str, list[str]]:
     summary: dict[str, set] = {}
     for r in results:
         for a in r["atoms"]:
@@ -1045,7 +1060,7 @@ def build_summary(results: Iterable[dict]) -> dict:
     return {fam: sorted(champs) for fam, champs in sorted(summary.items())}
 
 
-def compute_damage_type_stats(results: Iterable[dict]) -> dict:
+def compute_damage_type_stats(results: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Coverage of parameters.damage_type across damage-family atoms."""
     total = typed = 0
     by_type: dict[str, int] = {}
@@ -1071,8 +1086,11 @@ def compute_damage_type_stats(results: Iterable[dict]) -> dict:
 
 
 def build_report(
-    results: list[dict], vocab, sanity: list[dict], suggestions: list[str]
-) -> dict:
+    results: list[dict[str, Any]],
+    vocab: Mapping[str, dict[str, Any]],
+    sanity: list[dict[str, Any]],
+    suggestions: list[str],
+) -> dict[str, Any]:
     total_atoms = 0
     total_unclassified = 0
     total_noise = 0
@@ -1122,7 +1140,7 @@ def build_report(
     }
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--champions",
@@ -1230,7 +1248,9 @@ def main(argv=None) -> int:
     return 0
 
 
-def build_sanity_and_suggestions(results, vocab):
+def build_sanity_and_suggestions(
+    results: list[dict[str, Any]], vocab: Mapping[str, dict[str, Any]]
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Sanity checks for curated mechanics + classifier improvement list."""
     by_champ = {r["champion"]: r for r in results}
     sanity = []

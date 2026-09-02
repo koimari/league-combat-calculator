@@ -18,7 +18,9 @@ from __future__ import annotations
 import argparse
 import json
 import time
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -45,7 +47,7 @@ RAW_DIR = Path("data/wiki-raw")
 UA = "Scryglass-wiki-decompose/0.1 (research)"
 
 
-def api(client, params):
+def api(client: httpx.Client, params: Mapping[str, str]) -> dict[str, Any]:
     params = dict(params)
     params["format"] = "json"
     r = client.get(API, params=params)
