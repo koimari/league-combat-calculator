@@ -21,7 +21,6 @@ Delete a row when it lands.
 | e9 steraks re-derived to death_time 9.702; HANDOVER.md:2513 and scenarios.json:639 still cite the superseded 15.091 — reconcile (corpus via repin, never hand-edit) | #227 |
 | Manaflow modelled only for Tear though five items carry the keys; Mercurial's 50%/2s movement duplicated between atom values and declaration (no accessor home) | #230 |
 | F-7 (pre-existing on HEAD): MODULE_CC names only CC-bearing slots; Fimbulwinter certification by candidate coverage alone — campaign follow-up | #228 |
-| F-5: Vi Blast Shield rider binds to a carrier by ordinal before the walk decides (D-VI-1); the strict xfail is retired for a green denial-receipt test (test_w2_sustain.py:313); walk-side re-anchor to first unblocked cast still needed (old damage.py:1864 pin stale) | #229 |
 | PERF DEBT: measured — budget table in `benchmarks.md` ("Optimizer search — `optimize_build`, uncoupled"). Decide: accept and close, or take the design change (hoist the per-owner fold to the fight) | #213 |
 
 ## Coordination note (2026-08-21, from the roadmap-closeout session)

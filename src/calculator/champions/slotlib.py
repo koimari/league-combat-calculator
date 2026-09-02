@@ -725,13 +725,11 @@ def attach_self_shield(
     """Attach a module-authored self-shield payload to an ability entry.
 
     The payload shape mirrors the Eclipse item's ``self_shield_events``
-    receipt: the engine copies the list onto the ability's damage-event
-    rows by ordinal, and the participant ledger grants a timed self-shield
-    at that event's timestamp.  Only an ability emitting damage events can
-    carry it, so a shield-only slot stays on the ally-support scanner.
-    ``actor_wide`` is the flag actor-wide heals carry -- one activation is
-    one shield, de-duplicated across enemy pairs in ``participant_timeline``
-    rather than by a per-module roster-index gate.
+    receipt.  The engine copies the list onto the ability's damage-event
+    rows by ordinal and the ledger grants a timed self-shield at that
+    timestamp.  ``actor_wide`` de-duplicates one activation across enemy
+    pairs, and ``rebind_on_ability_hit`` moves the rider to the first
+    ability packet that lands when its authored carrier is blocked.
     """
     entry["self_shield_events"] = [
         {
@@ -739,6 +737,7 @@ def attach_self_shield(
             "duration": float(duration),
             "source": str(source),
             "actor_wide": True,
+            "rebind_on_ability_hit": True,
         }
     ]
     if detail:

@@ -371,6 +371,14 @@ class SurvivalAction(NamedTuple):
     # "names none").  They were ``str | None`` id fields until Phase 4 S1;
     # every consumer compared them for identity, which is what a slot is.
     trigger_slot: int = NO_SLOT
+    # A rider whose trigger is "the holder's next ability hit", which only
+    # the walk can resolve: ``trigger_slot`` names one carrier packet chosen
+    # by ordinal before the walk knew which packets land, and this flag lets
+    # the kernel move the rider to the first ability packet that does land
+    # (``transitions._rebind_self_shields``).  ``slotlib.attach_self_shield``
+    # is what declares it; the Eclipse item's self-shield does not, and keeps
+    # the one carrier it was authored on.
+    rebinds_on_ability_hit: bool = False
     event: dict | None = None
     # Damage fields
     amount: float = 0.0

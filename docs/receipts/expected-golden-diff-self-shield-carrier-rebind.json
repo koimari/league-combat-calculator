@@ -1,50 +1,125 @@
 {
   "slice": "self-shield-carrier-rebind",
-  "dated": "2026-08-21",
+  "dated": "2026-09-02",
+  "issue": 229,
   "receipt": "docs/receipts/self-shield-carrier-rebind-2026-08-21.md",
   "correction": {
-    "one_sentence": "D-VI-1's detector (participant_timeline._self_shield_carrier_denials) is generic over every attach_self_shield rider, not Vi-specific: catalyst_roster's Malphite (enemy) has its Granite Shield rider refused as trigger_event_skipped on the same shape, so combat.item_denial_receipts gains two new denial rows for that scenario and combat.dispositions gains the matching disposition entries for their fields.",
-    "why_it_had_no_symptom_elsewhere": "The audit only fires when all three of the receipt doc's conditions hold (rider refused as trigger_event_skipped, that carrier genuinely skipped in the published ledger, and the holder lands at least one ability packet at or after the carrier's timestamp). catalyst_roster is the only committed coupled scenario where an enemy's self-shield rider hits that exact shape; no damage, healing, or survival number moves anywhere -- the receipt is additive per docs/receipts/self-shield-carrier-rebind-2026-08-21.md section 5's golden note."
+    "one_sentence": "A self-shield rider whose payload declares rebind_on_ability_hit now moves, inside the survival walk, to the first ability packet its holder lands instead of dying with the carrier it was bound to by ordinal, so catalyst_roster's Malphite is granted Granite Shield at 7.49 and its denial receipt is replaced by an applied shield, while liandry_reprice_mage_roster's Malphite lands no candidate at all and gains the denial row that names the last one.",
+    "why_the_new_numbers_are_right": "Granite Shield is granted on Malphite's ability landing, which only the walk can settle: the Q it was authored on is attacker_state_blocked, his ability against ally:Pantheon lands at 7.49, and in game that hit grants the shield. The 243.3 is the same amount the rider always carried and the 217.8 absorbed is what the roster deals him in the 8 s the shield holds. liandry_reprice_mage_roster moves no number: Malphite is blocked through every in-window candidate there, so the rider stays refused and only the receipt naming that fact is new.",
+    "pair_jurisdiction": "champions/slotlib.attach_self_shield stamps rebind_on_ability_hit on the payload it writes, so every module authoring a self shield gains one boolean leaf in the pair snapshot. No number moves in that jurisdiction."
   },
   "landed_against": {
     "coupled_golden": "scripts/golden_coupled_baseline.json",
-    "rule": "R-17 -- the unit declares its moved leaves; the boundary re-capture is separate"
+    "pair_golden": "scripts/golden_baseline.json",
+    "rule": "R-17 -- the unit declares its moved leaves; the baselines are re-captured in the commit that follows"
   },
   "expected_diff_paths": {
+    "golden": [
+      "/champion_baselines/Akshan/abilities_level_11/passive/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Ambessa/abilities_level_11/W/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Blitzcrank/abilities_level_11/Q/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Camille/abilities_level_11/W/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Malphite/abilities_level_11/Q/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Neeko/abilities_level_11/R/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Rakan/abilities_level_11/Q/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Renata/abilities_level_11/E/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Senna/abilities_level_11/R/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Shen/abilities_level_11/E/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Shyvana/abilities_level_11/W/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Skarner/abilities_level_11/W/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Vex/abilities_level_11/W/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Vi/abilities_level_11/Q/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Viktor/abilities_level_11/Q/self_shield_events[0]/rebind_on_ability_hit",
+      "/champion_baselines/Volibear/abilities_level_11/E/self_shield_events[0]/rebind_on_ability_hit"
+    ],
+    "golden_shape_counters": [],
     "coupled_golden": [
+      "/coupled_scenarios/catalyst_roster/combat/breakdown[3]/effective_health",
+      "/coupled_scenarios/catalyst_roster/combat/breakdown[3]/health_damage",
+      "/coupled_scenarios/catalyst_roster/combat/breakdown[3]/shield_absorbed",
+      "/coupled_scenarios/catalyst_roster/combat/breakdown[3]/support_shield_received",
+      "/coupled_scenarios/catalyst_roster/combat/breakdown[3]/support_value",
+      "/coupled_scenarios/catalyst_roster/combat/breakdown[3]/utility_outcomes/scored_support_amount",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/breakdown[3].utility_outcomes.scored_support_amount",
       "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[0].rebind_time",
       "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[0].time",
       "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[0].withheld_amount",
-      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[1].rebind_time",
-      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[1].time",
-      "/coupled_scenarios/catalyst_roster/combat/dispositions/item_denial_receipts[1].withheld_amount",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/support_events[0].applied_amount/disposition",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/support_events[0].applied_amount/reason",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/support_events[0].expires_at",
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/utility_outcomes.participants.enemy:Malphite.scored_support_amount",
       "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[0]",
-      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[1]"
+      "/coupled_scenarios/catalyst_roster/combat/objective/enemy_team_effective_health",
+      "/coupled_scenarios/catalyst_roster/combat/objective/total_support_value",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/effective_health",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/ending_health",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/ending_health_ratio",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/health_damage",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/remaining_shield",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/shield_absorbed",
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/support_shield_received",
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/applied_amount",
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/expires_at",
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/shield_pool",
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/skipped_reason",
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/time",
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/trigger_event_id",
+      "/coupled_scenarios/catalyst_roster/combat/utility_outcomes/participants/enemy:Malphite/scored_support_amount",
+      "/coupled_scenarios/liandry_reprice_mage_roster/combat/dispositions/item_denial_receipts[0].time",
+      "/coupled_scenarios/liandry_reprice_mage_roster/combat/dispositions/item_denial_receipts[0].withheld_amount",
+      "/coupled_scenarios/liandry_reprice_mage_roster/combat/item_denial_receipts[0]"
     ],
     "coupled_golden_shape_counters": []
   },
-  "measured": {
-    "coupled_golden": "10 differing leaves: the eight enumerated above plus /metadata/fingerprint/leaves and /metadata/fingerprint/numeric_leaves, both disowned counters (umbrella criterion 4) claimed by no allowlist by design.",
+  "expected_diff_values": {
     "command": "python scripts/golden_snapshot.py compare scripts/golden_coupled_baseline.json",
-    "quoted_values": {
-      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[0]": [
-        null,
-        {
-          "time": 0.0,
-          "kind": "item_denial",
-          "source": "Granite Shield",
-          "reason": "self_shield_carrier_skipped",
-          "attacker": "enemy:Malphite",
-          "target": "enemy:Malphite",
-          "event_id": "enemy:Malphite:ally:Pantheon:0:shield",
-          "carrier_event_id": "enemy:Malphite:ally:Pantheon:0",
-          "carrier_skipped_reason": "attacker_state_blocked",
-          "rebind_time": 7.49,
-          "withheld_amount": 243.3
-        }
+    "catalyst_roster_rider": {
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/time": [0.0, 7.49],
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/applied_amount": [
+        0.0, 243.3
       ],
-      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[1]": [
-        null,
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/expires_at": [
+        null, 15.49
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/shield_pool": [
+        null, "general"
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/skipped_reason": [
+        "trigger_event_skipped", null
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/support_events[0]/trigger_event_id": [
+        "enemy:Malphite:main:0", "enemy:Malphite:ally:Pantheon:5"
+      ]
+    },
+    "catalyst_roster_survival": {
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/shield_absorbed": [
+        0.0, 217.8
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/support_shield_received": [
+        0.0, 243.3
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/remaining_shield": [
+        0.0, 25.5
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/health_damage": [
+        1992.1, 1774.3
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/effective_health": [
+        2433.0, 2676.3
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/ending_health": [
+        440.9, 658.7
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/participants[3]/survival/ending_health_ratio": [
+        0.18, 0.27
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/objective/enemy_team_effective_health": [
+        5581.1, 5824.4
+      ],
+      "/coupled_scenarios/catalyst_roster/combat/objective/total_support_value": [0.0, 243.3]
+    },
+    "denial_rows": {
+      "/coupled_scenarios/catalyst_roster/combat/item_denial_receipts[0]": [
         {
           "time": 0.0,
           "kind": "item_denial",
@@ -57,13 +132,40 @@
           "carrier_skipped_reason": "attacker_state_blocked",
           "rebind_time": 7.49,
           "withheld_amount": 243.3
+        },
+        null
+      ],
+      "/coupled_scenarios/liandry_reprice_mage_roster/combat/item_denial_receipts[0]": [
+        null,
+        {
+          "time": 0.0,
+          "kind": "item_denial",
+          "source": "Granite Shield",
+          "reason": "self_shield_carrier_skipped",
+          "attacker": "enemy:Malphite",
+          "target": "enemy:Malphite",
+          "event_id": "enemy:Malphite:main:0:shield",
+          "carrier_event_id": "enemy:Malphite:main:0",
+          "carrier_skipped_reason": "attacker_state_blocked",
+          "last_candidate_event_id": "enemy:Malphite:main:4",
+          "last_candidate_skipped_reason": "attacker_state_blocked",
+          "withheld_amount": 303.3
         }
       ]
-    },
-    "fingerprint_leaves": [78253, 78287],
-    "fingerprint_numeric_leaves": [26416, 26422]
+    }
+  },
+  "described_leaves": {
+    "why": "Amendment E's third guard: an allowlist claiming a disposition transition names the leaf that entry describes. This one describes a leaf that DID move, so the number is claimed under its own snapshot path above and the citation carries none of it.",
+    "leaves": {
+      "/coupled_scenarios/catalyst_roster/combat/dispositions/support_events[0].applied_amount/disposition": {
+        "describes": "/coupled_scenarios/catalyst_roster/combat/support_events[0].applied_amount",
+        "moved": [0.0, 243.3],
+        "claimed_under": "/coupled_scenarios/catalyst_roster/combat/support_events[0]/applied_amount"
+      }
+    }
   },
   "numbers_that_did_not_move": {
-    "damage_healing_survival": "combat.item_denial_receipts is a detector-only channel (docs/receipts/self-shield-carrier-rebind-2026-08-21.md section 4): shield_absorbed and every damage/healing/survival leaf in catalyst_roster is unchanged. Only the new receipt rows and their disposition entries appear."
+    "every_other_scenario": "Twenty-one of the twenty-three coupled scenarios are byte-identical. The two that move both hold a Malphite whose Granite Shield rider was refused for its carrier's sake; no other roster holds a blocked self-shield rider.",
+    "pair_engine": "The pair snapshot gains sixteen boolean payload leaves and no number."
   }
 }
