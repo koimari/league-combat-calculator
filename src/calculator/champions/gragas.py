@@ -10,7 +10,7 @@ from ..healing_helpers import ability_json
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -24,11 +24,10 @@ def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _barrel_roll(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charged = bool(ctx.option("q_fully_fermented"))
     attr = "Maximum Magic Damage" if charged else "Minimum Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)

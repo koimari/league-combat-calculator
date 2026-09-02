@@ -36,7 +36,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import missing_hp_fraction
+from .module_helpers import missing_hp_fraction, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -137,12 +137,11 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
 _death_in_lavender.phase = BUFF
 
 
-def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _void_surge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: ``q_casts`` directional dashes, each 12-20 + 105% AD, can crit."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_dash = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     casts = min(max(int(ctx.option("q_casts")), 1), 4)
@@ -179,13 +178,12 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _royal_maelstrom(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: slash count from final bonus AS; per-slash damage interpolates
     between the JSON min/max attributes by target missing health."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     missing = missing_hp_fraction(ctx)
     min_hit = extract_named(
@@ -239,13 +237,12 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _endless_banquet(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R active: Void Coral explosion (true damage + 20% missing health),
     plus the True Form stat buff when the ``true_form`` option is on."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     missing = missing_hp_fraction(ctx)
     max_hp = ctx.target_stat("target_max_health")

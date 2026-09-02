@@ -41,6 +41,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -58,12 +59,11 @@ from .source_receipts import load_champion_sources
 Q_SHRED_DURATION = data_value(spell_object("Kog'Maw", "KogMawQ"), "ShredDuration")
 
 
-def _caustic_spittle(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _caustic_spittle(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: magic damage + bonus-AS stat buff + resistance shred debuff."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry: dict[str, Any] = {

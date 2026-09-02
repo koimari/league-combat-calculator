@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -26,11 +26,10 @@ def _nimble_fighter(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _urchin_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _urchin_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     attack_damage = ctx.stat("attack_damage")
     entry = damage_entry(
@@ -67,11 +66,10 @@ _W_PASSIVE_TICK_INTERVAL = 1.0 / data_value(_FIZZ_W_SPELL, "DoTTicksPerSecond")
 _W_PASSIVE_TICKS = int(_W_PASSIVE_DURATION / _W_PASSIVE_TICK_INTERVAL)
 
 
-def _seastone_trident(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _seastone_trident(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     active = extract_named(ability, "Active Magic Damage", rank, ctx.stats, ctx.target)
     passive_per_tick = extract_named(
         ability, "Passive Magic Damage per Tick", rank, ctx.stats, ctx.target

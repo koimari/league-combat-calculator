@@ -91,6 +91,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -193,12 +194,11 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _contaminate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: base + per-stack physical (+35% bonus AD) + per-stack 35% AP magic."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base = extract_named(ability, "Base Physical Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(

@@ -21,6 +21,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -32,12 +33,11 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 
 
-def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _twilight_shroud(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: emit the sourced energy restore and temporary maximum increase."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     duration = extract_value(ability, "Shroud Duration", rank)
     return {
         "name": ability_name(ability),
@@ -66,12 +66,11 @@ def _assassins_mark_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     )
 
 
-def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _perfect_execution(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: R1 dash damage plus R2 execute bounds for missing-HP scaling."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     r1_damage = extract_named(ability, "Magic Damage", rank, ctx.stats)
     r2_min = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats)

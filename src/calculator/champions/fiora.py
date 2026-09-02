@@ -8,7 +8,7 @@ from .. import healing_helpers as _healing
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     extract_named,
@@ -55,11 +55,10 @@ _riposte = named_damage(
 )
 
 
-def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, _rank = ranked
+@ranked_slot
+def _bladework(
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
+) -> dict[str, Any] | None:
     attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,

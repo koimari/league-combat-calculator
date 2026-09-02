@@ -51,7 +51,7 @@ from ..stats import growth_multiplier
 from .engine import SlotCtx
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import named_damage
+from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -131,7 +131,10 @@ def _voidling_attack_damage(
     )
 
 
-def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _void_swarm(
+    ctx: SlotCtx, ability: dict[str, Any], w_rank: int
+) -> dict[str, Any] | None:
     """W: zero-damage summon cast + the voidling-attack proc row.
 
     One summon wave per fight window: ``voidling_count`` Voidlings (2-4,
@@ -146,10 +149,6 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     the Zz'Rot stacks come from casting another ability and the Voidlings
     from W's Active, neither of which a basic attack does.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, w_rank = ranked
     if ctx.option("auto_attacks_only"):
         return None
 

@@ -48,6 +48,7 @@ from typing import Any
 from ..ability_spec import ControlEvent, DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -117,12 +118,11 @@ def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
 _backstab.phase = ONHIT
 
 
-def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _jack_in_the_box(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the sprung box's single-target attack volley."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     attacks = min(
         max(int(ctx.options.get("w_box_attacks", _BOX_MAX_ATTACKS)), 1),
         _BOX_MAX_ATTACKS,
@@ -160,12 +160,11 @@ def _jack_in_the_box(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _two_shiv_poison(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the base Magic Damage row, or the <30%-HP execute row."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     execute = bool(ctx.option("e_execute"))
     attribute = "Increased Damage" if execute else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -190,12 +189,11 @@ def _two_shiv_poison(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _hallucinate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _hallucinate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the death-explosion Magic Damage plus commanded clone attacks."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     clone_attacks = min(max(int(ctx.option("r_clone_attacks")), 0), 30)
     ad = float(ctx.stat("attack_damage"))

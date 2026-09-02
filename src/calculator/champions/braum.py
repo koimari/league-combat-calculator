@@ -40,7 +40,7 @@ from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option
-from .module_helpers import at_level
+from .module_helpers import at_level, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -194,12 +194,11 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _winters_bite(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: base magic damage + 2.5% of Braum's OWN built max health."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
@@ -229,12 +228,11 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _stand_behind_me(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: self 20-40 (+36% bonus) armor AND magic resist; zero damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     entry = damage_entry(
         ability_name(ability),

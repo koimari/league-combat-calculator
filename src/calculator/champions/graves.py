@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -62,11 +62,10 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _end_of_line(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     initial = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     detonation = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -94,11 +93,10 @@ _smoke_screen = named_damage(
 )
 
 
-def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _quickdraw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("e_true_grit_stacks")), 0), 8)
     armor = extract_named(ability, "Bonus Armor", rank, ctx.stats, ctx.target) * stacks
     mr = (
@@ -121,11 +119,10 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
 _quickdraw.phase = BUFF
 
 
-def _collateral_damage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _collateral_damage(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     secondary = bool(ctx.option("r_secondary_target"))
     attr = "Reduced Damage" if secondary else "Physical Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)

@@ -15,7 +15,12 @@ from ..healing_helpers import ability_json, cast_slot_times, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    no_damage,
+    ranked_slot,
+    typed_damage,
+)
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -50,11 +55,8 @@ def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _kayle_e(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _kayle_e(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     passive = extract_named(ability, "Passive Damage", rank, ctx.stats, ctx.target)
     active = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(

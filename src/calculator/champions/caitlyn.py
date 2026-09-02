@@ -46,7 +46,7 @@ from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import at_level
+from .module_helpers import at_level, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -225,7 +225,10 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _piltover_peacemaker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: primary hit plus ``q_secondary_targets`` at the sourced 60% row.
 
     The cached prose: the shot "deals physical damage to the first enemy
@@ -236,10 +239,6 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ``q_secondary_targets`` champion option takes one reduced hit;
     traps-revealed enemies (full damage) are not distinguished.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)

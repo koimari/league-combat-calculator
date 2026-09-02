@@ -37,7 +37,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -114,12 +114,11 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
 _STRUT_ACTIVE_SECONDS = 4.0
 
 
-def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bullet_time(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: per-wave damage x sourced Total Waves (14/16/18 by rank)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_wave = extract_named(
         ability, "Physical Damage per Wave", rank, ctx.stats, ctx.target
@@ -178,7 +177,8 @@ def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
 _love_tap.phase = ONHIT
 
 
-def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _strut(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: the active's sourced bonus attack speed over its own window.
 
     The slot deals no damage at all (no damage instance exists in the
@@ -187,10 +187,6 @@ def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
     active does not hold full uptime of a longer fight.  The two
     movement-speed rows have no ``stat_buff`` key to land in.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)

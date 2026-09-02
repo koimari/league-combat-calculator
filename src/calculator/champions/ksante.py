@@ -8,7 +8,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -180,11 +180,10 @@ class _PathMakerRule:
 KSANTE_PATH_MAKER_RULE = _PathMakerRule()
 
 
-def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _path_maker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     for attribute in (
         "Physical Damage",
@@ -240,11 +239,8 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _all_out(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if bool(ctx.option("r_terrain")):
         strike = extract_named(

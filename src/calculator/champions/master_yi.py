@@ -32,7 +32,7 @@ from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -103,12 +103,11 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 _double_strike.phase = ONHIT
 
 
-def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _meditate(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: a zero-damage channel receipt (the heal lives in healing.py)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     entry = damage_entry(
         ability_name(ability),
         rank,

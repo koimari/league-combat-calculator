@@ -42,7 +42,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_contract import coverage
-from .module_helpers import no_damage_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -105,12 +105,11 @@ def _expunge_scaled(recast_min: float, recast_max: float) -> Callable[[float], f
     return scaled
 
 
-def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _twofold_hex(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: first-cast bolts + auto-recast expunge, both fire every cast."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     first = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     recast_min = extract_named(

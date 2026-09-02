@@ -28,7 +28,7 @@ from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import delayed_damage
+from .module_helpers import delayed_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -66,12 +66,11 @@ def _r_bounces(ctx: SlotCtx) -> int:
     return max(1, min(_R_MAX_BOUNCES, int(ctx.option("r_bounces"))))
 
 
-def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _pyroclasm(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: per-bounce damage x the r_bounces option (never the JSON total)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total = per_bounce * _r_bounces(ctx)
     entry = damage_entry(

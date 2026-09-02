@@ -8,7 +8,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import at_level, no_damage
+from .module_helpers import at_level, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -134,11 +134,10 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _dancing_grenade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     bounces = min(max(int(ctx.option("q_bounces")), 1), 4)
     deaths = min(max(int(ctx.option("q_target_deaths")), 0), 3)
     value = extract_named(
@@ -162,7 +161,10 @@ def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _captive_audience(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the summoned Lotus Trap's detonation damage.
 
     One trap detonates for the full "Magic Damage" row (20-260 + 120%
@@ -172,10 +174,6 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
     (default 1, max 2 — the charge cap) prices the first trap full and
     each further trap at the reduced row.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     traps = min(max(int(ctx.option("e_traps")), 1), 2)
     full = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -202,11 +200,10 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _curtain_call(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     shots = min(max(int(ctx.option("r_shots")), 1), 4)
     minimum = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target

@@ -34,7 +34,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import ability_cast_times
+from .module_helpers import ability_cast_times, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -147,16 +147,15 @@ def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
     )
 
 
-def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _summon_tibbers(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: % magic-pen stat buff + initial burst + Tibbers aura.
 
     Supports the ``tibbers_aura_seconds`` option (default 5.0) — how
     many seconds of aura damage to include in the R total.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     # R passive: % magic penetration, applied to the shared stats
     # context (BUFF phase runs before every damage slot) and reported
@@ -326,7 +325,10 @@ def _pyromania(ctx: SlotCtx) -> None:
     ctx.results["P"] = entry
 
 
-def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _molten_shield(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the shield's sourced retaliation landing.
 
     "While Molten Shield is active, enemies that deal damage to it take
@@ -337,10 +339,6 @@ def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     attacks.  One landing is a certified single hit; several are one
     aggregate, because nothing sources when each enemy strikes.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     if find_named_leveling(ability, "Magic Damage") is None:
         raise ValueError(
             "Annie E: the cached Molten Shield entry no longer carries a "

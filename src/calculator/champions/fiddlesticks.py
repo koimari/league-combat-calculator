@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -29,11 +29,8 @@ def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _terrify(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     feared = bool(ctx.option("q_target_already_feared"))
     attr = "Increased Magic Damage" if feared else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -77,15 +74,15 @@ _terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Durat
 
 def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
     if bool(ctx.option("q_target_already_feared")):
+        # pylint: disable-next=no-value-for-parameter  # ranked_slot takes (ctx)
         return _terrify(ctx)
     return _terrify_fearing(ctx)
 
 
-def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _bountiful_harvest(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     ticks = min(max(int(ctx.option("w_ticks")), 1), 8)
     per_instance = extract_named(
         ability, "Damage per Instance", rank, ctx.stats, ctx.target
@@ -118,11 +115,10 @@ _reap = named_damage(
 )
 
 
-def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _crowstorm(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     ticks = min(max(int(ctx.option("r_ticks")), 1), 20)
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target

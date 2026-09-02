@@ -38,7 +38,7 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .module_contract import coverage
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_name,
@@ -107,12 +107,11 @@ def _target_max_health_percent(
     return total
 
 
-def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _wilding_claw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the stance's empowered-attack on-hit (+ Awaken rows)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     awaken = bool(ctx.option("q_awaken"))
     empowered = min(
         max(

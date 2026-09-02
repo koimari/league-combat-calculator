@@ -60,7 +60,7 @@ from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_contract import coverage
-from .module_helpers import clamp
+from .module_helpers import clamp, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -358,11 +358,10 @@ def _timed_plasma_proc(
     }
 
 
-def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _void_seeker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     distance, hit_time = _w_hit_time(ctx)
@@ -407,11 +406,10 @@ def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _icathian_rain(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     evolved, evolution_note = _evolution_state(
         ctx,

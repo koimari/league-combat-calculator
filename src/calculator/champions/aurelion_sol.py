@@ -63,7 +63,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import delayed_damage, no_damage_slot
+from .module_helpers import delayed_damage, no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     by_option,
@@ -245,12 +245,11 @@ _Q_TICKS_PER_SECOND = 8
 _Q_TICK_INTERVAL = 1.0 / _Q_TICKS_PER_SECOND  # "every 0.125 seconds"
 
 
-def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _breath_of_light(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: full-channel beam + bursts; continuous channel in timed fights."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     ap = ctx.stat("ability_power")
     beam_per_second = _beam_per_second(ctx, ability, rank, ap)
@@ -395,12 +394,11 @@ _E_DURATION = data_value(_E_SPELL, "Duration")
 _E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.25 seconds"
 
 
-def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _singularity(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: 20 sourced ticks of the full-zone total, plus the execute line."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

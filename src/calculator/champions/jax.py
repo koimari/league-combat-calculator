@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -44,11 +44,8 @@ def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
 _assault.phase = BUFF
 
 
-def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _empower(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     value = extract_named(
         ability, "Additional Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -66,11 +63,10 @@ def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _counter_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     dodged = min(max(int(ctx.option("e_dodged_attacks")), 0), 5)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
@@ -89,11 +85,10 @@ def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _grandmaster(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),

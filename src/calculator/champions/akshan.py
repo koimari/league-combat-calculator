@@ -52,7 +52,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -239,17 +239,16 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _comeuppance(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: min damage per bullet x stored bullets + crit/missing-HP flags.
 
     Uses "Minimum Physical Damage per Bullet" — the JSON's "Maximum"
     variant already has the 3x missing-HP multiplier baked in; the
     fight engine applies that scaling itself from the flags.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_bullet = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target

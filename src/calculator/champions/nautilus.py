@@ -24,6 +24,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -57,12 +58,11 @@ def _staggering_blow(ctx: SlotCtx) -> dict[str, Any] | None:
 _staggering_blow.phase = ONHIT
 
 
-def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _titans_wrath(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: Pain of Wrath's Total Magic Damage across both instances."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -84,12 +84,11 @@ def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _depth_charge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the primary-target eruption's Increased Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     increased = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
     # The primary target "is stunned for the same duration, and knocked up
     # for a modified duration": the cached "Stun Duration" and "Knock Up

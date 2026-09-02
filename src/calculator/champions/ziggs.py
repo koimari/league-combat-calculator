@@ -28,6 +28,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     by_option,
@@ -101,12 +102,11 @@ def _short_fuse(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _hexplosive_minefield(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: 1 full mine + (mines_hit - 1) reduced mines, capped by JSON."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     mines = max(1, int(ctx.option("mines_hit")))
     full = extract_named(ability, "Magic Damage per Mine", rank, ctx.stats, ctx.target)

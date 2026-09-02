@@ -34,7 +34,7 @@ from ..damage import effective_cooldown
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_contract import coverage
-from .module_helpers import clamp, no_damage_slot
+from .module_helpers import clamp, no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -188,11 +188,10 @@ def _timed_threaded_volley(
     return entry
 
 
-def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _threaded_volley(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     ground = str(ctx.option("q_ground"))
     if ground not in {"normal", "worked"}:
@@ -245,12 +244,11 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _seismic_shove(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W deals no damage but spends its sourced cast and mana cost."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     return {
         "name": ability_name(ability),
         "rank": rank,
@@ -262,11 +260,10 @@ def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _unraveled_earth(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     requested = int(ctx.option("e_detonations"))
     detonations = int(clamp(float(requested), 0.0, 4.0))

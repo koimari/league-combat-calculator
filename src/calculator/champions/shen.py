@@ -57,7 +57,7 @@ from ..stats import calculate_attack_speed
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
     ability_name,
@@ -163,12 +163,11 @@ def _energy_restore(level: int) -> float:
     return 30.0
 
 
-def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _twilight_assault(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: selected normal/enhanced attacks, including their base swings."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     hits = min(
         _Q_ATTACKS,
@@ -253,7 +252,10 @@ def _twilight_assault(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _shadow_dash(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: one champion hit at the selected dash travel time, plus Ki
     Barrier's self-shield (P), which the cached notes name as one of the
     dash's own completion triggers.
@@ -266,10 +268,6 @@ def _shadow_dash(ctx: SlotCtx) -> dict[str, Any] | None:
     prices exactly the one grant a real fight would produce and Q's own
     later completion is not double-counted.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     distance = min(600.0, max(300.0, float(ctx.option("e_dash_distance"))))
     speed = _E_BASE_SPEED + ctx.stat("move_speed")

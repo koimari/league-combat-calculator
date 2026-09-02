@@ -56,7 +56,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage, typed_damage
+from .module_helpers import no_damage, ranked_slot, typed_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -129,12 +129,11 @@ def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _mounting_dread(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: Mounting Dread — third-stack Wolf pounce."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     stacks = min(max(int(ctx.option("e_stacks")), 1), _E_STACK_MAX)
     if stacks < _E_STACK_MAX:
         return no_damage(
@@ -228,7 +227,10 @@ def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _wolfs_frenzy(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: Wolf's Frenzy — Wolf basic attacks over the fight window.
 
     Wolf's attacks are magic and the rate scales with 25% of Kindred's
@@ -238,10 +240,6 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     through the same modifier override Mounting Dread uses, so the
     sourced formula prices exactly.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     attacks = min(max(int(ctx.option("w_attacks")), 1), 8)
     marks = _marks(ctx)
     leveling = find_named_leveling(ability, "Magic Damage")

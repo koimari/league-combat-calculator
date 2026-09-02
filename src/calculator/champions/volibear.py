@@ -26,6 +26,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -130,13 +131,12 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
 _relentless_storm.phase = BUFF
 
 
-def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _frenzied_maul(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: base physical damage; the Wounded 2nd bite adds the sourced
     increased-damage part (50% + 25% per 100 bonus AD of the base)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)

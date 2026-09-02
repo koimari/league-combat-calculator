@@ -21,6 +21,7 @@ from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     ability_cast_times,
     no_damage,
+    ranked_slot,
 )
 from .slotlib import (
     ability_name,
@@ -55,11 +56,10 @@ _BOLT_OFFSET = 0.5
 _BOLT_INTERVAL = 0.5
 
 
-def _electrical_surge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _electrical_surge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     active = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     passive = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
@@ -81,11 +81,10 @@ def _electrical_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _slicing_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _slicing_maelstrom(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     bolts = max(1, min(6, int(ctx.option("r_bolts"))))
     per = extract_named(ability, "Magic Damage Per Bolt", rank, ctx.stats, ctx.target)
     return {

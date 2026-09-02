@@ -62,7 +62,7 @@ from ..binary_roots import data_value, spell_object
 from ..survival.actions import TransitionRank
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import missing_hp_fraction, named_damage
+from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -189,7 +189,10 @@ _blood_hunt.phase = BUFF
 _E_REDUCTION_SOURCE = "Warwick.E[0].effects[0].description"
 
 
-def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _primal_howl(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: zero damage, a sourced incoming-damage-reduction self-state window.
 
     "Active: Warwick gains damage reduction for up to 2.75 seconds. Primal
@@ -202,10 +205,6 @@ def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
     Unbreakable Will, no cached sentence in this kit carves true damage — or
     any other type — out, so the un-narrowed declaration is the sourced one.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     reduction_percent, reduction_atom = required_ranked_attribute_atom(

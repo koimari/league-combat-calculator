@@ -11,7 +11,7 @@ from ..binary_roots import data_value, data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -189,11 +189,10 @@ _powder_keg = named_damage(
 )
 
 
-def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _cannon_barrage(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     fire_at_will = bool(ctx.option("r_fire_at_will"))
     deaths_daughter = bool(ctx.option("r_deaths_daughter"))
     waves = (

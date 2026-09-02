@@ -44,7 +44,7 @@ from ..binary_roots import data_value_at_rank, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_contract import coverage
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -72,12 +72,11 @@ def _bonus_magic_damage_levelings(
     return matches[0], matches[1]
 
 
-def _twin_fang(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _twin_fang(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: per-level base + 10% AP; poisoned targets add rank bonus + 55% AP."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base_leveling, poison_leveling = _bonus_magic_damage_levelings(ability)
     # Base scales per champion LEVEL: modifier 0 is the 40-entry array

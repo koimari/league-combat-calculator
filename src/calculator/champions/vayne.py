@@ -40,6 +40,7 @@ from typing import Any
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -87,12 +88,11 @@ def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _silver_bolts(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: %maxHP true damage every 3rd hit, in the on-hit shell."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_hit = pct_health_per_hit(
         ability,

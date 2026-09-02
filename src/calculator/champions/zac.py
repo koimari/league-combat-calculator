@@ -25,6 +25,7 @@ for it, through the two channels ``COVERAGE_CHANNELS`` names.
 """
 
 from dataclasses import replace
+from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
@@ -32,7 +33,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import (
     ability_name,
@@ -83,12 +84,9 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 # empowered second Stretching Strike that replaces Zac's next basic
 # attack while the tether persists.  The second strike has a sourced
 # 0.25-second cast time.
-def _stretching_strikes(ctx: SlotCtx):
+@ranked_slot
+def _stretching_strikes(ctx: SlotCtx, ability: dict[str, Any], rank: int):
     """Q: both Stretching Strikes — 2 x the sourced per-hit Magic Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),

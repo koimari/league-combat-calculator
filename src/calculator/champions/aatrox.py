@@ -54,7 +54,7 @@ from ..healing_helpers import (
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import no_damage_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -132,12 +132,11 @@ def _q_strike_parts(
     )
 
 
-def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _darkin_blade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the sweetspot or normal triad, one event per strike."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     detail = None
     if "q_variant" in ctx.options:
@@ -175,17 +174,16 @@ _W_TETHER_EFFECT_INDEX = 1
 _W_HITS = 2
 
 
-def _infernal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _infernal_chains(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the chain hit, then the same damage again when the tether expires.
 
     The cached "Total Damage" row is exactly twice "Physical Damage" at
     every rank, so pricing the two hits separately keeps the total and buys
     the tether's cached delay.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     tether_seconds = extract_description_duration(ability, _W_TETHER_EFFECT_INDEX)
     if tether_seconds is None:
         raise ValueError(

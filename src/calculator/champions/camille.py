@@ -46,6 +46,7 @@ from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -147,12 +148,11 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tactical_sweep(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: inner cone physical + optional outer-cone % max HP sweet spot."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if ctx.option("w_outer_cone"):
@@ -205,12 +205,11 @@ def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
 _hookshot.phase = BUFF
 
 
-def _hextech_ultimatum(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _hextech_ultimatum(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: zero upfront damage; current-health magic rider on zone autos."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     percent = extract_value(ability, "Bonus Magic Damage", rank)
     window = extract_value(ability, "Zone Duration", rank)
@@ -264,6 +263,7 @@ def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     documented boundary — the ledger's payload grants a general shield
     that absorbs both types.
     """
+    # pylint: disable-next=no-value-for-parameter  # a compiled (ctx) parser
     entry = _packet_w(ctx)
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:

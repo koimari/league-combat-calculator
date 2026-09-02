@@ -32,6 +32,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import AMP, SlotCtx, build_parser
 from .inputs import bool_option, float_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -98,12 +99,9 @@ def _cursed_touch_display(ctx: SlotCtx) -> None:
         ctx.results["P"] = damage_entry(ability_name(ability), 1, 0.0, 0.0, "true")
 
 
-def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _despair(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: toggle DoT — ``w_seconds`` of 0.5 s ticks, per-tick keys."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     w_seconds = max(0.5, float(ctx.option("w_seconds")))
     per_tick = extract_named(

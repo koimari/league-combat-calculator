@@ -55,6 +55,7 @@ from ..binary_roots import (
 from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .inputs import int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -326,7 +327,10 @@ def _golden_eclipse(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _radiant_volley(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _radiant_volley(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the full 6-10 bolt volley — Initial Explosion + subsequent bolts.
 
     The reviewed packet priced only the "Initial Explosion Magic Damage"
@@ -337,10 +341,6 @@ def _radiant_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     target area.  The volley launches over the sourced 0.5 seconds, with
     the bolts distributing evenly.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     initial = extract_named(
         ability, "Initial Explosion Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -374,7 +374,10 @@ def _radiant_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _solar_snare(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _solar_snare(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: orb hit + the solar-field DoT (game-file-sourced 0.5s window).
 
     The reviewed packet priced only the orb.  The orb also emanates a
@@ -386,10 +389,6 @@ def _solar_snare(ctx: SlotCtx) -> dict[str, Any] | None:
     Second) over the 0.5s window.  The field expands after the sourced
     0.5-second delay, so the first tick lands at 0.5s.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     orb = extract_named(ability, "Orb Magic Damage", rank, ctx.stats, ctx.target)
     per_tick = extract_named(
         ability, "Field Magic Damage per Tick", rank, ctx.stats, ctx.target

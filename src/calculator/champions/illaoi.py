@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -69,11 +69,10 @@ def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
 _tentacle.phase = ONHIT
 
 
-def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _harsh_lesson(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     pct = extract_value(ability, "Additional Physical Damage", rank) / 100.0
     ad_ratio = extract_value(ability, "Additional Physical Damage", rank, 1) / 100.0

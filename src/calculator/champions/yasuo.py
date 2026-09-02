@@ -36,7 +36,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -141,7 +141,10 @@ def _per_target_lockout(ability: dict[str, Any], rank: int) -> float:
     return float(extract_cooldown(ability, rank) or 0.5)
 
 
-def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _sweeping_blade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: Sweeping Blade with Ride the Wind per-stack bonus damage.
 
     Single-target fight model: the 0.1s ability cooldown is irrelevant to
@@ -149,10 +152,6 @@ def _sweeping_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     once per its per-target lockout (``onTargetCdStatic``, 10/9/8/7/6 by
     rank); that lockout is the cast-rate limiter here.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     stacks = min(max(int(ctx.option("e_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(

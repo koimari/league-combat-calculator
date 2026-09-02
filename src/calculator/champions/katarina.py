@@ -22,7 +22,12 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_contract import coverage
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, at_level, no_damage
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    at_level,
+    no_damage,
+    ranked_slot,
+)
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -38,11 +43,10 @@ _KATARINA_R_SPELL = spell_object("Katarina", "KatarinaR")
 _DEATH_LOTUS_DURATION = data_value(_KATARINA_R_SPELL, "Duration")
 
 
-def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _death_lotus(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     daggers = max(1, min(15, int(ctx.option("r_daggers"))))
     physical = extract_named(
         ability, "Physical Damage Per Dagger", rank, ctx.stats, ctx.target

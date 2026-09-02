@@ -76,6 +76,24 @@ def typed_damage(
     return entry
 
 
+def ranked_slot(
+    body: Callable[[SlotCtx, dict[str, Any], int], dict[str, Any] | None],
+) -> SlotParser:
+    """A slot that prices nothing until learned; *body* gets its ``(ability, rank)``."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ranked = ctx.ranked()
+        if ranked is None:
+            return None
+        return body(ctx, *ranked)
+
+    # Not functools.wraps: a ``__wrapped__`` would make pylint read a direct
+    # ``slot(ctx)`` call against the body's three-parameter signature.
+    parse.__name__, parse.__qualname__ = body.__name__, body.__qualname__
+    parse.__doc__, parse.__module__ = body.__doc__, body.__module__
+    return parse
+
+
 def delayed(parser: SlotParser, *, delay: float) -> SlotParser:
     """Wrap a slot so every part it emits lands *delay* seconds after the cast start.
 
@@ -105,7 +123,7 @@ def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
     return delayed(simple_damage(**simple_damage_kwargs), delay=delay)
 
 
-def named_damage(
+def named_damage(  # pylint: disable=too-many-arguments
     attr: str,
     dmg_type: str,
     *,
@@ -129,12 +147,12 @@ def named_damage(
         ranked = ctx.ranked()
         if ranked is None:
             return None
-        ability, rank = ranked
-        value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+        ability, selected = ranked
+        value = extract_named(ability, attr, selected, ctx.stats, ctx.target)
         entry = damage_entry(
             ability_name(ability),
-            rank,
-            extract_cooldown(ability, rank),
+            selected,
+            extract_cooldown(ability, selected),
             value,
             dmg_type,
         )

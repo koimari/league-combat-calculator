@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -39,11 +39,10 @@ _resonance_proc = proc_damage(
 )
 
 
-def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _timewinder(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     initial = extract_named(
         ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -67,11 +66,10 @@ def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
     return return_entry
 
 
-def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, _rank = ranked
+@ranked_slot
+def _parallel_convergence(
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
+) -> dict[str, Any] | None:
     ready = bool(ctx.option("w_passive_ready"))
     entry = no_damage(
         ctx,

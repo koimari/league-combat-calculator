@@ -52,7 +52,7 @@ from ..survival.actions import TransitionRank
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
-from .module_helpers import missing_hp_fraction
+from .module_helpers import missing_hp_fraction, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -132,12 +132,11 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _head_rush(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: physical hit + item on-hit application + armor/MR shred."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -264,7 +263,10 @@ def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _chilling_scream(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: fully-charged magic damage, wall bonus, and the sourced
     charge-window damage reduction + terrain-collision control.
 
@@ -280,10 +282,6 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
     stun that land on the primary target (control-only events, like the
     other reviewed control packets).
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     if ctx.option("e_wall_collision"):
@@ -419,7 +417,10 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _certain_death(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: explosion magic damage + armor/MR/life-steal/move-speed buffs.
 
     The explosion is counted once, against the primary target. The
@@ -427,10 +428,6 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
     re-triggers Blood Frenzy — covered by the ``blood_frenzy_active``
     toggle's default.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

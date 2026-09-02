@@ -56,7 +56,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown
 
@@ -155,12 +155,9 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _maiden(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R: Eulogy of the Isles — Maiden basic attacks over the window."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     attacks = min(max(int(ctx.option("maiden_attacks")), 0), 10)
     if attacks <= 0:
         return no_damage(

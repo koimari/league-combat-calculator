@@ -10,6 +10,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -42,11 +43,8 @@ def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
 _warpath.phase = BUFF
 
 
-def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _rampage(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("q_stacks")), 0), 3)
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
@@ -69,11 +67,10 @@ def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
 _W_TICKS = 5
 
 
-def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _spirit_of_dread(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     ticks = min(max(int(ctx.options.get("w_ticks", _W_TICKS)), 1), _W_TICKS)
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -95,11 +92,10 @@ def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _devastating_charge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     distance = min(max(float(ctx.option("e_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
@@ -128,11 +124,8 @@ def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _r(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _r(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     return damage_entry(
         ability_name(ability),
         rank,

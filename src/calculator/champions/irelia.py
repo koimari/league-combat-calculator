@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option, int_option
-from .module_helpers import named_damage
+from .module_helpers import named_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -67,11 +67,10 @@ _bladesurge = named_damage(
 )
 
 
-def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _defiant_dance(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
@@ -99,11 +98,10 @@ _flawless_duet = named_damage(
 )
 
 
-def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _vanguard(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

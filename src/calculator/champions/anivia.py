@@ -68,7 +68,7 @@ from ..binary_roots import data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, float_option
 from .module_contract import coverage
-from .module_helpers import no_damage_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -83,12 +83,11 @@ _R_TICK_INTERVAL = data_value_at_rank(_ANIVIA_R_SPELL, "TickRate", 1)
 _R_GROWTH_SECONDS = data_value_at_rank(_ANIVIA_R_SPELL, "GrowthTime", 1)
 
 
-def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _glacial_storm(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: three initial half-second ticks, then empowered ticks."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     duration = max(float(ctx.option("r_duration")), 1.5)
     total_ticks = int(duration / 0.5)
