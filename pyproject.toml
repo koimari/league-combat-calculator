@@ -38,12 +38,13 @@ extend-exclude = "vendor/"
 [tool.sightline]
 excludes = ["vendor"]  # external code (CLAUDE.md rule 1)
 
-# The simply-elegant house comment standard, minus the three form rules this tree
-# writes against on purpose: a module docstring and a function docstring carry the
-# "why" (traps, sources, contracts) as prose, bounded by scripts/prose_lint.py's
-# docstring-no-longer-than-its-body rule rather than by a one-line / sections-only form.
+# The simply-elegant house comment standard, minus the rules this tree answers
+# elsewhere: a module or function docstring carries the "why" (traps, sources,
+# contracts) as prose, and scripts/prose_lint.py bounds src/ and scripts/ docstrings
+# and comment runs by their body (tests/test_prose_lint.py pins that at zero). A
+# test's docstring is its claim and is not bounded.
 [tool.simply-elegant]
-comment-rules-off = ["module-doc", "layout", "block"]
+comment-rules-off = ["module-doc", "layout", "block", "ratio"]
 
 # The simply-elegant hooks run ruff on their own strict config (select = ALL)
 # and merge this table on top; every overrule below states its reason.
