@@ -394,10 +394,6 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     cc_reviewed: bool
 
     def __post_init__(self) -> None:
-        if not isinstance(self.kind, TriggerKind):
-            raise ValueError("Trigger kind must be a TriggerKind member")
-        if not isinstance(self.cc, CcClass):
-            raise ValueError("Trigger cc must be a CcClass member")
         if not math.isfinite(self.time):
             raise ValueError(f"Trigger time must be finite, got {self.time!r}")
         if self.cc_kind and self.cc_kind not in CC_KIND_VOCABULARY:
@@ -1956,9 +1952,12 @@ def _sequence(value: Any) -> int:
 
 
 def event_triggers(
-    row: Mapping[str, Any], *, kinds: frozenset[TriggerKind] = _ROW_KINDS
+    row: Any, *, kinds: frozenset[TriggerKind] = _ROW_KINDS
 ) -> tuple[Trigger, ...]:
     """0-2 Triggers from one authored row — a stunning damage packet is both.
+
+    ``row`` is one untyped result-list entry; anything but a mapping is
+    skipped rather than read.
 
     The damage trigger is unconditional for an authored row *of the kinds
     asked for*, because the consumers disagree about which damage matters
@@ -2006,7 +2005,7 @@ def event_triggers(
     return tuple(triggers)
 
 
-def _takedown_trigger(row: Mapping[str, Any]) -> Trigger | None:
+def _takedown_trigger(row: Any) -> Trigger | None:
     """One explicit takedown receipt as a Trigger; never a kill inferred."""
     if not isinstance(row, Mapping):
         return None

@@ -1619,14 +1619,7 @@ def _support_effect_templates(
     #  W rank 0 -> no cast -> no packet).  The packet rides the Slice 4
     #  item-cleanse kernel (per-fight one-use latch, interval truncation,
     #  named denials); the heal is the separate E1 self-heal receipt.
-    champion_name = str(
-        getattr(attacker.champion_data, "name", "")
-        or (
-            attacker.champion_data.get("name", "")
-            if isinstance(attacker.champion_data, Mapping)
-            else ""
-        )
-    )
+    champion_name = str(attacker.champion_data.get("name", ""))
     if champion_name == "Gangplank":
         for cast_index, cast in enumerate(result.get("cast_timeline", ())):
             if str(cast.get("slot", "")) != "W":

@@ -144,8 +144,6 @@ def test_a_zero_policy_is_required_and_carries_a_reason() -> None:
     """D-24: the invariant at rule granularity, with no default to fall through."""
     with pytest.raises(ValueError, match="reason"):
         ZeroPolicy(Disposition.STRUCTURAL_ZERO, "   ")
-    with pytest.raises(ValueError):
-        ZeroPolicy("STRUCTURAL_ZERO", "a string is not a disposition")  # type: ignore[arg-type]
     with pytest.raises(TypeError):
         _rule_without_zero_policy()
 

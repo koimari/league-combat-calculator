@@ -171,5 +171,3 @@ def test_a_policy_without_a_reason_is_refused() -> None:
     """A disposition with no receipt is a label (the rule-level check too)."""
     with pytest.raises(ValueError, match="reason"):
         ZeroPolicy(Disposition.MEASURED, "  ")
-    with pytest.raises(ValueError, match="Disposition"):
-        ZeroPolicy("MEASURED", "a string is not a disposition")  # type: ignore[arg-type]

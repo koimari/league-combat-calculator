@@ -5823,7 +5823,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             identity = _tear_hit_identity(key, accepted_ordinal, info)
             hit_receipt, tear_event = tear.hit(
                 time=cast_time,
-                hit_identity=identity if identity is not None else "",
+                hit_identity=identity,
                 target_kind=state.target_class,
                 sequence=sequence,
             )
@@ -14917,7 +14917,7 @@ def _muramana_cast_receipt(
     # the parts alone desynchronised this walk from the very count it is
     # checked against below, which withheld the whole row.  Either fact
     # showing damage is a damaging cast; only both showing none is not.
-    row = breakdown.get(slot) if isinstance(breakdown, Mapping) else None
+    row = breakdown.get(slot)
     priced = (
         float(row.get("total_damage", 0.0) or 0.0) if isinstance(row, Mapping) else 0.0
     )

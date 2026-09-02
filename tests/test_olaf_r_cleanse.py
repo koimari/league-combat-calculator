@@ -2281,41 +2281,6 @@ class TestUnchangedBoundaries:
 # ---------------------------------------------------------------------------
 
 
-class TestRegressionSurface:
-    def test_slice_regression_files_collected(self):
-        # The mandated sanity list (the brief's contract #15) is the
-        # full run gate: every file below stays green with this matrix
-        # in the same invocation (the footer command).
-        import tests.test_app
-        import tests.test_catalyst_resource_ledger
-        import tests.test_cleanse_eligibility
-        import tests.test_cleanse_eligibility_consumers
-        import tests.test_cleanse_eligibility_kernel
-        import tests.test_dr_mundo_passive
-        import tests.test_gangplank_w_cleanse
-        import tests.test_item_sustain
-        import tests.test_mana_restore_refund
-        import tests.test_milio_r_cleanse
-        import tests.test_rengar_w_cleanse
-        import tests.test_resource_ledger
-        import tests.test_resource_ledger_champion_consumers
-        import tests.test_resource_ledger_consumers
-        import tests.test_state_lifecycle
-        import tests.test_state_lifecycle_consumers  # noqa: F401 - its import-time pins
-
-    def test_existing_olaf_surfaces_stay_green(self):
-        # The existing Olaf regression surface (the brief's contract
-        # #15): the CP10 batch + the E8c shields + the support-effects
-        # atom rows all name Olaf — they must stay green with the R
-        # matrix (run in the footer command).
-        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
-        # ``test_full_entry_packets.py`` (ours, 108872c8), which names the
-        # same 120 full-entry champions Olaf sat in.
-        import tests.test_e8_shields
-        import tests.test_full_entry_packets
-        import tests.test_support_effects  # noqa: F401 - its import-time pins
-
-
 # The full mandated sanity gate (the brief's contract #15):
 #
 #   .venv/bin/python -m pytest tests/test_olaf_r_cleanse.py \

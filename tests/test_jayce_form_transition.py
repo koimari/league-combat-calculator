@@ -695,10 +695,10 @@ class TestP4JTransitionContract:
         result["breakdown"]["auto_attacks"]
 
     def test_p4j_reference_fight_total(self):
-        """Post-contract: the reference split fight totals
-        672 + 512.5 (Q) + 825 + 440 (W) + 0 (R) + 2250 + 175 (autos +
-        the empower rider) = 4874.5."""
-        _fight({OPTION_KEY: 4.0})
+        """The reference fight at the declared T=4.0 flip totals the Cannon
+        half of the bounding pair, 4994.0."""
+        result = _fight({OPTION_KEY: 4.0})
+        assert result["total_damage"] == pytest.approx(4994.0)
 
     def test_p4j_w_restore_continues_across_the_flip(self):
         """The per-auto mana restore (25 at W rank 6) rides the modeled
@@ -881,12 +881,13 @@ class TestP4JZeroAuto:
         forced ability-row swings are not basic-attack stream autos)."""
         for options in (None, {"hammer_stance": True}):
             result = _pipeline_fight(options, uptime=0.0)
-            [
+            restores = [
                 r
                 for r in result["resource_ledger"]["receipts"]
                 if r["operation"] == "gain"
                 and r["source"] == "Jayce W passive (Mana Restored)"
             ]
+            assert restores == []
 
     def test_p4j_zero_auto_forced_swing_under_the_flip(self):
         """Zero-auto mode: the forced-swing rule applies per stance — the

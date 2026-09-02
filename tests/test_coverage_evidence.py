@@ -170,12 +170,6 @@ def test_blank_subject_is_rejected() -> None:
         validate_claim(claim(subject="   "))
 
 
-def test_a_non_claim_value_is_rejected() -> None:
-    """The table holds claims, not look-alike mappings."""
-    with pytest.raises(CoverageClaimError, match="is not a Claim"):
-        validate_claim({"subject": "Imperial Mandate"})
-
-
 # ---------------------------------------------------------------------------
 # The requirement matrix
 # ---------------------------------------------------------------------------
@@ -494,11 +488,6 @@ def test_key_that_is_not_a_triple_is_rejected() -> None:
             SourceRef(url="https://wiki.leagueoflegends.com/en-us/X", revision_id=0),
             "not a positive revision",
             id="source-ref-zero-revision",
-        ),
-        pytest.param(
-            SourceRef(url="https://wiki.leagueoflegends.com/en-us/X", revision_id="7"),
-            "is not an integer",
-            id="source-ref-revision-is-a-string",
         ),
         pytest.param(
             SourceRef(url="https://wiki.leagueoflegends.com/en-us/X", revision_id=True),

@@ -5674,7 +5674,7 @@ def hubris_eminence_bonus_ad(
     """Return Eminence's sourced temporary bonus AD for explicit kill state."""
     if item_name not in ITEM_EFFECTS:
         raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
-    if isinstance(stacks, bool) or not isinstance(stacks, int) or stacks < 0:
+    if isinstance(stacks, bool) or stacks < 0:
         raise ValueError("Hubris Eminence stacks must be a non-negative integer")
     if not active:
         return 0.0
@@ -5717,7 +5717,7 @@ def yun_tal_permanent_crit_chance(
     """Return Practice Makes Lethal's bounded permanent crit chance."""
     if item_name not in ITEM_EFFECTS:
         raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
-    if isinstance(stacks, bool) or not isinstance(stacks, int) or stacks < 0:
+    if isinstance(stacks, bool) or stacks < 0:
         raise ValueError("Yun Tal stacks must be a non-negative integer")
     suffix = "melee" if is_melee else "ranged"
     per_stack = required_effect_value(item_name, f"crit_chance_per_stack_{suffix}")

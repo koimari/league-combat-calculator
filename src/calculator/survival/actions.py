@@ -781,39 +781,17 @@ def action_key(
     participant_id: str,
     event: Mapping[str, Any],
 ) -> tuple[Any, ...]:
-    """Order event phases without ever comparing payload dictionaries.
+    """The survival walk's total order over event phases, never comparing
+    payload dictionaries; pair packets precompute it per event (``_sk``).
 
-    The survival walk's total order.  Pair packets precompute it per event
-    (``_sk``) because the walk re-sorts the same roster events for every
-    optimizer candidate.
-
-    Element 1 is the rank's :func:`ordering_slot`, not the rank: one pair of
-    ranks resolves together, and folding it here keeps the inline sort tuples in
-    ``compile.py`` comparable with this one.
-
-    The ``_event_id`` component is a dead tie-break for engine damage events:
-    ``sequence`` is unique per pair fight, and events from different pairs
-    already differ at the source/participant components.  The compiler's
-    pair-local event numbering depends on that, so an engine event arriving
-    without its sequence is rejected rather than letting numbering become
-    order-relevant.
-
-    The timestamp must be **finite** here rather than at the one constructor:
-    ``float()`` already rejects a malformed time, and NaN/inf is the one value
-    it accepts that no total order can place.  Every action reaches this
-    function, so one guard covers every author.
+    Element 1 is the rank's :func:`ordering_slot`, so one pair of ranks
+    resolves together and ``compile.py``'s inline sort tuples stay comparable
+    with this one.  ``_event_id`` is a dead tie-break for engine damage
+    events: ``sequence`` is unique per pair fight, so an event without one is
+    rejected rather than letting numbering become order-relevant.  NaN/inf is
+    the one time ``float()`` accepts that no total order can place, and every
+    action reaches this function, so the one guard is here.
     """
-    # Element 1 must be a rank on every key or the keys are not
-    # comparable in one order: a caller holding a number would put its
-    # ``0.0`` ahead of a ``BARRIER_GRANT`` that is spelled ``1``, which
-    # is how a hostile control came to resolve before the Black Shield
-    # that blocks it.  Every author now names a rank, so a non-member
-    # is a defect rather than an older spelling to translate.
-    if not isinstance(phase, TransitionRank):
-        raise TypeError(
-            f"action_key: phase must be a TransitionRank, got "
-            f"{phase!r} (event_id={event.get('_event_id')!r})"
-        )
     time_value = float(event_time)
     if not math.isfinite(time_value):
         raise ValueError(

@@ -46,6 +46,8 @@ R13 | sourced rearm clock end to end on Banshee's 40s: endpoint
      window, and the unsourced shield that never rearms          | walk
 """
 
+from operator import itemgetter
+
 import pytest
 
 from src.app import app
@@ -64,6 +66,8 @@ from src.calculator.participant_timeline import Combatant
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import unrepresentable_template_receipt
 from tests.survival_probe import simulate_survival, survival_of
+
+_BY_TIME = itemgetter("time")
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -806,7 +810,7 @@ def test_r8_stasis_blocked_packets_do_not_spend_the_shield():
 
     q_events = sorted(
         _events(combat, target="enemy:Ahri", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     assert [event["time"] for event in q_events] == [0.0, 3.25, 6.5]
 
@@ -847,7 +851,7 @@ def test_r8_yasuo_destroyed_packets_do_not_spend_the_shield():
 
     q_events = sorted(
         _events(combat, target="enemy:Yasuo", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     destroyed = [
         event for event in q_events if event.get("skipped_reason") == "yasuo_wind_wall"
@@ -895,7 +899,7 @@ def test_r8_braum_full_blocked_packet_does_not_spend_the_shield():
 
     q_events = sorted(
         _events(combat, target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     first, second, third = q_events
 

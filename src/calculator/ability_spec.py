@@ -280,8 +280,6 @@ class ZeroPolicy:
 
     def __post_init__(self) -> None:
         """A disposition with no reason is a label, not a receipt."""
-        if not isinstance(self.disposition, Disposition):
-            raise ValueError("zero_policy.disposition must be a Disposition")
         if not self.reason.strip():
             raise ValueError("zero_policy needs a reason")
 
@@ -519,8 +517,6 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
             raise ValueError("DamagePart time_offset cannot be negative")
         if self.hit_interval is not None and self.hit_interval < 0:
             raise ValueError("DamagePart hit_interval cannot be negative")
-        if self.cc_kind is not None and not isinstance(self.cc_kind, str):
-            raise ValueError("DamagePart cc_kind must be a string or None")
         if self.cc_duration < 0:
             raise ValueError("DamagePart cc_duration cannot be negative")
 
@@ -599,8 +595,6 @@ class ControlEvent:  # pylint: disable=too-many-instance-attributes
     def __post_init__(self) -> None:
         if not self.kind.strip():
             raise ValueError("ControlEvent kind must be a non-empty string")
-        if not isinstance(self.scope, ControlScope):
-            raise ValueError("ControlEvent scope must be a ControlScope")
         if self.duration <= 0.0:
             raise ValueError("ControlEvent duration must be positive")
         if self.magnitude < 0.0:

@@ -99,28 +99,30 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
     is a new member and a new member is a new branch, rather than a silent
     fall-through to zero.
     """
-    if isinstance(magnitude, Fixed):
-        return resolve(magnitude.value, ctx.level)
-    if isinstance(magnitude, RampPerSecond):
-        return _ramp_per_second(magnitude, ctx)
-    if isinstance(magnitude, TargetBonusHealthScaled):
-        return _target_bonus_health_scaled(magnitude, ctx)
-    if isinstance(magnitude, RampPerStack):
-        return _ramp_per_stack(magnitude, ctx)
-    if isinstance(magnitude, MeleeRangedSplit):
-        return _melee_ranged_split(magnitude, ctx)
-    if isinstance(magnitude, StatScaled):
-        raise DeltaAmpInterpretationError(
-            f"{ctx.owner} scales with the holder's {magnitude.stat.value}, "
-            "which is not a build fact this context carries; its base and "
-            f"rate compile to the {AMP_BASE_FRACTION_FIELD!r} and "
-            f"{AMP_PER_HUNDRED_STAT_FIELD!r} fields and PartAmp.fraction "
-            "takes the reading"
-        )
-    raise DeltaAmpInterpretationError(
-        f"{type(magnitude).__name__} has no delta-amp arithmetic yet; the "
-        "slice that declares a rule with it owns the branch"
-    )
+    match magnitude:
+        case Fixed():
+            return resolve(magnitude.value, ctx.level)
+        case RampPerSecond():
+            return _ramp_per_second(magnitude, ctx)
+        case TargetBonusHealthScaled():
+            return _target_bonus_health_scaled(magnitude, ctx)
+        case RampPerStack():
+            return _ramp_per_stack(magnitude, ctx)
+        case MeleeRangedSplit():
+            return _melee_ranged_split(magnitude, ctx)
+        case StatScaled():
+            raise DeltaAmpInterpretationError(
+                f"{ctx.owner} scales with the holder's {magnitude.stat.value}, "
+                "which is not a build fact this context carries; its base and "
+                f"rate compile to the {AMP_BASE_FRACTION_FIELD!r} and "
+                f"{AMP_PER_HUNDRED_STAT_FIELD!r} fields and PartAmp.fraction "
+                "takes the reading"
+            )
+        case _:
+            raise DeltaAmpInterpretationError(
+                f"{type(magnitude).__name__} has no delta-amp arithmetic yet; the "
+                "slice that declares a rule with it owns the branch"
+            )
 
 
 def _melee_ranged_split(magnitude: MeleeRangedSplit, ctx: BuildContext) -> float:

@@ -10,6 +10,7 @@ silently disappear from the other (see tests/test_endpoint_parity.py).
 
 import math
 from collections.abc import Mapping
+from typing import Any
 from urllib.parse import urlsplit
 
 from .capabilities import FIGHT_EFFECTIVE_STATS
@@ -25,8 +26,11 @@ ICON_HOSTS = frozenset(
 )
 
 
-def https_icon(url: str) -> str:
-    """Return one allow-listed HTTPS icon URL or an empty public value."""
+def https_icon(url: Any) -> str:
+    """Return one allow-listed HTTPS icon URL or an empty public value.
+
+    ``url`` is a cached icon field, so anything but a string is unsourced.
+    """
     if not isinstance(url, str):
         return ""
     if url.startswith("http://"):

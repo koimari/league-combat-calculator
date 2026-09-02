@@ -104,6 +104,7 @@ R19 | Kernel fail-closed: same-hit rule unverified -> missing_same_hit_rule | ke
 R20 | Kernel contract: receipt shapes (six separation concerns)      | kernel      | NEW-CONTRACT | no
 """
 
+from operator import itemgetter
 from typing import Any
 
 import pytest
@@ -118,6 +119,8 @@ from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import ActionKind
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.survival_probe import simulate_survival, survival_of
+
+_BY_TIME = itemgetter("time")
 
 try:  # P2 Slice 3 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import crowd_control_eligibility as cce
@@ -880,9 +883,7 @@ def test_r6b_app_depletion_then_stun_lands():
         }
     )
 
-    r_events = sorted(
-        _events(combat, target="ally:Lux", source="R"), key=lambda event: event["time"]
-    )
+    r_events = sorted(_events(combat, target="ally:Lux", source="R"), key=_BY_TIME)
     first, tether = r_events
     assert first["time"] == pytest.approx(0.0)
     assert first["damage"] == pytest.approx(230.3)
@@ -1133,7 +1134,7 @@ def test_r11a_spell_shield_blocks_the_cast_entirely():
     )
     e_events = sorted(
         _events(combat, target="ally:Yasuo", source="E"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     annul_blocked, later = e_events
     assert annul_blocked["time"] == pytest.approx(0.0)
@@ -1176,7 +1177,7 @@ def test_r11b_projectile_defense_destroys_the_packet():
     )
     e_events = sorted(
         _events(combat, target="ally:Yasuo", source="E"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     destroyed, annul_blocked = e_events
     assert destroyed["time"] == pytest.approx(0.0)
@@ -1219,7 +1220,7 @@ def test_r11c_full_blocked_packet_drops_its_cc_without_receipt():
     )
     e_events = sorted(
         _events(combat, target="ally:Braum", source="E"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     full_blocked, later = e_events
     assert full_blocked["time"] == pytest.approx(0.0)
@@ -1256,9 +1257,7 @@ def test_r11d_stasis_blocked_packets_skip_every_later_gate():
             ],
         }
     )
-    e_events = sorted(
-        _events(combat, target="ally:Lux", source="E"), key=lambda event: event["time"]
-    )
+    e_events = sorted(_events(combat, target="ally:Lux", source="E"), key=_BY_TIME)
     stasis_blocked, later = e_events
     assert stasis_blocked["time"] == pytest.approx(0.0)
     assert stasis_blocked["skipped_reason"] == "target_state_blocked"
