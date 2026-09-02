@@ -3233,7 +3233,7 @@ class TestHealthComponentInvariant:
     """
 
     @staticmethod
-    def _stats(champion_data, level, items, options):
+    def _stats(champion_data, level, items, options) -> dict[str, float]:
         from src.calculator.pipeline import FightParams, run_fight
 
         params = FightParams.from_request({"champion_options": options})

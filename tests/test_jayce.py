@@ -23,6 +23,8 @@ Jayce starts with R at rank 1 and can never level it, so Q/W/E have SIX
 ranks and R's values step with CHAMPION LEVEL at 1 / 6 / 11 / 16.
 """
 
+from typing import Any
+
 import pytest
 
 from src.calculator.champions import get_champion_cast_order
@@ -843,7 +845,7 @@ class TestCannonShredDuration:
         "critical_strike_chance": 0.0,
     }
 
-    def _armor(self, jayce_data, duration):
+    def _armor(self, jayce_data, duration) -> dict[str, Any]:
         abilities = _parse(jayce_data, level=13, stats=self._STATS)
         return calculate_fight_damage(
             dict(self._STATS),

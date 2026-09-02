@@ -29,6 +29,7 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 
 from sqlalchemy import select
@@ -340,8 +341,8 @@ def compute_scorecard(
     beta_start: datetime | None = None,
     weeks: int = 2,
     staleness_path: str | Path | None = None,
-    db_module: Any = None,
-) -> dict:
+    db_module: ModuleType | None = None,
+) -> dict[str, Any]:
     """Compute the beta scorecard with the PASS/FAIL gate.
 
     ``now`` defaults to the current UTC time and ``beta_start`` to 14 days

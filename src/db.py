@@ -66,7 +66,13 @@ from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    Session,
+    mapped_column,
+    sessionmaker,
+)
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -322,7 +328,7 @@ def is_postgres() -> bool:
     return _resolve_database_url().startswith("postgresql")
 
 
-def session() -> Any:
+def session() -> Session:
     """Open a new ORM session bound to the lazily created engine."""
     get_engine()
     assert _session_factory is not None

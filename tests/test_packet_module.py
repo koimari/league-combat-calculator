@@ -14,6 +14,7 @@ champions a test session happens to import first.
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -95,7 +96,7 @@ def _ctx(champion: str, slot: str) -> SlotCtx:
     )
 
 
-def _source_ability(champion: str, slot: str, spec: dict):
+def _source_ability(champion: str, slot: str, spec: dict) -> dict[str, Any] | None:
     source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
     entries = (load_public_champion(champion).get("abilities") or {}).get(source[0], [])
     return entries[source[1]] if source[1] < len(entries) else None
