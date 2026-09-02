@@ -8,7 +8,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value_at_rank, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -46,24 +46,12 @@ def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
 _brushmaker.phase = ONHIT
 
 
-def _triggerseed(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=2.0),)
-    entry["detail"] = (
-        "Shield is granted immediately; the sourced explosion occurs after two seconds."
-    )
-    return entry
+_triggerseed = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=2.0,
+    detail="Shield is granted immediately; the sourced explosion occurs after two seconds.",
+)
 
 
 # HARDCODED: verify on patch updates — Daisy's attack stats are not in the

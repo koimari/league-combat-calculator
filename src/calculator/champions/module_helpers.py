@@ -9,16 +9,17 @@ champion membership or champion-specific formulas.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, SlotParser
+from .engine import AMP, DAMAGE, SlotCtx, SlotParser
 from .slotlib import (
+    MODULE_FORMULA_ZERO,
+    ability_name,
     damage_entry,
     extract_cooldown,
-    extract_description_control_duration,
     extract_named,
     simple_damage,
 )
@@ -75,6 +76,22 @@ def typed_damage(
     return entry
 
 
+def delayed(parser: SlotParser, *, delay: float) -> SlotParser:
+    """Wrap a slot so every part it emits lands *delay* seconds after the cast start."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = parser(ctx)
+        if entry is None:
+            return None
+        entry["parts"] = tuple(
+            replace(part, time_offset=delay) for part in entry.get("parts", ())
+        )
+        return entry
+
+    parse.phase = getattr(parser, "phase", DAMAGE)
+    return parse
+
+
 def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
     """A :func:`slotlib.simple_damage` slot whose hit lands after a delay.
 
@@ -86,18 +103,106 @@ def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
     knows its source's convention.  Every ``simple_damage`` keyword passes
     through unchanged, so the delayed slot and the plain one price alike.
     """
-    base = simple_damage(**simple_damage_kwargs)
+    return delayed(simple_damage(**simple_damage_kwargs), delay=delay)
+
+
+def named_damage(
+    attr: str,
+    dmg_type: str,
+    *,
+    ticks: int | None = None,
+    time_offset: float | None = None,
+    hit_interval: float | None = None,
+    crit_effectiveness: float = 0.0,
+    basic_damage: bool = False,
+    **entry_keys: Any,
+) -> SlotParser:
+    """A slot pricing one named row of its cached entry at the slot's rank.
+
+    The row is one cast's whole damage; ``ticks`` delivers it as that many
+    even hits (the Cassiopeia rule).  The part keywords author the hit, and
+    every other keyword lands on the entry as-is (``detail``,
+    ``event_order_certified``, ``empowers_next_auto``, ...), in the order
+    written; the engine's entry-key check refuses a misspelling.
+    """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = base(ctx)
-        if entry is None:
+        ranked = ctx.ranked()
+        if ranked is None:
             return None
-        entry["parts"] = tuple(
-            replace(part, time_offset=delay) for part in entry.get("parts", ())
+        ability, rank = ranked
+        value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
+        entry = damage_entry(
+            ability_name(ability),
+            rank,
+            extract_cooldown(ability, rank),
+            value,
+            dmg_type,
         )
+        entry["parts"] = (
+            DamagePart(
+                dmg_type,
+                value / ticks if ticks else value,
+                count=ticks or 1,
+                time_offset=time_offset,
+                hit_interval=hit_interval,
+                crit_effectiveness=crit_effectiveness,
+                basic_damage=basic_damage,
+                zero_policy=MODULE_FORMULA_ZERO,
+            ),
+        )
+        entry.update(entry_keys)
         return entry
 
-    parse.phase = base.phase
+    parse.phase = DAMAGE
+    return parse
+
+
+def with_detail(detail: str) -> Callable[[SlotParser], SlotParser]:
+    """Wrap a slot so the row it emits carries *detail*."""
+
+    def wrap(parser: SlotParser) -> SlotParser:
+        def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+            entry = parser(ctx)
+            if entry is None:
+                return None
+            entry["detail"] = detail
+            return entry
+
+        return parse
+
+    return wrap
+
+
+def amp_slot(option: str, apply: Callable[[dict[str, Any]], None]) -> SlotParser:
+    """An AMP pseudo-slot: with *option* on, *apply* rewrites every Q/W/E/R entry."""
+
+    def parse(ctx: SlotCtx) -> None:
+        if not ctx.option(option):
+            return
+        for key in ("Q", "W", "E", "R"):
+            entry = ctx.results.get(key)
+            if entry is not None:
+                apply(entry)
+
+    parse.phase = AMP
+    return parse
+
+
+def with_item_on_hit_specs(
+    parse_abilities: Callable[..., dict[str, Any]],
+    specs: Mapping[str, Mapping[str, Any]],
+) -> Callable[..., dict[str, Any]]:
+    """Wrap a parser so each listed slot's row declares its wiki-sourced item on-hits."""
+
+    def parse(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        result = parse_abilities(*args, **kwargs)
+        for slot, spec in specs.items():
+            entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
+            if entry is not None:
+                entry["applies_item_on_hits"] = dict(spec)
+        return result
+
     return parse
 
 
@@ -273,66 +378,22 @@ def rank_gated_no_damage_parser(
     return parse
 
 
-# P4: the shared Yasuo/Yone crit-conversion rule.  The cached P prose is
-# verbatim Yasuo's for both ("total critical strike chance is doubled ...
-# every 1% ... converted into 0.5 bonus attack damage ... 90% of the
-# critical damage champions usually have"); both champions carry the
-# champion stat criticalStrikeDamageModifier.flat = 0.9; the binaries
-# corroborate CritDamageMod 0.9 + CritToAD 50.0 (the x2 chance is
-# script-side).  The Q's degraded "Critical Strike Damage" rows (189% +
-# 28.35% AD = 1.05 x 1.8 + 1.05 x 0.27; 198% + 29.7% AD = 1.1 x 1.8 +
-# 1.1 x 0.27) are the display of this same converted system.
-CRIT_CHANCE_MULTIPLIER = 2.0
-CRIT_DAMAGE_MULTIPLIER_FACTOR = 0.9
-EXCESS_CRIT_BONUS_AD_PER_PERCENT = 0.5
+def no_damage_slot(reason: str) -> SlotParser:
+    """A slot whose cached row prices no enemy damage: its named, rank-gated zero row."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability()
+        if ability is None:
+            return None
+        return no_damage(ctx, name=ability_name(ability), reason=reason)
+
+    parse.phase = DAMAGE
+    return parse
 
 
-def crit_conversion_payload() -> dict[str, Any]:
-    """The engine's crit_modifier payload for the shared conversion."""
-    return {
-        "crit_chance_multiplier": CRIT_CHANCE_MULTIPLIER,
-        "crit_damage_multiplier_factor": CRIT_DAMAGE_MULTIPLIER_FACTOR,
-        "excess_crit_bonus_ad_per_percent": EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-    }
-
-
-def crit_conversion_certification(
-    atom_hash: str,
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(certified_constants, atom_ids) for the conversion rule.
-
-    The 0.9 factor is the champion stat criticalStrikeDamageModifier.flat
-    (the pinned atom hash varies per champion); the x2 chance + 0.5 AD
-    per excess % are cached-P-prose + binary roots.  A patch that
-    changes the roots trips the pinned hash (fail-closed staleness).
-    """
-    cert = dict(crit_conversion_payload())
-    atoms = {
-        "crit_damage_multiplier_factor": {
-            "atom_id": "stats.critical_strike_damage_modifier.flat",
-            "hash": atom_hash,
-        },
-    }
-    return cert, atoms
-
-
-# The Yasuo/Yone Q3 knock-up has no cached leveling row: its only source
-# is the "Gathering Storm Bonus" branch of the Q description, which is
-# also the branch that states the empower exists at all.
-Q3_KNOCKUP_BRANCH = "Gathering Storm Bonus"
-
-
-def q3_knockup_duration(champion: str, ability: dict[str, Any]) -> float:
-    """The Q3 whirlwind's knock-up, read off its own sourced branch."""
-    for index, effect in enumerate(ability.get("effects") or []):
-        if Q3_KNOCKUP_BRANCH not in str(effect.get("description") or ""):
-            continue
-        duration = extract_description_control_duration(ability, index)
-        if duration:
-            return float(duration)
-        break
-    raise ValueError(
-        f"{champion} Q: the cached {Q3_KNOCKUP_BRANCH!r} branch states no "
-        "knock-up duration, so the Q3 control fails closed rather than "
-        "shipping an invented interval"
-    )
+def at_level(brackets: Sequence[tuple[int, Any]], level: int) -> Any:
+    """The value of the highest bracket *level* has reached; *brackets* descend by level."""
+    for min_level, value in brackets:
+        if level >= min_level:
+            return value
+    return brackets[-1][1]

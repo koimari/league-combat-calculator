@@ -40,17 +40,15 @@ from ..ability_atoms import (
     ranked_ability_atom_value,
     required_ability_atom,
 )
-from ..ability_spec import DamagePart
 from ..binary_roots import data_value_at_rank, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
-    extract_named,
     simple_damage,
     sum_modifiers,
 )
@@ -117,74 +115,40 @@ _W_DURATION = data_value_at_rank(_CASSIOPEIA_W_SPELL, "CloudDuration", 1)
 _W_TICK_INTERVAL = _W_DURATION / _W_TICKS  # "every 1.0 seconds"
 
 
-def _noxious_blast(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: full-poison total across seven sourced ticks (0.429s cadence).
-
-    The "Total Magic Damage" row is read directly (75..215 at 0 AP) so
-    the priced sum is exact at every rank; the per-tick row (10.71..30.71)
-    is its rounded 1/7th, which would drift by ~0.03 per rank.  The seven
-    ticks are still emitted as events for the coupled ledger.
-    """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "magic",
-            total / _Q_TICKS,
-            count=_Q_TICKS,
-            time_offset=_Q_FIRST_TICK,
-            hit_interval=_Q_TICK_INTERVAL,
-        ),
-    )
-    entry["dot_duration"] = _Q_DURATION
-    entry["detail"] = "7 poison ticks at 0.429s intervals"
-    return entry
+# Q: full-poison total across seven sourced ticks (0.429s cadence).
+#
+# The "Total Magic Damage" row is read directly (75..215 at 0 AP) so
+# the priced sum is exact at every rank; the per-tick row (10.71..30.71)
+# is its rounded 1/7th, which would drift by ~0.03 per rank.  The seven
+# ticks are still emitted as events for the coupled ledger.
+_noxious_blast = named_damage(
+    "Total Magic Damage",
+    "magic",
+    ticks=_Q_TICKS,
+    time_offset=_Q_FIRST_TICK,
+    hit_interval=_Q_TICK_INTERVAL,
+    dot_duration=_Q_DURATION,
+    detail="7 poison ticks at 0.429s intervals",
+)
 
 
-def _miasma(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: full-zone total across five sourced per-second ticks.
-
-    The "Total Magic Damage" row is exactly five times the "Magic Damage
-    Per Second" row at every rank (100/20 .. 200/40), so the zone is
-    priced as five per-second ticks over the five-second duration and
-    the sum is exact.  (The wiki packet's raw 0.263s cadence would be
-    19 x per-second/4 = 95% of the total — the round-off the worklist
-    targets.)
-    """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "magic",
-            total / _W_TICKS,
-            count=_W_TICKS,
-            time_offset=_W_TICK_INTERVAL,
-            hit_interval=_W_TICK_INTERVAL,
-        ),
-    )
-    entry["dot_duration"] = _W_DURATION
-    entry["detail"] = "5 per-second zone ticks over the 5s duration"
-    return entry
+# W: full-zone total across five sourced per-second ticks.
+#
+# The "Total Magic Damage" row is exactly five times the "Magic Damage
+# Per Second" row at every rank (100/20 .. 200/40), so the zone is
+# priced as five per-second ticks over the five-second duration and
+# the sum is exact.  (The wiki packet's raw 0.263s cadence would be
+# 19 x per-second/4 = 95% of the total — the round-off the worklist
+# targets.)
+_miasma = named_damage(
+    "Total Magic Damage",
+    "magic",
+    ticks=_W_TICKS,
+    time_offset=_W_TICK_INTERVAL,
+    hit_interval=_W_TICK_INTERVAL,
+    dot_duration=_W_DURATION,
+    detail="5 per-second zone ticks over the 5s duration",
+)
 
 
 def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:

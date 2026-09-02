@@ -46,19 +46,16 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
-from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stats import growth_multiplier
 from .engine import SlotCtx
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import rank
+from .module_helpers import named_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
-    damage_entry,
     extract_cooldown,
-    extract_named,
     extract_value,
     find_named_leveling,
     fixed_count_pet_row,
@@ -197,73 +194,29 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _malefic_visions(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: the full 4-second Total Magic Damage across 16 sourced ticks."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    selected_rank = rank(ctx)
-    if selected_rank < 1:
-        return None
-    total = extract_named(
-        ability, "Total Magic Damage", selected_rank, ctx.stats, ctx.target
-    )
-    entry = damage_entry(
-        ability_name(ability),
-        selected_rank,
-        extract_cooldown(ability, selected_rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "magic",
-            total / _E_TICKS,
-            count=_E_TICKS,
-            time_offset=_E_TICK_INTERVAL,
-            hit_interval=_E_TICK_INTERVAL,
-        ),
-    )
-    # Item burns (Liandry's, Blackfire Torch) stay refreshed through the
-    # whole 4-second infection (the Cassiopeia rule).
-    entry["dot_duration"] = _E_DURATION
-    return entry
+# E: the full 4-second Total Magic Damage across 16 sourced ticks.  Item
+# burns (Liandry's, Blackfire Torch) stay refreshed through the whole
+# infection (the Cassiopeia rule).
+_malefic_visions = named_damage(
+    "Total Magic Damage",
+    "magic",
+    ticks=_E_TICKS,
+    time_offset=_E_TICK_INTERVAL,
+    hit_interval=_E_TICK_INTERVAL,
+    dot_duration=_E_DURATION,
+)
 
-
-def _nether_grasp(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: the full 2.5-second Total Magic Damage across 10 sourced ticks.
-
-    Only the flat "Total Magic Damage" row (effect 0) is read; the
-    Null Zone's separate max-health row stays out of scope, as in the
-    reviewed packet.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    selected_rank = rank(ctx)
-    if selected_rank < 1:
-        return None
-    total = extract_named(
-        ability, "Total Magic Damage", selected_rank, ctx.stats, ctx.target
-    )
-    entry = damage_entry(
-        ability_name(ability),
-        selected_rank,
-        extract_cooldown(ability, selected_rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "magic",
-            total / _R_TICKS,
-            count=_R_TICKS,
-            time_offset=_R_TICK_INTERVAL,
-            hit_interval=_R_TICK_INTERVAL,
-        ),
-    )
-    entry["dot_duration"] = _R_DURATION
-    return entry
+# R: the full 2.5-second Total Magic Damage across 10 sourced ticks.  Only
+# the flat "Total Magic Damage" row (effect 0) is read; the Null Zone's
+# separate max-health row stays out of scope, as in the reviewed packet.
+_nether_grasp = named_damage(
+    "Total Magic Damage",
+    "magic",
+    ticks=_R_TICKS,
+    time_offset=_R_TICK_INTERVAL,
+    hit_interval=_R_TICK_INTERVAL,
+    dot_duration=_R_DURATION,
+)
 
 
 PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8f"

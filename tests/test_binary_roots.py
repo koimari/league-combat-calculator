@@ -149,7 +149,7 @@ class TestBatch2VladimirAndYone:
     def test_yone_q3_knockup_binary_agrees_with_the_cached_description(self):
         """Two roots, one number: the binary Q3KnockupDuration and the live
         description-branch read must agree — either drifting fails closed."""
-        from src.calculator.champions.module_helpers import q3_knockup_duration
+        from src.calculator.champions.yasuo_yone import q3_knockup_duration
         from src.calculator.data_fetcher import get_champion
 
         q_ability = get_champion("Yone")["abilities"]["Q"][0]

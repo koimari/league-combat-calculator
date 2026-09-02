@@ -5,15 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
-    damage_entry,
-    extract_cooldown,
     extract_named,
     proc_damage,
 )
@@ -34,50 +31,28 @@ _vital_proc = proc_damage(
 )
 
 
-def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", value, basic_damage=True),)
-    entry["applies_item_on_hits"] = {
+_lunge = named_damage(
+    "Physical Damage",
+    "physical",
+    basic_damage=True,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit",),
-    }
+    },
     # One stab on one target, no sourced travel phase — the certification
     # that carries Lunge's hit into the event ledger MODULE_CC is read from.
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = "Lunge's stab applies one full-effectiveness on-hit package."
-    return entry
+    event_order_certified="single_hit",
+    detail="Lunge's stab applies one full-effectiveness on-hit package.",
+)
 
 
-def _riposte(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.5),)
-    entry["detail"] = (
-        "Defensive stance/stun branch is retained as control state; the shock is one magic hit."
-    )
-    return entry
+_riposte = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.5,
+    detail="Defensive stance/stun branch is retained as control state; the shock is one magic hit.",
+)
 
 
 def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:

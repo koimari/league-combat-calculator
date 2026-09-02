@@ -927,14 +927,14 @@ CACHED_SOURCE_ROW = frozenset(
             1,
         ),
         (
-            "champions/module_helpers.py",
+            "champions/yasuo_yone.py",
             "q3_knockup_duration",
             "or-default",
             '"description"',
             1,
         ),
         (
-            "champions/module_helpers.py",
+            "champions/yasuo_yone.py",
             "q3_knockup_duration",
             "or-default",
             '"effects"',

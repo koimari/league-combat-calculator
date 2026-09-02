@@ -36,15 +36,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_contract import coverage
-from .module_helpers import (
-    CRIT_CHANCE_MULTIPLIER,
-    CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-    crit_conversion_certification,
-    crit_conversion_payload,
-    no_damage,
-    q3_knockup_duration,
-)
+from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -52,13 +44,20 @@ from .slotlib import (
     extract_cooldown,
     extract_description_duration,
     extract_named,
-    extract_value,
+)
+from .yasuo_yone import (
+    CRIT_CHANCE_MULTIPLIER,
+    CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+    crit_conversion_certification,
+    crit_conversion_payload,
+    gathering_storm_thrust,
 )
 
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
 
 
-# P4: the crit-conversion rule is the shared module_helpers rule (the
+# P4: the crit-conversion rule is the shared yasuo_yone rule (the
 # 0.9 factor's atom hash is f375a24fbf0555e1 for Yasuo).
 (
     _CRIT_CHANCE_MULTIPLIER,
@@ -97,62 +96,7 @@ def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _steel_tempest(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: Steel Tempest, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
-    damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "physical",
-    )
-    # "Steel Tempest's damage based on its AD ratio can critically strike"
-    # (cached Q description): the flat 20-120 base never crits, so it is a
-    # plain part; the 105% AD portion is a separate crit-eligible part that
-    # uses the crit chance/multiplier the engine resolves from P's
-    # crit_modifier (which already multiplies the multiplier by 0.9).
-    flat = extract_value(ability, "Physical Damage", rank, 0)
-    ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
-    ad_part = ctx.stat("attack_damage") * ad_ratio
-    # Both parts are the one thrust — the split is crit eligibility, not a
-    # second hit — so the ledger sees ONE landing: the flat part carries
-    # the cast instant (and with it the control marker), and the AD part
-    # rides that same event rather than booking a second one.
-    #
-    # The knock-up is a property of the branch, not of the slot, so it is
-    # authored here rather than in MODULE_CC: only the 2-stack cast is the
-    # whirlwind that "additionally knocks up enemies hit for 0.9 seconds",
-    # and that sentence is where its duration is read from.
-    knockup = q3_knockup_duration("Yasuo", ability) if stacks >= 2 else 0.0
-    entry["parts"] = (
-        DamagePart(
-            "physical",
-            flat,
-            time_offset=0.0,
-            cc_kind="knockup" if stacks >= 2 else "none",
-            cc_duration=knockup,
-        ),
-        DamagePart("physical", ad_part, crit_effectiveness=1.0),
-    )
-    if stacks >= 2:
-        entry["detail"] = (
-            "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
-            f"same sourced damage as a normal thrust, adding a {knockup:g}s "
-            "knock-up (crowd-control state, not damage)."
-        )
-    else:
-        entry["detail"] = (
-            f"Gathering Storm {stacks}/2 stacks; the Q3 whirlwind at 2 "
-            "stacks deals the same sourced damage (the empower is the "
-            "knock-up, a crowd-control state)."
-        )
-    return entry
+_steel_tempest = gathering_storm_thrust("Yasuo")
 
 
 def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:

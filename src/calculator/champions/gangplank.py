@@ -11,7 +11,7 @@ from ..binary_roots import data_value, data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -47,33 +47,20 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart("physical", value, crit_effectiveness=1.0, basic_damage=True),
-    )
-    entry["applies_item_on_hits"] = {
+_parrrley = named_damage(
+    "Physical Damage",
+    "physical",
+    crit_effectiveness=1.0,
+    basic_damage=True,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
-    }
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Ranged attack: applies on-hit/on-attack effects and may critically strike "
-        "for the sourced 230% modifier."
-    )
-    return entry
+    },
+    event_order_certified="single_hit",
+    detail="Ranged attack: applies on-hit/on-attack effects and may critically strike "
+    "for the sourced 230% modifier.",
+)
 
 
 # P2 Slice 5 — Remove Scurvy typed declaration.  The heal values are the
@@ -193,26 +180,13 @@ def _remove_scurvy(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    bonus = extract_named(ability, "Bonus Champion Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        bonus,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", bonus),)
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Champion keg branch: triggering attack plus the sourced bonus; 40% "
-        "armor-ignore is retained in provenance."
-    )
-    return entry
+_powder_keg = named_damage(
+    "Bonus Champion Damage",
+    "physical",
+    event_order_certified="single_hit",
+    detail="Champion keg branch: triggering attack plus the sourced bonus; 40% "
+    "armor-ignore is retained in provenance.",
+)
 
 
 def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:

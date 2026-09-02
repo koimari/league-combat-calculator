@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -111,21 +111,11 @@ def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _reap(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.4),)
-    return entry
+_reap = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.4,
+)
 
 
 def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:

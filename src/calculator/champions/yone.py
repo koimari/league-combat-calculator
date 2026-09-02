@@ -20,7 +20,7 @@ rows. All numeric values are read from the champion JSON data.
 from __future__ import annotations
 
 # pylint: disable=duplicate-code  # Yone deliberately mirrors Yasuo's Q/P
-# crit-conversion shape (the shared module_helpers rule); the parallel
+# crit-conversion shape (the shared yasuo_yone rule); the parallel
 # blocks are the documented contract, not accidental duplication.
 from typing import Any
 
@@ -28,15 +28,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx
 from .inputs import int_option
-from .module_helpers import (
-    CRIT_CHANCE_MULTIPLIER,
-    CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-    crit_conversion_certification,
-    crit_conversion_payload,
-    no_damage,
-    q3_knockup_duration,
-)
+from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -45,8 +37,16 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
+from .yasuo_yone import (
+    CRIT_CHANCE_MULTIPLIER,
+    CRIT_DAMAGE_MULTIPLIER_FACTOR,
+    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
+    crit_conversion_certification,
+    crit_conversion_payload,
+    gathering_storm_thrust,
+)
 
-# P4: the crit-conversion rule is the shared module_helpers rule (the
+# P4: the crit-conversion rule is the shared yasuo_yone rule (the
 # 0.9 factor's atom hash is 1142fbe0a600fcc8 for Yone).
 (
     _CRIT_CHANCE_MULTIPLIER,
@@ -105,61 +105,7 @@ def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _mortal_steel(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: Mortal Steel, empowered into the Q3 whirlwind at 2 Gathering Storm stacks."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
-    damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "physical",
-    )
-    # P4: the flat/AD-ratio split (Yasuo's shape) — only the AD-ratio
-    # portion crits ("Mortal Steel's damage based on its AD ratio can
-    # critically strike"; the binary TotalDamageCrit = base + AD x
-    # (crit stat x ratio)).
-    flat = extract_value(ability, "Physical Damage", rank, 0)
-    ad_ratio = extract_value(ability, "Physical Damage", rank, 1) / 100.0
-    ad_part = ctx.stat("attack_damage") * ad_ratio
-    # Both parts are the one thrust — the split is crit eligibility, not a
-    # second hit — so the ledger sees ONE landing: the flat part carries
-    # the cast instant (and with it the control marker), and the AD part
-    # rides that same event rather than booking a second one.
-    #
-    # The knock-up is a property of the branch, not of the slot, so it is
-    # authored here rather than in MODULE_CC: only the 2-stack cast is the
-    # whirlwind that "additionally knock[s] up enemies hit in their path",
-    # and that sentence is where its duration is read from.
-    knockup = q3_knockup_duration("Yone", ability) if stacks >= 2 else 0.0
-    entry["parts"] = (
-        DamagePart(
-            "physical",
-            flat,
-            time_offset=0.0,
-            cc_kind="knockup" if stacks >= 2 else "none",
-            cc_duration=knockup,
-        ),
-        DamagePart("physical", ad_part, crit_effectiveness=1.0),
-    )
-    if stacks >= 2:
-        entry["detail"] = (
-            "Gathering Storm at 2 stacks: this cast is the Q3 whirlwind — "
-            f"same sourced damage as a normal thrust, adding a {knockup:g}s "
-            "knock-up (crowd-control state, not damage)."
-        )
-    else:
-        entry["detail"] = (
-            f"Gathering Storm {stacks}/2 stacks; the Q3 whirlwind at 2 "
-            "stacks deals the same sourced damage (the empower is the "
-            "knock-up, a crowd-control state)."
-        )
-    return entry
+_mortal_steel = gathering_storm_thrust("Yone")
 
 
 def _mixed_damage_entry(

@@ -44,7 +44,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -54,22 +54,7 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 
-
-def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
-    return entry
+_pierce = named_damage("Physical Damage", "physical", time_offset=0.0)
 
 
 def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:

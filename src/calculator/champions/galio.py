@@ -13,6 +13,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
+from .module_helpers import named_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -164,24 +165,14 @@ def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _heros_entrance(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: impact damage after the sourced 2.75-second channel."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", total, time_offset=_R_LANDING_TIME),)
-    entry["cast_time"] = _R_LANDING_TIME
-    entry["detail"] = "impact after 2.75s channel; allied cast target assumed"
-    return entry
+# R: impact damage after the sourced 2.75-second channel.
+_heros_entrance = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=_R_LANDING_TIME,
+    cast_time=_R_LANDING_TIME,
+    detail="impact after 2.75s channel; allied cast target assumed",
+)
 
 
 OPTIONS: list[dict[str, Any]] = [

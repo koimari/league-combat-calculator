@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -86,24 +86,12 @@ def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _smoke_screen(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.25),)
-    entry["detail"] = (
-        "Impact damage plus 4-second nearsight cloud; slow/vision are utility."
-    )
-    return entry
+_smoke_screen = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.25,
+    detail="Impact damage plus 4-second nearsight cloud; slow/vision are utility.",
+)
 
 
 def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:

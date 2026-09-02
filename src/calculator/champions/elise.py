@@ -6,9 +6,8 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
-    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -84,28 +83,16 @@ def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-        # One explosion.  Its arrival has no sourced duration — the spider
-        # crawls "after a delay of 0.75 seconds" only when it detects a
-        # target first, and its travel is proximity-driven — so the cast
-        # boundary is the only placement the source gives it.
-        event_order_certified="single_hit",
-    )
-    entry["detail"] = (
-        "One untargetable spider explosion; target selection is a sourced proximity branch."
-    )
-    return entry
+_volatile_spiderling = named_damage(
+    "Magic Damage",
+    "magic",
+    # One explosion.  Its arrival has no sourced duration — the spider
+    # crawls "after a delay of 0.75 seconds" only when it detects a
+    # target first, and its travel is proximity-driven — so the cast
+    # boundary is the only placement the source gives it.
+    event_order_certified="single_hit",
+    detail="One untargetable spider explosion; target selection is a sourced proximity branch.",
+)
 
 
 def _cocoon(ctx: SlotCtx) -> dict[str, Any] | None:

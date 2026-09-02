@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -105,48 +105,23 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
 _parallel_convergence.phase = ONHIT
 
 
-def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        bonus,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", bonus),)
-    entry["empowers_next_auto"] = True
+_phase_dive = named_damage(
+    "Bonus Magic Damage",
+    "magic",
+    empowers_next_auto=True,
     # One empowered swing, landing with that swing.
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Empowers one basic attack; the blink and attack reset are state-only."
-    )
-    return entry
+    event_order_certified="single_hit",
+    detail="Empowers one basic attack; the blink and attack reset are state-only.",
+)
 
 
-def _chronobreak(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", damage, time_offset=0.5),)
-    entry["event_order_certified"] = "single arrival explosion"
-    entry["detail"] = (
-        "Explosion at the afterimage; the sourced self-heal/stasis is not outgoing damage."
-    )
-    return entry
+_chronobreak = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.5,
+    event_order_certified="single arrival explosion",
+    detail="Explosion at the afterimage; the sourced self-heal/stasis is not outgoing damage.",
+)
 
 
 SLOTS = {
