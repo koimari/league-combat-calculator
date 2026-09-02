@@ -123,9 +123,9 @@ Contract sections (numbered as in the RLM-2 C brief):
   S14 Missing identity or rows (the unavailable-source KeyError pinned;
       the typed extractors return 0.0 on the empty P leveling — a
       pinned source gap; the require_named_leveling fail-loud precedent).
-  S15 Score fail-closed (the generic gate receipts PASS —
-      support_kind=cleanse / support_cleanse / support_kind=canister;
-      never a silent re-price).
+  S15 Score fail-closed (the generic gate receipts PASS — the cleanse
+      shapes stage, support_kind=canister still refuses; never a silent
+      re-price).
   S16 Full vs score parity (Q/W/E/R engine surface byte-identical
       today — each path needs a FRESH stats dict because the module
       parse mutates the caller's stats with R's base-health grant,
@@ -1492,21 +1492,20 @@ class TestMissingIdentityAndRows:
 
 class TestScoreFailClosed:
     def test_score_gate_names_fail_closed_receipts(self):
-        # PASS (the brief's contract #15): the compiled score path ALREADY
-        # fails closed on every P2-8 authoring shape — a cleanse-kind
-        # template (support_kind=cleanse), a heal packet carrying the
-        # cleanse marker (support_cleanse), and a canister-kind template
-        # (the compile gate's support_kind=canister); a plain heal stays
-        # representable.  The P2-8 wiring must route the resist/canister
-        # packets through this gate (never silently re-price the pickup
-        # heal as a plain heal or drop the resist).
+        # PASS (the brief's contract #15): of the P2-8 authoring shapes
+        # the compiled score path stages the cleanse-kind resist template
+        # and the heal carrying the cleanse marker (#226), and fails
+        # closed on the canister-kind template (support_kind=canister); a
+        # plain heal stays representable.  The P2-8 wiring routes the
+        # resist/canister packets through this gate, so the pickup heal is
+        # never silently re-priced and the resist never dropped.
         resist = _resist_packet(0.0)
-        assert unrepresentable_template_receipt(resist) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(resist) is None
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse_item": _P_CLEANSE_ITEM}
             )
-            == "support_cleanse"
+            is None
         )
         canister = _canister_packet(0.0)
         assert unrepresentable_template_receipt(canister) == "support_kind=canister"
@@ -1661,10 +1660,9 @@ class TestModeParity:
 
     def test_wired_p_parity_and_named_score_divergence(self):
         # P2-8 contract: full vs score agree on the Q/W/E/R + heal
-        # surfaces AND the passive's score divergence is NAMED (the
-        # resist/canister receipts fail closed on the compiled path —
-        # support_kind=cleanse / support_kind=canister) — never a silent
-        # re-price of the pickup heal.
+        # surfaces, the resist packet stages on the compiled path, and the
+        # remaining divergence is NAMED (support_kind=canister) — never a
+        # silent re-price of the pickup heal.
         full = _fight({}, one_rotation=True)
         scored = _fight({}, one_rotation=True, score_only=True)
         for slot in ("Q", "W", "E", "R"):
@@ -1674,10 +1672,7 @@ class TestModeParity:
             assert frow["total_damage"] == srow["total_damage"]
             assert frow["total_raw"] == srow["total_raw"]
             assert frow.get("casts") == srow.get("casts")
-        assert (
-            unrepresentable_template_receipt(_resist_packet(0.0))
-            == "support_kind=cleanse"
-        )
+        assert unrepresentable_template_receipt(_resist_packet(0.0)) is None
         assert (
             unrepresentable_template_receipt(_canister_packet(0.0))
             == "support_kind=canister"

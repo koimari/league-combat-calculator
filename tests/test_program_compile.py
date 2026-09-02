@@ -1,5 +1,8 @@
 """Phase 4 S4 — the one constructor, and what it refuses.
 
+file-length-ok: the module under test is the one-constructor boundary, and
+one suite per boundary is what keeps its field list provable in one place.
+
 ``program/compile`` is the front door for action construction.  Its claim is
 a location claim first — every ``SurvivalAction(...)`` expression in ``src/``
 is in this module, bar the one declared survivor, which
@@ -715,3 +718,50 @@ class TestTheActorWideHealSkip:
             self.result_with_an_actor_wide_heal(), suppress_actor_wide_heals=True
         )
         assert ActionKind.HEAL not in [a.kind for a in actions]
+
+
+class TestTheCompiledHealCarriesItsGateFields:
+    """A heal's own answers to the walk's gates, on the compiled action.
+
+    ``action_from_event`` stamps both off the same event, so a heal only one
+    builder stamps is a heal one walk applies and the other drops: without
+    ``cast_while_disabled`` the compiled walk blocks Gangplank's Remove
+    Scurvy exactly when the receipt walk applies it, and without the cleanse
+    pair a heal that rides a cleanse loses the truncation (issue #226).
+    """
+
+    @staticmethod
+    def compiled_heal(**heal_fields):
+        (action,) = [
+            action
+            for action in compile_result(
+                engine_result(
+                    self_healing_events=[
+                        {
+                            "time": 3.0,
+                            "sequence": 5,
+                            "amount": 120.0,
+                            "source": "Remove Scurvy",
+                            "source_key": "W",
+                            **heal_fields,
+                        }
+                    ]
+                )
+            )
+            if action.kind is ActionKind.HEAL
+        ]
+        return action
+
+    def test_the_declared_cast_while_disabled_exemption_is_stamped(self) -> None:
+        assert self.compiled_heal(cast_while_disabled=True).cast_while_disabled is True
+
+    def test_a_heal_that_declares_nothing_stays_gated(self) -> None:
+        heal = self.compiled_heal()
+        assert heal.cast_while_disabled is False
+        assert heal.cleanse is False
+        assert heal.cleanse_item == ""
+
+    def test_a_heal_that_rides_a_cleanse_keeps_the_marker_pair(self) -> None:
+        heal = self.compiled_heal(cleanse=True, cleanse_item="Mikael's Blessing")
+        assert heal.cleanse is True
+        assert heal.cleanse_item == "Mikael's Blessing"

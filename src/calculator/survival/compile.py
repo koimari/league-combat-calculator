@@ -63,17 +63,12 @@ def unrepresentable_heal_receipt(event: Mapping[str, Any]) -> str | None:
     """Return a named receipt when a heal packet carries a transition the
     compiled score kernel cannot stage, else None.
 
-    ``healing_category`` is not a rejection: every compiled heal action
-    carries the field, so the kernel's vamp carve-outs (received-healing
-    multiplier exemption, ichor conversion) apply identically.
-
-    A heal packet carrying the cleanse marker (Mikael's Purify) fails closed
-    with ``support_cleanse``: the compiled kernel cannot reproduce the
-    action-downtime truncation, so the caller falls back to the authoritative
-    receipt walk instead of silently dropping the cleanse.
+    Two markers are deliberately not rejections.  ``healing_category`` rides
+    every compiled heal action, so the kernel's vamp carve-outs apply
+    identically; the cleanse marker (Mikael's Purify) reaches the shared
+    ``_apply_cleanse`` off ``action.cleanse``/``cleanse_item``, which both
+    adapters stamp.
     """
-    if event.get("cleanse") or event.get("cleanse_item"):
-        return "support_cleanse"
     if event.get("overheal_to_shield"):
         return "overheal_to_shield"
     # ``requires_holder_health_ratio`` (Knight's Vow Sacrifice heals,
@@ -103,6 +98,13 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
 
 # The resolved support kinds the compiled score ledger can stage.
 #
+# ``cleanse`` is the same statement about the compiler that ``damage_modifier``
+# was below: the transition was never missing — ``_apply_cleanse`` is a kernel
+# function both adapters have always driven — what refused was *compilation*,
+# because the support builder stamped none of the packet's cleanse fields.  It
+# stamps them now, so a self-cast activation (Quicksilver, Gangplank W, Olaf R)
+# and a fan-out (Milio R) stage identically under either ledger.
+#
 # ``damage_modifier`` joined the set at the H5 stage, which is where the
 # kernel was taught timed, typed damage modifiers (D-101; the umbrella's
 # ``[H]`` table records the scoping and this module does not re-rule it).
@@ -113,7 +115,7 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
 # the walk's, which is why the modifier's own refusals get a function of
 # their own below rather than clauses inside the shield/heal ladder: a heal's
 # duration is a reason to decline and a modifier's duration is the mechanic.
-_STAGED_SUPPORT_KINDS = frozenset({"shield", "heal", "damage_modifier"})
+_STAGED_SUPPORT_KINDS = frozenset({"shield", "heal", "damage_modifier", "cleanse"})
 
 
 def unrepresentable_modifier_receipt(template: Mapping[str, Any]) -> str | None:

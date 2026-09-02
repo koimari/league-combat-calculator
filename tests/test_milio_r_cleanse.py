@@ -56,7 +56,7 @@ CURRENT RUNTIME FACTS (verified before pinning):
   consuming the one use (the Mikael's-style gated path, the OPPOSITE of
   the GP/Rengar utility-before-gate dispatch); the per-fight latch is
   shared by one cast's recipients; the cooldown is receipted but never
-  enforced; and the score carries support_kind=cleanse fail-closed.
+  enforced; and the compiled score path stages the cleanse (#226).
 - Game-file evidence (data/bin/characters/milio.bin.json MilioR):
   HealBase DataValues [50,150,250,350,...] (ranks 1..3 = 150/250/350),
   mSpellCalculations HealCalc = HealBase + StatByCoefficient 0.5 (50%
@@ -75,8 +75,8 @@ used while the CASTER is crowd-controlled — the Mikael's-style gated
 path, use NOT consumed, the OPPOSITE of the GP/Rengar
 utility-before-gate dispatch), the heal (E8d fan-out) + cleanse
 separate, the per-fight one-use latch shared by one cast's recipients,
-the cooldown receipted but never enforced, and the score fails closed
-(support_kind=cleanse).  This matrix pins the CONTRACT green.
+the cooldown receipted but never enforced, and the compiled score path
+staging the cleanse.  This matrix pins the CONTRACT green.
 
 Contract sections (numbered as in the RLM-2 C brief):
   S1  Source evidence + typed values (cached R rows; the cleanse +
@@ -149,7 +149,7 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.healing import derive_self_healing
-from src.calculator.participant_timeline import Combatant
+from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.app_config import app_config
 from tests.survival_probe import simulate_survival, survival_of
@@ -1654,19 +1654,17 @@ class TestMissingIdentityAndRows:
 
 
 # ---------------------------------------------------------------------------
-# S13 — Score fail-closed behavior
+# S13 — Score staging behavior
 # ---------------------------------------------------------------------------
 
 
 class TestScoreFailClosed:
     def test_score_gate_names_fail_closed_receipts(self):
-        # PASS: the compiled score path ALREADY fails closed on every
-        # Milio R authoring shape — a cleanse-kind template
-        # (support_kind=cleanse) and a heal packet carrying the cleanse
-        # marker (support_cleanse) are unrepresentable; the R heal alone
-        # (kind heal, no marker) stays representable.  The P2-7 wiring
-        # must route the R packet through this gate (never silently
-        # re-price the heal as a plain heal or drop the cleanse).
+        # The compiled score path stages every Milio R authoring shape —
+        # the cleanse-kind template, the heal carrying the marker and the
+        # R heal alone (#226); movement is still refused.  The P2-7
+        # wiring routes the R packet through this gate, so the heal can
+        # never be silently re-priced nor the cleanse dropped.
         template = {
             "kind": "cleanse",
             "amount": 1.0,
@@ -1679,12 +1677,12 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse": True}
             )
-            == "support_cleanse"
+            is None
         )
         assert (
             unrepresentable_template_receipt({"kind": "heal", "amount": 350.0}) is None
@@ -1695,10 +1693,10 @@ class TestScoreFailClosed:
         )
 
     def test_score_gate_never_reprices_the_r_heal(self):
-        # PASS: the R heal packet (the E8d fan-out shape) is a plain heal
-        # — representable — and the cleanse marker (once the R packet
-        # carries it) flips the SAME packet to the named receipt: the
-        # gate can never silently re-price the heal as a plain heal.
+        # PASS: both the plain R heal (the E8d fan-out shape) and the
+        # marked one compile, and the marker pair is what tells them apart
+        # on the compiled action — arriving without it is exactly the
+        # silent re-price as a plain heal.
         heal_template = {
             "kind": "heal",
             "amount": 350.0,
@@ -1708,9 +1706,16 @@ class TestScoreFailClosed:
             "target": "ally:Jinx",
             "_event_id": "milio:r:3:enemy:Garen:ally:1",
         }
+        marked = {**heal_template, "cleanse": True, "cleanse_item": _R_CLEANSE_ITEM}
         assert unrepresentable_template_receipt(heal_template) is None
-        marked = {**heal_template, "cleanse": True}
-        assert unrepresentable_template_receipt(marked) == "support_cleanse"
+        assert unrepresentable_template_receipt(marked) is None
+        compiler = _WalkCompiler()
+        compiler.add_support_templates(
+            [heal_template, marked], 0, {"main": 0, "ally:Jinx": 1}
+        )
+        plain, cleansing = compiler.actions
+        assert (plain.cleanse, plain.cleanse_item) == (False, "")
+        assert (cleansing.cleanse, cleansing.cleanse_item) == (True, _R_CLEANSE_ITEM)
 
 
 # ---------------------------------------------------------------------------
@@ -1761,9 +1766,8 @@ class TestModeParity:
 
     def test_r_mode_parity_named_cleanse_divergence(self):
         # P2-7 contract: the engine surface stays byte-identical full vs
-        # score_only AND the couple score gate names the fail-closed
-        # receipt for the R cleanse packet (the completion rule's pinned
-        # divergence — support_kind=cleanse, never a silent re-price).
+        # score_only AND the couple score gate stages the R cleanse packet
+        # rather than diverging on it — never a silent re-price.
         full = _fight({}, one_rotation=True)
         scored = _fight({}, one_rotation=True, score_only=True)
         assert full["breakdown"]["R"] == scored["breakdown"]["R"]
@@ -1779,7 +1783,7 @@ class TestModeParity:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
         combat = _app_combat()
         assert survival_of(combat)["cleanse"]["decision"]["reason"] == (
             "control_not_active"
@@ -1885,17 +1889,12 @@ class TestUnchangedBoundaries:
             "intervals_after",
             "use_consumed",
         }
+        assert unrepresentable_template_receipt({"kind": "cleanse"}) is None
         assert (
-            unrepresentable_template_receipt({"kind": "cleanse"})
-            == "support_kind=cleanse"
+            unrepresentable_template_receipt({"kind": "heal", "cleanse": True}) is None
         )
         assert (
-            unrepresentable_template_receipt({"kind": "heal", "cleanse": True})
-            == "support_cleanse"
-        )
-        assert (
-            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0})
-            == "support_kind=cleanse"
+            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
         )
 
 

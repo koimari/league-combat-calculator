@@ -3,7 +3,10 @@
 Timeline-level walk integration (through
 ``participant_timeline._simulate_survival``), app-level self-cast actives
 (Quicksilver Sash / Mercurial Scimitar item options), the Mikael's Purify
-heal+cleanse marker, and the compiled-score fail-closed surface.
+heal+cleanse marker, and what the compiled score compiler stages for each.
+Roster-level compiled/receipt parity is ``test_compiled_support_parity.py``.
+
+file-length-ok: one acceptance matrix per slice, and this is Slice 4's.
 """
 
 import pytest
@@ -539,27 +542,42 @@ def test_app_mikaels_heal_and_cleanse_receipts():
 
 
 # ---------------------------------------------------------------------------
-# Score path: fail closed
+# Score path: what the compiler stages
 # ---------------------------------------------------------------------------
 
 
-def test_compiled_walk_fails_closed_on_cleanse_templates():
+def test_compiled_walk_stages_a_cleanse_template_with_its_dispatch_fields():
+    """A cleanse-kind template compiles to the UTILITY action the kernel's
+    cleanse dispatch reads: the typed utility kind, the declaration item and
+    the per-cast group a fan-out shares one use across.  Dropping any of the
+    three would stage an activation the walk then ignores."""
     compiler = _WalkCompiler()
-    with pytest.raises(UncompilableActionError) as excinfo:
-        compiler.add_support_templates(
-            [
-                {
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "attacker": "main",
-                    "target": "main",
-                    "time": 1.0,
-                }
-            ],
-            0,
-            {"main": 0},
-        )
-    assert "support_kind=cleanse" in str(excinfo.value)
+    compiler.add_support_templates(
+        [
+            {
+                "kind": "cleanse",
+                "amount": 1.0,
+                "attacker": "main",
+                "target": "main",
+                "time": 1.0,
+                "utility_kind": "cleanse",
+                "cleanse_item": "Quicksilver Sash",
+                "cleanse_group": "main:milio:r:0",
+                "cast_blocked_by_attacker_control": True,
+            }
+        ],
+        0,
+        {"main": 0},
+    )
+    (action,) = compiler.actions
+    assert action.kind is ActionKind.UTILITY
+    assert action.utility_kind == "cleanse"
+    assert action.cleanse_item == "Quicksilver Sash"
+    assert action.cleanse_group == "main:milio:r:0"
+    assert action.cast_blocked_by_attacker_control is True
+
+
+def test_compiled_walk_still_fails_closed_on_movement_templates():
     compiler = _WalkCompiler()
     with pytest.raises(UncompilableActionError) as excinfo:
         compiler.add_support_templates(
@@ -579,33 +597,38 @@ def test_compiled_walk_fails_closed_on_cleanse_templates():
     assert "support_kind=movement" in str(excinfo.value)
 
 
-def test_compiled_walk_fails_closed_on_mikaels_heal_marker():
-    # The heal+cleanse marker must not compile as a silent plain heal.
+def test_compiled_walk_stages_the_mikaels_heal_marker():
+    """The heal+cleanse marker compiles as a heal that still carries its
+    marker, so the kernel's ``_apply_cleanse`` runs off the compiled action
+    exactly as it runs off the receipt walk's."""
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse": True}
         )
-        == "support_cleanse"
+        is None
     )
     compiler = _WalkCompiler()
-    with pytest.raises(UncompilableActionError) as excinfo:
-        compiler.add_support_templates(
-            [
-                {
-                    "kind": "heal",
-                    "amount": 100.0,
-                    "cleanse": True,
-                    "source": MIKAELS_SOURCE,
-                    "attacker": "caster",
-                    "target": "main",
-                    "time": 2.5,
-                }
-            ],
-            0,
-            {"main": 0, "caster": 1},
-        )
-    assert "support_cleanse" in str(excinfo.value)
-    # A plain heal stays representable.
+    compiler.add_support_templates(
+        [
+            {
+                "kind": "heal",
+                "amount": 100.0,
+                "cleanse": True,
+                "cleanse_item": "Mikael's Blessing",
+                "source": MIKAELS_SOURCE,
+                "attacker": "caster",
+                "target": "main",
+                "time": 2.5,
+            }
+        ],
+        0,
+        {"main": 0, "caster": 1},
+    )
+    (action,) = compiler.actions
+    assert action.kind is ActionKind.HEAL
+    assert action.cleanse is True
+    assert action.cleanse_item == "Mikael's Blessing"
+    # A plain heal stays a plain heal.
     compiler = _WalkCompiler()
     compiler.add_support_templates(
         [
@@ -622,3 +645,4 @@ def test_compiled_walk_fails_closed_on_mikaels_heal_marker():
     )
     (action,) = compiler.actions
     assert action.kind is ActionKind.HEAL
+    assert action.cleanse is False
