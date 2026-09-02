@@ -370,7 +370,7 @@ python scripts/patch_update.py packets [--no-rebuild]
 | `audit` / `detail` | Step 1's report without re-pulling | 0 clear, 1 BLOCKING entries (`audit`) | a vanished effect branch, an unreviewed source conflict, a removed-but-implemented item, a stale economics table |
 | `fetch` | Refreshes `data/gamefiles/` (the exact cache `patch_regression.py check` reads, Step 2) plus the tracked Gnar/GnarBig/Renata game-file authority pair (`data/bin/characters/`, commit 58ce29e) | 0 clean, 1 partial (an authority file failed), 2 hard error | empty/unreadable champion roster; HTTP/network errors per file; malformed JSON (`jq empty`); always clears a prior patch's cached bin before fetching so a stale copy can't be silently re-served; refuses to overwrite an uncommitted tracked authority file without `--force` |
 | `bis` | Rebuilds `static/bis-profiles.json` (`build_bis_profiles.py` wrapper). Also runs inside `run`'s catalogue rebuild — it is not a by-hand step any more. | 0 ok, 2 on any invariant failure | missing `LCC_AXWORD_SOURCE` sibling-repo file; missing champion cache; zero champions produced; zero merged Meraki damage packets; a merged-packet count that regresses below the checked-in baseline (the Axword invariant, `tests/test_bis_profiles.py`) |
-| `packets` | One currency verdict on `static/reviewed-packets.json` from two checks that catch disjoint drift: the **source receipts** (champions.json / Axword sha256, per-champion wiki revision, roster membership — a changed *source*) and a **rebuild diff** (regenerate to a scratch path and compare `slots` / `review_status` — a changed *builder*, which no receipt can see). It never writes that file. `--no-rebuild` runs the receipt half alone. | 0 clean, 1 not current | missing checked-in asset; missing `LCC_WIKI_DB` / wiki sqlite cache; missing Axword source; zero wiki revision receipts |
+| `packets` | One currency verdict on `static/reviewed-packets.json` from two checks that catch disjoint drift: the **source receipts** (champions.json / Axword sha256, per-champion wiki revision, roster membership — a changed *source*) and a **rebuild diff** (regenerate to a scratch path and compare `slots` / `review_status` — a changed *builder*, which no receipt can see). It never writes that file. `--no-rebuild` runs the receipt half alone. | 0 clean, 1 not current | missing checked-in asset; a missing wiki revision index (build it with `decompose_wiki.py --wiki-db`); missing Axword source; zero wiki revision receipts |
 
 `detect`, `fetch`, `bis` and `packets` each print one JSON report to stdout
 (`--indent 2, sort_keys`), so they compose with `jq` in a cron wrapper or CI
@@ -399,8 +399,24 @@ human steps in Steps 3/4/5 above):
 - Public launch / auth operations — see `docs/deploy-runbook.md`.
 - Issue-closure policy details — see `docs/issue-closure-policy.md`.
 
-## Environment (2026-08-07)
+## Environment
 
-- `LCC_WIKI_DB=/Users/river/Projects/scryglass/data/lol/knowledge/league-wiki.sqlite3`
-- `LCC_WIKI_QUERY=<repo>/vendor/league-wiki-query/scripts/query_league_wiki.py`
-- `LCC_AXWORD_SOURCE=/Users/river/Projects/lol-strength-analysis/src/data/generated/merakiAbilityKits.ts`
+Every source resolves repo-relative by default, so a variable is only needed
+to point at a copy somewhere else.
+
+- `LCC_WIKI_DB` is the wiki revision index the `packets` gate reads. Build it
+  at the default path with `python scripts/decompose_wiki.py --wiki-db`, then
+  leave the variable unset. The run takes 490 requests to the wiki API and
+  about 4.5 minutes, and writes 24,452 namespace-0 revisions to
+  `data/wiki/league-wiki.sqlite3` (1.6 MB, gitignored). Rebuild it on patch
+  day before `packets`, because it holds each page's current revision only.
+- `LCC_AXWORD_SOURCE` is `src/data/generated/merakiAbilityKits.ts` from a
+  `koimari/lol-strength-analysis` checkout, which the default expects as a
+  sibling of this repo.
+- `LCC_WIKI_QUERY` is the read-only wiki CLI `full_entry_audit.py` shells out
+  to. It is vendored at
+  `vendor/league-wiki-query/scripts/query_league_wiki.py` and found there
+  without the variable. Its own database is the full source-preserving index
+  (`SCRYGLASS_LEAGUE_WIKI_DB`, schema in
+  `vendor/league-wiki-query/references/schema.md`), not the revision index
+  above.

@@ -142,8 +142,8 @@ def _wiki_revisions(wiki_db: str | Path | None = None) -> dict[str, dict[str, An
     if not db.is_file():
         raise RuntimeError(
             f"Local League Wiki cache not found: {db}\n"
-            "Supply it with --wiki-db or the LCC_WIKI_DB environment "
-            "variable (repo convention: data/wiki/league-wiki.sqlite3)."
+            "Build one with `python scripts/decompose_wiki.py --wiki-db`, or "
+            "supply an existing copy with --wiki-db / LCC_WIKI_DB."
         )
     try:
         with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as connection:
