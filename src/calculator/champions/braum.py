@@ -40,6 +40,7 @@ from ..binary_roots import data_value, spell_object
 from ..stats import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option
+from .module_helpers import at_level, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -75,14 +76,6 @@ _AUTO = 1
 def _trigger_damage(level: int) -> float:
     """Trigger damage at a level (16 + 10 x lvl, linear past 18: 216 at 20)."""
     return _TRIGGER_BASE + _TRIGGER_PER_LEVEL * level
-
-
-def _immunity_window(level: int) -> float:
-    """Stack-immunity duration after a proc at a champion level."""
-    for min_level, seconds in _IMMUNITY_BREAKPOINTS:
-        if level >= min_level:
-            return seconds
-    return _IMMUNITY_BREAKPOINTS[-1][1]
 
 
 def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
@@ -136,7 +129,7 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
 
     trigger = _trigger_damage(ctx.level)
     bonus_per_auto = _BONUS_AUTO_RATIO * trigger
-    window = _immunity_window(ctx.level)
+    window = at_level(_IMMUNITY_BREAKPOINTS, ctx.level)
 
     stacks = 0
     procs = 0
@@ -201,12 +194,11 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _winters_bite(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: base magic damage + 2.5% of Braum's OWN built max health."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
@@ -236,12 +228,11 @@ def _winters_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _stand_behind_me(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _stand_behind_me(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: self 20-40 (+36% bonus) armor AND magic resist; zero damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     entry = damage_entry(
         ability_name(ability),

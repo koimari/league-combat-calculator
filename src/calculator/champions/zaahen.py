@@ -37,7 +37,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import typed_damage
+from .module_helpers import ranked_slot, typed_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -113,12 +113,11 @@ def _cultivation_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
 _cultivation_of_war.phase = BUFF
 
 
-def _darkin_glaive(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _darkin_glaive(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Price the selected Q row from Zaahen's three sourced Q variants."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     try:
         variant = int(ctx.option("q_variant"))

@@ -37,11 +37,10 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
     PER_LEVEL_SCALING,
-    STEROID_ZERO,
     ability_name,
     damage_entry,
     extract_cooldown,
@@ -113,12 +112,11 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
 _STRUT_ACTIVE_SECONDS = 4.0
 
 
-def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bullet_time(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: per-wave damage x sourced Total Waves (14/16/18 by rank)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_wave = extract_named(
         ability, "Physical Damage per Wave", rank, ctx.stats, ctx.target
@@ -177,7 +175,8 @@ def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
 _love_tap.phase = ONHIT
 
 
-def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _strut(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: the active's sourced bonus attack speed over its own window.
 
     The slot deals no damage at all (no damage instance exists in the
@@ -186,28 +185,19 @@ def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
     active does not hold full uptime of a longer fight.  The two
     movement-speed rows have no ``stat_buff`` key to land in.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)
-    entry = damage_entry(
-        ability_name(ability),
+    return steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{granted:g}% bonus attack speed for {_STRUT_ACTIVE_SECONDS:g}s "
+            f"({bonus_as:g}% over the fight window); the passive's 30-50 / "
+            "60-100 bonus movement speed has no stat_buff key"
+        ),
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for {_STRUT_ACTIVE_SECONDS:g}s "
-        f"({bonus_as:g}% over the fight window); the passive's 30-50 / "
-        "60-100 bonus movement speed has no stat_buff key"
-    )
-    return entry
 
 
 _strut.phase = BUFF

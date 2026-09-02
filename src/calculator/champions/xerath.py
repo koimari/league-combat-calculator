@@ -22,6 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .inputs import int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 
@@ -41,12 +42,11 @@ _BLAST_DELAY_SECONDS = 0.528
 _R_BARRAGE_INTERVAL_SECONDS = 0.627
 
 
-def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _rite_of_the_arcane(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: every Arcane Barrage of the channel, plus Arcane Perfection stacks."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     recasts = round(extract_named(ability, "Number of Recasts", rank))
     per_shot = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     stacks = min(max(int(ctx.option("r_arcane_perfection")), 0), 6)

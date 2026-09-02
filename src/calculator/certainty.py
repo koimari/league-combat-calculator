@@ -258,7 +258,13 @@ def _slot_certainty(
 ) -> _Verdict:
     """Derive one slot's certainty level and its human-readable reason."""
     verdict = (
-        _certified_boundary(slot, coverage, module_slots, ability_names, audit)
+        _certified_boundary(
+            slot,
+            coverage,
+            module_slots=module_slots,
+            ability_names=ability_names,
+            audit=audit,
+        )
         or _slot_option_estimate(slot, options, ability_names)
         or _assumption_verdict(slot, assumptions, ability_names)
         or _global_option_estimate(slot, options, ability_names)

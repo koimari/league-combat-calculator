@@ -10,7 +10,7 @@ from ..healing_helpers import ability_json
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -24,11 +24,10 @@ def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _barrel_roll(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charged = bool(ctx.option("q_fully_fermented"))
     attr = "Maximum Magic Damage" if charged else "Minimum Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -47,66 +46,30 @@ def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _drunken_rage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value),)
-    entry["empowers_next_auto"] = True
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "One brew-empowered basic attack; max-health term is evaluated against the live target."
-    )
-    entry["target_max_health_sensitive"] = True
-    return entry
+_drunken_rage = named_damage(
+    "Bonus Magic Damage",
+    "magic",
+    empowers_next_auto=True,
+    event_order_certified="single_hit",
+    detail="One brew-empowered basic attack; max-health term is evaluated against the live target.",
+    target_max_health_sensitive=True,
+)
 
 
-def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value),)
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Collision damage plus sourced knockback/stun; cooldown refund is not assumed "
-        "without a hit state."
-    )
-    return entry
+_body_slam = named_damage(
+    "Magic Damage",
+    "magic",
+    event_order_certified="single_hit",
+    detail="Collision damage plus sourced knockback/stun; cooldown refund is not assumed "
+    "without a hit state.",
+)
 
 
-def _explosive_cask(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.5),)
-    return entry
+_explosive_cask = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.5,
+)
 
 
 SLOTS = {

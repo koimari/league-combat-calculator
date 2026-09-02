@@ -11,7 +11,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
 from .module_contract import coverage
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -43,11 +43,10 @@ def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _taste_their_fear(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _taste_their_fear(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     isolated = bool(ctx.option("q_isolated"))
     attribute = "Isolated Target Physical Damage" if isolated else "Physical Damage"
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)

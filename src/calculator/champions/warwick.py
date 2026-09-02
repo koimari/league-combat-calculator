@@ -57,17 +57,16 @@ from ..ability_atoms import (
     required_ability_atom,
     required_ranked_attribute_atom,
 )
-from ..ability_spec import AttackClass, DamageClass, DamagePart
+from ..ability_spec import AttackClass, DamageClass
 from ..binary_roots import data_value, spell_object
 from ..survival.actions import TransitionRank
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import missing_hp_fraction
+from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     atom_receipt,
-    damage_entry,
     extract_cooldown,
     extract_named,
     on_hit_entry,
@@ -99,31 +98,18 @@ _HUNGER_RAGE_SHARE = data_value(_WARWICK_P_SPELL, "EmpoweredHealingRatio")
 _BLOOD_HUNT_DOUBLED_MISSING = 0.75
 
 
-def _infinite_duress(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: Total Magic Damage over the 1.5s suppress channel."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-
-    total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", total, time_offset=0.0),)
-    entry["dot_duration"] = _R_CHANNEL_SECONDS
-    entry["detail"] = (
-        "Total Magic Damage 175/350/525 + 167% bonus AD over the "
-        f"{_R_CHANNEL_SECONDS:g}s suppress channel (magic damage every "
-        "0.25s; the wiki's 3 on-hit applications are item on-hit/on-"
-        "attack riders, not extra ability damage, and are not "
-        "multiplied — the cache publishes no per-tick row)"
-    )
-    return entry
+# R: Total Magic Damage over the 1.5s suppress channel.
+_infinite_duress = named_damage(
+    "Total Magic Damage",
+    "magic",
+    time_offset=0.0,
+    dot_duration=_R_CHANNEL_SECONDS,
+    detail="Total Magic Damage 175/350/525 + 167% bonus AD over the "
+    f"{_R_CHANNEL_SECONDS:g}s suppress channel (magic damage every "
+    "0.25s; the wiki's 3 on-hit applications are item on-hit/on-"
+    "attack riders, not extra ability damage, and are not "
+    "multiplied — the cache publishes no per-tick row)",
+)
 
 
 def _hunger_heal_share(health_percent: float) -> float:
@@ -203,7 +189,10 @@ _blood_hunt.phase = BUFF
 _E_REDUCTION_SOURCE = "Warwick.E[0].effects[0].description"
 
 
-def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _primal_howl(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: zero damage, a sourced incoming-damage-reduction self-state window.
 
     "Active: Warwick gains damage reduction for up to 2.75 seconds. Primal
@@ -216,10 +205,6 @@ def _primal_howl(ctx: SlotCtx) -> dict[str, Any] | None:
     Unbreakable Will, no cached sentence in this kit carves true damage — or
     any other type — out, so the un-narrowed declaration is the sourced one.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     reduction_percent, reduction_atom = required_ranked_attribute_atom(

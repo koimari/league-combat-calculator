@@ -31,6 +31,7 @@ from ..ability_spec import ControlEvent, DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .inputs import int_option
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import ability_name, damage_entry, extract_cooldown
 
@@ -161,12 +162,11 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bladecaller(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: per-Feather damage x recalled Feather count (stack detonation)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base_source = "Xayah.E[0].effects[0].leveling[0].modifiers[0]"
     ratio_source = "Xayah.E[0].effects[0].leveling[0].modifiers[1]"

@@ -8,7 +8,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -24,11 +24,10 @@ PASSIVE_W_BASE = data_value(_KASSADIN_W_SPELL, "PassiveBaseDamage")
 PASSIVE_W_AP_RATIO = calculation_coefficient(_KASSADIN_W_SPELL, "OnHitDamage")
 
 
-def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _null_sphere(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -49,11 +48,10 @@ def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _nether_blade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passive = PASSIVE_W_BASE + PASSIVE_W_AP_RATIO * ctx.stat("ability_power")
     active = (
         extract_named(
@@ -86,11 +84,10 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _riftwalk(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _riftwalk(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("r_stacks")), 0), 4)
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     bonus = extract_named(

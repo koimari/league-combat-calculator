@@ -30,8 +30,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import AMP, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .inputs import bool_option, float_option
+from .module_helpers import amp_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -78,17 +79,8 @@ def _apply_curse(result: dict[str, Any]) -> None:
     )
 
 
-def _cursed_touch_amp(ctx: SlotCtx) -> None:
-    """AMP pseudo-slot: apply the curse to every magic-damage ability."""
-    if not ctx.option("target_cursed"):
-        return
-    for key in ("Q", "W", "E", "R"):
-        entry = ctx.results.get(key)
-        if entry is not None:
-            _apply_curse(entry)
-
-
-_cursed_touch_amp.phase = AMP
+# AMP pseudo-slot: apply the curse to every magic-damage ability.
+_cursed_touch_amp = amp_slot("target_cursed", _apply_curse)
 
 
 def _cursed_touch_display(ctx: SlotCtx) -> None:
@@ -98,12 +90,9 @@ def _cursed_touch_display(ctx: SlotCtx) -> None:
         ctx.results["P"] = damage_entry(ability_name(ability), 1, 0.0, 0.0, "true")
 
 
-def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _despair(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: toggle DoT — ``w_seconds`` of 0.5 s ticks, per-tick keys."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     w_seconds = max(0.5, float(ctx.option("w_seconds")))
     per_tick = extract_named(

@@ -36,6 +36,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -48,12 +49,9 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 
 
-def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _equinox(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """E: initial hit plus the optional equal-damage eruption."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     second_hit = bool(ctx.option("e_second_hit"))

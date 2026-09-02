@@ -19,7 +19,7 @@ from ..healing_helpers import ability_json, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option
-from .module_helpers import no_damage
+from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -44,15 +44,14 @@ def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _howling_gale(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
-    low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
-    high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
-    value = low + (high - low) * charge
+    value = between_rows(
+        ctx, ability, rank, "Minimum Magic Damage", "Maximum Magic Damage", charge
+    )
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -67,25 +66,15 @@ def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _zephyr(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value),)
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Passive movement speed and active slow are sourced utility; the active is one magic hit."
-    )
-    return entry
+_zephyr = named_damage(
+    "Magic Damage",
+    "magic",
+    event_order_certified="single_hit",
+    detail=(
+        "Passive movement speed and active slow are sourced utility; the active "
+        "is one magic hit."
+    ),
+)
 
 
 SLOTS = {

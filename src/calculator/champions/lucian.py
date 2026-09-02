@@ -44,7 +44,7 @@ from typing import Any
 
 from .engine import SlotCtx
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import at_level, no_damage
 from .packet_module import build_packet_module
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
@@ -60,14 +60,6 @@ _LIGHTSLINGER_RATIO_BANDS: tuple[tuple[int, float], ...] = (
 )
 
 
-def _lightslinger_ratio(level: int) -> float:
-    """The second shot's AD ratio at a champion level."""
-    for min_level, ratio in _LIGHTSLINGER_RATIO_BANDS:
-        if level >= min_level:
-            return ratio
-    return _LIGHTSLINGER_RATIO_BANDS[-1][1]
-
-
 def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: second shot after each ability — the engine double-shot path."""
     passive = ctx.ability("P")
@@ -80,7 +72,7 @@ def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
         "parts": (),
         "double_shot": {
             "name": "Lightslinger",
-            "ad_ratio": _lightslinger_ratio(ctx.level),
+            "ad_ratio": at_level(_LIGHTSLINGER_RATIO_BANDS, ctx.level),
         },
     }
 

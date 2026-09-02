@@ -23,7 +23,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_contract import coverage
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -44,12 +44,11 @@ from .source_receipts import load_champion_sources
 _Q_TETHER_SECONDS = data_value(spell_object("Kled", "KledQ"), "TetherPopTime")
 
 
-def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bear_trap(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the trap's own hit, then the tether's pull hit 1.75s later."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     # Two cached rows share the name "Physical Damage" — the trap's
     # (30 : 130 + 60% bonus AD) and the pull's (60 : 260 + 120% bonus AD).
     # The first is the one a name lookup reaches, and the cached "Total
@@ -120,11 +119,8 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _charge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _charge(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     fraction = max(0.0, min(1.0, float(ctx.option("charge_fraction"))))
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)

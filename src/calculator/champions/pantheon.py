@@ -32,6 +32,7 @@ from ..binary_roots import (
 from .engine import SlotCtx
 from .inputs import bool_option, float_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -58,12 +59,11 @@ _W_BONUS_HEALTH_PER_100 = (
 _W_STUN_SECONDS = data_value(_PANTHEON_W_SPELL, "StunDuration")
 
 
-def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _comet_spear(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: Hurl base (or <20%-HP execute) + the Mortal Will empowered term."""
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     if bool(ctx.option("q_execute")):
         # Target below 20% of maximum health: the Increased Hurl Damage row.
@@ -104,12 +104,11 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _shield_vault(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: %max-HP physical damage with the AP and bonus-health per-100 terms."""
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     ap = float(ctx.stat("ability_power") or 0.0)
@@ -144,12 +143,11 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _grand_starfall(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _grand_starfall(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: center Magic Damage row, or the Reduced edge row when selected."""
-    ranked = ctx.ranked("R", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     attr = "Reduced Damage" if bool(ctx.option("r_edge")) else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)

@@ -5,6 +5,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
+from .module_helpers import named_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -75,12 +76,11 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _terrashape(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Terrashape's bonus is an on-hit rider, not a direct spell hit."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     return ability_on_hit_entry(
         "Terrashape element",
@@ -97,21 +97,7 @@ def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
 _terrashape.phase = ONHIT
 
 
-def _supreme_display(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
-    return entry
+_supreme_display = named_damage("Physical Damage", "physical", time_offset=0.0)
 
 
 SLOTS = {

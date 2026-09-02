@@ -26,6 +26,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -130,13 +131,12 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
 _relentless_storm.phase = BUFF
 
 
-def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _frenzied_maul(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: base physical damage; the Wounded 2nd bite adds the sourced
     increased-damage part (50% + 25% per 100 bonus AD of the base)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
@@ -279,14 +279,7 @@ def derive_self_healing(
     w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
     w_missing_pct = _healing.leveling_modifier(w, "Heal", w_rank, 1)
 
-    def frenzied_maul_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = w_flat,
-        missing_pct: float = w_missing_pct,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-
+    frenzied_maul_heal = _healing.flat_plus_missing_heal(w_flat, w_missing_pct)
     # One bite, one heal: the cached note is "Frenzied Maul deals bonus
     # damage and heals if the target is still Wounded after the cast time",
     # so the payment is the cast, not the parts this module prices that bite

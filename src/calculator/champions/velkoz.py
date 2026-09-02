@@ -25,6 +25,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
+from .module_helpers import ranked_slot
 from .slotlib import (
     PER_LEVEL_SCALING,
     ability_name,
@@ -130,12 +131,11 @@ _R_TICK_INTERVAL_SECONDS = 0.2
 _R_CHANNEL_SECONDS = 2.6
 
 
-def _disintegration_ray(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _disintegration_ray(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the full 13-tick channel (per-tick x 13 == the Maximum Damage row)."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_tick = extract_named(ability, "Damage Per Tick", rank, ctx.stats, ctx.target)
     total = per_tick * _R_TICKS
     entry = damage_entry(

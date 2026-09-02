@@ -37,7 +37,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_helpers import delayed_damage
+from .module_helpers import delayed_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -85,7 +85,10 @@ def _feast_stacks(ctx: SlotCtx) -> int:
     return int(ctx.options.get("feast_stacks", _DEFAULT_FEAST_STACKS))
 
 
-def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _vorpal_spikes(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: 3 empowered attacks; per hit = base + 30% AP + %maxHP + rider.
 
     The empowered hits are real basic attacks: with an auto stream they
@@ -94,10 +97,6 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
     swings, which the fight engine appends via ``empowers_next_auto``'s
     ``hits`` count.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
         return None
@@ -157,7 +156,8 @@ def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _feast(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R (BUFF): stack bonus health first, then true damage off buffed stats.
 
     Unranked R emits nothing — without a rank there are no Feast stacks
@@ -165,10 +165,6 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
     (BUFF-phase guarantee) so R's own "% bonus health" ratio — and any
     other read of Cho'Gath's health — sees stacks plus item health.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     stack_health = _feast_stacks(ctx) * extract_value(
         ability, "Bonus Health Per Stack", rank

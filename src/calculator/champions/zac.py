@@ -33,8 +33,8 @@ from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, SlotParser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .module_helpers import no_damage
-from .packet_module import build_packet_module, full_plus_reduced_parser
+from .module_helpers import no_damage, ranked_slot
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -84,12 +84,11 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 # empowered second Stretching Strike that replaces Zac's next basic
 # attack while the tether persists.  The second strike has a sourced
 # 0.25-second cast time.
-def _stretching_strikes(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _stretching_strikes(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: both Stretching Strikes — 2 x the sourced per-hit Magic Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -185,11 +184,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             source=("W", 0),
             event_order_certified="single_hit",
         ),
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage Per Hit",
-            reduced_attr="Reduced Damage Per Hit",
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage Per Hit",
+            repeat_attr="Reduced Damage Per Hit",
             dmg_type="magic",
-            reduced_count=3,
+            repeats=3,
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=3.0,

@@ -22,7 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
 from .module_contract import coverage
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -39,17 +39,16 @@ from .source_receipts import load_champion_sources
 _RECAST_TIME_OFFSET = 0.5
 
 
-def _sonic_wave_and_resonating_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _sonic_wave_and_resonating_strike(
+    ctx: SlotCtx, wave: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: Sonic Wave hit + the Resonating Strike recast on the mark.
 
     The recast reads the cached Minimum/Maximum Physical Damage rows of
     Q[1] and interpolates by the target's missing-health fraction at each
     cast, so the fight prices the two-stage combo honestly.
     """
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    wave, rank = ranked
 
     sonic = extract_named(wave, "Physical Damage", rank, ctx.stats, ctx.target)
     parts = [DamagePart("physical", sonic, time_offset=0.0)]

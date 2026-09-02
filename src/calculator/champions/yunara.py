@@ -20,6 +20,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -43,12 +44,11 @@ _R_ARC_OF_RUIN_AP_RATIO = data_value(_YUNARA_R_SPELL, "RW_APRatio")
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
 
 
-def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _arc_of_judgment(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: initial impact plus the 4 lingering-bead ticks (or Arc of Ruin)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     transcendent = bool(ctx.option("r_transcendent"))
     if transcendent:
         r_rank = ctx.rank_for("R")
@@ -109,12 +109,11 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _transcend_one_self(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _transcend_one_self(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the Transcendent State buff shell (zero direct damage)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     entry = damage_entry(
         ability_name(ability),
         rank,

@@ -40,6 +40,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -199,12 +200,11 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _decimate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _decimate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the outer blade's physical damage; applies a bleed stack."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     attribute = "Physical Damage (Blade)"
     total = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -229,7 +229,10 @@ def _decimate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _crippling_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: bonus physical damage on the next basic attack, crits fully.
 
     The bonus is 40-60% total AD and the wiki states it is affected by
@@ -238,10 +241,6 @@ def _crippling_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     (one-rotation, or timed at zero uptime) the engine appends the
     expected-crit base swing to this row — the Blitzcrank/Caitlyn rule.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     attribute = "Bonus Physical Damage"
     bonus = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
@@ -303,7 +302,10 @@ def _apprehend(ctx: SlotCtx) -> dict[str, Any] | None:
 _apprehend.phase = BUFF
 
 
-def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _noxian_guillotine(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: true damage plus one bonus instance per Hemorrhage stack.
 
     Damage is "True Damage" + N x "Bonus Damage Per Stack", where N is
@@ -321,10 +323,6 @@ def _noxian_guillotine(ctx: SlotCtx) -> dict[str, Any] | None:
     once more against the same (max) stack count — the recast parts are
     a second base + per-stack pair offset past the kill check.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(

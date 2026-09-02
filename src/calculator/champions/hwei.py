@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import level_row, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -25,17 +25,8 @@ def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    def _per_proc(inner_ctx: SlotCtx, inner_ability: dict[str, Any]) -> float:
-        return extract_named(
-            inner_ability,
-            "Per-Level Scaling",
-            inner_ctx.level,
-            inner_ctx.stats,
-            inner_ctx.target,
-        )
-
     entry = proc_damage(
-        _per_proc,
+        level_row("Per-Level Scaling"),
         "magic",
         count_option="p_triggers",
         default_count=1,
@@ -209,11 +200,8 @@ def _torment(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _despair(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _despair(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     tick = extract_named(ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target)
     explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     # Each tick applies a Despair stack, and "for each stack, the target is

@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -17,35 +17,21 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 
-
-def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        bonus,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", bonus, crit_effectiveness=1.0),)
-    entry["empowers_next_auto"] = True
+_spinning_axe = named_damage(
+    "Bonus Physical Damage",
+    "physical",
+    crit_effectiveness=1.0,
+    empowers_next_auto=True,
     # One empowered swing, landing with that swing.
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "One empowered basic attack; the caught axe readies the next cast."
-    )
-    return entry
+    event_order_certified="single_hit",
+    detail="One empowered basic attack; the caught axe readies the next cast.",
+)
 
 
-def _blood_rush(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _blood_rush(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     entry = damage_entry(
         ability_name(ability),
@@ -64,31 +50,18 @@ def _blood_rush(ctx: SlotCtx) -> dict[str, Any] | None:
 _blood_rush.phase = BUFF
 
 
-def _stand_aside(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", value, time_offset=0.25),)
-    entry["detail"] = (
-        "Line hit; the source also applies the selected rank's slow and knock-aside."
-    )
-    return entry
+_stand_aside = named_damage(
+    "Physical Damage",
+    "physical",
+    time_offset=0.25,
+    detail="Line hit; the source also applies the selected rank's slow and knock-aside.",
+)
 
 
-def _whirling_death(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _whirling_death(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     per_pass = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

@@ -31,6 +31,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -172,12 +173,11 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
 
 
-def _harrowed_path(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _harrowed_path(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the 30-50% attack speed Viego holds while inside his own mist."""
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0

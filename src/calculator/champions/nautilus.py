@@ -23,7 +23,8 @@ P1-2 fixes:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx
+from .engine import SlotCtx
+from .module_helpers import innate_on_hit, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -31,7 +32,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
-    on_hit_entry,
 )
 
 # HARDCODED: verify on patch updates — Pain of Wrath's second instance
@@ -42,27 +42,16 @@ _W_SECOND_INSTANCE_DELAY = 1.25
 PACKET_SHA256 = "66ae84d11488386be94ff6ac41a99478d1d5d6394c98003813b547dbda249172"
 
 
-def _staggering_blow(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: empowered basic attacks deal 14 : 128 (based on level) bonus
-    physical damage — the "Per-Level Scaling" leveling row."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
-    per_hit = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
-    )
-    return on_hit_entry(ability_name(ability), per_hit, "physical")
+# P: empowered basic attacks deal 14 : 128 (based on level) bonus
+# physical damage — the "Per-Level Scaling" leveling row.
+_staggering_blow = innate_on_hit("Per-Level Scaling", "physical")
 
 
-_staggering_blow.phase = ONHIT
-
-
-def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _titans_wrath(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: Pain of Wrath's Total Magic Damage across both instances."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -84,12 +73,11 @@ def _titans_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _depth_charge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _depth_charge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the primary-target eruption's Increased Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     increased = extract_named(ability, "Increased Damage", rank, ctx.stats, ctx.target)
     # The primary target "is stunned for the same duration, and knocked up
     # for a modified duration": the cached "Stun Duration" and "Knock Up

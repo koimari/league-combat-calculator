@@ -147,7 +147,7 @@ Contract sections (numbered as in the RLM-2 C brief):
       the shield-before-damage arm priority PASS; the wired
       cleanse-vs-immunity-vs-stat-buff ordering xfailed).
   S10 Missing identity or rows (resolve_cleanse_item fails closed
-      naming the source PASS; the _require_row fail-loud precedent).
+      naming the source PASS; the require_named_leveling fail-loud precedent).
   S11 Score fail-closed (the generic gates PASS: support_kind=cleanse /
       stat_buff / movement / support_cleanse; crowd_control_resist
       representable — never a silent re-price).
@@ -1971,18 +1971,18 @@ class TestMissingIdentityAndRows:
         assert resolve_cleanse_item("Mercurial Scimitar") == "Mercurial Scimitar"
 
     def test_require_row_fail_loud_precedent(self):
-        # The _require_row precedent (the brief's contract #11): missing
+        # The require_named_leveling precedent (the brief's contract #11): missing
         # leveling rows fail LOUD, naming the ability + the attribute —
         # the helper the R declaration must mirror for any row the
         # parser drops (the duration-extension row has EMPTY leveling).
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         fake = {
             "name": "Ragnarok",
             "effects": [{"leveling": []}],
         }
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Bonus Resistances")
+            require_named_leveling("K'Sante", fake, "Bonus Resistances")
         assert "Ragnarok" in str(excinfo.value)
         assert "Bonus Resistances" in str(excinfo.value)
         # The duration-extension row is prose + game DataValue only —

@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot, require_named_leveling
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -187,30 +187,13 @@ class _GrenadeRule:
 HEIMER_E_GRENADE_RULE = _GrenadeRule()
 
 
-def _require_row(ability: dict[str, Any], attribute: str) -> None:
-    """Fail loud when the named leveling row is absent (cache corruption).
-
-    The degraded W/E rows must never price a silent zero: a missing row
-    raises naming the champion, ability and attribute (the repo's
-    fail-closed convention for missing keys).
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return
-    raise KeyError(
-        f"Heimerdinger {ability_name(ability)} has no {attribute!r} " "leveling row"
-    )
-
-
-def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _micro_rockets(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
-    _require_row(ability, "Initial Rocket Magic Damage")
-    _require_row(ability, "Subsequent Rocket Magic Damage")
+    require_named_leveling("Heimerdinger", ability, "Initial Rocket Magic Damage")
+    require_named_leveling("Heimerdinger", ability, "Subsequent Rocket Magic Damage")
     first = extract_named(
         ability, "Initial Rocket Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -249,7 +232,7 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     if variant == 0:
-        _require_row(ability, "Magic Damage")
+        require_named_leveling("Heimerdinger", ability, "Magic Damage")
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)

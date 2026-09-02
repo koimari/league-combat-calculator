@@ -33,6 +33,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import lucian, slotlib
+from src.calculator.champions.module_helpers import at_level
 
 _DATA = json.loads(
     Path(__file__)
@@ -173,7 +174,7 @@ class TestLucian:
         data = _fight("Lucian", autos=True, mode="time_based", enemies=False)
         stats = data["champion_stats"]
         ad = float(stats["attack_damage"])
-        ratio = lucian._lightslinger_ratio(18)
+        ratio = at_level(lucian._LIGHTSLINGER_RATIO_BANDS, 18)
         assert ratio == pytest.approx(0.60)
         autos = int(data["breakdown"]["auto_attacks"]["count"])
         row = data["breakdown"]["double_shot"]

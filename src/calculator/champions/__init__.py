@@ -466,18 +466,20 @@ def parse_champion_abilities(
 
 
 def get_champion_cast_order(champion_name: str) -> list[str] | None:
-    """The champion's own rotation order, or ``None`` for the default.
+    """The module's ``CAST_ORDER`` where the engine's ``(Q, Q2, W, E, R)`` misrepresents
+    the kit (Jayce casts R before Q/W), or ``None`` for the default."""
+    declared = _module_declaration(champion_name, "CAST_ORDER")
+    return list(declared) if declared else None
 
-    A module declares ``CAST_ORDER`` when the engine's ``(Q, Q2, W, E, R)``
-    misrepresents how the kit is used: Jayce transforms into Cannon stance
-    and only then casts, so his R resolves before Q/W.
-    """
+
+def _module_declaration(champion_name: str, attribute: str) -> Any:
+    """A module's optional declaration; None with no such module or attribute."""
     try:
-        module = get_champion_module_contract(champion_name).module
+        return getattr(
+            get_champion_module_contract(champion_name).module, attribute, None
+        )
     except KeyError:
         return None
-    declared = getattr(module, "CAST_ORDER", None)
-    return list(declared) if declared else None
 
 
 # ``False`` — an unregistered name, or a module that stays silent — keeps the
@@ -1032,11 +1034,7 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
 
 def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
     """Explain why a module's certified cast sequence cannot be reordered."""
-    try:
-        module = get_champion_module_contract(champion_name).module
-    except KeyError:
-        return None
-    reason = getattr(module, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON", None)
+    reason = _module_declaration(champion_name, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON")
     return str(reason) if reason else None
 
 

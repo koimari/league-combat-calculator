@@ -42,6 +42,7 @@ from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -61,12 +62,11 @@ _W_TICKS = int(_W_DURATION / _W_TICK_INTERVAL)
 _R_TETHER_SECONDS = data_value(spell_object("Morgana", "MorganaR"), "ChainDuration")
 
 
-def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tormented_shadow(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: 10 ticks of Maximum Damage Per Tick == Maximum Total Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Maximum Damage Per Tick", rank, ctx.stats, ctx.target
@@ -95,12 +95,11 @@ def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _soul_shackles(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _soul_shackles(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: initial hit + the same damage again at the 3s tether break."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

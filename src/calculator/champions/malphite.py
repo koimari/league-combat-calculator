@@ -36,6 +36,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, spell_object
 from .engine import BUFF, SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -92,15 +93,14 @@ def _seismic_shard(packet_q):
     return parse
 
 
-def _thunderclap(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _thunderclap(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: tripled-armor buff, then the empowered-attack parts (on-hit + cone).
 
     BUFF phase so E (40% armor ratio) parses after the armor grant.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     # W passive: bonus armor, tripled while Granite Shield is active.  The
     # cached "Increased Bonus Armor" row (30/45/60/75/90 % armor) IS the
     # tripled value; the module treats the shield as active for the whole

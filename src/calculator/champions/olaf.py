@@ -34,7 +34,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -107,41 +107,34 @@ def _berserker_rage(ctx: SlotCtx) -> dict[str, Any] | None:
 _berserker_rage.phase = BUFF
 
 
-def _tough_it_out(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tough_it_out(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the 40-80% attack speed beside the scanner-owned shield."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _W_DURATION_SECONDS)
-    entry = damage_entry(
-        ability_name(ability),
+    return steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{granted:g}% bonus attack speed for {_W_DURATION_SECONDS:g}s "
+            f"({bonus_as:g}% over the fight window); the cast's Shield "
+            "Strength row is emitted by the ally-support scanner"
+        ),
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for {_W_DURATION_SECONDS:g}s "
-        f"({bonus_as:g}% over the fight window); the cast's Shield "
-        "Strength row is emitted by the ally-support scanner"
-    )
-    return entry
 
 
 _tough_it_out.phase = BUFF
 
 
-def _ragnarok(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _ragnarok(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: bonus attack damage (10-30 + 25% AD) and resistances for 3s."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     share = buff_window_share(ctx, _R_DURATION_SECONDS)
     granted_ad = extract_named(

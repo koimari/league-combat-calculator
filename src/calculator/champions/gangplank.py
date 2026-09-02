@@ -11,7 +11,7 @@ from ..binary_roots import data_value, data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -47,33 +47,20 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart("physical", value, crit_effectiveness=1.0, basic_damage=True),
-    )
-    entry["applies_item_on_hits"] = {
+_parrrley = named_damage(
+    "Physical Damage",
+    "physical",
+    crit_effectiveness=1.0,
+    basic_damage=True,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
-    }
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Ranged attack: applies on-hit/on-attack effects and may critically strike "
-        "for the sourced 230% modifier."
-    )
-    return entry
+    },
+    event_order_certified="single_hit",
+    detail="Ranged attack: applies on-hit/on-attack effects and may critically strike "
+    "for the sourced 230% modifier.",
+)
 
 
 # P2 Slice 5 — Remove Scurvy typed declaration.  The heal values are the
@@ -193,33 +180,19 @@ def _remove_scurvy(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    bonus = extract_named(ability, "Bonus Champion Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        bonus,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", bonus),)
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Champion keg branch: triggering attack plus the sourced bonus; 40% "
-        "armor-ignore is retained in provenance."
-    )
-    return entry
+_powder_keg = named_damage(
+    "Bonus Champion Damage",
+    "physical",
+    event_order_certified="single_hit",
+    detail="Champion keg branch: triggering attack plus the sourced bonus; 40% "
+    "armor-ignore is retained in provenance.",
+)
 
 
-def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _cannon_barrage(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     fire_at_will = bool(ctx.option("r_fire_at_will"))
     deaths_daughter = bool(ctx.option("r_deaths_daughter"))
     waves = (
@@ -300,18 +273,9 @@ def derive_self_healing(
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
     w_flat = extract_named(w, "Heal", w_rank, champion_stats)
-    w_missing_ratio = (
-        _healing.leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+    remove_scurvy_heal = _healing.flat_plus_missing_heal(
+        w_flat, _healing.leveling_ratio(w, "Heal", "missing health", w_rank)
     )
-
-    def remove_scurvy_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = w_flat,
-        missing_ratio: float = w_missing_ratio,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_ratio
-
     for cast in cast_timeline or []:
         if cast.get("slot") != "W":
             continue

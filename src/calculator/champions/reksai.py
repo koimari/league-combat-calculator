@@ -38,7 +38,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_helpers import typed_damage
+from .module_helpers import ranked_slot, typed_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -85,12 +85,11 @@ def _queens_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     return typed_damage(ctx, "Total Bonus Physical Damage", "physical", time_offset=0.0)
 
 
-def _furious_bite(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _furious_bite(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: physical bite, or the 120% true-damage variant at max Fury."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     fury = max(0, min(100, int(ctx.option("e_fury"))))
     if fury >= 100:
         value = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)

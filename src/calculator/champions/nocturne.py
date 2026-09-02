@@ -21,13 +21,9 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import bool_option
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
     extract_value,
     with_control_event,
     with_item_on_hits,
@@ -72,38 +68,32 @@ def _tether_fear(compiled):
     return parse
 
 
-def _shroud_of_darkness(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _shroud_of_darkness(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the permanent 30-50% attack speed, doubled on a blocked cast."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     passive_as = extract_value(ability, "Bonus Attack Speed", rank)
     enhanced_as = extract_value(ability, "Enhanced Bonus Attack Speed", rank)
     blocked = bool(ctx.option("w_spellshield_block"))
     share = buff_window_share(ctx, _W_ENHANCED_SECONDS) if blocked else 0.0
     bonus_as = passive_as + (enhanced_as - passive_as) * share
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
-    )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     # "Passive: Nocturne gains bonus attack speed" (cached W effect 0): the
     # base row is innate, so autos-only keeps it. The enhanced half rides
     # the option's declared block, not a cast either.
-    entry["innate_grant"] = True
-    entry["detail"] = (
-        f"+{passive_as:g}% bonus attack speed (the passive half, no "
-        f"duration); a successful spell-shield block doubles it to "
-        f"+{enhanced_as:g}% for {_W_ENHANCED_SECONDS:g}s "
-        f"({'armed' if blocked else 'not armed'}: {bonus_as:g}% applied)"
+    return steroid_entry(
+        ability,
+        rank,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{passive_as:g}% bonus attack speed (the passive half, no "
+            f"duration); a successful spell-shield block doubles it to "
+            f"+{enhanced_as:g}% for {_W_ENHANCED_SECONDS:g}s "
+            f"({'armed' if blocked else 'not armed'}: {bonus_as:g}% applied)"
+        ),
+        innate_grant=True,
     )
-    return entry
 
 
 _shroud_of_darkness.phase = BUFF

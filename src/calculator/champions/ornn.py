@@ -19,6 +19,7 @@ from ..stats import MAX_LEVEL
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -30,11 +31,10 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 
 
-def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _bellows_breath(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
@@ -165,11 +165,10 @@ _R_RECAST_DELAY = 1.25
 _R_PASS_CC_KINDS = ("slow", "immobilize")
 
 
-def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _call_of_the_forge_god(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     attr = "Total Magic Damage" if passes == 2 else "Magic Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)

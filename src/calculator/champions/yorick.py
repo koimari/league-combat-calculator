@@ -56,7 +56,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown
 
@@ -155,12 +155,9 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _maiden(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R: Eulogy of the Isles — Maiden basic attacks over the window."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     attacks = min(max(int(ctx.option("maiden_attacks")), 0), 10)
     if attacks <= 0:
         return no_damage(
@@ -288,18 +285,9 @@ def derive_self_healing(
     q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_level = int(champion_stat(champion_stats, "level"))
     q_flat = _leveling_flat_at_level(q, "Heal", q_level)
-    q_missing_ratio = (
-        _healing.leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
+    last_rites_heal = _healing.flat_plus_missing_heal(
+        q_flat, _healing.leveling_ratio(q, "Heal", "missing health", q_rank)
     )
-
-    def last_rites_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = q_flat,
-        missing_ratio: float = q_missing_ratio,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_ratio
-
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):

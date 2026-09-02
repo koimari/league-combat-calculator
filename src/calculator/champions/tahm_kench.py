@@ -31,6 +31,7 @@ from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -57,11 +58,10 @@ def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
 _acquired_taste.phase = ONHIT
 
 
-def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _tongue_lash(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     # Tongue Lash's row carries a per-rank base and an eighteen-entry per-level
     # term, so reading it needs the level as well as the rank.
     total = extract_named(
@@ -218,14 +218,7 @@ def derive_self_healing(
     q_flat = extract_named(q, "Heal", q_rank, champion_stats, {})
     q_missing_pct = _healing.leveling_modifier(q, "Heal", q_rank, 1)
 
-    def tongue_lash_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = q_flat,
-        missing_pct: float = q_missing_pct,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-
+    tongue_lash_heal = _healing.flat_plus_missing_heal(q_flat, q_missing_pct)
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):

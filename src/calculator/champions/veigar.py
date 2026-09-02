@@ -33,7 +33,7 @@ from typing import Any
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
 from .module_contract import coverage
-from .module_helpers import delayed_damage, no_damage_parser
+from .module_helpers import delayed_damage, no_damage_parser, ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -52,12 +52,11 @@ from .source_receipts import load_champion_sources
 _EXECUTE_MISSING_RATIO_CAP = 2.0 / 3.0
 
 
-def _event_horizon(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _event_horizon(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: one sourced stun interval after the cage rises."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     return {
         "name": ability_name(ability),
         "rank": rank,
@@ -97,12 +96,11 @@ def _primordial_burst_scaled(base: float) -> Callable[[float], float]:
     return scaled
 
 
-def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _primordial_burst(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: minimum-damage row scaled by the missing-health execute curve."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     base = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     return {
         "name": ability_name(ability),

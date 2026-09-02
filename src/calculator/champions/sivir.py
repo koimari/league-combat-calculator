@@ -86,7 +86,7 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_contract import coverage
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -99,12 +99,11 @@ from .slotlib import (
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
 
 
-def _boomerang_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _boomerang_blade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the two-way pass priced from the Total Maximum Champion Damage row."""
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(
         ability, "Total Maximum Champion Damage", rank, ctx.stats, ctx.target
     )
@@ -137,17 +136,16 @@ def _empowered_swings(ctx: SlotCtx, window: float) -> int:
     return max(1, math.floor(rate * window))
 
 
-def _ricochet(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _ricochet(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: one bounce per empowered attack, priced from the Bounce Damage row.
 
     The reviewed packet's ``ad`` ratio was the **Bonus Attack Speed** row
     (20-40%) rather than **Bounce Damage** (40-50% AD), so it underpriced
     every bounce; the atom accessor reads the damage row by name.
     """
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     ratio, _ = required_ranked_attribute_atom(
         "Sivir", champion_data, "W", "Bounce Damage", rank, modifier_index=0
@@ -200,17 +198,16 @@ def _ricochet(ctx: SlotCtx) -> dict[str, Any] | None:
 _SPELL_SHIELD_HEAL_DELAY_SECONDS = 0.25
 
 
-def _spell_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _spell_shield(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: one timed spell shield with its sourced block heal.
 
     Numeric values ride the typed ability-atom accessors: the 1.5s window
     (``timing.active_duration``) and the Heal row (60-80% AD + 50% AP by
     rank).  The 0.25s heal delay is prose-sourced (no atom exists).
     """
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     duration_atom = required_ability_atom(
         "Sivir",

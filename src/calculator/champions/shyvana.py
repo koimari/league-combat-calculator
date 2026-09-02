@@ -33,6 +33,7 @@ from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -132,11 +133,10 @@ def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
 _scalemail.phase = BUFF
 
 
-def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _emberstrike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     casts = min(max(int(ctx.option("q_casts")), 1), 3)
     dragon = bool(ctx.option("dragon_form"))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
@@ -364,16 +364,7 @@ def derive_self_healing(
         flat = extract_named(w, "Heal", level, champion_stats, {})
         missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
-        def inferno_aegis_heal(
-            current_health: float,
-            maximum_health: float,
-            flat: float = flat,
-            missing_pct: float = missing_pct,
-        ) -> float:
-            return (
-                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-            )
-
+        inferno_aegis_heal = _healing.flat_plus_missing_heal(flat, missing_pct)
         for payment in _healing.payments(
             _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
         ):

@@ -35,6 +35,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option
+from .module_helpers import at_level, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -64,14 +65,6 @@ PASSIVE_COOLDOWN_BREAKPOINTS = ((16, 3.0), (11, 4.0), (6, 5.0), (1, 6.0))
 Q_SHRED_DURATION = 3.0
 
 
-def _passive_cooldown(level: int) -> float:
-    """Martial Cadence per-target cooldown at a champion level."""
-    for min_level, cooldown in PASSIVE_COOLDOWN_BREAKPOINTS:
-        if level >= min_level:
-            return cooldown
-    return PASSIVE_COOLDOWN_BREAKPOINTS[-1][1]
-
-
 def _martial_cadence(ctx: SlotCtx) -> dict[str, Any]:
     """P: current-HP% on-hit proc on a per-target cooldown (fight-scheduled)."""
     ability = ctx.ability()
@@ -83,7 +76,7 @@ def _martial_cadence(ctx: SlotCtx) -> dict[str, Any]:
             "damage_type": "physical",
             "current_health_percent": PASSIVE_CURRENT_HP_PERCENT,
             "min_damage": PASSIVE_MIN_DAMAGE,
-            "proc_cooldown": _passive_cooldown(ctx.level),
+            "proc_cooldown": at_level(PASSIVE_COOLDOWN_BREAKPOINTS, ctx.level),
         },
     }
 
@@ -91,12 +84,11 @@ def _martial_cadence(ctx: SlotCtx) -> dict[str, Any]:
 _martial_cadence.phase = ONHIT
 
 
-def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _dragon_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: physical damage + % armor reduction debuff (option-gated)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -122,12 +114,11 @@ def _dragon_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 _dragon_strike.phase = DEBUFF
 
 
-def _demacian_standard(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _demacian_standard(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: magic active damage + bonus-AS stat buff (doubled near the flag)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

@@ -38,7 +38,7 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .module_contract import coverage
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_name,
@@ -107,12 +107,11 @@ def _target_max_health_percent(
     return total
 
 
-def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _wilding_claw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the stance's empowered-attack on-hit (+ Awaken rows)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     awaken = bool(ctx.option("q_awaken"))
     empowered = min(
         max(
@@ -242,56 +241,43 @@ def _blazing_stampede(packet_e):
     return parse
 
 
-def _bridge_between(packet_p):
-    """P: stance/cooldown system plus an unmodelable attack-speed steroid.
-
-    Kept ``out_of_scope`` (receipted open, the Olaf-R rule) because Monk
-    Training WOULD change damage if it could be modeled.  The row states
-    the mechanic and its live blockers instead of pretending the slot is
-    non-damaging.
-
-    Three blockers: the windowed path, the cooldown refund, and
-    ``buff_window_share``.  All three hold — the windowed kernel in
-    ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``, and the
-    refund blocker is the SHAPE of the one authoring surface (a static
-    parse-time divisor on an entry's own cooldown, Ezreal's
-    ``_with_q_refund``), not its absence.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_p(ctx)
-        if entry is None:
-            return None
-        entry["detail"] = (
-            "Awakened Spirit (stance swaps, a 1.5s global cooldown and the "
-            "Awaken recast window) carries no damage instance. Monk "
-            "Training does move damage and is NOT modeled: after any cast, "
-            "the next two basic attacks within 4s gain 30% bonus attack "
-            "speed and refund 5% of Awakened Spirit's cooldown (wiki prose "
-            "plus the binary's UdyrPassive AttackSpeed calculation 0.30, "
-            "AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, "
-            "not called no_damage, on three counts. The engine's only "
-            "WINDOWED attack-speed path resolves its window start by "
-            "walking cast_order to the Q slot, so it is Q-slot-only (the "
-            "Miss Fortune W precedent) and a P-slot steroid cannot reach "
-            "it. The unwindowed self-buff channel "
-            "(module_helpers.buff_window_share) weights a bonus purely by "
-            "TIME, while this window is bounded by attack count as well as "
-            "time — it closes on the second empowered attack or at 4s, "
-            "whichever comes first — so a time-weighted share would "
-            "over-credit it whenever the attacks land early. And the "
-            "cooldown refund has no channel that fits: a champion CAN "
-            "author one (Ezreal's _with_q_refund divides each emitted "
-            "entry's cooldown by a refund rate factor), but every such "
-            "rewrite is static and parse-time, sound only because "
-            "Ezreal's refund stream is always on, while this one is "
-            "bounded by the same 4s/2-attack window — nothing mutates a "
-            "cooldown mid-fight (item_effects' CooldownProcEffect is read "
-            "only by the item-proc scheduler)."
-        )
-        return entry
-
-    return parse
+# P: stance/cooldown system plus an unmodelable attack-speed steroid.  Kept
+# ``out_of_scope`` (receipted open, the Olaf-R rule) because Monk Training
+# WOULD change damage if it could be modeled.  The row states the mechanic
+# and its live blockers instead of pretending the slot is non-damaging.
+# Three blockers: the windowed path, the cooldown refund, and
+# ``buff_window_share``.  All three hold — the windowed kernel in
+# ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``, and the refund
+# blocker is the SHAPE of the one authoring surface (a static parse-time
+# divisor on an entry's own cooldown, Ezreal's ``_with_q_refund``), not its
+# absence.
+_bridge_between = with_detail(
+    "Awakened Spirit (stance swaps, a 1.5s global cooldown and the "
+    "Awaken recast window) carries no damage instance. Monk "
+    "Training does move damage and is NOT modeled: after any cast, "
+    "the next two basic attacks within 4s gain 30% bonus attack "
+    "speed and refund 5% of Awakened Spirit's cooldown (wiki prose "
+    "plus the binary's UdyrPassive AttackSpeed calculation 0.30, "
+    "AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, "
+    "not called no_damage, on three counts. The engine's only "
+    "WINDOWED attack-speed path resolves its window start by "
+    "walking cast_order to the Q slot, so it is Q-slot-only (the "
+    "Miss Fortune W precedent) and a P-slot steroid cannot reach "
+    "it. The unwindowed self-buff channel "
+    "(module_helpers.buff_window_share) weights a bonus purely by "
+    "TIME, while this window is bounded by attack count as well as "
+    "time — it closes on the second empowered attack or at 4s, "
+    "whichever comes first — so a time-weighted share would "
+    "over-credit it whenever the attacks land early. And the "
+    "cooldown refund has no channel that fits: a champion CAN "
+    "author one (Ezreal's _with_q_refund divides each emitted "
+    "entry's cooldown by a refund rate factor), but every such "
+    "rewrite is static and parse-time, sound only because "
+    "Ezreal's refund stream is always on, while this one is "
+    "bounded by the same 4s/2-attack window — nothing mutates a "
+    "cooldown mid-fight (item_effects' CooldownProcEffect is read "
+    "only by the item-proc scheduler)."
+)
 
 
 # Reviewed crowd control, read from the cached kit: R (Wingborne Storm)

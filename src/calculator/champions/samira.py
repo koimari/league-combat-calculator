@@ -37,7 +37,7 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import at_level, no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     PER_LEVEL_SCALING,
@@ -53,13 +53,6 @@ _STYLE_MAX = 6
 # Style bonus movement speed per stack by level bracket (wiki prose:
 # 2.75% / 3% / 3.25% / 3.5% at levels 1 / 6 / 11 / 16).
 _STYLE_MS_BRACKETS = ((16, 3.5), (11, 3.25), (6, 3.0), (1, 2.75))
-
-
-def _style_ms_per_stack(level: int) -> float:
-    for min_level, percent in _STYLE_MS_BRACKETS:
-        if level >= min_level:
-            return percent
-    return _STYLE_MS_BRACKETS[-1][1]
 
 
 def _style_stacks(ctx: SlotCtx) -> int:
@@ -104,7 +97,7 @@ def _blade_zone_rider(ctx: SlotCtx) -> HitRider | None:
 def _style_state(ctx: SlotCtx) -> str:
     """The Style stack state both P rows disclose."""
     stacks = _style_stacks(ctx)
-    per_stack = _style_ms_per_stack(ctx.level)
+    per_stack = at_level(_STYLE_MS_BRACKETS, ctx.level)
     unlock = (
         "Inferno Trigger is available and consumes them all at the end of " "the effect"
         if stacks >= _STYLE_MAX

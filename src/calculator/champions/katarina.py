@@ -22,7 +22,12 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_contract import coverage
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    at_level,
+    no_damage,
+    ranked_slot,
+)
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -38,11 +43,10 @@ _KATARINA_R_SPELL = spell_object("Katarina", "KatarinaR")
 _DEATH_LOTUS_DURATION = data_value(_KATARINA_R_SPELL, "Duration")
 
 
-def _death_lotus(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _death_lotus(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     daggers = max(1, min(15, int(ctx.option("r_daggers"))))
     physical = extract_named(
         ability, "Physical Damage Per Dagger", rank, ctx.stats, ctx.target
@@ -131,21 +135,13 @@ _AP_RATIO_BANDS: tuple[tuple[int, float], ...] = (
 )
 
 
-def _sinister_steel_ratio(level: int) -> float:
-    """The AP ratio of a dagger-retrieval spin at a champion level."""
-    for min_level, ratio in _AP_RATIO_BANDS:
-        if level >= min_level:
-            return ratio
-    return _AP_RATIO_BANDS[-1][1]
-
-
 def _spin_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     """One dagger spin: flat(level) + 60% bonus AD + level-banded AP."""
     flat = extract_value(ability, "Bonus Magic Damage", ctx.level, 0)
     bonus_ad_ratio = extract_value(ability, "Bonus Magic Damage", ctx.level, 1) / 100.0
     ad = ctx.stat("bonus_attack_damage")
     ap = ctx.stat("ability_power")
-    return flat + bonus_ad_ratio * ad + _sinister_steel_ratio(ctx.level) * ap
+    return flat + bonus_ad_ratio * ad + at_level(_AP_RATIO_BANDS, ctx.level) * ap
 
 
 _sinister_steel = proc_damage(

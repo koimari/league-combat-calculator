@@ -9,6 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option, int_option
+from .module_helpers import between_rows, named_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -52,44 +53,28 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
 _fervor.phase = BUFF
 
 
-def _bladesurge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart("physical", value, basic_damage=True, time_offset=0.2),
-    )
-    entry["applies_item_on_hits"] = {
+_bladesurge = named_damage(
+    "Physical Damage",
+    "physical",
+    basic_damage=True,
+    time_offset=0.2,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit",),
-    }
-    entry["detail"] = (
-        "One dash attack; reset, heal and Unsteady mark consumption are state branches."
-    )
-    return entry
+    },
+    detail="One dash attack; reset, heal and Unsteady mark consumption are state branches.",
+)
 
 
-def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _defiant_dance(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
-    low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
-    high = extract_named(
-        ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
+    value = between_rows(
+        ctx, ability, rank, "Minimum Physical Damage", "Maximum Physical Damage", charge
     )
-    value = low + (high - low) * charge
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -104,28 +89,17 @@ def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _flawless_duet(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.4),)
-    return entry
+_flawless_duet = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.4,
+)
 
 
-def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _vanguard(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(

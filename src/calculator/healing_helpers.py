@@ -171,6 +171,17 @@ def heal_from_damage(
     healing.append(heal)
 
 
+def flat_plus_missing_heal(
+    flat: float, missing_pct: float
+) -> Callable[[float, float], float]:
+    """A flat heal plus *missing_pct* percent of the recipient's live missing health."""
+
+    def amount_formula(current_health: float, maximum_health: float) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+
+    return amount_formula
+
+
 def missing_health_scaled_heal(
     minimum: float, maximum: float
 ) -> Callable[[float, float], float]:

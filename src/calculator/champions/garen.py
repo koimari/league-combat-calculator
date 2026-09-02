@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat
-from .module_helpers import no_damage
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -23,27 +23,15 @@ def _perseverance(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _decisive_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", value, basic_damage=True),)
-    entry["event_order_certified"] = "single_hit"
-    entry["empowers_next_auto"] = True
-    entry["detail"] = (
-        "One uncancellable, silencing empowered basic attack; slow cleanse/movement "
-        "speed are state-only."
-    )
-    return entry
+_decisive_strike = named_damage(
+    "Bonus Physical Damage",
+    "physical",
+    basic_damage=True,
+    event_order_certified="single_hit",
+    empowers_next_auto=True,
+    detail="One uncancellable, silencing empowered basic attack; slow cleanse/movement "
+    "speed are state-only.",
+)
 
 
 def _courage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -57,11 +45,10 @@ def _courage(ctx: SlotCtx) -> dict[str, Any] | None:
 _courage.phase = BUFF
 
 
-def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _judgment(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     nearest = bool(ctx.option("e_nearest_target"))
     spins = 7 + int(max(0.0, ctx.stat("bonus_attack_speed")) // 25.0)
     spins = min(max(spins, 7), 15)
@@ -91,27 +78,15 @@ def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _demacian_justice(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "True Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "true",
-    )
-    entry["parts"] = (DamagePart("true", value, time_offset=0.435),)
-    entry["event_order_certified"] = "single_hit"
-    entry["target_max_health_sensitive"] = True
-    entry["detail"] = (
-        "True damage scales from target missing health; the execute/reveal threshold "
-        "is target state."
-    )
-    return entry
+_demacian_justice = named_damage(
+    "True Damage",
+    "true",
+    time_offset=0.435,
+    event_order_certified="single_hit",
+    target_max_health_sensitive=True,
+    detail="True damage scales from target missing health; the execute/reveal threshold "
+    "is target state.",
+)
 
 
 SLOTS = {
