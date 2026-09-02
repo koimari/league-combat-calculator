@@ -150,7 +150,9 @@ golden baseline when any of these are missing/stale:
   `docs/coverage-residue.json` row acknowledges, or a row that no longer
   reproduces, aborts. Commit the refreshed receipt with the data.
 
-Environment: set `LCC_WIKI_DB` (wiki sqlite), `LCC_AXWORD_SOURCE` (Meraki
+Environment: build the wiki revision index (`scripts/decompose_wiki.py
+--wiki-db`, ~4.5 min, no variable needed at its default path), set
+`LCC_WIKI_DB` only for a copy elsewhere, `LCC_AXWORD_SOURCE` (Meraki
 kit in the `lol-strength-analysis` sibling repo), `LCC_WIKI_QUERY` (the query
 CLI, vendored fallback at `vendor/league-wiki-query/scripts/`), and
 `CDTB_BIN` (game-file exports) per the runbook; every path resolves

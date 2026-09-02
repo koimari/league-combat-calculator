@@ -131,7 +131,8 @@ def test_build_fails_closed_when_wiki_db_missing(tmp_path):
     axword = _write_axword(tmp_path)
     output = tmp_path / "out" / "reviewed-packets.json"
     missing = tmp_path / "missing.sqlite3"
-    with pytest.raises(RuntimeError, match=r"--wiki-db|LCC_WIKI_DB"):
+    # The message names the builder: nothing else in the tree supplies the index.
+    with pytest.raises(RuntimeError, match=r"decompose_wiki\.py --wiki-db"):
         brm.build(champions, axword, output, wiki_db=missing)
     assert not output.exists(), "no output may be written on a missing wiki DB"
 

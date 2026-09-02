@@ -43,6 +43,10 @@ data/bin/*
 data/bin/characters/*
 !data/bin/characters/*.bin.json
 data/wiki-raw/
+# Wiki revision index the reviewed-packet gate reads (plus its staging file).
+# Current wiki state, so it is rebuilt per patch day, never committed:
+# scripts/decompose_wiki.py --wiki-db
+data/wiki/league-wiki.sqlite3*
 data/atoms/*.atoms.json
 docs/receipts/champions/*.json
 docs/receipts/items/*.json

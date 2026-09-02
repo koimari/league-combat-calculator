@@ -10,4 +10,12 @@ wikitext is thin).
 Rebuild:
     python scripts/decompose_wiki.py --index
 
+`league-wiki.sqlite3` (gitignored) is the revision index the reviewed-packet
+gate reads: one `pages` row per namespace-0 page with its current revision id
+and timestamp, redirects included. It carries no wikitext, so the
+`league-wiki-query` CLI cannot read it.
+
+Rebuild:
+    python scripts/decompose_wiki.py --wiki-db
+
 Raw wikitext fetches go to `data/wiki-raw/` (gitignored, on demand).
