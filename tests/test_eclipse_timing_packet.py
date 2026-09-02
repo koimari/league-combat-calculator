@@ -540,6 +540,13 @@ class TestTriggerTiming:
         assert [event["time"] for event in ledger] == [0.0, 7.0]
         assert all(event["self_shield"]["amount"] == 75.0 for event in ledger)
         assert all(event["self_shield"]["duration"] == 2.0 for event in ledger)
+        # This rider states no re-bind: Ever Rising Moon arms on the proc
+        # event it rides, so a blocked proc is a shield the fight did not
+        # earn.  Only ``slotlib.attach_self_shield`` declares the ability-hit
+        # re-bind the walk applies (``transitions._rebind_self_shields``).
+        assert all(
+            "rebind_on_ability_hit" not in event["self_shield"] for event in ledger
+        )
 
 
 # ---------------------------------------------------------------------------

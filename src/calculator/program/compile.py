@@ -505,6 +505,7 @@ def action_from_event(
         aidx=aidx,
         trigger=-1,
         trigger_slot=EVENT_SLOTS.slot(str(trigger_id)) if trigger_id else NO_SLOT,
+        rebinds_on_ability_hit=bool(get("_rebind_on_ability_hit")),
         event=event,
         amount=max(0.0, float(get("damage", get("amount", 0.0)) or 0.0)),
         damage_type=str(get("damage_type", "")),

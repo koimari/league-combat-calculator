@@ -743,6 +743,7 @@
               "actor_wide": true,
               "amount": 163.88,
               "duration": 2.0,
+              "rebind_on_ability_hit": true,
               "source": "Dirty Fighting (3-Stack Shield)"
             }
           ],
@@ -1219,6 +1220,7 @@
               "actor_wide": true,
               "amount": 208.82,
               "duration": 1.5,
+              "rebind_on_ability_hit": true,
               "source": "Repudiation"
             }
           ],
@@ -3577,6 +3579,7 @@
               "actor_wide": true,
               "amount": 216.3,
               "duration": 10.0,
+              "rebind_on_ability_hit": true,
               "source": "Mana Barrier"
             }
           ],
@@ -4765,6 +4768,7 @@
               "actor_wide": true,
               "amount": 303.8,
               "duration": 2.0,
+              "rebind_on_ability_hit": true,
               "source": "Adaptive Defenses"
             }
           ],
@@ -16923,6 +16927,7 @@
               "actor_wide": true,
               "amount": 157.8,
               "duration": 5.0,
+              "rebind_on_ability_hit": true,
               "source": "Granite Shield"
             }
           ],
@@ -20035,6 +20040,7 @@
               "actor_wide": true,
               "amount": 185.0,
               "duration": 2.0,
+              "rebind_on_ability_hit": true,
               "source": "Pop Blossom"
             }
           ],
@@ -22801,6 +22807,7 @@
               "actor_wide": true,
               "amount": 158.2,
               "duration": 10.0,
+              "rebind_on_ability_hit": true,
               "source": "Fey Feathers"
             }
           ],
@@ -23636,6 +23643,7 @@
               "actor_wide": true,
               "amount": 50.0,
               "duration": 3.0,
+              "rebind_on_ability_hit": true,
               "source": "Loyalty Program"
             }
           ],
@@ -25398,6 +25406,7 @@
               "actor_wide": true,
               "amount": 220.0,
               "duration": 3.0,
+              "rebind_on_ability_hit": true,
               "source": "Dawning Shadow"
             }
           ],
@@ -26228,6 +26237,7 @@
               "actor_wide": true,
               "amount": 89.94,
               "duration": 2.5,
+              "rebind_on_ability_hit": true,
               "source": "Ki Barrier"
             }
           ],
@@ -26471,6 +26481,7 @@
               "actor_wide": true,
               "amount": 130.0,
               "duration": 1.0,
+              "rebind_on_ability_hit": true,
               "source": "Inferno Aegis"
             }
           ],
@@ -27396,6 +27407,7 @@
               "actor_wide": true,
               "amount": 127.6,
               "duration": 2.5,
+              "rebind_on_ability_hit": true,
               "source": "Seismic Bastion"
             }
           ],
@@ -32575,6 +32587,7 @@
               "actor_wide": true,
               "amount": 100.0,
               "duration": 2.5,
+              "rebind_on_ability_hit": true,
               "source": "Personal Space"
             }
           ],
@@ -32779,6 +32792,7 @@
               "actor_wide": true,
               "amount": 189.12,
               "duration": 3.0,
+              "rebind_on_ability_hit": true,
               "source": "Blast Shield"
             }
           ],
@@ -33201,6 +33215,7 @@
               "actor_wide": true,
               "amount": 98.82,
               "duration": 2.5,
+              "rebind_on_ability_hit": true,
               "source": "Siphon Power"
             }
           ],
@@ -33646,6 +33661,7 @@
               "actor_wide": true,
               "amount": 218.82,
               "duration": 3.0,
+              "rebind_on_ability_hit": true,
               "source": "Sky Splitter"
             }
           ],
@@ -52935,18 +52951,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60001,
+      "leaves": 60017,
       "numeric_leaves": 46189,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "59063b77ca93cb4ae878a6a6f633027155ffc8df",
+    "git_head": "bb06cef5f9d42192e14fad36670f6e0193d90d22",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "2464616e5d1809ca57eb3dd0b8f5bb6a4084ce12"
+    "src_tree_sha": "fbe0d0a523503d3365a3159626cc8459ed1eac9a"
   },
   "registered_champion_fights": {
     "Aatrox": {

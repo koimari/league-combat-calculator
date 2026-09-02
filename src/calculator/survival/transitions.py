@@ -98,6 +98,7 @@ from .actions import (
     LiveProbe,
     SurvivalAction,
     TransitionRank,
+    action_key,
     attack_class_of,
     damage_class_of,
     declared_modifier_classes,
@@ -332,6 +333,13 @@ class TransitionContext:
     redirect_gate_checked: set[int] = field(default_factory=set)
     redirect_cancelled: set[int] = field(default_factory=set)
     shield_presence_at_time: dict[tuple[int, float], bool] = field(
+        default_factory=dict, repr=False
+    )
+    # Self-shield riders waiting for a carrier, by holder roster index.  A
+    # rider declaring ``rebinds_on_ability_hit`` waits here from the trigger
+    # gate until the holder lands an ability packet; the walk refuses the
+    # ones still waiting when it ends (D-VI-1).
+    pending_self_shields: dict[int, list[SurvivalAction]] = field(
         default_factory=dict, repr=False
     )
     # Derived per-walk speed fields.  The ledger capability
@@ -3456,9 +3464,50 @@ _DAMAGE_KINDS = frozenset(
 )
 
 
-def run_survival_walk(
-    actions: Sequence[SurvivalAction], ctx: TransitionContext
+def _rebind_self_shields(
+    ctx: TransitionContext,
+    actions: list[SurvivalAction],
+    carrier: SurvivalAction,
+    after: int,
 ) -> None:
+    """Move the holder's waiting self-shield riders onto the packet that landed.
+
+    A rider declaring ``rebinds_on_ability_hit`` is bound to one carrier
+    packet by ordinal, in ``damage._damage_event_row``, before the walk
+    knows which packets land.  The trigger gate parks it when that carrier
+    is skipped and this arms it on the holder's next landing ability packet,
+    at that packet's timestamp.  It is the same action and the same ledger
+    slot re-inserted in walk order, the way a walk-authored heal is, so the
+    rider moves rather than being granted twice.
+    """
+    riders = ctx.pending_self_shields.pop(carrier.attacker, None)
+    if not riders:
+        return
+    carrier_id = EVENT_SLOTS.text(carrier.event_slot)
+    for rider in riders:
+        event = rider.event
+        if event is not None:
+            event["time"] = carrier.time
+            event["_trigger_event_id"] = carrier_id
+        moved = rider._replace(
+            time=carrier.time,
+            trigger_slot=carrier.event_slot,
+            sort_key=action_key(
+                carrier.time,
+                rider.phase,
+                ctx.combatants[rider.subject].participant_id,
+                event or {},
+            ),
+        )
+        insertion = after
+        while (
+            insertion < len(actions) and actions[insertion].sort_key <= moved.sort_key
+        ):
+            insertion += 1
+        actions.insert(insertion, moved)
+
+
+def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> None:
     """The shared walk: every precondition gate in the authoritative order,
     then this loop's own dispatch to the one implementation per mechanic.
 
@@ -3576,6 +3625,14 @@ def run_survival_walk(
             # so overwriting the stamp published the consequence in place of
             # the cause, and the specific reason the walk refused this action
             # was lost to the generic one that followed from it.
+            if action.rebinds_on_ability_hit:
+                # This rider's trigger is "the holder's next ability hit",
+                # and the packet it was nailed to is not the only one that
+                # can be it.  Park it until one lands rather than refusing
+                # it on that packet's behalf; the walk makes the refusal
+                # below itself when it ends with none (D-VI-1).
+                ctx.pending_self_shields.setdefault(action.attacker, []).append(action)
+                continue
             ledger.skip(
                 action,
                 "trigger_event_skipped",
@@ -3958,6 +4015,25 @@ def run_survival_walk(
             )
             continue
         _apply_damage(ctx, action, state)
+        if (
+            ctx.pending_self_shields
+            and action.is_ability
+            and action.event_slot != NO_SLOT
+        ):
+            # This ability packet landed, so it can carry the riders the
+            # trigger gate parked for its holder.
+            _rebind_self_shields(ctx, actions, action, action_index)
+    for riders in ctx.pending_self_shields.values():
+        for rider in riders:
+            # No ability packet this holder authored ever landed, so the
+            # rider's trigger never happened and the gate's refusal stands.
+            ledger.skip(
+                rider,
+                "trigger_event_skipped",
+                damage_phase=rider.phase < TransitionRank.DEBUFF_ARM,
+                preserve_reason=True,
+            )
+    ctx.pending_self_shields.clear()
 
 
 def _fill_blocked_shield_after(
