@@ -31,6 +31,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "knockback",
             "R": "fear",
+            "P": "none",
         }
         assert hecarim.parse_abilities.cc_kinds == hecarim.MODULE_CC
 
@@ -48,6 +49,7 @@ class TestReviewedCrowdControl:
             "W": ["none"],
             "E": ["knockback"],
             "R": ["fear"],
+            "passive": ["none"],
         }
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):

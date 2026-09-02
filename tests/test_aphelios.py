@@ -81,6 +81,8 @@ class TestReviewedCrowdControl:
             "Q": CC_PER_PART,
             "E": "none",
             "R": CC_PER_PART,
+            "P": CC_PER_PART,
+            "W": "none",
         }
         assert aphelios.parse_abilities.cc_kinds == aphelios.MODULE_CC
 

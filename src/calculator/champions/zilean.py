@@ -96,7 +96,7 @@ def _time_bomb(compiled):
 
 # Q's kind depends on the second-bomb state, so the slot names itself
 # per-part and ``_time_bomb`` authors the answer.  P/W/E/R price no damage.
-MODULE_CC = {"Q": CC_PER_PART, "E": "slow"}
+MODULE_CC = {"Q": CC_PER_PART, "E": "slow", "P": "none", "W": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zilean",

@@ -9,7 +9,7 @@ derived from.
 
 import pytest
 
-from src.calculator.champions import corki, engine
+from src.calculator.champions import corki
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import (
     FightConfig,
@@ -556,25 +556,19 @@ class TestReviewedCcFreeKit:
     exists.
     """
 
-    def test_every_castable_slot_declares_a_reviewed_kind(self) -> None:
-        assert set(corki.MODULE_CC) == set(corki.SLOTS) - {"P"}
+    def test_every_slot_declares_a_reviewed_kind(self) -> None:
+        assert set(corki.MODULE_CC) == set(corki.SLOTS)
         assert set(corki.MODULE_CC.values()) == {"none"}
 
-    def test_the_passive_is_not_declared_because_nothing_would_read_it(
-        self, corki_data
-    ) -> None:
-        """Hextech Munitions rides the basic attack, not a cast.
-
-        Its row emits no damage part at all — the true damage is a ratio
-        the fight engine applies to each swing — so it authors no ability
-        event, and a declaration there would be reviewed-looking and
-        unread.  The engine refuses that rather than accepting it.
-        """
+    def test_the_passive_declares_none_and_lands_on_no_part(self, corki_data) -> None:
+        """Hextech Munitions rides the basic attack, not a cast.  Its row
+        emits no damage part, so the declaration has none to ride.  The kit
+        fact is stated anyway, and test_module_cc_census.py counts the
+        slots it cannot land on."""
         entry = corki.parse_abilities(corki_data, 18, 100.0)["passive"]
+        assert corki.MODULE_CC["P"] == "none"
         assert entry["parts"] == ()
         assert entry["basic_attack_true_ratio"] > 0
-        with pytest.raises(ValueError, match="would reach nothing"):
-            engine._apply_module_cc(dict(entry), "none", "Corki", "P")
 
     def test_no_cached_ability_text_mentions_crowd_control(self, corki_data) -> None:
         """The source the declaration is read from, checked as source.

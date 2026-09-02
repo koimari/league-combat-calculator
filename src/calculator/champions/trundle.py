@@ -68,7 +68,7 @@ def _kings_tribute(compiled):
 # for the same amount" and reduces resistances and size — real debuffs,
 # but none of them crowd control.  W (Frozen Domain) and E (Pillar of Ice)
 # carry the kit's other control and deal no damage.
-MODULE_CC = {"Q": "slow", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "slow", "E": "slow", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Trundle",

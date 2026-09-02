@@ -29,7 +29,7 @@ from ..ability_atoms import (
 )
 from ..ability_spec import ControlEvent, DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .inputs import int_option
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -244,7 +244,7 @@ def _bladecaller(
 # cadence between them, so a part marker could never reach the ledger
 # either; ``_bladecaller`` instead authors the sourced root as a
 # ``control_events`` payload exactly when the feather count arms it.
-MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "R": "none", "P": "none", "E": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Xayah",

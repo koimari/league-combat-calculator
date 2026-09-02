@@ -16,13 +16,19 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Evelynn")
-        assert evelynn.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
+        assert evelynn.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+            "W": "per_part",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
         # W is absent rather than "none": Allure's expunge slows and
         # charms, but W emits no damage row to carry the answer.
-        assert "W" not in evelynn.MODULE_CC
+        assert evelynn.MODULE_CC["W"] == "per_part"
         assert "charms them" in cc_review.slot_text(data, "W")
 
     def test_every_ability_event_carries_the_review(self):

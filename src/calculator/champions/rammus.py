@@ -201,7 +201,13 @@ def _defensive_ball_curl(
 # absent here.  P is a stat innate.
 # E (Frenzying Taunt) prices no damage against a champion, so its reviewed
 # control rides the entry as a sourced ControlEvent rather than on a part.
-MODULE_CC = {"Q": "immobilize", "W": CC_PER_PART, "E": "taunt", "R": "slow"}
+MODULE_CC = {
+    "Q": "immobilize",
+    "W": CC_PER_PART,
+    "E": "taunt",
+    "R": "slow",
+    "P": "none",
+}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rammus",

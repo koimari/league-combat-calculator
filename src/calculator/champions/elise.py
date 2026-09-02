@@ -135,7 +135,7 @@ SLOTS = {
 # (Cocoon) deals no damage, so it carries its stun as a sourced
 # ``control_event`` off the "Stun Duration" row instead of on a part.  W's
 # Skittering Frenzy form, R and P grant stats.
-MODULE_CC = {"Q": "none", "W": "none", "E": "stun"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "P": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Elise", cc_kinds=MODULE_CC)
 

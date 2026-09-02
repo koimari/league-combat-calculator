@@ -32,7 +32,7 @@ import re
 from typing import Any
 
 from ..healing_helpers import ability_json, parsed_rank
-from .engine import ONHIT, SlotCtx
+from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
 from .module_contract import coverage
@@ -171,7 +171,7 @@ def _song_of_celerity(packet_e):
 # slow is the passive's empowered attack, not Q).  R (Crescendo) "deals
 # magic damage to enemies hit and stuns them for 1.5 seconds".  W and E
 # deal no damage, so they carry no reviewable control.
-MODULE_CC = {"Q": "none", "R": "stun"}
+MODULE_CC = {"Q": "none", "R": "stun", "P": CC_PER_PART, "W": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sona",

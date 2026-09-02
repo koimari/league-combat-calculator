@@ -476,6 +476,7 @@ class TestReviewedCrowdControl:
             "Q2": "none",
             "W": "slow",
             "E": "immobilize",
+            "R": "knockback",
         }
         assert "slowed by 80% decaying over 2 seconds" in " ".join(
             cc_review.slot_text(data, "W").split()

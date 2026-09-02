@@ -471,7 +471,13 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 # ledger cannot carry a kind for, and P's weapon branch rides the on-hit
 # channel, which carries no kind either (Gravitum's slow: see
 # ``_P_BRANCH_UNPRICED``).  E's row has no part at all.
-MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": CC_PER_PART}
+MODULE_CC = {
+    "Q": CC_PER_PART,
+    "E": "none",
+    "R": CC_PER_PART,
+    "P": CC_PER_PART,
+    "W": "none",
+}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Aphelios",

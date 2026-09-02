@@ -176,7 +176,7 @@ _bravado.phase = ONHIT
 # enemies hit and stuns them for 1.5 seconds".  Q, W and R deal no damage
 # — heal, shield and invulnerability — and P is an attack-stream rider, so
 # E is the whole of this kit's reviewable control.
-MODULE_CC = {"E": "stun"}
+MODULE_CC = {"E": "stun", "P": "none", "Q": "none", "W": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Taric",

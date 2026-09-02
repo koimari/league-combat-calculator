@@ -413,7 +413,7 @@ def _solar_snare(
 # ``_solar_snare``).  P's Searing Brilliance projectiles "fire ... at the
 # target" and do nothing else, so the slot answers "none" for the
 # empowered swing it arms; W authors no damage part of its own.
-MODULE_CC = {"P": "none", "Q": "none", "E": CC_PER_PART, "R": "none"}
+MODULE_CC = {"P": "none", "Q": "none", "E": CC_PER_PART, "R": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Mel",

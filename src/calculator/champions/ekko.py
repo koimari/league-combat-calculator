@@ -6,7 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import level_row, named_damage, no_damage, ranked_slot
@@ -127,7 +127,7 @@ SLOTS = {
 # attack and R's arrival explosion add damage and nothing else.  W is
 # absent because it emits no damage row — its chronosphere slow and its
 # entry-triggered stun ride a zone the damage model does not price.
-MODULE_CC = {"Q": "slow", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "slow", "E": "none", "R": "none", "P": "none", "W": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Ekko", cc_kinds=MODULE_CC)
 

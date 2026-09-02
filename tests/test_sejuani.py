@@ -23,6 +23,7 @@ class TestReviewedCrowdControl:
             "W": CC_PER_PART,
             "E": "immobilize",
             "R": "stun",
+            "P": "none",
         }
         assert "knocking them up for 0.5 seconds" in cc_review.slot_text(data, "Q")
         # E applies two immobilize kinds in one cast.
@@ -36,7 +37,7 @@ class TestReviewedCrowdControl:
         assert "the enemy hit by the bola is unaffected by the storm" in r_text
         # P is absent: Icebreaker's bonus rides Sejuani's next attack or
         # ability rather than emitting an ability event of its own.
-        assert "P" not in sejuani.MODULE_CC
+        assert sejuani.MODULE_CC["P"] == "none"
 
     def test_w_answers_per_swing_because_the_two_swings_differ(self):
         w_text = cc_review.slot_text(cc_review.kit("Sejuani"), "W")

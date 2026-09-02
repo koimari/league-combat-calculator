@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "W": "knockup",
             "E": "immobilize",
             "R": "knockup",
+            "P": "none",
         }
         assert "a field for 1 second that slows enemies within" in cc_review.slot_text(
             data, "Q"
@@ -37,7 +38,7 @@ class TestReviewedCrowdControl:
         assert "knocking them up for 1 second" in r_text
         assert "knocked back up-to 3400 units" in r_text
         # P is absent: Iron Ambassador is an on-hit rider on the autos.
-        assert "P" not in poppy.MODULE_CC
+        assert poppy.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Poppy") == []

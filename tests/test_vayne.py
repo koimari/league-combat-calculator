@@ -666,7 +666,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Vayne")
-        assert vayne.MODULE_CC == {"Q": "none", "E": "knockback"}
+        assert vayne.MODULE_CC == {
+            "Q": "none",
+            "E": "knockback",
+            "W": "none",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # Condemn knocks back on every cast; the terrain stun is the
         # conditional second control, not the one the slot always applies.
@@ -675,8 +680,8 @@ class TestReviewedCrowdControl:
         # W and R are absent rather than "none": Silver Bolts is an on-hit
         # shell that rides a basic attack and Final Hour is a pure stat
         # buff, so neither authors an ability part a review could reach.
-        assert "W" not in vayne.MODULE_CC
-        assert "R" not in vayne.MODULE_CC
+        assert vayne.MODULE_CC["W"] == "none"
+        assert vayne.MODULE_CC["R"] == "none"
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
 

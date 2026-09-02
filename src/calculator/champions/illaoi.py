@@ -137,7 +137,7 @@ SLOTS = {
 # P's Tentacle strikes are an effect-phase proc row whose event list the
 # module builds itself, so a slot marker there would never reach the
 # ledger.
-MODULE_CC = {"W": "none", "R": "none"}
+MODULE_CC = {"W": "none", "R": "none", "P": "none", "Q": "none", "E": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Illaoi", cc_kinds=MODULE_CC)
 OPTIONS = [

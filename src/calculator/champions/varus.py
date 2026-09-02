@@ -383,7 +383,7 @@ SLOTS = {
 # hit, "dealing magic damage and rooting them for 2 seconds".  W is an
 # on-hit Blight rider with no cast damage and P is a kill-triggered stat
 # buff.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "root"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "root", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Varus", cc_kinds=MODULE_CC)
 

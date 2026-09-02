@@ -196,13 +196,13 @@ def _soul_unbound(
 # its knock-up belongs to the Gathering Storm branch, so the kind is
 # authored per part in ``_mortal_steel``.  P is the soul-mark state row.
 #
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# E reviews to no control, and no part of its row carries the answer.
 # Soul Unbound's recast controls nothing, but its true-damage event is
 # built by the fight engine from the ``stored_damage`` declaration, not
 # from a part this module authors — there is nothing here for a kind to be
 # stamped on, and a declaration that never reaches the ledger would claim a
 # review the coverage scan cannot see.
-MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "pull"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "pull", "P": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yone",

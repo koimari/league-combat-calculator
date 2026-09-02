@@ -216,7 +216,7 @@ def _spark_surge(
 # damage to the first enemy hit ... and pierce through enemies".  P is
 # absent: Living Battery rides the basic-attack stream as an on-hit
 # rider, not an ability event the ledger reviews.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zeri",

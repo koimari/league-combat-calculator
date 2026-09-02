@@ -28,6 +28,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "root",
             "R": "slow",
+            "P": "none",
         }
         assert leona.parse_abilities.cc_kinds == leona.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []

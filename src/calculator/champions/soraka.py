@@ -175,7 +175,7 @@ SLOTS = {
 # immobilizing half of what this row's two hits apply, and ``_equinox``
 # authors it as a sourced control event at the eruption's 1.5s offset when
 # the target-remains option arms that second hit.  W deals no damage.
-MODULE_CC = {"Q": "slow", "E": "root"}
+MODULE_CC = {"Q": "slow", "E": "root", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 

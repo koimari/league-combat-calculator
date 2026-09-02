@@ -421,17 +421,23 @@ class TestJsonCrossChecks:
 
 
 class TestReviewedCrowdControl:
-    """Diana's crowd-control review, and the slots that still withhold.
+    """Diana's crowd-control review, slot by slot.
 
-    R's beam strikes "after 1 second" — the sourced delay the row now
+    R's beam strikes "after 1 second" — the sourced delay the row
     authors, and the instant its pull and slow have already landed on.
     W's row is the cached 'Total Magic Damage' of all three spheres and
-    E's is the dash count in one part, neither with a cadence to place.
+    E's is the dash count in one part, and both review to "none".
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Diana")
-        assert diana.MODULE_CC == {"Q": "none", "R": "pull"}
+        assert diana.MODULE_CC == {
+            "Q": "none",
+            "R": "pull",
+            "P": "none",
+            "W": "none",
+            "E": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "pulls all nearby enemies towards her" in cc_review.slot_text(data, "R")
 
@@ -447,8 +453,8 @@ class TestReviewedCrowdControl:
         assert part.time_offset == 1.0
         assert part.cc_kind == "pull"
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Diana") == ["E", "W"]
+    def test_every_slot_is_reviewed_so_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Diana") == []
         coverage = cc_review.fimbulwinter_coverage("Diana")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []

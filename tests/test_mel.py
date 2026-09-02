@@ -24,6 +24,7 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "E": CC_PER_PART,
             "R": "none",
+            "W": "none",
         }
         assert mel.parse_abilities.cc_kinds == mel.MODULE_CC
 

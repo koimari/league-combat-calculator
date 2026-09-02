@@ -20,7 +20,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yunara")
-        assert yunara.MODULE_CC == {"Q": "none", "W": "slow"}
+        assert yunara.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "P": "none",
+            "E": "none",
+            "R": "none",
+        }
         assert yunara.parse_abilities.cc_kinds == yunara.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # Both W forms slow, so one slot-wide kind covers r_transcendent.
@@ -30,8 +36,8 @@ class TestReviewedCrowdControl:
 
     def test_the_non_damaging_slots_stay_absent(self):
         """E is a dash, R is the Transcendent State buff shell."""
-        assert "E" not in yunara.MODULE_CC
-        assert "R" not in yunara.MODULE_CC
+        assert yunara.MODULE_CC["E"] == "none"
+        assert yunara.MODULE_CC["R"] == "none"
         assert (
             cc_review.control_words(cc_review.slot_text(cc_review.kit("Yunara"), "E"))
             == []

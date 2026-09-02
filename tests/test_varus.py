@@ -14,7 +14,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Varus")
-        assert varus.MODULE_CC == {"Q": "none", "E": "slow", "R": "root"}
+        assert varus.MODULE_CC == {
+            "Q": "none",
+            "E": "slow",
+            "R": "root",
+            "P": "none",
+            "W": "none",
+        }
         # Q's only "slow" is the one Varus takes himself while charging.
         assert "charges while being slowed by 20%" in cc_review.slot_text(data, "Q")
         assert "slowing enemies within" in cc_review.slot_text(data, "E")

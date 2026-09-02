@@ -35,7 +35,7 @@ from typing import Any
 
 from ..ability_spec import ControlScope
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, ONHIT, SlotCtx
+from .engine import BUFF, CC_PER_PART, ONHIT, SlotCtx
 from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -201,12 +201,14 @@ def _cast_detail(
 # Cached kit review: Q's bolts deal damage "and slow[] them by 80%
 # decaying over 2 seconds"; E's enemy cast only damages and reveals.  W's
 # polymorph and R's knock-up are real control on abilities that deal no
-# damage, so neither can ride a damage part: W's rides its own control
+# damage, so neither can ride a damage part.  W's rides its own control
 # event off the sourced "Disable Duration" row, authored by ``_whimsy``
-# on the enemy branch alone because the kind is a property of the cast
-# and not of the slot, and R's has no duration row in the cache to
-# author at all.
-MODULE_CC = {"Q": "slow", "E": "none"}
+# on the enemy branch alone, because the kind is a property of the cast
+# and not of the slot.  R "knock[s] up nearby enemies for 1 second" on
+# every cast, which is the slot's own constant; the cache states no
+# duration row for it, so the declaration names the kind and no event
+# carries it.  P is Pix's on-attack bolt row.
+MODULE_CC = {"Q": "slow", "E": "none", "P": "none", "W": CC_PER_PART, "R": "knockup"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Lulu",

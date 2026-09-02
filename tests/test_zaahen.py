@@ -42,6 +42,7 @@ class TestReviewedCrowdControl:
             "W": "stun",
             "E": "none",
             "R": "none",
+            "P": "none",
         }
         assert zaahen.parse_abilities.cc_kinds == zaahen.MODULE_CC
         w_text = cc_review.slot_text(data, "W")

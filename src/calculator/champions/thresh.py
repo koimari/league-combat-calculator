@@ -88,7 +88,7 @@ _damnation.phase = BUFF
 # the immobilizing half.  R (The Box): a wall breaks "dealing magic damage
 # and slowing them by 99% for 2 seconds".  P is a soul-stack buff and W is
 # a lantern shield, neither of which damages.
-MODULE_CC = {"Q": "immobilize", "E": "knockback", "R": "slow"}
+MODULE_CC = {"Q": "immobilize", "E": "knockback", "R": "slow", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Thresh",

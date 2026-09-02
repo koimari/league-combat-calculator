@@ -286,7 +286,7 @@ SLOTS = {
 # which detonate "upon contact with an enemy" on no sourced cadence, and
 # E's row is the dash count in one part with no interval between the two
 # dashes.  Neither is a delay this review can author.
-MODULE_CC = {"Q": "none", "R": "pull"}
+MODULE_CC = {"Q": "none", "R": "pull", "P": "none", "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Diana", cc_kinds=MODULE_CC)
 

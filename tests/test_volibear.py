@@ -29,6 +29,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "slow",
+            "P": "none",
         }
         assert volibear.parse_abilities.cc_kinds == volibear.MODULE_CC
         assert "stunning them for 1 second" in cc_review.slot_text(data, "Q")

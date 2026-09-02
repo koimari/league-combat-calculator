@@ -34,7 +34,13 @@ class TestReviewedCrowdControl:
         # Q's kind depends on the second-bomb state, so it is authored PER
         # PART by ``_time_bomb`` rather than declared per slot.  E prices no
         # damage, so its slow rides the entry as a sourced ControlEvent.
-        assert zilean.MODULE_CC == {"Q": CC_PER_PART, "E": "slow"}
+        assert zilean.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "E": "slow",
+            "P": "none",
+            "W": "none",
+            "R": "none",
+        }
         assert zilean.parse_abilities.cc_kinds == zilean.MODULE_CC
         lone = parse_champion_abilities(
             data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -77,7 +83,7 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Zilean")
         coverage = get_champion_module_contract("Zilean").coverage
         assert zilean.MODULE_CC["E"] == "slow"
-        assert "W" not in zilean.MODULE_CC
+        assert zilean.MODULE_CC["W"] == "none"
         for slot in ("W", "E"):
             assert coverage[slot] == "no_damage", slot
         assert "if the target is an enemy, they are slowed" in (
@@ -94,7 +100,7 @@ class TestReviewedCrowdControl:
         contract = get_champion_module_contract("Zilean")
         assert contract.coverage["R"] == "modeled"
         assert contract.coverage_channels["R"] == ("starting_revive_defense",)
-        assert "R" not in zilean.MODULE_CC
+        assert zilean.MODULE_CC["R"] == "none"
 
         stats = calculate_total_stats(cc_review.kit("Zilean"), 18, [])
         defenses = resolve_starting_defenses("Zilean", 18, stats, [])

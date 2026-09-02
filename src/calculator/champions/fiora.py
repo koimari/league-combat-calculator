@@ -100,7 +100,7 @@ SLOTS = {
 # Bladework empowers two attacks and "the first attack slows the target
 # by 30% for 1 second"; the row's damage is those swings, so the slow
 # rides the events the engine reattributes to it.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "slow"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow", "P": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 

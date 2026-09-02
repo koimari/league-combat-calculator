@@ -171,7 +171,7 @@ SLOTS = {
 # 1 second"; E only deals damage along the dash (its shield is Azir's own);
 # R's phalanx knocks enemies "away over 1 second to a line 650 units in
 # front of Azir".  W summons a soldier and emits no damage row of its own.
-MODULE_CC = {"Q": "slow", "E": "none", "R": "knockback"}
+MODULE_CC = {"Q": "slow", "E": "none", "R": "knockback", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Azir", cc_kinds=MODULE_CC)
 

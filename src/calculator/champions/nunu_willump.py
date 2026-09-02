@@ -99,7 +99,7 @@ PACKET_SHA256 = "a41876fad651b2f3fca034c6a2c1ba7e0bdab4d8874850a2decd86e65b42092
 # second" (the snowbound root belongs to the unpriced delayed detonation).
 # R's explosion leaves "affected enemies ... slowed".  P is absent: Call of
 # the Freljord is an attack-speed buff with no damage row of its own.
-MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow", "R": "slow"}
+MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow", "R": "slow", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nunu & Willump",

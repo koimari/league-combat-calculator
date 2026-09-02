@@ -394,11 +394,11 @@ class TestPassiveEventCertification:
 
 
 class TestReviewedCrowdControl:
-    """Ambessa's crowd-control review, and the slot that still withholds.
+    """Ambessa's crowd-control review, slot by slot.
 
     R's strike lands on the far side of its cached suppression, stunning
     what it damages.  E's row is the cached 'Total Physical Damage' of
-    both spins, and the cache never times the second one.
+    both spins, and carries the slow both of them apply.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -408,6 +408,8 @@ class TestReviewedCrowdControl:
             "Q2": "none",
             "W": "none",
             "R": "stun",
+            "P": "none",
+            "E": "slow",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
@@ -427,8 +429,10 @@ class TestReviewedCrowdControl:
         assert part.time_offset == pytest.approx(1.45)
         assert part.cc_kind == "stun"
 
-    def test_lacerates_second_spin_has_no_cached_time(self):
-        """The one slot that still withholds, and the sentence that proves it."""
+    def test_lacerates_summed_spins_carry_the_slow(self):
+        """The cache never times the second spin, so both land on one row.
+        The row declares the slow they share, which is what lets the whole
+        fight certify."""
         text = cc_review.slot_text(cc_review.kit("Ambessa"), "E")
         assert (
             "drakehound's step's dash may be buffered during the lockout or "
@@ -436,7 +440,8 @@ class TestReviewedCrowdControl:
             "case, she will spin a second time at the end of the dash to apply "
             "the same effects at no additional cost." in text
         )
-        assert cc_review.unreviewed_ability_slots("Ambessa") == ["E"]
+        assert ambessa.MODULE_CC["E"] == "slow"
+        assert cc_review.unreviewed_ability_slots("Ambessa") == []
         coverage = cc_review.fimbulwinter_coverage("Ambessa")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []

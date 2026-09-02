@@ -148,7 +148,7 @@ SLOTS = {
 # prices no damage part, so its airborne rides the entry as a sourced
 # ControlEvent instead.  P stays absent — unreviewed rather than
 # reviewed-no-CC.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "airborne"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "airborne", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
 

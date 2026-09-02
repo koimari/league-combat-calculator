@@ -2479,53 +2479,80 @@ def _control_armed_event_coverage(
     items: list[dict[str, Any]],
     damage_events: list[dict[str, Any]],
     control_events: list[dict[str, Any]] | None = None,
-) -> tuple[bool, str, str]:
-    """Certify the control metadata a control-armed holder shield needs.
+    *,
+    is_melee: bool = False,
+) -> tuple[bool, str, str, str]:
+    """Certify a control-armed holder shield against the proc's own trigger.
 
     Everlasting — the one such producer declared today — is not a generic
     "ability hit" proc.  The Wiki limits it to an immobilize, or a slow for a
-    melee holder, and its shield must land after that authored cast.  A damage
-    event with no reviewed ``cc_kind`` therefore cannot safely prove that the
-    passive did or did not trigger.  Pure auto-attack windows are exact
-    because they contain no candidate ability control event at all.
+    melee holder, and its shield lands after that authored cast.  Which
+    authored control arms it is therefore the mechanic's own question, and
+    the certificate names the event that answered it: the predicate here is
+    :func:`item_support_effects.control_trigger_rule`, the same
+    ``state_lifecycle.CcTriggerRule`` the roster walk grants the shield
+    through, read against the same raw rows.  A reviewed ``"none"`` row is
+    not a candidate for it — that is the reviewed absence of control, which
+    is evidence the proc did NOT arm — so it can never be the certificate.
 
+    A row nobody reviewed is the refusal: it may carry the immobilize that
+    arms the shield or no control at all, and the ledger cannot say which.
     The refusal names the declaration it came from: the receipt token is the
     rule's own ``mechanic_id`` and the note is built from the holder and the
     producer, so a second such producer is reported as itself rather than
     under the first one's name.
     """
+    from .item_support_effects import _event_time, control_trigger_rule
+
     # An ability that carries its control on a ``control_events`` row rather
     # than on a damage packet is the same evidence, so both ledgers feed one
     # scan: a reviewed control row certifies the cast that authored it.
-    ledger = {"damage_events": [*damage_events, *(control_events or [])]}
+    rows = [
+        row
+        for row in (*damage_events, *(control_events or ()))
+        if isinstance(row, Mapping)
+    ]
+    ledger = {"damage_events": rows}
+    armed_by = ""
     for slot in _control_armed_holder_shields(items):
+        rule = control_trigger_rule(slot.producer)
+        for row in rows:
+            branch = rule.match(row, is_melee=is_melee)
+            if branch and not armed_by:
+                armed_by = (
+                    f"{slot.owner} — "
+                    f"{slot.producer.value.replace('_', ' ').title()} armed by "
+                    f"{row.get('source') or row.get('source_key')} ({branch}) at "
+                    f"{round(_event_time(row), 3)}s"
+                )
+                break
         # The sixth control-reading site, on the bus.  ``cc_reviewed`` on a
         # Trigger holds when the row carries a vocabulary ``cc_kind``,
         # including the reviewed-no-CC ``"none"``, which narrows nothing and
         # is never a live control kind.  A tuple ledger's positional rows
         # classify as nothing at all, which is the silence the ``isinstance``
         # filter produces.
-        ability_events = [
+        unreviewed = [
             trigger
             for trigger in authored_triggers(
                 ledger,
                 streams=frozenset({Stream.DAMAGE}),
                 holder=slot.owner,
             )
-            if trigger.is_ability
+            if trigger.is_ability and not trigger.cc_reviewed
         ]
-        if not ability_events:
-            continue
-        if all(trigger.cc_reviewed for trigger in ability_events):
+        if not unreviewed:
             continue
         return (
             False,
             slot.rule.mechanic_id.replace(".", "_"),
             f"{slot.owner}'s {slot.producer.value.replace('_', ' ').title()} "
-            "needs an authored immobilize/slow marker; the ability packet did "
-            "not certify its crowd-control state.",
+            "arms on an authored immobilize/slow, and "
+            f"{sorted({str(trigger.source_key) for trigger in unreviewed})} "
+            "reached the ledger with no reviewed crowd-control state.",
+            armed_by,
         )
-    return True, "", ""
+    return True, "", "", armed_by
 
 
 @dataclass
@@ -18379,9 +18406,19 @@ def calculate_fight_damage(
         num_auto_attacks=state.num_auto_attacks,
         lean=score_only,
     )
-    control_complete, control_source, control_note = _control_armed_event_coverage(
-        items, damage_events, rotation.control_events
+    control_complete, control_source, control_note, control_armed_by = (
+        _control_armed_event_coverage(
+            items,
+            damage_events,
+            rotation.control_events,
+            is_melee=bool(state.is_melee),
+        )
     )
+    if control_armed_by:
+        # Which authored control armed the holder's shield, named. The
+        # roster walk grants it; this is the pair ledger's receipt that the
+        # event it grants on is in here, at that instant.
+        timeline_coverage["control_armed_by"] = control_armed_by
     if not control_complete:
         timeline_coverage["complete"] = False
         timeline_coverage["certification"] = "partial_event_order"

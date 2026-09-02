@@ -103,7 +103,7 @@ _get_excited.phase = BUFF
 # of the same explosion this row prices, now placed at its arming time.
 # P and Q are zero-damage stat rows (Get Excited! stacks, the weapon
 # toggle).
-MODULE_CC = {"W": "slow", "E": "root", "R": "none"}
+MODULE_CC = {"W": "slow", "E": "root", "R": "none", "P": "none", "Q": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Jinx",

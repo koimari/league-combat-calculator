@@ -44,7 +44,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Xin Zhao")
-        assert xin_zhao.MODULE_CC == {"W": "slow", "E": "slow", "R": "none"}
+        assert xin_zhao.MODULE_CC == {
+            "W": "slow",
+            "E": "slow",
+            "R": "none",
+            "P": "none",
+            "Q": "per_part",
+        }
         assert xin_zhao.parse_abilities.cc_kinds == xin_zhao.MODULE_CC
         assert "slowing all targets hit by 30%" in cc_review.slot_text(data, "E")
         # W's slow is the thrust's, and the module now prices the whole
@@ -67,7 +73,7 @@ class TestReviewedCrowdControl:
     def test_three_talon_strike_has_no_slot_wide_answer(self):
         """Only the third of Q's three empowered attacks knocks up."""
         data = cc_review.kit("Xin Zhao")
-        assert "Q" not in xin_zhao.MODULE_CC
+        assert xin_zhao.MODULE_CC["Q"] == "per_part"
         assert "the third attack knocks up the target" in cc_review.slot_text(data, "Q")
         # The row covers all three empowered attacks, but only one of them
         # knocks up, so no slot-wide kind answers for it.

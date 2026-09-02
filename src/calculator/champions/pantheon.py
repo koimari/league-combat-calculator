@@ -178,7 +178,7 @@ def _grand_starfall(
 # and slows them by 50% for 2 seconds" — the row prices the shockwave of
 # that same cast, which lands on the target the spear slowed.  P authors
 # no damage part.
-MODULE_CC = {"W": "stun", "Q": "none", "E": "none", "R": "slow"}
+MODULE_CC = {"W": "stun", "Q": "none", "E": "none", "R": "slow", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Pantheon",

@@ -148,7 +148,7 @@ SLOTS = {
 # 1.25 seconds" (its centre silence is not an immobilize and is not in the
 # vocabulary).  Q is absent because its fear is branch-conditional and is
 # authored on the part in _terrify; P carries no damage part at all.
-MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Fiddlesticks", cc_kinds=MODULE_CC)
 

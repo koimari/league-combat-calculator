@@ -636,7 +636,7 @@ class TestDerivedStackMonotonicity:
 
 
 class TestReviewedCrowdControl:
-    """Darius' reviewed crowd control, and the slot that still withholds.
+    """Darius' reviewed crowd control, slot by slot.
 
     A control-armed holder shield (Fimbulwinter's Everlasting) has to know
     whether an ability event was a control event; an ability packet that
@@ -645,7 +645,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Darius")
-        assert darius.MODULE_CC == {"Q": "none", "W": "slow"}
+        assert darius.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "P": "none",
+            "E": "per_part",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "slow the target by 90% for 1 second" in cc_review.slot_text(data, "W")
 
@@ -653,23 +659,19 @@ class TestReviewedCrowdControl:
         """R's fear is a kill trigger on minions and monsters, not the target."""
         text = cc_review.slot_text(cc_review.kit("Darius"), "R")
         assert "darius fears nearby minions and monsters for 3 seconds" in text
-        assert "R" not in darius.MODULE_CC
+        assert darius.MODULE_CC["R"] == "none"
 
-    def test_r_withholds_because_its_stack_term_repeats(self, darius_data):
-        """A two-part row is certifiable now; a repeated part is not.
-
-        R's second part hits once per Hemorrhage stack, and a part that
-        repeats is a schedule the cache gives no cadence for - the stacks
-        land together, which no ``count``-based part can state.
-        """
+    def test_r_prices_one_landing_plus_a_term_per_hemorrhage_stack(self, darius_data):
+        """R's second part hits once per Hemorrhage stack, and the stacks
+        land together, which no ``count``-based cadence can state."""
         base, per_stack = _abilities(darius_data)["R"]["parts"]
 
         assert base.count == 1
         assert per_stack.dot_stack_scaled is True
         assert per_stack.count == P_BLEED_MAX_STACKS
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Darius") == ["R"]
+    def test_every_slot_is_reviewed_so_the_fight_certifies(self):
+        assert cc_review.unreviewed_ability_slots("Darius") == []
         coverage = cc_review.fimbulwinter_coverage("Darius")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []

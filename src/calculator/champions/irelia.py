@@ -139,7 +139,7 @@ SLOTS = {
 # converging blades deal magic damage "and stun[] them for 0.75 seconds".
 # R differs per pass, so its kinds ride its parts above.  P is the
 # attack-speed/on-hit passive and authors no damage part.
-MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "R": CC_PER_PART}
+MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "R": CC_PER_PART, "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Irelia", cc_kinds=MODULE_CC)
 OPTIONS = [

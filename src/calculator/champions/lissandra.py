@@ -23,7 +23,7 @@ not have, so nothing but the boundary receipt could be priced anyway.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
     ability_name,
@@ -120,7 +120,7 @@ SLOTS = {
 # 1.5-second stun is not the hit the module counts (ASSUMPTIONS above).
 # P's kill-boundary row prices nothing and authors no part, so it
 # declares no kind.
-MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow"}
+MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow", "P": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 

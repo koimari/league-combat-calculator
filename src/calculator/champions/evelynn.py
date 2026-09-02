@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import ControlEvent, ControlScope, DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
@@ -157,7 +157,7 @@ SLOTS = {
 # cone all deal damage and apply nothing else.  W is absent rather than
 # "none": Allure's expunge does slow and charm, but W emits no damage row,
 # so the answer would have no event to ride.
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Evelynn", cc_kinds=MODULE_CC)
 

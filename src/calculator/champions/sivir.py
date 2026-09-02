@@ -316,7 +316,7 @@ def _on_the_hunt(packet_r):
 # once per pass" out and back with no cached return cadence, and Ricochet's
 # bounces are counted per empowered swing but carry no authored sub-cast
 # timing.  This kit stays coarse until those rows carry timing.
-MODULE_CC = {"P": "none", "E": "none", "R": "none"}
+MODULE_CC = {"P": "none", "E": "none", "R": "none", "Q": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sivir",

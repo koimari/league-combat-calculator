@@ -514,10 +514,48 @@ def _validate_entry_keys(
     _VALIDATED_ENTRY_SHAPES.add(shape)
 
 
+def part_reaches_event_ledger(entry: Mapping[str, Any], part: Any) -> bool:
+    """Whether one part's hits become authored events the ledger can read.
+
+    The parse-side reading of the emission gate in
+    ``damage._evaluate_cast_parts``, clause for clause: a part with one
+    certified landing, an authored instant, a live target-health formula,
+    module-authored events, an empowered swing behind it, a sourced control
+    interval of its own or a skillshot's own event lands somewhere a
+    control marker can be read; anything else is priced into the row's
+    aggregate and carries no marker anywhere. Two readers share it — the
+    contract below, and the roster census that counts the declarations no
+    row can carry.
+    """
+    parts = entry["parts"]
+    return bool(
+        (
+            entry.get("event_order_certified") == "single_hit"
+            and len(parts) == 1
+            and part.count <= 1
+        )
+        or (
+            part.time_offset is not None
+            and (part.count <= 1 or part.hit_interval is not None)
+        )
+        or any(other.hp_scaled_damage is not None for other in parts)
+        or isinstance(entry.get("damage_events"), list)
+        # An empowering cast is delivered BY the basic attacks it forces, so
+        # its row's events are authored from the swings the fight engine
+        # reattributes to it (``damage._author_empowered_swing_events``) and
+        # the marker on them is this entry's own declaration, read back by
+        # ``damage._declared_cc_marker``.
+        or entry.get("empowers_next_auto")
+        or part.cc_duration > 0.0
+        or part.skillshot
+    )
+
+
 def _validate_cc_event_contract(
     champion_name: str,
     result_key: str,
     entry: Mapping[str, Any],
+    declared: str | None = None,
 ) -> None:
     """A part-authored ``cc_kind`` must be a known kind that reaches the
     event ledger.
@@ -526,14 +564,18 @@ def _validate_cc_event_contract(
     Everlasting) read the marker off authored damage events only. A marker
     on an entry the fight engine will aggregate coarsely — no single-hit
     certification, no authored ``time_offset``, no dynamic part, no
-    module-authored event list — silently never triggers anything, so it
-    is rejected here, at parse time, instead. Mirrors the emission gate in
-    ``damage._evaluate_cast_parts``. ``cc_kind="none"`` is held to the same
-    standard: a reviewed *absence* of control is only worth declaring where
-    the ledger can see it, because that is where the control token is
-    cleared — a "none" that never reaches an event proves nothing about the
-    fight it was supposed to certify, and would read as a reviewed slot
-    while leaving the coarse row it rides on unreviewed.
+    module-authored event list — silently never triggers anything, so a
+    module that wrote one onto a part it picked is stopped here, at parse
+    time.
+
+    ``declared`` is the module's ``MODULE_CC`` value for this slot, and a
+    part carrying it is NOT part-authored: the declaration states the kit's
+    fact for the whole slot and :func:`_apply_module_cc` stamps it on every
+    part, coarse ones included. Where the row cannot carry it the marker
+    lands nowhere, which is a fact about the row rather than a mistake
+    about the kit — refusing it here would make the slot undeclarable, and
+    ``MODULE_CC`` names every slot the module emits. The roster census
+    (``tests/test_module_cc_census.py``) counts and names those slots.
     """
     parts = entry.get("parts") or ()
     for part in parts:
@@ -558,28 +600,12 @@ def _validate_cc_event_contract(
                 f"{part.cc_kind!r} (known kinds are defined by "
                 "ability_spec.CC_KIND_VOCABULARY)"
             )
-    certified = entry.get("event_order_certified") == "single_hit"
-    has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
-    has_authored_events = isinstance(entry.get("damage_events"), list)
-    # An empowering cast is delivered BY the basic attacks it forces, so
-    # its row's events are authored from the swings the fight engine
-    # reattributes to it (``damage._author_empowered_swing_events``) and
-    # the marker on them is this entry's own declaration, read back by
-    # ``damage._declared_cc_marker``. That producer is the carrier, so the
-    # part-timing tests below are the wrong question to ask of this row.
-    empowers = bool(entry.get("empowers_next_auto"))
+    if declared and declared != CC_PER_PART:
+        # A constant declaration is stamped on every part of the slot,
+        # coarse ones included, so no part here authored anything.
+        return
     for part in cc_parts:
-        emits = (
-            (certified and len(parts) == 1 and part.count <= 1)
-            or (
-                part.time_offset is not None
-                and (part.count <= 1 or part.hit_interval is not None)
-            )
-            or has_dynamic_part
-            or has_authored_events
-            or empowers
-        )
-        if not emits:
+        if not part_reaches_event_ledger(entry, part):
             raise ValueError(
                 f"{champion_name} entry {result_key!r}: cc_kind "
                 f"{part.cc_kind!r} would never reach the event ledger — "
@@ -604,29 +630,6 @@ _EMPOWER_MARKER_ZERO = ZeroPolicy(
 )
 
 
-# The channels that ride the holder's basic attacks as a *rate* rather
-# than as a cast: an entry declaring one is priced per swing, forever, in
-# every branch it has (Corki's Hextech Munitions, Gangplank's Trial by
-# Fire).  Its damage lands on the auto stream, which is never an ability
-# event, so a crowd-control declaration on such a row can never be read.
-#
-# An ``on_hit`` payload is deliberately NOT here: it belongs to a cast
-# that may or may not force a swing depending on the fight's options
-# (Kassadin's W does both), so an on-hit row with no swing this parse is
-# simply a row that prices nothing — the quiet answer below, not a
-# contradiction.
-_SWING_RIDER_CHANNELS = frozenset(
-    {
-        "basic_attack_true_ratio",
-        "spellblade_true_ratio",
-        "spellblade_bonus_true_ratio",
-        "auto_attack_override",
-        "auto_attack_conversion",
-        "double_shot",
-    }
-)
-
-
 def _empower_marker_part(
     entry: dict[str, Any],
     kind: str,
@@ -635,34 +638,17 @@ def _empower_marker_part(
 ) -> DamagePart | None:
     """The carrier for a declaration on a slot that emits no damage part.
 
-    ``ability_on_hit_entry`` and the empower shells return ``parts = ()``:
-    their bonus rides the on-hit stream and the row's own damage is the
-    consumed swing ``damage._reattribute_empowered_swings`` moves onto it.
-    Those swings DO author events, and ``damage._declared_cc_marker`` reads
-    the kind to stamp on them off this entry's parts — so a partless shell
-    is exactly the case where a declaration would look landed and reach
-    nothing.  One zero-damage part gives the marker somewhere to live.
+    The empower shells return ``parts = ()`` and their damage is the swing
+    ``damage._reattribute_empowered_swings`` moves onto the row, so one
+    zero-damage part is what gives the marker somewhere to live for
+    ``damage._declared_cc_marker`` to read.
 
-    A partless slot that prices itself per swing
-    (:data:`_SWING_RIDER_CHANNELS`) has no cast in any branch, so its
-    declaration can never be read and is refused rather than stamped.
-
-    ``None`` is the third answer, and the only quiet one: an entry with no
-    parts and no swing rider prices nothing this parse — an option emptied
-    it (Corki's barrage at zero charges, Kassadin's unempowered W) or the
-    slot is pure state.  A row with no damage authors no event for
-    anything to miss.
+    ``None`` is the quiet answer: a row with no parts and no empower
+    prices nothing an ability event could carry this parse, and
+    ``tests/test_module_cc_census.py`` counts the slots it lands on.
     """
     if not entry.get("empowers_next_auto"):
-        channels = sorted(_SWING_RIDER_CHANNELS & set(entry))
-        if not channels:
-            return None
-        raise ValueError(
-            f"{champion_name} slot {slot!r}: MODULE_CC declares {kind!r} but "
-            f"the slot prices itself per basic attack through {channels} and "
-            "emits no damage part — that damage never becomes an ability "
-            "event, so the declaration would reach nothing"
-        )
+        return None
     damage_type = str(entry.get("damage_type", ""))
     if damage_type not in part_damage_types():
         raise ValueError(
@@ -1014,6 +1000,7 @@ def build_parser(
             entry = results.get(_result_key(slot))
             if entry is not None:
                 _apply_module_cc(entry, declared_cc, champion_name, slot)
+        declared_by_key = {_result_key(s): k for s, k in declared_cc_kinds.items()}
         for result_key, entry in results.items():
             _resolve_pending_control_events(champion_name, result_key, entry)
             _certify_shared_instant(champion_name, result_key, entry)
@@ -1021,7 +1008,9 @@ def build_parser(
             _refuse_undeclared_part_cc(
                 champion_name, result_key, entry, declared_result_keys
             )
-            _validate_cc_event_contract(champion_name, result_key, entry)
+            _validate_cc_event_contract(
+                champion_name, result_key, entry, declared_by_key.get(result_key)
+            )
 
         return results
 

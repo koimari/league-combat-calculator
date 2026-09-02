@@ -276,12 +276,19 @@ SLOTS["W"] = _repudiation
 # seconds", so the stun is what the damaged target is taking as the damage
 # arrives, and that landing is now authored (see ``_public_execution``).
 #
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan: its
+# E slows, and one row carries the declaration for both spins: the
 # row is the cached "Total Physical Damage" of both spins, each of which
 # "slow[s] them by 99% decaying over 1 second", and the cache times the
 # second spin only as "at the end of the dash" — a dash whose length it
 # never gives.  P is an empowered-auto rider with no boundary of its own.
-MODULE_CC = {"Q": "none", "Q2": "none", "W": "none", "R": "stun"}
+MODULE_CC = {
+    "Q": "none",
+    "Q2": "none",
+    "W": "none",
+    "R": "stun",
+    "P": "none",
+    "E": "slow",
+}
 
 parse_abilities = build_parser(SLOTS, "Ambessa", cc_kinds=MODULE_CC)
 

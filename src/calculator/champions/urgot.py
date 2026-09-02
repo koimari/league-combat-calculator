@@ -135,7 +135,7 @@ _echoing_flames_proc = proc_damage(
 # target "during which they are revealed and slowed by 0% : 75%"; the
 # Mercy recast's suppression and post-execution fear ride the execution
 # branch this row does not price.  P is an attack-stream shotgun rider.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "immobilize", "R": "slow"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "immobilize", "R": "slow", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Urgot",

@@ -22,7 +22,13 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Trundle")
         # A cc-only slot states its kind in MODULE_CC like any other and
         # publishes the sourced interval as a ControlEvent (CF8).
-        assert trundle.MODULE_CC == {"Q": "slow", "E": "slow", "R": "none"}
+        assert trundle.MODULE_CC == {
+            "Q": "slow",
+            "E": "slow",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         assert "slow the target by 75% for 0.1 seconds" in cc_review.slot_text(
             data, "Q"
         )

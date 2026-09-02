@@ -219,7 +219,7 @@ SLOTS = {
 # Q (Snip Snip!) only cuts — its damage clauses carry no control word —
 # and the cached entry times every snip of the cast, so the row now says
 # so on hits the event ledger can see.
-MODULE_CC = {"E": "none", "Q": "none", "R": "slow"}
+MODULE_CC = {"E": "none", "Q": "none", "R": "slow", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Gwen", cc_kinds=MODULE_CC)
 

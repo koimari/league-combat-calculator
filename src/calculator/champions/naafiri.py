@@ -426,7 +426,7 @@ def _eviscerate(
 # and slows the target by 99% for 0.25 seconds" — the slow lands on
 # Naafiri's own arrival hit.  P's Packmates land with her and apply
 # nothing of their own; W authors no damage part.
-MODULE_CC = {"P": "none", "Q": "none", "E": "none", "R": "slow"}
+MODULE_CC = {"P": "none", "Q": "none", "E": "none", "R": "slow", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Naafiri",

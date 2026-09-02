@@ -188,7 +188,7 @@ _guerrilla_warfare = with_detail(
 # 4 seconds" — with no control clause.  R (Noxious Trap) detonates
 # "inflicting poison to nearby enemies and slowing them for 4 seconds".
 # W (Move Quick) is Teemo's own movement speed and authors no damage.
-MODULE_CC = {"Q": "blind", "E": "none", "R": "slow"}
+MODULE_CC = {"Q": "blind", "E": "none", "R": "slow", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Teemo",

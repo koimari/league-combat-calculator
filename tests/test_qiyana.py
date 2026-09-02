@@ -30,7 +30,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Qiyana")
-        assert qiyana.MODULE_CC == {"Q": CC_PER_PART, "E": "none", "R": "stun"}
+        assert qiyana.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "E": "none",
+            "R": "stun",
+            "P": "none",
+            "W": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # R's windblast knocks back but damages nobody; the priced row is
         # the shockwave, which damages and stuns.
@@ -38,8 +44,8 @@ class TestReviewedCrowdControl:
         assert "knocks back enemies hit by 375 units" in r_text
         assert "dealing physical damage to enemies hit, stunning them" in r_text
         # P and W are absent: both are on-hit riders on the auto stream.
-        assert "P" not in qiyana.MODULE_CC
-        assert "W" not in qiyana.MODULE_CC
+        assert qiyana.MODULE_CC["P"] == "none"
+        assert qiyana.MODULE_CC["W"] == "none"
 
     def test_q_answers_per_element_and_leaves_the_grouped_index_unreviewed(self):
         q_text = cc_review.slot_text(cc_review.kit("Qiyana"), "Q")

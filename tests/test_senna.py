@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Senna")
-        assert senna.MODULE_CC == {"Q": "slow", "W": "root", "R": "none"}
+        assert senna.MODULE_CC == {
+            "Q": "slow",
+            "W": "root",
+            "R": "none",
+            "P": "none",
+            "E": "none",
+        }
         assert "deals physical damage to enemies hit and slows them" in (
             cc_review.slot_text(data, "Q")
         )
@@ -24,8 +30,8 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
         # E (camouflage) deals no damage and P's mark consume rides the
         # auto stream, so neither carries an ability event of its own.
-        assert "E" not in senna.MODULE_CC
-        assert "P" not in senna.MODULE_CC
+        assert senna.MODULE_CC["E"] == "none"
+        assert senna.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Senna") == []

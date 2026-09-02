@@ -527,7 +527,7 @@ SLOTS = {
 # knockback on the part itself (see ``_chilling_scream``), because that
 # kind belongs to the full charge this module prices rather than to the
 # slot.  W_frenzy and P emit no ability damage.
-MODULE_CC = {"Q": "stun", "W": "none", "E": "knockback", "R": "none"}
+MODULE_CC = {"Q": "stun", "W": "none", "E": "knockback", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 

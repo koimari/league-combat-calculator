@@ -154,14 +154,14 @@ _highlander.phase = BUFF
 # controls the enemies it strikes (Master Yi is the one made unable to
 # act).  P is an on-hit rider, W a self-channel, R a self-buff.
 #
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan,
-# and the reason is not timing: Wuju Style "empowers his basic attacks
+# E reviews to no control, and the row it rides is not a cast: Wuju Style
+# "empowers his basic attacks
 # within the next 5 seconds to deal bonus true damage on-hit", but the
 # reviewed packet prices it as one direct hit on the E row.  Certifying
 # that hit at the cast boundary would state an instant the ability does
 # not have — the rider lands on a later basic attack — so the row needs
 # to move onto the on-hit stream before it can carry any marker.
-MODULE_CC = {"Q": "none"}
+MODULE_CC = {"Q": "none", "P": "none", "W": "none", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Master Yi",

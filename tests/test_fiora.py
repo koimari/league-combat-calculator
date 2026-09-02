@@ -13,7 +13,13 @@ class TestReviewedCrowdControl:
     """Lunge controls nothing, Riposte's shock slows, Bladework withholds."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert fiora.MODULE_CC == {"Q": "none", "W": "slow", "E": "slow"}
+        assert fiora.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "slow",
+            "P": "none",
+            "R": "none",
+        }
         assert fiora.parse_abilities.cc_kinds == fiora.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

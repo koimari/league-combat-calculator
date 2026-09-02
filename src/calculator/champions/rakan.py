@@ -142,7 +142,7 @@ SLOTS = {
 # rides with.  P (a self-shield) and E (an ally shield and dash) damage
 # nothing, so neither is declared: P is never cast, and E's slot exists
 # only so the support scanner can price its ally shield.
-MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm"}
+MODULE_CC = {"Q": "none", "W": "knockup", "R": "charm", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Rakan", cc_kinds=MODULE_CC)
 

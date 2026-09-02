@@ -132,7 +132,7 @@ SOURCES = load_champion_sources("Kayn")
 # physical damage to the target and dashes out from their body" with
 # none either.  W's answer depends on the form and is authored on its
 # part (see ``_blades_reach``).  P and E author no damage part.
-MODULE_CC = {"Q": "none", "W": CC_PER_PART, "R": "none"}
+MODULE_CC = {"Q": "none", "W": CC_PER_PART, "R": "none", "P": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kayn", cc_kinds=MODULE_CC)
 

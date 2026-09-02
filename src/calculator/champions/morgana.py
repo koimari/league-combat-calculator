@@ -166,7 +166,7 @@ PACKET_SHA256 = "5cc8fcb312de2d1d31c8b63157dac32a85424fa0decca7a8f1ac4ac94d689a9
 # them for a duration"; W's desecrated soil only damages.  R applies two
 # controls, one per part, and declares them on its parts
 # (``_soul_shackles``).  E shields an ally and P heals Morgana.
-MODULE_CC = {"Q": "root", "W": "none", "R": CC_PER_PART}
+MODULE_CC = {"Q": "root", "W": "none", "R": CC_PER_PART, "P": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Morgana",

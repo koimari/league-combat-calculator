@@ -261,16 +261,23 @@ class TestFullCombo:
 
 
 class TestReviewedCrowdControl:
-    """Anivia's crowd-control review, and the slot that still withholds.
+    """Anivia's crowd-control review, and the two slots that withhold.
 
-    R's blizzard ticks ride their cached 0.5-second beat and each slows.
-    Q's row is the cached 'Total Magic Damage' of the slowing pass-through
-    and the stunning shatter, with no cached time for the shatter.
+    R's blizzard ticks ride their cached 0.5-second beat and each slows,
+    but stating the kind on them is the ``enhanced_consume`` ruling that
+    has its own slice.  Q's row is the cached 'Total Magic Damage' of the
+    slowing pass-through and the stunning shatter, with no cached time for
+    the shatter.  Both name themselves per-part and neither answers.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Anivia")
-        assert anivia.MODULE_CC == {"E": "none"}
+        assert anivia.MODULE_CC == {
+            "E": "none",
+            "Q": "per_part",
+            "W": "knockback",
+            "R": "per_part",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 
     def test_glacial_storms_ticks_ride_their_cached_beat(
@@ -288,21 +295,22 @@ class TestReviewedCrowdControl:
         assert growing.count == 3
         assert (empowered.time_offset, empowered.hit_interval) == (1.5, 0.5)
 
-    def test_the_blizzards_slow_stays_undeclared_by_decision_not_by_source(
+    def test_the_blizzards_slow_is_cached_and_still_unstated(
         self, anivia_data, parse_at
     ):
-        """R's slow is cached and unambiguous; declaring it answers H6.
+        """R's slow is cached and unambiguous, and no tick part carries it.
 
-        A ``cc_kind`` on these ticks makes Anivia the roster's first
-        ``enhanced_consume`` producer (R's chill feeding E's "Enhanced
-        Damage"), which empties the cast-dependency audit's dated
-        acknowledged-gap list - a ruling reserved for its own slice.
+        Stating it makes Anivia the roster's first ``enhanced_consume``
+        producer, R's chill feeding E's "Enhanced Damage", which is the
+        cast-dependency ruling reserved to its own slice.
         """
+        text = cc_review.slot_text(cc_review.kit("Anivia"), "R")
+        assert "slowing them for 1 second" in text
         _, abilities = parse_at(anivia_data, 18)
-        assert all(part.cc_kind is None for part in abilities["R"]["parts"])
+        assert {part.cc_kind for part in abilities["R"]["parts"]} == {None}
 
     def test_flash_frosts_shatter_has_no_cached_time(self):
-        """The one slot that still withholds, and the sentence that proves it.
+        """The other withholding slot, and the sentence that proves it.
 
         The shatter's stun IS sourced ("Stun Duration"), but Q's row is
         the pass-through and the shatter summed into one "Total Magic

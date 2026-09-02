@@ -122,7 +122,7 @@ PACKET_SHA256 = "7a3d30a61866ada61c6491cf4aecec11630184dd05c83eba0b177309e54647f
 # damage to enemies hit" and its recast converges them — no control
 # either.  P's bleed is an attack-stream rider with its own authored
 # events, and E (Assassin's Path) is terrain parkour with no damage.
-MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "R": "none", "P": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Talon",

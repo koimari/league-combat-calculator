@@ -28,6 +28,7 @@ class TestReviewedCrowdControl:
             "Q": CC_PER_PART,
             "W": "immobilize",
             "R": "suppression",
+            "P": "none",
         }
         # Abyssal Dive lands two immobilize kinds at once, so the reviewed
         # kind is the un-narrowed one.

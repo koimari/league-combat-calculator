@@ -24,14 +24,20 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Veigar")
-        assert veigar.MODULE_CC == {"Q": "none", "W": "none", "R": "none"}
+        assert veigar.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "R": "none",
+            "P": "none",
+            "E": "stun",
+        }
         assert veigar.parse_abilities.cc_kinds == veigar.MODULE_CC
         for slot in ("Q", "W", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
 
     def test_the_cage_carries_the_kits_stun_and_no_damage(self):
         data = cc_review.kit("Veigar")
-        assert "E" not in veigar.MODULE_CC
+        assert veigar.MODULE_CC["E"] == "stun"
         assert "stunned for a duration" in cc_review.slot_text(data, "E")
         assert get_champion_module_contract("Veigar").coverage["E"] == "no_damage"
 

@@ -18,6 +18,8 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "none",
             "R": "immobilize",
+            "P": "none",
+            "Q": "none",
         }
         assert "slows them by 40% for 2 seconds" in cc_review.slot_text(data, "W")
         # E's only control word is a reference to R's knock back, not to

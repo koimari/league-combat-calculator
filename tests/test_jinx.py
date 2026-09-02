@@ -26,7 +26,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import jinx
 
-        assert jinx.MODULE_CC == {"W": "slow", "E": "root", "R": "none"}
+        assert jinx.MODULE_CC == {
+            "W": "slow",
+            "E": "root",
+            "R": "none",
+            "P": "none",
+            "Q": "none",
+        }
         assert jinx.parse_abilities.cc_kinds == jinx.MODULE_CC
 
     def test_the_declared_kinds_are_the_ones_the_text_gives(self):
@@ -40,7 +46,13 @@ class TestReviewedCrowdControl:
             assert _CC.control_hits(slot) == list(expected), slot
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _CC.kinds() == {"W": ["slow"], "E": ["root"], "R": ["none"]}
+        """P is a takedown-stack buff row with no part to carry its "none"."""
+        assert _CC.kinds() == {
+            "Q": ["none"],
+            "W": ["slow"],
+            "E": ["root"],
+            "R": ["none"],
+        }
 
     def test_flame_chompers_land_on_their_sourced_arming_time(self):
         """The Chomper cannot explode before it arms, 0.5 s after the cast."""

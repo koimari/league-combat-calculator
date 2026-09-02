@@ -170,7 +170,7 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 # nearby enemies).  E creates a mist trail and P is the possession
 # mechanic; neither authors a damage part, so neither can carry a kind —
 # E's attack-speed grant is a stat row, and P prices nothing at all.
-MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
+MODULE_CC = {"Q": "none", "W": "stun", "R": "slow", "P": "none", "E": "none"}
 
 
 @ranked_slot

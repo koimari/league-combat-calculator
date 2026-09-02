@@ -329,11 +329,16 @@ class TestModuleCcDeclaration:
         return parse_abilities
 
     @staticmethod
-    def _module(**overrides):
-        """A minimal module object that satisfies the rest of the contract."""
+    def _module(*, wire=True, **overrides):
+        """A minimal module object that satisfies the rest of the contract.
+
+        Its declaration is the total one the contract demands, every slot
+        it emits reviewed as no control, and its parser carries the same
+        map. ``wire=False`` is the module that declares and hands nothing
+        to the engine.
+        """
         module = ModuleType("fake_champion")
         module.parse_abilities = lambda *args, **kwargs: {}
-        module.MODULE_CC = {}
         module.SLOTS = {"Q": lambda ctx: None, "W": lambda ctx: None}
         module.OPTIONS = []
         module.ASSUMPTIONS = ["one"]
@@ -341,13 +346,24 @@ class TestModuleCcDeclaration:
         module.MODULE_COVERAGE = dict.fromkeys("PQWER", "out_of_scope")
         for key, value in overrides.items():
             setattr(module, key, value)
+        if "MODULE_CC" not in overrides:
+            module.MODULE_CC = dict.fromkeys(module.SLOTS, "none")
+        if wire and getattr(module.parse_abilities, "cc_kinds", None) is None:
+            module.parse_abilities.cc_kinds = module.MODULE_CC
         return module
 
     def _contract(self, **overrides):
         return contract_from_module("Fake", "fake_champion", self._module(**overrides))
 
-    def test_an_empty_declaration_reviews_nothing(self):
-        assert self._contract().cc_kinds == {}
+    def test_a_declaration_short_of_a_slot_is_refused(self):
+        """Totality is the point: a slot left out reads to every consumer
+        exactly like the reviewed "none" next to it, so the map names every
+        slot the module emits or registration stops."""
+        with pytest.raises(ChampionModuleContractError, match="names no kind"):
+            self._contract(
+                MODULE_CC={"Q": "none"},
+                parse_abilities=self._wired_parser({"Q": "none"}),
+            )
 
     def test_a_module_with_no_declaration_at_all_is_refused(self):
         """Absence by omission and absence by review read the same from the
@@ -384,7 +400,7 @@ class TestModuleCcDeclaration:
         with pytest.raises(
             ChampionModuleContractError, match=r"build_parser\(\.\.\., cc_kinds"
         ):
-            self._contract(MODULE_CC={"Q": "none"})
+            self._contract(wire=False)
 
     def test_silence_keeps_the_one_cast_ultimate_rule(self):
         """CF18: ``ULTIMATE_RECASTS`` is opt-in, and its absence is the
@@ -414,7 +430,7 @@ class TestModuleCcDeclaration:
             ChampionModuleContractError, match=r"build_packet_module\(\.\.\., cc_kinds"
         ):
             self._contract(
-                MODULE_CC={"Q": "none"},
+                wire=False,
                 parse_abilities=TestPacketPinCarriers._stamped_parser(),
                 PACKET_SHA256=TestPacketPinCarriers.DIGEST,
             )
@@ -434,12 +450,13 @@ class TestModuleCcDeclaration:
         A pilot's declaration grows as the rest of its kit is reviewed, so
         what is pinned here is the fact each migration established — the
         kind, on the slot the wave read it off — not the size of the dict
-        that has since grown around it.  Corki's P dropped out: Hextech
-        Munitions delivers on the auto stream, so its row authors no
-        ability event and the engine refuses a declaration there.
+        that has since grown around it.  Corki's P states the same reviewed
+        absence as the rest and rides nothing: Hextech Munitions delivers
+        on the auto stream, so its row authors no ability event for a
+        marker to sit on.
         """
         assert get_champion_module_contract("Corki").cc_kinds == dict.fromkeys(
-            ("Q", "W", "E", "R"), "none"
+            ("P", "Q", "W", "E", "R"), "none"
         )
         for name, slot, kind in (
             ("Syndra", "E", "stun"),

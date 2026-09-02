@@ -21,7 +21,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Xayah")
-        assert xayah.MODULE_CC == {"Q": "none", "W": "none", "R": "none"}
+        assert xayah.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "R": "none",
+            "P": "none",
+            "E": "per_part",
+        }
         assert xayah.parse_abilities.cc_kinds == xayah.MODULE_CC
         for slot in ("Q", "W", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == [], slot
@@ -29,7 +35,7 @@ class TestReviewedCrowdControl:
     def test_bladecaller_withholds_on_its_aggregated_feather_row(self):
         """E's root is real, and its row has no per-feather timing."""
         data = cc_review.kit("Xayah")
-        assert "E" not in xayah.MODULE_CC
+        assert xayah.MODULE_CC["E"] == "per_part"
         assert "rooted for 1.25 seconds" in cc_review.slot_text(data, "E")
         parsed = parse_champion_abilities(
             data, 18, 0.0, {"Q": 5, "W": 5, "E": 5, "R": 3}

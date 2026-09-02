@@ -20,7 +20,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Wukong")
-        assert wukong.MODULE_CC == {"Q": "none", "E": "none", "R": "knockup"}
+        assert wukong.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "knockup",
+            "P": "none",
+        }
         assert wukong.parse_abilities.cc_kinds == wukong.MODULE_CC
         assert "knock them up once for 0.6 seconds" in cc_review.slot_text(data, "R")
         # Q's only debuff is "armor reduction for 3 seconds" — a resistance
@@ -33,7 +38,7 @@ class TestReviewedCrowdControl:
     def test_the_unmodelled_slots_stay_absent(self):
         """W is the clone's pet timeline; P is the armor buff."""
         assert "W" not in wukong.MODULE_CC
-        assert "P" not in wukong.MODULE_CC
+        assert wukong.MODULE_CC["P"] == "none"
         assert get_champion_module_contract("Wukong").coverage["W"] == "out_of_scope"
 
     def test_every_ability_event_carries_the_review(self):

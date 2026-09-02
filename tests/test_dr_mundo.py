@@ -644,7 +644,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Dr. Mundo")
-        assert dr_mundo.MODULE_CC == {"Q": "slow", "W": "none", "E": "none"}
+        assert dr_mundo.MODULE_CC == {
+            "Q": "slow",
+            "W": "none",
+            "E": "none",
+            "R": "none",
+        }
         assert "slows them by 40% for 2 seconds" in cc_review.slot_text(data, "Q")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
 

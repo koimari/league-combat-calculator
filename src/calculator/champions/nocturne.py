@@ -111,7 +111,7 @@ _shroud_of_darkness.phase = BUFF
 # (the Graves W reading), and its damaging recast dash applies nothing.
 # W (spell shield) deals no damage, and P is absent because Umbra Blades is
 # an on-hit rider on the auto stream rather than an ability event.
-MODULE_CC = {"Q": "none", "E": "fear", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "fear", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nocturne",

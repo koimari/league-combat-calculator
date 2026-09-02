@@ -18,6 +18,8 @@ class TestReviewedCrowdControl:
             "Q": "immobilize",
             "E": "knockback",
             "R": "slow",
+            "P": "none",
+            "W": "none",
         }
         # Death Sentence stuns and renders airborne at once, so the
         # reviewed kind is the un-narrowed one.

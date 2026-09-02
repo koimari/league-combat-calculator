@@ -174,7 +174,7 @@ def _sweeping_blade(
 # here: its knock-up belongs to the Gathering Storm branch, so the kind is
 # authored per part in ``_steel_tempest``.  W raises a projectile wall and P
 # is the Flow/crit state row; neither authors a damage part.
-MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "knockup"}
+MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "knockup", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # R's slashes are one priced sweep over the knock-up's duration.

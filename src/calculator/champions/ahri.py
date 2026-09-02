@@ -186,7 +186,7 @@ MODULE_COVERAGE = coverage(no_damage="P")
 # scan.  Fox-Fire is two flame tiers (a second part of the same damage
 # type, hitting twice) and Spirit Rush is three dashes in one part: both
 # are schedules with unsourced cadence, which ``single_hit`` refuses.
-MODULE_CC = {"E": "immobilize", "Q": "none"}
+MODULE_CC = {"E": "immobilize", "Q": "none", "P": "none", "W": "none", "R": "none"}
 
 
 parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)

@@ -32,6 +32,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "stun",
             "R": CC_PER_PART,
+            "P": "none",
         }
         assert irelia.parse_abilities.cc_kinds == irelia.MODULE_CC
 

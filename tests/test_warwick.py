@@ -43,7 +43,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Warwick")
-        assert warwick.MODULE_CC == {"Q": "none", "R": "suppression"}
+        assert warwick.MODULE_CC == {
+            "Q": "none",
+            "R": "suppression",
+            "P": "none",
+            "W": "none",
+            "E": "per_part",
+        }
         assert warwick.parse_abilities.cc_kinds == warwick.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         r_text = cc_review.slot_text(data, "R")
@@ -59,8 +65,8 @@ class TestReviewedCrowdControl:
         review could reach.  W is a pure stat buff.
         """
         data = cc_review.kit("Warwick")
-        assert "W" not in warwick.MODULE_CC
-        assert "E" not in warwick.MODULE_CC
+        assert warwick.MODULE_CC["W"] == "none"
+        assert warwick.MODULE_CC["E"] == "per_part"
         assert get_champion_module_contract("Warwick").coverage["E"] == "modeled"
         assert "fearing nearby enemies for 1 second" in cc_review.slot_text(data, "E")
         assert row_review.parts("Warwick", "E") == ()

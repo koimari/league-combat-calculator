@@ -29,6 +29,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "fear",
+            "P": "none",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []

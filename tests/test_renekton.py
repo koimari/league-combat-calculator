@@ -21,12 +21,13 @@ class TestReviewedCrowdControl:
             "W": "stun",
             "E": "none",
             "R": "none",
+            "P": "none",
         }
         for slot in ("Q", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
         assert "stunning them for 0.75 seconds" in cc_review.slot_text(data, "W")
         # P is Fury bookkeeping with no damage row.
-        assert "P" not in renekton.MODULE_CC
+        assert renekton.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Renekton") == []

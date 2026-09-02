@@ -22,7 +22,7 @@ PACKET_SHA256 = "9da3638ceb40ffff52f60102f737c9576d5d5c13e67a3149499cf273105ff4f
 # Overload Damage", and the active's root, disarm and silence land on Ryze
 # and his own allies as they blink — no enemy control at all.  P only
 # raises Ryze's maximum mana.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Ryze",

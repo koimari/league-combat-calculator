@@ -18,7 +18,13 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Renata Glasc")
         # A cc-only slot states its kind in MODULE_CC like any other and
         # publishes the sourced interval as a ControlEvent (CF8).
-        assert renata_glasc.MODULE_CC == {"Q": "root", "E": "slow", "R": "berserk"}
+        assert renata_glasc.MODULE_CC == {
+            "Q": "root",
+            "E": "slow",
+            "R": "berserk",
+            "P": "none",
+            "W": "none",
+        }
         q_text = cc_review.slot_text(data, "Q")
         assert "deals magic damage to the first enemy hit and roots them" in q_text
         # The recast's stun lands on the enemies the thrown target passes
@@ -28,8 +34,8 @@ class TestReviewedCrowdControl:
         # W and R deal no damage; R's berserk is real control, published
         # as a sourced ControlEvent off the cached Berserk Duration row.
         # P is an on-hit mark on the autos.
-        assert "W" not in renata_glasc.MODULE_CC
-        assert "P" not in renata_glasc.MODULE_CC
+        assert renata_glasc.MODULE_CC["W"] == "none"
+        assert renata_glasc.MODULE_CC["P"] == "none"
         assert "become berserk for a duration" in cc_review.slot_text(data, "R")
 
     def test_every_ability_event_carries_the_review(self):

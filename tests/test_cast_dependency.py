@@ -643,13 +643,14 @@ def _champion_module(**attributes) -> ModuleType:
     """The smallest module ``contract_from_module`` accepts, plus overrides."""
     module = ModuleType(attributes.pop("__name__", "synthetic_champion"))
     module.parse_abilities = lambda *args, **kwargs: {}
-    # Every module states its reviewed crowd control at MODULE_CC, wired
-    # into the parser; a synthetic kit reviews nothing and says so.
-    module.MODULE_CC = {}
-    module.parse_abilities.cc_kinds = {}
     module.SLOTS = {
         slot: (lambda ctx: None) for slot in ("P", "Q", "Q2", "W", "E", "R")
     }
+    # Every module states its reviewed crowd control at MODULE_CC, one
+    # entry per slot it emits, wired into the parser; a synthetic kit
+    # reviews every slot as no control and says so.
+    module.MODULE_CC = dict.fromkeys(module.SLOTS, "none")
+    module.parse_abilities.cc_kinds = module.MODULE_CC
     module.OPTIONS = []
     module.ASSUMPTIONS = ["A synthetic module for the contract gate."]
     module.SOURCES = [{"label": "synthetic", "url": SOURCE}]
@@ -711,6 +712,8 @@ class TestTheContractCarriesDeclarations:
         """
         module = _champion_module(CAST_ORDER=["Q", "Q2_absent", "W"])
         module.SLOTS = {slot: (lambda ctx: None) for slot in ("P", "Q", "W", "E", "R")}
+        module.MODULE_CC = dict.fromkeys(module.SLOTS, "none")
+        module.parse_abilities.cc_kinds = module.MODULE_CC
         contract = contract_from_module("Synthetic", "synthetic", module)
         assert contract.cast_dependencies == ()
 

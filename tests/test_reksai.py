@@ -23,6 +23,7 @@ class TestReviewedCrowdControl:
             "W": "knockup",
             "E": "none",
             "R": "none",
+            "P": "none",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "knock them up for 1 second" in cc_review.slot_text(data, "W")
@@ -33,7 +34,7 @@ class TestReviewedCrowdControl:
         assert "cannot enter a tunnel while immobilized" in e_text
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
         # P is Fury generation and healing, with no damage row.
-        assert "P" not in reksai.MODULE_CC
+        assert reksai.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Rek'Sai") == []

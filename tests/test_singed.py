@@ -338,7 +338,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Singed")
-        assert singed.MODULE_CC == {"Q": "none", "E": "airborne"}
+        assert singed.MODULE_CC == {
+            "Q": "none",
+            "E": "airborne",
+            "P": "none",
+            "W": "slow",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # Fling throws the target; the cached text names the throw only as
         # a displacement, so the reviewed kind is the un-narrowed airborne

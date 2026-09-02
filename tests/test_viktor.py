@@ -27,6 +27,7 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "none",
             "R": "none",
+            "P": "none",
         }
         assert viktor.parse_abilities.cc_kinds == viktor.MODULE_CC
         for slot in ("Q", "E", "R"):

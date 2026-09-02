@@ -823,16 +823,19 @@ class TestStatsBonusAttackSpeed:
 
 
 class TestReviewedCrowdControl:
-    """Bel'Veth's reviewed crowd control, and the slots that still withhold.
-
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    """
+    """Bel'Veth's reviewed crowd control, slot by slot.  Fimbulwinter's
+    Everlasting reads the marker off authored events, so a packet that
+    never says forces the whole timed fight into coarse ordering."""
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Bel'Veth")
-        assert belveth.MODULE_CC == {"W": "knockup", "E": "none", "R": "slow"}
+        assert belveth.MODULE_CC == {
+            "W": "knockup",
+            "E": "none",
+            "R": "slow",
+            "P": "none",
+            "Q": "none",
+        }
         w_text = cc_review.slot_text(data, "W")
         assert "knocks them up for a duration" in w_text
         assert "slows them by 30% for 2 seconds" in w_text
@@ -854,13 +857,9 @@ class TestReviewedCrowdControl:
         assert part.time_offset == 0.0
         assert part.cc_kind == "none"
 
-    def test_void_surge_has_no_cached_spacing(self):
-        """The one slot that still withholds, and the sentence that proves it.
-
-        Q is control-free in the cache, but its row is the four cardinal
-        dashes in one part and the only spacing the cache offers is a
-        cooldown it never names.
-        """
+    def test_void_surge_reviews_to_none_on_one_coarse_row(self):
+        """Q is control-free in the cache, and its row is the four cardinal
+        dashes spaced by a cooldown the cache never names."""
         data = cc_review.kit("Bel'Veth")
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert (
@@ -868,7 +867,7 @@ class TestReviewedCrowdControl:
             "off cooldown, and incurs a cooldown between casts."
             in cc_review.slot_text(data, "Q")
         )
-        assert cc_review.unreviewed_ability_slots("Bel'Veth") == ["Q"]
+        assert cc_review.unreviewed_ability_slots("Bel'Veth") == []
         coverage = cc_review.fimbulwinter_coverage("Bel'Veth")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []

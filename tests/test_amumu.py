@@ -339,6 +339,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "none",
             "R": "stun",
+            "P": "none",
         }
         assert amumu.parse_abilities.cc_kinds == amumu.MODULE_CC
 

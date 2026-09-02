@@ -315,7 +315,7 @@ def _bola_strike(
 # empowered basic attack's armour reduction rider, which the reviewed
 # packet prices as no enemy-damage of its own, and P is the Ferocity state
 # row.
-MODULE_CC = {"Q": "none", "W": "none", "E": CC_PER_PART}
+MODULE_CC = {"Q": "none", "W": "none", "E": CC_PER_PART, "P": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rengar",

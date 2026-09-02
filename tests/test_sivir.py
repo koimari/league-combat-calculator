@@ -1,12 +1,10 @@
-"""Sivir's crowd-control review: two control-free slots neither can carry.
+"""Sivir's crowd-control review: five slots, not one of them a control.
 
 A control-armed holder shield (Fimbulwinter's Everlasting) has to know
 whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.  Sivir's
-two damaging slots apply no control at all, but neither row is a hit the
-ledger can time, and a reviewed "none" that never reaches an event proves
-nothing about the fight it was supposed to certify — so the module
-declares nothing and this kit stays coarse.
+says makes the whole timed fight fall back to coarse ordering.  Sivir
+applies no control anywhere, so every slot declares "none" and the timed
+fight certifies — even on the two damaging rows the ledger cannot time.
 """
 
 from src.calculator.champions import sivir
@@ -14,13 +12,19 @@ from tests import cc_review
 
 
 class TestReviewedCrowdControl:
-    """Why Sivir withholds: timing, not an unread control."""
+    """A control-free kit, on two rows the ledger still cannot time."""
 
     def test_the_damaging_slots_are_control_free_in_the_cached_text(self):
         data = cc_review.kit("Sivir")
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
-        assert sivir.MODULE_CC == {"P": "none", "E": "none", "R": "none"}
+        assert sivir.MODULE_CC == {
+            "P": "none",
+            "E": "none",
+            "R": "none",
+            "Q": "none",
+            "W": "none",
+        }
         assert sivir.parse_abilities.cc_kinds == sivir.MODULE_CC
 
     def test_neither_row_is_a_hit_the_ledger_can_time(self):
@@ -43,8 +47,8 @@ class TestReviewedCrowdControl:
             "additional surrounding enemies" in cc_review.slot_text(data, "W")
         )
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Sivir") == ["Q", "W"]
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
+        assert cc_review.unreviewed_ability_slots("Sivir") == []
         coverage = cc_review.fimbulwinter_coverage("Sivir")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -1,12 +1,14 @@
-"""Kennen's crowd-control review: every slot withholds, and none for timing.
+"""Kennen's crowd-control review: the stun is the mark's, not a slot's.
 
 A control-armed holder shield (Fimbulwinter's Everlasting) has to know
 whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.  Kennen has
-no ``MODULE_CC`` because Mark of the Storm puts the stun on the target's
-stack count rather than on any one ability — the third application stuns,
-the first two do not, and every slot is capable of being either.  P's own
-row carries the walk that says which applications those were.
+says makes the whole timed fight fall back to coarse ordering.  Kennen's
+``MODULE_CC`` declares P's stun and leaves Q, W, E and R ``CC_PER_PART``,
+because Mark of the Storm puts the stun on the target's stack count rather
+than on any one ability: the third application stuns, the first two do
+not, and every slot is capable of being either.  No part of those four
+authors a kind, so they stay unreviewed and P's own row carries the walk
+that says which applications those were.
 """
 
 import copy
@@ -124,12 +126,18 @@ class TestMarkOfTheStormWalk:
 
 
 class TestReviewedCrowdControl:
-    """Why Kennen withholds: the stun belongs to the mark, not the slot."""
+    """Why the damaging slots withhold: the stun belongs to the mark."""
 
-    def test_the_kit_declares_nothing_because_the_mark_is_state(self):
+    def test_the_damaging_slots_declare_per_part_because_the_mark_is_state(self):
         passive = cc_review.slot_text(cc_review.kit("Kennen"), "P")
-        assert kennen.MODULE_CC == {}
-        assert kennen.parse_abilities.cc_kinds == {}
+        assert kennen.MODULE_CC == {
+            "P": "stun",
+            "Q": "per_part",
+            "W": "per_part",
+            "E": "per_part",
+            "R": "per_part",
+        }
+        assert kennen.parse_abilities.cc_kinds == kennen.MODULE_CC
         assert (
             "kennen's abilities apply a stack of mark of the storm to "
             "enemies hit for 6 seconds, refreshing on subsequent "

@@ -579,7 +579,7 @@ SLOTS = {
 # answer is a property of the branch and each variant authors its own
 # ``cc_kind`` on its own part above.  P and W are absent too: their rows
 # price no damage part for an event to carry a kind.
-MODULE_CC = {"Q": "none", "E": "none", "R": CC_PER_PART}
+MODULE_CC = {"Q": "none", "E": "none", "R": CC_PER_PART, "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Aurelion Sol", cc_kinds=MODULE_CC)
 

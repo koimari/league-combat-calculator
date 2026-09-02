@@ -131,7 +131,7 @@ def _furious_bite(
 # its "immobilized" wording is about Rek'Sai being unable to enter a
 # tunnel.  R "slashes at the target with her claws, dealing physical
 # damage".  P is Fury generation and healing, with no damage row.
-MODULE_CC = {"Q": "none", "W": "knockup", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "knockup", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rek'Sai",

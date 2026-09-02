@@ -35,7 +35,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yasuo")
-        assert yasuo.MODULE_CC == {"Q": CC_PER_PART, "E": "none", "R": "knockup"}
+        assert yasuo.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "E": "none",
+            "R": "knockup",
+            "P": "none",
+            "W": "none",
+        }
         assert yasuo.parse_abilities.cc_kinds == yasuo.MODULE_CC
         assert "knocks up all nearby airborne enemy champions" in cc_review.slot_text(
             data, "R"

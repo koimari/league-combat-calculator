@@ -295,7 +295,7 @@ SLOTS = {
 # control ("slowing them by 35% and crippling them"); it deals no damage,
 # so the answer rides its entry as a sourced ControlEvent rather than on
 # a part.  P (lifesteal) damages nothing and applies none.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Nasus", cc_kinds=MODULE_CC)
 

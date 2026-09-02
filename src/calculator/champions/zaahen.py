@@ -175,7 +175,7 @@ def _dreaded_return(ctx: SlotCtx) -> dict[str, Any] | None:
 # to the recast variant, so the kind is authored per part in
 # ``_darkin_glaive``.  P is the Determination stack buff and authors no
 # damage part.
-MODULE_CC = {"Q": CC_PER_PART, "W": "stun", "E": "none", "R": "none"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "stun", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zaahen",

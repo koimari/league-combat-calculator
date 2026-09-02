@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "immobilize",
+            "P": "root",
         }
         # Q and R each apply two immobilize kinds in one cast, which is
         # what the un-narrowed "immobilize" states.

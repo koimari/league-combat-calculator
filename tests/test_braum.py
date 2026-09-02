@@ -381,7 +381,13 @@ class TestReviewedCrowdControl:
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert braum.MODULE_CC == {"Q": "slow", "R": "knockup"}
+        assert braum.MODULE_CC == {
+            "Q": "slow",
+            "R": "knockup",
+            "P": "per_part",
+            "W": "none",
+            "E": "none",
+        }
         assert braum.parse_abilities.cc_kinds == braum.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

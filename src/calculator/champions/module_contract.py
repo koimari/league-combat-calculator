@@ -307,9 +307,16 @@ def _module_cc(
     ``MODULE_CC`` is the single declaration site for a kit's crowd-control
     facts (D-6): ``{slot: kind}`` with kinds from
     :data:`ability_spec.CC_KIND_VOCABULARY`, where ``"none"`` is a reviewed
-    *absence* of control and an **absent slot is unreviewed** — the two
-    are different answers and only the first one clears the Fimbulwinter /
-    Imperial Mandate control token.
+    *absence* of control.
+
+    The map is **total** over the champion slots the module emits: a slot
+    left out is not "no control", it is nobody's answer, and the two read
+    the same to every later reader — which is how a CC-bearing slot went
+    unreviewed while its module looked declared. Naming every slot makes
+    the absent case impossible rather than merely discouraged. Non-champion
+    channels a module also emits (Ambessa's ``Q2``, Amumu's ``curse``) are
+    optional: they are parts of a slot's cast, and the slot answers for
+    them.
 
     A slot the module does not emit is a declaration with no referent, and
     a kind outside the vocabulary is a typo that would author a no-op stun,
@@ -325,9 +332,10 @@ def _module_cc(
     since a packet module must never call ``build_parser`` itself.
 
     Raises:
-        ChampionModuleContractError: The declaration is malformed, names a
-            slot the module does not emit, uses an unknown kind, or
-            disagrees with what the module wired into its parser.
+        ChampionModuleContractError: The declaration is malformed, leaves an
+            emitted champion slot unnamed, names a slot the module does not
+            emit, uses an unknown kind, or disagrees with what the module
+            wired into its parser.
     """
     wiring = (
         "build_packet_module"
@@ -338,9 +346,8 @@ def _module_cc(
     if declared is None:
         raise ChampionModuleContractError(
             f"{module.__name__} declares no MODULE_CC — every module states "
-            "its reviewed crowd control at that one name, and a kit with "
-            "nothing slot-level to say states it as an empty dict with the "
-            "reason above it"
+            "its reviewed crowd control at that one name, one entry for "
+            "every champion slot it emits"
         )
     if not isinstance(declared, dict):
         raise ChampionModuleContractError(
@@ -375,6 +382,18 @@ def _module_cc(
         raise ChampionModuleContractError(
             f"{module.__name__} declares MODULE_CC {dict(declared)} but wired "
             f"{dict(wired)} into {wiring} — one declaration, one wiring"
+        )
+    unnamed = [
+        slot
+        for slot in REQUIRED_CHAMPION_SLOTS
+        if slot in slots and slot not in declared
+    ]
+    if unnamed:
+        raise ChampionModuleContractError(
+            f"{module.__name__} MODULE_CC names no kind for slot(s) {unnamed} "
+            "— the map is total over the slots the module emits, because an "
+            "absent slot and a reviewed 'none' read the same downstream; "
+            f"state the cached kit's kind, {CC_PER_PART!r}, or 'none'"
         )
     return dict(declared)
 

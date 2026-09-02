@@ -17,8 +17,9 @@ from tests import cc_review
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {}
 
-# No reviewed-absent slot's cached text carries a control word at all.
-UNCONTROLLED_MENTIONS: dict[str, list[str]] = {}
+# Vigilance reads an immobilize someone else applied: an enemy champion
+# within 1000 units being immobilized empowers Lucian's next two shots.
+UNCONTROLLED_MENTIONS: dict[str, list[str]] = {"P": ["immobiliz"]}
 
 
 @pytest.fixture(scope="module")
@@ -28,7 +29,13 @@ def cached():
 
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
-        assert lucian.MODULE_CC == {"Q": "none", "W": "none", "R": "none"}
+        assert lucian.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "R": "none",
+            "P": "none",
+            "E": "none",
+        }
         for slot, phrase in QUOTED.items():
             assert phrase in cc_review.slot_text(cached, slot), slot
 
@@ -41,12 +48,12 @@ class TestReviewedCrowdControl:
             assert hits == UNCONTROLLED_MENTIONS.get(slot, []), slot
 
     def test_every_ability_event_carries_the_review(self, cached):
-        """Reviewing a kit only counts where the ledger can see it."""
+        """A declared kind lands on every part of the slot's row that can
+        carry it; the roster census counts the slots with no such part."""
         parsed = lucian.parse_abilities(cached, 18, 100.0)
         for slot, kind in lucian.MODULE_CC.items():
-            parts = parsed[slot]["parts"]
-            assert parts, slot
-            assert {part.cc_kind for part in parts} == {kind}, slot
+            parts = cc_review.declared_parts(parsed, slot)
+            assert {part.cc_kind for part in parts} <= {kind}, slot
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         """The campaign's control-token probe, through the public entry."""

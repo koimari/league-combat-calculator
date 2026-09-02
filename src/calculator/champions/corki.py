@@ -407,12 +407,11 @@ SLOTS = {
 # control-armed item passives (Fimbulwinter's Everlasting) price a Corki
 # fight instead of withholding on an unreviewed kit.
 #
-# P is not declared: Hextech Munitions is a true-damage rider the fight
-# engine prices onto each basic attack, so its damage is auto-phase and
-# the row emits no part of its own — a declaration there would reach no
-# ability event, which the engine now refuses rather than accepting as a
-# no-op.
-MODULE_CC = {slot: "none" for slot in SLOTS if slot != "P"}
+# P states the same reviewed absence as the rest, and rides nothing:
+# Hextech Munitions is a true-damage rider the fight engine prices onto
+# each basic attack, so its damage is auto-phase and the row emits no part
+# of its own for a marker to sit on.
+MODULE_CC = dict.fromkeys(SLOTS, "none")
 
 parse_abilities = build_parser(SLOTS, "Corki", cc_kinds=MODULE_CC)
 

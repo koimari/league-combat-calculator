@@ -493,7 +493,12 @@ class TestReviewedCrowdControl:
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert vi.MODULE_CC == {"Q": "knockback", "E": "none", "R": "knockup"}
+        assert vi.MODULE_CC == {
+            "Q": "knockback",
+            "E": "none",
+            "R": "knockup",
+            "W": "none",
+        }
         assert vi.parse_abilities.cc_kinds == vi.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Nocturne")
-        assert nocturne.MODULE_CC == {"Q": "none", "E": "fear", "R": "none"}
+        assert nocturne.MODULE_CC == {
+            "Q": "none",
+            "E": "fear",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         # Q's only control word is the dusk trail "slowly disappear[ing]",
         # which is the trail expiring rather than a slow applied to anyone.
         q_text = cc_review.slot_text(data, "Q")
@@ -30,8 +36,8 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(r_text) == []
         # W (spell shield) deals no damage and P is an on-hit rider on the
         # auto stream, so neither could carry an answer of its own.
-        assert "W" not in nocturne.MODULE_CC
-        assert "P" not in nocturne.MODULE_CC
+        assert nocturne.MODULE_CC["W"] == "none"
+        assert nocturne.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Nocturne") == []

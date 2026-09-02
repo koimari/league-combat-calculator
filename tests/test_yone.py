@@ -32,7 +32,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yone")
-        assert yone.MODULE_CC == {"Q": CC_PER_PART, "W": "none", "R": "pull"}
+        assert yone.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "none",
+            "R": "pull",
+            "P": "none",
+            "E": "none",
+        }
         assert yone.parse_abilities.cc_kinds == yone.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         r_text = cc_review.slot_text(data, "R")
@@ -67,7 +73,7 @@ class TestReviewedCrowdControl:
     def test_soul_unbound_withholds_on_its_engine_authored_event(self):
         """E emits a true-damage event with no module part to mark."""
         parsed = parse_champion_abilities(cc_review.kit("Yone"), 18, 100.0, _RANKS)
-        assert "E" not in yone.MODULE_CC
+        assert yone.MODULE_CC["E"] == "none"
         assert parsed["E"]["parts"] == ()
         assert parsed["E"]["stored_damage"]["duration"] == yone._E_SPIRIT_FORM_SECONDS
 
