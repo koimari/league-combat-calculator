@@ -94,11 +94,11 @@ from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
     ally_item_effect_value,
-    gluttonous_greaves_slay_omnivamp,
     input_option_value,
     item_state_receipts,
     required_effect_value,
     resolve_stat_effects,
+    slay_takedown_omnivamp,
     validate_item_input_options,
 )
 from src.calculator.item_support_effects import (
@@ -519,9 +519,10 @@ def test_ten_authored_stacks_reach_max_omnivamp():
         "slay_stacks",
     )
     assert stacks == MAX_STACKS
-    resolved = gluttonous_greaves_slay_omnivamp(
+    resolved = slay_takedown_omnivamp(
         [get_item_by_name(GLUTTONOUS)],
         {GLUTTONOUS: {"slay_stacks": MAX_STACKS}},
+        GLUTTONOUS,
     )
     per_takedown = required_effect_value(GLUTTONOUS, "slay_omnivamp_per_takedown")
     assert resolved == pytest.approx(per_takedown * MAX_STACKS)
