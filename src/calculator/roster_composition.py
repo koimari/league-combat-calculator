@@ -271,7 +271,7 @@ def target_params(base: FightParams, defender: Combatant) -> FightParams:
     return replace(base, **target_overrides(defender))
 
 
-def defensive_signature(defender: Combatant) -> tuple[Any, ...]:
+def defensive_signature(defender: Combatant) -> tuple[float | str, ...]:
     """Return a hashable signature for the target override fields."""
     return tuple(target_overrides(defender).values())
 

@@ -1938,21 +1938,20 @@ def _float(value: Any) -> float:
     return parsed if math.isfinite(parsed) else 0.0
 
 
-def _sequence(value: Any) -> int:
-    """A row's ordinal, with an absent, missing or unparsable one as -1.
+#: A Trigger's ``sequence`` for a row that authored none.  ``0`` is a real
+#: ordinal (every ledger numbers its rows from zero), so absence is negative.
+_NO_SEQUENCE = -1
 
-    ``0`` is a real sequence and the commonest there is: both of
-    ``damage._ordered_damage_events``' builders number their rows from zero,
-    so every ledger's first row carries it.  It cannot share a spelling with
-    the absent marker.
-    """
+
+def _sequence(value: Any) -> int | None:
+    """A row's ordinal, or ``None`` for an absent or unparsable one."""
     if value is None:
-        return -1
+        return None
     try:
         parsed = float(value)
     except (TypeError, ValueError):
-        return -1
-    return int(parsed) if math.isfinite(parsed) else -1
+        return None
+    return int(parsed) if math.isfinite(parsed) else None
 
 
 def event_triggers(
@@ -1980,13 +1979,14 @@ def event_triggers(
     cc_class, cc_kind, cc_reviewed = _classify_cc(row)
     if not kinds & _ROW_KINDS:
         return ()
+    sequence = _sequence(row.get("sequence"))
     shared = {
         "time": _float(row.get("time")),
         "source_key": str(row.get("source_key", "") or ""),
         "event_id": str(row.get("_event_id", "") or ""),
         "attacker_id": str(row.get("attacker", "") or ""),
         "target_id": str(row.get("target", "") or ""),
-        "sequence": _sequence(row.get("sequence")),
+        "sequence": _NO_SEQUENCE if sequence is None else sequence,
         "ability_instance": str(row.get("ability_instance", "") or ""),
         "damage": max(0.0, _float(row.get("damage"))),
         "raw_damage": max(0.0, _float(row.get("raw_damage"))),
@@ -2019,7 +2019,7 @@ def _takedown_trigger(row: Mapping[str, Any]) -> Trigger | None:
         event_id=str(row.get("_event_id", "") or ""),
         attacker_id=str(row.get("attacker", "") or ""),
         target_id=str(row.get("target", "") or ""),
-        sequence=-1,
+        sequence=_NO_SEQUENCE,
         ability_instance="",
         damage=0.0,
         raw_damage=0.0,

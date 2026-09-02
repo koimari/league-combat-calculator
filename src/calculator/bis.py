@@ -23,6 +23,7 @@ import time
 from collections.abc import Iterable, Mapping
 from copy import deepcopy
 from dataclasses import replace
+from typing import Any
 
 from .interpreters import (
     survival_ledger_certifications,
@@ -658,7 +659,7 @@ def bis_payload(
     *,
     pair_result_cache: dict | None = None,
     search_context: CoupledSearchContext | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Rank one slot and return the complete JSON-safe BIS receipt."""
     request = parse_scenario_request(data, deterministic=True, parse_crossover=False)
     subject_team = request_string(data, "subject_team", "main")
@@ -977,7 +978,7 @@ def _bis_batch_result(result: Mapping[str, object]) -> dict[str, object]:
     }
 
 
-def bis_batch_payload(data: Mapping[str, object]) -> dict:
+def bis_batch_payload(data: Mapping[str, object]) -> dict[str, Any]:
     """Score dependent BIS slots in one request with shared pair state.
 
     The browser's greedy roster path needs the winner from slot N before it

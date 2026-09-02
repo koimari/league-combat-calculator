@@ -293,7 +293,9 @@ def declared_option_spec(family: str, owner: str, key: str) -> Mapping[str, Any]
     return spec
 
 
-def declared_option_default(family: str, owner: str, key: str) -> Any:
+def declared_option_default(
+    family: str, owner: str, key: str
+) -> Any:  # sightline-ok: 1 key-typed read
     """The value an unset option prices at, as its own spec declares it."""
     return declared_option_spec(family, owner, key)["default"]
 
@@ -1586,7 +1588,7 @@ def _simulate_stacking_on_hit_damage(
     proc_autos: list[int],
     effectiveness: float = 1.0,
     target_basic_damage_multiplier: float = 1.0,
-) -> list[float]:
+) -> list[StackingProc]:
     """Simulate a stacking proc whose formula reads decreasing target HP.
 
     Kraken's bonus damage scales with the target's missing health at
@@ -5288,7 +5290,7 @@ def _auto_restore_schedule(
     """
     times = _restore_stream_attack_timestamps(state)
     if not times:
-        return (), ()
+        return (), []
     burst_swings = 0
     burst_seconds = 0.0
     swing_events: list[dict[str, Any]] = []

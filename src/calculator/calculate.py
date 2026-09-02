@@ -8,6 +8,7 @@ the stable JSON-safe payload returned to every in-process consumer.
 import re
 from collections.abc import Mapping
 from dataclasses import replace
+from typing import Any
 
 from .champions import engine_registration_kind
 from .defensive_effects import resolve_starting_defenses
@@ -286,7 +287,7 @@ def _name_the_response(response: dict) -> None:
 
 def calculate_payload(
     data: Mapping[str, object], *, deterministic: bool = False
-) -> dict:
+) -> dict[str, Any]:
     """Return the complete JSON-safe calculate payload without Flask state.
 
     ``headline_total`` is the one published answer to "which number does this

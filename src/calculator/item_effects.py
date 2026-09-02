@@ -4013,7 +4013,9 @@ def refresh_item_effects() -> None:
 ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects()
 
 
-def required_effect_value(item_name: str, key: str) -> Any:
+def required_effect_value(
+    item_name: str, key: str
+) -> Any:  # sightline-ok: 1 key-typed read
     """Read a required key from an item's effect entry, failing loudly.
 
     A missing key means the parser omitted a required parser-owned value or

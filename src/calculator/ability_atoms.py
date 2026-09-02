@@ -357,7 +357,7 @@ _MISSING = object()
 
 def ability_field(
     payload: Mapping[str, Any], key: str, *, form: str = "ability"
-) -> Any:
+) -> Any:  # sightline-ok: 1 key-typed read
     """One field of an authored ability payload, through its declared schema.
 
     The payload identifies itself by the ability ``name`` its module authored,
