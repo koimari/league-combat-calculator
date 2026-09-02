@@ -15,7 +15,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -167,8 +167,13 @@ def _download_bytes(url: str) -> bytes:
 # Diff primitives
 # ---------------------------------------------------------------------------
 
+#: One changed leaf: (dotted path, old value, new value); a missing side is None.
+LeafChange = tuple[str, object, object]
+#: A champions/items table re-keyed by display name.
+NameKeyed = dict[str, dict[str, Any]]
 
-def leaf_diffs(old, new, path: str = ""):
+
+def leaf_diffs(old: object, new: object, path: str = "") -> Iterator[LeafChange]:
     """Yield (path, old_value, new_value) for every changed leaf.
 
     Containers recurse; a missing side is reported as None; list length
@@ -187,12 +192,12 @@ def leaf_diffs(old, new, path: str = ""):
         yield (path, old, new)
 
 
-def drop_noise(diffs):
+def drop_noise(diffs: Iterable[LeafChange]) -> list[LeafChange]:
     """Drop diffs on cosmetic/bookkeeping paths (icons, dates, prices)."""
     return [d for d in diffs if not any(s in d[0] for s in NOISE_SUBSTRINGS)]
 
 
-def is_numeric_diff(diff):
+def is_numeric_diff(diff: LeafChange) -> bool:
     """True when the changed leaf is a number (or a string that parses as one).
 
     Numeric diffs are the ones that can move calculations; prose diffs
@@ -200,7 +205,7 @@ def is_numeric_diff(diff):
     golden gate is the real arbiter, since custom modules may regex prose.
     """
 
-    def numeric(value):
+    def numeric(value: object) -> bool:
         if value is None:
             return True  # added/removed alongside a numeric sibling
         if isinstance(value, bool):
@@ -219,7 +224,9 @@ def is_numeric_diff(diff):
     return numeric(old) and numeric(new)
 
 
-def name_delta(old_by_name, new_by_name):
+def name_delta(
+    old_by_name: Mapping[str, Any], new_by_name: Mapping[str, Any]
+) -> tuple[list[str], list[str]]:
     """(added, removed) name lists between two name-keyed dicts."""
     added = sorted(set(new_by_name) - set(old_by_name))
     removed = sorted(set(old_by_name) - set(new_by_name))
@@ -231,13 +238,13 @@ def name_delta(old_by_name, new_by_name):
 # ---------------------------------------------------------------------------
 
 
-def _load_current(filename: str):
+def _load_current(filename: str) -> dict[str, Any]:
     """Load a data file from the on-disk cache (the freshly pulled patch)."""
     with (REPO_ROOT / "data" / filename).open(encoding="utf-8") as f:
         return json.load(f)
 
 
-def _load_head(filename: str):
+def _load_head(filename: str) -> dict[str, Any]:
     """Load the last committed version of a data file via git."""
     result = subprocess.run(
         ["git", "show", f"HEAD:data/{filename}"],
@@ -249,12 +256,12 @@ def _load_head(filename: str):
     return json.loads(result.stdout)
 
 
-def _by_display_name(entries):
+def _by_display_name(entries: Mapping[str, dict[str, Any]]) -> NameKeyed:
     """Re-key a champions/items dict by its entries' display names."""
     return {entry.get("name", key): entry for key, entry in entries.items()}
 
 
-def load_old_and_new():
+def load_old_and_new() -> tuple[NameKeyed, NameKeyed, NameKeyed, NameKeyed]:
     """Returns (old_champs, new_champs, old_items, new_items), name-keyed."""
     return (
         _by_display_name(_load_head("champions.json")),

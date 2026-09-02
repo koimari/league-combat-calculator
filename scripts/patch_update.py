@@ -79,7 +79,7 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -166,7 +166,9 @@ def _detail_lines(diffs):
     return lines
 
 
-def champion_audit_lines(old_champs, new_champs):
+def champion_audit_lines(
+    old_champs: Mapping[str, Any], new_champs: Mapping[str, Any]
+) -> list[str]:
     """Audit section for registered champions plus the roster delta."""
     lines = ["== Registered champions =="]
     for name in registered_champion_names():
@@ -187,7 +189,9 @@ def champion_audit_lines(old_champs, new_champs):
     return lines
 
 
-def item_audit_lines(old_items, new_items):
+def item_audit_lines(
+    old_items: Mapping[str, Any], new_items: Mapping[str, Any]
+) -> list[str]:
     """Audit section for configured items plus the shop-wide add/remove delta."""
     lines = ["== Configured items =="]
     for name in sorted(_ITEM_PARSE_CONFIG):
@@ -222,7 +226,9 @@ def item_audit_lines(old_items, new_items):
     return lines
 
 
-def item_source_lines(old_items, new_items):
+def item_source_lines(
+    old_items: Mapping[str, Any], new_items: Mapping[str, Any]
+) -> tuple[list[str], bool]:
     """Source-completeness section, plus whether the patch may proceed.
 
     Two things stop a patch here. An effect branch that disappeared is almost
@@ -275,7 +281,9 @@ def _authored_keys(record: dict[str, Any]):
     return sorted(key for key in record if key not in _ALLY_SOURCE_KEYS)
 
 
-def ally_effect_lines(old_items, new_items):
+def ally_effect_lines(
+    old_items: Mapping[str, Any], new_items: Mapping[str, Any]
+) -> tuple[list[str], bool]:
     """Audit section for the hand-authored cross-participant item values.
 
     ``ALLY_ITEM_EFFECTS`` is typed by hand from the Wiki and is where four of
@@ -323,7 +331,7 @@ def ally_effect_lines(old_items, new_items):
     return lines, not blocking
 
 
-def escalated_cached_data_lines(receipt_path=None):
+def escalated_cached_data_lines(receipt_path: Path | None = None) -> list[str]:
     """Audit section for the cached-data defects waiting on a re-pull.
 
     ``docs/receipts/escalated-defects-cached-data.json`` holds defects in
@@ -356,7 +364,9 @@ def escalated_cached_data_lines(receipt_path=None):
     return lines
 
 
-def economics_lines(tables, new_items, ddragon_version):
+def economics_lines(
+    tables: Mapping[str, Any], new_items: Mapping[str, Any], ddragon_version: str | None
+) -> tuple[list[str], bool]:
     """Audit section for the sourced gold table the purchase optimizer prices from.
 
     ``data/economics-sourced.json`` is DDragon's item gold table pinned to one
@@ -380,7 +390,7 @@ def economics_lines(tables, new_items, ddragon_version):
     return lines, not reasons
 
 
-def print_audit():
+def print_audit() -> bool:
     """Print the full audit report (champions, items, deltas).
 
     Returns whether the source-completeness, hand-authored ally, and item
@@ -415,7 +425,7 @@ def print_audit():
     return source_ok and ally_ok and economics_ok
 
 
-def print_detail(names):
+def print_detail(names: Iterable[str]) -> None:
     """Full leaf diffs vs HEAD for arbitrary champions/items by display name."""
     old_champs, new_champs, old_items, new_items = load_old_and_new()
     for name in names:
@@ -572,7 +582,7 @@ def clear_wiki_caches():
             print(f"Cleared {path.relative_to(REPO_ROOT)}")
 
 
-def run_pull():
+def run_pull() -> str | None:
     """Stream data_updater.update_data(), returning the new patch string.
 
     Modifier-parse ERROR spam from lolstaticdata (Bard chimes, Jhin crit
@@ -620,7 +630,7 @@ def refresh_economics() -> int:
 # ---------------------------------------------------------------------------
 
 
-def rebuild_static_artifacts():
+def rebuild_static_artifacts() -> int:
     """Rebuild the derived catalogues the web UI fetches at runtime.
 
     app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
@@ -1139,7 +1149,7 @@ def run_coverage_census(output: Path | None = None) -> int:
     return result.returncode
 
 
-def run_gates():
+def run_gates() -> int:
     """pytest, golden compare, and (only on green tests) baseline re-capture.
 
     Returns process exit code: 0 when tests pass and the baseline was
@@ -1184,8 +1194,8 @@ def run_gamefile_refresh(
     patch: str | None,
     *,
     force: bool = False,
-    resolver=None,
-    fetch=None,
+    resolver: Callable[[], str] | None = None,
+    fetch: Callable[..., tuple[dict[str, Any], int]] | None = None,
 ) -> int:
     """Re-download data/gamefiles/ before the staleness gate compares against it.
 
@@ -1229,7 +1239,7 @@ def run_full(
     audit_output: Path | None = None,
     staleness_out: Path | None = None,
     patch: str | None = None,
-):
+) -> int:
     """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
 
     Order (issue #134 — golden capture stays last and conditional): wiki pull,

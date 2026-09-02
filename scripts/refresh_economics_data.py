@@ -26,7 +26,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import requests
 
@@ -67,7 +69,11 @@ _UNSELLABLE = {
 _UNSELLABLE_NOTE = "unsellable since V25.09 (wiki rev 4021809); DDragon stale"
 
 
-def stale_reasons(tables, items_cache, ddragon_version):
+def stale_reasons(
+    tables: Mapping[str, Any],
+    items_cache: Mapping[str, Any],
+    ddragon_version: str | None,
+) -> list[str]:
     """Why ``tables`` (the economics file) is not current for ``items_cache``.
 
     Empty means current: pinned to the cache's DDragon release, a sell row for
