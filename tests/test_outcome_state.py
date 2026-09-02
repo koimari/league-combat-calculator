@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.calculator import ability_spec, trigger_stream
+from src.calculator import ability_spec
 from src.calculator.ability_spec import Disposition
 from src.calculator.survival import outcome_state
 from src.calculator.survival.actions import NO_SLOT, ActionKind, SurvivalAction
@@ -190,7 +190,7 @@ def test_a_field_with_no_write_and_no_refusal_reads_as_starved() -> None:
     quantity = ledger.quantity(2, "applied")
     assert quantity.disposition is Disposition.STARVED
     assert quantity.field == "applied"
-    with pytest.raises(trigger_stream.ProjectionStarvation):
+    with pytest.raises(ability_spec.ProjectionStarvation):
         quantity.read()
 
 
@@ -234,7 +234,7 @@ def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() 
     """The incident at the aggregate, refused by the algebra rather than by review."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(0), damage=40.0)
-    with pytest.raises(trigger_stream.ProjectionStarvation):
+    with pytest.raises(ability_spec.ProjectionStarvation):
         ability_math.quantity_sum(
             (ledger.quantity(0, "applied"), ledger.quantity(9, "applied"))
         )

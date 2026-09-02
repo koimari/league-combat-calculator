@@ -111,10 +111,6 @@ PROTOCOL_ATTRIBUTES = frozenset(
 #: committed list rather than whatever the resolver happened to miss.
 UNRESOLVED_ALLOWED = frozenset(
     {
-        # A call whose callee is itself an expression.  The one live case is
-        # ``ability_spec``'s lazily-fetched ``ProjectionStarvation`` class,
-        # raised as ``_projection_starvation()(...)``.
-        "<expression>",
         "ValueError",
         # ``precision.sum_plan``'s fail-closed refusal of an undeclared
         # panel, reached since S10 gave the receipt's three panels a

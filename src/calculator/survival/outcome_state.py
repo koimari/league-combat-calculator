@@ -20,8 +20,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from ..ability_spec import Measured, Quantity, Starved, StructuralZero
-from ..trigger_stream import StarvedSignal
+from ..ability_spec import Measured, Quantity, Starved, StarvedSignal, StructuralZero
 from .actions import NO_SLOT, SurvivalAction
 
 __all__ = [

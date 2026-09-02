@@ -827,9 +827,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         seen: list[tuple[str, str]] = []
 
         def spy(name):
-            original = getattr(
-                module_contract, name
-            )  # sightline-ok: 24 spy over _VALIDATORS
+            original = getattr(module_contract, name)  # sightline-ok: 24 spy table
 
             def record(*args, **kwargs):
                 seen.append((name, kwargs["module"]))

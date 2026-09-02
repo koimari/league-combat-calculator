@@ -1768,7 +1768,7 @@ MODULE_DECLARATION = frozenset(
         ),
         ("champions/nocturne.py", "_tether_fear", "getattr", '"phase"', 1),
         ("champions/packet_module.py", "_variant_slot", "getattr", '"phase"', 1),
-        ("data_updater.py", "_process_champions", "getattr", '"name"', 1),
+        ("data_updater.py", "_bulk_pass", "getattr", '"name"', 1),
         (
             "interpreters/__init__.py",
             "_validate_authority_agreement",

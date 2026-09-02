@@ -721,11 +721,10 @@ class FightConfig:
         here is refused rather than merged, so "sourced" and "caller-supplied"
         never both answer for one field.
 
-        ``target_magic_resistance`` is a required argument precisely because
-        it is the one durability stat no minion record states: the caller must
-        decide it in the open. Defaulting it here would put an invented magic
-        resistance behind a sourced-looking constructor, which is the failure
-        :mod:`minion_stats` exists to prevent.
+        ``target_magic_resistance`` has no default because it is the one
+        durability stat no minion record states; a default here would put an
+        invented magic resistance behind a sourced-looking constructor, which
+        is the failure :mod:`minion_stats` exists to prevent.
         """
         sourced = sourced_minion_target(minion_type)
         # "minion_type" needs no entry here: it is a named parameter above, so

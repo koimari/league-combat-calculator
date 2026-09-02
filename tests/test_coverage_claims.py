@@ -49,6 +49,7 @@ from src.calculator.coverage_evidence import (
     SourceRef,
     Symbol,
     TestRef,
+    claim_name,
     validate_claim,
 )
 from src.calculator.data_fetcher import fetch_item_data
@@ -313,6 +314,7 @@ def test_node_ids_split_into_the_parts_the_rules_read() -> None:
 def test_the_fabricated_claim_is_itself_well_formed() -> None:
     """The load tier accepts the claim these cases resolve, so a failure is the tier's."""
     validate_claim(MANDATE_CLAIM)
+    assert claim_name(MANDATE_CLAIM)
 
 
 @BOTH_TIERS
@@ -2461,7 +2463,6 @@ def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     for lane, dotted in recorded.items():
         module, _, symbol = dotted.rpartition(".")
         assert module == "src.calculator.item_coverage", lane
-        assert callable(
-            getattr(item_coverage, symbol)
-        ), dotted  # sightline-ok: 24 receipt names a symbol
+        resolved = getattr(item_coverage, symbol)  # sightline-ok: 24 receipt symbol
+        assert callable(resolved), dotted
         assert symbol == capture_coverage_classification.CLASSIFIER_NAMES[lane]

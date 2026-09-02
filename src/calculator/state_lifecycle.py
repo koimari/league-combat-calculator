@@ -1324,9 +1324,8 @@ class InstanceCadence:
     def allow(self, time: float, instance: str | None) -> bool:
         """Whether a trigger for *instance* may proceed at *time*.
 
-        A consumed instance is recorded here; the caller must NOT retry
-        the same instance later (matches Fimbulwinter's seen-casts
-        consumption semantics).
+        An allowed instance is recorded here, so a repeat of it is judged
+        against that record (Fimbulwinter's seen-casts consumption).
         """
         if instance is None:
             return True

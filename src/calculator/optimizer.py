@@ -33,7 +33,6 @@ from .item_source import is_ordinary_sr_item
 from .loadout_rules import (
     ITEM_TO_EXCLUSIVITY_GROUPS,
     conflicts_with_groups,
-    inventory_capacity,
     occupied_groups,
     role_quest_legal_items,
     role_scoped_shop_items,
@@ -42,6 +41,7 @@ from .loadout_rules import (
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .pipeline import FightParams, run_fight
 from .program.views import RankingWriter, name_every_number
+from .role_quests import inventory_capacity
 from .timeline_coverage import (
     applicability_exclusion_sources,
     combine_timeline_coverages,

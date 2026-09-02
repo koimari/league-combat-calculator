@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import ability_spec, trigger_stream
+from src.calculator import ability_spec
 from src.calculator.ability_spec import (
     AttackClass,
     Authority,
@@ -169,31 +169,18 @@ class TestClosedVocabularies:
                 for alias in node.names:
                     assert not alias.name.startswith("src.calculator")
 
-    def test_the_leaf_defers_exactly_one_sibling_import_and_it_is_named(self) -> None:
-        """``Starved.read`` raises ``ProjectionStarvation``, whose home is not here.
-
-        D-72 puts the ``Quantity`` algebra in this leaf and D-25 keeps
-        ``ProjectionStarvation`` in ``trigger_stream`` — which imports this
-        module.  A module-scope import would be a cycle, so the raise fetches
-        the class at raise time, the repo's own idiom for the same collision
-        (``champions/engine.py`` defers ``slotlib``).  One exception, pinned by
-        name and by the function it sits in, so the allowance cannot widen
-        into a category.
-        """
+    def test_the_leaf_defers_no_sibling_import(self) -> None:
+        """``Starved.read`` raises ``ProjectionStarvation``, which lives here,
+        so no function in the leaf fetches a sibling at call time."""
         tree = _module_tree()
         deferred = [
-            (function.name, node)
+            node
             for function in ast.walk(tree)
             if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef))
             for node in ast.walk(function)
             if isinstance(node, (ast.Import, ast.ImportFrom))
         ]
-        assert len(deferred) == 1
-        owner, node = deferred[0]
-        assert owner == "_projection_starvation"
-        assert isinstance(node, ast.ImportFrom)
-        assert (node.level, node.module) == (1, "trigger_stream")
-        assert [alias.name for alias in node.names] == ["ProjectionStarvation"]
+        assert deferred == []
 
     def test_the_leaf_loads_with_no_package_around_it(self) -> None:
         """The property the AST rules stand for, checked by execution.
@@ -201,8 +188,7 @@ class TestClosedVocabularies:
         The file is executed on its own, with no package to resolve a
         relative import against.  It loads and its vocabulary works, which is
         what "dependency-free leaf" means and what an AST rule can only
-        approximate — the deferred import is deferred in fact, not merely in
-        indentation.
+        approximate.
         """
         spec = importlib.util.spec_from_file_location(
             "ability_spec_standalone", ability_spec.__file__
@@ -478,7 +464,7 @@ def test_a_withheld_quantity_with_no_receipt_cannot_be_constructed() -> None:
 
 def test_reading_a_starved_quantity_raises_projection_starvation() -> None:
     """D-25: lazily, on first read, carrying field/producer/reason."""
-    with pytest.raises(trigger_stream.ProjectionStarvation) as excinfo:
+    with pytest.raises(ability_spec.ProjectionStarvation) as excinfo:
         STARVED.read()
     message = str(excinfo.value)
     assert "cc" in message
@@ -548,7 +534,7 @@ def test_a_starved_member_raises_from_every_side_of_a_fold() -> None:
         (STARVED, STRUCTURAL),
         (STARVED, STARVED),
     ):
-        with pytest.raises(trigger_stream.ProjectionStarvation):
+        with pytest.raises(ability_spec.ProjectionStarvation):
             _ = left + right
 
 
@@ -558,9 +544,9 @@ def test_starved_beats_withheld_in_both_orders() -> None:
     A withheld total that quietly swallowed a programming error would be
     exactly the failure this campaign is named after, wearing a receipt.
     """
-    with pytest.raises(trigger_stream.ProjectionStarvation):
+    with pytest.raises(ability_spec.ProjectionStarvation):
         _ = WITHHELD + STARVED
-    with pytest.raises(trigger_stream.ProjectionStarvation):
+    with pytest.raises(ability_spec.ProjectionStarvation):
         _ = STARVED + WITHHELD
 
 
@@ -572,7 +558,7 @@ def test_the_matrix_is_covered_in_every_direction() -> None:
         for right in members:
             try:
                 total = left + right
-            except trigger_stream.ProjectionStarvation:
+            except ability_spec.ProjectionStarvation:
                 assert ability_spec.Starved in (type(left), type(right))
             else:
                 assert isinstance(total, (ability_spec.Measured, ability_spec.Withheld))

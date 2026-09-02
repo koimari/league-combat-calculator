@@ -32,6 +32,8 @@ from src.calculator.ability_spec import (
     Authority,
     DamagePart,
     Disposition,
+    ProjectionStarvation,
+    projection_starvation,
 )
 from src.calculator.champions.engine import _validate_cc_event_contract
 from src.calculator.interpreters import INTERPRETERS
@@ -516,7 +518,7 @@ def test_authored_triggers_skips_rows_that_are_not_mappings():
 
 def test_a_tuple_ledger_starves_a_declared_stream():
     """The campaign's ``STARVED`` leaf, as a control-flow signal (D-25)."""
-    with pytest.raises(ts.ProjectionStarvation) as excinfo:
+    with pytest.raises(ProjectionStarvation) as excinfo:
         ts.authored_triggers(
             {"damage_events_tuple": [(0.0, "main", 1.0)]},
             streams=frozenset({ts.Stream.CC}),
@@ -1950,7 +1952,7 @@ def test_the_single_catch_has_a_permanent_injection_seam():
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
-        "from .trigger_stream import ProjectionStarvation\n"
+        "from .ability_spec import ProjectionStarvation\n"
         "\n"
         "def swallow(run):\n"
         "    try:\n"
@@ -1993,7 +1995,7 @@ def test_the_request_boundary_converts_a_starvation_into_a_named_500():
     import src.app as app_module
 
     def _starving():
-        raise ts.ProjectionStarvation("cc", "Imperial Mandate", "tuple ledger")
+        raise projection_starvation("cc", "Imperial Mandate", "tuple ledger")
 
     guarded = app_module._within_starvation_boundary(_starving)
     with app_module.app.test_request_context("/api/calculate", method="POST"):
@@ -2679,7 +2681,7 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         # request boundary names.
         with pytest.raises(ValueError) as excinfo:
             ts.is_immobilizing_event({"cc_kind": self.UNKNOWN_KIND})
-        assert not isinstance(excinfo.value, ts.ProjectionStarvation)
+        assert not isinstance(excinfo.value, ProjectionStarvation)
 
     def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self):
         """What the endpoint actually does with it — measured, not reasoned.

@@ -96,13 +96,51 @@ class WithheldHasNoValue(ValueError):
     """
 
 
-def _projection_starvation() -> type[Exception]:
-    """``ProjectionStarvation``'s class, fetched at raise time because
-    ``trigger_stream`` owns it and imports this module."""
-    # pylint: disable-next=import-outside-toplevel,cyclic-import
-    from .trigger_stream import ProjectionStarvation
+class StarvedSignal(RuntimeError):
+    """A leaf has no value a rule computed, and saying so is the only answer.
 
-    return ProjectionStarvation
+    One boundary converts a member of this class into a response (the
+    ``src/app.py`` catch); everywhere else it propagates, because a named
+    refusal that is silently absorbed is a zero nobody computed.  Every
+    member carries ``field``, ``producer`` and ``reason``, the three facts
+    that boundary publishes.  A ``RuntimeError``, so a caller catching that
+    keeps catching it.
+    """
+
+    #: The disposition every member of this class *is*, so the boundary reads
+    #: the spelling off the exception rather than re-deriving it.
+    disposition = Disposition.STARVED
+
+    def __init__(
+        self, message: str, field_name: str, producer: str, reason: str
+    ) -> None:
+        """Name the leaf, who was asking for it, and why it has no answer."""
+        super().__init__(message)
+        self.field = field_name
+        self.producer = producer
+        self.reason = reason
+
+
+class ProjectionStarvation(StarvedSignal):
+    """A consumer asked a stream a question this result cannot answer.
+
+    A projection and a consumer disagree, which is a programming error and
+    not a data condition; it is raised lazily, on the first read of an
+    inadequate representation.
+    """
+
+
+def projection_starvation(
+    field_name: str, producer: str, reason: str
+) -> ProjectionStarvation:
+    """The signal for *producer* asking the *field_name* stream it cannot answer."""
+    return ProjectionStarvation(
+        f"STARVED: {producer or '<unnamed holder>'} asked for the "
+        f"{field_name} stream — {reason}",
+        field_name,
+        producer,
+        reason,
+    )
 
 
 class _QuantityAlgebra:
@@ -248,7 +286,7 @@ class Starved(_QuantityAlgebra):
 
     def read(self) -> float:
         """Never returns: the campaign's one lazily-raised failure."""
-        raise _projection_starvation()(self.field, self.producer, self.reason)
+        raise projection_starvation(self.field, self.producer, self.reason)
 
 
 # The four dispositions as a value type (D-72).  ``Disposition`` survives as

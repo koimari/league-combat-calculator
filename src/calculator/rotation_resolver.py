@@ -72,6 +72,7 @@ from .cast_dependency import (
     active_dependencies,
 )
 from .damage import DEFAULT_CAST_ORDER
+from .data_fetcher import fetch_item_data
 from .data_registry import data_version
 from .stats import effective_cooldown
 
@@ -1475,7 +1476,6 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     from .champions import (
         parse_champion_abilities,
     )  # pylint: disable=import-outside-toplevel
-    from .data_fetcher import fetch_item_data  # pylint: disable=import-outside-toplevel
     from .stats import calculate_total_stats  # pylint: disable=import-outside-toplevel
 
     items_by_name = {d["name"]: d for d in fetch_item_data().values()}

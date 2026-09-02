@@ -44,7 +44,7 @@ from .ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
     Authority,
-    Disposition,
+    projection_starvation,
 )
 
 # The module's second intra-package import, and Phase 4 S7's own amendment to
@@ -75,10 +75,8 @@ __all__ = [
     "MechanicCapability",
     "MechanicOwner",
     "Pairing",
-    "ProjectionStarvation",
     "RiderDelivery",
     "RuneOwner",
-    "StarvedSignal",
     "Stream",
     "Trigger",
     "TriggerKind",
@@ -279,66 +277,6 @@ _DAMAGE_TYPES = frozenset({"physical", "magic", "true"})
 
 class TriggerRegistryError(RuntimeError):
     """A declaration is structurally invalid; raised at import of this module."""
-
-
-class StarvedSignal(RuntimeError):
-    """A leaf has no value a rule computed, and saying so is the only answer.
-
-    The class D-25's one boundary converts, named by the umbrella's
-    Amendment G of 2026-08-14.  D-25's rule is about *where* a named refusal
-    becomes a response — one place, allowlisted by source assertion, absorbed
-    nowhere — and never a count of the exception types that one handler
-    names.  Two conditions reach it, and they are the same disposition:
-
-    * a projection cannot answer the question a consumer asked
-      (:class:`ProjectionStarvation`);
-    * a write-once record holds two answers to one question, or two applied
-      contributions for one key, so it cannot answer either
-      (``survival.outcome_state``'s three raises).
-
-    Both are programming errors and in both the leaf has no computed value,
-    which is the whole of what ``STARVED`` means — so the invariant table
-    owes no fifth spelling.  Every member carries ``field``, ``producer`` and
-    ``reason``, because the boundary publishes those three and a member that
-    could not fill them would arrive as a 500 with a name and nothing else.
-
-    Subclassing ``RuntimeError`` rather than replacing it: every member was
-    one already, and a caller that catches ``RuntimeError`` today keeps
-    catching it.
-    """
-
-    #: The campaign disposition every member of this class *is*, so the one
-    #: boundary that converts one into a response reads the spelling off the
-    #: exception rather than re-deriving which of the four states it is.
-    disposition = Disposition.STARVED
-
-    def __init__(self, message: str, field: str, producer: str, reason: str) -> None:
-        """Name the leaf, who was asking for it, and why it has no answer."""
-        super().__init__(message)
-        self.field = field
-        self.producer = producer
-        self.reason = reason
-
-
-class ProjectionStarvation(StarvedSignal):
-    """A consumer asked a stream a question this result cannot answer.
-
-    A projection and a consumer disagree, which is a programming error and
-    not a data condition.  It is raised lazily, on the first read of an
-    inadequate representation, and caught at exactly one boundary — the
-    request boundary in ``src/app.py`` (D-25).  Everywhere else it
-    propagates, because a named refusal that is silently absorbed is the
-    zero this campaign exists to kill.
-    """
-
-    def __init__(self, field: str, producer: str, reason: str) -> None:
-        super().__init__(
-            f"STARVED: {producer or '<unnamed holder>'} asked for the "
-            f"{field} stream — {reason}",
-            field,
-            producer,
-            reason,
-        )
 
 
 # A row is seventeen facts; a record of seventeen fields is the honest
@@ -2066,7 +2004,7 @@ def authored_triggers(
         return ()
     if result.get("damage_events_tuple"):
         asked = ", ".join(sorted(stream.value for stream in wanted))
-        raise ProjectionStarvation(
+        raise projection_starvation(
             asked,
             holder,
             "the score-only tuple ledger carries positional rows no scan can "
