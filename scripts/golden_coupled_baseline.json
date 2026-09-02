@@ -130559,6 +130559,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.spell_shield.rearm.source_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.spell_shield.window.start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -130852,6 +130860,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.spell_shield.cooldown_seconds": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.source_atom.values[0]": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -131245,7 +131261,7 @@
                 "blocks_control_only": true,
                 "requires_ability": true
               },
-              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
               "blocked_packets": [],
               "cooldown_atom": {
                 "atom_id": "timing.cooldown",
@@ -131265,6 +131281,29 @@
               },
               "cooldown_seconds": 40.0,
               "decisions": [],
+              "rearm": {
+                "cooldown": 40.0,
+                "restarts_on_champion_damage": true,
+                "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                "source_atom": {
+                  "atom_id": "timing.cooldown",
+                  "behavior": "timing",
+                  "evidence": [
+                    "passive:Annul@kw:cooldown"
+                  ],
+                  "hash": "c020562aebacbe01",
+                  "name": "Annul",
+                  "source": "Banshee's Veil.passives[0].branches[0]",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    40.0
+                  ]
+                },
+                "sourced": true
+              },
+              "rearms": [],
               "rules": [
                 {
                   "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -131303,7 +131342,7 @@
                   }
                 },
                 {
-                  "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                   "source": {
                     "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                     "revision_id": 0,
@@ -131560,7 +131599,7 @@
                   "blocks_control_only": true,
                   "requires_ability": true
                 },
-                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
                 "blocked_packets": [],
                 "cooldown_atom": {
                   "atom_id": "timing.cooldown",
@@ -131580,6 +131619,29 @@
                 },
                 "cooldown_seconds": 40.0,
                 "decisions": [],
+                "rearm": {
+                  "cooldown": 40.0,
+                  "restarts_on_champion_damage": true,
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                  "source_atom": {
+                    "atom_id": "timing.cooldown",
+                    "behavior": "timing",
+                    "evidence": [
+                      "passive:Annul@kw:cooldown"
+                    ],
+                    "hash": "c020562aebacbe01",
+                    "name": "Annul",
+                    "source": "Banshee's Veil.passives[0].branches[0]",
+                    "units": [
+                      "s"
+                    ],
+                    "values": [
+                      40.0
+                    ]
+                  },
+                  "sourced": true
+                },
+                "rearms": [],
                 "rules": [
                   {
                     "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -131618,7 +131680,7 @@
                     }
                   },
                   {
-                    "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                    "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                     "source": {
                       "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                       "revision_id": 0,
@@ -133120,6 +133182,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.spell_shield.rearm.source_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.spell_shield.window.start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -133413,6 +133483,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.spell_shield.cooldown_seconds": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.source_atom.values[0]": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -133806,7 +133884,7 @@
                 "blocks_control_only": true,
                 "requires_ability": true
               },
-              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
               "blocked_packets": [],
               "cooldown_atom": {
                 "atom_id": "timing.cooldown",
@@ -133826,6 +133904,29 @@
               },
               "cooldown_seconds": 40.0,
               "decisions": [],
+              "rearm": {
+                "cooldown": 40.0,
+                "restarts_on_champion_damage": true,
+                "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                "source_atom": {
+                  "atom_id": "timing.cooldown",
+                  "behavior": "timing",
+                  "evidence": [
+                    "passive:Annul@kw:cooldown"
+                  ],
+                  "hash": "c020562aebacbe01",
+                  "name": "Annul",
+                  "source": "Banshee's Veil.passives[0].branches[0]",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    40.0
+                  ]
+                },
+                "sourced": true
+              },
+              "rearms": [],
               "rules": [
                 {
                   "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -133864,7 +133965,7 @@
                   }
                 },
                 {
-                  "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                   "source": {
                     "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                     "revision_id": 0,
@@ -134121,7 +134222,7 @@
                   "blocks_control_only": true,
                   "requires_ability": true
                 },
-                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
                 "blocked_packets": [],
                 "cooldown_atom": {
                   "atom_id": "timing.cooldown",
@@ -134141,6 +134242,29 @@
                 },
                 "cooldown_seconds": 40.0,
                 "decisions": [],
+                "rearm": {
+                  "cooldown": 40.0,
+                  "restarts_on_champion_damage": true,
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                  "source_atom": {
+                    "atom_id": "timing.cooldown",
+                    "behavior": "timing",
+                    "evidence": [
+                      "passive:Annul@kw:cooldown"
+                    ],
+                    "hash": "c020562aebacbe01",
+                    "name": "Annul",
+                    "source": "Banshee's Veil.passives[0].branches[0]",
+                    "units": [
+                      "s"
+                    ],
+                    "values": [
+                      40.0
+                    ]
+                  },
+                  "sourced": true
+                },
+                "rearms": [],
                 "rules": [
                   {
                     "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -134179,7 +134303,7 @@
                     }
                   },
                   {
-                    "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                    "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                     "source": {
                       "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                       "revision_id": 0,
@@ -135603,6 +135727,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.spell_shield.rearm.source_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.spell_shield.window.start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -135896,6 +136028,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.spell_shield.cooldown_seconds": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.source_atom.values[0]": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -136289,7 +136429,7 @@
                 "blocks_control_only": true,
                 "requires_ability": true
               },
-              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
               "blocked_packets": [],
               "cooldown_atom": {
                 "atom_id": "timing.cooldown",
@@ -136309,6 +136449,29 @@
               },
               "cooldown_seconds": 40.0,
               "decisions": [],
+              "rearm": {
+                "cooldown": 40.0,
+                "restarts_on_champion_damage": true,
+                "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                "source_atom": {
+                  "atom_id": "timing.cooldown",
+                  "behavior": "timing",
+                  "evidence": [
+                    "passive:Annul@kw:cooldown"
+                  ],
+                  "hash": "c020562aebacbe01",
+                  "name": "Annul",
+                  "source": "Banshee's Veil.passives[0].branches[0]",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    40.0
+                  ]
+                },
+                "sourced": true
+              },
+              "rearms": [],
               "rules": [
                 {
                   "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -136347,7 +136510,7 @@
                   }
                 },
                 {
-                  "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                   "source": {
                     "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                     "revision_id": 0,
@@ -136604,7 +136767,7 @@
                   "blocks_control_only": true,
                   "requires_ability": true
                 },
-                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
                 "blocked_packets": [],
                 "cooldown_atom": {
                   "atom_id": "timing.cooldown",
@@ -136624,6 +136787,29 @@
                 },
                 "cooldown_seconds": 40.0,
                 "decisions": [],
+                "rearm": {
+                  "cooldown": 40.0,
+                  "restarts_on_champion_damage": true,
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                  "source_atom": {
+                    "atom_id": "timing.cooldown",
+                    "behavior": "timing",
+                    "evidence": [
+                      "passive:Annul@kw:cooldown"
+                    ],
+                    "hash": "c020562aebacbe01",
+                    "name": "Annul",
+                    "source": "Banshee's Veil.passives[0].branches[0]",
+                    "units": [
+                      "s"
+                    ],
+                    "values": [
+                      40.0
+                    ]
+                  },
+                  "sourced": true
+                },
+                "rearms": [],
                 "rules": [
                   {
                     "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -136662,7 +136848,7 @@
                     }
                   },
                   {
-                    "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                    "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                     "source": {
                       "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                       "revision_id": 0,
@@ -138164,6 +138350,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.spell_shield.rearm.source_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.spell_shield.window.start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -138457,6 +138651,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.spell_shield.cooldown_seconds": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.source_atom.values[0]": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -138850,7 +139052,7 @@
                 "blocks_control_only": true,
                 "requires_ability": true
               },
-              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
               "blocked_packets": [],
               "cooldown_atom": {
                 "atom_id": "timing.cooldown",
@@ -138870,6 +139072,29 @@
               },
               "cooldown_seconds": 40.0,
               "decisions": [],
+              "rearm": {
+                "cooldown": 40.0,
+                "restarts_on_champion_damage": true,
+                "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                "source_atom": {
+                  "atom_id": "timing.cooldown",
+                  "behavior": "timing",
+                  "evidence": [
+                    "passive:Annul@kw:cooldown"
+                  ],
+                  "hash": "c020562aebacbe01",
+                  "name": "Annul",
+                  "source": "Banshee's Veil.passives[0].branches[0]",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    40.0
+                  ]
+                },
+                "sourced": true
+              },
+              "rearms": [],
               "rules": [
                 {
                   "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -138908,7 +139133,7 @@
                   }
                 },
                 {
-                  "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                   "source": {
                     "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                     "revision_id": 0,
@@ -139165,7 +139390,7 @@
                   "blocks_control_only": true,
                   "requires_ability": true
                 },
-                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
                 "blocked_packets": [],
                 "cooldown_atom": {
                   "atom_id": "timing.cooldown",
@@ -139185,6 +139410,29 @@
                 },
                 "cooldown_seconds": 40.0,
                 "decisions": [],
+                "rearm": {
+                  "cooldown": 40.0,
+                  "restarts_on_champion_damage": true,
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                  "source_atom": {
+                    "atom_id": "timing.cooldown",
+                    "behavior": "timing",
+                    "evidence": [
+                      "passive:Annul@kw:cooldown"
+                    ],
+                    "hash": "c020562aebacbe01",
+                    "name": "Annul",
+                    "source": "Banshee's Veil.passives[0].branches[0]",
+                    "units": [
+                      "s"
+                    ],
+                    "values": [
+                      40.0
+                    ]
+                  },
+                  "sourced": true
+                },
+                "rearms": [],
                 "rules": [
                   {
                     "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -139223,7 +139471,7 @@
                     }
                   },
                   {
-                    "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                    "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                     "source": {
                       "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                       "revision_id": 0,
@@ -140752,6 +141000,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.spell_shield.rearm.source_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.spell_shield.window.start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -141045,6 +141301,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.spell_shield.cooldown_seconds": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.source_atom.values[0]": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -141438,7 +141702,7 @@
                 "blocks_control_only": true,
                 "requires_ability": true
               },
-              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
               "blocked_packets": [],
               "cooldown_atom": {
                 "atom_id": "timing.cooldown",
@@ -141458,6 +141722,29 @@
               },
               "cooldown_seconds": 40.0,
               "decisions": [],
+              "rearm": {
+                "cooldown": 40.0,
+                "restarts_on_champion_damage": true,
+                "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                "source_atom": {
+                  "atom_id": "timing.cooldown",
+                  "behavior": "timing",
+                  "evidence": [
+                    "passive:Annul@kw:cooldown"
+                  ],
+                  "hash": "c020562aebacbe01",
+                  "name": "Annul",
+                  "source": "Banshee's Veil.passives[0].branches[0]",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    40.0
+                  ]
+                },
+                "sourced": true
+              },
+              "rearms": [],
               "rules": [
                 {
                   "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -141496,7 +141783,7 @@
                   }
                 },
                 {
-                  "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                   "source": {
                     "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                     "revision_id": 0,
@@ -141753,7 +142040,7 @@
                   "blocks_control_only": true,
                   "requires_ability": true
                 },
-                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
                 "blocked_packets": [],
                 "cooldown_atom": {
                   "atom_id": "timing.cooldown",
@@ -141773,6 +142060,29 @@
                 },
                 "cooldown_seconds": 40.0,
                 "decisions": [],
+                "rearm": {
+                  "cooldown": 40.0,
+                  "restarts_on_champion_damage": true,
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                  "source_atom": {
+                    "atom_id": "timing.cooldown",
+                    "behavior": "timing",
+                    "evidence": [
+                      "passive:Annul@kw:cooldown"
+                    ],
+                    "hash": "c020562aebacbe01",
+                    "name": "Annul",
+                    "source": "Banshee's Veil.passives[0].branches[0]",
+                    "units": [
+                      "s"
+                    ],
+                    "values": [
+                      40.0
+                    ]
+                  },
+                  "sourced": true
+                },
+                "rearms": [],
                 "rules": [
                   {
                     "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -141811,7 +142121,7 @@
                     }
                   },
                   {
-                    "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                    "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                     "source": {
                       "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                       "revision_id": 0,
@@ -143252,6 +143562,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.spell_shield.rearm.source_atom.values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.spell_shield.window.start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -143545,6 +143863,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.spell_shield.cooldown_seconds": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.cooldown": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.spell_shield.rearm.source_atom.values[0]": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -143938,7 +144264,7 @@
                 "blocks_control_only": true,
                 "requires_ability": true
               },
-              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+              "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
               "blocked_packets": [],
               "cooldown_atom": {
                 "atom_id": "timing.cooldown",
@@ -143958,6 +144284,29 @@
               },
               "cooldown_seconds": 40.0,
               "decisions": [],
+              "rearm": {
+                "cooldown": 40.0,
+                "restarts_on_champion_damage": true,
+                "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                "source_atom": {
+                  "atom_id": "timing.cooldown",
+                  "behavior": "timing",
+                  "evidence": [
+                    "passive:Annul@kw:cooldown"
+                  ],
+                  "hash": "c020562aebacbe01",
+                  "name": "Annul",
+                  "source": "Banshee's Veil.passives[0].branches[0]",
+                  "units": [
+                    "s"
+                  ],
+                  "values": [
+                    40.0
+                  ]
+                },
+                "sourced": true
+              },
+              "rearms": [],
               "rules": [
                 {
                   "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -143996,7 +144345,7 @@
                   }
                 },
                 {
-                  "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                   "source": {
                     "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                     "revision_id": 0,
@@ -144253,7 +144602,7 @@
                   "blocks_control_only": true,
                   "requires_ability": true
                 },
-                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance; the fight model cannot rearm the shield (cooldown remains receipted).",
+                "block_rule": "Annul: 'blocks the next hostile ability' \u2014 one use per hostile ability instance, and the sourced cooldown rearms the shield inside the fight only once it has fully elapsed.",
                 "blocked_packets": [],
                 "cooldown_atom": {
                   "atom_id": "timing.cooldown",
@@ -144273,6 +144622,29 @@
                 },
                 "cooldown_seconds": 40.0,
                 "decisions": [],
+                "rearm": {
+                  "cooldown": 40.0,
+                  "restarts_on_champion_damage": true,
+                  "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
+                  "source_atom": {
+                    "atom_id": "timing.cooldown",
+                    "behavior": "timing",
+                    "evidence": [
+                      "passive:Annul@kw:cooldown"
+                    ],
+                    "hash": "c020562aebacbe01",
+                    "name": "Annul",
+                    "source": "Banshee's Veil.passives[0].branches[0]",
+                    "units": [
+                      "s"
+                    ],
+                    "values": [
+                      40.0
+                    ]
+                  },
+                  "sourced": true
+                },
+                "rearms": [],
                 "rules": [
                   {
                     "rule": "One shield use blocks ONE hostile ability instance; every packet of the same cast follows the same block decision without spending again.",
@@ -144311,7 +144683,7 @@
                     }
                   },
                   {
-                    "rule": "A consumed shield is not rearmed inside one modeled fight; the sourced cooldown remains receipted ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier).  Rearm is follow-up work.",
+                    "rule": "A consumed shield rearms inside one modeled fight only once its sourced cooldown has fully elapsed ('40 second cooldown, timer restarts upon taking damage from champions' \u2014 Banshee's Veil / Edge of Night; 60 seconds \u2014 Verdant Barrier), and that restart clause anchors the clock to the later of the consumption instant and the last champion damage the holder took.  A shield whose cooldown is not sourced never rearms.",
                     "source": {
                       "label": "Local League Wiki cache \u2014 Sivir E and Annul item descriptions",
                       "revision_id": 0,
@@ -150290,15 +150662,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 23,
-      "leaves": 95611,
-      "numeric_leaves": 31647,
+      "leaves": 95803,
+      "numeric_leaves": 31671,
       "sections": "coupled_scenarios"
     },
-    "git_head": "fee0b7167750bd2b2c2ae5d931e54800b4d9e629",
+    "git_head": "59063b77ca93cb4ae878a6a6f633027155ffc8df",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 23,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "46520f9de31d7d9e53d60e5643e0649835f143c6"
+    "src_tree_sha": "2464616e5d1809ca57eb3dd0b8f5bb6a4084ce12"
   }
 }

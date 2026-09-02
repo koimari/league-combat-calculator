@@ -240,6 +240,13 @@
       "combat/2:enemy:Dr. Mundo/outgoing": "612.9",
       "fights/0:Alistar": "717.6",
       "fights/1:Dr. Mundo": "374.8"
+    },
+    "undaunted_armed_swing_roster": {
+      "combat/0:main/incoming": "1588.2",
+      "combat/0:main/outgoing": "2007.8",
+      "combat/1:enemy:Ornn/incoming": "2007.8",
+      "combat/1:enemy:Ornn/outgoing": "1588.2",
+      "fights/0:Ornn": "1779.1"
     }
   },
   "metadata": {
@@ -251,11 +258,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "c6fce5032e97c2187a3907d9d1649ecc7164d800",
+    "git_head": "59063b77ca93cb4ae878a6a6f633027155ffc8df",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 27,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "c8d8de0b38767ad3eb29da391436502ec4fdcbd3"
+    "src_tree_sha": "2464616e5d1809ca57eb3dd0b8f5bb6a4084ce12"
   }
 }
