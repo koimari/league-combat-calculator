@@ -55,3 +55,15 @@ literal defaults, prose lint, census check), and the tests that pin the fix.
 - All ten issues closed, each closure comment commit-addressed.
 - Decision log (`decisions.tsv`, session scratchpad) walks against the
   commits and PRs.
+
+## Results
+
+| Wave | PR | Merge | Suite | Golden movement | Closed |
+|---|---|---|---|---|---|
+| 1 | #305 | fd6f55c1 | 15,376 passed | 7 pair repr leaves (#232); coupled recapture of the standing spell-shield rearm drift | #232 #233 #234 #236 #263 |
+| 2 | #306 | e06e9623 | 15,451 passed | 356 pair and 347 coupled leaves (#228 shapes, #229 re-bind); one numeric move, `catalyst_roster` Malphite | #216 #226 #228 #229 #230 |
+
+Two workers were sent back once: #230 for the on-hit charge trigger (landed)
+and #226 for the canister heal (declined on evidence, it is a receipt with no
+packet producer, now pinned). #216 left the packets asset at 16.15; the five
+slot-level drifts are #307. Census frontier 100 to 40 coarse cells.
