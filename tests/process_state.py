@@ -60,7 +60,7 @@ def snapshot() -> dict[str, dict]:
 
 
 def _changed(before: dict, mapping) -> list[str]:
-    """Keys of *mapping* that no longer hold the value *before* recorded."""
+    """Keys of *mapping* whose value differs from what *before* recorded."""
     return [
         key
         for key in before.keys() | mapping.keys()
