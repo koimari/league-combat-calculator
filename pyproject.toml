@@ -37,6 +37,10 @@ extend-exclude = "vendor/"
 
 [tool.sightline]
 excludes = ["vendor"]  # external code (CLAUDE.md rule 1)
+# #26 flags a constant assembled by code; here that is the design: rule 5 reads every
+# number from cached data (`data_value(...) * 100`), and a champion's SLOTS/OPTIONS
+# contract is a table of callables.
+rules-off = [26]
 
 # The simply-elegant house comment standard, minus the rules this tree answers
 # elsewhere: a module or function docstring carries the "why" (traps, sources,
