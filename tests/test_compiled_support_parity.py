@@ -10,6 +10,13 @@ search on the receipt walk; and the compiled heal builder stamped no
 ``cast_while_disabled``, so Gangplank's Remove Scurvy heal was applied by one
 walk and blocked by the other the moment the cleanse stopped hiding it.
 
+The issue's title also names a "canister heal", and that half needed no code:
+Dr. Mundo's canister is a survival-row receipt the shared kernel writes off
+his ``crowd_control_resist`` arm, which the compiler always accepted, so the
+holder at participant[2] already matched.  What was missing was a test, and
+the two canister cases here are it — one pinning the parity, one pinning why
+``support_kind=canister`` must keep refusing.
+
 Every case here asserts the same two things: the compiled surface deep-equals
 the receipt surface, and the compiled rung was actually taken — a fallback
 makes the two equal by construction and proves nothing.
@@ -22,13 +29,18 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.item_behavior import PacketKind
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
+    _WalkCompiler,
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
+from src.calculator.survival import compile as survival_compile
+from src.calculator.survival.actions import UTILITY_KINDS, ActionKind
+from src.calculator.survival.compile import unrepresentable_template_receipt
 
 MIKAELS = "Mikael's Blessing"
 QUICKSILVER = "Quicksilver Sash"
@@ -42,6 +54,8 @@ STUNNER = ("Amumu", {"Q": 5, "W": 5, "E": 5, "R": 3})
 # control would gate (Milio's R) needs to reach the walk at all.
 NO_CONTROL = ("Corki", {"Q": 5, "W": 5, "E": 5, "R": 3})
 TWO_ALLIES = (("Jinx", (), {}), ("Ashe", (), {}))
+#: Dr. Mundo second, so his passive's holder IS participant[2].
+MUNDO_SECOND = (("Jinx", (), {}), ("Dr. Mundo", (), {}))
 
 
 @dataclass(slots=True)
@@ -218,6 +232,83 @@ def test_remove_scurvy_heals_on_the_compiled_path_while_its_caster_is_stunned():
     ]
 
 
+def test_the_canister_receipt_reaches_participant_two_on_the_compiled_path():
+    """Dr. Mundo's canister is a survival-row RECEIPT, not a packet.
+
+    The issue's title says "cleanse/canister heal", so this is the row that
+    claim resolves to: the passive arms one ``crowd_control_resist`` packet,
+    the shared kernel resists the next hostile immobilize off it, and the
+    canister / pickup / passive-cost blocks are written into the holder's
+    state.  With the holder at participant[2] the compiled path publishes
+    every one of them at the receipt walk's numbers.
+
+    There is no canister heal to compare: the pickup needs Mundo's movement,
+    which the model does not simulate, so ``pickup`` quotes its 4% figure
+    with ``supported: False`` and applies nothing.  The nonzero equalities
+    here are the ones that exist — the health the passive charged and the
+    healing the holder actually received.
+    """
+    compiled = _assert_compiled_parity(allies=MUNDO_SECOND)
+    holder = _survival(compiled, "ally:Dr. Mundo")
+    assert holder["passive_cost"] == {
+        "percent": 4.0,
+        "amount": 95.64,
+        "health_before": 2391.0,
+        "health_after": 2295.36,
+    }
+    assert holder["canister"]["distance"] == pytest.approx(525.0)
+    assert holder["canister"]["lifetime"] == pytest.approx(7.0)
+    assert holder["pickup"]["supported"] is False
+    assert holder["pickup"]["heal_amount"] == pytest.approx(95.64)
+    assert holder["healing_received"] == pytest.approx(1002.2)
+    # The passive actually fired: the holder eats less control than the ally
+    # beside him, who has no immunity to spend.
+    assert (
+        holder["action_downtime"] < _survival(compiled, "ally:Jinx")["action_downtime"]
+    )
+
+
+def test_the_canister_packet_kind_stays_refused_because_it_is_not_a_packet(
+    monkeypatch,
+):
+    """``support_kind=canister`` must keep refusing, and this is why.
+
+    No producer in ``src/`` emits a canister-kind packet — ``PacketKind`` is
+    the closed vocabulary the emitters are written against and has no member
+    for it, so the only canister template in the tree is the Dr. Mundo
+    matrix's pinned candidate shape.  Admitting the kind the way ``cleanse``
+    was admitted does not model anything: ``canister`` is in neither
+    ``UTILITY_KINDS`` nor the standalone-kind table, so it classifies as a
+    plain heal and compiles to a phantom one-health HEAL the receipt walk
+    never applies.  That is the silent mis-compile the refusal exists for, so
+    the refusal stays until a canister mechanic has a packet kind of its own.
+    """
+    packet = {
+        "kind": "canister",
+        "amount": 1.0,
+        "time": 0.0,
+        "attacker": "main",
+        "target": "main",
+        "source": "Dr. Mundo P — Goes Where He Pleases",
+        "_event_id": "mundo:canister:0.0",
+    }
+    assert "canister" not in {member.value for member in PacketKind}
+    assert "canister" not in UTILITY_KINDS
+    assert unrepresentable_template_receipt(packet) == "support_kind=canister"
+
+    monkeypatch.setattr(
+        survival_compile,
+        "_STAGED_SUPPORT_KINDS",
+        frozenset({*survival_compile._STAGED_SUPPORT_KINDS, "canister"}),
+    )
+    compiler = _WalkCompiler()
+    compiler.add_support_templates([packet], 0, {"main": 0})
+    (phantom,) = compiler.actions
+    assert phantom.kind is ActionKind.HEAL
+    assert phantom.amount == pytest.approx(1.0)
+    assert phantom.utility_kind == ""
+
+
 def test_one_search_context_replays_a_staged_cleanse_across_candidates():
     """A roster cleanse is compiled once into the base panel and replayed by
     every later evaluation, so the case a single-evaluation test cannot see
@@ -261,6 +352,7 @@ def test_one_search_context_replays_a_staged_cleanse_across_candidates():
         ),
         pytest.param({"champion": "Milio"}, id="milio_fanout_cleanse"),
         pytest.param({"champion": "Gangplank"}, id="gangplank_self_cleanse"),
+        pytest.param({"allies": MUNDO_SECOND}, id="mundo_canister_second_ally"),
     ],
 )
 def test_compiled_support_totals_equal_the_receipt_walks_for_every_participant(case):
