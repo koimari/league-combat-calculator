@@ -59,10 +59,10 @@ Contract pinned (typed source-backed values):
   receipt (decision, removed/kept intervals, heal entry with the sourced
   atom), the caster's cleanse_use receipt, and source_revision_id 3984364
   in the registry/declaration chain.
-* Score/receipt parity + compiled: the compiled score kernel FAILS CLOSED
-  on the heal+cleanse packet (named support_cleanse receipt) and falls
-  back to the receipt walk with equal results; run_fight score-only totals
-  equal the full fight.
+* Score/receipt parity + compiled: the compiled score kernel STAGES the
+  heal+cleanse packet, carrying the marker pair the shared kernel
+  dispatches on, and prices it equal to the receipt walk; run_fight
+  score-only totals equal the full fight.
 * Optimizer/BIS/coverage: Mikael's is optimizer-eligible ("Purify cleanses
   and heals an ally."), modeled_state, in get_eligible_legendaries, not
   target-blocked, no stale BIS entry, and review issue 48 is recorded
@@ -101,10 +101,7 @@ from src.calculator.participant_timeline import (
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.compile import (
-    UncompilableActionError,
-    unrepresentable_template_receipt,
-)
+from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests import item_probe
 from tests.survival_probe import simulate_survival, survival_of
 
@@ -1115,42 +1112,44 @@ def test_source_revision_3984364_rides_the_receipt_chain():
 # ---------------------------------------------------------------------------
 
 
-def test_compiled_score_path_fails_closed_on_the_heal_cleanse_packet():
-    """The compiled score kernel cannot reproduce the action-downtime
-    truncation, so a heal packet carrying the cleanse marker fails closed
-    with the named 'support_cleanse' receipt (never compiled as a silent
-    plain heal); a plain heal stays representable."""
+def test_compiled_score_path_stages_the_heal_cleanse_packet():
+    """The action-downtime truncation is a shared-kernel transition, so the
+    compiled score path stages Purify rather than falling back: the marker
+    pair the kernel dispatches on rides the compiled action, and a plain heal
+    carries neither (issue #226)."""
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse": True}
         )
-        == "support_cleanse"
+        is None
     )
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse_item": MIKAELS}
         )
-        == "support_cleanse"
+        is None
     )
     assert unrepresentable_template_receipt({"kind": "heal", "amount": 100.0}) is None
     compiler = _WalkCompiler()
-    with pytest.raises(UncompilableActionError) as excinfo:
-        compiler.add_support_templates(
-            [
-                {
-                    "kind": "heal",
-                    "amount": 100.0,
-                    "cleanse": True,
-                    "source": MIKAELS_SOURCE,
-                    "attacker": "caster",
-                    "target": "main",
-                    "time": 2.5,
-                }
-            ],
-            0,
-            {"main": 0, "caster": 1},
-        )
-    assert "support_cleanse" in str(excinfo.value)
+    compiler.add_support_templates(
+        [
+            {
+                "kind": "heal",
+                "amount": 100.0,
+                "cleanse": True,
+                "cleanse_item": MIKAELS,
+                "source": MIKAELS_SOURCE,
+                "attacker": "caster",
+                "target": "main",
+                "time": 2.5,
+            }
+        ],
+        0,
+        {"main": 0, "caster": 1},
+    )
+    (action,) = compiler.actions
+    assert action.cleanse is True
+    assert action.cleanse_item == MIKAELS
 
 
 def _timeline(include_receipt: bool = True, **kwargs):

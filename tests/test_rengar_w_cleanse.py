@@ -51,7 +51,7 @@ from all crowd control".  CURRENT RUNTIME FACTS (verified before pinning):
   champion-cleanse kernel to RENGAR W: the cleanse fires ONLY on
   EMPOWERED W casts (the live-walk Ferocity-Bonus condition — no user
   toggle, no base-W cleanse), the grey-health heal stays the separate
-  authored effect, and the score fails closed (``support_kind=cleanse``).
+  authored effect, and the compiled score path stages the cleanse (#226).
   This matrix pins the CONTRACT; genuinely-absent mechanics are
   ``pytest.mark.xfail`` with reason "awaiting P2-6 wiring".
 
@@ -1358,17 +1358,12 @@ class TestNamedDenials:
             "intervals_after",
             "use_consumed",
         }
+        assert unrepresentable_template_receipt({"kind": "cleanse"}) is None
         assert (
-            unrepresentable_template_receipt({"kind": "cleanse"})
-            == "support_kind=cleanse"
+            unrepresentable_template_receipt({"kind": "heal", "cleanse": True}) is None
         )
         assert (
-            unrepresentable_template_receipt({"kind": "heal", "cleanse": True})
-            == "support_cleanse"
-        )
-        assert (
-            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0})
-            == "support_kind=cleanse"
+            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
         )
 
     def test_rengar_source_unresolved_fails_closed(self):
@@ -1643,13 +1638,11 @@ class TestNoDuplicateDamage:
 
 class TestScoreFailClosed:
     def test_score_gate_names_fail_closed_receipts(self):
-        # PASS: the compiled score path ALREADY fails closed on every
-        # Rengar W authoring shape — a cleanse-kind template
-        # (support_kind=cleanse) and a heal packet carrying the cleanse
-        # marker (support_cleanse) are unrepresentable; a plain heal
-        # stays representable.  The P2-6 wiring must route the empowered
-        # W packet through this gate (never silently re-price the heal
-        # as a plain heal or drop the cleanse).
+        # The compiled score path stages every Rengar W authoring shape —
+        # the cleanse-kind template, the heal carrying the marker and the
+        # plain heal (#226).  The P2-6 wiring routes the empowered W
+        # packet through this gate, so the heal can never be silently
+        # re-priced nor the cleanse dropped.
         template = {
             "kind": "cleanse",
             "amount": 1.0,
@@ -1662,12 +1655,12 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:W:1",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse": True}
             )
-            == "support_cleanse"
+            is None
         )
         assert (
             unrepresentable_template_receipt({"kind": "heal", "amount": 100.0}) is None
@@ -1690,17 +1683,15 @@ class TestScoreFailClosed:
             assert full["total_damage"] == scored["total_damage"]
 
     def test_wired_score_names_the_cleanse_receipt(self):
-        # P2-6 contract: the couple score adapter cannot model the
-        # champion cleanse (interval truncation), so the empowered-W
-        # packet fails closed with the NAMED receipt
-        # (support_kind=cleanse) and the fight is priced by the receipt
-        # walk — never a silent re-priced plain heal, never a silent
-        # drop.
+        # P2-6 contract: the empowered-W packet is staged by the couple
+        # score adapter and priced through the same shared-kernel
+        # truncation the receipt walk runs — never a silent re-priced
+        # plain heal, never a silent drop.
         combat = _app_combat({"p_ferocity": 4})
         survival = _main_survival(combat)
         # The receipt walk prices the fight (the full decision — the
         # Garen fight has no control, so control_not_active + the use
-        # consumed); the score gate names the receipt below.
+        # consumed); the compiled gate stages the same packet below.
         assert survival["cleanse"]["decision"]["reason"] == "control_not_active"
         assert survival["cleanse"]["item"] == "Rengar W"
         assert survival["cleanse_use"]["uses_after"] == 0
@@ -1716,7 +1707,7 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:W:1",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
 
 
 # ---------------------------------------------------------------------------
@@ -1765,7 +1756,7 @@ class TestModeParity:
             "target": "main",
             "_event_id": "main:cleanse:W:1",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
         combat = _app_combat({"p_ferocity": 4})
         assert (
             _main_survival(combat)["cleanse"]["decision"]["reason"]

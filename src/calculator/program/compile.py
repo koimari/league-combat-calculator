@@ -47,6 +47,10 @@ constructor parameter instead -- the same device ``build_state``'s
 that builds the walk compiles what the walk may not reach and hands it over.
 """
 
+# file-length-ok: the module IS the one-constructor boundary its docstring
+# argues for — splitting it puts SurvivalAction fields back in two files,
+# which is the disagreement (a field one builder stamps and the other does
+# not) this file exists to make impossible.
 from __future__ import annotations
 
 import math
@@ -1416,6 +1420,18 @@ class WalkCompiler:
                     source=str(event.get("source", event.get("source_key", ""))),
                     event_slot=slot_of(heal_event_id),
                     sequence=event.get("sequence"),
+                    # The declared exemption from the walk's attacker
+                    # crowd-control gate (Gangplank's Remove Scurvy is the
+                    # game's canCastWhileDisabled: being held is the reason
+                    # to cast it).  ``action_from_event`` stamps it off the
+                    # same field, and a heal only one builder exempts is a
+                    # heal one walk applies and the other blocks.
+                    cast_while_disabled=bool(event.get("cast_while_disabled")),
+                    # The same pair for the cleanse a heal can ride
+                    # (Mikael's Purify), read where ``add_support_templates``
+                    # reads it.
+                    cleanse=bool(event.get("cleanse")),
+                    cleanse_item=str(event.get("cleanse_item", "") or ""),
                 )
             )
         self.coverage.append(result.get("timeline_coverage", {}))
@@ -1432,11 +1448,11 @@ class WalkCompiler:
             subject_i = index_of[target_id]
             kind = str(template.get("kind", ""))
             # Fail closed on any resolved support template the score kernel
-            # cannot stage: non-heal/shield kinds (stat buffs, damage
-            # modifiers, on-hit magic, temporary health), timed
-            # shields/heals (duration > 0), live gates, vamp source
-            # categories, live amount formulas, and trigger links — instead
-            # of mis-compiling it as a flat heal or silently dropping it.
+            # cannot stage: kinds outside the staged set (stat buffs, on-hit
+            # magic, temporary health, movement), timed shields (duration >
+            # 0), live gates, live amount formulas, and trigger links —
+            # instead of mis-compiling it as a flat heal or silently
+            # dropping it.
             template_receipt = unrepresentable_template_receipt(template)
             if template_receipt is not None:
                 raise UncompilableActionError(
@@ -1463,27 +1479,14 @@ class WalkCompiler:
                     receipt="support_trigger_link",
                     source=str(template.get("source", "")),
                 )
-            # When this packet arms, read from the same classifier the
-            # receipt walk reads.  Classifying by kind here instead would
-            # ignore a packet's own ``_rank`` declaration, so a shield
-            # declaring ``LATE_BARRIER`` would arm before the damage it was
-            # placed after on the compiled path and after it on the walk —
-            # a desync no equality gate can see until such a packet exists.
-            #
-            # This also widened the *kind* ladder, which is a second thing
-            # and is inert only because of the receipt above.  The branch
-            # this replaced was ``BARRIER_GRANT if kind == "shield" else
-            # RECOVERY``, so for the kinds ``unrepresentable_template_receipt``
-            # rejects — everything but ``shield`` and ``heal`` — the rank
-            # moved: ``temporary_health`` to ``BARRIER_GRANT`` and
-            # ``stasis`` to ``STATE_GRANT`` (both ordering moves, out of the
-            # recovery slot and ahead of the damage), ``stat_buff``/
-            # ``damage_modifier`` to ``DEBUFF_ARM`` and
-            # ``movement``/``cleanse``/... to ``UTILITY_ARM`` (rank moves
-            # inside one ordering slot, inert until S6 splits it).
-            # Admitting a kind to compilation therefore lands two behaviour
-            # changes, not one: read this line before widening that
-            # receipt.
+            # When this packet arms and what it becomes are both read from
+            # the classifiers the receipt adapter reads, never from a kind
+            # literal here: a packet's own ``_rank`` declaration has to win
+            # (a shield declaring ``LATE_BARRIER`` arms after the damage it
+            # was placed behind, on both paths), and one packet has to become
+            # one action kind whichever adapter compiles it.  So widening
+            # ``unrepresentable_template_receipt`` admits a kind to its rank
+            # and to its action kind at once: read this before widening it.
             # ``ActionKind``'s own spelling, not a literal: the packet kind
             # and the action kind are the same word by construction (the
             # receipt adapter's classifier maps one to the other), and
@@ -1501,20 +1504,12 @@ class WalkCompiler:
                     time=time_value,
                     phase=priority,
                     # The same classifier the receipt adapter runs, for the
-                    # reason the rank above uses ``support_transition_rank``:
-                    # one packet must become one action kind whichever
-                    # adapter compiles it.  The literal this replaces --
-                    # ``SHIELD if kind == "shield" else HEAL`` -- was a
-                    # two-way fold that was correct only while the receipt
-                    # admitted exactly those two kinds.  It stopped being
-                    # correct the moment the state kinds were admitted: a
-                    # ``crowd_control_resist`` arm (Dr. Mundo's passive) or a
-                    # ``stasis``/``spell_shield``/``invulnerability``/
-                    # ``untargetable`` grant compiled as a zero-amount HEAL,
-                    # which is silence -- the score walk left the holder
-                    # unprotected while the receipt walk armed it, and the
-                    # two priced the same fight differently with nothing
-                    # saying so.
+                    # reason the rank above uses ``support_transition_rank``.
+                    # A kind fold spelled here instead is silence: a
+                    # ``crowd_control_resist`` arm or a ``stasis`` grant that
+                    # compiled as a zero-amount HEAL would leave the holder
+                    # unprotected on the score walk and armed on the receipt
+                    # walk, with nothing saying so.
                     kind=classify_event_kind(template, priority),
                     subject=subject_i,
                     attacker=attacker_i,
@@ -1560,6 +1555,19 @@ class WalkCompiler:
                     temporary_health_duration=max(
                         0.0,
                         float(template.get("temporary_health_duration", 0.0) or 0.0),
+                    ),
+                    # The cleanse dispatch's own inputs, read off the same
+                    # template fields ``action_from_event`` reads: the marker
+                    # pair the heal branch tests, the per-cast group a
+                    # fan-out shares one use across, the typed utility kind a
+                    # self-cast activation dispatches on, and the caster gate
+                    # a blocked cast is receipted through.
+                    cleanse=bool(template.get("cleanse")),
+                    cleanse_item=str(template.get("cleanse_item", "") or ""),
+                    cleanse_group=str(template.get("cleanse_group", "") or ""),
+                    utility_kind=kind if kind in UTILITY_KINDS else "",
+                    cast_blocked_by_attacker_control=bool(
+                        template.get("cast_blocked_by_attacker_control")
                     ),
                 )
             )
