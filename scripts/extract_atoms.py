@@ -684,7 +684,9 @@ def _slot_damage_type(
     return None
 
 
-def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | None:
+def wiki_damage_type(
+    entries: list[tuple[str, str, str | None]], champ_norm: str, name: str, alt: str
+) -> str | None:
     """Best wiki damage type for a SpellObject, or None (never a guess).
 
     Matching order, all driven by data/champions.json (no champion names
@@ -725,7 +727,11 @@ def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | Non
 # --------------------------------------------------------------------------
 # Classification
 # --------------------------------------------------------------------------
-def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, str]]:
+def classify_object(
+    feat: dict,
+    keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
+    tag_map=None,
+) -> list[tuple[str, str]]:
     """Return [(atom_id, family), ...] for one SpellObject.
 
     Evidence order (a later tier never overrides an earlier one):

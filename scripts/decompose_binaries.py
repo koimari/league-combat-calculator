@@ -73,7 +73,7 @@ def open_wad(path: Path):
     return WAD(str(path))
 
 
-def extract_path(wad, table, path: str) -> bytes | None:
+def extract_path(wad, table: dict[int, str], path: str) -> bytes | None:
     h = wad.get_hash(path)
     for sec in wad.files:
         if sec.path_hash == h:

@@ -79,7 +79,7 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -270,7 +270,7 @@ def item_source_lines(old_items, new_items):
     return lines, not blocking
 
 
-def _authored_keys(record: dict[str, Any]):
+def _authored_keys(record: Mapping[str, Any]):
     """The hand-typed numeric keys of one ALLY_ITEM_EFFECTS record."""
     return sorted(key for key in record if key not in _ALLY_SOURCE_KEYS)
 

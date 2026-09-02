@@ -46,7 +46,7 @@ import math
 import subprocess
 import sys
 import time
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any, Literal
@@ -286,7 +286,9 @@ def snapshot_champion_baselines(champions: dict[str, Any]):
     return out
 
 
-def _resolve_build(requested_names: list[str], items_by_name, substitutions):
+def _resolve_build(
+    requested_names: Iterable[str], items_by_name: Mapping[Any, Any], substitutions
+):
     """Resolve build item names against cached data, logging missing names."""
     build = []
     for name in requested_names:
@@ -299,7 +301,7 @@ def _resolve_build(requested_names: list[str], items_by_name, substitutions):
 
 
 def snapshot_registered_fights(
-    champions: dict[str, Any], items_by_name: dict[Any, Any], substitutions
+    champions: Mapping[str, Any], items_by_name: Mapping[Any, Any], substitutions
 ):
     """Section 2: fights for every registered champion, 4 builds x 2 levels.
 
@@ -347,7 +349,7 @@ def snapshot_registered_fights(
 
 
 def snapshot_keystone_fights(
-    champions: dict[str, Any], items_by_name: dict[Any, Any], substitutions
+    champions: Mapping[str, Any], items_by_name: Mapping[Any, Any], substitutions
 ):
     """Section 4: the two swing-scheduling keystones, armed.
 
@@ -402,7 +404,7 @@ def _sweep_entry(champion_data, item, **fight_kwargs):
     }
 
 
-def snapshot_item_sweep(champions: dict[str, Any], items: dict[str, Any]):
+def snapshot_item_sweep(champions: Mapping[str, Any], items: Mapping[str, Any]):
     """Section 3: every item, alone, at level 11, in two arms.
 
     The one-rotation arm runs Vayne and Ahri with auto_attack_uptime=1.0 —
@@ -737,7 +739,7 @@ def _identity_index(members):
     return _index(members, _identity)
 
 
-def _identity_keyed_diffs(path, old, new, out):
+def _identity_keyed_diffs(path: str, old, new, out):
     """Diff two identity-bearing lists by identity, never by list position.
 
     A member both sides hold is compared field by field under the *baseline's*
@@ -819,7 +821,7 @@ def _leaf_diffs(path: str, old, new, out, identity=None):
         out.append(_leaf_diff(path, old, new, identity))
 
 
-def _leaf_diff(path, old, new, identity=None):
+def _leaf_diff(path: str, old, new, identity=None):
     transition, abs_delta, percent = _classify(old, new)
     return LeafDiff(
         path=path,
