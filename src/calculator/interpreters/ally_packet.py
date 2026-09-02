@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
+from functools import partial
 
 from ..item_behavior import (
     AllyPacketRule,
@@ -41,23 +42,22 @@ from ..item_behavior import (
     PacketTrigger,
     Recipients,
     RuleFamily,
+    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules
-from ..value_ref import LevelValueRef, ValueRef
+from ..value_ref import LevelValueRef, ValueRef, declared_reference
 
 
 class AllyPacketInterpretationError(ValueError):
     """A producer was asked something its declaration does not answer."""
 
 
-def _payload(rule: BehaviorRule) -> AllyPacketRule:
-    """*rule*'s ally-packet payload, or a stop."""
-    payload = rule.payload
-    if not isinstance(payload, AllyPacketRule):
-        raise AllyPacketInterpretationError(
-            f"{rule.mechanic_id} is not an ally-packet rule"
-        )
-    return payload
+_payload = partial(
+    typed_payload,
+    payload_type=AllyPacketRule,
+    stop=AllyPacketInterpretationError,
+    noun="an ally-packet rule",
+)
 
 
 def packet_fields(
@@ -131,13 +131,14 @@ class AllyPacketSlot:
 
     def value(self, key: str) -> float:
         """One declared number, read live from the registry that owns it."""
-        for reference in _payload(self.rule).values:
-            if isinstance(reference, ValueRef) and reference.key == key:
-                return reference.get()
-        raise AllyPacketInterpretationError(
+        return declared_reference(
+            _payload(self.rule).values,
+            ValueRef,
+            key,
+            AllyPacketInterpretationError,
             f"{self.rule.mechanic_id} declares no {key!r} value; a producer "
-            "reads the numbers its declaration names and no others"
-        )
+            "reads the numbers its declaration names and no others",
+        ).get()
 
     def level_value(self, key: str, level: int) -> float:
         """One declared level ramp, read at *level*.
@@ -146,12 +147,13 @@ class AllyPacketSlot:
         is one number with two ends.  *level* is whichever participant
         :meth:`level_subject` names, so the source answers, not the caller.
         """
-        for reference in _payload(self.rule).values:
-            if isinstance(reference, LevelValueRef) and reference.min_key == key:
-                return reference.get(level)
-        raise AllyPacketInterpretationError(
-            f"{self.rule.mechanic_id} declares no {key!r} level ramp"
-        )
+        return declared_reference(
+            _payload(self.rule).values,
+            LevelValueRef,
+            key,
+            AllyPacketInterpretationError,
+            f"{self.rule.mechanic_id} declares no {key!r} level ramp",
+        ).get(level)
 
     def level_subject(self, key: str) -> LevelSubject:
         """Whose level the *key* ramp is read at, as the declaration states it."""

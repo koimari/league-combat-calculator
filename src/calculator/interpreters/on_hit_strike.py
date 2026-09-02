@@ -205,7 +205,7 @@ def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
     return PerHitEffect(
         damage_source(
             rule.owner,
-            payload.formula.damage_class.value,
+            payload.formula.damage_type,
             damage_formula.compile_formula(payload.formula, ctx),
             suffix=ON_HIT_SUFFIX,
             breakdown_key=f"{ON_HIT_BREAKDOWN_PREFIX}{rule.owner}",
@@ -237,10 +237,7 @@ def per_hit_effects(
     facts are threaded, not defaulted, though no on-hit coefficient reads one:
     a placeholder would be the silent default the context refuses."""
     return tuple(
-        per_hit_effect(
-            rule,
-            build_context(rule.owner, facts),
-        )
+        per_hit_effect(rule, build_context(rule.owner, facts))
         for rule in strike_rules(owners)
     )
 

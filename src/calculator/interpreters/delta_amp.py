@@ -71,6 +71,7 @@ from ..item_behavior import (
     WindowBoundary,
     WindowMerge,
     chain_rank,
+    compiled_value,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
@@ -300,12 +301,12 @@ class AmpSlot:
         declare what the caller is asking for — asking a window's end of a
         rule with no window — and that is a programming error, never a zero.
         """
-        for field in self.fields[index]:
-            if field.name == name:
-                return float(field.value)
-        raise DeltaAmpInterpretationError(
+        return compiled_value(
+            self.fields[index],
+            name,
+            DeltaAmpInterpretationError,
             f"{self.rules[index].mechanic_id} compiles no {name!r} field; the "
-            "engine asked its declaration a question it does not answer"
+            "engine asked its declaration a question it does not answer",
         )
 
     def window(self, index: int = 0) -> tuple[float, float]:
@@ -553,12 +554,12 @@ class PartAmp:
 
     def _value(self, name: str, index: int) -> float:
         """One compiled field of one holder's rule, or a stop."""
-        for field in self.fields[index]:
-            if field.name == name:
-                return float(field.value)
-        raise DeltaAmpInterpretationError(
+        return compiled_value(
+            self.fields[index],
+            name,
+            DeltaAmpInterpretationError,
             f"{self.rules[index].mechanic_id} compiles no {name!r} field; the "
-            "engine asked its declaration a question it does not answer"
+            "engine asked its declaration a question it does not answer",
         )
 
     def _terms(

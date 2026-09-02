@@ -31,6 +31,7 @@ from ..rune_effects import (
     display_name,
     keyed_columns,
     no_damage_compiler,
+    option_gated_level_grant,
     required_level_table,
     required_leveling,
     required_pair,
@@ -60,10 +61,7 @@ def _compile_absolute_focus(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
             "compiler prices the 'above' one — wiki description reordered"
         )
 
-    def amount(context: RuneStatContext) -> float:
-        if not context.option(name, _ABOVE_THRESHOLD, 1.0):
-            return 0.0
-        return at_level(force_by_level, context.level)
+    amount = option_gated_level_grant(name, force_by_level, _ABOVE_THRESHOLD, 1.0)
 
     return RuneStatGrantEffect(
         rune_name=name,
@@ -183,10 +181,7 @@ def _compile_waterwalking(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     effects = RuneValues(name, entry.get("effects", {}))
     force_by_level = required_level_table(name, effects, "adaptive_force_leveling")
 
-    def amount(context: RuneStatContext) -> float:
-        if not context.option(name, _IN_RIVER, 0.0):
-            return 0.0
-        return at_level(force_by_level, context.level)
+    amount = option_gated_level_grant(name, force_by_level, _IN_RIVER, 0.0)
 
     return RuneStatGrantEffect(
         rune_name=name,

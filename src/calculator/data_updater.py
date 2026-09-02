@@ -20,7 +20,7 @@ _LOLSTATICDATA_ROOT = (
     Path(__file__).resolve().parent.parent.parent / "vendor" / "lolstaticdata"
 )
 if str(_LOLSTATICDATA_ROOT) not in sys.path:
-    sys.path.insert(0, str(_LOLSTATICDATA_ROOT))  # sightline-ok: 9 vendored root
+    sys.path.insert(0, str(_LOLSTATICDATA_ROOT))  # sightline-ok: 9 - vendored root
 
 from lolstaticdata.common import utils as _lsd_utils
 from lolstaticdata.common.utils import download_json, get_latest_patch_version

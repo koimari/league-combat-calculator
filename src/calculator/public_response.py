@@ -16,7 +16,9 @@ from urllib.parse import urlsplit
 from .capabilities import FIGHT_EFFECTIVE_STATS
 from .champions import engine_registration_kind
 from .scenario import ChampionLoadout
-from .timeline_coverage import combine_timeline_coverages
+from .timeline_coverage import (
+    aggregate_timeline_coverage,
+)
 
 ICON_HOSTS = frozenset(
     {
@@ -321,14 +323,6 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
     }
 
 
-def _aggregate_timeline_coverage(results: list[dict]) -> dict:
-    """Combine per-target ordering receipts without overstating precision."""
-    return combine_timeline_coverages(
-        (result.get("timeline_coverage", {}) for result in results),
-        target_count=len(results),
-    )
-
-
 def _primary_value(result: Mapping, key: str) -> object:
     """Copy the primary target's value defensively (mapping/list containers)."""
     value = result[key]
@@ -403,7 +397,7 @@ def aggregate_public_results(results: list[dict[str, Any]]) -> dict[str, Any]:
     flattened per-target stream stamped with ``target_index``).
     """
     primary = results[0]
-    timeline_coverage = _aggregate_timeline_coverage(results)
+    timeline_coverage = aggregate_timeline_coverage(results)
     damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
     for result in results:
         for damage_type, amount in result["damage_by_type"].items():

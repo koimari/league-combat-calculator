@@ -12,7 +12,7 @@ Adding a shield mechanic or changing absorption order is one edit here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 #: The three pools a shield can sit in.  A typed pool absorbs only its own
 #: damage type; the general pool absorbs every type, true damage included.
@@ -293,6 +293,16 @@ def expire_threshold_health(pools: ShieldPools, event_time: float) -> float:
     return expire_temporary_max_health(pools, health.bonus)
 
 
+def _apply_to_health(pools: Any, amount: float) -> tuple[float, float]:
+    """Take ``amount`` out of health; returns ``(applied, overkill)``."""
+    applied_to_health = min(amount, pools.health)
+    overkill = max(0.0, amount - applied_to_health)
+    pools.health = max(0.0, pools.health - applied_to_health)
+    pools.health_damage += applied_to_health
+    pools.overkill += overkill
+    return applied_to_health, overkill
+
+
 def absorb(
     pools: ShieldPools,
     damage: float,
@@ -325,11 +335,7 @@ def absorb(
         # bare health subtraction, bit-identical to the full path below with
         # every pool at zero.  This is the optimizer walk's dominant state.
         pools.damage_taken += damage
-        applied_to_health = min(damage, pools.health)
-        overkill = max(0.0, damage - applied_to_health)
-        pools.health = max(0.0, pools.health - applied_to_health)
-        pools.health_damage += applied_to_health
-        pools.overkill += overkill
+        applied_to_health, overkill = _apply_to_health(pools, damage)
         return Absorption(0.0, applied_to_health, overkill)
     timed = pools.timed
     if timed:
@@ -384,11 +390,7 @@ def absorb(
     pools.shield_absorbed += used
     absorbed += used
 
-    applied_to_health = min(remaining, pools.health)
-    overkill = max(0.0, remaining - applied_to_health)
-    pools.health = max(0.0, pools.health - applied_to_health)
-    pools.health_damage += applied_to_health
-    pools.overkill += overkill
+    applied_to_health, overkill = _apply_to_health(pools, remaining)
     if armed is None:
         return Absorption(absorbed, applied_to_health, overkill)
     return Absorption(

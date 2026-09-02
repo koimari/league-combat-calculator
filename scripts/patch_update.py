@@ -166,18 +166,29 @@ def _detail_lines(diffs):
     return lines
 
 
+def _flagged_diff_lines(
+    name: str, old: Mapping[str, Any], new: Mapping[str, Any]
+) -> list[str]:
+    """One entry's audit lines, flagged for numeric change; none when unchanged."""
+    diffs = drop_noise(list(leaf_diffs(old, new)))
+    if not diffs:
+        return []
+    flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
+    return [f"  {name} ({flag}):", *_detail_lines(diffs)]
+
+
 def champion_audit_lines(
     old_champs: Mapping[str, Any], new_champs: Mapping[str, Any]
 ) -> list[str]:
     """Audit section for registered champions plus the roster delta."""
     lines = ["== Registered champions =="]
     for name in registered_champion_names():
-        diffs = drop_noise(list(leaf_diffs(old_champs.get(name), new_champs.get(name))))
-        if not diffs:
+        entry_lines = _flagged_diff_lines(
+            name, old_champs.get(name), new_champs.get(name)
+        )
+        if not entry_lines:
             continue
-        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
-        lines.append(f"  {name} ({flag}):")
-        lines.extend(_detail_lines(diffs))
+        lines.extend(entry_lines)
     if len(lines) == 1:
         lines.append("  (no changes)")
 
@@ -195,12 +206,12 @@ def item_audit_lines(
     """Audit section for configured items plus the shop-wide add/remove delta."""
     lines = ["== Configured items =="]
     for name in sorted(_ITEM_PARSE_CONFIG):
-        diffs = drop_noise(list(leaf_diffs(old_items.get(name), new_items.get(name))))
-        if not diffs:
+        entry_lines = _flagged_diff_lines(
+            name, old_items.get(name), new_items.get(name)
+        )
+        if not entry_lines:
             continue
-        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
-        lines.append(f"  {name} ({flag}):")
-        lines.extend(_detail_lines(diffs))
+        lines.extend(entry_lines)
         static_keys = _STATIC_VALUE_KEYS_BY_ITEM.get(name)
         if static_keys:
             lines.append(
@@ -310,12 +321,12 @@ def ally_effect_lines(
                 f"ALLY_ITEM_EFFECTS still prices {_authored_keys(record)}"
             )
             continue
-        diffs = drop_noise(list(leaf_diffs(old_items.get(name), new_items.get(name))))
-        if not diffs:
+        entry_lines = _flagged_diff_lines(
+            name, old_items.get(name), new_items.get(name)
+        )
+        if not entry_lines:
             continue
-        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
-        lines.append(f"  {name} ({flag}):")
-        lines.extend(_detail_lines(diffs))
+        lines.extend(entry_lines)
         lines.append(
             f"    NOTE: hand-authored values {_authored_keys(record)} do not "
             "refresh — re-read the Wiki entry and update "

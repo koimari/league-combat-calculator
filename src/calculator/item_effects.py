@@ -18,6 +18,7 @@ import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, Literal
 
 from . import data_fetcher, item_source
@@ -4014,7 +4015,7 @@ ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects()
 
 def required_effect_value(
     item_name: str, key: str
-) -> Any:  # sightline-ok: 1 key-typed read
+) -> Any:  # sightline-ok: 1 - key-typed read
     """Read a required key from an item's effect entry, failing loudly.
 
     A missing key means the parser omitted a required parser-owned value or
@@ -4337,25 +4338,32 @@ _DORANS_HELM_HELPING_HAND_ATOMS: dict[str, dict[str, Any]] = {
 }
 
 
-def dorans_helm_helping_hand_minion_damage() -> float:
-    """Doran's Helm's sourced 5 bonus physical damage vs minions.
-
-    The registry value is validated against the catalog atoms so a stale
-    static literal fails closed instead of riding silently.  A champion-class
-    target can never receive the bonus; a minion-class fight arms it as a real
-    on-hit packet from the item's own ``RestrictedChannelRule`` declaration
-    (``interpreters.on_hit_strike.class_restricted_per_hit_effects``).
-    """
-    value = sustain_effect_value("Doran's Helm", "helping_hand_minion_damage")
-    for atom in _DORANS_HELM_HELPING_HAND_ATOMS.values():
+def _atom_pinned_value(
+    item: str, key: str, atoms: Mapping[str, Mapping[str, Any]]
+) -> float:
+    """A registry value certified against every catalog atom that sources it,
+    so a stale static literal fails closed instead of riding silently."""
+    value = sustain_effect_value(item, key)
+    for atom in atoms.values():
         atom_values = atom.get("values", ())
         if not atom_values or float(atom_values[0]) != value:
             raise ValueError(
-                f"ITEM_EFFECTS['Doran's Helm'] helping_hand_minion_damage="
-                f"{value!r} diverges from catalog atom {atom.get('hash')!r} "
-                f"({atom_values!r})"
+                f"ITEM_EFFECTS['{item}'] {key}={value!r} diverges from catalog "
+                f"atom {atom.get('hash')!r} ({atom_values!r})"
             )
     return value
+
+
+# Doran's Helm's 5 bonus physical damage vs minions.  A champion-class target
+# never receives it; a minion-class fight arms it as a real on-hit packet from
+# the item's own ``RestrictedChannelRule`` declaration
+# (``interpreters.on_hit_strike.class_restricted_per_hit_effects``).
+dorans_helm_helping_hand_minion_damage = partial(
+    _atom_pinned_value,
+    "Doran's Helm",
+    "helping_hand_minion_damage",
+    _DORANS_HELM_HELPING_HAND_ATOMS,
+)
 
 
 # ── Target classes (P3-3M) ────────────────────────────────────────────────
@@ -4474,25 +4482,15 @@ _IONIAN_BOOTS_INSIGHT_ATOMS: dict[str, dict[str, Any]] = {
 }
 
 
-def ionian_insight_summoner_spell_haste() -> float:
-    """Ionian Boots of Lucidity's sourced 10 summoner spell haste.
-
-    The registry value is validated against the catalog atom so a stale
-    static literal fails closed instead of riding silently.  The branch
-    is receipt-only: the champion fighter model has no summoner-spell
-    action state, so the haste is never an ability-haste packet and never
-    reduces champion cooldowns.
-    """
-    value = sustain_effect_value("Ionian Boots of Lucidity", "summoner_spell_haste")
-    for atom in _IONIAN_BOOTS_INSIGHT_ATOMS.values():
-        atom_values = atom.get("values", ())
-        if not atom_values or float(atom_values[0]) != value:
-            raise ValueError(
-                f"ITEM_EFFECTS['Ionian Boots of Lucidity'] summoner_spell_haste="
-                f"{value!r} diverges from catalog atom {atom.get('hash')!r} "
-                f"({atom_values!r})"
-            )
-    return value
+# Ionian Boots of Lucidity's 10 summoner spell haste, receipt-only: the
+# champion fighter model has no summoner-spell action state, so the haste is
+# never an ability-haste packet and never reduces champion cooldowns.
+ionian_insight_summoner_spell_haste = partial(
+    _atom_pinned_value,
+    "Ionian Boots of Lucidity",
+    "summoner_spell_haste",
+    _IONIAN_BOOTS_INSIGHT_ATOMS,
+)
 
 
 # Guardian Angel "Rebirth": the catalog atom receipts for the crammed
@@ -5038,19 +5036,30 @@ def damage_source(
     )
 
 
+def _split_ratio_of_stat(
+    item_name: str, melee_ratio: float, ranged_ratio: float, stat: str
+) -> Callable[[DamageInputs], float]:
+    """A melee/ranged ratio of one of the holder's stats, as a pricer."""
+
+    def raw(inputs: DamageInputs) -> float:
+        ratio = melee_ratio if inputs.is_melee else ranged_ratio
+        return ratio * inputs.stat(item_name, stat)
+
+    return raw
+
+
 def _compile_auto_cooldown(
     item_name: str,
     values: Mapping[str, Any],
 ) -> AutoCooldownEffect:
     """Compile Titanic-style empowered-auto damage."""
     required = _RequiredValues(item_name, values)
-    melee_ratio = required.number("active_max_hp_ratio_melee")
-    ranged_ratio = required.number("active_max_hp_ratio_ranged")
-
-    def raw(inputs: DamageInputs) -> float:
-        ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.stat(item_name, "health")
-
+    raw = _split_ratio_of_stat(
+        item_name,
+        required.number("active_max_hp_ratio_melee"),
+        required.number("active_max_hp_ratio_ranged"),
+        "health",
+    )
     source = damage_source(
         item_name,
         required.value("damage_type"),
@@ -5067,18 +5076,17 @@ def _compile_per_ability_hit(
 ) -> DamageSource:
     """Compile Muramana-style damage applied per ability hit."""
     required = _RequiredValues(item_name, values)
-    melee_ratio = required.number("max_mana_ratio_ability_melee")
-    ranged_ratio = required.number("max_mana_ratio_ability_ranged")
+    raw = _split_ratio_of_stat(
+        item_name,
+        required.number("max_mana_ratio_ability_melee"),
+        required.number("max_mana_ratio_ability_ranged"),
+        "max_mana",
+    )
     lockout_seconds = required.number("same_target_cast_lockout_seconds")
     if not math.isfinite(lockout_seconds) or lockout_seconds <= 0.0:
         raise ValueError(
             f"{item_name!r} same-target cast lockout must be finite and positive"
         )
-
-    def raw(inputs: DamageInputs) -> float:
-        ratio = melee_ratio if inputs.is_melee else ranged_ratio
-        return ratio * inputs.stat(item_name, "max_mana")
-
     return damage_source(
         item_name,
         required.value("damage_type"),
@@ -5311,33 +5319,58 @@ def ap_multiplier(items: list[dict[str, Any]]) -> float:
     return 1.0 + bonus
 
 
-def permanent_ap_multiplier(items: list[dict[str, Any]]) -> float:
-    """Return parser-backed AP multiplier eligible as a permanent stat."""
-    if "Rabadon's Deathcap" not in _item_names(items):
+def _held_item_multiplier(items: list[dict[str, Any]], *, item: str, key: str) -> float:
+    """``1 + key`` while ``item`` is held, else the identity."""
+    if item not in _item_names(items):
         return 1.0
-    return 1.0 + required_effect_value("Rabadon's Deathcap", "ap_percent_increase")
+    return 1.0 + required_effect_value(item, key)
 
 
-def mana_to_ap_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
-    """Return parser-owned Awe bonus-mana-to-AP conversion."""
+def _held_item_conversion(
+    items: list[dict[str, Any]], amount: float, *, item: str, key: str
+) -> float:
+    """``key`` times ``amount`` while ``item`` is held, else nothing."""
+    if item not in _item_names(items):
+        return 0.0
+    return required_effect_value(item, key) * amount
+
+
+def _awe_conversion(
+    items: list[dict[str, Any]],
+    bonus_mana: float,
+    *,
+    holders: tuple[str, ...],
+    key: str,
+) -> float:
+    """Every held Awe holder's ``key`` share of bonus mana, in holder order."""
     names = _item_names(items)
     total = 0.0
-    for name in ("Archangel's Staff", "Seraph's Embrace"):
+    for name in holders:
         if name in names:
-            total += required_effect_value(name, "bonus_mana_to_ap_ratio") * bonus_mana
+            total += required_effect_value(name, key) * bonus_mana
     return total
 
 
-def mana_to_health_bonus(items: list[dict[str, Any]], bonus_mana: float) -> float:
-    """Return parser-owned Awe bonus-mana-to-health conversion."""
-    names = _item_names(items)
-    total = 0.0
-    for name in ("Fimbulwinter", "Winter's Approach"):
-        if name in names:
-            total += (
-                required_effect_value(name, "bonus_mana_to_health_ratio") * bonus_mana
-            )
-    return total
+#: Parser-backed AP multiplier eligible as a permanent stat.
+permanent_ap_multiplier = partial(
+    _held_item_multiplier, item="Rabadon's Deathcap", key="ap_percent_increase"
+)
+
+
+#: Parser-owned Awe bonus-mana-to-AP conversion.
+mana_to_ap_bonus = partial(
+    _awe_conversion,
+    holders=("Archangel's Staff", "Seraph's Embrace"),
+    key="bonus_mana_to_ap_ratio",
+)
+
+
+#: Parser-owned Awe bonus-mana-to-health conversion.
+mana_to_health_bonus = partial(
+    _awe_conversion,
+    holders=("Fimbulwinter", "Winter's Approach"),
+    key="bonus_mana_to_health_ratio",
+)
 
 
 def dawncore_bonus_ap(
@@ -5549,18 +5582,16 @@ def cleave_on_hit_item_name(items: Sequence[Mapping[str, Any]]) -> str | None:
     return None
 
 
-def item_bonus_health_multiplier(items: list[dict[str, Any]]) -> float:
-    """Return Warmog's parser-owned multiplier for item-granted health."""
-    if "Warmog's Armor" not in _item_names(items):
-        return 1.0
-    return 1.0 + required_effect_value("Warmog's Armor", "item_bonus_health_ratio")
+#: Warmog's parser-owned multiplier for item-granted health.
+item_bonus_health_multiplier = partial(
+    _held_item_multiplier, item="Warmog's Armor", key="item_bonus_health_ratio"
+)
 
 
-def muramana_bonus_ad(items: list[dict[str, Any]], max_mana: float) -> float:
-    """Return Muramana's parser-owned maximum-mana-to-AD conversion."""
-    if "Muramana" not in _item_names(items):
-        return 0.0
-    return required_effect_value("Muramana", "max_mana_to_ad_ratio") * max_mana
+#: Muramana's parser-owned maximum-mana-to-AD conversion.
+muramana_bonus_ad = partial(
+    _held_item_conversion, item="Muramana", key="max_mana_to_ad_ratio"
+)
 
 
 def endless_hunger_ability_haste(
@@ -5747,11 +5778,10 @@ class ThornsEffect:
     bonus_armor_ratio: float = 0.0
 
 
-def steraks_bonus_ad(items: list[dict[str, Any]], base_ad: float) -> float:
-    """Return parser-backed Sterak's base-AD conversion."""
-    if "Sterak's Gage" not in _item_names(items):
-        return 0.0
-    return required_effect_value("Sterak's Gage", "base_ad_to_bonus_ad_ratio") * base_ad
+#: Parser-backed Sterak's base-AD conversion.
+steraks_bonus_ad = partial(
+    _held_item_conversion, item="Sterak's Gage", key="base_ad_to_bonus_ad_ratio"
+)
 
 
 def terminus_max_stack_bonuses(

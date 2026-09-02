@@ -161,20 +161,24 @@ def boot_upgrade_contract() -> dict[str, dict[str, str]]:
     }
 
 
-def inventory_capacity(role: str, role_quest_complete: bool) -> int:
-    """Return combat-item slots for the selected role state."""
+def _quest_role(role: str, role_quest_complete: bool) -> str:
+    """The validated role, which a completed role quest requires."""
     parsed_role = validate_role(role)
     if role_quest_complete and not parsed_role:
         raise ValueError("role is required when role_quest_complete is true")
-    return 7 if parsed_role == "bottom" and role_quest_complete else 6
+    return parsed_role
+
+
+def inventory_capacity(role: str, role_quest_complete: bool) -> int:
+    """Return combat-item slots for the selected role state."""
+    bottom = _quest_role(role, role_quest_complete) == "bottom"
+    return 7 if bottom and role_quest_complete else 6
 
 
 def required_boots_tier(role: str, role_quest_complete: bool) -> int:
     """Return the only boots tier legal for the selected role state."""
-    parsed_role = validate_role(role)
-    if role_quest_complete and not parsed_role:
-        raise ValueError("role is required when role_quest_complete is true")
-    return 3 if parsed_role == "mid" and role_quest_complete else 2
+    mid = _quest_role(role, role_quest_complete) == "mid"
+    return 3 if mid and role_quest_complete else 2
 
 
 def role_quest_domain_contract() -> dict[str, object]:

@@ -10,6 +10,7 @@ from typing import Any
 
 from .ability_atoms import (
     AbilityAtomQuery,
+    atom_receipt,
     ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
@@ -839,22 +840,6 @@ def _slot_rank(
         return default_rank
 
 
-def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
-    """Keep the provenance fields that identify one runtime atom."""
-    return {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
-
-
 def _shield_duration_metadata(
     champion_data: dict[str, Any], slot: str
 ) -> dict[str, Any]:
@@ -874,7 +859,7 @@ def _shield_duration_metadata(
         raise ValueError(
             f"{champion_name} {slot} shield duration atom must use seconds"
         )
-    return {"duration": duration, "duration_atom": _atom_receipt(atom)}
+    return {"duration": duration, "duration_atom": atom_receipt(atom)}
 
 
 def _invulnerability_timing_metadata(
@@ -911,8 +896,8 @@ def _invulnerability_timing_metadata(
         "duration": ranked_ability_atom_value(
             duration_atom, 1, source=duration_query.source
         ),
-        "activation_delay_atom": _atom_receipt(delay_atom),
-        "duration_atom": _atom_receipt(duration_atom),
+        "activation_delay_atom": atom_receipt(delay_atom),
+        "duration_atom": atom_receipt(duration_atom),
     }
 
 
@@ -1038,8 +1023,8 @@ def _bailout_ramp_metadata(
                     f"{atom.get('source', '')!r} must use {expected!r} units"
                 )
         metadata[field_name] = base + ratio * ability_power / 100.0
-        atoms.append(_atom_receipt(base_atom))
-        atoms.append(_atom_receipt(ratio_atom))
+        atoms.append(atom_receipt(base_atom))
+        atoms.append(atom_receipt(ratio_atom))
 
     duration_atom = required_ability_atom(
         atom_key, champion_data, "W", query=_BAILOUT_DURATION_QUERY
@@ -1049,7 +1034,7 @@ def _bailout_ramp_metadata(
     duration = ranked_ability_atom_value(
         duration_atom, 1, source=_BAILOUT_DURATION_QUERY.source
     )
-    atoms.append(_atom_receipt(duration_atom))
+    atoms.append(atom_receipt(duration_atom))
 
     effects = ability.get("effects", [])
     active = str(effects[0].get("description", "")) if effects else ""
@@ -1226,7 +1211,7 @@ def _morgana_black_shield_metadata(
         "shield_pool": "magic",
         "crowd_control_immunity_while_shield": True,
         "crowd_control_immunity_source": ability_name(ability),
-        "source_atom": _atom_receipt(strength_atom),
+        "source_atom": atom_receipt(strength_atom),
     }
 
 
@@ -1278,7 +1263,7 @@ def _target_max_health_shield_metadata(
                 return {
                     "amount": 0.0,
                     "amount_formula": amount_formula,
-                    "amount_formula_atom": _atom_receipt(atom),
+                    "amount_formula_atom": atom_receipt(atom),
                 }
     return {}
 
@@ -1315,7 +1300,7 @@ def _target_missing_health_heal_metadata(
     return {
         "amount": 0.0,
         "amount_formula": amount_formula,
-        "amount_formula_atom": _atom_receipt(atom),
+        "amount_formula_atom": atom_receipt(atom),
     }
 
 
@@ -1430,7 +1415,7 @@ def _nami_return_bounce_packet(
         "target_scope": "one_teammate",
         "rank": rank,
         "target_selection_key": f"heal:{slot}:{cast_index}:bounce",
-        "source_atoms": [_atom_receipt(heal_atom), _atom_receipt(floor_atom)],
+        "source_atoms": [atom_receipt(heal_atom), atom_receipt(floor_atom)],
     }
 
 
@@ -1471,7 +1456,7 @@ def _yuumi_best_friend_packet(
         "target_scope": "one_teammate",
         "rank": rank,
         "target_selection_key": f"heal:{slot}:{cast_index}:best_friend",
-        "source_atoms": [_atom_receipt(total_atom), _atom_receipt(bonus_atom)],
+        "source_atoms": [atom_receipt(total_atom), atom_receipt(bonus_atom)],
     }
 
 
@@ -1530,10 +1515,10 @@ def _yuumi_conversion_shield_packet(
         # lands on the ally who was healed, not an independent target).
         "target_selection_key": str(heal_event.get("target_selection_key", "")),
         "duration": duration,
-        "duration_atom": _atom_receipt(shield_duration_atom),
+        "duration_atom": atom_receipt(shield_duration_atom),
         "source_atoms": [
-            _atom_receipt(shield_duration_atom),
-            _atom_receipt(channel_atom),
+            atom_receipt(shield_duration_atom),
+            atom_receipt(channel_atom),
         ],
     }
 

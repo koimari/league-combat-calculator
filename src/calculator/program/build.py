@@ -297,23 +297,22 @@ def pair_preview_mechanics() -> frozenset[str]:
     return frozenset(previewed)
 
 
-def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """Which of one pair fight's breakdown rows are previews, not deliveries.
-
-    The join has two declared halves: the pair engine stamps each row it authors
-    with the mechanic that rule belongs to (``pair_preview_of``), and the
-    capability registry says whether that mechanic's pair-lane number is
-    ``THEORETICAL``.  One home, because a roster composes a pair fight in two
-    places and two copies would answer identically until one was not updated.
-    """
-    previews = pair_preview_mechanics()
-    if not previews:
+def _rows_previewing(
+    result_breakdown: Mapping[str, Any], mechanics: frozenset[str]
+) -> frozenset[str]:
+    """The breakdown rows stamped as previews of one of *mechanics*."""
+    if not mechanics:
         return frozenset()
     return frozenset(
         source
         for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in previews
+        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in mechanics
     )
+
+
+def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """Which of one pair fight's breakdown rows are previews, not deliveries."""
+    return _rows_previewing(result_breakdown, pair_preview_mechanics())
 
 
 @cache
@@ -354,14 +353,7 @@ def dropped_preview_mechanics() -> frozenset[str]:
 
 def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
     """The preview rows of one pair fight a roster composition leaves out."""
-    dropped = dropped_preview_mechanics()
-    if not dropped:
-        return frozenset()
-    return frozenset(
-        source
-        for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in dropped
-    )
+    return _rows_previewing(result_breakdown, dropped_preview_mechanics())
 
 
 @cache

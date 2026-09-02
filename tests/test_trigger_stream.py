@@ -1594,7 +1594,7 @@ def pairing_defects(
             defects.append(f"{mechanic}: pair_of resolves to no capability")
             continue
         module, attribute = partner.impl.rsplit(".", 1)
-        resolved = importlib.import_module(  # sightline-ok: 24 impl is a dotted receipt
+        resolved = importlib.import_module(  # sightline-ok: 24 - dotted receipt
             f"src.calculator.{module}"
         )
         if not hasattr(resolved, attribute):

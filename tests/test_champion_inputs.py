@@ -55,17 +55,9 @@ CHAMPIONS_ROOT = ROOT / "src" / "calculator" / "champions"
 # instrument that gates it.
 from scripts.behavior_frontier import (
     INPUT_BLOCK_NAMES,
+    _literal_default,
     zero_policy_frontier,
 )
-
-
-def _literal_default(node: ast.AST) -> bool:
-    """Whether a ``.get`` default is a bare number (or its negation)."""
-    if isinstance(node, ast.Constant):
-        return isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
-    if isinstance(node, ast.UnaryOp):
-        return _literal_default(node.operand)
-    return False
 
 
 def _input_fallback_sites(root: Path = CHAMPIONS_ROOT) -> list[str]:

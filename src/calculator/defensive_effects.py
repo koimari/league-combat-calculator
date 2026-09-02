@@ -676,10 +676,31 @@ def resolve_starting_defenses(
     return ledger.frozen()
 
 
+def armed_revive(defenses: StartingDefenses) -> tuple[float, float, str, str] | None:
+    """``(amount, delay, source, source_key)`` of an armed revive, or ``None``.
+
+    The source is the champion's own passive when the module declares one
+    (Anivia Rebirth, Zac Cell Division, Zilean Chronoshift); Guardian Angel
+    stays the item-source label.
+    """
+    revive_amount = max(0.0, float(defenses.revive_health_amount))
+    revive_delay = max(0.0, float(defenses.revive_delay))
+    if revive_amount <= 0.0 or revive_delay <= 0.0:
+        return None
+    revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
+    revive_key = (
+        f"revive_{revive_source.replace(' ', '_')}"
+        if revive_source != "Guardian Angel (Rebirth)"
+        else "revive_Guardian Angel"
+    )
+    return revive_amount, revive_delay, revive_source, revive_key
+
+
 __all__ = [
     "DEFENSE_SOURCE_LABEL",
     "DefenseCitation",
     "StartingDefenses",
+    "armed_revive",
     "defense_source",
     "resolve_starting_defenses",
 ]

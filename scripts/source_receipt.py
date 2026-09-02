@@ -16,6 +16,7 @@ machine whose checkout uses LF; compare against `source_sha256()` instead.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 from collections.abc import Mapping
@@ -66,3 +67,20 @@ def cache_patch(champions: Mapping[str, Any] | None = None) -> str:
             int(part) if part.isdigit() else -1 for part in patch.split(".")
         ],
     )
+
+
+def catalog_arguments(
+    description: str, *, source: str, output: str
+) -> argparse.Namespace:
+    """The ``--source``/``--output``/``--patch`` arguments every catalog builder takes.
+
+    ``source`` is a cache file under ``data/``, ``output`` a file under
+    ``static/``; the patch defaults to the cache's own, so a rebuild cannot
+    stamp a stale one.
+    """
+    root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--source", type=Path, default=root / "data" / source)
+    parser.add_argument("--output", type=Path, default=root / "static" / output)
+    parser.add_argument("--patch", default=None)
+    return parser.parse_args()

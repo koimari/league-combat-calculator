@@ -36,6 +36,7 @@ from .practice_dummy import (
 )
 from .request_parsing import (
     request_index_map,
+    short_string,
 )
 from .request_parsing import (
     request_int as _request_int,
@@ -51,17 +52,6 @@ from .rune_effects import RunePage, validate_rune_page
 from .stats import MAX_LEVEL, resolve_pre_combat_stats
 
 MAX_LOADOUT_ITEMS = 6
-
-
-def _short_string(value: object, field: str, *, required: bool = False) -> str:
-    if not isinstance(value, str):
-        raise ValueError(f"{field} must be a string")
-    parsed = value.strip()
-    if required and not parsed:
-        raise ValueError(f"{field} is required")
-    if len(parsed) > 100:
-        raise ValueError(f"{field} must be at most 100 characters")
-    return parsed
 
 
 def _validate_champion_options(
@@ -205,13 +195,13 @@ class ChampionLoadout:
         if not isinstance(value, Mapping):
             raise ValueError(f"{field} must be an object")
 
-        kind = _short_string(value.get("kind", "champion"), f"{field}.kind")
+        kind = short_string(value.get("kind", "champion"), f"{field}.kind")
         if kind not in {"champion", PRACTICE_DUMMY_KIND}:
             raise ValueError(
                 f"{field}.kind must be 'champion' or '{PRACTICE_DUMMY_KIND}'"
             )
         is_practice_dummy = kind == PRACTICE_DUMMY_KIND
-        champion = _short_string(
+        champion = short_string(
             value.get("champion", PRACTICE_DUMMY_NAME if is_practice_dummy else ""),
             f"{field}.champion",
             required=True,
@@ -236,10 +226,10 @@ class ChampionLoadout:
                 f"{field}.items may contain at most {MAX_LOADOUT_ITEMS} entries"
             )
         items = tuple(
-            _short_string(item, f"{field}.items entries", required=True)
+            short_string(item, f"{field}.items entries", required=True)
             for item in raw_items
         )
-        boots = _short_string(value.get("boots", ""), f"{field}.boots")
+        boots = short_string(value.get("boots", ""), f"{field}.boots")
         if is_practice_dummy and boots:
             raise ValueError(f"{field}.boots is not available for a practice dummy")
         item_options = validate_item_input_options(value.get("item_options"))

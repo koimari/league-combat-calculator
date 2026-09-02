@@ -33,9 +33,9 @@ with the rule union.
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from . import item_effects, rune_effects
 
@@ -257,7 +257,7 @@ class ValueRef:
         if not self.owner or not self.key:
             raise ValueRefError("a ValueRef names an owner and a key")
 
-    def get(self, level: int | None = None) -> float:  # sightline-ok: 37 LevelValueRef
+    def get(self, level: int | None = None) -> float:  # sightline-ok: 37 - subclass
         """Read the number now, raising with owner and key context if absent."""
         del level
         if self.registry == "ITEM_EFFECTS":
@@ -281,6 +281,11 @@ class LevelValueRef:
     min_key: str
     max_key: str
     scale: LevelScale
+
+    @property
+    def key(self) -> str:
+        """The key a declaration names the ramp by: its low end."""
+        return self.min_key
 
     def __post_init__(self) -> None:
         """Reject a scale outside the union, or one its registry cannot serve."""
@@ -339,6 +344,11 @@ class LateLevelValueRef:
     max_key: str
     start_key: str
     end_key: str
+
+    @property
+    def key(self) -> str:
+        """The key a declaration names the ramp by: its low end."""
+        return self.min_key
 
     def __post_init__(self) -> None:
         """Reject a ramp that does not name all four of its keys."""
@@ -463,6 +473,16 @@ def resolve_flat(references: Sequence[AnyValueRef]) -> tuple[float, ...]:
     return tuple(reference.get() for reference in references)
 
 
+def declared_reference(
+    values: Iterable[Any], kind: type, key: str, stop: type[Exception], missing: str
+) -> Any:
+    """The *kind* reference in *values* declared under *key*, or *stop*."""
+    for reference in values:
+        if isinstance(reference, kind) and reference.key == key:
+            return reference
+    raise stop(missing)
+
+
 __all__ = [
     "DERIVED_OPS",
     "LEVEL_SCALES",
@@ -482,6 +502,7 @@ __all__ = [
     "ValueRef",
     "ValueRefError",
     "ValueRegistry",
+    "declared_reference",
     "receipt_for",
     "resolve",
     "resolve_flat",

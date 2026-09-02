@@ -38,6 +38,7 @@ from ..rune_effects import (
     breakdown_key,
     display_name,
     no_damage_compiler,
+    per_stack_grant,
     required_leveling,
     stack_count_option,
 )
@@ -74,12 +75,10 @@ def _compile_legend_alacrity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """
     name = "Legend: Alacrity"
     effects = RuneValues(name, entry.get("effects", {}))
-    base = effects.number("attack_speed_percent")
-    per_stack = effects.number("attack_speed_percent_per_stack")
-    ceiling = effects.number("max_stacks")
-
-    def amount(context: RuneStatContext) -> float:
-        return base + per_stack * context.option(name, _LEGEND_STACKS, 0.0)
+    base, per_stack, ceiling = effects.numbers(
+        "attack_speed_percent", "attack_speed_percent_per_stack", "max_stacks"
+    )
+    amount = per_stack_grant(name, base, per_stack, _LEGEND_STACKS)
 
     return RuneStatGrantEffect(
         rune_name=name,
@@ -105,9 +104,9 @@ def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneMultiStatGrantEff
     """
     name = "Legend: Bloodline"
     effects = RuneValues(name, entry.get("effects", {}))
-    health = effects.number("bonus_health")
-    per_stack = effects.number("life_steal_percent_per_stack")
-    ceiling = effects.number("max_stacks")
+    health, per_stack, ceiling = effects.numbers(
+        "bonus_health", "life_steal_percent_per_stack", "max_stacks"
+    )
 
     def amounts(context: RuneStatContext) -> Mapping[RuneStat, float]:
         stacks = context.option(name, _LEGEND_STACKS, 0.0)
@@ -239,9 +238,9 @@ def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
     """
     name = "Triumph"
     effects = RuneValues(name, entry.get("effects", {}))
-    max_health_ratio = effects.number("max_health_heal_ratio")
-    missing_health_ratio = effects.number("missing_health_heal_ratio")
-    gold = effects.number("flat_gold")
+    max_health_ratio, missing_health_ratio, gold = effects.numbers(
+        "max_health_heal_ratio", "missing_health_heal_ratio", "flat_gold"
+    )
 
     def amount(inputs: DamageInputs) -> float:
         return max_health_ratio * champion_stat(inputs.champion_stats, "health")

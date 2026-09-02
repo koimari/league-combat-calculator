@@ -2463,6 +2463,6 @@ def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     for lane, dotted in recorded.items():
         module, _, symbol = dotted.rpartition(".")
         assert module == "src.calculator.item_coverage", lane
-        resolved = getattr(item_coverage, symbol)  # sightline-ok: 24 receipt symbol
+        resolved = getattr(item_coverage, symbol)  # sightline-ok: 24 - receipt symbol
         assert callable(resolved), dotted
         assert symbol == capture_coverage_classification.CLASSIFIER_NAMES[lane]

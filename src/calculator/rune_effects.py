@@ -27,7 +27,7 @@ engine publishes — never a silent zero.
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from functools import cache
+from functools import cache, partial
 from types import MappingProxyType
 from typing import Any
 
@@ -703,11 +703,8 @@ class KeystoneAeryEffect:
 
     def raw_damage(self, inputs: DamageInputs) -> float:
         """Price one offensive signal from sourced level and stat tables."""
-        stats = inputs.champion_stats
-        return (
-            at_level(self.damage_by_level, inputs.level)
-            + self.bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
-            + self.ap_ratio * champion_stat(stats, "ability_power")
+        return leveled_adaptive_damage(
+            self.damage_by_level, self.bonus_ad_ratio, self.ap_ratio, inputs
         )
 
     def raw_shield(self, inputs: DamageInputs) -> float:
@@ -895,11 +892,8 @@ class KeystoneHailOfBladesEffect:
 
     def raw_damage(self, inputs: DamageInputs) -> float:
         """Price one bonus true-damage attack from level and ratios."""
-        stats = inputs.champion_stats
-        return (
-            at_level(self.damage_by_level, inputs.level)
-            + self.bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
-            + self.ap_ratio * champion_stat(stats, "ability_power")
+        return leveled_adaptive_damage(
+            self.damage_by_level, self.bonus_ad_ratio, self.ap_ratio, inputs
         )
 
 
@@ -1342,7 +1336,7 @@ class RuneValues:
         self.rune_name = rune_name
         self.values = values
 
-    def value(self, key: str) -> Any:  # sightline-ok: 1 key-typed read
+    def value(self, key: str) -> Any:  # sightline-ok: 1 - key-typed read
         """Return one required value or raise with rune and key context."""
         if key not in self.values or self.values[key] is None:
             raise KeyError(
@@ -1354,6 +1348,10 @@ class RuneValues:
     def number(self, key: str) -> float:
         """Return one required numeric value as a float."""
         return float(self.value(key))
+
+    def numbers(self, *keys: str) -> tuple[float, ...]:
+        """Return required numeric values, one per key, in key order."""
+        return tuple(self.number(key) for key in keys)
 
 
 #: The column count of a level table stating every level of the game's cap.
@@ -1526,6 +1524,82 @@ def ratio_adaptive_type(
         return "physical" if ad_contribution > ap_contribution else "magic"
 
     return adaptive_type
+
+
+def required_leveling_pair(
+    name: str, effects: RuneValues, tables: str
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """A keystone's two 20-level ``leveling`` tables, ``tables`` naming them."""
+    leveling = effects.value("leveling")
+    if not isinstance(leveling, list) or len(leveling) < 2:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] leveling must contain {tables} tables — "
+            "wiki parse degraded; check rune_parser and data/runes.json"
+        )
+    first = tuple(float(value) for value in leveling[0])
+    second = tuple(float(value) for value in leveling[1])
+    if len(first) < 20 or len(second) < 20:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
+            "wiki parse degraded; check rune_parser and data/runes.json"
+        )
+    return first, second
+
+
+def leveled_adaptive_damage(
+    by_level: Sequence[float],
+    bonus_ad_ratio: float,
+    ap_ratio: float,
+    inputs: DamageInputs,
+) -> float:
+    """A leveled base plus bonus-AD and AP ratios: the formula adaptive procs state."""
+    stats = inputs.champion_stats
+    return (
+        at_level(by_level, inputs.level)
+        + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
+        + ap_ratio * champion_stat(stats, "ability_power")
+    )
+
+
+def adaptive_formula(
+    name: str, effects: RuneValues
+) -> tuple[Callable[[DamageInputs], float], float, float]:
+    """A rune's leveled adaptive pricer, with the two ratios it reads."""
+    by_level = required_leveling(name, effects)
+    bonus_ad_ratio = effects.number("bonus_ad_ratio")
+    ap_ratio = effects.number("ap_ratio")
+    pricer = partial(leveled_adaptive_damage, by_level, bonus_ad_ratio, ap_ratio)
+    return pricer, bonus_ad_ratio, ap_ratio
+
+
+def leveled_damage(name: str, effects: RuneValues) -> Callable[[DamageInputs], float]:
+    """A proc priced by its level table alone."""
+    by_level = required_leveling(name, effects)
+    return lambda inputs: at_level(by_level, inputs.level)
+
+
+def per_stack_grant(
+    name: str, base: float, per_stack: float, option: str
+) -> Callable[[RuneStatContext], float]:
+    """``base`` plus ``per_stack`` times the holder's ``option`` stack count."""
+
+    def amount(context: RuneStatContext) -> float:
+        return base + per_stack * context.option(name, option, 0.0)
+
+    return amount
+
+
+def option_gated_level_grant(
+    name: str, by_level: Sequence[float], option: str, default: float
+) -> Callable[[RuneStatContext], float]:
+    """A level-table grant paid only while the ``option`` switch is on."""
+
+    def amount(context: RuneStatContext) -> float:
+        if not context.option(name, option, default):
+            return 0.0
+        return at_level(by_level, context.level)
+
+    return amount
 
 
 def no_damage_compiler(

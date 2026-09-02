@@ -37,12 +37,12 @@ Why each slot is non-generic:
 """
 
 import math
-from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import (
     AbilityAtomQuery,
+    atom_receipt,
     ranked_ability_atom_value,
     required_ability_atom,
 )
@@ -247,22 +247,6 @@ _E_REDUCTION_SOURCE = "Briar.E[0].effects[0].description"
 _E_CONTROL_SOURCE = "Briar.E[0].effects[3].description"
 
 
-def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
-    """Keep the provenance fields that identify one runtime atom."""
-    return {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
-
-
 @ranked_slot
 def _chilling_scream(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
@@ -355,8 +339,8 @@ def _chilling_scream(
                 "duration": charge_seconds,
                 "source": f"{ability_name(ability)} · damage reduction",
                 "source_atoms": [
-                    _atom_receipt(reduction_atom),
-                    _atom_receipt(duration_atom),
+                    atom_receipt(reduction_atom),
+                    atom_receipt(duration_atom),
                 ],
                 # The reduction covers every damage type Briar takes while
                 # charging (physical, magic, and true — the sourced prose
@@ -413,7 +397,7 @@ def _chilling_scream(
                 time_offset=E_FULL_CHARGE_SECONDS + knockup_seconds,
             ),
         )
-        entry["control_source_atoms"] = [_atom_receipt(control_atom)]
+        entry["control_source_atoms"] = [atom_receipt(control_atom)]
     return entry
 
 

@@ -117,13 +117,10 @@ def _cooldown_values(ability: Mapping[str, Any]) -> list[float]:
     return []
 
 
-def _damage_packet(
+def _base_and_ratios(
     attribute: str, leveling: Mapping[str, Any]
-) -> dict[str, Any] | None:
-    if not _DAMAGE_ATTRIBUTE.search(attribute) or _NON_DAMAGE_ATTRIBUTE.search(
-        attribute
-    ):
-        return None
+) -> tuple[list[float], dict[str, list[float]]] | None:
+    """One leveling row's base values and per-stat ratio tables, or None."""
     base: list[float] = []
     ratios: dict[str, list[float]] = {}
     for modifier in leveling.get("modifiers", []):
@@ -140,6 +137,20 @@ def _damage_packet(
                 ratios[key] = [value * factor for value in values]
     if not base and not ratios:
         return None
+    return base, ratios
+
+
+def _damage_packet(
+    attribute: str, leveling: Mapping[str, Any]
+) -> dict[str, Any] | None:
+    if not _DAMAGE_ATTRIBUTE.search(attribute) or _NON_DAMAGE_ATTRIBUTE.search(
+        attribute
+    ):
+        return None
+    tables = _base_and_ratios(attribute, leveling)
+    if tables is None:
+        return None
+    base, ratios = tables
     lower = attribute.lower()
     priority = 0
     if "total" in lower:
@@ -165,22 +176,10 @@ def _utility_packet(
     lower = attribute.lower()
     if not re.search(r"shield|barrier|\bheal(?:ing)?\b", lower):
         return None
-    base: list[float] = []
-    ratios: dict[str, list[float]] = {}
-    for modifier in leveling.get("modifiers", []):
-        values = _values(modifier)
-        if not values:
-            continue
-        units = modifier.get("units", [])
-        unit = str(units[0] if units else "")
-        components = _ratio_components(unit, attribute)
-        if components.get("base"):
-            base = values
-        else:
-            for key, factor in components.items():
-                ratios[key] = [value * factor for value in values]
-    if not base and not ratios:
+    tables = _base_and_ratios(attribute, leveling)
+    if tables is None:
         return None
+    base, ratios = tables
     return {"attribute": attribute, "base": base, "ratios": ratios, "priority": 0}
 
 

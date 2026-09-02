@@ -21,6 +21,7 @@ Nothing here is memoized, for the same reason the catalog is not:
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 
 from ..item_behavior import (
     ActiveCastRule,
@@ -30,6 +31,8 @@ from ..item_behavior import (
     FightFacts,
     KernelField,
     RuleFamily,
+    declared_mechanic_id,
+    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import DamageSource, damage_source
@@ -57,34 +60,20 @@ class ActiveCastInterpretationError(ValueError):
     """A rule reached this interpreter that is not an item active."""
 
 
-def _payload(rule: BehaviorRule) -> ActiveCastRule:
-    """*rule*'s active payload, or a stop."""
-    payload = rule.payload
-    if not isinstance(payload, ActiveCastRule):
-        raise ActiveCastInterpretationError(f"{rule.mechanic_id} is not an active rule")
-    return payload
+_payload = partial(
+    typed_payload,
+    payload_type=ActiveCastRule,
+    stop=ActiveCastInterpretationError,
+    noun="an active rule",
+)
 
 
 def active_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One active's compiled numbers, stamped with *lane*.
-
-    Registered for both the pair engine and the receipt walk, whose only
-    difference is the lane, so one body makes "the walk reads the same
-    declaration the pair engine reads" a property of the tree.  Compiling the
-    formula here fails a missing registry key when the build is made rather
-    than on whichever event first asks for the number.
-    """
-    payload = _payload(rule)
-    damage_formula.compile_formula(payload.formula, ctx)
-    return (
-        KernelField(
-            name=ACTIVE_COOLDOWN_FIELD,
-            value=resolve(payload.cooldown, ctx.level),
-            lane=lane,
-            rule_id=rule.mechanic_id,
-        ),
+    """One active's compiled numbers, stamped with *lane*, for both engines."""
+    return damage_formula.compiled_field(
+        _payload(rule), "cooldown", ACTIVE_COOLDOWN_FIELD, rule, ctx, lane
     )
 
 
@@ -94,7 +83,7 @@ def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
     inherited = payload.lifesteal_effectiveness
     return damage_source(
         rule.owner,
-        payload.formula.damage_class.value,
+        payload.formula.damage_type,
         damage_formula.compile_formula(payload.formula, ctx),
         suffix=ACTIVE_SUFFIX,
         breakdown_key=f"{ACTIVE_BREAKDOWN_PREFIX}{rule.owner}",
@@ -124,13 +113,13 @@ def active_mechanic_id(owner: str) -> str:
     spelling of the slug.  A missing rule stops rather than defaults: an
     unstamped row would double count, in the roster total and in the walk.
     """
-    rules = active_rules([owner])
-    if not rules:
-        raise ActiveCastInterpretationError(
-            f"{owner} authors an item active and declares no active_cast rule, "
-            "so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    return declared_mechanic_id(
+        owner,
+        active_rules([owner]),
+        ActiveCastInterpretationError,
+        authors="an item active",
+        declares="active_cast",
+    )
 
 
 def active_sources(
@@ -138,18 +127,10 @@ def active_sources(
     *,
     facts: FightFacts,
 ) -> tuple[DamageSource, ...]:
-    """Every active this build declares, in build order.
-
-    Build order is the order the items were bought, which is the order the
-    registry's own loop appended them in, which is the order the engine's
-    breakdown rows come out in.  Preserving it is what makes the migration
-    provably neutral rather than merely equivalent.
-    """
+    """Every active this build declares, in build order (purchase order, the
+    registry's append order and the engine's breakdown-row order)."""
     return tuple(
-        active_source(
-            rule,
-            build_context(rule.owner, facts),
-        )
+        active_source(rule, build_context(rule.owner, facts))
         for rule in active_rules(owners)
     )
 

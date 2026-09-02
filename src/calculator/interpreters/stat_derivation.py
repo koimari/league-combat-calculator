@@ -29,6 +29,7 @@ from ..item_behavior import (
     STAT_DERIVATION_UNGRANTED_PAYLOADS,
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     DerivedStat,
     EngineLane,
     KernelField,
@@ -36,6 +37,7 @@ from ..item_behavior import (
     PenetrationChannelRule,
     RuleFamily,
     StatAvailability,
+    sole_declaration,
 )
 from ..item_behavior_catalog import behavior_rules
 from ..value_ref import ValueRefError, resolve, resolve_flat
@@ -103,7 +105,7 @@ def granted_stat(payload: object) -> DerivedStat | None:
 
 
 @dataclass(frozen=True, slots=True)
-class StatSlot:
+class StatSlot(CompiledSlot):
     """One holder's stat derivation, resolved for one build.
 
     The accessor an engine holds instead of an item name.  ``value`` refuses
@@ -114,6 +116,11 @@ class StatSlot:
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
+    stop = StatDerivationInterpretationError
+    missing = (
+        "{mechanic_id} declares no {name!r} value; a stat derivation reads "
+        "the numbers its declaration names and no others"
+    )
 
     @property
     def owner(self) -> str:
@@ -129,16 +136,6 @@ class StatSlot:
     def availability(self) -> StatAvailability:
         """When this stat is in the block the engines read."""
         return self.rule.payload.availability
-
-    def value(self, name: str) -> float:
-        """One declared number, by the field name it was declared under."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise StatDerivationInterpretationError(
-            f"{self.rule.mechanic_id} declares no {name!r} value; a stat "
-            "derivation reads the numbers its declaration names and no others"
-        )
 
 
 def stat_derivation_rules(
@@ -157,25 +154,14 @@ def stat_derivation_rules(
 def sole_declared_derivation(
     owners: Sequence[str], payload_type: type
 ) -> StatSlot | None:
-    """This build's one derivation of a shape that does not compose, or ``None``.
-
-    The companion to :func:`declared_stat_derivations` for shapes whose
-    numbers multiply rather than grant.  Nothing declares how two casting
-    trades compose, so a second holder is a named stop rather than whichever
-    slot sorts first.  ``None`` is an answer and not a zero: no holder
-    declares the shape, so the number the caller would have multiplied stays
-    as it was.
-    """
+    """This build's one derivation of a shape that does not compose, or ``None``."""
     slots = declared_stat_derivations(owners, payload_type)
-    if not slots:
-        return None
-    if len(slots) > 1:
-        raise StatDerivationInterpretationError(
-            f"{[slot.owner for slot in slots]} all declare "
-            f"{payload_type.__name__} and no rule declares how two of them "
-            "compose; the slice that declares a second one owns the fold"
-        )
-    return slots[0]
+    return sole_declaration(
+        slots,
+        [slot.owner for slot in slots],
+        payload_type,
+        StatDerivationInterpretationError,
+    )
 
 
 def declared_stat_derivations(

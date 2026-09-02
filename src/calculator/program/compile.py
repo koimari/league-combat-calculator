@@ -56,6 +56,7 @@ from operator import itemgetter
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
+from ..defensive_effects import armed_revive
 from ..delivery_eligibility import CombatantFacts
 from ..healing_reduction import amplifies_recovery
 from ..interpreters.delta_amp import StaticHolderAmps
@@ -713,17 +714,10 @@ def revive_candidate_actions(
     candidates: list[SurvivalAction] = []
     aidx = next_aidx
     for actor_index, actor in enumerate(combatant_list):
-        defenses = actor.defenses
-        revive_amount = max(0.0, float(defenses.revive_health_amount))
-        revive_delay = max(0.0, float(defenses.revive_delay))
-        if revive_amount <= 0.0 or revive_delay <= 0.0:
+        revive = armed_revive(actor.defenses)
+        if revive is None:
             continue
-        revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
-        revive_key = (
-            f"revive_{revive_source.replace(' ', '_')}"
-            if revive_source != "Guardian Angel (Rebirth)"
-            else "revive_Guardian Angel"
-        )
+        revive_amount, revive_delay, revive_source, revive_key = revive
         for action in actions:
             if action.subject != actor_index or action.kind not in _DAMAGE_ACTION_KINDS:
                 continue
@@ -1855,6 +1849,26 @@ def routed_declaration(declared: Any, share: float) -> Any:
     return route_declared_packet(declared, RoutingProvenance(KNIGHTS_VOW_ROUTER, share))
 
 
+def _tether_indexes(
+    tether: Mapping[str, Any], combatants: Sequence[Any]
+) -> tuple[str, int, str, int] | None:
+    """The holder and target ids and combatant indexes of an armed Knight's Vow tether,
+    or ``None`` when it is out of range, unready, or names nobody present."""
+    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+        return None
+    holder_id = str(tether["holder"].participant_id)
+    target_id = str(tether["target"].participant_id)
+    holder_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == holder_id), -1
+    )
+    target_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == target_id), -1
+    )
+    if holder_i < 0 or target_i < 0:
+        return None
+    return holder_id, holder_i, target_id, target_i
+
+
 def stage_knights_vow_redirect_actions(
     compiler: WalkCompiler,
     combatants: Sequence[Any],
@@ -1879,32 +1893,14 @@ def stage_knights_vow_redirect_actions(
     fraction with a named reason, and the compiled path simply never stages
     them.
     """
-    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+    indexes = _tether_indexes(tether, combatants)
+    if indexes is None:
         return next_aidx
+    holder_id, holder_i, target_id, target_i = indexes
     target = tether["target"]
     holder = tether["holder"]
     fraction = max(0.0, min(1.0, float(tether["redirect_fraction"])))
     threshold = float(tether["threshold"])
-    target_id = str(target.participant_id)
-    holder_id = str(holder.participant_id)
-    target_i = next(
-        (
-            i
-            for i, combatant in enumerate(combatants)
-            if combatant.participant_id == target_id
-        ),
-        -1,
-    )
-    holder_i = next(
-        (
-            i
-            for i, combatant in enumerate(combatants)
-            if combatant.participant_id == holder_id
-        ),
-        -1,
-    )
-    if target_i < 0 or holder_i < 0:
-        return next_aidx
     aidx = next_aidx
     rebuilt: list[SurvivalAction] = []
     for action in compiler.actions:
@@ -2058,22 +2054,12 @@ def stage_knights_vow_heals(
     panel: the Worthy ally's outgoing physical/magic/true damage packets
     author a holder heal (kind ``HEAL``, subject = the Knight's Vow holder,
     gated by the typed holder-health ratio the kernel enforces)."""
-    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+    indexes = _tether_indexes(tether, combatants)
+    if indexes is None:
         return next_aidx
-    holder = tether["holder"]
-    target = tether["target"]
+    holder_id, holder_i, _, target_i = indexes
     heal_fraction = max(0.0, float(tether["heal_fraction"]))
     threshold = float(tether["threshold"])
-    holder_id = str(holder.participant_id)
-    target_id = str(target.participant_id)
-    holder_i = next(
-        (i for i, c in enumerate(combatants) if c.participant_id == holder_id), -1
-    )
-    target_i = next(
-        (i for i, c in enumerate(combatants) if c.participant_id == target_id), -1
-    )
-    if holder_i < 0 or target_i < 0:
-        return next_aidx
     aidx = next_aidx
     appended: list[SurvivalAction] = []
     for action in compiler.actions:

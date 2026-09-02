@@ -67,13 +67,6 @@ def _naive_utc(value: datetime | None) -> datetime:
     return value
 
 
-def _iso(value: datetime | None) -> str | None:
-    """Serialize a naive-UTC datetime as an ISO-8601 string with a Z suffix."""
-    if value is None:
-        return None
-    return value.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
-
-
 def _week_windows(beta_start: datetime, weeks: int) -> list[tuple[datetime, datetime]]:
     """Return ``[(start, end), ...]`` for each 7-day week of the beta."""
     return [
@@ -290,7 +283,7 @@ def _staleness_week(
             "status": "fail",
             "detail": (
                 f"no staleness check during the week "
-                f"(report checked {_iso(checked_at)})"
+                f"(report checked {db.serialize_datetime(checked_at)})"
             ),
         }
     age_hours = (effective_end - checked_at).total_seconds() / 3600.0
@@ -564,10 +557,10 @@ def compute_scorecard(
     }
 
     return {
-        "generated_at": _iso(now),
+        "generated_at": db.serialize_datetime(now),
         "beta": {
-            "start": _iso(beta_start),
-            "end": _iso(beta_end),
+            "start": db.serialize_datetime(beta_start),
+            "end": db.serialize_datetime(beta_end),
             "weeks": weeks,
             "window_days": 7 * weeks,
             "complete": beta_complete,
@@ -614,7 +607,7 @@ def compute_scorecard(
                 "report": {
                     "exists": report is not None,
                     "patch": report.get("patch") if report else None,
-                    "checked_at": _iso(checked_at),
+                    "checked_at": db.serialize_datetime(checked_at),
                     "age_hours": age_hours,
                     "stale_flags": _stale_flag_count(report),
                 },

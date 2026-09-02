@@ -2541,6 +2541,37 @@ _MUNDO_P_CANISTER_LIFETIME = 7.0
 _MUNDO_P_COOLDOWN_ROW = (60.0, 15.0)
 
 
+def _record_death(
+    ctx: Any, action: SurvivalAction, state: dict, event_time: float
+) -> None:
+    """Book the subject's death at ``event_time``: first death, Defy, terminal
+    phase, and the downtime that runs to the end of the fight."""
+    if state["first_death_time"] is None:
+        state["first_death_time"] = float(event_time)
+    trigger_defy(ctx, ctx.combatants[action.subject].participant_id, float(event_time))
+    state["death_time"] = min(float(ctx.duration), event_time)
+    state["terminal_phase"] = "dead"
+    state["action_downtime_intervals"].append(
+        {
+            "kind": "death",
+            "start": float(event_time),
+            "end": float(ctx.duration),
+            "source": str(action.source or action.source_key or "Death"),
+        }
+    )
+
+
+def _hostile(ctx: Any, action: SurvivalAction) -> bool:
+    """Whether the action's attacker is on a team other than its subject's."""
+    attacker_team = ""
+    subject_team = ""
+    if 0 <= action.attacker < len(ctx.combatants):
+        attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
+    if 0 <= action.subject < len(ctx.combatants):
+        subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
+    return bool(attacker_team) and attacker_team != subject_team
+
+
 def _apply_mundo_p_resist(
     ctx: TransitionContext,
     action: SurvivalAction,
@@ -2567,21 +2598,7 @@ def _apply_mundo_p_resist(
     pools.health = max(0.0, float(pools.health) - cost)
     event_time = float(action.time)
     if pools.health <= 0.0 and state["death_time"] is None:
-        if state["first_death_time"] is None:
-            state["first_death_time"] = float(event_time)
-        trigger_defy(
-            ctx, ctx.combatants[action.subject].participant_id, float(event_time)
-        )
-        state["death_time"] = min(float(ctx.duration), event_time)
-        state["terminal_phase"] = "dead"
-        state["action_downtime_intervals"].append(
-            {
-                "kind": "death",
-                "start": float(event_time),
-                "end": float(ctx.duration),
-                "source": str(action.source or action.source_key or "Death"),
-            }
-        )
+        _record_death(ctx, action, state, event_time)
         arm_revive_stasis(state, float(event_time))
     resist = state["mundo_p_resist"]
     resist["armed"] = False
@@ -2859,37 +2876,28 @@ def _apply_crowd_control(
         and profile.blocking
         and not profile.unknown
         and float(action.time) < float(ragnarok.get("until", 0.0))
+        and _hostile(ctx, action)
     ):
-        attacker_team = ""
-        subject_team = ""
-        if 0 <= action.attacker < len(ctx.combatants):
-            attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
-        if 0 <= action.subject < len(ctx.combatants):
-            subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
-        hostile = bool(attacker_team) and attacker_team != subject_team
-        if hostile:
-            blocked_row = {
-                "time": round(float(action.time), 3),
-                "source_key": str(action.source_key or ""),
-                "control_kind": str(profile.kind),
-            }
-            ragnarok.setdefault("blocked", []).append(blocked_row)
-            ctx.ledger.write(action, ragnarok_blocked=dict(blocked_row))
-            ctx.ledger.mark_applied(action)
-            return
+        blocked_row = {
+            "time": round(float(action.time), 3),
+            "source_key": str(action.source_key or ""),
+            "control_kind": str(profile.kind),
+        }
+        ragnarok.setdefault("blocked", []).append(blocked_row)
+        ctx.ledger.write(action, ragnarok_blocked=dict(blocked_row))
+        ctx.ledger.mark_applied(action)
+        return
     resist = state.get("mundo_p_resist")
-    if resist and resist.get("armed") and profile.blocking and not profile.unknown:
-        attacker_team = ""
-        subject_team = ""
-        if 0 <= action.attacker < len(ctx.combatants):
-            attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
-        if 0 <= action.subject < len(ctx.combatants):
-            subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
-        hostile = bool(attacker_team) and attacker_team != subject_team
-        if hostile:
-            _apply_mundo_p_resist(ctx, action, state, profile)
-            ctx.ledger.mark_applied(action)
-            return
+    if (
+        resist
+        and resist.get("armed")
+        and profile.blocking
+        and not profile.unknown
+        and _hostile(ctx, action)
+    ):
+        _apply_mundo_p_resist(ctx, action, state, profile)
+        ctx.ledger.mark_applied(action)
+        return
     until = float(action.time + duration)
     state["crowd_control_until"] = max(state["crowd_control_until"], until)
     state["crowd_control_intervals"].append(
@@ -3405,21 +3413,7 @@ def _apply_damage(
             }
         )
     if pools.health <= 0.0 and state["death_time"] is None:
-        if state["first_death_time"] is None:
-            state["first_death_time"] = float(event_time)
-        trigger_defy(
-            ctx, ctx.combatants[action.subject].participant_id, float(event_time)
-        )
-        state["death_time"] = min(float(ctx.duration), event_time)
-        state["terminal_phase"] = "dead"
-        state["action_downtime_intervals"].append(
-            {
-                "kind": "death",
-                "start": float(event_time),
-                "end": float(ctx.duration),
-                "source": str(action.source or action.source_key or "Death"),
-            }
-        )
+        _record_death(ctx, action, state, event_time)
         # A revive packet is intentionally scheduled by the caller.  A
         # dead participant remains terminal until that explicit packet;
         # no item is inferred from the loadout here.  The lethal packet DOES

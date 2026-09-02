@@ -1472,10 +1472,14 @@ def covering_scenarios(
     }
 
 
+def _unarmed(covering: Mapping[str, Any]) -> tuple[str, ...]:
+    """The members of a covering map no scenario covers, sorted."""
+    return tuple(sorted(member for member, names in covering.items() if not names))
+
+
 def _uncovered_families(scenarios, families):
     """Deferral families no scenario equips a declaring item of (R-12)."""
-    covering = covering_scenarios(scenarios, families)
-    return tuple(sorted(family for family, names in covering.items() if not names))
+    return _unarmed(covering_scenarios(scenarios, families))
 
 
 def holder_amp_declarations() -> dict[str, frozenset[str]]:
@@ -1495,8 +1499,7 @@ def holder_amp_declarations() -> dict[str, frozenset[str]]:
 
 def _unarmed_amp_kinds(scenarios, amps):
     """Static holder amps no scenario equips a declaring item of."""
-    covering = covering_scenarios(scenarios, amps)
-    return tuple(sorted(kind for kind, names in covering.items() if not names))
+    return _unarmed(covering_scenarios(scenarios, amps))
 
 
 # The two re-pricing windows' kind names are the tree's own vocabulary for
@@ -1590,8 +1593,7 @@ def window_covering_scenarios(
 
 def _unarmed_repricing_windows(scenarios, windows):
     """Re-pricing windows no scenario arms (R-12)."""
-    covering = window_covering_scenarios(scenarios, windows)
-    return tuple(sorted(kind for kind, names in covering.items() if not names))
+    return _unarmed(window_covering_scenarios(scenarios, windows))
 
 
 # The pair engine's one basic-attack swing pricing entry point, named rather
@@ -1710,8 +1712,7 @@ def swing_term_covering_scenarios(
 
 def _unarmed_swing_terms(scenarios, terms):
     """Target-side swing terms no scenario arms against a swing (R-12)."""
-    covering = swing_term_covering_scenarios(scenarios, terms)
-    return tuple(sorted(term for term, names in covering.items() if not names))
+    return _unarmed(swing_term_covering_scenarios(scenarios, terms))
 
 
 def _refuse_unarmed_swing_terms(scenarios, terms):

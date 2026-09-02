@@ -13,6 +13,7 @@ from typing import Any
 
 from .ability_atoms import (
     AbilityAtomQuery,
+    atom_receipt,
     ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
@@ -147,6 +148,70 @@ _PROSE_DURATION_QUERIES: dict[tuple[str, str], AbilityAtomQuery] = {
     ),
 }
 
+# The prose-duration windows: slot, then the ProjectileDefense fields, where a
+# ``blocked_sources`` / ``blocked_event_ids`` entry names the option holding
+# the selection.
+_PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
+    "Yasuo": (
+        "W",
+        {
+            "kind": "yasuo_wind_wall",
+            "source": "Yasuo W · Wind Wall",
+            "blocked_sources": "w_blocked_skillshots",
+            "blocked_event_ids": "w_blocked_event_ids",
+            "destroy_projectiles": True,
+        },
+    ),
+    "Samira": (
+        "W",
+        {
+            "kind": "samira_blade_whirl",
+            "source": "Samira W · Blade Whirl",
+            "blocked_sources": "w_blocked_skillshots",
+            "destroy_projectiles": True,
+        },
+    ),
+    "Gwen": (
+        "W",
+        {
+            "kind": "gwen_hallowed_mist",
+            "source": "Gwen W · Hallowed Mist",
+            "blocked_sources": "w_blocked_skillshots",
+            "destroy_projectiles": True,
+        },
+    ),
+    "Fiora": (
+        "W",
+        {
+            "kind": "fiora_riposte",
+            "source": "Fiora W · Riposte",
+            "blocked_sources": "w_blocked_sources",
+            "full_block_all": True,
+            "requires_skillshot": False,
+        },
+    ),
+    "Pantheon": (
+        "E",
+        {
+            "kind": "pantheon_aegis_assault",
+            "source": "Pantheon E · Aegis Assault",
+            "blocked_sources": "e_blocked_skillshots",
+            "full_block_all": True,
+        },
+    ),
+    "Jax": (
+        "E",
+        {
+            "kind": "jax_counter_strike",
+            "source": "Jax E · Counter Strike",
+            "full_block_all": True,
+            "blocks_basic_attacks": True,
+            "area_damage_reduction": 0.25,
+            "requires_skillshot": False,
+        },
+    ),
+}
+
 _BRAUM_DURATION_QUERY = AbilityAtomQuery(
     source="Braum.E[0].effects[0].leveling[1].modifiers[0]",
     behavior="ability",
@@ -162,22 +227,6 @@ _AMUMU_REDUCTION_CAP_QUERY = AbilityAtomQuery(
     behavior="ability",
     evidence_prefix="damage reduction cap@",
 )
-
-
-def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
-    """Keep the provenance fields that identify one runtime atom."""
-    return {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
 
 
 def _ranked_atom_value(
@@ -210,7 +259,7 @@ def _prose_duration_atom(
     atom = required_ability_atom(champion, champion_data, slot, query=query)
     if atom.get("units") != ["s"]:
         raise ValueError(f"{champion} {slot} defense duration atom must use seconds")
-    return ranked_ability_atom_value(atom, 1, source=query.source), _atom_receipt(atom)
+    return ranked_ability_atom_value(atom, 1, source=query.source), atom_receipt(atom)
 
 
 def resolve_physical_damage_reduction(
@@ -294,10 +343,10 @@ def resolve_physical_damage_reduction(
         per_instance_cap=max(0.0, cap_percent / 100.0),
         source="Amumu E · Tantrum",
         source_atoms=(
-            _atom_receipt(flat_atom),
-            _atom_receipt(armor_atom),
-            _atom_receipt(magic_resistance_atom),
-            _atom_receipt(cap_atom),
+            atom_receipt(flat_atom),
+            atom_receipt(armor_atom),
+            atom_receipt(magic_resistance_atom),
+            atom_receipt(cap_atom),
         ),
     )
 
@@ -380,142 +429,37 @@ def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense |
             damage_reduction=reduction,
             full_block_first=True,
             source_atoms=(
-                _atom_receipt(duration_atom),
-                _atom_receipt(reduction_atom),
+                atom_receipt(duration_atom),
+                atom_receipt(reduction_atom),
             ),
         )
 
-    if champion == "Yasuo" and bool(options.get("w_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "W")
-        ability = _ability(champion_data, "W")
-        if rank < 1 or ability is None:
-            return None
-        source_duration, duration_atom = _prose_duration_atom(
-            champion, champion_data, "W"
-        )
-        start, duration = _window(
-            options, "w_active_from", "w_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="yasuo_wind_wall",
-            source="Yasuo W · Wind Wall",
-            start=start,
-            duration=duration,
-            blocked_sources=_source_selection(options, "w_blocked_skillshots"),
-            blocked_event_ids=_source_selection(options, "w_blocked_event_ids"),
-            destroy_projectiles=True,
-            source_atoms=(duration_atom,),
-        )
-
-    if champion == "Samira" and bool(options.get("w_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "W")
-        ability = _ability(champion_data, "W")
-        if rank < 1 or ability is None:
-            return None
-        source_duration, duration_atom = _prose_duration_atom(
-            champion, champion_data, "W"
-        )
-        start, duration = _window(
-            options, "w_active_from", "w_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="samira_blade_whirl",
-            source="Samira W · Blade Whirl",
-            start=start,
-            duration=duration,
-            blocked_sources=_source_selection(options, "w_blocked_skillshots"),
-            destroy_projectiles=True,
-            source_atoms=(duration_atom,),
-        )
-
-    if champion == "Gwen" and bool(options.get("w_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "W")
-        ability = _ability(champion_data, "W")
-        if rank < 1 or ability is None:
-            return None
-        source_duration, duration_atom = _prose_duration_atom(
-            champion, champion_data, "W"
-        )
-        start, duration = _window(
-            options, "w_active_from", "w_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="gwen_hallowed_mist",
-            source="Gwen W · Hallowed Mist",
-            start=start,
-            duration=duration,
-            blocked_sources=_source_selection(options, "w_blocked_skillshots"),
-            destroy_projectiles=True,
-            source_atoms=(duration_atom,),
-        )
-
-    if champion == "Fiora" and bool(options.get("w_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "W")
-        ability = _ability(champion_data, "W")
-        if rank < 1 or ability is None:
-            return None
-        source_duration, duration_atom = _prose_duration_atom(
-            champion, champion_data, "W"
-        )
-        start, duration = _window(
-            options, "w_active_from", "w_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="fiora_riposte",
-            source="Fiora W · Riposte",
-            start=start,
-            duration=duration,
-            blocked_sources=_source_selection(options, "w_blocked_sources"),
-            full_block_all=True,
-            requires_skillshot=False,
-            source_atoms=(duration_atom,),
-        )
-
-    if champion == "Pantheon" and bool(options.get("e_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "E")
-        ability = _ability(champion_data, "E")
-        if rank < 1 or ability is None:
-            return None
-        source_duration, duration_atom = _prose_duration_atom(
-            champion, champion_data, "E"
-        )
-        start, duration = _window(
-            options, "e_active_from", "e_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="pantheon_aegis_assault",
-            source="Pantheon E · Aegis Assault",
-            start=start,
-            duration=duration,
-            blocked_sources=_source_selection(options, "e_blocked_skillshots"),
-            full_block_all=True,
-            source_atoms=(duration_atom,),
-        )
-
-    if champion == "Jax" and bool(options.get("e_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "E")
-        ability = _ability(champion_data, "E")
-        if rank < 1 or ability is None:
-            return None
-        source_duration, duration_atom = _prose_duration_atom(
-            champion, champion_data, "E"
-        )
-        start, duration = _window(
-            options, "e_active_from", "e_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="jax_counter_strike",
-            source="Jax E · Counter Strike",
-            start=start,
-            duration=duration,
-            full_block_all=True,
-            blocks_basic_attacks=True,
-            area_damage_reduction=0.25,
-            requires_skillshot=False,
-            source_atoms=(duration_atom,),
-        )
-
-    return None
+    window = _PROSE_DURATION_WINDOWS.get(champion)
+    if window is None:
+        return None
+    slot, fields = window
+    key = slot.lower()
+    if not bool(options.get(f"{key}_active", False)):
+        return None
+    rank = _rank_for(champion, int(combatant.level), request, slot)
+    ability = _ability(champion_data, slot)
+    if rank < 1 or ability is None:
+        return None
+    source_duration, duration_atom = _prose_duration_atom(champion, champion_data, slot)
+    start, duration = _window(
+        options, f"{key}_active_from", f"{key}_active_seconds", source_duration
+    )
+    selections = {
+        name: _source_selection(options, fields[name])
+        for name in ("blocked_sources", "blocked_event_ids")
+        if name in fields
+    }
+    return ProjectileDefense(
+        start=start,
+        duration=duration,
+        source_atoms=(duration_atom,),
+        **{**fields, **selections},
+    )
 
 
 _ANNUL_ITEM_NAMES = ("Banshee's Veil", "Edge of Night", "Verdant Barrier")

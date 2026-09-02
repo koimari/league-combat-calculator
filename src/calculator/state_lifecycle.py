@@ -872,12 +872,7 @@ class TimedStackState:
                 },
             )
             return None
-        before = self.stacks
-        self._entries.clear()
-        self._last_gain_time = None
-        self._shared_deadline = None
-        self._decay_steps_applied = 0
-        self._instances.clear()
+        before = self._wipe()
         return self._timeline.record(
             time,
             "consume",
@@ -893,6 +888,16 @@ class TimedStackState:
             },
         )
 
+    def _wipe(self) -> int:
+        """Drop every entry and timer; returns the stack count they held."""
+        before = self.stacks
+        self._entries.clear()
+        self._last_gain_time = None
+        self._shared_deadline = None
+        self._decay_steps_applied = 0
+        self._instances.clear()
+        return before
+
     def reset(
         self,
         time: float,
@@ -905,12 +910,7 @@ class TimedStackState:
         to = max(0, min(int(to), self.rule.max_stacks))
         if self.stacks == to and reason != "reset":
             return None
-        before = self.stacks
-        self._entries.clear()
-        self._last_gain_time = None
-        self._shared_deadline = None
-        self._decay_steps_applied = 0
-        self._instances.clear()
+        before = self._wipe()
         if before == to:
             return None
         return self._timeline.record(

@@ -225,7 +225,7 @@ _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
 # Ablaze too, so this is the minimal declaration that keeps W's priced
 # row true in every derived order, and naming the other appliers as well
 # would constrain more than the mechanic does.
-CAST_DEPENDENCIES = (  # sightline-ok: 32 module_contract reads it by name
+CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
     CastDependency(
         slot="W",
         requires="Q",

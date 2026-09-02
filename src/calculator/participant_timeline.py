@@ -25,7 +25,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .champions.inputs import declared_option_defaults
 from .champions.skill_orders import get_ability_rank
 from .champions.slotlib import extract_cooldown, extract_named
-from .defensive_effects import StartingDefenses
+from .defensive_effects import StartingDefenses, armed_revive
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     champion_grievous_wound_sources,
@@ -3453,20 +3453,10 @@ def _simulate_survival(
     # the rest.  This preserves exact packet ordering without guessing which
     # packet becomes lethal before shields, overkill, or prior healing resolve.
     for participant_id, events in list(expanded_incoming.items()):
-        defenses = combatant_by_id[participant_id].defenses
-        revive_amount = max(0.0, float(defenses.revive_health_amount))
-        revive_delay = max(0.0, float(defenses.revive_delay))
-        if revive_amount <= 0.0 or revive_delay <= 0.0:
+        revive = armed_revive(combatant_by_id[participant_id].defenses)
+        if revive is None:
             continue
-        # E8d follow-up: the revive source is the champion's own passive when
-        # the module declares one (Anivia Rebirth, Zac Cell Division, Zilean
-        # Chronoshift); Guardian Angel remains the item-source label.
-        revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
-        revive_key = (
-            f"revive_{revive_source.replace(' ', '_')}"
-            if revive_source != "Guardian Angel (Rebirth)"
-            else "revive_Guardian Angel"
-        )
+        revive_amount, revive_delay, revive_source, revive_key = revive
         candidates: list[dict[str, Any]] = []
         for index, event in enumerate(events):
             if str(event.get("kind", "")) in {

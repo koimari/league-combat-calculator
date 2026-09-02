@@ -9,7 +9,6 @@ roster BIS preview to reason about conditional value.
 
 from __future__ import annotations
 
-import argparse
 import json
 import re
 import sys
@@ -19,7 +18,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.source_receipt import cache_patch, source_receipt
+from scripts.source_receipt import cache_patch, catalog_arguments, source_receipt
 from src.calculator.item_source import effect_text
 
 NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?%?")
@@ -131,15 +130,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parents[1]
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, default=root / "data" / "items.json")
-    parser.add_argument(
-        "--output", type=Path, default=root / "static" / "effect-catalog.json"
-    )
-    # Default derived from the cache, so a rebuild cannot stamp a stale patch.
-    parser.add_argument("--patch", default=None)
-    args = parser.parse_args()
+    args = catalog_arguments(__doc__, source="items.json", output="effect-catalog.json")
     catalog = build_catalog(args.source.resolve(), args.patch or cache_patch())
     args.output.write_text(
         json.dumps(catalog, ensure_ascii=False, separators=(",", ":")) + "\n",

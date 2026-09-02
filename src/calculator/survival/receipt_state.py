@@ -22,7 +22,12 @@ from ..interaction_effects import (
     resolve_projectile_defense,
     resolve_spell_shield,
 )
-from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
+from .actions import (
+    SurvivalAction,
+    TransitionRank,
+    TriggerLinkage,
+    action_key,
+)
 from .outcome_state import OutcomeLedger
 from .transitions import participant_pools
 
@@ -489,7 +494,7 @@ def build_states(
     ]
 
 
-class ReceiptLedger:
+class ReceiptLedger(TriggerLinkage):
     """The annotating adapter: event-observation writes, trigger-linkage
     status by event id, and walk-authored recovery scheduling."""
 
@@ -499,13 +504,13 @@ class ReceiptLedger:
         "annotations_written",
         "compile_event",
         "current_index",
-        "damage_event_status",
         "expanded_healing",
         "healing",
         "index_of",
         "next_aidx",
         "outcomes",
         "records_annotations",
+        "trigger_status",
     )
 
     # Event writes always persist on this adapter; annotations only when
@@ -541,7 +546,7 @@ class ReceiptLedger:
         self.compile_event = compile_event
         self.annotating = annotating
         self.records_annotations = annotating
-        self.damage_event_status: dict[int, str] = {}
+        self.trigger_status: dict[int, str] = {}
         self.actions = actions
         self.current_index = -1
         self.index_of = index_of
@@ -612,24 +617,6 @@ class ReceiptLedger:
             action.event.setdefault("skipped_reason", reason)
         else:
             action.event["skipped_reason"] = reason
-
-    # -- trigger linkage ----------------------------------------------------
-    def trigger_applied(self, action: SurvivalAction) -> bool:
-        """Whether the action's trigger packet was applied (no trigger
-        passes; a skipped trigger fails closed, never silently applies)."""
-        if action.trigger_slot == NO_SLOT:
-            return True
-        return self.damage_event_status.get(action.trigger_slot) == "applied"
-
-    def mark_applied(self, action: SurvivalAction) -> None:
-        """Mark this action's event applied, so its dependants may fire."""
-        if action.event_slot != NO_SLOT:
-            self.damage_event_status[action.event_slot] = "applied"
-
-    def mark_blocked(self, action: SurvivalAction) -> None:
-        """Mark this action's event blocked, so its dependants fail closed."""
-        if action.event_slot != NO_SLOT:
-            self.damage_event_status[action.event_slot] = "blocked"
 
     # -- walk-authored scheduling -------------------------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:

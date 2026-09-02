@@ -123,6 +123,22 @@ def required_ability_atom(
     return dict(atom)
 
 
+def atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep the provenance fields that identify one runtime atom."""
+    return {
+        key: atom[key]
+        for key in (
+            "atom_id",
+            "behavior",
+            "source",
+            "values",
+            "units",
+            "evidence",
+            "hash",
+        )
+    }
+
+
 def ranked_ability_atom_value(
     atom: Mapping[str, Any], rank: int, *, source: str
 ) -> float:
@@ -357,7 +373,7 @@ _MISSING = object()
 
 def ability_field(
     payload: Mapping[str, Any], key: str, *, form: str = "ability"
-) -> Any:  # sightline-ok: 1 key-typed read
+) -> Any:  # sightline-ok: 1 - key-typed read
     """One field of an authored ability payload, through its declared schema.
 
     The payload identifies itself by the ability ``name`` its module authored,

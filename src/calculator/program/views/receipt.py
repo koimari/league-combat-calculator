@@ -149,17 +149,24 @@ _SUPPORT_LABEL_KEYS = (
 )
 
 
+def _event_row(
+    writer: LeafWriter, prefix: str, index: int, event: Mapping[str, Any], family: str
+) -> tuple[dict[str, Any], Any, Any]:
+    """One event's row, its leaf writer and refusal, time and attacker published."""
+    row: dict[str, Any] = {}
+    leaf = writer.block(row, f"{prefix}[{index}]")
+    leaf.measured("time", round_field(f"{family}.time", float(event.get("time", 0.0))))
+    leaf.raw("attacker", event.get("attacker"))
+    return row, leaf, _refusal(event)
+
+
 def _damage_event_rows(
     events: Sequence[Mapping[str, Any]], writer: LeafWriter, prefix: str
 ) -> list[dict[str, Any]]:
     """One published damage row per annotated event, in walk order."""
     rows: list[dict[str, Any]] = []
     for index, event in enumerate(events):
-        row: dict[str, Any] = {}
-        leaf = writer.block(row, f"{prefix}[{index}]")
-        refusal = _refusal(event)
-        leaf.measured("time", round_field("events.time", float(event.get("time", 0.0))))
-        leaf.raw("attacker", event.get("attacker"))
+        row, leaf, refusal = _event_row(writer, prefix, index, event, "events")
         leaf.raw("target", event.get("target"))
         leaf.raw("source", event.get("source_key", ""))
         leaf.raw("damage_type", event.get("damage_type", ""))
@@ -382,13 +389,7 @@ def _healing_event_rows(
     """One published healing row per annotated event, in walk order."""
     rows: list[dict[str, Any]] = []
     for index, event in enumerate(events):
-        row: dict[str, Any] = {}
-        leaf = writer.block(row, f"{prefix}[{index}]")
-        refusal = _refusal(event)
-        leaf.measured(
-            "time", round_field("healing_events.time", float(event.get("time", 0.0)))
-        )
-        leaf.raw("attacker", event.get("attacker"))
+        row, leaf, refusal = _event_row(writer, prefix, index, event, "healing_events")
         leaf.raw("source", event.get("source", ""))
         if event.get("_event_id") is not None:
             leaf.raw("event_id", str(event["_event_id"]))
@@ -481,13 +482,7 @@ def _support_event_rows(
     """One published support row per armed template, in reading order."""
     rows: list[dict[str, Any]] = []
     for index, event in enumerate(events):
-        row: dict[str, Any] = {}
-        leaf = writer.block(row, f"{prefix}[{index}]")
-        refusal = _refusal(event)
-        leaf.measured(
-            "time", round_field("support_events.time", float(event.get("time", 0.0)))
-        )
-        leaf.raw("attacker", event.get("attacker"))
+        row, leaf, refusal = _event_row(writer, prefix, index, event, "support_events")
         leaf.raw("target", event.get("target"))
         leaf.raw("recipient", event.get("target"))
         if event.get("_event_id") is not None:

@@ -38,6 +38,7 @@ from ..ability_spec import DamageClass
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     EngineLane,
     FightFacts,
     KernelField,
@@ -124,7 +125,7 @@ def ramp_fields(
 
 
 @dataclass(frozen=True, slots=True)
-class ShredSlot:
+class ShredSlot(CompiledSlot):
     """One resistance's declared shred, resolved for one build.
 
     A slot holds exactly one rule.  Two items stacking their reductions on one
@@ -136,6 +137,11 @@ class ShredSlot:
     resistance: Resistance
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
+    stop = ResistanceShredInterpretationError
+    missing = (
+        "{mechanic_id} compiles no {name!r} field; the engine asked its "
+        "declaration a question it does not answer"
+    )
 
     @property
     def _payload(self) -> ResistanceShredRule:
@@ -146,16 +152,6 @@ class ShredSlot:
                 f"{self.rule.mechanic_id} is not a resistance-shred rule"
             )
         return payload
-
-    def value(self, name: str) -> float:
-        """One compiled field of the slot's rule, or a stop."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise ResistanceShredInterpretationError(
-            f"{self.rule.mechanic_id} compiles no {name!r} field; the engine "
-            "asked its declaration a question it does not answer"
-        )
 
     @property
     def per_stack(self) -> float:

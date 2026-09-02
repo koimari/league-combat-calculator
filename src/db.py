@@ -414,7 +414,7 @@ def _redis_record_counter(*, hits: bool) -> None:
     _redis_call("hincrby", _REDIS_COUNTER_KEY, "hits" if hits else "misses", 1)
 
 
-def _serialize_datetime(value: datetime | None) -> str | None:
+def serialize_datetime(value: datetime | None) -> str | None:
     """ISO-8601 UTC string for API output (storage is naive UTC)."""
     if value is None:
         return None
@@ -507,7 +507,7 @@ def _build_to_dict(build: Build) -> dict[str, Any]:
         "enemies": build.enemies or [],
         "allies": build.allies or [],
         "fight_params": build.fight_params or {},
-        "created_at": _serialize_datetime(build.created_at),
+        "created_at": serialize_datetime(build.created_at),
         "request": request,
     }
 
@@ -583,7 +583,7 @@ def get_share_link(
                     "token": share.token,
                     "slug": share.slug,
                     "views": share.views,
-                    "created_at": _serialize_datetime(share.created_at),
+                    "created_at": serialize_datetime(share.created_at),
                 }
             }
         )
@@ -665,7 +665,7 @@ def list_feedback(
                 "matched": row.matched,
                 "delta": row.delta,
                 "note": row.note,
-                "created_at": _serialize_datetime(row.created_at),
+                "created_at": serialize_datetime(row.created_at),
             }
             for row in rows
         ]

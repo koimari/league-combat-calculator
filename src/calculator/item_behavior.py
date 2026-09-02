@@ -31,11 +31,11 @@ live meanings of that word already.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, is_dataclass
 from dataclasses import fields as dataclass_fields
 from enum import Enum
-from typing import NamedTuple, get_args
+from typing import Any, ClassVar, NamedTuple, get_args
 
 from .ability_spec import (
     AttackClass,
@@ -43,7 +43,14 @@ from .ability_spec import (
     DamageClass,
     ZeroPolicy,
 )
-from .value_ref import VALUE_REF_TYPES, AnyValueRef, LevelValueRef, SourceReceipt
+from .value_ref import (
+    VALUE_REF_TYPES,
+    AnyValueRef,
+    LevelValueRef,
+    SourceReceipt,
+    ValueRefError,
+    resolve_flat,
+)
 
 
 class BehaviorRuleError(ValueError):
@@ -853,6 +860,11 @@ class DamageFormula:
     scaling: Scaling
     floor: Floor
     damage_class: DamageClass
+
+    @property
+    def damage_type(self) -> str:
+        """The damage class as the engine names it."""
+        return self.damage_class.value
 
     def __post_init__(self) -> None:
         """A formula with no terms is a number nobody declared."""
@@ -3765,6 +3777,119 @@ class DefenseOutcome:
     notes: tuple[str, ...]
 
 
+def typed_payload(
+    rule: BehaviorRule, payload_type: type, stop: type[Exception], noun: str
+) -> Any:
+    """*rule*'s payload as *payload_type*, or *stop* saying it is not *noun*."""
+    payload = rule.payload
+    if not isinstance(payload, payload_type):
+        raise stop(f"{rule.mechanic_id} is not {noun}")
+    return payload
+
+
+def declared_mechanic_id(
+    owner: str,
+    rules: Sequence[BehaviorRule],
+    stop: type[Exception],
+    *,
+    authors: str,
+    declares: str,
+) -> str:
+    """The mechanic id of *owner*'s first rule, or *stop*.
+
+    A stop rather than a default: an unstamped pair row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
+    """
+    if not rules:
+        raise stop(
+            f"{owner} authors {authors} and declares no {declares} rule, so its "
+            "pair row has no mechanic to be a preview of"
+        )
+    return rules[0].mechanic_id
+
+
+def compiled_value(
+    fields: Iterable[KernelField], name: str, stop: type[Exception], missing: str
+) -> float:
+    """The compiled field named *name*, or *stop* with the *missing* message."""
+    for field in fields:
+        if field.name == name:
+            return float(field.value)
+    raise stop(missing)
+
+
+def sole_declaration(
+    items: Sequence[Any],
+    owners: Sequence[str],
+    payload_type: type,
+    stop: type[Exception],
+) -> Any:
+    """A build's one declaration of a shape that does not compose, or ``None``.
+
+    ``None`` is an answer and not a zero: no holder declares the shape.  Two
+    holders is a stop, because nothing declares how two of them compose.
+    """
+    if not items:
+        return None
+    if len(items) > 1:
+        raise stop(
+            f"{owners} all declare {payload_type.__name__} and no rule declares "
+            "how two of them compose; the slice that declares a second one owns "
+            "the fold"
+        )
+    return items[0]
+
+
+def flat_fields(
+    rule: BehaviorRule,
+    references: Sequence[tuple[str, Any]],
+    lane: EngineLane,
+    stop: type[Exception],
+    reader: str,
+) -> tuple[KernelField, ...]:
+    """*references* resolved without any fight context, as compiled fields.
+
+    A reference needing a level or a fight fact is *stop* naming *reader*,
+    the accessor that is handed the context it resolves against.
+    """
+    try:
+        values = resolve_flat([reference for _, reference in references])
+    except ValueRefError as exc:
+        raise stop(
+            f"{rule.mechanic_id} declares a reference that needs a level or a "
+            f"fight fact, and this accessor has neither; read it through {reader}, "
+            "which is handed the context it resolves against"
+        ) from exc
+    return tuple(
+        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        for (name, _), value in zip(references, values, strict=False)
+    )
+
+
+class CompiledSlot:
+    """A rule with its compiled fields: ``value`` reads one by name or stops.
+
+    A slot class names its family's ``stop`` and the ``missing`` message it
+    formats with ``mechanic_id`` and ``name``.
+    """
+
+    __slots__ = ()
+    rule: BehaviorRule
+    fields: tuple[KernelField, ...]
+    stop: ClassVar[type[Exception]]
+    missing: ClassVar[str]
+
+    def value(self, name: str) -> float:
+        """One compiled field of the slot's rule, or a stop."""
+        return compiled_value(
+            self.fields,
+            name,
+            self.stop,
+            self.missing.format(mechanic_id=self.rule.mechanic_id, name=name),
+        )
+
+
 __all__ = [
     "ACTIVATION_TYPES",
     "AMP_CHAIN_ORDER",
@@ -3814,6 +3939,7 @@ __all__ = [
     "Comparison",
     "Compilability",
     "Compilable",
+    "CompiledSlot",
     "Consumption",
     "CooldownProcRule",
     "CritDamageBonusRule",
@@ -3934,10 +4060,15 @@ __all__ = [
     "WindowMerge",
     "ZeroPolicy",
     "chain_rank",
+    "compiled_value",
+    "declared_mechanic_id",
+    "flat_fields",
     "is_denial_receipt",
     "is_packet_kind",
     "is_value_reference",
     "policy_values",
     "policy_walk",
+    "sole_declaration",
+    "typed_payload",
     "validate_rule",
 ]
