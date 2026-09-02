@@ -14,6 +14,7 @@ Each domain maps one cached data family to Atom records:
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .atomizer import Atomizer, number_and_unit, split_effect_fragments
@@ -111,7 +112,7 @@ _ITEM_KEYWORDS: tuple[tuple[str, str, str], ...] = (
 )
 
 
-def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
+def atomize_item(item: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Atomize one item: stats + shop + every passive/active fragment.
 
     Fragments are classified per-effect (never against a whole-item blob),
@@ -130,11 +131,10 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
                     "stat",
                     f"{name}.stats.{stat_name}",
                     stat_name,
-                    [float(flat)],
-                    ["flat"],
-                    [f"stats.{stat_name}.flat"],
+                    values=[float(flat)],
+                    units=["flat"],
+                    evidence=[f"stats.{stat_name}.flat"],
                 )
-    # shop prices
     prices = (item.get("shop") or {}).get("prices") or {}
     if isinstance(prices.get("total"), (int, float)):
         a.add(
@@ -142,9 +142,9 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
             "economy",
             f"{name}.shop.prices.total",
             "total",
-            [float(prices["total"])],
-            ["gold"],
-            ["shop.prices.total"],
+            values=[float(prices["total"])],
+            units=["gold"],
+            evidence=["shop.prices.total"],
         )
     # passives and actives as per-effect fragments
     for effect_kind, effects in (
@@ -153,9 +153,8 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
     ):
         if not effects:
             continue
-        if isinstance(effects, dict):
-            effects = [effects]
-        for index, effect in enumerate(effects):
+        effect_rows = [effects] if isinstance(effects, dict) else effects
+        for index, effect in enumerate(effect_rows):
             effect_name = str(
                 effect.get("name") or f"{effect_kind.capitalize()} {index + 1}"
             )
@@ -177,9 +176,9 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
                         "timing",
                         fragment_path,
                         effect_name,
-                        [float(lockout_match.group(1))],
-                        ["seconds"],
-                        [f"{effect_kind}:{effect_name}@kw:ability damage"],
+                        values=[float(lockout_match.group(1))],
+                        units=["seconds"],
+                        evidence=[f"{effect_kind}:{effect_name}@kw:ability damage"],
                     )
                 for keyword, atom_id, behavior in _ITEM_KEYWORDS:
                     if keyword in lowered:
@@ -189,15 +188,15 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
                             behavior,
                             fragment_path,
                             effect_name,
-                            values,
-                            units,
-                            [evidence],
+                            values=values,
+                            units=units,
+                            evidence=[evidence],
                         )
     return a.emit()
 
 
 def atomize_item_catalogue(
-    items: dict[str, dict[str, Any]],
+    items: Mapping[str, dict[str, Any]],
 ) -> dict[str, list[dict[str, Any]]]:
     return {str(key): atomize_item(item) for key, item in sorted(items.items())}
 
@@ -213,7 +212,7 @@ _FOCUS_WINDOW_ACTIVE_EFFECTS = {"Ashe": {"Q": 1}}
 
 def atomize_abilities(
     champion_name: str,
-    champion: dict[str, Any],
+    champion: Mapping[str, Any],
 ) -> dict[str, list[dict[str, Any]]]:
     """Atomize one champion's ability slots -> effects -> leveling modifiers."""
     out: dict[str, list[dict[str, Any]]] = {}
@@ -236,9 +235,9 @@ def atomize_abilities(
                             "timing",
                             f"{champion_name}.{slot}[{entry_index}].cooldown",
                             ability_name,
-                            values,
-                            ["s"] * len(values),
-                            [f"cooldown.modifiers[{mod_index}]"],
+                            values=values,
+                            units=["s"] * len(values),
+                            evidence=[f"cooldown.modifiers[{mod_index}]"],
                         )
             # P1 Slice 11: the effect-0-only scan mislabels multi-effect
             # entries whose effects[0] is a passive — the explicit map
@@ -280,9 +279,11 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        [prose_duration],
-                        ["s"],
-                        [f"stack duration@effects[{effect_index}].description"],
+                        values=[prose_duration],
+                        units=["s"],
+                        evidence=[
+                            f"stack duration@effects[{effect_index}].description"
+                        ],
                     )
                 elif prose_duration is not None:
                     a.add(
@@ -291,9 +292,11 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        [prose_duration],
-                        ["s"],
-                        [f"active duration@effects[{effect_index}].description"],
+                        values=[prose_duration],
+                        units=["s"],
+                        evidence=[
+                            f"active duration@effects[{effect_index}].description"
+                        ],
                     )
                 if (
                     champion_name in _FOCUS_WINDOW_ACTIVE_EFFECTS
@@ -309,9 +312,11 @@ def atomize_abilities(
                             f"{champion_name}.{slot}[{entry_index}].effects"
                             f"[{effect_index}].description",
                             ability_name,
-                            [active_duration],
-                            ["s"],
-                            [f"active duration@effects[{effect_index}].description"],
+                            values=[active_duration],
+                            units=["s"],
+                            evidence=[
+                                f"active duration@effects[{effect_index}].description"
+                            ],
                         )
                 shield_duration = extract_description_shield_duration(
                     entry, effect_index
@@ -323,9 +328,11 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        [shield_duration],
-                        ["s"],
-                        [f"shield duration@effects[{effect_index}].description"],
+                        values=[shield_duration],
+                        units=["s"],
+                        evidence=[
+                            f"shield duration@effects[{effect_index}].description"
+                        ],
                     )
                 control_durations = extract_description_control_durations(
                     entry, effect_index
@@ -339,9 +346,11 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        [control_duration],
-                        ["s"],
-                        [f"control duration@effects[{effect_index}].description"],
+                        values=[control_duration],
+                        units=["s"],
+                        evidence=[
+                            f"control duration@effects[{effect_index}].description"
+                        ],
                     )
                 if len(control_durations) > 1:
                     a.add(
@@ -350,9 +359,9 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        control_durations,
-                        ["s"] * len(control_durations),
-                        [
+                        values=control_durations,
+                        units=["s"] * len(control_durations),
+                        evidence=[
                             f"control duration sequence@effects[{effect_index}]"
                             ".description"
                         ],
@@ -367,9 +376,11 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        [damage_reduction],
-                        ["%"],
-                        [f"damage reduction@effects[{effect_index}].description"],
+                        values=[damage_reduction],
+                        units=["%"],
+                        evidence=[
+                            f"damage reduction@effects[{effect_index}].description"
+                        ],
                     )
                 damage_reduction_cap = extract_description_damage_reduction_cap(
                     entry, effect_index
@@ -381,9 +392,11 @@ def atomize_abilities(
                         f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                         ".description",
                         ability_name,
-                        [damage_reduction_cap],
-                        ["%"],
-                        [f"damage reduction cap@effects[{effect_index}].description"],
+                        values=[damage_reduction_cap],
+                        units=["%"],
+                        evidence=[
+                            f"damage reduction cap@effects[{effect_index}].description"
+                        ],
                     )
                 invulnerability_delay, invulnerability_duration = (
                     extract_description_invulnerability_timing(entry, effect_index)
@@ -398,9 +411,11 @@ def atomize_abilities(
                         "timing",
                         source,
                         ability_name,
-                        [invulnerability_delay],
-                        ["s"],
-                        [f"invulnerability delay@effects[{effect_index}].description"],
+                        values=[invulnerability_delay],
+                        units=["s"],
+                        evidence=[
+                            f"invulnerability delay@effects[{effect_index}].description"
+                        ],
                     )
                 if invulnerability_duration is not None:
                     a.add(
@@ -408,9 +423,9 @@ def atomize_abilities(
                         "timing",
                         source,
                         ability_name,
-                        [invulnerability_duration],
-                        ["s"],
-                        [
+                        values=[invulnerability_duration],
+                        units=["s"],
+                        evidence=[
                             f"invulnerability duration@effects[{effect_index}].description"
                         ],
                     )
@@ -443,19 +458,20 @@ def atomize_abilities(
                             f"{champion_name}.{slot}[{entry_index}].effects[{effect_index}]"
                             f".leveling[{leveling_index}].modifiers[{mod_index}]",
                             ability_name,
-                            values,
-                            units,
-                            [f"{attribute}@effects[{effect_index}]"],
+                            values=values,
+                            units=units,
+                            evidence=[f"{attribute}@effects[{effect_index}]"],
                         )
         out[slot] = a.emit()
     return out
 
 
-def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
+def atomize_rune_catalogue(
+    runes: Mapping[str, Mapping[str, Any]] | Iterable[Mapping[str, Any]] | None,
+) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
-    if isinstance(runes, dict):
-        runes = list(runes.values())
-    for rune in runes or []:
+    records = runes.values() if isinstance(runes, Mapping) else runes or ()
+    for rune in records:
         a = Atomizer("runes", source_ref=str(rune.get("name", "?")))
         name = str(rune.get("name", "?"))
 
@@ -506,7 +522,7 @@ def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
                 return "count"
             return "flat"
 
-        def visit(value: Any, path: str) -> None:
+        def visit(value: Any, path: str, *, a=a, name=name) -> None:
             if isinstance(value, dict):
                 for sub_key, sub_value in value.items():
                     visit(sub_value, f"{path}.{sub_key}" if path else sub_key)
@@ -519,9 +535,9 @@ def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
                 "rune",
                 f"{name}.{path}",
                 name,
-                values,
-                [unit_for(path)] * len(values),
-                [f"{path}={value}"],
+                values=values,
+                units=[unit_for(path)] * len(values),
+                evidence=[f"{path}={value}"],
             )
 
         for key, value in rune.items():
@@ -532,7 +548,7 @@ def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
     return out
 
 
-def atomize_economics(economics: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+def atomize_economics(economics: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Atomize the sourced sell/combine tables."""
     out: dict[str, list[dict[str, Any]]] = {}
     for row in economics.get("per_item_sell", []):
@@ -544,9 +560,9 @@ def atomize_economics(economics: dict[str, Any]) -> dict[str, list[dict[str, Any
                 "economy",
                 f"{name}.total",
                 name,
-                [float(row["total"])],
-                ["gold"],
-                ["per_item_sell.total"],
+                values=[float(row["total"])],
+                units=["gold"],
+                evidence=["per_item_sell.total"],
             )
         if isinstance(row.get("ddragon_sell"), (int, float)):
             a.add(
@@ -554,9 +570,9 @@ def atomize_economics(economics: dict[str, Any]) -> dict[str, list[dict[str, Any
                 "economy",
                 f"{name}.sell",
                 name,
-                [float(row["ddragon_sell"])],
-                ["gold"],
-                ["per_item_sell.ddragon_sell"],
+                values=[float(row["ddragon_sell"])],
+                units=["gold"],
+                evidence=["per_item_sell.ddragon_sell"],
             )
         out[name] = a.emit()
     for row in economics.get("combine_costs", []):
@@ -568,15 +584,15 @@ def atomize_economics(economics: dict[str, Any]) -> dict[str, list[dict[str, Any
                 "economy",
                 f"{name}.combine",
                 name,
-                [float(row["derived_combine"])],
-                ["gold"],
-                ["combine_costs.derived_combine"],
+                values=[float(row["derived_combine"])],
+                units=["gold"],
+                evidence=["combine_costs.derived_combine"],
             )
         out.setdefault(name, []).extend(a.emit())
     return out
 
 
-def atomize_stats(champion: dict[str, Any]) -> list[dict[str, Any]]:
+def atomize_stats(champion: Mapping[str, Any]) -> list[dict[str, Any]]:
     a = Atomizer("stats", source_ref=str(champion.get("name", "?")))
     name = str(champion.get("name", "?"))
     for stat_name, stat in (champion.get("stats") or {}).items():
@@ -589,9 +605,9 @@ def atomize_stats(champion: dict[str, Any]) -> list[dict[str, Any]]:
                     "stat",
                     f"{name}.stats.{stat_name}.{field}",
                     stat_name,
-                    [float(value)],
-                    [_stat_unit(field)],
-                    [f"stats.{stat_name}.{field}"],
+                    values=[float(value)],
+                    units=[_stat_unit(field)],
+                    evidence=[f"stats.{stat_name}.{field}"],
                 )
     return a.emit()
 

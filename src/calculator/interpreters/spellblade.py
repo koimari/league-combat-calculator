@@ -21,14 +21,18 @@ exclusive in game, and a build holding Sheen and Trinity Force arms one.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
     SpellbladeRule,
+    declared_mechanic_id,
+    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import SpellbladeEffect, damage_source
@@ -53,14 +57,12 @@ class SpellbladeInterpretationError(ValueError):
     """A rule reached this interpreter that is not a spellblade."""
 
 
-def _payload(rule: BehaviorRule) -> SpellbladeRule:
-    """*rule*'s spellblade payload, or a stop."""
-    payload = rule.payload
-    if not isinstance(payload, SpellbladeRule):
-        raise SpellbladeInterpretationError(
-            f"{rule.mechanic_id} is not a spellblade rule"
-        )
-    return payload
+_payload = partial(
+    typed_payload,
+    payload_type=SpellbladeRule,
+    stop=SpellbladeInterpretationError,
+    noun="a spellblade rule",
+)
 
 
 def _sibling(reference: AnyValueRef | None, level: int) -> float:
@@ -71,25 +73,9 @@ def _sibling(reference: AnyValueRef | None, level: int) -> float:
 def spellblade_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One spellblade's compiled numbers, stamped with *lane*.
-
-    The cooldown, plus the proof that this spellblade's bases resolve.
-    Compiling here surfaces a formula's build-time failures, a missing
-    registry key or a basis with no reading, when the build is made rather
-    than on whichever proc first asks for the number.
-
-    One body serves both the pair engine and the receipt walk, so the two
-    cannot drift over which declaration they read.
-    """
-    payload = _payload(rule)
-    damage_formula.compile_formula(payload.formula, ctx)
-    return (
-        KernelField(
-            name=SPELLBLADE_COOLDOWN_FIELD,
-            value=resolve(payload.cooldown, ctx.level),
-            lane=lane,
-            rule_id=rule.mechanic_id,
-        ),
+    """One spellblade's compiled numbers, stamped with *lane*."""
+    return damage_formula.compiled_field(
+        _payload(rule), "cooldown", SPELLBLADE_COOLDOWN_FIELD, rule, ctx=ctx, lane=lane
     )
 
 
@@ -100,13 +86,13 @@ def spellblade_mechanic_id(owner: str) -> str:
     engine's number in every roster total while the walk prices the same
     declaration, and that is a double count.
     """
-    rules = spellblade_rules([owner])
-    if not rules:
-        raise SpellbladeInterpretationError(
-            f"{owner} authors a spellblade row and declares no spellblade "
-            "rule, so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    return declared_mechanic_id(
+        owner,
+        spellblade_rules([owner]),
+        SpellbladeInterpretationError,
+        authors="a spellblade row",
+        declares="spellblade",
+    )
 
 
 def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
@@ -140,7 +126,7 @@ def spellblade_effect(rule: BehaviorRule, ctx: BuildContext) -> SpellbladeEffect
     return SpellbladeEffect(
         source=damage_source(
             rule.owner,
-            payload.formula.damage_class.value,
+            payload.formula.damage_type,
             damage_formula.compile_formula(payload.formula, ctx),
             suffix=SPELLBLADE_SUFFIX,
             breakdown_key=f"{SPELLBLADE_BREAKDOWN_PREFIX}{rule.owner}",
@@ -165,10 +151,7 @@ def spellblade_effect(rule: BehaviorRule, ctx: BuildContext) -> SpellbladeEffect
 def resolve_slot(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> SpellbladeEffect | None:
     """The one spellblade this build arms, or ``None`` if it declares none.
 
@@ -179,13 +162,7 @@ def resolve_slot(
     for rule in spellblade_rules(owners)[:1]:
         return spellblade_effect(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
         )
     return None
 

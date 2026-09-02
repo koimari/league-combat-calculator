@@ -551,10 +551,11 @@ def test_certainty_contract_shape(sqlite_database):
     assert set(body) >= {"champion", "slots", "certified", "registration"}
     assert body["certified"] is True
     assert set(body["slots"]) >= {"P", "Q", "W", "E", "R"}
-    for slot, info in body["slots"].items():
+    for info in body["slots"].values():
         assert set(info) == {"certainty", "reason"}
         assert info["certainty"] in {"exact", "estimate", "boundary"}
-        assert isinstance(info["reason"], str) and info["reason"]
+        assert isinstance(info["reason"], str)
+        assert info["reason"]
 
 
 def test_certainty_ahri_levels(sqlite_database):

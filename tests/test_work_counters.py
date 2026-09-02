@@ -80,18 +80,18 @@ def _enemies(count: int = 1):
 
 def _single_candidate_search(**overrides):
     """One coupled ``optimize_build`` whose every slot is already locked."""
-    arguments = dict(
-        champion_data=get_champion("Cassiopeia"),
-        level=13,
-        fight_params=FightParams.from_request(
+    arguments = {
+        "champion_data": get_champion("Cassiopeia"),
+        "level": 13,
+        "fight_params": FightParams.from_request(
             {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
         ),
-        locked_items=list(LOCKED_ITEMS),
-        locked_boots=LOCKED_BOOTS,
-        max_legendary_slots=len(LOCKED_ITEMS),
-        require_complete_timeline=True,
-        enemy_loadouts=_enemies(),
-    )
+        "locked_items": list(LOCKED_ITEMS),
+        "locked_boots": LOCKED_BOOTS,
+        "max_legendary_slots": len(LOCKED_ITEMS),
+        "require_complete_timeline": True,
+        "enemy_loadouts": _enemies(),
+    }
     arguments.update(overrides)
     return optimize_build(**arguments)
 
@@ -126,17 +126,17 @@ class TestCountersRideTheSearch:
             "score_memo": {},
             "search_context": CoupledSearchContext(work_counters=sink),
         }
-        arguments = dict(
-            champion_data=get_champion("Cassiopeia"),
-            level=13,
-            items=[],
-            fight_params=FightParams.from_request(
+        arguments = {
+            "champion_data": get_champion("Cassiopeia"),
+            "level": 13,
+            "items": [],
+            "fight_params": FightParams.from_request(
                 {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
             ),
-            objective="total_damage",
-            combat_context=combat_context,
-            work_counters=sink,
-        )
+            "objective": "total_damage",
+            "combat_context": combat_context,
+            "work_counters": sink,
+        }
         first = _evaluate_build(**arguments)
         second = _evaluate_build(**arguments)
 

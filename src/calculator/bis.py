@@ -18,27 +18,26 @@ and each entry is produced beside its leaf by ``serialize_leaf``.
 each candidate's combat map before folding a score out of it.
 """
 
-from copy import deepcopy
-from dataclasses import replace
 import math
 import time
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from copy import deepcopy
+from dataclasses import replace
+from typing import Any
 
 from .interpreters import (
     survival_ledger_certifications,
     survival_ledger_note,
 )
+from .item_coverage import target_build_coverage
 from .item_effects import validate_item_input_options
-from .loadout_rules import (
-    required_boots_tier,
-    role_quest_legal_items,
-    role_scoped_shop_items,
-)
+from .loadout_rules import role_quest_legal_items, role_scoped_shop_items
 from .optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
     optimizer_supported_items,
 )
+from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .pipeline import DEFAULT_FIGHT_DURATION
 from .program.build import Tagged, ranked_total
 from .program.views import (
@@ -49,9 +48,9 @@ from .program.views import (
     published_tag,
     refuse_previewed,
 )
-from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
+from .role_quests import required_boots_tier
 from .scenario import (
     MAX_LOADOUT_ITEMS,
     ChampionLoadout,
@@ -59,7 +58,6 @@ from .scenario import (
     parse_scenario_request,
     resolve_scenario,
 )
-from .item_coverage import target_build_coverage
 from .timeline_coverage import applicability_exclusion_sources
 
 
@@ -171,7 +169,9 @@ def bis_candidate_pool(
     return sorted(scoped, key=lambda item: item.get("name", ""))
 
 
-def roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, object]]:
+def roster_target_coverage(
+    loadouts: Iterable[ChampionLoadout],
+) -> list[dict[str, object]]:
     """Return unsupported target mechanics for the coupled roster.
 
     Roster BIS candidates are later used as passive targets by the main
@@ -182,16 +182,14 @@ def roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, ob
     blocked: list[dict[str, object]] = []
     for loadout in loadouts:
         coverage = target_build_coverage(list(loadout.item_data))
-        for entry in coverage.get("withheld", []):
-            blocked.append(
-                {
-                    "champion": loadout.champion_data.get(
-                        "name", loadout.request.champion
-                    ),
-                    "name": entry.get("name", ""),
-                    "reason": entry.get("reason", ""),
-                }
-            )
+        blocked.extend(
+            {
+                "champion": loadout.champion_data.get("name", loadout.request.champion),
+                "name": entry.get("name", ""),
+                "reason": entry.get("reason", ""),
+            }
+            for entry in coverage.get("withheld", [])
+        )
     return blocked
 
 
@@ -585,7 +583,7 @@ def _withheld_candidate(
 def _bis_coverage_receipt(
     certified_ranked: list[dict],
     partial_ranked: list[dict],
-    withheld_candidates: list[dict[str, object]],
+    withheld_candidates: Iterable[dict[str, object]],
     target_coverage_filtered: list[dict[str, object]],
 ) -> tuple[dict[str, object], str, list[dict[str, object]]]:
     """Classify exhaustive coverage and return its public explanation."""
@@ -658,17 +656,19 @@ def bis_payload(
     *,
     pair_result_cache: dict | None = None,
     search_context: CoupledSearchContext | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Rank one slot and return the complete JSON-safe BIS receipt."""
     request = parse_scenario_request(data, deterministic=True, parse_crossover=False)
     subject_team = request_string(data, "subject_team", "main")
     if subject_team not in {"main", "ally", "enemy"}:
         raise ValueError("subject_team must be main, ally, or enemy")
-    slot_index = request_int(data, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+    slot_index = request_int(
+        data, "slot_index", 0, minimum=0, maximum=MAX_LOADOUT_ITEMS - 1
+    )
     slot_kind = request_string(data, "slot_kind", "item")
     if slot_kind not in {"item", "boots"}:
         raise ValueError("slot_kind must be item or boots")
-    subject_index = request_int(data, "subject_index", 0, 0, 4)
+    subject_index = request_int(data, "subject_index", 0, minimum=0, maximum=4)
     objective_meta = bis_objective_meta(request_string(data, "objective", "overall"))
     objective_key = objective_meta["key"]
     if subject_team == "ally" and subject_index >= len(request.allies):
@@ -977,7 +977,7 @@ def _bis_batch_result(result: Mapping[str, object]) -> dict[str, object]:
     }
 
 
-def bis_batch_payload(data: Mapping[str, object]) -> dict:
+def bis_batch_payload(data: Mapping[str, object]) -> dict[str, Any]:
     """Score dependent BIS slots in one request with shared pair state.
 
     The browser's greedy roster path needs the winner from slot N before it
@@ -994,7 +994,7 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
     scenario = deepcopy(dict(data))
     scenario.pop("slots", None)
     subject_team = request_string(scenario, "subject_team", "main")
-    subject_index = request_int(scenario, "subject_index", 0, 0, 4)
+    subject_index = request_int(scenario, "subject_index", 0, minimum=0, maximum=4)
     pair_result_cache: dict = {}
     batch_search_context = None
     results: list[dict] = []
@@ -1007,7 +1007,9 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
         slot_kind = request_string(raw_slot, "slot_kind", "item")
         if slot_kind not in {"item", "boots"}:
             raise ValueError("slot_kind must be item or boots")
-        slot_index = request_int(raw_slot, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+        slot_index = request_int(
+            raw_slot, "slot_index", 0, minimum=0, maximum=MAX_LOADOUT_ITEMS - 1
+        )
         current = deepcopy(scenario)
         current["slot_kind"] = slot_kind
         current["slot_index"] = slot_index

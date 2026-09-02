@@ -22,9 +22,13 @@ Short Fuse AP ratio (see HARDCODED below).
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     by_option,
@@ -36,8 +40,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores
 # Short Fuse's per-level base but drops its AP modifier entirely.
@@ -45,7 +47,7 @@ from ..binary_roots import data_value, spell_object
 SHORT_FUSE_AP_RATIO = data_value(spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio")
 
 
-def _short_fuse_refund_seconds(ability: dict[str, Any], level: int) -> float:
+def _short_fuse_refund_seconds(ability: Mapping[str, Any], level: int) -> float:
     """Read the sourced 4/5/6-second cast refund from passive prose."""
     description = " ".join(
         str(effect.get("description", "")) for effect in ability.get("effects", [])
@@ -100,12 +102,11 @@ def _short_fuse(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _hexplosive_minefield(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _hexplosive_minefield(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: 1 full mine + (mines_hit - 1) reduced mines, capped by JSON."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     mines = max(1, int(ctx.option("mines_hit")))
     full = extract_named(ability, "Magic Damage per Mine", rank, ctx.stats, ctx.target)

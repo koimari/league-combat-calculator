@@ -23,7 +23,10 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
+from .inputs import int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -32,8 +35,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 # ROOTED IN THE BINARY (data/bin/characters/ezreal.bin.json): the passive
 # stack shape is EzrealPassive DataValues, Q's cooldown refund is
@@ -141,7 +142,10 @@ def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
 _rising_spell_force.phase = BUFF
 
 
-def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _mystic_shot(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: physical skillshot; applies item on-hit and on-attack effects
     at full effectiveness, cannot crit; cooldown carries its own refund.
 
@@ -150,10 +154,6 @@ def _mystic_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     and the two never stack on one ability hit (item taxonomy:
     ``superseded_by_ability_proc``).
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     period = _q_hasted_period(ctx)

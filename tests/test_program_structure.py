@@ -22,6 +22,7 @@ from __future__ import annotations
 import ast
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -275,12 +276,14 @@ class TestEveryViewTakesTheWalkAndNothingElse:
     )
 
     @staticmethod
-    def _front_door(spec: str):
+    def _front_door(spec: str) -> Callable[..., object]:
         """One view function, imported the way its consumer imports it."""
         import importlib
 
         module, name = spec.split(":")
-        return getattr(importlib.import_module(f"src.calculator.{module}"), name)
+        path = f"src.calculator.{module}"
+        imported = importlib.import_module(path)  # sightline-ok: 24 - dotted spec
+        return getattr(imported, name)  # sightline-ok: 24 - dotted spec
 
     def test_each_view_takes_a_program_and_a_walk_result_and_no_third_thing(
         self,

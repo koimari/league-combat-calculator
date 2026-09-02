@@ -41,11 +41,11 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_interpolation, data_value, spell_object
 from .engine import SlotCtx
+from .inputs import int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import with_control
-from .inputs import int_option
-from .module_contract import coverage
 
 PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
 
@@ -168,7 +168,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Monster Hunter bonus vs non-epic monsters are not modeled",
         "P (Garden of Thorns) has no enemy-damage formula: it periodically spawns Seeds (vision "
         "wards enemies can walk over to destroy), no term dealt to an enemy (the pinned packet "
-        "declares the slot kind='no_damage'), so the slot is no_damage rather than an unmodeled gap",
+        "declares the slot kind='no_damage'), so the slot is no_damage rather than an "
+        "unmodeled gap",
     ),
     # E's vines burst on the enemies they reach and R damages "as it
     # expands"; neither packet carries a travel or tick phase to place.

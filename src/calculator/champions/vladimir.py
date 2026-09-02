@@ -30,12 +30,13 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import AMP, SlotCtx
+from .engine import SlotCtx
 from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import ability_name, damage_entry
 from .inputs import bool_option, float_option
 from .module_contract import coverage
+from .module_helpers import amp_slot, ranked_slot
+from .packet_module import build_packet_module, repeat_damage_parser
+from .slotlib import ability_name, damage_entry, extract_named
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
 
@@ -173,7 +174,10 @@ class _TidesOfBloodBoundaryRules:
 TIDES_OF_BLOOD_BOUNDARY_RULES = _TidesOfBloodBoundaryRules()
 
 
-def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tides_of_blood(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: charge-interpolated nova between the sourced min/max rows.
 
     Each of the three modifiers (flat, % maximum health, % AP) is read
@@ -184,10 +188,6 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     champion's OWN maximum health (``ctx.stats["health"]``), the same
     ``health`` stat the pinned packet maps it to.
     """
-    ranked = ctx.ranked("E", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     raw_fraction = ctx.option("e_charge_fraction")
     if isinstance(raw_fraction, bool):
@@ -311,17 +311,8 @@ def _apply_hemoplague(result: dict[str, Any]) -> None:
         }
 
 
-def _hemoplague_amp(ctx: SlotCtx) -> None:
-    """AMP pseudo-slot: the 10% debuff amplifies every damage entry."""
-    if not ctx.option("r_hemoplague_debuff"):
-        return
-    for key in ("Q", "W", "E", "R"):
-        entry = ctx.results.get(key)
-        if entry is not None:
-            _apply_hemoplague(entry)
-
-
-_hemoplague_amp.phase = AMP
+# AMP pseudo-slot: the 10% debuff amplifies every damage entry.
+_hemoplague_amp = amp_slot("r_hemoplague_debuff", _apply_hemoplague)
 
 
 # Sanguine Pool's ticks land on enemies who "are slowed by 40%"; Tides of
@@ -362,7 +353,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     float_option(
         "e_charge_fraction",
         1.0,
@@ -381,7 +373,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Hemoplague) marks the target for 4 seconds: all damage dealt "
     "while marked is increased by 10% (cached R prose; patch history "
     "'reduced to 10% from 12%').  The AMP pseudo-slot adds the sourced "
@@ -416,17 +409,17 @@ MODULE_COVERAGE = coverage(no_damage="P")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Vladimir self-healing events from its authored packet."""
     healing = []
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_heal = _healing.extract_named(
+    q_heal = extract_named(
         _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
     for payment in _healing.payments(
@@ -455,10 +448,10 @@ def derive_self_healing(
     # first infected champion pays the full heal and each additional
     # champion pays the reduced heal.
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(
+    r_heal = extract_named(
         _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
     )
-    r_reduced = _healing.extract_named(
+    r_reduced = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Reduced Heal",
         r_rank,

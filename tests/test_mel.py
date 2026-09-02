@@ -10,9 +10,9 @@ from src.calculator.champions import (
     mel,
     parse_champion_abilities,
 )
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review, coverage_truth, row_review
-from src.calculator.champions.engine import CC_PER_PART
 
 
 class TestReviewedCrowdControl:

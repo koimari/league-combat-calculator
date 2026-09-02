@@ -16,7 +16,7 @@ from src.calculator.atomizer_domains import (
     atomize_rune_catalogue,
     atomize_stats,
 )
-from src.calculator.data_fetcher import fetch_item_data, fetch_champion_data
+from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,18 +25,22 @@ def _item(name):
     return next(v for v in fetch_item_data().values() if v.get("name") == name)
 
 
-def test_atom_contract_fields():
+def _bolt_atoms() -> list[dict]:
     a = Atomizer("items", source_ref="Test")
     a.add(
         "damage.magic",
         "damage",
         "Test.passives[0]",
         "Bolt",
-        [50.0],
-        ["flat"],
-        ["kw:magic damage"],
+        values=[50.0],
+        units=["flat"],
+        evidence=["kw:magic damage"],
     )
-    emitted = a.emit()
+    return a.emit()
+
+
+def test_atom_contract_fields():
+    emitted = _bolt_atoms()
     assert len(emitted) == 1
     atom = emitted[0]
     for key in (
@@ -50,7 +54,7 @@ def test_atom_contract_fields():
         "hash",
     ):
         assert key in atom, key
-    assert atom["hash"] == atom["hash"]  # deterministic
+    assert atom["hash"] == _bolt_atoms()[0]["hash"]  # deterministic
     assert atom["evidence"] == ["kw:magic damage"]
 
 
@@ -61,18 +65,18 @@ def test_dedup_merges_evidence_per_behavior():
         "damage",
         "p[0]",
         "A",
-        [10.0],
-        ["flat"],
-        ["passive:A@kw:physical"],
+        values=[10.0],
+        units=["flat"],
+        evidence=["passive:A@kw:physical"],
     )
     a.add(
         "damage.physical",
         "damage",
         "a[0]",
         "B",
-        [],
-        [],
-        ["active:B@kw:physical damage"],
+        values=[],
+        units=[],
+        evidence=["active:B@kw:physical damage"],
     )
     emitted = a.emit()
     assert len(emitted) == 1

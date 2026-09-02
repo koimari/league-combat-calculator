@@ -18,9 +18,9 @@ a preserved defect S6 declined to touch, not an oversight.
 """
 
 import ast
-import json
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Iterable, Mapping, NamedTuple, Sequence
+from typing import NamedTuple
 
 import pytest
 
@@ -118,8 +118,8 @@ def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
     """Element 1 of the walk's total order is the fold's output.
 
     Since S6 the fold is the identity for every arming rank, so a heal and
-    a debuff armed at one timestamp no longer tie on the phase component
-    and no longer fall through to the tie-breaks after it.  A reactive
+    a debuff armed at one timestamp do not tie on the phase component
+    and do not fall through to the tie-breaks after it.  A reactive
     strike-back still ties with a late barrier, which is the one pair the
     fold still holds.
     """
@@ -274,20 +274,23 @@ def _sort_key_tuples(tree: ast.AST, rules: _SlotRules) -> list[tuple[ast.Tuple, 
             for keyword in node.keywords:
                 if keyword.arg == "sort_key" and isinstance(keyword.value, ast.Tuple):
                     found.append((keyword.value, "sort_key[1]"))
-                if keyword.arg == "key" and isinstance(keyword.value, ast.Lambda):
-                    if isinstance(keyword.value.body, ast.Tuple):
-                        found.append((keyword.value.body, "sort_key[1]"))
+                if (
+                    keyword.arg == "key"
+                    and isinstance(keyword.value, ast.Lambda)
+                    and isinstance(keyword.value.body, ast.Tuple)
+                ):
+                    found.append((keyword.value.body, "sort_key[1]"))
             index = rules.sort_key_arg.get(_callee_name(node.func), -1)
             if 0 <= index < len(node.args) and isinstance(node.args[index], ast.Tuple):
                 found.append((node.args[index], "sort_key[1] (positional)"))
         elif isinstance(node, ast.Assign):
-            for target in node.targets:
-                if (
-                    isinstance(target, ast.Name)
-                    and target.id.endswith("sort_key")
-                    and isinstance(node.value, ast.Tuple)
-                ):
-                    found.append((node.value, "sort_key[1]"))
+            found.extend(
+                (node.value, "sort_key[1]")
+                for target in node.targets
+                if isinstance(target, ast.Name)
+                and target.id.endswith("sort_key")
+                and isinstance(node.value, ast.Tuple)
+            )
     return found
 
 
@@ -316,9 +319,11 @@ def phase_literals(
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             callee = _callee_name(node.func)
-            for keyword in node.keywords:
-                if keyword.arg == "phase" and _slot_offends(keyword.value, bound):
-                    offenders.append((path.name, keyword.value.lineno, "phase="))
+            offenders.extend(
+                (path.name, keyword.value.lineno, "phase=")
+                for keyword in node.keywords
+                if keyword.arg == "phase" and _slot_offends(keyword.value, bound)
+            )
             index = rules.phase_arg.get(callee, -1)
             if 0 <= index < len(node.args) and _slot_offends(node.args[index], bound):
                 offenders.append(
@@ -331,17 +336,15 @@ def phase_literals(
             ):
                 offenders.append((path.name, node.lineno, "phase comparison"))
         elif isinstance(node, ast.ClassDef):
-            for stmt in node.body:
-                if (
-                    isinstance(stmt, ast.AnnAssign)
-                    and isinstance(stmt.target, ast.Name)
-                    and stmt.target.id == "phase"
-                    and stmt.value is not None
-                    and _slot_offends(stmt.value, bound)
-                ):
-                    offenders.append(
-                        (path.name, stmt.lineno, f"{node.name}.phase default")
-                    )
+            offenders.extend(
+                (path.name, stmt.lineno, f"{node.name}.phase default")
+                for stmt in node.body
+                if isinstance(stmt, ast.AnnAssign)
+                and isinstance(stmt.target, ast.Name)
+                and stmt.target.id == "phase"
+                and stmt.value is not None
+                and _slot_offends(stmt.value, bound)
+            )
     for tup, slot in _sort_key_tuples(tree, rules):
         if len(tup.elts) > 1 and _slot_offends(tup.elts[1], bound):
             offenders.append((path.name, tup.elts[1].lineno, slot))
@@ -377,7 +380,6 @@ def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
     }
     assert dict(rules.sort_key_arg) == {
         "SurvivalAction": 0,
-        "_enriched_damage_event": 13,
         "compiled_damage_action": 0,
     }
 
@@ -415,24 +417,24 @@ def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
         0.0,
         ActionKind.PLAIN_DAMAGE,
         0,
-        1,
-        0,
-        10.0,
-        "physical",
-        None,
-        10.0,
-        None,
-        None,
-        "source_key",
-        "Source",
-        "event:1",
-        0,
-        None,
-        None,
-        False,
-        False,
-        None,
-        None,
+        attacker=1,
+        aidx=0,
+        amount=10.0,
+        damage_type="physical",
+        raw_formula=None,
+        raw_damage=10.0,
+        grievous=None,
+        wound=None,
+        source_key="source_key",
+        source="Source",
+        event_slot="event:1",
+        sequence=0,
+        live_amp=None,
+        declared=None,
+        is_ability=False,
+        basic_attack=False,
+        baseline_effective_armor=None,
+        baseline_effective_mr=None,
     )
     assert action.phase is TransitionRank.DAMAGE
     assert SurvivalAction().phase is TransitionRank.DAMAGE
@@ -442,7 +444,7 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
     """The guard's own red: each shape it claims to cover, made to fail."""
     sample = tmp_path / "sample.py"
     sample.write_text(
-        "\n".join(
+        "\n".join(  # noqa: FLY002 - one sample line per shape
             (
                 # The definitions shapes 2 and 3 read their positions from.
                 "def action_key(event_time, phase, participant_id, event):\n    pass",
@@ -582,8 +584,8 @@ def test_the_classified_ladder_reproduces_the_slots_it_replaced() -> None:
     """The three legacy branches — -2.0, -1.0 and the 1.0 fall-through.
 
     The fall-through is the load-bearing one: an unlisted kind still arms
-    at the rank the open ``else 1.0`` gave it.  What S6 changed is that the
-    three ranks the 1.0 covered no longer answer to one slot, so the kind
+    at the rank the open ``else 1.0`` gave it.  Since S6 the three ranks
+    the 1.0 covered do not answer to one slot, so the kind
     ladder's answers are read one by one instead of as a single fold.
     """
     assert support_transition_rank({"kind": "stasis"}) is TransitionRank.STATE_GRANT
@@ -630,18 +632,20 @@ def _declared_ranks(path: Path) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
-            for keyword in node.keywords:
-                if keyword.arg == "rank" and _rank_name(keyword.value):
-                    found.append((path.name, _rank_name(keyword.value)))
+            found.extend(
+                (path.name, _rank_name(keyword.value))
+                for keyword in node.keywords
+                if keyword.arg == "rank" and _rank_name(keyword.value)
+            )
         elif isinstance(node, ast.Dict):
-            for key, value in zip(node.keys, node.values):
+            for key, value in zip(node.keys, node.values, strict=False):
                 if getattr(key, "id", "") == "SUPPORT_RANK_KEY" and _rank_name(value):
                     found.append((path.name, _rank_name(value)))
     return found
 
 
 def test_every_packet_author_declares_a_named_rank() -> None:
-    """The population that used to write an open float, now named.
+    """Every packet author names a rank; none writes an open float.
 
     Four of these were named before the last author converted (three at 0A,
     plus C4's Abyssal Mask Unmake); the rest are the retired ``_priority``
@@ -693,8 +697,8 @@ def _armed_at(rank: TransitionRank, source: str, time: float = 0.0):
     """One authored packet's sort key at *rank*, all tie-breaks held equal.
 
     Everything after element 1 is identical between two calls with the same
-    *source*, which is exactly the position the collapsed slot used to push
-    the decision down to.
+    *source*, which is exactly the position a collapsed slot pushes the
+    decision down to.
     """
     event = {
         "sequence": 0,
@@ -816,14 +820,17 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
     named in the module instead, and this is the assertion that the two
     questions now have two answers.
     """
-    assert actions_module._RECOVERY_CLASSIFIED_RANKS == frozenset(
-        {
-            TransitionRank.DEBUFF_ARM,
-            TransitionRank.RECOVERY,
-            TransitionRank.UTILITY_ARM,
-        }
+    assert (
+        frozenset(
+            {
+                TransitionRank.DEBUFF_ARM,
+                TransitionRank.RECOVERY,
+                TransitionRank.UTILITY_ARM,
+            }
+        )
+        == actions_module._RECOVERY_CLASSIFIED_RANKS
     )
-    # ...and it is no longer expressible as the fold's output, which is what
+    # ...and it is not expressible as the fold's output, which is what
     # makes naming it load-bearing rather than stylistic.
     assert {
         rank

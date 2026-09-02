@@ -1,9 +1,9 @@
 """Tests for the Qiyana champion module."""
 
 from src.calculator.champions import parse_champion_abilities, qiyana
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
-from src.calculator.champions.engine import CC_PER_PART
 
 
 def _q_part(variant):

@@ -98,7 +98,6 @@ from src.calculator.damage import (
     effective_cooldown,
 )
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.item_coverage import item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -108,7 +107,6 @@ from src.calculator.item_effects import (
 )
 from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
-
 from tests import item_probe
 from tests.app_config import app_config
 
@@ -407,9 +405,9 @@ def test_ionian_insight_adds_no_ability_timing_beyond_the_ten_haste_stat(
     stats = calculate_total_stats(ahri_data, 18, [_boots()])
     abilities = _ahri_abilities(ahri_data, stats)
     for label, overrides in (
-        ("one_rotation", dict(one_rotation=True, fight_duration_seconds=5.0)),
-        ("timed_abilities", dict()),
-        ("timed_autos", dict(auto_attack_uptime=1.0)),
+        ("one_rotation", {"one_rotation": True, "fight_duration_seconds": 5.0}),
+        ("timed_abilities", {}),
+        ("timed_autos", {"auto_attack_uptime": 1.0}),
     ):
         with_boots = _champion_fight(stats, abilities, items=(_boots(),), **overrides)
         without_item = _champion_fight(stats, abilities, items=(), **overrides)
@@ -476,9 +474,11 @@ def test_one_rotation_fight_is_bit_identical_with_and_without_the_boots(
     base_stats = calculate_total_stats(ahri_data, 18, [])
     boot_stats = calculate_total_stats(ahri_data, 18, [_boots()])
     abilities = _ahri_abilities(ahri_data, boot_stats)
-    overrides = dict(
-        one_rotation=True, fight_duration_seconds=5.0, auto_attack_uptime=1.0
-    )
+    overrides = {
+        "one_rotation": True,
+        "fight_duration_seconds": 5.0,
+        "auto_attack_uptime": 1.0,
+    }
     without = _champion_fight(base_stats, abilities, items=(), **overrides)
     with_boots = _champion_fight(boot_stats, abilities, items=(_boots(),), **overrides)
     assert with_boots["total_damage"] == without["total_damage"]
@@ -492,7 +492,7 @@ def test_auto_only_fight_is_identical_with_and_without_the_boots(ahri_data):
     haste and move speed do not touch the 1v1 auto schedule)."""
     base_stats = calculate_total_stats(ahri_data, 18, [])
     boot_stats = calculate_total_stats(ahri_data, 18, [_boots()])
-    overrides = dict(auto_attack_uptime=1.0)
+    overrides = {"auto_attack_uptime": 1.0}
     without = _champion_fight(base_stats, {}, items=(), **overrides)
     with_boots = _champion_fight(boot_stats, {}, items=(_boots(),), **overrides)
     assert with_boots["total_damage"] == without["total_damage"]
@@ -648,7 +648,7 @@ def test_a_flash_or_ignite_cast_would_reuse_9_percent_faster(ahri_data):
         effective = base_cd * 100.0 / (100.0 + haste)
         assert effective == pytest.approx(base_cd * 100.0 / 110.0), spell
         assert effective < base_cd, spell
-        assert 1.0 - 100.0 / 110.0 == pytest.approx(0.0909090909), spell
+        assert pytest.approx(0.0909090909) == 1.0 - 100.0 / 110.0, spell
 
 
 # ---------------------------------------------------------------------------

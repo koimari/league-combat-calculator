@@ -419,7 +419,8 @@ def test_frontend_kill_time_never_displays_zero_and_shows_surviving_hp():
     assert "metricValueLabel(metric, aValue, aAlive" in row
     # The receipt is never lost to the 52px column: it rides as the cell's
     # title and in the row's accessible name.
-    assert "title=" in row and "aria-label=" in row
+    assert "title=" in row
+    assert "aria-label=" in row
     label = source.split("function metricValueLabel(")[1].split("\nfunction ")[0]
     assert "killTimeLabel(value)" in label
     # The old formatting that rendered a defeat as "0 s" is gone: every

@@ -44,6 +44,8 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency, SuppressedInference
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -55,7 +57,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 # Transcendent's full-splinter upgrade multiplies TOTAL ability power by
 # the binary SyndraPassive.CapstoneAPPerc (stacks multiplicatively with
@@ -231,13 +232,12 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _force_of_will(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: base magic damage; at 60+ splinters a bonus TRUE damage part
     equal to (12% + 2% per 100 AP) of the magic damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
@@ -276,13 +276,12 @@ def _force_of_will(ctx: SlotCtx) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def _unleashed_power(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _unleashed_power(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: sphere-count option x "Magic Damage per Sphere" (one hit per
     sphere; the Min/Max JSON rows are derived totals, never read)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_sphere = extract_named(
         ability, "Magic Damage per Sphere", rank, ctx.stats, ctx.target
@@ -403,7 +402,7 @@ _INFERENCE_READS_THE_STUN_BACKWARDS = (
     "the mechanic the wrong way round."
 )
 
-CAST_DEPENDENCIES = (
+CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
     CastDependency(
         slot="E",
         requires="Q",

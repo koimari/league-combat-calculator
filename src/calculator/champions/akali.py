@@ -20,6 +20,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import int_option
+from .module_helpers import level_row, ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -29,15 +31,13 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
-def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _twilight_shroud(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: emit the sourced energy restore and temporary maximum increase."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     duration = extract_value(ability, "Shroud Duration", rank)
     return {
         "name": ability_name(ability),
@@ -55,23 +55,11 @@ def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _assassins_mark_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    """Resolve one Assassin's Mark proc from per-level JSON scaling."""
-    return extract_named(
-        ability,
-        "Bonus Magic Damage",
-        ctx.level,
-        ctx.stats,
-        ctx.target,
-    )
-
-
-def _perfect_execution(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _perfect_execution(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: R1 dash damage plus R2 execute bounds for missing-HP scaling."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     r1_damage = extract_named(ability, "Magic Damage", rank, ctx.stats)
     r2_min = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats)
@@ -118,7 +106,7 @@ SLOTS = {
     "E": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "R": _perfect_execution,
     "P": proc_damage(
-        per_proc=_assassins_mark_damage,
+        per_proc=level_row("Bonus Magic Damage"),
         dmg_type="magic",
         count_option="passive_procs",
         phase_order_events=True,

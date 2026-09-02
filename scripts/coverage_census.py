@@ -34,19 +34,21 @@ import functools
 import json
 import multiprocessing
 import sys
+from collections.abc import Collection, Mapping
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator import item_coverage, item_source  # noqa: E402
-from src.calculator.bis import bis_payload  # noqa: E402
-from src.calculator.calculate import calculate_payload  # noqa: E402
-from src.calculator.role_quests import (  # noqa: E402
+from src.calculator import item_coverage, item_source
+from src.calculator.bis import bis_payload
+from src.calculator.calculate import calculate_payload
+from src.calculator.role_quests import (
     SUPPORT_QUEST_UPGRADED_STAGE,
     support_quest_item_stage,
 )
-from src.calculator.rune_effects import rune_catalog, resolve_rune  # noqa: E402
+from src.calculator.rune_effects import resolve_rune, rune_catalog
 
 LEVEL = 18
 MODES = ("one_rotation", "time_based", "timed", "auto_only")
@@ -103,7 +105,9 @@ def _coarse(result):
     return {str(s) for s in _coverage(result["resp"]).get("coarse_sources", [])}
 
 
-def _slot_payload(record, role_default=""):
+def _slot_payload(
+    record: Mapping[str, Any], role_default: str = ""
+) -> dict[str, Any] | None:
     """Route one item into its legal slot and role state."""
     name = str(record.get("name", ""))
     payload = {"items": [name], "role": role_default}
@@ -144,7 +148,7 @@ CHAMPION_BUCKETS = (
 GLOBAL_BUCKETS = ("keystone_unmodeled", "expiry_refusals", "enemy_item_entries")
 
 
-def _timed_payload(champ, **extra):
+def _timed_payload(champ: str, **extra):
     return {
         "champion": champ,
         "level": LEVEL,
@@ -155,7 +159,7 @@ def _timed_payload(champ, **extra):
     }
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _catalog():
     """The populations every axis sweeps, read once per process."""
     champions = sorted(
@@ -201,12 +205,8 @@ def _catalog():
     }
 
 
-def _champion_cells(champ):
-    """Every frontier entry one champion can own."""
-    cat = _catalog()
-    cells = {bucket: {} for bucket in CHAMPION_BUCKETS}
-
-    # 1. champion x mode, and the bare-kit timed baseline.
+def _mode_cells(champ: str, cells: Mapping) -> set:
+    """Champion x mode; returns the bare-kit timed baseline."""
     baseline = set()
     for mode in MODES:
         r = _probe(calculate_payload, _timed_payload(champ, fight_mode=mode))
@@ -216,13 +216,16 @@ def _champion_cells(champ):
             baseline = _coarse(r)
             if baseline:
                 cells["attacker_kit_coarse"][champ] = sorted(baseline)
+    return baseline
 
-    # 2. champion x legally-slotted item, across every window the interface can
-    #    ask for.  A single mode with autos on is not "all modes with all
-    #    items": an item can be coarse in one rotation and clean in a timed
-    #    window, and turning the auto stream off changes which sources are
-    #    active at all.  Each cell is compared against that champion's bare kit
-    #    IN THE SAME WINDOW, so the entry is the item's contribution.
+
+def _item_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
+    """Champion x legally-slotted item, across every window the interface can
+    ask for.  A single mode with autos on is not "all modes with all items":
+    an item can be coarse in one rotation and clean in a timed window, and
+    turning the auto stream off changes which sources are active at all.
+    Each cell is compared against that champion's bare kit IN THE SAME
+    WINDOW, so the entry is the item's contribution."""
     for mode, autos in ITEM_WINDOWS:
         window = _timed_payload(champ, fight_mode=mode, include_auto_attacks=autos)
         base = _coarse(_probe(calculate_payload, window))
@@ -239,7 +242,9 @@ def _champion_cells(champ):
                 if extra:
                     cells["item_pair_coarse"][key] = extra
 
-    # 3. champion x compiled keystone.
+
+def _keystone_cells(champ: str, cat: Mapping, cells: Mapping, baseline: set) -> None:
+    """Champion x compiled keystone, against the bare-kit baseline."""
     for keystone in cat["keystones"]:
         r = _probe(calculate_payload, _timed_payload(champ, keystone=keystone))
         key = f"{champ}|{keystone}"
@@ -250,7 +255,9 @@ def _champion_cells(champ):
             if extra:
                 cells["keystone_failures"][key] = f"coarse: {extra}"
 
-    # 4. every certified-timeline item on this champion as the enemy.
+
+def _enemy_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
+    """Every certified-timeline item on this champion as the enemy."""
     for item in cat["certified_items"]:
         r = _probe(
             calculate_payload,
@@ -262,7 +269,9 @@ def _champion_cells(champ):
         if not r["ok"]:
             cells["certified_enemy_withholds"][f"{champ}|{item}"] = r["error"]
 
-    # 6. comparison curve.
+
+def _crossover_cells(champ: str, cells: Mapping) -> None:
+    """The comparison curve."""
     r = _probe(
         calculate_payload,
         {"champion": champ, "level": LEVEL, "items": [], "include_crossover": True},
@@ -276,17 +285,32 @@ def _champion_cells(champ):
                 status.get("reason", "curve absent")
             )
 
-    # 7. BIS sample, both windows.
-    if champ in BIS_SAMPLE:
-        for mode in ("one_rotation", "timed"):
-            r = _probe(
-                bis_payload,
-                _timed_payload(
-                    champ, fight_mode=mode, include_auto_attacks=mode == "timed"
-                ),
-            )
-            if not r["ok"]:
-                cells["bis_errors"][f"{champ}|{mode}"] = r["error"]
+
+def _bis_cells(champ: str, cells: Mapping) -> None:
+    """The BIS sample, both windows."""
+    if champ not in BIS_SAMPLE:
+        return
+    for mode in ("one_rotation", "timed"):
+        r = _probe(
+            bis_payload,
+            _timed_payload(
+                champ, fight_mode=mode, include_auto_attacks=mode == "timed"
+            ),
+        )
+        if not r["ok"]:
+            cells["bis_errors"][f"{champ}|{mode}"] = r["error"]
+
+
+def _champion_cells(champ: str) -> dict:
+    """Every frontier entry one champion can own."""
+    cat = _catalog()
+    cells = {bucket: {} for bucket in CHAMPION_BUCKETS}
+    baseline = _mode_cells(champ, cells)
+    _item_cells(champ, cat, cells)
+    _keystone_cells(champ, cat, cells, baseline)
+    _enemy_cells(champ, cat, cells)
+    _crossover_cells(champ, cells)
+    _bis_cells(champ, cells)
     return cells
 
 
@@ -350,7 +374,9 @@ def _receipt(frontier):
     }
 
 
-def run_census(shard=(0, 1), workers=None):
+def run_census(
+    shard: tuple[int, int] = (0, 1), workers: int | None = None
+) -> dict[str, Any]:
     """Sweep every axis (or one shard of the champions) and return the receipt.
 
     Champions are swept one per worker process; the global buckets are swept
@@ -371,7 +397,7 @@ def run_census(shard=(0, 1), workers=None):
     return _receipt(frontier)
 
 
-def restrict(receipt, shard):
+def restrict(receipt: Mapping[str, Any], shard: tuple[int, int]) -> dict[str, Any]:
     """The part of a full receipt that ``run_census(shard)`` reproduces."""
     mine = set(_shard_champions(shard))
     frontier = {
@@ -391,7 +417,7 @@ def restrict(receipt, shard):
 RESIDUE_PATH = REPO_ROOT / "docs" / "coverage-residue.json"
 
 
-def _residue_rows():
+def _residue_rows() -> list[dict[str, str]]:
     """The committed acknowledgements, or none if the file is absent."""
     if not RESIDUE_PATH.exists():
         return []
@@ -408,7 +434,9 @@ def _frontier_pairs(frontier):
     return pairs
 
 
-def reconcile_residue(receipt, champions=None):
+def reconcile_residue(
+    receipt: Mapping[str, Any], champions: Collection[str] | None = None
+) -> dict[str, int | list[str]]:
     """Split the frontier into acknowledged rows and unacknowledged entries.
 
     Two failures, not one. An entry nothing acknowledges is the frontier
@@ -436,7 +464,7 @@ def _shard(text):
     return index, count
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     """CLI: ``run [--output PATH]`` or ``check PATH``; exit 1 on any frontier."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

@@ -173,11 +173,10 @@ def _bumped_version(monkeypatch: pytest.MonkeyPatch):
 def test_declared_tables_partition_every_memo_in_the_tree() -> None:
     """No memo is outside the five tables, and none is in two of them.
 
-    Five, not four: ``REFRESH_CLEARED_MEMOS`` used to be left out of this
-    partition, and it worked only because its one member's name does not
-    match the convention the scan keyed on.  A table excluded from the
-    partition that proves the population is closed is a table the partition
-    cannot see grow.
+    Five, not four: ``REFRESH_CLEARED_MEMOS`` is in this partition even though
+    its one member's name does not match the convention the scan keys on.  A
+    table excluded from the partition that proves the population is closed is
+    a table the partition cannot see grow.
     """
     tables = {
         "keyed": frozenset(data_registry.DATA_VERSION_KEYED_MEMOS),
@@ -220,7 +219,7 @@ def test_the_phase_keys_its_survivors_and_the_rotation_lane_keys_its_own() -> No
     over item-derived values is *required* to join the keyed one — so a
     length here would turn obeying the decision into a failure.
     """
-    assert D49_SURVIVORS <= set(data_registry.DATA_VERSION_KEYED_MEMOS)
+    assert set(data_registry.DATA_VERSION_KEYED_MEMOS) >= D49_SURVIVORS
     assert D49_SURVIVORS.isdisjoint(data_registry.ROTATION_MEMOS)
     assert data_registry.ROTATION_MEMOS
 
@@ -519,19 +518,19 @@ def test_the_ability_atoms_memo_drops_its_superseded_generation(
     bumped_version,
 ) -> None:
     """The eviction claim, for the memo the merge added to the keyed table."""
-    from src.calculator import ability_atoms  # noqa: PLC0415
-    from src.calculator.data_fetcher import get_champion  # noqa: PLC0415
+    from src.calculator import ability_atoms
+    from src.calculator.data_fetcher import get_champion
 
     champion = get_champion("Ahri")
-    ability_atoms._ABILITY_ATOMS_MEMO.clear()  # noqa: SLF001
-    ability_atoms._ability_atoms("Ahri", champion)  # noqa: SLF001
-    before = len(ability_atoms._ABILITY_ATOMS_MEMO)  # noqa: SLF001
+    ability_atoms._ABILITY_ATOMS_MEMO.clear()
+    ability_atoms._ability_atoms("Ahri", champion)
+    before = len(ability_atoms._ABILITY_ATOMS_MEMO)
 
     bumped_version()
-    ability_atoms._ability_atoms("Ahri", champion)  # noqa: SLF001
+    ability_atoms._ability_atoms("Ahri", champion)
 
-    assert len(ability_atoms._ABILITY_ATOMS_MEMO) == before  # noqa: SLF001
-    generations = {key[0] for key in ability_atoms._ABILITY_ATOMS_MEMO}  # noqa: SLF001
+    assert len(ability_atoms._ABILITY_ATOMS_MEMO) == before
+    generations = {key[0] for key in ability_atoms._ABILITY_ATOMS_MEMO}
     assert len(generations) == 1
 
 

@@ -2,10 +2,9 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import anivia, get_champion_module_meta
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 # ---------------------------------------------------------------------------
 # Q — Flash Frost

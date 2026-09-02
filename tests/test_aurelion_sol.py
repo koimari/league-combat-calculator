@@ -20,17 +20,17 @@ import copy
 
 import pytest
 
-from tests.ability_math import parts_raw_total
 from src.calculator.champions import (
+    aurelion_sol,
     get_champion_module_contract,
     get_champion_options_meta,
 )
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.champions import aurelion_sol
-from src.calculator.champions.engine import CC_PER_PART
 from tests import cc_review, coverage_truth, row_review
+from tests.ability_math import parts_raw_total
 
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 TARGET_1000 = {"target_max_health": 1000.0}

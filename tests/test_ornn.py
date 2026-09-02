@@ -10,9 +10,9 @@ from src.calculator.champions import (
     ornn,
     parse_champion_abilities,
 )
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review, row_review
-from src.calculator.champions.engine import CC_PER_PART
 
 
 def _r_row(level, **options):
@@ -141,7 +141,7 @@ class TestTemperBrittleConsume:
         monkeypatch.setattr(
             "src.calculator.data_fetcher.get_champion", lambda *a, **k: stripped
         )
-        with pytest.raises(ValueError, match="Ornn P .Temper."):
+        with pytest.raises(ValueError, match=r"Ornn P .Temper."):
             parse_champion_abilities(
                 stripped,
                 18,
@@ -159,7 +159,7 @@ class TestTemperBrittleConsume:
         monkeypatch.setattr(
             "src.calculator.data_fetcher.get_champion", lambda *a, **k: drifted
         )
-        with pytest.raises(ValueError, match="BrittlePercentMaxHPCalc|game file"):
+        with pytest.raises(ValueError, match=r"BrittlePercentMaxHPCalc|game file"):
             parse_champion_abilities(
                 drifted,
                 18,

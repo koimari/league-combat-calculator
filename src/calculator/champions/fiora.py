@@ -4,28 +4,20 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat, float_option, int_option
+from .. import healing_helpers as _healing
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import bool_option, champion_stat, float_option, int_option
+from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
-    damage_entry,
-    extract_cooldown,
     extract_named,
     proc_damage,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-
-
-def _vital(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    return extract_named(ability, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
-
 
 _vital_proc = proc_damage(
-    _vital,
+    level_row("Bonus Damage"),
     "true",
     count_option="p_vitals",
     default_count=0,
@@ -34,62 +26,42 @@ _vital_proc = proc_damage(
 )
 
 
-def _lunge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", value, basic_damage=True),)
-    entry["applies_item_on_hits"] = {
+_lunge = named_damage(
+    "Physical Damage",
+    "physical",
+    basic_damage=True,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit",),
-    }
+    },
     # One stab on one target, no sourced travel phase — the certification
     # that carries Lunge's hit into the event ledger MODULE_CC is read from.
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = "Lunge's stab applies one full-effectiveness on-hit package."
-    return entry
+    event_order_certified="single_hit",
+    detail="Lunge's stab applies one full-effectiveness on-hit package.",
+)
 
 
-def _riposte(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.5),)
-    entry["detail"] = (
-        "Defensive stance/stun branch is retained as control state; the shock is one magic hit."
-    )
-    return entry
+_riposte = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.5,
+    detail="Defensive stance/stun branch is retained as control state; the shock is one magic hit.",
+)
 
 
-def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _bladework(
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
+) -> dict[str, Any] | None:
     attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason=f"{attacks} empowered basic attack(s); first cannot crit and second uses the sourced modified critical damage.",
+        reason=(
+            f"{attacks} empowered basic attack(s); first cannot crit and second uses "
+            f"the sourced modified critical damage."
+        ),
     )
     if entry is None:
         return None
@@ -104,7 +76,10 @@ def _grand_challenge(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Grand Challenge",
-        reason="Vital highlighting and Victory Zone healing are explicit challenge state, not outgoing damage.",
+        reason=(
+            "Vital highlighting and Victory Zone healing are explicit challenge "
+            "state, not outgoing damage."
+        ),
     )
 
 
@@ -178,17 +153,17 @@ SOURCES = load_champion_sources("Fiora")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Fiora self-healing events from its authored packet."""
     healing = []
     p_level = int(champion_stat(champion_stats, "level"))
-    p_heal = _healing.extract_named(
+    p_heal = extract_named(
         _healing.ability_json(champion_data, "P"),
         "Bonus Damage",
         p_level,

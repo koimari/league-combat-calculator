@@ -4,8 +4,8 @@ import math
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion
 from src.calculator import support_effects
+from src.calculator.data_fetcher import get_champion
 from src.calculator.support_effects import _support_profile, derive_ally_effects
 
 
@@ -31,7 +31,7 @@ def test_morgana_black_shield_uses_typed_magic_pool_and_duration_atoms():
         18,
         {"ability_power": 50.0},
         [{"slot": "E", "time": 1.25}],
-        {"E": 5},
+        ability_ranks={"E": 5},
     )
 
     assert len(effects) == 1
@@ -88,7 +88,7 @@ def test_taric_bastion_uses_the_protected_units_max_health_atom():
         18,
         {"ability_power": 0.0, "bonus_attack_damage": 0.0, "health": 2000.0},
         [{"slot": "W", "time": 1.0}],
-        {"W": 5},
+        ability_ranks={"W": 5},
     )
 
     shield = effects[0]
@@ -107,7 +107,7 @@ def test_taric_cosmic_radiance_emits_a_delayed_typed_state_packet():
         18,
         {"ability_power": 0.0},
         [{"slot": "R", "time": 1.0}],
-        {"R": 3},
+        ability_ranks={"R": 3},
     )
 
     assert len(effects) == 1
@@ -141,7 +141,7 @@ def test_seraphine_surround_sound_publishes_only_the_priced_caster_shield():
         18,
         {"ability_power": 0.0},
         [{"slot": "W", "time": 1.0}],
-        {"W": 5},
+        ability_ranks={"W": 5},
     )
 
     assert [effect["kind"] for effect in effects] == ["shield"]
@@ -164,7 +164,7 @@ def test_seraphine_first_pulse_option_resurrects_no_zero_row():
         18,
         {"ability_power": 0.0},
         [{"slot": "W", "time": 1.0}],
-        {"W": 5},
+        ability_ranks={"W": 5},
         champion_options={"w_already_shielded": True},
     )
 
@@ -187,7 +187,7 @@ def test_reviewed_self_or_ally_shields_expose_their_target_scope(champion, slot,
         18,
         {"ability_power": 0.0, "bonus_attack_damage": 0.0, "health": 2000.0},
         [{"slot": slot, "time": 1.0}],
-        {slot: 5},
+        ability_ranks={slot: 5},
     )
 
     shield = next(effect for effect in effects if effect["kind"] == "shield")
@@ -247,7 +247,7 @@ def test_support_packet_missing_or_invalid_cast_time_fails_closed(bad_time):
         cast["time"] = bad_time
 
     with pytest.raises(
-        ValueError, match="Support cast W time|missing its sourced time"
+        ValueError, match=r"Support cast W time|missing its sourced time"
     ):
         _sona_effects([cast])
 
@@ -277,7 +277,7 @@ def test_a_self_scoped_row_flags_itself_as_a_self_grant():
     """A ``self`` scope override carries the self flag with it: the pair
     ``scope="self"`` / ``target_self=False`` is unreachable through the
     ordinary path, and the roster resolver's teammate-less branch reads
-    the flag, so it used to drop the shield in a solo fight."""
+    the flag, so a wrong flag would drop the shield in a solo fight."""
     effects = derive_ally_effects(
         get_champion("Rumble"),
         18,
@@ -314,7 +314,7 @@ def test_sivir_spell_shield_heals_only_sivir():
     """ "she heals herself and activates Fleet of Foot" â the "and" is a verb.
 
     The declaring sentence names no ally, so the packet is the caster's
-    alone.  MERGE: the scanner no longer publishes it at all, and that is
+    alone.  MERGE: the scanner does not publish it at all, and that is
     the more capable answer.  The wiki gates the heal on a successful
     block â "Upon successfully blocking a hostile effect, she heals
     herself" â which a scanner row cannot express: it would pay at the

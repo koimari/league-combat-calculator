@@ -34,7 +34,7 @@ would invert the phase's one-way dependency for no runtime gain.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import NamedTuple, NewType, Union
+from typing import NamedTuple, NewType
 
 # A roster index, narrowed.  The kernel stores the same integer in
 # ``SurvivalAction.subject`` / ``.attacker`` / ``.holder`` as a plain ``int``;
@@ -110,7 +110,7 @@ class DerivedOrigin:
     role: str
 
 
-Origin = Union[PairOrigin, SupportOrigin, ReactiveOrigin, DerivedOrigin]
+Origin = PairOrigin | SupportOrigin | ReactiveOrigin | DerivedOrigin
 
 
 class EventId(NamedTuple):
@@ -127,18 +127,20 @@ def origin_text(origin: Origin) -> str:
     rendering raises here rather than reaching a caller as a stringified
     dataclass, which would serialize into a public receipt.
     """
-    if isinstance(origin, PairOrigin):
-        return f"{origin.attacker}:{origin.defender}"
-    if isinstance(origin, SupportOrigin):
-        return f"{origin.holder}:{origin.label}"
-    if isinstance(origin, ReactiveOrigin):
-        return f"{event_id_text(origin.trigger)}:{origin.label}"
-    if isinstance(origin, DerivedOrigin):
-        return f"{event_id_text(origin.parent)}:{origin.role}"
-    raise TypeError(
-        f"{type(origin).__name__} is not an Origin; the union is closed "
-        "(PairOrigin | SupportOrigin | ReactiveOrigin | DerivedOrigin)"
-    )
+    match origin:
+        case PairOrigin():
+            return f"{origin.attacker}:{origin.defender}"
+        case SupportOrigin():
+            return f"{origin.holder}:{origin.label}"
+        case ReactiveOrigin():
+            return f"{event_id_text(origin.trigger)}:{origin.label}"
+        case DerivedOrigin():
+            return f"{event_id_text(origin.parent)}:{origin.role}"
+        case _:
+            raise TypeError(
+                f"{type(origin).__name__} is not an Origin; the union is closed "
+                "(PairOrigin | SupportOrigin | ReactiveOrigin | DerivedOrigin)"
+            )
 
 
 def event_id_text(event: EventId) -> str:

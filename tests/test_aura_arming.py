@@ -13,15 +13,17 @@ member publishes the participant ledger's seventh phase name, which is the
 change ``CAPABILITY_SCHEMA_VERSION`` moved to 2 to announce.
 """
 
+import re
+
 import pytest
 
 from src import app as app_module
+from src.calculator import item_support_effects
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
 from src.calculator.capabilities import (
     CAPABILITY_SCHEMA_VERSION,
     PARTICIPANT_LEDGER_CONTRACT,
 )
-from src.calculator import item_support_effects
 from src.calculator.item_support_effects import (
     SUPPORT_RANK_KEY,
     derive_item_support_effects,
@@ -32,7 +34,6 @@ from src.calculator.survival.actions import (
     public_phase,
     support_transition_rank,
 )
-
 from tests.test_item_support_effects import _ABYSSAL_ROSTER, _actor
 
 UNMAKE = "Abyssal Mask — Unmake"
@@ -118,11 +119,15 @@ class TestAPersistentModifierMustSayItIsAnAura:
         assert self._modifier()[SUPPORT_RANK_KEY] is TransitionRank.AURA_ARM
 
     def test_a_persistent_modifier_with_no_rank_raises(self):
-        with pytest.raises(ValueError, match="must declare TransitionRank.AURA_ARM"):
+        with pytest.raises(
+            ValueError, match=re.escape("must declare TransitionRank.AURA_ARM")
+        ):
             self._modifier(rank=None)
 
     def test_a_persistent_modifier_declaring_another_rank_raises(self):
-        with pytest.raises(ValueError, match="must declare TransitionRank.AURA_ARM"):
+        with pytest.raises(
+            ValueError, match=re.escape("must declare TransitionRank.AURA_ARM")
+        ):
             self._modifier(rank=TransitionRank.DEBUFF_ARM)
 
     def test_a_triggered_modifier_is_untouched(self):

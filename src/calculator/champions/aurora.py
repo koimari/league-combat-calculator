@@ -34,11 +34,15 @@ anywhere. Reclassified from out_of_scope to no_damage (an
 atoms-confirmed zero-HP-number effect), not left silently absent.
 """
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import int_option
+from .module_contract import coverage
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -48,9 +52,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the
 # passive's monster damage cap (attribute "Bonus Damage", 100-270 by
@@ -104,12 +105,11 @@ def _expunge_scaled(recast_min: float, recast_max: float) -> Callable[[float], f
     return scaled
 
 
-def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _twofold_hex(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: first-cast bolts + auto-recast expunge, both fire every cast."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     first = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     recast_min = extract_named(
@@ -174,27 +174,18 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _across_the_veil(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: dash/stealth/movement utility — sourced zero-damage row (no_damage).
-
-    The cached W entry carries ``damageType: None`` and its effect rows
-    ("Invisibility Duration", "Bonus Movement Speed", cooldown-reset
-    clause) are pure utility — Across the Veil has no HP number against
-    an enemy champion anywhere.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Across the Veil is a dash/invisibility/movement-speed "
-            "utility with no enemy-damage attribute of its own "
-            "(data/champions.json Aurora W carries damageType: None and "
-            "no effect row carries an HP-damage leveling entry)."
-        ),
-    )
+# W: dash/stealth/movement utility — sourced zero-damage row (no_damage).
+#
+# The cached W entry carries ``damageType: None`` and its effect rows
+# ("Invisibility Duration", "Bonus Movement Speed", cooldown-reset
+# clause) are pure utility — Across the Veil has no HP number against
+# an enemy champion anywhere.
+_across_the_veil = no_damage_slot(
+    "Across the Veil is a dash/invisibility/movement-speed "
+    "utility with no enemy-damage attribute of its own "
+    "(data/champions.json Aurora W carries damageType: None and "
+    "no effect row carries an HP-damage leveling entry)."
+)
 
 
 OPTIONS: list[dict[str, Any]] = [

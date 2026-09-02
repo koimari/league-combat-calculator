@@ -23,7 +23,16 @@ The CP-era gap items are closed here:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import (
+    calculation_coefficient,
+    calculation_stat_coefficient,
+    data_value,
+    spell_object,
+)
 from .engine import SlotCtx
+from .inputs import bool_option, float_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -31,14 +40,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
-)
-from .inputs import bool_option, float_option
-from .module_contract import coverage
-from ..binary_roots import (
-    calculation_coefficient,
-    calculation_stat_coefficient,
-    data_value,
-    spell_object,
 )
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
@@ -58,12 +59,11 @@ _W_BONUS_HEALTH_PER_100 = (
 _W_STUN_SECONDS = data_value(_PANTHEON_W_SPELL, "StunDuration")
 
 
-def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _comet_spear(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: Hurl base (or <20%-HP execute) + the Mortal Will empowered term."""
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     if bool(ctx.option("q_execute")):
         # Target below 20% of maximum health: the Increased Hurl Damage row.
@@ -104,12 +104,11 @@ def _comet_spear(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _shield_vault(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: %max-HP physical damage with the AP and bonus-health per-100 terms."""
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     ap = float(ctx.stat("ability_power") or 0.0)
@@ -144,12 +143,11 @@ def _shield_vault(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _grand_starfall(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _grand_starfall(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: center Magic Damage row, or the Reduced edge row when selected."""
-    ranked = ctx.ranked("R", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     attr = "Reduced Damage" if bool(ctx.option("r_edge")) else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -198,7 +196,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     bool_option(
         "q_execute",
         False,
@@ -233,12 +232,14 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
         "default": [],
         "max_items": 24,
         "label": (
-            "Front-facing skillshot slots to block; an empty list blocks all marked skillshots"
+            "Front-facing skillshot slots to block; an empty list blocks all marked "
+            "skillshots"
         ),
     },
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q prices the Hurl Physical Damage row plus the Mortal Will empowered "
     "term (20 : 265.88 by level + 115% bonus AD) — Pantheon starts fights "
     "with maximum Mortal Will stacks (cached P description), so the first "

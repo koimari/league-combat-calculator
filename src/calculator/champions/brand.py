@@ -27,7 +27,8 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
-from .module_helpers import delayed_damage
+from .inputs import int_option
+from .module_helpers import delayed_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -37,7 +38,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 # HARDCODED: verify on patch updates — the Ablaze DoT is prose-only in
 # the JSON (P effect[1] has no leveling entry): each stack deals 2% of
@@ -66,12 +66,11 @@ def _r_bounces(ctx: SlotCtx) -> int:
     return max(1, min(_R_MAX_BOUNCES, int(ctx.option("r_bounces"))))
 
 
-def _pyroclasm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _pyroclasm(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: per-bounce damage x the r_bounces option (never the JSON total)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     total = per_bounce * _r_bounces(ctx)
     entry = damage_entry(
@@ -226,7 +225,7 @@ _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
 # Ablaze too, so this is the minimal declaration that keeps W's priced
 # row true in every derived order, and naming the other appliers as well
 # would constrain more than the mechanic does.
-CAST_DEPENDENCIES = (
+CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
     CastDependency(
         slot="W",
         requires="Q",

@@ -7,10 +7,11 @@ the module publishes the complete parser/evidence contract.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from string import hexdigits
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
 
 from ..ability_spec import CC_KIND_VOCABULARY
 from ..cast_dependency import (
@@ -51,7 +52,7 @@ COVERAGE_CHANNELS = frozenset(
 _RESTATED_FACTS = ("REVIEW_STATUS", "PACKET_SPEC")
 
 
-def default_coverage(slots: dict[str, Any]) -> dict[str, str]:
+def default_coverage(slots: Mapping[str, Any]) -> dict[str, str]:
     """The five-slot coverage ``SLOTS`` implies: an emitted slot is
     ``modeled``, an unemitted one ``out_of_scope``.  Any other reading is
     the module's own, stated through ``MODULE_COVERAGE``.
@@ -85,8 +86,8 @@ def coverage(*, no_damage: str = "", out_of_scope: str = "") -> dict[str, str]:
             "coverage() named one slot twice: "
             f"no_damage={no_damage!r} out_of_scope={out_of_scope!r}"
         )
-    stated = {slot: "no_damage" for slot in no_damage}
-    stated.update({slot: "out_of_scope" for slot in out_of_scope})
+    stated = dict.fromkeys(no_damage, "no_damage")
+    stated.update(dict.fromkeys(out_of_scope, "out_of_scope"))
     return {slot: stated.get(slot, "modeled") for slot in REQUIRED_CHAMPION_SLOTS}
 
 
@@ -150,7 +151,9 @@ def _stat_conversion(module: ModuleType) -> BonusHealthConversion | None:
     return declared
 
 
-def _agreeing(module: ModuleType, declared: list[tuple[str, Any]], what: str) -> Any:
+def _agreeing(
+    module: ModuleType, declared: Sequence[tuple[str, Any]], what: str
+) -> Any:
     """The one value every present carrier holds.
 
     Raises:
@@ -393,7 +396,7 @@ def _refuse_restatements(module: ModuleType) -> None:
 
 
 def _coverage_channels(
-    module: ModuleType, coverage: dict[str, str], slots: dict[str, Any]
+    module: ModuleType, coverage: Mapping[str, str], slots: Mapping[str, Any]
 ) -> dict[str, tuple[str, ...]]:
     """The engine channels a module names for its unemitted ``modeled`` slots.
 
@@ -458,7 +461,7 @@ def _coverage_channels(
 # number at all.  ``ULTIMATE_RECASTS = True`` is a module's review statement
 # that its R is an ordinary repeatable cast gated only by its cooldown;
 # absence is the conservative answer, so silence keeps the one-cast rule.
-def _ultimate_recasts(module: ModuleType, slots: dict[str, Any]) -> bool:
+def _ultimate_recasts(module: ModuleType, slots: Mapping[str, Any]) -> bool:
     """Whether the timed scheduler may recast this kit's R on its cooldown.
 
     Raises:

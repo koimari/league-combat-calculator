@@ -80,7 +80,7 @@ def test_lifeline_missing_damage_type_fails_closed(monkeypatch):
     broken.pop("damage_type", None)
     monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Immortal Shieldbow", broken)
 
-    with pytest.raises(KeyError, match="Immortal Shieldbow.*damage_type"):
+    with pytest.raises(KeyError, match=r"Immortal Shieldbow.*damage_type"):
         resolve_starting_defenses(
             "Kai'Sa", 18, _stats(), [{"name": "Immortal Shieldbow"}]
         )

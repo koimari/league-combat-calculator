@@ -13,17 +13,18 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.ability_spec import DamagePart
-
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
     FightConfig,
-    calculate_fight_damage,
+    _calculate_stacking_procs,
     _simulate_current_health_on_hit,
     _simulate_stacking_on_hit_damage,
+    calculate_fight_damage,
+)
+from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
-    _calculate_stacking_procs,
 )
 from src.calculator.interpreters import (
     cast_proc,
@@ -33,7 +34,7 @@ from src.calculator.interpreters import (
     resistance_shred,
     spellblade,
 )
-from src.calculator.item_behavior import Resistance
+from src.calculator.item_behavior import FightFacts, Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
 
@@ -42,10 +43,12 @@ def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
     return resistance_shred.resolve_slot(
         owners,
         Resistance.MAGIC_RESIST,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
 
 
@@ -53,10 +56,12 @@ def _charged_strikes(*owners: str, level: int = 18, is_melee: bool = True):
     """The charged strikes a build declares, resolved through their rules."""
     return charged_strike.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -64,10 +69,12 @@ def _cast_proc_slots(*owners: str, is_melee: bool = True) -> "cast_proc.CastProc
     """The cast-triggered procs a build declares, resolved through their rules."""
     return cast_proc.resolve_slots(
         owners,
-        level=11,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=11,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -75,10 +82,12 @@ def _periodic_slots(*owners: str) -> "periodic.PeriodicSlots":
     """The clock-driven strikes a build declares, resolved through their rules."""
     return periodic.resolve_slots(
         owners,
-        level=11,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=11,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -91,10 +100,12 @@ def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
     """The spellblade a build arms, resolved through its declaration."""
     return spellblade.resolve_slot(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -110,10 +121,12 @@ def _hypershot_slot(owners):
     return delta_amp.resolve_slot(
         owners,
         AmpChainSlot.HYPERSHOT,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -129,10 +142,12 @@ def _whole_total_fraction(owner: str, duration: float) -> float:
     slot = delta_amp.resolve_slot(
         [owner],
         AmpChainSlot.WHOLE_TOTAL,
-        level=18,
-        fight_duration_seconds=duration,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=duration,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     return slot.sources()[0][1]
@@ -152,27 +167,29 @@ def _simulate_bork_damage(
     """Readable test adapter around the generic current-health simulation."""
     strikes = on_hit_strike.per_hit_effects(
         ["Blade of the Ruined King"],
-        level=1,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=1,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
         num_auto_attacks,
-        auto_damage_per_hit,
-        other_on_hit_per_hit,
-        SimpleNamespace(
+        auto_damage_per_hit=auto_damage_per_hit,
+        other_on_hit_per_hit=other_on_hit_per_hit,
+        resists=SimpleNamespace(
             effective_armor=effective_armor,
             effective_mr=0.0,
             physical_damage_flat_reduction=0.0,
             physical_damage_flat_reduction_cap=0.0,
         ),
-        1.0,
-        phantom_hit_autos,
-        double_hit_all,
+        magic_amp=1.0,
+        phantom_hit_autos=phantom_hit_autos,
+        double_hit_all=double_hit_all,
     )
     return total, hits
 
@@ -195,10 +212,12 @@ def _shadowflame_effect():
     slot = delta_amp.resolve_slot(
         ["Shadowflame"],
         AmpChainSlot.CINDERBLOOM,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     return slot
@@ -226,16 +245,16 @@ def _simulate_kraken_damage(
             DamageInputs({}, level, is_melee, target_health, target_health),
             target_health,
             num_auto_attacks,
-            auto_damage_per_hit,
-            other_on_hit_per_hit,
-            SimpleNamespace(
+            auto_damage_per_hit=auto_damage_per_hit,
+            other_on_hit_per_hit=other_on_hit_per_hit,
+            resists=SimpleNamespace(
                 effective_armor=effective_armor,
                 effective_mr=0.0,
                 physical_damage_flat_reduction=0.0,
                 physical_damage_flat_reduction_cap=0.0,
             ),
-            1.0,
-            kraken_proc_autos,
+            magic_amp=1.0,
+            proc_autos=kraken_proc_autos,
         )
     )
 
@@ -323,8 +342,8 @@ class TestRapidFirecannonSharpshooter:
 
     def test_parsed_values_match_expected(self) -> None:
         """Verify parser extracts 40 magic damage from JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Rapid Firecannon", items)
@@ -547,8 +566,8 @@ class TestOverlordBloodmailTyranny:
 
     def test_parsed_ratio_matches_expected(self) -> None:
         """Verify parser extracts the 2.5% bonus health to AD ratio."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Overlord's Bloodmail", items)
@@ -1195,8 +1214,8 @@ class TestShadowflameCinderbloom:
         parse_at,
     ) -> None:
         """A real synthetic recast and a triggered proc each enter once."""
-        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.damage import _ordered_damage_events
+        from src.calculator.data_fetcher import get_item_by_name
 
         items = [shadowflame, get_item_by_name("Luden's Echo")]
         stats, abilities = parse_at(ambessa_data, 18, items=items)
@@ -1275,7 +1294,7 @@ class TestActualizerAmpRow:
         breakdown = fight["breakdown"]
         row = breakdown["ability_amp_Actualizer"]
         amp = row["multiplier"]
-        amped_keys = ("Q", "Q2", "W", "E", "R") + extra_keys
+        amped_keys = ("Q", "Q2", "W", "E", "R", *extra_keys)
         base = sum(
             breakdown[key]["total_damage"] for key in amped_keys if key in breakdown
         )
@@ -1698,8 +1717,8 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         """Ahri level 18 with Bloodsong vs 1000 HP / 100 Armor / 100 MR.
 
         5-second fight, 100% auto uptime. Expected ~1040 total damage
-        (±5%). Was ~1161 before the shared cast timeline: W (5.0s cd)
-        used to sneak a second cast at exactly t=5.0, but Q's 0.25s cast
+        (±5%), not ~1161: on the shared cast timeline W (5.0s cd) cannot
+        sneak a second cast at exactly t=5.0, because Q's 0.25s cast
         time delays W to t=0.25, putting its recast at 5.25 — past the
         fight's end, as in-game.
         """
@@ -5397,7 +5416,7 @@ class TestSpearOfShojin:
         - Q at 6s base, 0 ability haste, 25 basic = 6 * 100/125 = 4.8s
         - R at 60s base, 0 ability haste, 25 basic = still 60s (no basic haste)
         """
-        from src.calculator.damage import effective_cooldown
+        from src.calculator.stats import effective_cooldown
 
         base_q_cd = 6.0
         base_r_cd = 60.0
@@ -5496,8 +5515,8 @@ class TestSunderedSky(_FightHarness):
 
     def test_sundered_sky_parsed_values(self) -> None:
         """Parser extracts reduced_crit_ratio and cooldown from JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Sundered Sky", items)
@@ -5708,8 +5727,8 @@ class TestVoltaicCyclosword(_FightHarness):
     def test_voltaic_parsed_values(self) -> None:
         """Parser extracts the reworked Firmament: current-HP physical damage
         (melee 9% / ranged 7%) capped at 200."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Voltaic Cyclosword", items)
@@ -5810,8 +5829,8 @@ class TestUnendingDespair(_FightHarness):
 
     def test_unending_despair_parsed_values(self) -> None:
         """Parser extracts interval and bonus_hp_ratio from JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Unending Despair", items)
@@ -5912,8 +5931,8 @@ class TestTerminusPenetration(_FightHarness):
 
     def test_terminus_pen_parsed_values(self) -> None:
         """Parser extracts dark_pen_per_stack and dark_max_stacks."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Terminus", items)
@@ -5966,8 +5985,8 @@ class TestCollectorThreshold(_FightHarness):
 
     def test_collector_parsed_values(self) -> None:
         """Parser extracts threshold from JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("The Collector", items)
@@ -6123,8 +6142,8 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
 
     def _ahri_fight(self, champion_data, item_names, **overrides):
         """Timed 10s fight with real casts and the named items."""
-        from src.calculator.stats import calculate_total_stats
         from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
 
         items = [get_item_by_name(name) for name in item_names]
         stats = calculate_total_stats(champion_data, 18, items)
@@ -6374,8 +6393,8 @@ class TestRecurveBowSting(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the flat physical on-hit from cached JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Recurve Bow", fetch_item_data())
         assert parsed is not None
@@ -6473,8 +6492,8 @@ class TestSheenSpellblade:
 
     def test_two_procs_in_five_second_ahri_fight(self, ahri_data: dict) -> None:
         """Sheen weaves twice in 5 seconds, like the rest of the line."""
-        from src.calculator.stats import calculate_total_stats
         from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.stats import calculate_total_stats
 
         items = [get_item_by_name("Sheen")]
         stats = calculate_total_stats(ahri_data, 18, items)
@@ -6502,8 +6521,8 @@ class TestHauntingGuiseMadness(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the per-second ramp and its cap from cached JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Haunting Guise", fetch_item_data())
         assert parsed is not None
@@ -6581,8 +6600,8 @@ class TestBamisCinderImmolate(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the flat DPS; no bonus-health scaling exists."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Bami's Cinder", fetch_item_data())
         assert parsed is not None
@@ -6644,8 +6663,8 @@ class TestFatedAshesInflame(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the flat burn total; there is no AP scaling."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Fated Ashes", fetch_item_data())
         assert parsed is not None
@@ -6691,8 +6710,8 @@ class TestTiamatCrescent(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the active's AD ratio from cached JSON."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Tiamat", fetch_item_data())
         assert parsed is not None
@@ -6748,8 +6767,8 @@ class TestHextechAlternatorRevved(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the flat proc and the cooldown field."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Hextech Alternator", fetch_item_data())
         assert parsed is not None
@@ -6829,8 +6848,8 @@ class TestScoutsSlingshotBullseye(_FightHarness):
 
     def test_parsed_values_match_expected(self) -> None:
         """Parser extracts the proc, its cooldown, and the attack refund."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Scout's Slingshot", fetch_item_data())
         assert parsed is not None

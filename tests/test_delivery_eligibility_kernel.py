@@ -14,7 +14,6 @@ uses, first-valid-hit, destruction, later-hit reduction).
 import pytest
 
 from src.calculator import delivery_eligibility as de
-from src.calculator.state_lifecycle import SourceReceipt
 
 
 class _Action:
@@ -535,7 +534,7 @@ class TestSpellShieldRearmClock:
         assert clock.rearms_within(41.0, 1.0) is False
         assert clock.rearms_within(30.0, 1.0) is False
         # Verdant's 60s: champion damage at 9.0 pushes ready_at from 61.0 to
-        # 69.0, which still fits a 70s fight but no longer fits a 69s one —
+        # 69.0, which still fits a 70s fight and does not fit a 69s one —
         # the restart clause moves the boundary, it does not only delay.
         verdant = _clock(60.0)
         assert verdant.ready_at(1.0, 2.0) == pytest.approx(62.0)

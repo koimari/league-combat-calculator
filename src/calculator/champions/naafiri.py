@@ -131,7 +131,8 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import buff_window_share
+from .inputs import bool_option
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -141,7 +142,6 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
-from .inputs import bool_option
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
@@ -188,7 +188,10 @@ def _packmate_count(level: int, *, hunt: bool) -> int:
     raise ValueError(f"Naafiri: no sourced Packmate cap for level {level!r}")
 
 
-def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _call_of_the_pack(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the hunt's 20%-of-total-AD bonus-attack-damage steroid.
 
     See the module docstring's W entry for the two-channel sourcing of
@@ -196,10 +199,6 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
     ``NaafiriADPercentBoost``) and for why the branch's bonus movement
     speed stays a documented rider instead of a ``stat_buff`` key.
     """
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     entry = damage_entry(
         ability_name(ability),
@@ -325,12 +324,11 @@ def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _darkin_daggers(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: initial dagger + 10 bleed ticks + the recast's bonus damage."""
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     initial = extract_named(
         ability, "Initial Physical Damage", rank, ctx.stats, ctx.target
@@ -393,12 +391,11 @@ def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _eviscerate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: dash damage plus the Flurry explosion on arrival."""
-    ranked = ctx.ranked("E", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     dash = extract_named(ability, "Dash Physical Damage", rank, ctx.stats, ctx.target)
     flurry = extract_named(
@@ -461,7 +458,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     bool_option(
         "q_recast",
         True,
@@ -475,7 +473,8 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Darkin Daggers) prices the initial hit, 10 sourced 0.5s bleed "
     "ticks (Total Bleed Physical Damage == per-tick x 10, E2 worklist), "
     "and the recast's bonus damage — interpolated between the "
@@ -539,17 +538,17 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Naafiri self-healing events from its authored packet."""
     healing = []
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_heal = _healing.extract_named(
+    q_heal = extract_named(
         _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
     # One heal per Q cast: the module emits the initial hit at the cast

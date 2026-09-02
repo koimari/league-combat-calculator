@@ -9,7 +9,7 @@ module now reads through the atom accessor, and pins the neighbouring
 attack-speed row as a distinct atom so the two can never be confused
 again.
 
-The row is also no longer one lump.  The cached bounce sentence caps a
+The row is also not one lump.  The cached bounce sentence caps a
 swing at 8 bounces across enemies AND allows each enemy "up to one
 additional time per empowered attack", so one priced target takes
 exactly one bounce per empowered swing and the 8 never binds in a pair
@@ -82,7 +82,7 @@ class TestBounceDamageRow:
     """SC3: the packet priced the attack-speed row."""
 
     @pytest.mark.parametrize(
-        "rank,ratio", [(1, 40.0), (2, 42.5), (3, 45.0), (4, 47.5), (5, 50.0)]
+        ("rank", "ratio"), [(1, 40.0), (2, 42.5), (3, 45.0), (4, 47.5), (5, 50.0)]
     )
     def test_cached_bounce_damage_is_the_ad_row(self, rank, ratio):
         value, atom = required_ranked_attribute_atom(
@@ -134,7 +134,7 @@ class TestPerBounceStructure:
         (part,) = _parse()[1]["W"]["parts"]
         assert part.count == 1
 
-    @pytest.mark.parametrize("uptime,expected", [(0.0, 1), (0.5, 1), (1.0, 3)])
+    @pytest.mark.parametrize(("uptime", "expected"), [(0.0, 1), (0.5, 1), (1.0, 3)])
     def test_count_is_the_fight_auto_cadence_over_the_window(self, uptime, expected):
         """0.795 attacks/s x uptime x the sourced 4s window, floored at 1."""
         _, abilities = _parse(

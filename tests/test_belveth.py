@@ -11,11 +11,11 @@ Hand-validated against revision-backed patch 26.15 wiki data:
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import charged_strike, on_hit_strike
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import belveth, parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.champions import belveth
+from src.calculator.interpreters import charged_strike, on_hit_strike
+from src.calculator.item_behavior import FightFacts
 from tests import cc_review
 
 
@@ -168,7 +168,7 @@ class TestWAboveAndBelow:
         assert _parse(belveth_data, 5)["W"]["damage_type"] == "magic"
 
     def test_w_rank5_no_ap(self, belveth_data) -> None:
-        """Rank 5, 0 AP: 320; W no longer scales with bonus AD."""
+        """Rank 5, 0 AP: 320; W does not scale with bonus AD."""
         abilities = _parse(belveth_data, 18, bonus_ad=50.0, ranks=_ALL_MAX)
         assert abilities["W"]["total_raw"] == pytest.approx(320.0)
 
@@ -408,10 +408,12 @@ def _declared_per_hits(*owners: str, level: int = 18):
     """The on-hit strikes a build declares, through their own rules."""
     return on_hit_strike.per_hit_effects(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -571,10 +573,12 @@ def _kraken_raw_full_hp(kraken, stats, target_health):
     source of truth (the compiled stacking spec)."""
     slots = charged_strike.resolve_slots(
         [str(kraken.get("name", ""))],
-        level=int(stats.get("level", 18)),
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=int(stats.get("level", 18)),
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slots.stacking_on_hits, "expected a stacking on-hit item"
     inputs = item_effects.DamageInputs(

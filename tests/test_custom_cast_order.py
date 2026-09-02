@@ -1,4 +1,4 @@
-"""C6 — a custom ``cast_order`` may no longer delete a recast slot (D-11).
+"""C6 — a custom ``cast_order`` never deletes a recast slot (D-11).
 
 The defect: both request paths validated a requested order against the
 literal ``sorted(order) == ["E", "Q", "R", "W"]``, so the only orders a
@@ -16,7 +16,6 @@ Recast parentage comes from ``recast_of`` on the parsed entry and from
 nothing else — no name table, no ``"Q" + "Q2"`` inference.
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -26,31 +25,31 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
-import golden_snapshot  # noqa: E402  pylint: disable=wrong-import-position
+import golden_snapshot
 
-from src.calculator.cast_dependency import (  # noqa: E402
+from src.calculator.cast_dependency import (
     UnknownSlotError,
     expand_user_order,
     orderable_slots,
 )
-from src.calculator.champions import (  # noqa: E402
+from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator.damage import _ridden_parent_slot  # noqa: E402
-from src.calculator.data_fetcher import get_champion  # noqa: E402
-from src.calculator.pipeline import (  # noqa: E402
+from src.calculator.damage import _ridden_parent_slot
+from src.calculator.data_fetcher import get_champion
+from src.calculator.pipeline import (
     CAST_SLOT_SPELLING,
     FightParams,
     cast_slot_surface,
     run_fight,
     validate_cast_order_shape,
 )
-from src.calculator.scenario import (  # noqa: E402
+from src.calculator.scenario import (
     parse_scenario_request,
     resolve_scenario,
 )
-from src.calculator.stats import calculate_total_stats  # noqa: E402
+from src.calculator.stats import calculate_total_stats
 
 SRC = ROOT / "src" / "calculator"
 
@@ -150,7 +149,7 @@ class TestChampionAgnosticShapeCheck:
             assert "permutation of Q, W, E, R" not in source, module
 
     @pytest.mark.parametrize(
-        "bad, message",
+        ("bad", "message"),
         [
             ("QWER", "Cast order must be a list of ability slots"),
             (["Q", {}], "Cast order must be a list of ability slots"),
@@ -175,15 +174,14 @@ class TestPartialOrdersAreRunnable:
     """The widening the shape rule implies, exercised end to end.
 
     ``validate_cast_order_shape`` accepts any non-empty list of distinct
-    slots, so a request may now name a *subset* of the champion's kit —
-    both request paths previously demanded a four-slot permutation and
-    raised on anything shorter.  ``/api/calculate`` reads ``cast_order``
+    slots, so a request may name a *subset* of the champion's kit rather
+    than a four-slot permutation.  ``/api/calculate`` reads ``cast_order``
     straight off the payload, so this is a live widening of a public
     request parameter and not merely an internal shape rule.
     """
 
     @pytest.mark.parametrize(
-        "order, expected_rows",
+        ("order", "expected_rows"),
         [
             (["Q"], {"Q", "auto_attacks"}),
             (["R", "Q"], {"Q", "R", "auto_attacks"}),
@@ -264,11 +262,11 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
     def test_the_raise_is_reachable_from_the_request_path(self):
         """The fail-closed half must fire where a request is decided.
 
-        ``cast_slot_surface`` used to drop an unstamped ``Q2`` as a rider
-        row, so the only thing that could reach ``orderable_slots``'s raise
-        was a hand-built surface — and a real kit carrying one was silently
-        deleted from the requested order instead, which is the exact defect
-        C6 exists to kill.
+        If ``cast_slot_surface`` dropped an unstamped ``Q2`` as a rider
+        row, the only thing that could reach ``orderable_slots``'s raise
+        would be a hand-built surface — and a real kit carrying one would be
+        silently deleted from the requested order instead, which is the exact
+        defect C6 exists to kill.
         """
         kit = dict(_syndra_kit(120))
         kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}
@@ -414,7 +412,8 @@ class TestTheCustomOrderPinScenario:
         requested = _timeline(_run_scenario("syndra_custom_order_120"))
         derived = _timeline(_run_scenario("syndra_derived_order_120"))
         assert requested != derived
-        assert (0.0, "Q2") in requested and (0.0, "Q2") in derived
+        assert (0.0, "Q2") in requested
+        assert (0.0, "Q2") in derived
 
     def test_a_kit_without_the_charge_is_untouched(self):
         """39 splinters: no recast is live, so the order is what was asked."""
@@ -464,7 +463,7 @@ class TestTheRecastCastCountRuleStaysScoped:
         assert zero_cooldown == [("Syndra", "Q2")]
 
     @pytest.mark.parametrize(
-        "entry, rides",
+        ("entry", "rides"),
         [
             ({"recast_of": "Q", "cooldown": 5.0}, "Q"),
             ({"recast_of": "Q", "cooldown": 0.0}, None),

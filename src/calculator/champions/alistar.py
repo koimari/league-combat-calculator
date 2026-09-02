@@ -46,21 +46,23 @@ hardcoded.
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
-from ..ability_atoms import ability_payload
 from ..ability_atoms import (
     AbilityAtomQuery,
+    ability_payload,
     ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
 )
 from ..ability_spec import AttackClass, DamageClass, DamagePart
-from ..healing_helpers import HealAnchor, payments, ability_json, trigger_fields
+from ..healing_helpers import HealAnchor, ability_json, payments, trigger_fields
 from ..survival.actions import TransitionRank
-from .inputs import champion_stat, int_option
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     atom_receipt,
@@ -73,7 +75,7 @@ from .source_receipts import load_champion_sources
 
 
 def _extract_e_on_hit_damage(
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
     level: int,
 ) -> float:
     """Extract E's empowered-auto bonus magic damage at a champion level.
@@ -134,17 +136,14 @@ _E_DURATION = 5.0
 _E_TICK_INTERVAL = _E_DURATION / _E_TICKS  # "every 0.5 seconds"
 
 
-def _trample(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _trample(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """E: 10 sourced ticks of the per-tick row + level-scaled empowered auto.
 
     The per-tick value x 10 equals the JSON's "Total Magic Damage" at
     every rank, so the fight prices the full cast total across the
     tick timeline instead of one lump.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -226,7 +225,10 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
 _R_DURATION_SOURCE = "Alistar.R[0].effects[0].description"
 
 
-def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _unbreakable_will(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: zero damage, a sourced incoming-damage-reduction self-state window.
 
     "Active: Alistar cleanses himself of all crowd control. For the next
@@ -241,10 +243,6 @@ def _unbreakable_will(ctx: SlotCtx) -> dict[str, Any] | None:
     Unbreakable Will."  The self-CC-cleanse has no channel in this engine
     and stays unmodeled (see the module docstring).
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     reduction_percent, reduction_atom = required_ranked_attribute_atom(

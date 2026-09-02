@@ -19,7 +19,7 @@ from src.calculator.data_fetcher import get_champion
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import bench_coupled_optimizer  # noqa: E402  (path is set above)
+import bench_coupled_optimizer
 
 
 @pytest.fixture(scope="module")
@@ -158,7 +158,8 @@ class TestRoutingComparison:
             self._report(), self._report(score=3305.1)
         )
         assert "mundo_3champ" in failure
-        assert "3305.0" in failure and "3305.1" in failure
+        assert "3305.0" in failure
+        assert "3305.1" in failure
 
     def test_a_differing_winner_is_reported(self, bench):
         other = self._report()
@@ -295,8 +296,8 @@ class TestAllocationReading:
     ):
         """Same function, same process, same order — or it is a new number."""
         probed: list[str] = []
-        monkeypatch.setattr(bench, "allocation_probe", lambda name: probed.append(name))
-        bench.attach_allocation_peaks(dict.fromkeys(bench.SCENARIOS, {}))
+        monkeypatch.setattr(bench, "allocation_probe", probed.append)
+        bench.attach_allocation_peaks({name: {} for name in bench.SCENARIOS})
         assert probed == list(bench.SCENARIOS)
 
     def _run_main(self, bench, monkeypatch, argv):

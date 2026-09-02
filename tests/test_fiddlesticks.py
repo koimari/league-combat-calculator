@@ -15,7 +15,7 @@ _CC = cc_review.ChampionReview(_CC_CHAMPION, _CC_RANKS)
 
 
 class TestReviewedCrowdControl:
-    """Terrify fears, Reap slows; the doubled branch fears nothing, which is why Q's kind rides its part.
+    """Terrify fears, Reap slows; the doubled branch fears nothing, so Q's kind rides its part.
 
     A control-armed holder shield (Fimbulwinter's Everlasting) reads the
     reviewed ``cc_kind`` off authored damage events; an unreviewed ability
@@ -53,7 +53,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """A target that 'cannot be affected by it again' is not feared."""
-        assert _CC.kinds(**{"q_target_already_feared": True}) == {
+        assert _CC.kinds(q_target_already_feared=True) == {
             "Q": ["none"],
             "W": ["none"],
             "E": ["slow"],

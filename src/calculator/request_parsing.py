@@ -19,14 +19,18 @@ def request_string(
     required: bool = False,
 ) -> str:
     """Read one trimmed public string with the shared length limit."""
-    value = data.get(key, default)
+    return short_string(data.get(key, default), key, required=required)
+
+
+def short_string(value: object, field: str, *, required: bool = False) -> str:
+    """One trimmed public string under the shared length limit, or a stop."""
     if not isinstance(value, str):
-        raise ValueError(f"{key} must be a string")
+        raise ValueError(f"{field} must be a string")
     parsed = value.strip()
     if required and not parsed:
-        raise ValueError(f"{key} is required")
+        raise ValueError(f"{field} is required")
     if len(parsed) > 100:
-        raise ValueError(f"{key} must be at most 100 characters")
+        raise ValueError(f"{field} must be at most 100 characters")
     return parsed
 
 
@@ -34,6 +38,7 @@ def request_int(
     data: Mapping[str, object],
     key: str,
     default: int,
+    *,
     minimum: int,
     maximum: int,
 ) -> int:
@@ -58,15 +63,14 @@ def request_int(
 def request_optional_int(
     data: Mapping[str, object],
     key: str,
-    minimum: int,
+    *,
     maximum: int,
 ) -> int | None:
-    """Read one bounded integer, or ``None`` when the request omits it:
-    ``None`` and an empty string both spell "not supplied", so there is no
-    default to return and a supplied value reads under :func:`request_int`."""
+    """Read one bounded count of at least one, or ``None`` when the request omits
+    it: ``None`` and an empty string both spell "not supplied"."""
     if data.get(key) in (None, ""):
         return None
-    return request_int(data, key, default=minimum, minimum=minimum, maximum=maximum)
+    return request_int(data, key, default=1, minimum=1, maximum=maximum)
 
 
 def request_bool(data: Mapping[str, object], key: str, default: bool) -> bool:

@@ -45,7 +45,7 @@ import sys
 import time
 import tracemalloc
 from collections import Counter
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -53,7 +53,7 @@ from typing import Any, Literal
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.app import app  # noqa: E402
+from src.app import app
 
 # ``/api/optimize`` clamps ``time_budget_ms`` into [100, 60_000] and defaults
 # to 12_000.  A budget the machine can exhaust makes every counter below a
@@ -490,7 +490,7 @@ def routing_comparison(
     isolate: bool,
     repeats: int,
     determinism: bool = False,
-    report: Any = None,
+    report: Callable[..., dict[str, Any]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Every named scenario run both ways, each carrying its own verdict.
 
@@ -564,11 +564,13 @@ def attach_allocation_peaks(reports: MutableMapping[str, Any]) -> None:
         report["allocation_peak_bytes"] = allocation_probe(name)
 
 
-def run_scenario(name: str, payload: dict, repeats: int = 3) -> dict:
+def run_scenario(
+    name: str, payload: Mapping[str, Any], repeats: int = 3
+) -> dict[str, Any]:
     """POST one scenario through the real optimize endpoint and time it."""
     client = app.test_client()
     timings = []
-    body = None
+    body: dict[str, Any] | None = None
     for _ in range(repeats):
         started = time.perf_counter()
         response = client.post("/api/optimize", json=payload)
@@ -579,6 +581,8 @@ def run_scenario(name: str, payload: dict, repeats: int = 3) -> dict:
             )
         body = response.get_json()
         timings.append(elapsed)
+    if body is None:
+        raise ValueError(f"{name}: repeats must be at least 1")
     best = min(timings)
     print(f"{name}:")
     print(f"  wall time (best of {repeats}): {best * 1000:.1f} ms")

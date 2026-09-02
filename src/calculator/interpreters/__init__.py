@@ -45,9 +45,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Authority
+from ..champions.inputs import champion_stat
 from ..item_behavior import (
+    SUBJECT_AUTHORITY,
     BehaviorRule,
     BuildContext,
     Compilability,
@@ -62,13 +63,11 @@ from ..item_behavior import (
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
-    SUBJECT_AUTHORITY,
     Subject,
     ThresholdRegenRule,
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
-from .stat_derivation import declared_stat_derivations
 from . import (
     active_cast,
     ally_packet,
@@ -90,6 +89,7 @@ from . import (
     sustain,
     threshold_defense,
 )
+from .stat_derivation import declared_stat_derivations
 
 
 class InterpreterRegistryError(RuntimeError):
@@ -622,12 +622,17 @@ def declared_pairs() -> frozenset[tuple[RuleFamily, EngineLane]]:
     )
 
 
+def _pair_key(pair: tuple[RuleFamily, EngineLane]) -> tuple[str, str]:
+    """The sort key of one ``(family, lane)`` pair: both member values."""
+    return (pair[0].value, pair[1].value)
+
+
 def uninterpreted_pairs() -> tuple[tuple[RuleFamily, EngineLane], ...]:
     """Counter 4's population: declared pairs with no registered interpreter."""
     return tuple(
         sorted(
             (pair for pair in declared_pairs() if pair not in INTERPRETERS),
-            key=lambda pair: (pair[0].value, pair[1].value),
+            key=_pair_key,
         )
     )
 
@@ -880,9 +885,7 @@ def reachability_report(owners: frozenset[str] | None = None) -> ReachabilityRep
                     )
     orphans = [
         f"{family.value}/{lane.value} is registered and no declaration reaches it"
-        for family, lane in sorted(
-            INTERPRETERS, key=lambda pair: (pair[0].value, pair[1].value)
-        )
+        for family, lane in sorted(INTERPRETERS, key=_pair_key)
         if (family, lane) not in reached
     ]
     return ReachabilityReport(
@@ -895,9 +898,7 @@ def _validate_declared_lanes() -> tuple[str, ...]:
     return tuple(
         f"{family.value} declares no {lane.value} lane, so an interpreter "
         "registered there can never be reached"
-        for family, lane in sorted(
-            INTERPRETERS, key=lambda pair: (pair[0].value, pair[1].value)
-        )
+        for family, lane in sorted(INTERPRETERS, key=_pair_key)
         if lane not in lanes_for(family)
     )
 
@@ -978,7 +979,7 @@ def _validate_unserved_lanes(owners: frozenset[str]) -> tuple[str, ...]:
         "receipt for nothing"
         for family, lane in sorted(
             set(UNSERVED_LANE_RECEIPTS) - reached,
-            key=lambda pair: (pair[0].value, pair[1].value),
+            key=_pair_key,
         )
     )
     return tuple(failures)

@@ -19,6 +19,8 @@ locks the ledger outcomes:
   (210 at level 18) — the deliberate 210-self / 80-ally split.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions.slotlib import extract_named
@@ -569,18 +571,17 @@ def test_compiled_score_path_matches_legacy_receipt(champion):
         stats = calculate_total_stats(data, 18, [], role="mid")
         defenses = resolve_starting_defenses(champion, 18, stats, [])
 
-        def timeline(**kwargs):
-            return build_participant_timeline(
-                data,
-                18,
-                [],
-                params,
-                main_stats=stats,
-                main_defenses=defenses,
-                enemies=enemies,
-                allies=allies,
-                **kwargs,
-            )
+        timeline = partial(
+            build_participant_timeline,
+            data,
+            18,
+            [],
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=allies,
+        )
 
         legacy_score = timeline(include_receipt=False)
         fast = timeline(

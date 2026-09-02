@@ -13,10 +13,11 @@ which the pair engine does not track, so it is a flat amplifier whose gate is
 a declared option.
 """
 
-from typing import Any, Callable, Mapping, NamedTuple
+from collections.abc import Callable, Mapping
+from typing import Any, NamedTuple
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition, ZeroPolicy
+from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneAmpContext,
@@ -37,6 +38,7 @@ from ..rune_effects import (
     breakdown_key,
     display_name,
     no_damage_compiler,
+    per_stack_grant,
     required_leveling,
     stack_count_option,
 )
@@ -73,12 +75,10 @@ def _compile_legend_alacrity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """
     name = "Legend: Alacrity"
     effects = RuneValues(name, entry.get("effects", {}))
-    base = effects.number("attack_speed_percent")
-    per_stack = effects.number("attack_speed_percent_per_stack")
-    ceiling = effects.number("max_stacks")
-
-    def amount(context: RuneStatContext) -> float:
-        return base + per_stack * context.option(name, _LEGEND_STACKS, 0.0)
+    base, per_stack, ceiling = effects.numbers(
+        "attack_speed_percent", "attack_speed_percent_per_stack", "max_stacks"
+    )
+    amount = per_stack_grant(name, base, per_stack, _LEGEND_STACKS)
 
     return RuneStatGrantEffect(
         rune_name=name,
@@ -104,9 +104,9 @@ def _compile_legend_bloodline(entry: Mapping[str, Any]) -> RuneMultiStatGrantEff
     """
     name = "Legend: Bloodline"
     effects = RuneValues(name, entry.get("effects", {}))
-    health = effects.number("bonus_health")
-    per_stack = effects.number("life_steal_percent_per_stack")
-    ceiling = effects.number("max_stacks")
+    health, per_stack, ceiling = effects.numbers(
+        "bonus_health", "life_steal_percent_per_stack", "max_stacks"
+    )
 
     def amounts(context: RuneStatContext) -> Mapping[RuneStat, float]:
         stacks = context.option(name, _LEGEND_STACKS, 0.0)
@@ -164,13 +164,11 @@ def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
-def _target_health_amp(name: str, entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
+def _target_health_amp(name: str) -> RuneConditionalAmpEffect:
     """Compile one target-health-gated amplifier: the rune's identity, no more.
 
-    Its share, its amplifier and which side of the threshold arms it are the
-    amp chain's ``TARGET_HEALTH_GATE`` declaration.
-    """
-    del entry  # every number this rune prices is the chain's declaration
+    Its share, its amplifier and its side of the threshold (Coup de Grace
+    below, Cut Down above) are the amp chain's ``TARGET_HEALTH_GATE`` row."""
     return RuneConditionalAmpEffect(
         rune_name=name,
         breakdown_key=breakdown_key(name),
@@ -240,9 +238,9 @@ def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
     """
     name = "Triumph"
     effects = RuneValues(name, entry.get("effects", {}))
-    max_health_ratio = effects.number("max_health_heal_ratio")
-    missing_health_ratio = effects.number("missing_health_heal_ratio")
-    gold = effects.number("flat_gold")
+    max_health_ratio, missing_health_ratio, gold = effects.numbers(
+        "max_health_heal_ratio", "missing_health_heal_ratio", "flat_gold"
+    )
 
     def amount(inputs: DamageInputs) -> float:
         return max_health_ratio * champion_stat(inputs.champion_stats, "health")
@@ -267,16 +265,6 @@ def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
             "is not damage and never joins a total.",
         ),
     )
-
-
-def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
-    """Compile Coup de Grace: more damage to a champion below a health share."""
-    return _target_health_amp("Coup de Grace", entry)
-
-
-def _compile_cut_down(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
-    """Compile Cut Down: more damage to a champion above a health share."""
-    return _target_health_amp("Cut Down", entry)
 
 
 #: Last Stand's gate is the holder's own health, and the pair engine prices
@@ -372,8 +360,8 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Legend: Alacrity": _compile_legend_alacrity,
     "Legend: Haste": _compile_legend_haste,
     "Legend: Bloodline": _compile_legend_bloodline,
-    "Coup de Grace": _compile_coup_de_grace,
-    "Cut Down": _compile_cut_down,
+    "Coup de Grace": lambda entry: _target_health_amp("Coup de Grace"),
+    "Cut Down": lambda entry: _target_health_amp("Cut Down"),
     "Last Stand": _compile_last_stand,
 }
 

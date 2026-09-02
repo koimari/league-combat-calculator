@@ -174,27 +174,27 @@ class AuthoredDeclaration(NamedTuple):
     swing: tuple | None = None
     routing: tuple | None = None
 
-    def swing_composition(self) -> "BasicAttackSwing | None":
+    def swing_composition(self) -> BasicAttackSwing | None:
         """This declaration's swing composition, or ``None`` if none rode it."""
         return None if self.swing is None else BasicAttackSwing(*self.swing)
 
-    def routing_provenance(self) -> "RoutingProvenance | None":
+    def routing_provenance(self) -> RoutingProvenance | None:
         """This declaration's route, or ``None`` if it reached its subject directly."""
         return None if self.routing is None else RoutingProvenance(*self.routing)
 
-    def routed_by(self, routing: "RoutingProvenance") -> "AuthoredDeclaration":
+    def routed_by(self, routing: RoutingProvenance) -> AuthoredDeclaration:
         """The same declaration, re-delivered at a second subject."""
         return self._replace(routing=tuple(routing))
 
-    def delivered_as_a_swing(self, swing: BasicAttackSwing) -> "AuthoredDeclaration":
+    def delivered_as_a_swing(self, swing: BasicAttackSwing) -> AuthoredDeclaration:
         """The same declaration, carrying the swing composition it met."""
         return self._replace(swing=tuple(swing))
 
-    def repriced_at(self, effective_resistance: float) -> "AuthoredDeclaration":
+    def repriced_at(self, effective_resistance: float) -> AuthoredDeclaration:
         """The same declaration, met by a different resistance."""
         return self._replace(effective_resistance=float(effective_resistance))
 
-    def rescaled_by(self, factor: float) -> "AuthoredDeclaration":
+    def rescaled_by(self, factor: float) -> AuthoredDeclaration:
         """The same declaration, at a magnitude scaled by *factor*."""
         return self._replace(raw_amount=float(self.raw_amount) * float(factor))
 

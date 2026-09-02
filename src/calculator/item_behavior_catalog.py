@@ -25,15 +25,18 @@ another module's source text and this stays a light import.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from functools import lru_cache
-from typing import Any, Callable, NamedTuple
+from functools import cache
+from typing import Any, NamedTuple
 from urllib.parse import quote
 
 from . import data_registry, item_effects, rune_effects
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
+    DEFENSE_FIELD_COMBINE,
+    RULE_FAMILY_COUNT,
+    STAT_CHANNEL_PAYLOADS,
     AbsoluteWindow,
     ActiveCastRule,
     ActiveWindowCastEconomyRule,
@@ -49,7 +52,6 @@ from .item_behavior import (
     BelowHalfHealingRule,
     BonusTyping,
     BuildContext,
-    chain_rank,
     ChainTargets,
     ChargedSplash,
     CombatStateRule,
@@ -63,7 +65,7 @@ from .item_behavior import (
     DamageFormula,
     DamageThreshold,
     DecayingAttackStacks,
-    DEFENSE_FIELD_COMBINE,
+    DeclaredRamp,
     DefenseExclusivity,
     DefenseField,
     DefenseMechanic,
@@ -75,13 +77,13 @@ from .item_behavior import (
     EnergizedCharge,
     ExcludeTrigger,
     ExecuteRule,
+    FightFacts,
     Fixed,
-    HolderStat,
     FlatStatGrantRule,
     ForcedCritHeal,
     ForcedCritRule,
+    HolderStat,
     Isolation,
-    DeclaredRamp,
     LevelRamp,
     LevelSteppedRate,
     LevelSubject,
@@ -98,10 +100,10 @@ from .item_behavior import (
     PacketKind,
     PacketSpec,
     PacketTrigger,
-    PeriodicCadence,
-    PenetrationChannelRule,
-    PeriodicRule,
     PartAmpRule,
+    PenetrationChannelRule,
+    PeriodicCadence,
+    PeriodicRule,
     Persist,
     Persistence,
     Pool,
@@ -126,7 +128,6 @@ from .item_behavior import (
     ResourceRestoreRule,
     RestrictedChannel,
     RestrictedChannelRule,
-    RULE_FAMILY_COUNT,
     RuleFamily,
     Scaling,
     SecondaryTargetRule,
@@ -135,7 +136,6 @@ from .item_behavior import (
     ShieldAbsorbs,
     ShieldBypassRule,
     SpellbladeRule,
-    STAT_CHANNEL_PAYLOADS,
     StackedStatRule,
     StackGate,
     StackRamp,
@@ -161,16 +161,17 @@ from .item_behavior import (
     Typing,
     UltimateProcRule,
     UltimateRefundRule,
-    validate_rule,
     WindowBoundary,
     WindowMerge,
     ZeroPolicy,
+    chain_rank,
+    validate_rule,
 )
 from .survival.actions import ActionKind
 from .value_ref import (
     Const,
-    LateLevelValueRef,
     DerivedValueRef,
+    LateLevelValueRef,
     LevelScale,
     LevelValueRef,
     SourceReceipt,
@@ -465,7 +466,7 @@ CACHED_RUNE_SOURCE = "cached data/runes.json (patch 16.15)"
 _WIKI = "https://wiki.leagueoflegends.com/en-us"
 
 
-@lru_cache(maxsize=None)
+@cache
 def cached_source_receipt(owner: str, stamp: str) -> SourceReceipt:
     """The cache-backed citation for an owner whose entry carries none.
 
@@ -516,10 +517,6 @@ class DefenseShape:
         if any(key in entry for key in self.excludes):
             return False
         return all(key in entry for key in self.signature_keys)
-
-    def missing(self, entry: Mapping[str, Any]) -> tuple[str, ...]:
-        """The companion keys *entry* does not carry."""
-        return tuple(key for key in self.requires if key not in entry)
 
 
 @dataclass(frozen=True, slots=True)
@@ -615,14 +612,14 @@ _SOURCED_MULTIPLIER_ZERO = ZeroPolicy(
 DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
     DefenseMechanic.NOXIAN_ENDURANCE: DefenseDeclaration(
         shape=DefenseShape(
-            _REACTIVE_SHIELD_KEYS + ("basic_damage_multiplier",),
+            (*_REACTIVE_SHIELD_KEYS, "basic_damage_multiplier"),
             signature=("reactive_shield_base", "basic_damage_multiplier"),
         ),
-        writes=_REACTIVE_SHIELD_WRITES + (DefenseField.BASIC_DAMAGE_MULTIPLIER,),
+        writes=(*_REACTIVE_SHIELD_WRITES, DefenseField.BASIC_DAMAGE_MULTIPLIER),
         exclusivity=DefenseExclusivity.NONE,
         trigger=TriggerEvent.CHAMPION_DAMAGE,
         absorbs_key="reactive_shield_damage_type",
-        reads=_REACTIVE_SHIELD_READS + ("basic_damage_multiplier",),
+        reads=(*_REACTIVE_SHIELD_READS, "basic_damage_multiplier"),
         late_ramps=(_REACTIVE_SHIELD_RAMP,),
         zero_policy=_REACTIVE_SHIELD_ZERO,
     ),
@@ -723,8 +720,8 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
                 "shield_max",
                 "shield_scale_start_level",
                 "shield_scale_end_level",
+                *_LIFELINE_POLICY_KEYS,
             )
-            + _LIFELINE_POLICY_KEYS
         ),
         writes=_THRESHOLD_SHIELD_WRITES,
         exclusivity=DefenseExclusivity.LIFELINE,
@@ -748,8 +745,8 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
                 "shield_melee_max",
                 "shield_ranged_min",
                 "shield_ranged_max",
+                *_LIFELINE_POLICY_KEYS,
             )
-            + _LIFELINE_POLICY_KEYS
         ),
         writes=_THRESHOLD_SHIELD_WRITES,
         exclusivity=DefenseExclusivity.LIFELINE,
@@ -770,10 +767,10 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
                 "shield_ranged_base",
                 "shield_ranged_bonus_ad_ratio",
                 "lifeline_omnivamp_percent",
+                *_LIFELINE_POLICY_KEYS,
             )
-            + _LIFELINE_POLICY_KEYS
         ),
-        writes=_THRESHOLD_SHIELD_WRITES + (DefenseField.MAW_LIFELINE_OMNIVAMP_PERCENT,),
+        writes=(*_THRESHOLD_SHIELD_WRITES, DefenseField.MAW_LIFELINE_OMNIVAMP_PERCENT),
         exclusivity=DefenseExclusivity.LIFELINE,
         threshold_key="health_threshold",
         duration_key="duration",
@@ -788,7 +785,7 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
         zero_policy=_LIFELINE_ZERO,
     ),
     DefenseMechanic.LIFELINE_SERAPH: DefenseDeclaration(
-        shape=DefenseShape(("shield_max_mana_ratio",) + _LIFELINE_POLICY_KEYS),
+        shape=DefenseShape(("shield_max_mana_ratio", *_LIFELINE_POLICY_KEYS)),
         writes=_THRESHOLD_SHIELD_WRITES,
         exclusivity=DefenseExclusivity.LIFELINE,
         threshold_key="health_threshold",
@@ -798,7 +795,7 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
         zero_policy=_LIFELINE_ZERO,
     ),
     DefenseMechanic.LIFELINE_STERAK: DefenseDeclaration(
-        shape=DefenseShape(("shield_bonus_health_ratio",) + _LIFELINE_POLICY_KEYS),
+        shape=DefenseShape(("shield_bonus_health_ratio", *_LIFELINE_POLICY_KEYS)),
         writes=_THRESHOLD_SHIELD_WRITES,
         exclusivity=DefenseExclusivity.LIFELINE,
         threshold_key="health_threshold",
@@ -1503,9 +1500,9 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
         # exists and read by the rotation rather than by the amp chain.
         "mana_cost_multiplier": RuleFamily.STAT_DERIVATION,
     },
-    "ALLY_ITEM_EFFECTS": {
-        key: RuleFamily.DELTA_AMP for key in sorted(ALLY_DELTA_AMP_KEYS)
-    },
+    "ALLY_ITEM_EFFECTS": dict.fromkeys(
+        sorted(ALLY_DELTA_AMP_KEYS), RuleFamily.DELTA_AMP
+    ),
     "RUNE_EFFECTS": {},
 }
 
@@ -1593,8 +1590,8 @@ class LevelSteppedKeys(NamedTuple):
     stepping starts at rather than stating a level here.
     """
 
-    base: "str | tuple[str, str]"
-    per_level: "str | tuple[str, str]"
+    base: str | tuple[str, str]
+    per_level: str | tuple[str, str]
     from_level_key: str
 
 
@@ -1927,7 +1924,7 @@ def _declares_secondary(
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _mechanic_slug(owner: str) -> str:
     """An owner's identifier spelling, matching the bus's mechanic ids.
 
@@ -2669,7 +2666,7 @@ def _compile_delta_amp(
 
 
 def _rate_reference(
-    owner: str, registry: ValueRegistry, keys: "str | tuple[str, str]"
+    owner: str, registry: ValueRegistry, keys: str | tuple[str, str]
 ) -> ValueRef | MeleeRangedSplit:
     """One schema rate: a single sourced key, or a melee/ranged pair of them."""
     if isinstance(keys, tuple):
@@ -5660,7 +5657,6 @@ def _split_or_ref(
 def _stat_conversion_rules(
     owner: str,
     registry: ValueRegistry,
-    entry: Mapping[str, Any],
     schema: frozenset[str],
 ) -> list[BehaviorRule]:
     """Every stat one entry derives from another, in table order."""
@@ -6003,7 +5999,7 @@ def _compile_stat_derivation(
     """
     del family
     schema = _schema_keys(owner, registry, entry)
-    rules = _stat_conversion_rules(owner, registry, entry, schema)
+    rules = _stat_conversion_rules(owner, registry, schema)
     rules.extend(
         _stat_rule(
             owner,
@@ -6071,14 +6067,16 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
 # ── compilation ───────────────────────────────────────────────────────────
 
 
-def registry_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
+def registry_entries(
+    owner: str,
+) -> tuple[tuple[ValueRegistry, RuleFamily, Mapping[str, Any]], ...]:
     """Every registry entry that names *owner*, with the family it declares.
 
     An owner can appear in both registries — six do, because a dual-sided
     mechanic has a pair-side number and an ally-packet number — so this
     returns a tuple rather than an entry.
     """
-    found: list[tuple[ValueRegistry, RuleFamily, Any]] = []
+    found: list[tuple[ValueRegistry, RuleFamily, Mapping[str, Any]]] = []
     item_entry = item_effects.ITEM_EFFECTS.get(owner)
     if isinstance(item_entry, Mapping):
         tag = item_entry.get("type")
@@ -6143,9 +6141,12 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     cached = _BEHAVIOR_RULES_MEMO.get(key)
     if cached is not None:
         records = _live_registry_records(owner)
-        if cached[0] is records[0] and cached[1] is records[1]:
-            if cached[2] is records[2]:
-                return cached[3]
+        if (
+            cached[0] is records[0]
+            and cached[1] is records[1]
+            and cached[2] is records[2]
+        ):
+            return cached[3]
     entries = registry_entries(owner) + rune_amp_entries(owner)
     rules: list[BehaviorRule] = []
     for registry, family, entry in entries:
@@ -6153,12 +6154,14 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
             rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
     compiled = tuple(rules)
     data_registry.store_for_generation(
-        _BEHAVIOR_RULES_MEMO, key, _live_registry_records(owner) + (compiled,)
+        _BEHAVIOR_RULES_MEMO, key, (*_live_registry_records(owner), compiled)
     )
     return compiled
 
 
-def rune_amp_entries(owner: str) -> tuple[tuple[ValueRegistry, RuleFamily, Any], ...]:
+def rune_amp_entries(
+    owner: str,
+) -> tuple[tuple[ValueRegistry, RuleFamily, Mapping[str, Any]], ...]:
     """The rune record *owner* declares an amp-chain slot from, if any.
 
     Deliberately not part of :func:`registry_entries`: counter 3's population
@@ -6249,29 +6252,19 @@ def undeclared_entry_count() -> int:
     return sum(len(registry_entries(owner)) for owner in sorted(undeclared_owners()))
 
 
-def build_context(
-    owner: str,
-    level: int,
-    *,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
-) -> BuildContext:
+def build_context(owner: str, facts: FightFacts) -> BuildContext:
     """The build-time context an interpreter reads, stamped with the data version.
 
     ``data_registry.data_version()`` is read here rather than by each
-    interpreter, so every memo downstream keys on one counter.  The three
-    fight facts are keyword-only and required: a caller that forgets one gets
-    a ``TypeError``, never a defaulted zero duration flattening a ramping
-    magnitude or a defaulted range class paying every holder the ranged rate.
+    interpreter, so every memo downstream keys on one counter.
     """
     return BuildContext(
-        level=level,
+        level=facts.level,
         owner=owner,
         data_version=data_registry.data_version(),
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        fight_duration_seconds=facts.fight_duration_seconds,
+        target_bonus_health=facts.target_bonus_health,
+        holder_is_melee=facts.holder_is_melee,
     )
 
 
@@ -6613,62 +6606,62 @@ validate_catalog()
 
 
 __all__ = [
+    "ACKNOWLEDGED_READING_DIVERGENCES",
     "ACTION_KIND_FAMILY",
-    "ASSUMED_CARVE_LEADING_ABILITY_HITS",
     "ALLY_DELTA_AMP_KEYS",
     "ALLY_DELTA_AMP_SLOTS",
     "ALLY_ENTRY_SHAPES",
     "ALLY_PACKET_DECLARATIONS",
-    "AllyPacketDeclaration",
-    "CITATION_KEYS",
-    "COMPILED_SUPPORT_KINDS",
-    "EntryShape",
+    "AMP_COMPILABILITY",
+    "ASSUMED_CARVE_LEADING_ABILITY_HITS",
+    "CACHED_HEALTH_GATE_WORDS",
     "CACHED_ITEM_SOURCE",
     "CACHED_RUNE_SOURCE",
-    "ACKNOWLEDGED_READING_DIVERGENCES",
-    "AMP_COMPILABILITY",
+    "CITATION_KEYS",
+    "COMBAT_START",
     "COMPILED_KERNEL_CANNOT_AMP",
-    "COMPILED_KERNEL_CAN_AMP",
-    "BehaviorCatalogError",
-    "Compiler",
     "COMPILED_KERNEL_CANNOT_STAGE",
+    "COMPILED_KERNEL_CAN_AMP",
+    "COMPILED_SUPPORT_KINDS",
     "DEFENSE_DECLARATIONS",
     "DEFENSE_RECEIPTS",
     "DEFENSE_SOURCE_FAMILY",
-    "EVENT_CERTIFIED_MECHANICS",
-    "UNDECLARED_DEFENSE_MECHANICS",
-    "DefenseDeclaration",
-    "DefenseShape",
-    "defense_mechanics_for",
     "DELTA_AMP_UNMIGRATED_TAGS",
-    "COMBAT_START",
+    "EVENT_CERTIFIED_MECHANICS",
     "H4_DEAD_TAGS",
     "H4_SELF_REFERENTIAL_TAGS",
     "H4_TAG_REASONS",
-    "RUNE_AMP_SLOTS",
-    "TARGET_HEALTH_GATE_DIRECTIONS",
-    "CACHED_HEALTH_GATE_WORDS",
     "MIGRATED_DELTA_AMP_TAGS",
     "MULTIPLIER_ORIGIN",
+    "NO_LEADING_STACKS",
     "ON_HIT_FORMULA_FLOORS",
     "ON_HIT_FORMULA_TERMS",
-    "NO_LEADING_STACKS",
     "PER_ABILITY_HIT_BEHAVIOR",
+    "RUNE_AMP_SLOTS",
     "TAG_FAMILY",
+    "TARGET_HEALTH_GATE_DIRECTIONS",
+    "UNDECLARED_DEFENSE_MECHANICS",
+    "AllyPacketDeclaration",
+    "BehaviorCatalogError",
+    "Compiler",
+    "DefenseDeclaration",
+    "DefenseShape",
+    "EntryShape",
     "TermSchema",
     "behavior_rules",
     "build_context",
     "cached_source_receipt",
     "declared_owners",
-    "declares_runtime_behaviour",
     "declared_tags",
+    "declares_runtime_behaviour",
+    "defense_mechanics_for",
     "entry_families",
-    "rune_amp_entries",
     "owners_for",
     "producers_for",
     "registry_entries",
     "registry_owners",
     "rule_owners",
+    "rune_amp_entries",
     "undeclared_entry_count",
     "undeclared_owners",
     "validate_catalog",

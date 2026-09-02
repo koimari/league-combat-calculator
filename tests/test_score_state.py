@@ -31,8 +31,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.calculator.survival.score_state import ScoreLedger
 from src.calculator.survival.actions import ActionKind, SurvivalAction, TransitionRank
+from src.calculator.survival.score_state import ScoreLedger
 
 
 def action(aidx: int, *, trigger: int = -1) -> SurvivalAction:

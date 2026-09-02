@@ -20,13 +20,19 @@ it).  The out-of-combat refresh cadence stays state.
 
 from typing import Any
 
-from .inputs import champion_stat
+from .. import healing_helpers as _healing
 from .engine import build_parser
 from .healing_contract import self_healing_rule
-from .slotlib import attach_self_shield, simple_damage, support_cast, with_control
-from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
+from .inputs import champion_stat
 from .module_contract import coverage
+from .slotlib import (
+    attach_self_shield,
+    extract_named,
+    simple_damage,
+    support_cast,
+    with_control,
+)
+from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
 
@@ -149,17 +155,17 @@ COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Rakan self-healing events from its authored packet."""
     healing = []
     level = max(1, int(champion_stat(champion_stats, "level")))
-    heal = _healing.extract_named(
+    heal = extract_named(
         _healing.ability_json(champion_data, "Q"), "Heal", level, champion_stats
     )
     if heal > 0.0:

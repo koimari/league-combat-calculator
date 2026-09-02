@@ -51,13 +51,16 @@ wire them without re-deriving:
 """
 
 import math
+from collections.abc import Iterable
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..damage import effective_cooldown
 from ..binary_roots import data_value, spell_object
+from ..stats import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import clamp
+from .inputs import float_option, int_option
+from .module_contract import coverage
+from .module_helpers import clamp, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -68,8 +71,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
-from .module_contract import coverage
 
 _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
@@ -295,7 +296,7 @@ def _plasma_application_stream(
 
 
 def _walk_plasma_stacks(
-    ctx: SlotCtx, applications: list[tuple[float, int]]
+    ctx: SlotCtx, applications: Iterable[tuple[float, int]]
 ) -> tuple[list[DamagePart], int]:
     """Turn a stack-application stream into parts, counting the ruptures.
 
@@ -357,11 +358,10 @@ def _timed_plasma_proc(
     }
 
 
-def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _void_seeker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     distance, hit_time = _w_hit_time(ctx)
@@ -406,11 +406,10 @@ def _void_seeker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _icathian_rain(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     evolved, evolution_note = _evolution_state(
         ctx,
@@ -469,7 +468,7 @@ def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _supercharge_uptime(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int, duration: float, uptime: float
+    ctx: SlotCtx, ability: dict[str, Any], rank: int, duration: float, *, uptime: float
 ) -> tuple[int, float]:
     """(charges, window duty cycle) for Supercharge over the fight window.
 
@@ -526,7 +525,7 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
             "Kai'Sa E: 'Bonus Attack Speed' leveling entry missing from the "
             "ability JSON — cannot price Supercharge's window"
         )
-    casts, duty_cycle = _supercharge_uptime(ctx, ability, rank, duration, uptime)
+    casts, duty_cycle = _supercharge_uptime(ctx, ability, rank, duration, uptime=uptime)
     granted = bonus_percent * duty_cycle
     ctx.bump_stat("attack_speed", ctx.stat("attack_speed_ratio") * granted / 100.0)
     return {

@@ -143,12 +143,14 @@ class TestBlockerOneTheBurstHasNoPriceableMagnitude:
             assert not parameters.get("ratios")
             amounts = parameters.get("effect_amounts", {})
             # Only the burn is quantified: 10 -> 50 over the level ramp.
-            assert amounts.get("BaseDamageStart") and amounts.get("BaseDamageEnd")
+            assert amounts.get("BaseDamageStart")
+            assert amounts.get("BaseDamageEnd")
             assert not [key for key in amounts if "AD" in key or "Ratio" in key]
 
     def test_ddragon_carries_only_a_numberless_blurb(self) -> None:
         description = _DDRAGON["passive"]["description"]
-        assert "7" not in description and "%" not in description
+        assert "7" not in description
+        assert "%" not in description
 
     def test_no_cached_source_states_the_level_breakpoints(self) -> None:
         """The heart of the blocker: three values, no level schedule."""

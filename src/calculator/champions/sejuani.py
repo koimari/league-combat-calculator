@@ -16,6 +16,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -28,7 +29,10 @@ from .slotlib import (
 PACKET_SHA256 = "ea21bda8a36a602ed96aad725ac6f585d0e3db982035f7c61a78ebc50db90152"
 
 
-def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _winters_wrath(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: both flail swings (first + second "Physical Damage" rows).
 
     Each swing carries a "% of her maximum health" modifier that the
@@ -37,10 +41,6 @@ def _winters_wrath(ctx: SlotCtx) -> dict[str, Any] | None:
     override that prices the percentage against the fight's live health —
     matching the cached Total Physical Damage row at every rank.
     """
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     def sejuani_max_health(unit: str, value: float) -> float | None:
         if unit == "% of her maximum health":
@@ -109,7 +109,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Winter's Wrath) prices both flail swings: the first and second "
     "'Physical Damage' rows sum to the cached 'Total Physical Damage' "
     "row (10-130 + 90% AP + 12% of Sejuani's maximum health) at every "

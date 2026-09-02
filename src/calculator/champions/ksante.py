@@ -5,8 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, float_option, int_option
+from .module_helpers import no_damage, ranked_slot, require_named_leveling
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -16,8 +18,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
-from ..binary_roots import data_value, spell_object
 
 # Rooted in KSanteR.Omnivamp; the cached R prose corroborates the 20% value.
 _ALLOUT_OMNIVAMP_PERCENT = (
@@ -72,7 +72,10 @@ def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
             }
             for i in range(count)
         ],
-        "detail": f"{count} marked attack consumption(s); All Out bonus is {bool(ctx.option('all_out'))}.",
+        "detail": (
+            f"{count} marked attack consumption(s); All Out bonus is "
+            f"{bool(ctx.option('all_out'))}."
+        ),
     }
 
 
@@ -104,15 +107,6 @@ def _ntofo(ctx: SlotCtx) -> dict[str, Any] | None:
 _W_PHYS_RESIST_PCT_PER_100 = 2.0
 _W_TRUE_MIN_RESIST_PCT_PER_100 = 0.2
 _W_TRUE_MAX_RESIST_PCT_PER_100 = 1.6
-
-
-def _require_row(ability: dict[str, Any], attribute: str) -> None:
-    """Fail loud when the named leveling row is absent (cache corruption)."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return
-    raise KeyError(f"K'Sante {ability_name(ability)} has no {attribute!r} leveling row")
 
 
 class _PathMakerRule:
@@ -177,18 +171,17 @@ class _PathMakerRule:
 KSANTE_PATH_MAKER_RULE = _PathMakerRule()
 
 
-def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _path_maker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     for attribute in (
         "Physical Damage",
         "Minimum Bonus True Damage",
         "Maximum Bonus True Damage",
     ):
-        _require_row(ability, attribute)
+        require_named_leveling("K'Sante", ability, attribute)
     flat = extract_value(ability, "Physical Damage", rank, 0)
     base_pct = extract_value(ability, "Physical Damage", rank, 1)
     bonus_armor = ctx.stat("bonus_armor")
@@ -237,11 +230,8 @@ def _path_maker(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _all_out(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _all_out(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if bool(ctx.option("r_terrain")):
         strike = extract_named(
@@ -322,7 +312,12 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",
-    "Path Maker uses its physical packet and optionally the authored All Out true-damage range; charge duration is explicit.",
-    "All Out terrain routing and the health threshold / resistance conversion remain visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the fight's explicitly single-target attack/on-hit packets (the engine's full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is a documented boundary",
+    "Path Maker uses its physical packet and optionally the authored All Out "
+    "true-damage range; charge duration is explicit.",
+    "All Out terrain routing and the health threshold / resistance conversion remain "
+    "visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the "
+    "fight's explicitly single-target attack/on-hit packets (the engine's "
+    "full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is "
+    "a documented boundary",
 ]
 SOURCES = load_champion_sources("K'Sante")

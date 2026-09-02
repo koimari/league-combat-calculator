@@ -287,7 +287,8 @@ def test_armored_advance_reduces_basic_attacks_in_fight():
         if event.get("source") == "auto_attacks"
         and event.get("target") == "enemy:Galio"
     ]
-    assert autos_plain and autos_plated
+    assert autos_plain
+    assert autos_plated
     # Same first-auto pair: Plating + extra armor must strictly reduce.
     assert autos_plated[0] < autos_plain[0] * 0.9
 

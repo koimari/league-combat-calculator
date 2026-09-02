@@ -35,22 +35,24 @@ Contract clarifications received from RLM-1 (binding):
       ALL receipts including prior apply() calls.
 """
 
+import itertools
+
 import pytest
 
 from src.calculator.resource_ledger import (
-    RESOURCE_KIND_MANA,
-    OP_MAX_INCREASE,
+    OP_CLAMP,
     OP_GAIN,
-    OP_SPEND,
+    OP_MAX_INCREASE,
     OP_REFUND,
     OP_REGEN,
-    OP_CLAMP,
-    ResourceEvent,
+    OP_SPEND,
+    RESOURCE_KIND_MANA,
+    EnlightenDeclaration,
     ResourceAccount,
+    ResourceEvent,
     ResourceLedger,
     TearDeclaration,
     TearManaflow,
-    EnlightenDeclaration,
     enlighten_schedule,
 )
 
@@ -215,7 +217,7 @@ class TestKernel:
         receipts = ledger.run(events)
         assert len(receipts) == 4
         expected = [(500.0, 300.0), (300.0, 350.0), (350.0, 250.0), (250.0, 300.0)]
-        for receipt, (before, after) in zip(receipts, expected):
+        for receipt, (before, after) in zip(receipts, expected, strict=False):
             assert receipt.current_before == pytest.approx(before)
             assert receipt.current_after == pytest.approx(after)
         assert ledger.receipts()[-1].current_after == pytest.approx(300.0)
@@ -881,7 +883,7 @@ class TestEnlighten:
         acct = ResourceAccount(events[0].owner, maximum=1000.0, current=700.0)
         receipts = [acct.apply(e) for e in events]
         expected = [700.0, 766.6666666666666, 833.3333333333333]
-        for receipt, before in zip(receipts, expected):
+        for receipt, before in zip(receipts, expected, strict=False):
             assert receipt.current_before == pytest.approx(before)
             assert receipt.current_after == pytest.approx(before + 66.66666666666667)
         assert acct.current == pytest.approx(900.0)
@@ -928,7 +930,7 @@ class TestRegression:
         )
         assert len(receipts) == 4
         # resource_before/after chain: each receipt's before == previous after
-        for prev, cur in zip(receipts, receipts[1:]):
+        for prev, cur in itertools.pairwise(receipts):
             assert cur.current_before == pytest.approx(prev.current_after)
         # derivable timeline shape
         before = [r.current_before for r in receipts]

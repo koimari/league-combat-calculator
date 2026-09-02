@@ -50,10 +50,45 @@ Ledger observation contract (the only adapter difference):
 from __future__ import annotations
 
 import math
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple, Protocol
 
+from .. import shield_ledger
+from ..cleanse_eligibility import (
+    CleanseEligibility,
+    item_declaration,
+    movement_entry,
+    resolve_cleanse_item,
+    resolve_excluded_kinds,
+    truncate_intervals,
+)
+from ..crowd_control_eligibility import (
+    KNOWN_CONTROL_KINDS,
+    CrowdControlDecision,
+    CrowdControlEligibility,
+    classify_control,
+    immunity_holder,
+)
+from ..delivery_eligibility import (
+    SPELL_SHIELD_ONE_USE_RULE,
+    CombatantFacts,
+    DefenseWindow,
+    SourceReceipt,
+    SpellShieldComposition,
+    SpellShieldEligibility,
+    TriggeredHealRule,
+    spell_shield_block_decision,
+    spell_shield_group_key,
+    stable_event_key,
+)
+from ..healing_reduction import (
+    GRIEVOUS_WOUNDS_FACTOR,
+    heal_and_shield_power_factor,
+    matching_healing_reduction,
+)
+from ..resistance import apply_resistance
+from . import pricing
 from .actions import (
     EVENT_SLOTS,
     NO_SLOT,
@@ -65,40 +100,6 @@ from .actions import (
     damage_class_of,
     declared_modifier_classes,
 )
-from . import pricing
-from .. import shield_ledger
-from ..crowd_control_eligibility import (
-    KNOWN_CONTROL_KINDS,
-    CrowdControlDecision,
-    CrowdControlEligibility,
-    classify_control,
-    immunity_holder,
-)
-from ..cleanse_eligibility import (
-    CleanseEligibility,
-    item_declaration,
-    movement_entry,
-    resolve_cleanse_item,
-    resolve_excluded_kinds,
-    truncate_intervals,
-)
-from ..healing_reduction import (
-    GRIEVOUS_WOUNDS_FACTOR,
-    heal_and_shield_power_factor,
-    matching_healing_reduction,
-)
-from ..delivery_eligibility import (
-    SPELL_SHIELD_ONE_USE_RULE,
-    DefenseWindow,
-    SourceReceipt,
-    SpellShieldComposition,
-    SpellShieldEligibility,
-    TriggeredHealRule,
-    spell_shield_block_decision,
-    spell_shield_group_key,
-    stable_event_key,
-)
-from ..resistance import apply_resistance
 
 #: The revive label used when a participant's resolved defenses arm a revive
 #: without naming its own source.  Guardian Angel is the item-source carrier
@@ -148,7 +149,7 @@ class SurvivalLedger(Protocol):
 
 
 def resolve_grievous(
-    profiles: tuple[Any, ...], damage_type: str
+    profiles: tuple[dict[str, Any], ...], damage_type: str
 ) -> tuple[float, float, tuple[str, ...]] | None:
     """Pre-resolve one attacker's Grievous application for one damage type.
 
@@ -173,7 +174,7 @@ def resolve_grievous(
 
 
 def evaluate_live_raw_formula(
-    raw_formula: Any,
+    raw_formula: Callable[..., float],
     missing_ratio: float,
     target_max_health: float,
 ) -> float:
@@ -187,7 +188,7 @@ def evaluate_live_raw_formula(
         return max(0.0, float(raw_formula(missing_ratio)))
 
 
-def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
+def participant_pools(combatant: CombatantFacts) -> shield_ledger.ShieldPools:
     """Stage one participant's starting health, shields, and Lifelines."""
     defenses = combatant.defenses
     # An authored starting health (roster ``current_health``) is the one way
@@ -316,12 +317,12 @@ class TransitionContext:
 
     duration: float
     states: list[dict[str, Any]]
-    combatants: Sequence[Any]
+    combatants: Sequence[CombatantFacts]
     index_of: Mapping[str, int]
     ledger: SurvivalLedger
     regeneration_windows: Sequence[RegenerationWindow | None]
     venom_profiles: list[tuple[float, float] | None] | None = None
-    reduction_profiles: list[tuple[Any, ...]] | None = None
+    reduction_profiles: list[tuple[dict[str, Any], ...] | None] | None = None
     # Keyed by event slot (Phase 4 S1): ``redirect_children`` maps a parent
     # packet's slot to the redirected child action, and the two sets hold the
     # slots the holder-health gate has judged and cancelled.
@@ -341,7 +342,7 @@ class TransitionContext:
     record_defy_damage: bool = field(init=False)
     stack_flags: list[bool] = field(init=False, repr=False)
     regeneration_flags: list[bool] = field(init=False, repr=False)
-    _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
+    _defense_profiles: list[SubjectDefenseProfile] = field(init=False, repr=False)
     # Every caster's heal-and-shield-power factor, resolved once per walk
     # so the recovery path never re-reads a stat dict per packet.
     _heal_power: list[float] = field(init=False, repr=False)
@@ -366,7 +367,9 @@ class TransitionContext:
             )
         profiles = [
             _subject_defense_profile(combatant, window)
-            for combatant, window in zip(self.combatants, self.regeneration_windows)
+            for combatant, window in zip(
+                self.combatants, self.regeneration_windows, strict=False
+            )
         ]
         self._defense_profiles = profiles
         self.stack_flags = [profile.has_stack_items for profile in profiles]
@@ -378,7 +381,7 @@ class TransitionContext:
             for combatant in self.combatants
         ]
 
-    def defense_profile(self, subject: int) -> "SubjectDefenseProfile":
+    def defense_profile(self, subject: int) -> SubjectDefenseProfile:
         """The subject's cached per-event defense constants."""
         return self._defense_profiles[subject]
 
@@ -390,7 +393,7 @@ class TransitionContext:
             return 1.0
         return self._heal_power[caster]
 
-    def reductions_for(self, attacker: int) -> tuple[Any, ...]:
+    def reductions_for(self, attacker: int) -> tuple[dict[str, Any], ...]:
         """One attacker's healing-reduction profiles, empty where it has none.
 
         Score mode carries no profile list, so an empty tuple is the honest
@@ -400,7 +403,8 @@ class TransitionContext:
             0 <= attacker < len(self.reduction_profiles)
         ):
             return ()
-        return self.reduction_profiles[attacker]
+        profiles = self.reduction_profiles[attacker]
+        return () if profiles is None else profiles
 
 
 def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
@@ -464,7 +468,7 @@ def update_combat_state(
     jak_interval = profile.jak_interval
     jak_max = profile.jak_max
     if jak_interval > 0.0 and jak_max > 0:
-        stacks = min(jak_max, max(0, int(math.floor(action.time / jak_interval))))
+        stacks = min(jak_max, max(0, math.floor(action.time / jak_interval)))
         if stacks != target_state["jaksho_stacks"]:
             target_state["jaksho_stacks"] = stacks
             target_state["jaksho_stack_events"].append(
@@ -550,7 +554,7 @@ def update_combat_state(
 
 
 def apply_declared_price(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+    ctx: TransitionContext, action: SurvivalAction, state: Mapping[str, Any]
 ) -> float | None:
     """Price one packet from its family's declaration, at the live resistance.
 
@@ -639,7 +643,7 @@ def apply_declared_price(
 
 
 def reprice_dynamic_resistance(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+    ctx: TransitionContext, action: SurvivalAction, state: Mapping[str, Any]
 ) -> float | None:
     """Apply an armed target resistance delta to one post-mitigation packet.
 
@@ -716,6 +720,7 @@ def apply_overheal_shield(
     state: dict[str, Any],
     action: SurvivalAction,
     excess: float,
+    *,
     event_time: float,
 ) -> float:
     """Convert sourced overheal into a timed shield (Aphelios Severum).
@@ -833,7 +838,7 @@ def schedule_regeneration_recovery(
     source_key = action.source_key
     is_basic_or_on_hit = (
         action.basic_attack
-        or source_key in {"auto_attacks"}
+        or source_key == "auto_attacks"
         or source_key.startswith(("on_hit_", "on_hit_once_"))
     )
     ranged = str(combatant.champion_data.get("attackType", "MELEE")).upper() != "MELEE"
@@ -842,7 +847,7 @@ def schedule_regeneration_recovery(
     if total <= 0.0:
         return
     trigger_id = EVENT_SLOTS.text(action.event_slot)
-    ticks = max(1, int(round(duration_value / tick)))
+    ticks = max(1, round(duration_value / tick))
     for tick_index in range(1, ticks + 1):
         heal_event = {
             "time": round(action.time + tick * tick_index, 6),
@@ -851,7 +856,7 @@ def schedule_regeneration_recovery(
             # diminishing-return formula at every sourced tick.
             "amount": 0.0,
             "amount_formula": (
-                lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (
+                lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (  # noqa: E501 - lambda parameters do not wrap
                     total_cap
                     * min(
                         1.0,
@@ -999,6 +1004,7 @@ def grant_reactive_shield(
     action: SurvivalAction,
     state: dict[str, Any],
     event_time: float,
+    *,
     event_damage: float,
 ) -> None:
     """Grant a Noxian Endurance/Persistence typed shield after the hit.
@@ -1060,7 +1066,7 @@ def grant_reactive_shield(
 # ---------------------------------------------------------------------------
 
 
-def _actor_stasis_blocks(state: dict[str, Any], event_time: float) -> bool:
+def _actor_stasis_blocks(state: Mapping[str, Any], event_time: float) -> bool:
     """Whether an actor's stasis blocks the action it is authoring.
 
     Ordinary stasis (Zhonya's Time Stop, Bard's Tempered Fate) blocks.  The
@@ -1090,13 +1096,11 @@ def _actor_stasis_blocks(state: dict[str, Any], event_time: float) -> bool:
     # comparison and fall through to ``return True`` so it blocks on its
     # own terms, named "attacker_state_blocked" — not silently absorbed
     # into the revive bypass and misattributed to "attacker_dead".
-    if (
+    return not (
         state["death_time"] is not None
         and revive_stasis_until > event_time
-        and revive_stasis_until >= stasis_until - 1e-9
-    ):
-        return False
-    return True
+        and revive_stasis_until >= stasis_until - 1e-09
+    )
 
 
 def arm_revive_stasis(state: dict[str, Any], event_time: float) -> bool:
@@ -1379,7 +1383,10 @@ def _rearm_spell_shield(state: dict[str, Any], event_time: float) -> None:
 
 
 def _write_spell_shield_reduction_receipt(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any], attacker: Any
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: Mapping[str, Any],
+    attacker: CombatantFacts | None,
 ) -> None:
     """Mirror a projectile defense's reduction receipt onto a packet the
     spell shield is about to block.
@@ -1774,7 +1781,7 @@ def _apply_stat_buff(
 
 
 def _apply_damage_modifier(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+    ctx: TransitionContext, action: SurvivalAction, state: Mapping[str, Any]
 ) -> None:
     """Arm a timed (or persistent) cross-participant damage modifier."""
     # The declaration is read before the availability gate: a packet that
@@ -1929,7 +1936,7 @@ def _apply_cleanse(
     group = str(action.cleanse_group or "")
     same_group = bool(group) and group == use.get("last_cleanse_group")
     decision = eligibility.decide(
-        _cleanse_action_view(action, item, target_id, holder_id, state),
+        _cleanse_action_view(action, item, target_id, holder_id, state=state),
         holder={
             "uses_remaining": 1 if same_group else int(use["uses_remaining"]),
             "item_held": True,
@@ -2035,7 +2042,8 @@ def _cleanse_action_view(
     item: str,
     target_id: str,
     holder_id: str,
-    state: dict[str, Any],
+    *,
+    state: Mapping[str, Any],
 ) -> Any:
     """The kernel's typed view of one walk activation."""
     from types import SimpleNamespace
@@ -2055,8 +2063,8 @@ def _cleanse_action_view(
 
 def _cleanse_use_receipt(
     item: str,
-    declaration: dict[str, Any],
-    use: dict[str, Any],
+    declaration: Mapping[str, Any],
+    use: Mapping[str, Any],
     *,
     fired_while_crowd_controlled: bool,
 ) -> dict[str, Any]:
@@ -2073,7 +2081,7 @@ def _cleanse_use_receipt(
 
 
 def _cleanse_heal_entry(
-    action: SurvivalAction, declaration: dict[str, Any]
+    action: SurvivalAction, declaration: Mapping[str, Any]
 ) -> dict[str, Any] | None:
     """The heal entry attached to a Mikael's cleanse receipt (the heal is a
     SEPARATE effect with its own atoms; the amount is the packet's sourced
@@ -2196,7 +2204,7 @@ def _apply_heal(
             state,
             action,
             leftover_excess - ichor_converted,
-            event_time,
+            event_time=event_time,
         )
     else:
         ichor_converted = 0.0
@@ -2533,6 +2541,37 @@ _MUNDO_P_CANISTER_LIFETIME = 7.0
 _MUNDO_P_COOLDOWN_ROW = (60.0, 15.0)
 
 
+def _record_death(
+    ctx: Any, action: SurvivalAction, state: dict, event_time: float
+) -> None:
+    """Book the subject's death at ``event_time``: first death, Defy, terminal
+    phase, and the downtime that runs to the end of the fight."""
+    if state["first_death_time"] is None:
+        state["first_death_time"] = float(event_time)
+    trigger_defy(ctx, ctx.combatants[action.subject].participant_id, float(event_time))
+    state["death_time"] = min(float(ctx.duration), event_time)
+    state["terminal_phase"] = "dead"
+    state["action_downtime_intervals"].append(
+        {
+            "kind": "death",
+            "start": float(event_time),
+            "end": float(ctx.duration),
+            "source": str(action.source or action.source_key or "Death"),
+        }
+    )
+
+
+def _hostile(ctx: Any, action: SurvivalAction) -> bool:
+    """Whether the action's attacker is on a team other than its subject's."""
+    attacker_team = ""
+    subject_team = ""
+    if 0 <= action.attacker < len(ctx.combatants):
+        attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
+    if 0 <= action.subject < len(ctx.combatants):
+        subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
+    return bool(attacker_team) and attacker_team != subject_team
+
+
 def _apply_mundo_p_resist(
     ctx: TransitionContext,
     action: SurvivalAction,
@@ -2559,21 +2598,7 @@ def _apply_mundo_p_resist(
     pools.health = max(0.0, float(pools.health) - cost)
     event_time = float(action.time)
     if pools.health <= 0.0 and state["death_time"] is None:
-        if state["first_death_time"] is None:
-            state["first_death_time"] = float(event_time)
-        trigger_defy(
-            ctx, ctx.combatants[action.subject].participant_id, float(event_time)
-        )
-        state["death_time"] = min(float(ctx.duration), event_time)
-        state["terminal_phase"] = "dead"
-        state["action_downtime_intervals"].append(
-            {
-                "kind": "death",
-                "start": float(event_time),
-                "end": float(ctx.duration),
-                "source": str(action.source or action.source_key or "Death"),
-            }
-        )
+        _record_death(ctx, action, state, event_time)
         arm_revive_stasis(state, float(event_time))
     resist = state["mundo_p_resist"]
     resist["armed"] = False
@@ -2851,37 +2876,28 @@ def _apply_crowd_control(
         and profile.blocking
         and not profile.unknown
         and float(action.time) < float(ragnarok.get("until", 0.0))
+        and _hostile(ctx, action)
     ):
-        attacker_team = ""
-        subject_team = ""
-        if 0 <= action.attacker < len(ctx.combatants):
-            attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
-        if 0 <= action.subject < len(ctx.combatants):
-            subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
-        hostile = bool(attacker_team) and attacker_team != subject_team
-        if hostile:
-            blocked_row = {
-                "time": round(float(action.time), 3),
-                "source_key": str(action.source_key or ""),
-                "control_kind": str(profile.kind),
-            }
-            ragnarok.setdefault("blocked", []).append(blocked_row)
-            ctx.ledger.write(action, ragnarok_blocked=dict(blocked_row))
-            ctx.ledger.mark_applied(action)
-            return
+        blocked_row = {
+            "time": round(float(action.time), 3),
+            "source_key": str(action.source_key or ""),
+            "control_kind": str(profile.kind),
+        }
+        ragnarok.setdefault("blocked", []).append(blocked_row)
+        ctx.ledger.write(action, ragnarok_blocked=dict(blocked_row))
+        ctx.ledger.mark_applied(action)
+        return
     resist = state.get("mundo_p_resist")
-    if resist and resist.get("armed") and profile.blocking and not profile.unknown:
-        attacker_team = ""
-        subject_team = ""
-        if 0 <= action.attacker < len(ctx.combatants):
-            attacker_team = str(getattr(ctx.combatants[action.attacker], "team", ""))
-        if 0 <= action.subject < len(ctx.combatants):
-            subject_team = str(getattr(ctx.combatants[action.subject], "team", ""))
-        hostile = bool(attacker_team) and attacker_team != subject_team
-        if hostile:
-            _apply_mundo_p_resist(ctx, action, state, profile)
-            ctx.ledger.mark_applied(action)
-            return
+    if (
+        resist
+        and resist.get("armed")
+        and profile.blocking
+        and not profile.unknown
+        and _hostile(ctx, action)
+    ):
+        _apply_mundo_p_resist(ctx, action, state, profile)
+        ctx.ledger.mark_applied(action)
+        return
     until = float(action.time + duration)
     state["crowd_control_until"] = max(state["crowd_control_until"], until)
     state["crowd_control_intervals"].append(
@@ -2914,7 +2930,7 @@ def _apply_crowd_control(
 def _apply_live_amp(
     ctx: TransitionContext,
     action: SurvivalAction,
-    state: dict[str, Any],
+    state: Mapping[str, Any],
     amount: float,
 ) -> float:
     """Price a live-predicate amplifier on this packet, before absorption.
@@ -3219,7 +3235,7 @@ def _apply_damage(
         amount,
         damage_type,
         event_time,
-        live_healing_factor(state, event_time),
+        healing_factor=live_healing_factor(state, event_time),
     )
     if state.get("crowd_control_immunity_grants"):
         _sync_crowd_control_immunity(state, event_time)
@@ -3273,7 +3289,9 @@ def _apply_damage(
         ):
             schedule_maw_omnivamp_heal(ctx, action, event_time, event_damage)
         if state["reactive_shield_amount"] > 0.0:
-            grant_reactive_shield(ctx, action, state, event_time, event_damage)
+            grant_reactive_shield(
+                ctx, action, state, event_time, event_damage=event_damage
+            )
     if (
         ctx.record_defy_damage
         and 0 <= action.attacker < len(ctx.combatants)
@@ -3395,21 +3413,7 @@ def _apply_damage(
             }
         )
     if pools.health <= 0.0 and state["death_time"] is None:
-        if state["first_death_time"] is None:
-            state["first_death_time"] = float(event_time)
-        trigger_defy(
-            ctx, ctx.combatants[action.subject].participant_id, float(event_time)
-        )
-        state["death_time"] = min(float(ctx.duration), event_time)
-        state["terminal_phase"] = "dead"
-        state["action_downtime_intervals"].append(
-            {
-                "kind": "death",
-                "start": float(event_time),
-                "end": float(ctx.duration),
-                "source": str(action.source or action.source_key or "Death"),
-            }
-        )
+        _record_death(ctx, action, state, event_time)
         # A revive packet is intentionally scheduled by the caller.  A
         # dead participant remains terminal until that explicit packet;
         # no item is inferred from the loadout here.  The lethal packet DOES
@@ -3820,8 +3824,10 @@ def run_survival_walk(
             ActionKind.OVERHEAL_SHIELD,
             ActionKind.ICHOR_CONVERT,
         ) and (
-            (action.trigger >= 0 or action.trigger_slot != NO_SLOT)
-            and ledger.trigger_applied(action)
+            (
+                (action.trigger >= 0 or action.trigger_slot != NO_SLOT)
+                and ledger.trigger_applied(action)
+            )
             or bool(action.cast_while_disabled)
         )
         # A packet whose source declared itself "not the caster's own action"
@@ -3933,7 +3939,7 @@ def run_survival_walk(
 
 
 def _fill_blocked_shield_after(
-    state: dict[str, Any], action: SurvivalAction, absorbed: float
+    state: Mapping[str, Any], action: SurvivalAction, absorbed: float
 ) -> None:
     """Fill a blocked-control receipt's post-absorption holder amount.
 

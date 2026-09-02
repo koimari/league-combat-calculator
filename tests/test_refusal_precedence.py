@@ -2,11 +2,11 @@
 
 A refusal is a receipt: it is the sentence a reader gets in place of a
 number, so which of two competing refusals reaches the payload decides what
-that reader is told.  The kernel's trigger arm used to overwrite an
-already-stamped reason, which published the *consequence* in place of the
-*cause* — a redirect child Knight's Vow had cancelled reported
-``trigger_event_skipped``, and the trigger was skipped precisely because of
-the cancellation the receipt no longer mentioned.
+that reader is told.  A kernel trigger arm that overwrites an
+already-stamped reason publishes the *consequence* in place of the
+*cause* — a redirect child Knight's Vow has cancelled reports
+``trigger_event_skipped``, and the trigger is skipped precisely because of
+the cancellation the receipt then omits.
 
 The redirect-cancelled arm three lines below it already carried
 ``preserve_reason``; this file pins that both arms do, in both directions, so
@@ -15,8 +15,8 @@ the fix is a property rather than a one-line agreement between two branches.
 
 from __future__ import annotations
 
-
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.participant_timeline import Combatant
 from src.calculator.program.compile import action_from_event
 from src.calculator.survival import (
     EVENT_SLOTS,
@@ -28,7 +28,6 @@ from src.calculator.survival import (
     build_states,
     run_survival_walk,
 )
-from src.calculator.participant_timeline import Combatant
 
 
 def _target() -> Combatant:

@@ -36,7 +36,7 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("LeBlanc")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
 
-    @pytest.mark.parametrize("variant,kinds", [("Q", ["none"]), ("W", ["none"])])
+    @pytest.mark.parametrize(("variant", "kinds"), [("Q", ["none"]), ("W", ["none"])])
     def test_mimic_carries_the_copied_abilitys_answer(self, variant, kinds):
         assert _r_kinds(variant) == kinds
 

@@ -69,12 +69,10 @@ import pytest
 
 import src.app as app_module
 import src.calculator.item_effects as item_effects_module
-from tests.app_config import app_config
-from src.calculator.item_coverage import ATTACKER_LANES
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.item_coverage import item_model_coverage
+from src.calculator.item_coverage import ATTACKER_LANES, item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -83,6 +81,7 @@ from src.calculator.item_effects import (
     required_effect_value,
 )
 from src.calculator.stats import calculate_total_stats
+from tests.app_config import app_config
 
 HELM = "Doran's Helm"
 HELPING_HAND_KEY = "helping_hand_minion_damage"
@@ -741,7 +740,8 @@ def test_api_rejects_unknown_target_class_spellings_with_a_named_error(
     assert response.status_code == 400
     error = response.get_json()["error"]
     assert "target_class" in error
-    assert "champion" in error and "minion" in error
+    assert "champion" in error
+    assert "minion" in error
 
 
 @pytest.mark.parametrize("bad_value", [5, 1.5, True, None, ["minion"], {"a": 1}])

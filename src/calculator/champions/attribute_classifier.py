@@ -6,6 +6,8 @@ determines which attributes represent damage that should be included in
 the calculator, and what damage type they imply.
 """
 
+from collections.abc import Mapping
+
 # Keywords that indicate a damage attribute (case-insensitive match)
 _DAMAGE_KEYWORDS: set[str] = {
     "damage",
@@ -49,10 +51,7 @@ def is_damage_attribute(attribute: str) -> bool:
         return False
 
     # Exclude non-primary damage attributes
-    if any(kw in lower for kw in _EXCLUDE_KEYWORDS):
-        return False
-
-    return True
+    return not any(kw in lower for kw in _EXCLUDE_KEYWORDS)
 
 
 def is_primary_damage_attribute(attribute: str) -> bool:
@@ -105,7 +104,7 @@ def infer_damage_type_from_attribute(attribute: str) -> str | None:
     return None
 
 
-def classify_damage_type(ability_data: dict) -> str:
+def classify_damage_type(ability_data: Mapping) -> str:
     """Determine the damage type of an ability from its JSON data.
 
     Uses the ``damageType`` field as the primary signal, with fallback

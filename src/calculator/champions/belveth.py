@@ -29,12 +29,14 @@ Why each slot is non-generic:
 """
 
 import math
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
-from .module_helpers import missing_hp_fraction
+from .inputs import bool_option, int_option
+from .module_helpers import missing_hp_fraction, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -48,7 +50,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth
@@ -77,7 +78,9 @@ E_ON_HIT_MAX_EFFECTIVENESS = 0.24  # per-slash on-hits at 100% missing HP
 R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
 
 
-def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> float:
+def _per_level_scaling(
+    ability: Mapping[str, Any], occurrence: int, level: int
+) -> float:
     """Value of the N-th "Per-Level Scaling" leveling entry at *level*.
 
     Death in Lavender stores its permanent-stack AS under this generic
@@ -134,12 +137,11 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
 _death_in_lavender.phase = BUFF
 
 
-def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _void_surge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: ``q_casts`` directional dashes, each 12-20 + 105% AD, can crit."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_dash = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     casts = min(max(int(ctx.option("q_casts")), 1), 4)
@@ -176,13 +178,12 @@ def _void_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _royal_maelstrom(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: slash count from final bonus AS; per-slash damage interpolates
     between the JSON min/max attributes by target missing health."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     missing = missing_hp_fraction(ctx)
     min_hit = extract_named(
@@ -236,13 +237,12 @@ def _royal_maelstrom(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _endless_banquet(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _endless_banquet(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R active: Void Coral explosion (true damage + 20% missing health),
     plus the True Form stat buff when the ``true_form`` option is on."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     missing = missing_hp_fraction(ctx)
     max_hp = ctx.target_stat("target_max_health")

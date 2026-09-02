@@ -67,9 +67,9 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.champions.slotlib import find_named_leveling
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -475,7 +475,7 @@ class TestPermanentCounter:
         # ledger present: seed 40 -> +30 bonus AD / +20% crit / +40 range
         # in the stats, while the souls account starts from the seed and
         # documents the fight's gains on top.
-        stats, abilities = _parse({"senna_mist_stacks": 40})
+        _stats, abilities = _parse({"senna_mist_stacks": 40})
         assert abilities["passive"]["stat_buff"]["bonus_attack_damage"] == (
             pytest.approx(30.0)
         )
@@ -501,7 +501,8 @@ class TestThresholdTransitions:
         assert crossings
         for row in crossings:
             count = row["threshold_count"]
-            assert count % 20 == 0 and count > 0
+            assert count % 20 == 0
+            assert count > 0
             assert row["range_delta"] == pytest.approx(20.0)
             assert row["crit_delta"] == pytest.approx(10.0)
             assert row["stacks_before"] == count - 20
@@ -657,7 +658,7 @@ class TestScoreReceiptParity:
             assert len(full["cast_timeline"]) == len(scored["cast_timeline"])
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared
@@ -696,7 +697,8 @@ class TestUnchangedBoundaries:
                 "effects", []
             )
         )
-        assert "4 seconds" in prose and "current health" in prose
+        assert "4 seconds" in prose
+        assert "current health" in prose
         assert any(
             "priced against the target's MAX health" in text
             for text in get_champion_options_meta("Senna")["assumptions"]

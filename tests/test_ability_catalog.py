@@ -4,9 +4,9 @@ from pathlib import Path
 import pytest
 
 from scripts.build_ability_catalog import build_catalog
+from scripts.source_receipt import source_sha256
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.champions import registered_champion_names
-from scripts.source_receipt import source_sha256
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCH = "26.15"

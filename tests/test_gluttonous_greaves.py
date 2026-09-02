@@ -502,7 +502,7 @@ def test_gluttonous_stays_out_of_the_takedown_scan_registry():
     TAKEDOWN_SCAN_SUPPORT_ITEMS — its Slay admission is the authored
     scenario option, not a support-packet takedown stream (the stream is
     support-packet-only and cannot project into pre-fight stats)."""
-    assert TAKEDOWN_SCAN_SUPPORT_ITEMS == frozenset({"Cryptbloom"})
+    assert frozenset({"Cryptbloom"}) == TAKEDOWN_SCAN_SUPPORT_ITEMS
     assert has_takedown_scan_support_items([{"name": GLUTTONOUS}]) is False
     assert has_event_view_support_items([{"name": GLUTTONOUS}]) is False
 
@@ -553,7 +553,8 @@ def test_non_takedown_fight_authors_no_stacks():
         for row in receipts
         if row.get("item") == GLUTTONOUS and row.get("state") == "slay_stacks"
     ]
-    assert slay and slay[0]["slay_stacks"] == 0
+    assert slay
+    assert slay[0]["slay_stacks"] == 0
     assert slay[0]["omnivamp"] == pytest.approx(0.0)
 
 

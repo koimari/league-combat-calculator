@@ -4,6 +4,7 @@ import math
 
 from src.calculator.data_fetcher import fetch_item_data, get_champion, get_item_by_name
 from src.calculator.interpreters import periodic
+from src.calculator.item_behavior import FightFacts
 from src.calculator.passive_parser import parse_item_effect
 from src.calculator.pipeline import FightParams, _item_self_healing_events, run_fight
 
@@ -12,10 +13,12 @@ def _periodic_slots(*owners: str) -> periodic.PeriodicSlots:
     """The periodic strikes a build declares, read through their rules."""
     return periodic.resolve_slots(
         owners,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
 
 
@@ -73,7 +76,7 @@ def test_anguish_emits_exact_periodic_damage_and_self_healing_events():
     assert [event["time"] for event in item_heals] == [4.0, 8.0]
     assert all(
         event["amount"] == event_damage["damage"] * multiplier
-        for event, event_damage in zip(item_heals, damage_events)
+        for event, event_damage in zip(item_heals, damage_events, strict=False)
     )
     assert result["self_healing"] == sum(event["amount"] for event in healing_events)
 

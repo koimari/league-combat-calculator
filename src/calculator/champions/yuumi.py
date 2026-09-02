@@ -71,14 +71,14 @@ from ..healing_helpers import (
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .packet_module import build_packet_module, full_plus_reduced_parser
+from .module_contract import coverage
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
 )
-from .module_contract import coverage
 
 PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c82942"
 
@@ -158,11 +158,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q"}),
     cc_kinds=MODULE_CC,
     slot_parsers={
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage per Hit",
-            reduced_attr="Reduced Damage per Hit",
-            dmg_type="magic",
-            reduced_count=4,
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage per Hit",
+            repeat_attr="Reduced Damage per Hit",
+            repeats=4,
             time_offset=0.7,
             hit_interval=0.7,
             dot_duration=3.5,
@@ -228,13 +227,13 @@ COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Final Chapter's five waves and Feline Friendship's on-hit heal.
 
     "Heal per Hit" x5 == the cached "Total Heal" row; the waves land on the
@@ -258,23 +257,27 @@ def derive_self_healing(
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(5):
-                healing.append(
-                    {
-                        "time": start + index * 0.7,
-                        "amount": float(per_wave),
-                        "source": "Final Chapter",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.7,
+                    "amount": float(per_wave),
+                    "source": "Final Chapter",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(5)
+            )
     healing.extend(
         _feline_friendship_heals(champion_data, champion_stats, damage_events)
     )
     return healing
 
 
-def _feline_friendship_heals(champion_data, champion_stats, damage_events):
+def _feline_friendship_heals(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    damage_events: list[dict[str, Any]],
+):
     """P's on-hit heals: one per damaging hit the recharge gate allows.
 
     The buff is up when the fight opens (the innate recharges out of

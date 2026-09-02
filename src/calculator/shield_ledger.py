@@ -12,14 +12,13 @@ Adding a shield mechanic or changing absorption order is one edit here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 #: The three pools a shield can sit in.  A typed pool absorbs only its own
 #: damage type; the general pool absorbs every type, true damage included.
 PHYSICAL = "physical"
 MAGIC = "magic"
 GENERAL = "general"
-POOLS = frozenset({PHYSICAL, MAGIC, GENERAL})
 
 #: Marks a timed grant a Lifeline armed, so receipts can report threshold
 #: absorption apart from the pool the grant happens to sit in.
@@ -230,7 +229,8 @@ def grant(
 
     Every shield a fight hands out enters the pools here, so the pool total
     and its expiry sub-ledger can never disagree."""
-    _set_pool(pools, pool, _pool(pools, pool) + amount)
+    remaining, absorbed = _read_pool(pools, pool)
+    _write_pool(pools, pool, remaining + amount, absorbed)
     if expires_at is not None:
         pools.timed.append(
             TimedShield(amount=amount, expires_at=expires_at, pool=pool, source=source)
@@ -249,7 +249,8 @@ def expire_timed(pools: ShieldPools, event_time: float) -> float:
             continue
         amount = max(0.0, shield.amount)
         if amount > 0.0:
-            _set_pool(pools, shield.pool, max(0.0, _pool(pools, shield.pool) - amount))
+            remaining, absorbed = _read_pool(pools, shield.pool)
+            _write_pool(pools, shield.pool, max(0.0, remaining - amount), absorbed)
             pools.shield_expired += amount
             expired_total += amount
     pools.timed = surviving
@@ -291,11 +292,22 @@ def expire_threshold_health(pools: ShieldPools, event_time: float) -> float:
     return expire_temporary_max_health(pools, health.bonus)
 
 
+def _apply_to_health(pools: Any, amount: float) -> tuple[float, float]:
+    """Take ``amount`` out of health; returns ``(applied, overkill)``."""
+    applied_to_health = min(amount, pools.health)
+    overkill = max(0.0, amount - applied_to_health)
+    pools.health = max(0.0, pools.health - applied_to_health)
+    pools.health_damage += applied_to_health
+    pools.overkill += overkill
+    return applied_to_health, overkill
+
+
 def absorb(
     pools: ShieldPools,
     damage: float,
     damage_type: str,
     event_time: float,
+    *,
     healing_factor: float = 1.0,
 ) -> Absorption:
     """Apply one post-mitigation damage instance to a defender's pools.
@@ -322,11 +334,7 @@ def absorb(
         # bare health subtraction, bit-identical to the full path below with
         # every pool at zero.  This is the optimizer walk's dominant state.
         pools.damage_taken += damage
-        applied_to_health = min(damage, pools.health)
-        overkill = max(0.0, damage - applied_to_health)
-        pools.health = max(0.0, pools.health - applied_to_health)
-        pools.health_damage += applied_to_health
-        pools.overkill += overkill
+        applied_to_health, overkill = _apply_to_health(pools, damage)
         return Absorption(0.0, applied_to_health, overkill)
     timed = pools.timed
     if timed:
@@ -360,7 +368,7 @@ def absorb(
     armed = None
     if pools.threshold_shield is not None or pools.threshold_health is not None:
         armed = _arm_thresholds(
-            pools, remaining, damage_type, event_time, healing_factor
+            pools, remaining, damage_type, event_time, healing_factor=healing_factor
         )
         if armed.shield_pool is not None and armed.shield_pool != GENERAL:
             # A typed Lifeline (Maw's magic shield) blocks the very hit that
@@ -381,11 +389,7 @@ def absorb(
     pools.shield_absorbed += used
     absorbed += used
 
-    applied_to_health = min(remaining, pools.health)
-    overkill = max(0.0, remaining - applied_to_health)
-    pools.health = max(0.0, pools.health - applied_to_health)
-    pools.health_damage += applied_to_health
-    pools.overkill += overkill
+    applied_to_health, overkill = _apply_to_health(pools, remaining)
     if armed is None:
         return Absorption(absorbed, applied_to_health, overkill)
     return Absorption(
@@ -420,6 +424,7 @@ def _arm_thresholds(
     remaining: float,
     damage_type: str,
     event_time: float,
+    *,
     healing_factor: float = 1.0,
 ) -> _Armed:
     """Arm whichever Lifelines this damage would carry past their threshold.
@@ -501,7 +506,7 @@ def _drain(pools: ShieldPools, pool: str, remaining: float) -> float:
     than to the pool the grant sits in, so the two stay separately reportable
     and the grand total counts each unit exactly once.
     """
-    total = _pool(pools, pool)
+    total, credited = _read_pool(pools, pool)
     absorbed = 0.0
     for shield in sorted(pools.timed, key=lambda entry: entry.expires_at):
         if shield.pool != pool:
@@ -517,33 +522,39 @@ def _drain(pools: ShieldPools, pool: str, remaining: float) -> float:
         if shield.source == LIFELINE:
             pools.threshold_absorbed += used
         else:
-            _credit_pool(pools, pool, used)
+            credited += used
         if remaining <= 1e-9:
             break
     if remaining > 0.0:
         used = min(total, remaining)
         total -= used
         absorbed += used
-        _credit_pool(pools, pool, used)
-    _set_pool(pools, pool, total)
+        credited += used
+    _write_pool(pools, pool, total, credited)
     pools.timed = [shield for shield in pools.timed if shield.amount > 1e-9]
     return absorbed
 
 
-def _pool(pools: ShieldPools, pool: str) -> float:
-    """Read one pool total by name, failing closed on an unknown pool."""
-    if pool not in POOLS:
+def _read_pool(pools: ShieldPools, pool: str) -> tuple[float, float]:
+    """One pool's ``(remaining, absorbed)`` counters, failing closed on an unknown pool."""
+    if pool == PHYSICAL:
+        return pools.physical_shield, pools.physical_absorbed
+    if pool == MAGIC:
+        return pools.magic_shield, pools.magic_absorbed
+    if pool == GENERAL:
+        return pools.general_shield, pools.general_absorbed
+    raise ValueError(f"shield_ledger: unknown pool {pool!r}")
+
+
+def _write_pool(
+    pools: ShieldPools, pool: str, remaining: float, absorbed: float
+) -> None:
+    """Store one pool's ``(remaining, absorbed)`` counters."""
+    if pool == PHYSICAL:
+        pools.physical_shield, pools.physical_absorbed = remaining, absorbed
+    elif pool == MAGIC:
+        pools.magic_shield, pools.magic_absorbed = remaining, absorbed
+    elif pool == GENERAL:
+        pools.general_shield, pools.general_absorbed = remaining, absorbed
+    else:
         raise ValueError(f"shield_ledger: unknown pool {pool!r}")
-    return getattr(pools, f"{pool}_shield")
-
-
-def _set_pool(pools: ShieldPools, pool: str, amount: float) -> None:
-    """Write one pool total by name, failing closed on an unknown pool."""
-    if pool not in POOLS:
-        raise ValueError(f"shield_ledger: unknown pool {pool!r}")
-    setattr(pools, f"{pool}_shield", amount)
-
-
-def _credit_pool(pools: ShieldPools, pool: str, amount: float) -> None:
-    """Add to one pool's reported absorption total."""
-    setattr(pools, f"{pool}_absorbed", getattr(pools, f"{pool}_absorbed") + amount)

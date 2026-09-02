@@ -19,8 +19,9 @@ from src.calculator.item_behavior import (
     BehaviorRule,
     BehaviorRuleError,
     EmpoweredAutoBuffRule,
-    EngineLane,
     EmpoweredHitRule,
+    EngineLane,
+    FightFacts,
     RepeatingStrikeRule,
     RuleFamily,
     ShapedChargeRule,
@@ -48,10 +49,12 @@ def _slots(*owners: str, level: int = 18, is_melee: bool = True):
     """The charged strikes a build of *owners* declares."""
     return charged_strike.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -121,7 +124,7 @@ def test_the_optional_mechanics_are_declared_records_or_declared_absences() -> N
 
 
 def test_a_dropped_lethality_number_raises_rather_than_granting_zero() -> None:
-    """The fail-closed contract the item-name branch used to buy."""
+    """The fail-closed contract holds without an item-name branch."""
     broken = dict(ITEM_EFFECTS[LETHALITY_WINDOW])
     broken.pop("temporary_lethality_duration")
     with pytest.MonkeyPatch.context() as patcher:
@@ -227,10 +230,12 @@ def test_the_pair_interpreter_compiles_the_count_each_shape_has() -> None:
     (rule,) = charged_strike.charged_strike_rules([FLAT_REPEAT])
     ctx = build_context(
         FLAT_REPEAT,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == charged_strike.CHARGE_COUNT_FIELD
@@ -248,10 +253,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Tiamat",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(charged_strike.ChargedStrikeInterpretationError):
         charged_strike.strike_fields(foreign, ctx, EngineLane.PAIR_ENGINE)
@@ -259,7 +266,7 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
 
 # ── the swing schedule ────────────────────────────────────────────────────
 #
-# The fifth shape, and the one the engine used to reach by name: two call
+# The fifth shape, and the one the retired item-name reads reached: two call
 # paths in ``damage.py`` — the auto-count block and the swing-time block —
 # each asked whether the build held one of two items, and a third read the
 # registry for one of those names to strip its window from the opening rate.
@@ -289,14 +296,16 @@ def _swing_rule(owner: str):
 def test_the_two_swing_mechanics_are_declared_shapes() -> None:
     """A ramp the attacks build and a window the attacks re-arm."""
     ramp = _schedule(RAMP)
-    assert ramp is not None and ramp.window is None
+    assert ramp is not None
+    assert ramp.window is None
     assert ramp.ramp == charged_strike.DecayingStackRamp(
         per_stack=float(ITEM_EFFECTS[RAMP]["seething_attack_speed_per_stack"]),
         max_stacks=int(ITEM_EFFECTS[RAMP]["seething_max_stacks"]),
         stack_duration=float(ITEM_EFFECTS[RAMP]["seething_duration"]),
     )
     window = _schedule(WINDOW)
-    assert window is not None and window.ramp is None
+    assert window is not None
+    assert window.ramp is None
     assert window.window == charged_strike.RearmedWindow(
         bonus_percent=float(ITEM_EFFECTS[WINDOW]["bonus_attack_speed_percent"]),
         duration=float(ITEM_EFFECTS[WINDOW]["duration"]),
@@ -414,10 +423,12 @@ def test_a_swing_schedule_compiles_to_its_ramp_ceiling_and_no_damage() -> None:
     """A schedule is not spent, so what it compiles to is the ramp's ceiling."""
     ctx = build_context(
         RAMP,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     rule = _swing_rule(RAMP)
     (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
@@ -431,10 +442,12 @@ def test_a_window_only_schedule_compiles_to_the_no_sibling_spelling() -> None:
     """No ramp is a declared absence, not a stack count that measured zero."""
     ctx = build_context(
         WINDOW,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = charged_strike.strike_fields(
         _swing_rule(WINDOW), ctx, EngineLane.PAIR_ENGINE

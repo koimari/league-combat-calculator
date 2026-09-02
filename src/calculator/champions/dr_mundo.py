@@ -37,11 +37,14 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -51,8 +54,6 @@ from .slotlib import (
     stat_buff,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .module_contract import coverage
 
 # ROOTED IN THE BINARY (data/bin/characters/drmundo.bin.json): W's field
 # duration and auto-detonation instant are DrMundoW DataValues (Duration);
@@ -120,7 +121,10 @@ def _nearby_champions(ctx: SlotCtx) -> int:
     return min(max(count, 0), R_MAX_NEARBY_CHAMPIONS)
 
 
-def _maximum_dosage(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _maximum_dosage(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: zero damage; grants BASE health from Mundo's missing health.
 
     BASE, not bonus (the Gnar classification trap): the grant raises max
@@ -128,10 +132,6 @@ def _maximum_dosage(ctx: SlotCtx) -> dict[str, Any] | None:
     never reach items that convert BONUS health (Overlord's Bloodmail).
     ``base_health`` is the fight engine's key for that distinction.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     # "% missing health" is Mundo's OWN missing health — no scaling unit
     # covers that, so the percentage is read raw and applied here.
@@ -249,7 +249,10 @@ _blunt_force_trauma.phase = BUFF
 # ---------------------------------------------------------------------------
 
 
-def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _infected_bonesaw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: % of the target's current health, floored at a flat minimum.
 
     The percent's unit ("% of target's current health") has no stat behind
@@ -258,10 +261,6 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
     not decay its own target across casts. The floor is not decoration —
     at rank 5 it takes over below roughly 933 target health.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     percent = extract_value(ability, "Magic Damage", rank) / 100.0
     minimum = extract_value(ability, "Minimum Damage", rank)
@@ -303,17 +302,16 @@ def _infected_bonesaw(ctx: SlotCtx) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def _heart_zapper(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _heart_zapper(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: 12 charge ticks plus the detonation that always follows them.
 
     The detonation is not optional and is not a recast the player may skip
     — the field "does so automatically after the duration" — so it is one
     guaranteed instance per W cast, folded into the same entry.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
@@ -453,13 +451,13 @@ SOURCES = load_champion_sources("Dr. Mundo")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Dr. Mundo self-healing events from its authored packet.
 
     Two streams, both with a cadence of their own rather than a damage
@@ -471,7 +469,7 @@ def derive_self_healing(
     healing = []
     r = _healing.ability_json(champion_data, "R")
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    per_tick = _healing.extract_named(
+    per_tick = extract_named(
         r, "Health Regenerated per 0.5 Seconds", r_rank, champion_stats, {}
     )
     duration = max(0.0, float(fight_duration_seconds or 0.0))

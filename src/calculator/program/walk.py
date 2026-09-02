@@ -251,7 +251,7 @@ class SurvivalFold:
     projectile_defense: Mapping[str, Any] | None
 
 
-def survival_folds(states: Sequence[Any]) -> tuple[SurvivalFold, ...]:
+def survival_folds(states: Sequence[Mapping[str, Any]]) -> tuple[SurvivalFold, ...]:
     """One :class:`SurvivalFold` per settled participant state, in walk order.
 
     Exported rather than inlined into :func:`walk` so a caller assembling a
@@ -396,7 +396,7 @@ class WalkResult:
     item_denial_receipts: tuple[Mapping[str, Any], ...] = ()
     objective: ObjectiveFold | None = None
 
-    def projected(self, **folds: Any) -> "WalkResult":
+    def projected(self, **folds: Any) -> WalkResult:
         """The same walk, carrying a fold the composition derived from it.
 
         A new record rather than a mutation: the result is frozen because a
@@ -426,8 +426,8 @@ def walk(
     actions: Sequence[SurvivalAction],
     ctx: TransitionContext,
     *,
-    coverage: Sequence[Any] = (),
-    rung: Rung = CompiledFast(),
+    coverage: Sequence[Mapping[str, Any]] = (),
+    rung: Rung = CompiledFast(),  # noqa: B008 - a frozen sentinel; one instance is the default
     counters: WorkCounterSink | None = None,
 ) -> WalkResult:
     """Run the kernel exactly once and freeze what it produced.

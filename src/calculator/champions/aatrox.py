@@ -38,14 +38,23 @@ staying silently absent, and its heal keeps it ``modeled`` through the
 """
 
 import re
+from collections.abc import Iterable
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
+from ..healing_helpers import (
+    HealAnchor,
+    ability_json,
+    event_source,
+    leveling_value,
+    payments,
+    trigger_fields,
+)
+from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -55,15 +64,6 @@ from .slotlib import (
     on_hit_entry,
     pct_health_per_hit,
     stat_buff,
-)
-
-from ..healing_helpers import (
-    HealAnchor,
-    ability_json,
-    event_source,
-    leveling_value,
-    payments,
-    trigger_fields,
 )
 from .source_receipts import load_champion_sources
 
@@ -119,7 +119,7 @@ _Q_TRIAD_COMPONENTS = {
 
 
 def _q_strike_parts(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int, attrs: list[str]
+    ctx: SlotCtx, ability: dict[str, Any], rank: int, attrs: Iterable[str]
 ) -> tuple[DamagePart, ...]:
     """One part per named strike, at the strike's sourced landing time."""
     return tuple(
@@ -132,12 +132,11 @@ def _q_strike_parts(
     )
 
 
-def _darkin_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _darkin_blade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the sweetspot or normal triad, one event per strike."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     detail = None
     if "q_variant" in ctx.options:
@@ -175,17 +174,16 @@ _W_TETHER_EFFECT_INDEX = 1
 _W_HITS = 2
 
 
-def _infernal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _infernal_chains(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the chain hit, then the same damage again when the tether expires.
 
     The cached "Total Damage" row is exactly twice "Physical Damage" at
     every rank, so pricing the two hits separately keeps the total and buys
     the tether's cached delay.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     tether_seconds = extract_description_duration(ability, _W_TETHER_EFFECT_INDEX)
     if tether_seconds is None:
         raise ValueError(
@@ -232,28 +230,19 @@ def _deathbringer_stance(ctx: SlotCtx) -> dict[str, Any] | None:
 _deathbringer_stance.phase = ONHIT
 
 
-def _umbral_dash(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: dash + heal-amp utility — sourced zero-enemy-damage row (no_damage).
-
-    The cached E entry carries ``damageType: None`` and no effect row has a
-    ``leveling`` attribute; the passive heal (16% + 1.1% per 100 bonus
-    health of non-persistent post-mitigation damage dealt) is already
-    priced through ``derive_self_healing`` and the active dash is a pure
-    position change. Nothing here deals damage to an enemy champion.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Umbral Dash is a self-heal-amp dash with no enemy-damage "
-            "attribute of its own (data/champions.json Aatrox E carries "
-            "damageType: None and no effect row has a leveling entry); "
-            "its heal is priced through derive_self_healing."
-        ),
-    )
+# E: dash + heal-amp utility — sourced zero-enemy-damage row (no_damage).
+#
+# The cached E entry carries ``damageType: None`` and no effect row has a
+# ``leveling`` attribute; the passive heal (16% + 1.1% per 100 bonus
+# health of non-persistent post-mitigation damage dealt) is already
+# priced through ``derive_self_healing`` and the active dash is a pure
+# position change. Nothing here deals damage to an enemy champion.
+_umbral_dash = no_damage_slot(
+    "Umbral Dash is a self-heal-amp dash with no enemy-damage "
+    "attribute of its own (data/champions.json Aatrox E carries "
+    "damageType: None and no effect row has a leveling entry); "
+    "its heal is priced through derive_self_healing."
+)
 
 
 OPTIONS = [
@@ -321,10 +310,8 @@ def _is_persistent(event: dict[str, Any]) -> bool:
     """
     source = event_source(event).lower()
     return (
-        source.startswith("burn_")
-        or source.startswith("stacking_dot_")
+        source.startswith(("burn_", "stacking_dot_", "immolate_"))
         or "tibbers_aura" in source
-        or source.startswith("immolate_")
     )
 
 

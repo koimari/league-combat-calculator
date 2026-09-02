@@ -84,9 +84,8 @@ from pathlib import Path
 import pytest
 
 from src.app import app
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.item_coverage import review_issue_refs, target_item_model_coverage
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
@@ -97,13 +96,13 @@ from src.calculator.item_effects import (
     required_effect_value,
     validate_item_input_options,
 )
+from src.calculator.ledger_projection import SHARED_ROW_FIELDS, LightRow
 from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
@@ -111,13 +110,11 @@ from src.calculator.survival.compile import (
     unrepresentable_damage_receipt,
     unrepresentable_template_receipt,
 )
-
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests import item_probe
+from tests.survival_probe import simulate_survival, survival_of
 
 REDEMPTION = "Redemption"
-SOURCE = "Redemption \u2014 Intervention"  # "Redemption — Intervention"
+SOURCE = "Redemption \u2014 Intervention"
 SOURCE_URL = "https://wiki.leagueoflegends.com/en-us/Redemption"
 REVISION_ID = 4015392
 REPO = Path(__file__).resolve().parent.parent
@@ -125,7 +122,6 @@ REPO = Path(__file__).resolve().parent.parent
 
 def _kernel_combatant(participant_id, team, health=5000.0):
     """A minimal Combatant for the shared survival-kernel seam."""
-    from types import SimpleNamespace
 
     defenses = StartingDefenses(
         magic_shield=0.0,
@@ -184,7 +180,7 @@ def _calculate_status(payload: dict) -> tuple[int, dict]:
     response = app.test_client().post("/api/calculate", json=payload)
     try:
         body = response.get_json()
-    except Exception:  # pragma: no cover - non-JSON error bodies
+    except Exception:  # noqa: BLE001 - non-JSON body  # pragma: no cover
         body = {}
     return response.status_code, body
 
@@ -1115,13 +1111,17 @@ def _scoring_rows(result):
         if isinstance(event, tuple):
             row = LightRow._make(event)
             rows.append(
-                (row.sort_key[0],)
-                + tuple(getattr(row, field) for field in SHARED_ROW_FIELDS)
+                (
+                    row.sort_key[0],
+                    *tuple(getattr(row, field) for field in SHARED_ROW_FIELDS),
+                )
             )
         else:
             rows.append(
-                (event.get("time"),)
-                + tuple(event.get(field) for field in SHARED_ROW_FIELDS)
+                (
+                    event.get("time"),
+                    *tuple(event.get(field) for field in SHARED_ROW_FIELDS),
+                )
             )
     return rows
 
@@ -1180,7 +1180,8 @@ def test_no_stale_bis_entry_and_review_issue_48_recorded():
         (REPO / "docs" / "cp47-production-acceptance.json").read_text(encoding="utf-8")
     )
     residual = " ".join(tracked["residual_scope"])
-    assert "#48" in residual and "Redemption" in residual
+    assert "#48" in residual
+    assert "Redemption" in residual
 
 
 # ---------------------------------------------------------------------------

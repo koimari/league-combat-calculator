@@ -134,9 +134,10 @@ def test_warwick_jaws_of_the_beast_heals_ranked_percentage_of_damage():
     combat = _fight("Warwick", role="top", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
     q_events = _main_events(combat, "Q")
     q_heals = [h for h in _main_heals(combat) if h["source"] == "Jaws of the Beast"]
-    assert q_events and q_heals
+    assert q_events
+    assert q_heals
     assert len(q_heals) == len(q_events)
-    for heal, event in zip(q_heals, q_events):
+    for heal, event in zip(q_heals, q_events, strict=False):
         assert heal["amount"] == pytest.approx(0.75 * event["damage"], rel=0.01)
 
 
@@ -161,7 +162,7 @@ def test_karma_renewal_heals_missing_health_on_cast_and_tether_completion():
     assert [round(h["time"], 2) for h in heals] == [0.25, 2.25]
     max_health = _main_stats(combat)["health"]
     for heal in heals:
-        assert 0.0 < heal["raw_amount"]
+        assert heal["raw_amount"] > 0.0
         assert heal["raw_amount"] <= 0.17 * max_health + 1e-9
     # The main is damaged by the enemy before the first heal, so the
     # missing-health formula must price a positive amount that matches the
@@ -192,7 +193,8 @@ def test_karma_renewal_ratio_scales_with_ap():
     )
     plain_heals = _karma_renewal_heals(plain)
     ap_heals = _karma_renewal_heals(ap)
-    assert plain_heals and ap_heals
+    assert plain_heals
+    assert ap_heals
     # Deathcap's passive raises the build's total AP above the item's flat
     # 120; use the fight's own sourced AP so the ratio is exact.
     ap = _main_stats(ap)["ability_power"]
@@ -237,9 +239,10 @@ def test_nilah_apotheosis_heals_twenty_percent_of_post_mitigation_damage():
     combat = _fight("Nilah", role="mid", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
     r_events = _main_events(combat, "R")
     r_heals = [h for h in _main_heals(combat) if h["source"] == "Apotheosis"]
-    assert r_events and r_heals
+    assert r_events
+    assert r_heals
     assert len(r_heals) == len(r_events)
-    for heal, event in zip(r_heals, r_events):
+    for heal, event in zip(r_heals, r_events, strict=False):
         assert heal["amount"] == pytest.approx(0.20 * event["damage"], rel=0.02)
     assert not [h for h in _main_heals(combat) if h["source"] == "Formless Blade"]
 
@@ -257,11 +260,13 @@ def test_nilah_formless_blade_heal_scales_with_critical_strike_chance():
     assert _main_stats(combat)["critical_strike_chance"] == pytest.approx(15.0)
     q_events = _main_events(combat, "Q")
     q_heals = [h for h in _main_heals(combat) if h["source"] == "Formless Blade"]
-    assert q_events and q_heals
+    assert q_events
+    assert q_heals
     assert q_heals[0]["amount"] == pytest.approx(0.03 * q_events[0]["damage"], rel=0.02)
     r_events = _main_events(combat, "R")
     r_heals = [h for h in _main_heals(combat) if h["source"] == "Apotheosis"]
-    assert r_events and r_heals
+    assert r_events
+    assert r_heals
     assert r_heals[0]["amount"] == pytest.approx(
         0.245 * r_events[0]["damage"], rel=0.02
     )
@@ -313,7 +318,7 @@ def test_zaahen_grim_deliverance_heals_flat_per_champion_hit():
         ("KSante", "top"),
         # Locke W's grey-health heal is now implemented by the E8a
         # grey-health primitive (see tests/test_p1_review_1.py) — Locke
-        # authors a heal and no longer belongs in this list.
+        # authors a heal and does not belong in this list.
         # Mordekaiser's W recast heal is now implemented by the E8a
         # grey-health primitive (see tests/test_e8_grey_health.py); its R
         # heals 10% of the TARGET's maximum health and stays out of the

@@ -37,10 +37,10 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
-    STEROID_ZERO,
+    PER_LEVEL_SCALING,
     ability_name,
     damage_entry,
     extract_cooldown,
@@ -67,13 +67,11 @@ from .slotlib import (
 _LOVE_TAP_LEVEL1_AD_RATIO = 0.5
 _LOVE_TAP_BREAKPOINT_LEVELS = (4, 7, 9, 11, 13, 20, 25, 30)
 _LOVE_TAP_BREAKPOINT_STEP = 0.1
-# The cached wiki row this ladder must reproduce, as percentages.
-_LOVE_TAP_WIKI_ATTRIBUTE = "Per-Level Scaling"
 
 
 def _love_tap_tier(level: int) -> int:
     """Index of the breakpoint tier a champion level falls in."""
-    return sum(1 for breakpoint in _LOVE_TAP_BREAKPOINT_LEVELS if level >= breakpoint)
+    return sum(1 for threshold in _LOVE_TAP_BREAKPOINT_LEVELS if level >= threshold)
 
 
 def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -89,13 +87,13 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     tier = _love_tap_tier(ctx.level)
     ratio = _LOVE_TAP_LEVEL1_AD_RATIO + _LOVE_TAP_BREAKPOINT_STEP * tier
 
-    leveling = find_named_leveling(ability, _LOVE_TAP_WIKI_ATTRIBUTE, occurrence=0)
+    leveling = find_named_leveling(ability, PER_LEVEL_SCALING, occurrence=0)
     modifiers = (leveling or {}).get("modifiers") or []
     values = list(modifiers[0].get("values") or []) if modifiers else []
     if not values:
         raise ValueError(
             "Miss Fortune P (Love Tap) is missing its cached "
-            f"{_LOVE_TAP_WIKI_ATTRIBUTE!r} row; the bonus-damage "
+            f"{PER_LEVEL_SCALING!r} row; the bonus-damage "
             "coefficient cannot be sourced"
         )
     if tier < len(values):
@@ -104,7 +102,7 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
             raise ValueError(
                 "Miss Fortune P (Love Tap) coefficient drifted: game file "
                 f"gives {ratio:.6g} x AD at level {ctx.level}, cached wiki "
-                f"{_LOVE_TAP_WIKI_ATTRIBUTE!r} tier {tier} gives {cached:.6g}"
+                f"{PER_LEVEL_SCALING!r} tier {tier} gives {cached:.6g}"
             )
     return ratio
 
@@ -114,12 +112,11 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
 _STRUT_ACTIVE_SECONDS = 4.0
 
 
-def _bullet_time(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bullet_time(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: per-wave damage x sourced Total Waves (14/16/18 by rank)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_wave = extract_named(
         ability, "Physical Damage per Wave", rank, ctx.stats, ctx.target
@@ -178,7 +175,8 @@ def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
 _love_tap.phase = ONHIT
 
 
-def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _strut(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: the active's sourced bonus attack speed over its own window.
 
     The slot deals no damage at all (no damage instance exists in the
@@ -187,28 +185,19 @@ def _strut(ctx: SlotCtx) -> dict[str, Any] | None:
     active does not hold full uptime of a longer fight.  The two
     movement-speed rows have no ``stat_buff`` key to land in.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)
-    entry = damage_entry(
-        ability_name(ability),
+    return steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{granted:g}% bonus attack speed for {_STRUT_ACTIVE_SECONDS:g}s "
+            f"({bonus_as:g}% over the fight window); the passive's 30-50 / "
+            "60-100 bonus movement speed has no stat_buff key"
+        ),
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for {_STRUT_ACTIVE_SECONDS:g}s "
-        f"({bonus_as:g}% over the fight window); the passive's 30-50 / "
-        "60-100 bonus movement speed has no stat_buff key"
-    )
-    return entry
 
 
 _strut.phase = BUFF
@@ -256,7 +245,8 @@ OPTIONS.append(
     }
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Bullet Time) prices the full channel: per-wave damage x the "
     "sourced Total Waves row (14/16/18 by rank) at the sourced Wave "
     "Interval Time cadence.  The wiki's Maximum Total Physical Damage "

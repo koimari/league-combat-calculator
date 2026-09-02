@@ -59,12 +59,10 @@ from src.calculator.survival.compile import (
     unrepresentable_template_receipt,
 )
 from src.calculator.trigger_stream import HolderStacking
-
 from tests.test_survival_kernel import (
     Holder,
     KernelFixture,
     _differing_leaves,
-    _item,
     _reached_keys,
 )
 
@@ -350,7 +348,7 @@ def _template(**overrides):
 
 
 def test_the_template_refusal_admits_the_kind_and_still_names_its_own():
-    """Clause 1: the kind is no longer refused categorically.
+    """Clause 1: the kind is not refused categorically.
 
     The negative half is what makes the positive one mean something (R-05):
     an amount only the walk can price, and a deferred transition, are still
@@ -438,8 +436,8 @@ def test_a_compiled_damage_row_says_how_it_was_delivered():
     ``auto_attacks`` — an amp the score path priced differently from the
     walk with nothing saying so.
     """
-    from src.calculator.survival.actions import attack_class_of
     from src.calculator.ability_spec import AttackClass
+    from src.calculator.survival.actions import attack_class_of
 
     ability = SurvivalAction(is_ability=True, source_key="Q")
     basic = SurvivalAction(basic_attack=True, source_key="on_hit_Nashors")

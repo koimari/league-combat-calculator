@@ -8,6 +8,7 @@ the stable JSON-safe payload returned to every in-process consumer.
 import re
 from collections.abc import Mapping
 from dataclasses import replace
+from typing import Any
 
 from .champions import engine_registration_kind
 from .defensive_effects import resolve_starting_defenses
@@ -52,7 +53,7 @@ def _comparison_curve(
         else:
             target_results: list[dict] = []
             for enemy, target_params in zip(
-                resolved.enemies, resolved.target_fight_params
+                resolved.enemies, resolved.target_fight_params, strict=False
             ):
                 params = replace(
                     target_params,
@@ -228,7 +229,9 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
         return response
 
     target_rows: list[dict] = []
-    for enemy, target_params in zip(enemies, resolved.target_fight_params):
+    for enemy, target_params in zip(
+        enemies, resolved.target_fight_params, strict=False
+    ):
         result = run_fight(champion_data, request.level, items, target_params)
         if not params.one_rotation:
             require_certified_target_timeline(
@@ -284,7 +287,7 @@ def _name_the_response(response: dict) -> None:
 
 def calculate_payload(
     data: Mapping[str, object], *, deterministic: bool = False
-) -> dict:
+) -> dict[str, Any]:
     """Return the complete JSON-safe calculate payload without Flask state.
 
     ``headline_total`` is the one published answer to "which number does this

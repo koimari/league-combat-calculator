@@ -7,8 +7,6 @@ ordinary timestamp order. Adapter-parity rows do not certify the same-time
 policy.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
@@ -20,9 +18,9 @@ from src.calculator.program.views.survival import survival
 from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.survival import (
     EVENT_SLOTS,
+    SUPPORT_RANK_KEY,
     ReceiptLedger,
     ScoreLedger,
-    SUPPORT_RANK_KEY,
     TransitionContext,
     TransitionRank,
     build_states,
@@ -127,7 +125,7 @@ def _walk(
     combatants = _combatants(holder_id)
     actions, events = _actions(holder_id, shield_time, reactive_time)
     if reverse_input:
-        actions = sorted(reversed(actions), key=lambda action: action.sort_key)
+        actions = sorted(actions, key=lambda action: action.sort_key)
     states = build_states(combatants, (0.0,) * len(combatants))
     index_of = {
         combatant.participant_id: index for index, combatant in enumerate(combatants)

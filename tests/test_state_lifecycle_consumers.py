@@ -12,7 +12,8 @@ import pytest
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
-from src.calculator import item_effects, state_lifecycle as sl
+from src.calculator import item_effects
+from src.calculator import state_lifecycle as sl
 from src.calculator.ability_spec import DamagePart
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.ashe import ASHE_FOCUS_STACK_RULE
@@ -21,6 +22,7 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters import cast_proc
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_support_effects import derive_item_support_effects
 
 # ---------------------------------------------------------------------------
@@ -95,10 +97,12 @@ class TestEclipseConsumer:
             p
             for p in cast_proc.resolve_slots(
                 ("Eclipse",),
-                level=11,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                facts=FightFacts(
+                    level=11,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ).cooldown_procs
             if p.source.item_name == "Eclipse"
         )
@@ -279,7 +283,8 @@ class TestConquerorConsumer:
             starting_stacks=10,
         )
         heal = fight["breakdown"].get("heal_Conqueror")
-        assert heal is not None and heal["total_amount"] > 0
+        assert heal is not None
+        assert heal["total_amount"] > 0
         # Starting at 10, the first grant reaches 12 and heals.
         stack_events = fight["breakdown"]["keystone_Conqueror"]["stack_events"]
         assert any(event["stacks_after"] == 12 for event in stack_events)

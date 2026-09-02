@@ -1,10 +1,10 @@
 """Flask web application for the LoL Damage Calculator."""
 
-import hmac
 import base64
 import binascii
 import functools
 import hashlib
+import hmac
 import ipaddress
 import json
 import math
@@ -15,8 +15,8 @@ import sqlite3
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
 from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -38,43 +38,29 @@ from flask import (
     request,
     url_for,
 )
-
-from src.calculator.calculate import calculate_payload, compare_payload
-from src.calculator.application_errors import ApplicationError
+from flask.typing import ResponseReturnValue
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 # The sys.path bootstrap above forces every first-party import below it;
 # this one line carries the disable rather than the whole block, because
 # widening it is another lane's file to change.
-from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
+from src.calculator.ability_spec import (  # pylint: disable=wrong-import-position
     StarvedSignal,
 )
+from src.calculator.application_errors import ApplicationError
+from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
+from src.calculator.calculate import calculate_payload, compare_payload
+from src.calculator.capabilities import public_capability_contract
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
+)
+from src.calculator.certainty import (
     classify_assumption as _classify_assumption,
+)
+from src.calculator.certainty import (
     derive_certainty,
-)
-from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.item_effects import (
-    item_input_options_meta,
-    refresh_item_effects,
-    stat_conversion_metadata,
-)
-from src.calculator.rune_effects import (
-    keystone_input_options_meta,
-    refresh_rune_effects,
-    rune_catalog,
-    shard_catalog,
-)
-from src.calculator.item_coverage import (
-    ATTACKER_LANES,
-    item_model_coverage,
-    target_item_model_coverage,
-)
-from src.calculator.loadout_rules import (
-    exclusivity_groups,
-    inventory_capacity,
-    required_boots_tier,
-    validate_resolved_loadout,
 )
 from src.calculator.champions import (
     champion_options_meta_map,
@@ -82,38 +68,24 @@ from src.calculator.champions import (
     get_champion_module_meta,
     registered_champion_names,
 )
-from src.calculator.capabilities import public_capability_contract
-from src.calculator.cast_dependency import BASE_CAST_SLOTS
+from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.item_coverage import (
+    ATTACKER_LANES,
+    item_model_coverage,
+    target_item_model_coverage,
+)
+from src.calculator.item_effects import (
+    item_input_options_meta,
+    refresh_item_effects,
+    stat_conversion_metadata,
+)
+from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_selectable_items,
     item_gold,
     optimize_build,
     optimize_purchase,
-)
-from src.calculator.stats import MAX_LEVEL
-from src.calculator.stats import get_item_stats
-from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
-from src.calculator.program.views import (  # pylint: disable=wrong-import-position
-    UnrankableNumber,
-)
-from src.calculator.public_response import (
-    ICON_HOSTS as _ICON_HOSTS,
-    https_icon as _https_icon,
-    public_loadout_summary,
-)
-from src.calculator.scenario import (
-    ChampionLoadout,
-    load_public_champion as _load_public_champion,
-    parse_scenario_request,
-    resolve_named_item as _resolve_named_item,
-    resolve_scenario,
-)
-from src.calculator.role_quests import (
-    boot_upgrade_contract,
-    role_quest_domain_contract,
-    support_quest_item_contract,
-    support_quest_item_stage,
 )
 from src.calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
@@ -125,20 +97,65 @@ from src.calculator.pipeline import (
     PUBLIC_INPUT_LIMITS,
     rank_allocation_contract,
 )
+from src.calculator.program.views import (  # pylint: disable=wrong-import-position
+    UnrankableNumber,
+)
+from src.calculator.public_response import (
+    ICON_HOSTS as _ICON_HOSTS,
+)
+from src.calculator.public_response import (
+    https_icon as _https_icon,
+)
+from src.calculator.public_response import (
+    public_loadout_summary,
+)
 from src.calculator.request_parsing import (
     request_bool as _request_bool,
+)
+from src.calculator.request_parsing import (
     request_int as _request_int,
+)
+from src.calculator.request_parsing import (
     request_optional_int as _request_optional_int,
+)
+from src.calculator.request_parsing import (
     request_string as _request_string,
+)
+from src.calculator.request_parsing import (
     request_string_list as _request_string_list,
 )
+from src.calculator.role_quests import (
+    boot_upgrade_contract,
+    inventory_capacity,
+    required_boots_tier,
+    role_quest_domain_contract,
+    support_quest_item_contract,
+    support_quest_item_stage,
+)
+from src.calculator.rune_effects import (
+    keystone_input_options_meta,
+    refresh_rune_effects,
+    rune_catalog,
+    shard_catalog,
+)
+from src.calculator.scenario import (
+    ChampionLoadout,
+    parse_scenario_request,
+    resolve_scenario,
+)
+from src.calculator.scenario import (
+    load_public_champion as _load_public_champion,
+)
+from src.calculator.scenario import (
+    resolve_named_item as _resolve_named_item,
+)
+from src.calculator.stats import MAX_LEVEL, get_item_stats
 from src.calculator.validation_receipts import (
     VALIDATION_SOURCES as _VALIDATION_SOURCES,
+)
+from src.calculator.validation_receipts import (
     evaluate_validation_receipt,
 )
-from src.rate_limit import TokenBucketStore
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from src.db import (
     METRIC_EVENT_MAX_TOOK_MS,
     METRIC_EVENT_NAMES,
@@ -161,6 +178,7 @@ from src.db import (
     stable_cache_key,
     validation_summary,
 )
+from src.rate_limit import TokenBucketStore
 
 app = Flask(
     __name__,
@@ -419,7 +437,7 @@ def _auth_users() -> dict[str, str]:
         raise RuntimeError(
             "SCRYGLASS_AUTH_USERS must map account names to scrypt$ password hashes"
         )
-    return {username: password_hash for username, password_hash in users.items()}
+    return dict(users.items())
 
 
 def _invite_codes() -> tuple[str, ...]:
@@ -458,12 +476,14 @@ def _safe_next_path(value: str | None) -> str:
     return path if path.startswith("/") and not path.startswith("//") else "/"
 
 
-def _auth_error(message: str, status: int = 503):
+def _auth_error(message: str, status: int = 503) -> tuple[Response, int]:
     """Return a concise setup/error response without leaking password data."""
     return jsonify({"error": message}), status
 
 
-def _login_page(message: str = "", status: int = 200, next_path: str = "/"):
+def _login_page(
+    message: str = "", status: int = 200, next_path: str = "/"
+) -> tuple[str, int]:
     """Render the invite-gated closed-beta landing page.
 
     Served pre-auth, so it deliberately carries no dependency on protected
@@ -496,13 +516,14 @@ def _enforce_authentication():
     if (
         request.path == "/healthz"
         or request.path.startswith("/api/health/")
-        or request.path == "/privacy"
-        or request.path == "/terms"
-        or request.path == "/riot-disclaimer"
-        or request.path == "/api/auth/invite"
-        # Anonymous funnel events fire before/without any approved session;
-        # the scorecard endpoint (GET /api/metrics) stays behind the gate.
-        or request.path == "/api/metrics/event"
+        or request.path
+        in {
+            "/privacy",
+            "/terms",
+            "/riot-disclaimer",
+            "/api/auth/invite",
+            "/api/metrics/event",
+        }
         or request.path.startswith("/auth/")
     ):
         return None
@@ -517,7 +538,7 @@ def _result_cache_enabled() -> bool:
     return not app.config.get("TESTING") and (is_configured() or redis_configured())
 
 
-def _spend_rate_limit(scope: str):
+def _spend_rate_limit(scope: str) -> Response | None:
     """Protect expensive work globally across all Gunicorn workers."""
     if not app.config["RATE_LIMIT_ENABLED"] or app.config.get("TESTING"):
         return None
@@ -618,7 +639,8 @@ def _rate_limited(_error):
 @app.after_request
 def _add_security_headers(response):
     """Apply browser protections consistently to pages, APIs, and errors."""
-    for name, value in _SECURITY_HEADERS.items():
+    for name, header in _SECURITY_HEADERS.items():
+        value = header
         if (
             name == "Content-Security-Policy"
             and request.scheme == "http"
@@ -665,9 +687,9 @@ def _local_dev_request() -> bool:
         host_is_local = host == "localhost" or (
             host is not None and ipaddress.ip_address(host).is_loopback
         )
-        return peer_is_loopback and host_is_local
     except ValueError:
         return False
+    return peer_is_loopback and host_is_local
 
 
 def _run_data_update():
@@ -680,7 +702,7 @@ def _run_data_update():
 
 
 @app.route("/auth/login", methods=["GET", "POST"])
-def auth_login():
+def auth_login() -> ResponseReturnValue:
     """Authenticate one of the explicitly configured private accounts.
 
     In invite-gated deployments (``SCRYGLASS_INVITE_CODES`` set on top of
@@ -731,7 +753,7 @@ def auth_login():
 
 
 @app.route("/auth/logout", methods=["GET", "POST"])
-def auth_logout():
+def auth_logout() -> ResponseReturnValue:
     """End the local approved-user session."""
     response = redirect("/")
     response.delete_cookie(_AUTH_COOKIE, path="/")
@@ -739,7 +761,7 @@ def auth_logout():
 
 
 @app.route("/auth/status")
-def auth_status():
+def auth_status() -> Response:
     """Expose the current local identity and gate configuration."""
     session = _current_session()
     return jsonify(
@@ -753,7 +775,7 @@ def auth_status():
 
 
 @app.route("/api/auth/invite", methods=["GET", "POST"])
-def api_auth_invite():
+def api_auth_invite() -> Response | tuple[Response, int]:
     """Validate one invite code without logging in.
 
     ``GET`` reports whether the deployment is invite-gated; ``POST`` with a
@@ -788,25 +810,25 @@ def api_auth_invite():
 
 
 @app.route("/privacy")
-def privacy():
+def privacy() -> str:
     """Public privacy summary for the closed beta."""
     return render_template("privacy.html")
 
 
 @app.route("/terms")
-def terms():
+def terms() -> str:
     """Public terms of use for the closed beta."""
     return render_template("terms.html")
 
 
 @app.route("/riot-disclaimer")
-def riot_disclaimer():
+def riot_disclaimer() -> str:
     """Public Riot Games disclaimer and data-source statement."""
     return render_template("riot_disclaimer.html")
 
 
 @app.route("/")
-def index():
+def index() -> str:
     """Serve the main calculator page."""
     session = _current_session()
     return render_template(
@@ -821,7 +843,7 @@ def index():
 
 
 @app.route("/healthz")
-def health():
+def health() -> Response:
     """Cheap liveness probe that avoids loading calculator data."""
     return jsonify({"status": "ok"})
 
@@ -897,10 +919,8 @@ def _health_golden_check() -> dict:
         try:
             parsed = datetime.fromisoformat(checked_at)
             if parsed.tzinfo is None:
-                parsed = parsed.replace(tzinfo=timezone.utc)
-            age_days = max(
-                0.0, (datetime.now(timezone.utc) - parsed).total_seconds() / 86400.0
-            )
+                parsed = parsed.replace(tzinfo=UTC)
+            age_days = max(0.0, (datetime.now(UTC) - parsed).total_seconds() / 86400.0)
         except ValueError:
             age_days = None
     if age_days is None:
@@ -929,7 +949,7 @@ def _health_engine_check() -> dict:
 
 
 @app.route("/api/health/deep")
-def api_health_deep():
+def api_health_deep() -> Response:
     """Deep health probe: db, result cache, golden staleness, engine.
 
     Public (like /healthz) so uptime monitors can reach it without a
@@ -953,7 +973,7 @@ def api_health_deep():
         {
             "status": overall,
             "checks": checks,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
     )
 
@@ -986,7 +1006,7 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
 
 
 @app.route("/api/champions")
-def api_champions():
+def api_champions() -> Response:
     """Return champion identity and fail-closed attacker readiness.
 
     ``engine_registration`` is the module registry and the one field that
@@ -1069,7 +1089,7 @@ def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
 
 
 @app.route("/api/items")
-def api_items():
+def api_items() -> Response:
     """Return ordinary build items for manual attacker/roster loadouts."""
     result = sorted(
         [
@@ -1093,7 +1113,7 @@ def api_items():
 
 
 @app.route("/api/boots")
-def api_boots():
+def api_boots() -> Response:
     """Return tier-2 and quest-only tier-3 boots for the role-aware picker."""
     upgrade_pairs = boot_upgrade_contract()
     upgrade_from = {pair["upgraded"]: pair["base"] for pair in upgrade_pairs.values()}
@@ -1127,7 +1147,7 @@ def api_boots():
 
 
 @app.route("/api/config")
-def api_config():
+def api_config() -> Response:
     """Serve calculator config the frontend must share with the backend.
 
     Single source of truth for domain facts that would otherwise be
@@ -1146,7 +1166,7 @@ def api_config():
     try:
         cache_meta = json.loads(cache_meta_path.read_text(encoding="utf-8"))
         fetched_at = datetime.fromtimestamp(
-            float(cache_meta["fetched_at"]), tz=timezone.utc
+            float(cache_meta["fetched_at"]), tz=UTC
         ).isoformat()
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         fetched_at = None
@@ -1221,7 +1241,7 @@ def api_config():
 
 
 @app.route("/api/loadout-stats", methods=["POST"])
-def api_loadout_stats():
+def api_loadout_stats() -> Response | tuple[Response, int]:
     """Return champion-derived stats for one level and item loadout."""
     try:
         data = _json_object()
@@ -1239,7 +1259,7 @@ def _pure_payload_response(
     payload_fn: Callable[[dict], dict],
     *,
     missing_data_message: str | None = None,
-):
+) -> Response | tuple[Response, int]:
     """Serve one deterministic payload under its ``_OPERATION_POLICY`` entry.
 
     Every pure JSON operation runs the same ladder: decode the body, answer
@@ -1288,7 +1308,7 @@ _MISSING_SCENARIO_DATA = "Scenario data '{}' not found"
 
 
 @app.route("/api/calculate", methods=["POST"])
-def api_calculate():
+def api_calculate() -> Response | tuple[Response, int]:
     """Run the damage calculation and return results."""
 
     def _deterministic_calculate(data: dict) -> dict:
@@ -1298,13 +1318,13 @@ def api_calculate():
 
 
 @app.route("/api/compare", methods=["POST"])
-def api_compare():
+def api_compare() -> Response | tuple[Response, int]:
     """Calculate Build A and Build B behind one request boundary."""
     return _pure_payload_response("compare", compare_payload)
 
 
 @app.route("/api/bis", methods=["POST"])
-def api_bis():
+def api_bis() -> Response | tuple[Response, int]:
     """Rank one slot through the pure BIS application boundary."""
     return _pure_payload_response(
         "bis", bis_payload, missing_data_message=_MISSING_SCENARIO_DATA
@@ -1312,7 +1332,7 @@ def api_bis():
 
 
 @app.route("/api/bis/batch", methods=["POST"])
-def api_bis_batch():
+def api_bis_batch() -> Response | tuple[Response, int]:
     """Score dependent BIS slots with one shared timeline cache."""
     return _pure_payload_response(
         "bis_batch", bis_batch_payload, missing_data_message=_MISSING_SCENARIO_DATA
@@ -1320,7 +1340,7 @@ def api_bis_batch():
 
 
 @app.route("/api/optimize", methods=["POST"])
-def api_optimize():  # pylint: disable=too-many-return-statements
+def api_optimize() -> Response | tuple[Response, int]:
     """Find the optimal item build for a champion.
 
     Request parsing and validation run through the shared scenario boundary
@@ -1330,6 +1350,7 @@ def api_optimize():  # pylint: disable=too-many-return-statements
     items, budgets) are parsed after the shared call, and the deterministic
     result is cached under the ``optimize`` namespace.
     """
+    # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
         request = parse_scenario_request(
@@ -1339,24 +1360,30 @@ def api_optimize():  # pylint: disable=too-many-return-statements
         locked_items = _request_string_list(data, "locked_items", maximum=6)
         locked_boots = _request_string(data, "locked_boots")
         include_boots = _request_bool(data, "include_boots", True)
-        max_legendary_slots = _request_int(data, "max_legendary_slots", 5, 1, 6)
-        gold_budget = _request_optional_int(data, "gold_budget", 1, 30_000)
+        max_legendary_slots = _request_int(
+            data, "max_legendary_slots", 5, minimum=1, maximum=6
+        )
+        gold_budget = _request_optional_int(data, "gold_budget", maximum=30_000)
         optimization_scope = _request_string(data, "optimization_scope", "build")
         if optimization_scope not in {"build", "purchase"}:
             raise ValueError("optimization_scope must be 'build' or 'purchase'")
-        available_gold = _request_optional_int(data, "available_gold", 1, 30_000)
+        available_gold = _request_optional_int(data, "available_gold", maximum=30_000)
         if optimization_scope == "purchase" and available_gold is None:
             raise ValueError("available_gold is required for purchase optimization")
-        max_purchase_items = _request_optional_int(data, "max_purchase_items", 1, 7)
+        max_purchase_items = _request_optional_int(
+            data, "max_purchase_items", maximum=7
+        )
         allow_sell = _request_bool(data, "allow_sell", False)
-        max_sell_items = _request_int(data, "max_sell_items", 1, 0, 1)
+        max_sell_items = _request_int(data, "max_sell_items", 1, minimum=0, maximum=1)
         combine_policy = _request_string(data, "combine_policy", "shop_combine")
         if combine_policy not in {"shop_combine", "component_accumulate"}:
             raise ValueError(
                 "combine_policy must be 'shop_combine' or 'component_accumulate'"
             )
         include_starters = _request_bool(data, "include_starters", False)
-        time_budget_ms = _request_int(data, "time_budget_ms", 12_000, 100, 60_000)
+        time_budget_ms = _request_int(
+            data, "time_budget_ms", 12_000, minimum=100, maximum=60_000
+        )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -1446,8 +1473,8 @@ def api_optimize():  # pylint: disable=too-many-return-statements
             "level": level,
             "fight_params": fight_params,
             "objective": objective,
-            "locked_items": locked_items if locked_items else None,
-            "locked_boots": locked_boots if locked_boots else None,
+            "locked_items": locked_items or None,
+            "locked_boots": locked_boots or None,
             "target_fight_params": target_fight_params or None,
             "boots_tier": required_boots_tier(
                 fight_params.role, fight_params.role_quest_complete
@@ -1485,7 +1512,7 @@ def api_optimize():  # pylint: disable=too-many-return-statements
 
 
 @app.route("/api/builds", methods=["POST"])
-def api_save_build():
+def api_save_build() -> Response | tuple[Response, int]:
     """Persist one build scenario for later reload or sharing.
 
     The request mirrors the /api/calculate payload.  Dedicated columns take
@@ -1498,7 +1525,7 @@ def api_save_build():
     try:
         data = _json_object()
         _request_string(data, "champion", required=True)
-        _request_int(data, "level", 1, 1, MAX_LEVEL)
+        _request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
         role = _request_string(data, "role")
         items = data.get("items", [])
         if not isinstance(items, list) or not all(
@@ -1538,11 +1565,11 @@ def api_save_build():
 
 
 @app.route("/api/share", methods=["POST"])
-def api_create_share():
+def api_create_share() -> Response | tuple[Response, int]:
     """Create a public share link for a saved build."""
     try:
         data = _json_object()
-        build_id = _request_int(data, "build_id", 0, 1, 1_000_000_000)
+        build_id = _request_int(data, "build_id", 0, minimum=1, maximum=1_000_000_000)
         slug = _request_string(data, "slug")
         if slug and not all(
             character.isalnum() or character in "-_" for character in slug
@@ -1572,7 +1599,7 @@ def api_create_share():
 
 
 @app.route("/api/share/<token>")
-def api_get_share(token: str):
+def api_get_share(token: str) -> Response | tuple[Response, int]:
     """Resolve a share token to its build payload; counts one view."""
     if not token or len(token) > 100:
         return jsonify({"error": "Invalid share token"}), 404
@@ -1591,12 +1618,14 @@ _FEEDBACK_PAGE_MAX = 200
 
 
 @app.route("/api/feedback")
-def api_list_feedback():
+def api_list_feedback() -> Response | tuple[Response, int]:
     """Return recent validation feedback for the review loop."""
     try:
         champion = _request_string(request.args, "champion") or None
         source = _request_string(request.args, "source") or None
-        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
+        limit = _request_int(
+            request.args, "limit", 50, minimum=1, maximum=_FEEDBACK_PAGE_MAX
+        )
         rows = list_feedback(champion=champion, source=source, limit=limit)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1613,7 +1642,7 @@ def api_list_feedback():
 
 @app.route("/api/receipts", methods=["POST"])
 # pylint: disable=too-many-branches,too-many-locals,too-many-statements
-def api_receipts():  # pylint: disable=too-many-return-statements
+def api_receipts() -> Response | tuple[Response, int]:
     """Record one game-receipt validation observation.
 
     Body: ``{"champion", "loadout" (mirror of the /api/calculate payload),
@@ -1630,6 +1659,7 @@ def api_receipts():  # pylint: disable=too-many-return-statements
     the stored receipt stays numeric.  When ``observed`` is omitted the
     receipt is a positive confirmation (observed := predicted).
     """
+    # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
         champion = _request_string(data, "champion", required=True)
@@ -1703,7 +1733,7 @@ def api_receipts():  # pylint: disable=too-many-return-statements
 
 
 @app.route("/api/validation")
-def api_validation():
+def api_validation() -> Response | tuple[Response, int]:
     """Recent receipts plus the systematic-bias summary.
 
     ``?champion=`` narrows both halves; ``?limit=`` pages the recent
@@ -1713,7 +1743,9 @@ def api_validation():
     """
     try:
         champion = _request_string(request.args, "champion") or None
-        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
+        limit = _request_int(
+            request.args, "limit", 50, minimum=1, maximum=_FEEDBACK_PAGE_MAX
+        )
         rows = list_feedback(champion=champion, limit=limit)
         systematic = validation_summary(champion=champion)
     except ValueError as exc:
@@ -1725,7 +1757,7 @@ def api_validation():
 
 
 @app.route("/api/validation/champions")
-def api_validation_champions():
+def api_validation_champions() -> Response | tuple[Response, int]:
     """Champions with feedback counts and bias, for a future dashboard."""
     try:
         summary = validation_summary()
@@ -1739,7 +1771,7 @@ def api_validation_champions():
 
 
 @app.route("/api/metrics/event", methods=["POST"])
-def api_metrics_event():
+def api_metrics_event() -> Response | tuple[Response, int]:
     """Record one anonymous, session-scoped product event (no PII).
 
     Body: ``{"event": "page_view", "took_ms": 0}`` where ``took_ms`` is the
@@ -1781,7 +1813,7 @@ def api_metrics_event():
 
 
 @app.route("/api/metrics")
-def api_metrics():
+def api_metrics() -> Response | tuple[Response, int]:
     """Beta success scorecard with the PASS/FAIL gate (auth-gated).
 
     The scorecard is computed by src/metrics.compute_scorecard so the
@@ -1809,7 +1841,7 @@ def api_metrics():
 
 
 @app.route("/api/certainty")
-def api_certainty():
+def api_certainty() -> Response | tuple[Response, int]:
     """Trust-label data: per-ability certainty for one champion.
 
     ``?champion=`` is required.  Certainty levels:
@@ -1840,7 +1872,7 @@ def api_certainty():
 
 
 @app.route("/api/not-modeled")
-def api_not_modeled():
+def api_not_modeled() -> Response | tuple[Response, int]:
     """Documented non-computed mechanics for one champion.
 
     Collects the module's ASSUMPTIONS lines that describe mechanics the
@@ -1874,20 +1906,20 @@ def _staleness_path() -> Path:
     return Path(__file__).resolve().parent.parent / "data" / "staleness.json"
 
 
-def _read_staleness():
+def _read_staleness() -> dict[str, Any] | None:
     """Load data/staleness.json, or None when it is missing/invalid."""
     path = _staleness_path()
     if not path.exists():
         return None
     try:
-        with open(path, "r", encoding="utf-8") as handle:
+        with Path(path).open(encoding="utf-8") as handle:
             return json.load(handle)
     except (json.JSONDecodeError, OSError):
         return None
 
 
 @app.route("/api/staleness")
-def api_staleness():
+def api_staleness() -> Response | tuple[Response, int]:
     """Serve the patch-regression report (wiki cache vs game files).
 
     The read-only face the STALE badge consumes; a missing report is a 404.
@@ -1899,7 +1931,7 @@ def api_staleness():
 
 
 @app.route("/api/update-data")
-def api_update_data():
+def api_update_data() -> Response | tuple[Response, int]:
     """Stream data update progress via Server-Sent Events. Dev-only: 404s
     unless LOL_CALC_DEV=1 (see _dev_mode) and LOL_CALC_DEV_UPDATE_TOKEN is
     configured (see _dev_update_token)."""

@@ -6,9 +6,9 @@ from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -75,7 +75,8 @@ def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = tuple(parts)
     entry["cc_reviewed"] = True
     entry["detail"] = (
-        f"{'Renewal' if renewal else 'Focused Resolve'}; tether holds={holds}. Healing/root duration are utility/state."
+        f"{'Renewal' if renewal else 'Focused Resolve'}; tether holds={holds}. "
+        f"Healing/root duration are utility/state."
     )
     return entry
 
@@ -111,7 +112,8 @@ OPTIONS = [
     bool_option("w_tether_holds", True, label="Focused Resolve tether completes"),
 ]
 ASSUMPTIONS = [
-    "Mantra is an explicit next-ability state; Soulflare and Renewal use the Mantra rank rather than silently changing base ranks.",
+    "Mantra is an explicit next-ability state; Soulflare and Renewal use the Mantra "
+    "rank rather than silently changing base ranks.",
     "Focused Resolve emits one or two sourced magic hits depending on the tether-completion input.",
     "Inspire/Defiance shields and Gathering Fire cooldown refunds remain ally/state utility.",
     "E (Inspire) shields Karma or the selected teammate the sourced "
@@ -137,13 +139,13 @@ SOURCES = load_champion_sources("Karma")
 # even if the paired W packet was fully blocked.
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Karma self-healing events from its authored packet."""
     healing = []
     w_payload = ability_payload(ability_damages, "W")
@@ -158,17 +160,17 @@ def derive_self_healing(
             if cast.get("slot") != "W":
                 continue
             cast_time = float(cast.get("time", 0.0))
-            for offset in (0.0, 2.0):
-                healing.append(
-                    {
-                        "time": cast_time + offset,
-                        "amount": 0.0,
-                        "amount_formula": _renewal_heal,
-                        "source": "Renewal",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": cast_time + offset,
+                    "amount": 0.0,
+                    "amount_formula": _renewal_heal,
+                    "source": "Renewal",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for offset in (0.0, 2.0)
+            )
     return healing
 
 

@@ -9,17 +9,18 @@ presentation: Boundless Vitality multiplies shields three earlier mechanics
 granted, so moving it is not a refactor.
 """
 
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from .champions.skill_orders import get_ability_rank
 from .interpreters import opening_defense, resolve_defense
 from .interpreters.defense_state import declared_defenses
 from .interpreters.sustain import received_healing_multiplier
 from .item_behavior import (
+    DEFENSE_FIELD_COMBINE,
     AllyProducer,
     BehaviorRule,
-    DEFENSE_FIELD_COMBINE,
     DefenseCombine,
     DefenseField,
     DefenseMechanic,
@@ -340,7 +341,7 @@ _COVERAGE_CHAMPION_PASSIVE = "modeled_starting_passive"
 class _DefenseLedger:
     """Every defensive field, its notes and its citations, mid-resolution."""
 
-    __slots__ = ("fields", "notes", "citations")
+    __slots__ = ("citations", "fields", "notes")
 
     def __init__(self) -> None:
         """Seed every field with the state of a build holding nothing."""
@@ -449,15 +450,12 @@ def _champion_starting_revive(
     Division, Zilean Chronoshift) return the revive payload; every other
     champion fails closed with zero revive fields.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from .champions import _CHAMPION_MODULES
-    from importlib import import_module
 
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    module = _CHAMPION_MODULES.get(champion_name)
+    if module is None:
         return {}
-    package = f"{__name__.rsplit('.', 1)[0]}.champions"
-    module = import_module(f".{module_name}", package=package)
     resolver = getattr(module, "starting_revive_defense", None)
     if resolver is None:
         return {}
@@ -521,10 +519,8 @@ _BOUNDLESS_ALL_HEALS_NOTE = (
 def _apply_boundless_vitality(
     ledger: _DefenseLedger,
     declared: Mapping[DefenseMechanic, BehaviorRule],
-    subject: DefenseSubject,
 ) -> None:
     """Spirit Visage's received-healing multiplier, folded over the ledger."""
-    del subject
     rule = declared.get(DefenseMechanic.BOUNDLESS_VITALITY)
     if rule is None:
         return
@@ -558,9 +554,7 @@ def _apply_boundless_vitality(
         ledger.notes.append(_BOUNDLESS_ALL_HEALS_NOTE.format(share=share))
 
 
-def _apply_everlasting(
-    ledger: _DefenseLedger, names: frozenset[str], subject: DefenseSubject
-) -> None:
+def _apply_everlasting(ledger: _DefenseLedger, names: frozenset[str]) -> None:
     """Fimbulwinter's Everlasting: cited here, declared as an ally packet.
 
     The one defence this resolver publishes without a defensive declaration
@@ -570,7 +564,6 @@ def _apply_everlasting(
     infer — and saying that twice, once as a second declaration, is the
     duplicated authority this campaign exists to remove.
     """
-    del subject
     for owner in ITEM_EFFECTS:
         if owner not in names:
             continue
@@ -609,11 +602,11 @@ _LEDGER_APPLIED_DEFENSES: Mapping[
     ],
 ] = {
     DefenseMechanic.EVERLASTING: lambda ledger, names, declared, subject: (
-        _apply_everlasting(ledger, names, subject)
+        _apply_everlasting(ledger, names)
     ),
     DefenseMechanic.BOUNDLESS_VITALITY: (
         lambda ledger, names, declared, subject: _apply_boundless_vitality(
-            ledger, declared, subject
+            ledger, declared
         )
     ),
 }
@@ -644,6 +637,7 @@ def resolve_starting_defenses(
     level: int,
     stats: dict[str, float],
     items: Sequence[Mapping[str, Any]] = (),
+    *,
     item_options: Mapping[str, Mapping[str, int | float]] | None = None,
 ) -> StartingDefenses:
     """Resolve the sourced champion and item defences ready at fight start.
@@ -682,10 +676,31 @@ def resolve_starting_defenses(
     return ledger.frozen()
 
 
+def armed_revive(defenses: StartingDefenses) -> tuple[float, float, str, str] | None:
+    """``(amount, delay, source, source_key)`` of an armed revive, or ``None``.
+
+    The source is the champion's own passive when the module declares one
+    (Anivia Rebirth, Zac Cell Division, Zilean Chronoshift); Guardian Angel
+    stays the item-source label.
+    """
+    revive_amount = max(0.0, float(defenses.revive_health_amount))
+    revive_delay = max(0.0, float(defenses.revive_delay))
+    if revive_amount <= 0.0 or revive_delay <= 0.0:
+        return None
+    revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
+    revive_key = (
+        f"revive_{revive_source.replace(' ', '_')}"
+        if revive_source != "Guardian Angel (Rebirth)"
+        else "revive_Guardian Angel"
+    )
+    return revive_amount, revive_delay, revive_source, revive_key
+
+
 __all__ = [
     "DEFENSE_SOURCE_LABEL",
     "DefenseCitation",
-    "defense_source",
     "StartingDefenses",
+    "armed_revive",
+    "defense_source",
     "resolve_starting_defenses",
 ]

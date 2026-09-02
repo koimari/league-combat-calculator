@@ -122,7 +122,7 @@ Contract sections (numbered as in the RLM-2 C brief):
       the wired recharge contract xfailed).
   S14 Missing identity or rows (the unavailable-source KeyError pinned;
       the typed extractors return 0.0 on the empty P leveling — a
-      pinned source gap; the _require_row fail-loud precedent).
+      pinned source gap; the require_named_leveling fail-loud precedent).
   S15 Score fail-closed (the generic gate receipts PASS —
       support_kind=cleanse / support_cleanse / support_kind=canister;
       never a silent re-price).
@@ -154,7 +154,10 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.ability_spec import (
+    ACTION_BLOCKING_CC_KINDS,
+    NON_BLOCKING_CC_KINDS,
+)
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -166,22 +169,18 @@ from src.calculator.cleanse_eligibility import (
     resolve_cleanse_item,
     truncate_intervals,
 )
-from src.calculator.ability_spec import (
-    ACTION_BLOCKING_CC_KINDS,
-    NON_BLOCKING_CC_KINDS,
-)
 from src.calculator.crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival, survival_of
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MUNDO_DATA = _CHAMPION_DATA["DrMundo"]
@@ -735,7 +734,7 @@ class TestSourceAndTypedValues:
         # The module parse receipt (the brief's contract #1): exactly
         # E/Q/R/W — NO P slot (the passive deals no enemy damage).
         #
-        # MERGE: P is no longer ``out_of_scope``.  A slot with no cast can
+        # MERGE: P is not ``out_of_scope``.  A slot with no cast can
         # still be priced through a named engine channel, and the contract
         # makes the module say WHICH: Dr. Mundo's P is ``modeled`` through
         # ``COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}`` — the
@@ -832,14 +831,15 @@ class TestSourceAndTypedValues:
         # extractors return 0.0 for the empty-leveling P rows — the
         # cost/heal/canister values exist ONLY in the wording + the game
         # file.  The P2-8 declaration must receipt them from the game
-        # file and fail LOUD on a missing row (the _require_row
+        # file and fail LOUD on a missing row (the require_named_leveling
         # precedent), never fall back to a literal.
         assert extract_named(_p_ability(), "Health Cost", 1, {}, {}) == 0.0
         assert extract_named(_p_ability(), "Max Health Heal", 1, {}, {}) == 0.0
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         with pytest.raises(KeyError) as excinfo:
-            _require_row(
+            require_named_leveling(
+                "K'Sante",
                 {"name": "Goes Where He Pleases", "effects": [{"leveling": []}]},
                 "Health Cost",
             )
@@ -910,7 +910,8 @@ class TestNoTrigger:
         assert "cleanse" not in main
         assert "cleanse_use" not in main
         assert "cleanse_denied" not in main
-        assert "canister" not in main and "passive_cost" not in main
+        assert "canister" not in main
+        assert "passive_cost" not in main
         # The t=0 arm + the receipted cooldown are present (the passive
         # is armed; no trigger -> no resist).
         assert main["passive_state"]["armed"] is True
@@ -1447,22 +1448,22 @@ class TestMissingIdentityAndRows:
         assert "Mundo Passive" in str(excinfo.value)
 
     def test_require_row_fail_loud_precedent(self):
-        # The _require_row precedent (the brief's contract #14): missing
+        # The require_named_leveling precedent (the brief's contract #14): missing
         # leveling rows fail LOUD, naming the ability + the attribute —
         # the helper the P declaration must mirror for the cost/heal
         # rows that live only in the wording + game file today.
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         fake = {
             "name": "Goes Where He Pleases",
             "effects": [{"leveling": []}],
         }
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Health Cost")
+            require_named_leveling("K'Sante", fake, "Health Cost")
         assert "Goes Where He Pleases" in str(excinfo.value)
         assert "Health Cost" in str(excinfo.value)
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Max Health Heal")
+            require_named_leveling("K'Sante", fake, "Max Health Heal")
         assert "Max Health Heal" in str(excinfo.value)
 
     def test_declared_sources_stay_resolvable(self):
@@ -1564,7 +1565,7 @@ class TestModeParity:
             assert full["resource_ledger"] == scored["resource_ledger"]
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared

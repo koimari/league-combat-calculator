@@ -44,7 +44,7 @@ from .ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
     Authority,
-    Disposition,
+    projection_starvation,
 )
 
 # The module's second intra-package import, and Phase 4 S7's own amendment to
@@ -59,12 +59,13 @@ from .ability_spec import (
 from .program.views import ViewTag
 
 __all__ = [
-    "Authority",
     "CAPABILITIES",
     "CROSS_PARTICIPANT_AUTHORITIES",
+    "DIVERGENCES",
+    "RAW_STREAMS",
+    "Authority",
     "CcClass",
     "ChampionSlotOwner",
-    "DIVERGENCES",
     "DivergenceReceipt",
     "Engine",
     "EngineOwner",
@@ -74,9 +75,6 @@ __all__ = [
     "MechanicCapability",
     "MechanicOwner",
     "Pairing",
-    "ProjectionStarvation",
-    "StarvedSignal",
-    "RAW_STREAMS",
     "RiderDelivery",
     "RuneOwner",
     "Stream",
@@ -281,66 +279,6 @@ class TriggerRegistryError(RuntimeError):
     """A declaration is structurally invalid; raised at import of this module."""
 
 
-class StarvedSignal(RuntimeError):
-    """A leaf has no value a rule computed, and saying so is the only answer.
-
-    The class D-25's one boundary converts, named by the umbrella's
-    Amendment G of 2026-08-14.  D-25's rule is about *where* a named refusal
-    becomes a response — one place, allowlisted by source assertion, absorbed
-    nowhere — and never a count of the exception types that one handler
-    names.  Two conditions reach it, and they are the same disposition:
-
-    * a projection cannot answer the question a consumer asked
-      (:class:`ProjectionStarvation`);
-    * a write-once record holds two answers to one question, or two applied
-      contributions for one key, so it cannot answer either
-      (``survival.outcome_state``'s three raises).
-
-    Both are programming errors and in both the leaf has no computed value,
-    which is the whole of what ``STARVED`` means — so the invariant table
-    owes no fifth spelling.  Every member carries ``field``, ``producer`` and
-    ``reason``, because the boundary publishes those three and a member that
-    could not fill them would arrive as a 500 with a name and nothing else.
-
-    Subclassing ``RuntimeError`` rather than replacing it: every member was
-    one already, and a caller that catches ``RuntimeError`` today keeps
-    catching it.
-    """
-
-    #: The campaign disposition every member of this class *is*, so the one
-    #: boundary that converts one into a response reads the spelling off the
-    #: exception rather than re-deriving which of the four states it is.
-    disposition = Disposition.STARVED
-
-    def __init__(self, message: str, field: str, producer: str, reason: str) -> None:
-        """Name the leaf, who was asking for it, and why it has no answer."""
-        super().__init__(message)
-        self.field = field
-        self.producer = producer
-        self.reason = reason
-
-
-class ProjectionStarvation(StarvedSignal):
-    """A consumer asked a stream a question this result cannot answer.
-
-    A projection and a consumer disagree, which is a programming error and
-    not a data condition.  It is raised lazily, on the first read of an
-    inadequate representation, and caught at exactly one boundary — the
-    request boundary in ``src/app.py`` (D-25).  Everywhere else it
-    propagates, because a named refusal that is silently absorbed is the
-    zero this campaign exists to kill.
-    """
-
-    def __init__(self, field: str, producer: str, reason: str) -> None:
-        super().__init__(
-            f"STARVED: {producer or '<unnamed holder>'} asked for the "
-            f"{field} stream — {reason}",
-            field,
-            producer,
-            reason,
-        )
-
-
 # A row is seventeen facts; a record of seventeen fields is the honest
 # shape for it, and collapsing them into sub-objects would put the bus's
 # own vocabulary behind another indirection.
@@ -394,10 +332,6 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     cc_reviewed: bool
 
     def __post_init__(self) -> None:
-        if not isinstance(self.kind, TriggerKind):
-            raise ValueError("Trigger kind must be a TriggerKind member")
-        if not isinstance(self.cc, CcClass):
-            raise ValueError("Trigger cc must be a CcClass member")
         if not math.isfinite(self.time):
             raise ValueError(f"Trigger time must be finite, got {self.time!r}")
         if self.cc_kind and self.cc_kind not in CC_KIND_VOCABULARY:
@@ -489,11 +423,8 @@ class DivergenceReceipt:
 
     ref: str
     mechanic: str
-    pair_reading: str
-    walk_reading: str
     source_url: str
     revision_id: int
-    issue_ref: int
 
 
 # **Empty, and that is the end state.**  The campaign's one live divergence
@@ -733,16 +664,14 @@ def _walk_item(  # pylint: disable=too-many-arguments
     authority: Authority = Authority.COUPLED_AUTHORITATIVE,
     pairing: Pairing = Pairing.SOLO,
     pair_of: str | None = None,
-    divergence_ref: str | None = None,
     impl: str = _SUPPORT_IMPL,
-    view_tag: ViewTag = ViewTag.APPLIED,
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
 
     A constructor, not a default: the keyword defaults are what is true of
     the majority of walk packets (no stream, no raw field, the walk owns its
-    packet, no pair-side half, a delivered rather than previewed number).  A
-    row that differs states its difference at the call site.
+    packet, no pair-side half); a row that differs states its difference at
+    the call site.  A walk half delivers its number and cites no divergence.
 
     ``packet_source`` is the half's delivery reference, a
     :class:`RiderDelivery` for the one walk half that authors no packet:
@@ -761,10 +690,10 @@ def _walk_item(  # pylint: disable=too-many-arguments
         authority=authority,
         pairing=pairing,
         pair_of=pair_of,
-        divergence_ref=divergence_ref,
+        divergence_ref=None,
         impl=impl,
         packet_source=packet_source,
-        view_tags=MappingProxyType({Engine.WALK: view_tag}),
+        view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
         holder_stacking=holder_stacking,
     )
 
@@ -1941,27 +1870,29 @@ def _float(value: Any) -> float:
     return parsed if math.isfinite(parsed) else 0.0
 
 
-def _sequence(value: Any) -> int:
-    """A row's ordinal, with an absent, missing or unparsable one as -1.
+#: A Trigger's ``sequence`` for a row that authored none.  ``0`` is a real
+#: ordinal (every ledger numbers its rows from zero), so absence is negative.
+_NO_SEQUENCE = -1
 
-    ``0`` is a real sequence and the commonest there is: both of
-    ``damage._ordered_damage_events``' builders number their rows from zero,
-    so every ledger's first row carries it.  It cannot share a spelling with
-    the absent marker.
-    """
+
+def _sequence(value: Any) -> int | None:
+    """A row's ordinal, or ``None`` for an absent or unparsable one."""
     if value is None:
-        return -1
+        return None
     try:
         parsed = float(value)
     except (TypeError, ValueError):
-        return -1
-    return int(parsed) if math.isfinite(parsed) else -1
+        return None
+    return int(parsed) if math.isfinite(parsed) else None
 
 
 def event_triggers(
-    row: Mapping[str, Any], *, kinds: frozenset[TriggerKind] = _ROW_KINDS
+    row: object, *, kinds: frozenset[TriggerKind] = _ROW_KINDS
 ) -> tuple[Trigger, ...]:
     """0-2 Triggers from one authored row — a stunning damage packet is both.
+
+    ``row`` is one untyped result-list entry; anything but a mapping is
+    skipped rather than read.
 
     The damage trigger is unconditional for an authored row *of the kinds
     asked for*, because the consumers disagree about which damage matters
@@ -1983,13 +1914,14 @@ def event_triggers(
     cc_class, cc_kind, cc_reviewed = _classify_cc(row)
     if not kinds & _ROW_KINDS:
         return ()
+    sequence = _sequence(row.get("sequence"))
     shared = {
         "time": _float(row.get("time")),
         "source_key": str(row.get("source_key", "") or ""),
         "event_id": str(row.get("_event_id", "") or ""),
         "attacker_id": str(row.get("attacker", "") or ""),
         "target_id": str(row.get("target", "") or ""),
-        "sequence": _sequence(row.get("sequence")),
+        "sequence": _NO_SEQUENCE if sequence is None else sequence,
         "ability_instance": str(row.get("ability_instance", "") or ""),
         "damage": max(0.0, _float(row.get("damage"))),
         "raw_damage": max(0.0, _float(row.get("raw_damage"))),
@@ -2009,7 +1941,7 @@ def event_triggers(
     return tuple(triggers)
 
 
-def _takedown_trigger(row: Mapping[str, Any]) -> Trigger | None:
+def _takedown_trigger(row: Any) -> Trigger | None:
     """One explicit takedown receipt as a Trigger; never a kill inferred."""
     if not isinstance(row, Mapping):
         return None
@@ -2022,7 +1954,7 @@ def _takedown_trigger(row: Mapping[str, Any]) -> Trigger | None:
         event_id=str(row.get("_event_id", "") or ""),
         attacker_id=str(row.get("attacker", "") or ""),
         target_id=str(row.get("target", "") or ""),
-        sequence=-1,
+        sequence=_NO_SEQUENCE,
         ability_instance="",
         damage=0.0,
         raw_damage=0.0,
@@ -2070,7 +2002,7 @@ def authored_triggers(
         return ()
     if result.get("damage_events_tuple"):
         asked = ", ".join(sorted(stream.value for stream in wanted))
-        raise ProjectionStarvation(
+        raise projection_starvation(
             asked,
             holder,
             "the score-only tuple ledger carries positional rows no scan can "

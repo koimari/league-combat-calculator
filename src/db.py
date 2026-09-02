@@ -43,8 +43,9 @@ import math
 import os
 import secrets
 import threading
-from datetime import datetime, timedelta, timezone
-from typing import Any, Mapping
+from collections.abc import Mapping
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -65,7 +66,13 @@ from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    Session,
+    mapped_column,
+    sessionmaker,
+)
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -78,7 +85,7 @@ _VALID_FEEDBACK_SOURCES = frozenset({"manual", "combat_log", "practice_tool"})
 
 def _utcnow() -> datetime:
     """Naive UTC now; the storage convention for every timestamp column."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _resolve_database_url() -> str:
@@ -321,7 +328,7 @@ def is_postgres() -> bool:
     return _resolve_database_url().startswith("postgresql")
 
 
-def session() -> Any:
+def session() -> Session:
     """Open a new ORM session bound to the lazily created engine."""
     get_engine()
     assert _session_factory is not None
@@ -407,11 +414,11 @@ def _redis_record_counter(*, hits: bool) -> None:
     _redis_call("hincrby", _REDIS_COUNTER_KEY, "hits" if hits else "misses", 1)
 
 
-def _serialize_datetime(value: datetime | None) -> str | None:
+def serialize_datetime(value: datetime | None) -> str | None:
     """ISO-8601 UTC string for API output (storage is naive UTC)."""
     if value is None:
         return None
-    return value.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+    return value.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
 
 
 # ---------------------------------------------------------------------------
@@ -500,7 +507,7 @@ def _build_to_dict(build: Build) -> dict[str, Any]:
         "enemies": build.enemies or [],
         "allies": build.allies or [],
         "fight_params": build.fight_params or {},
-        "created_at": _serialize_datetime(build.created_at),
+        "created_at": serialize_datetime(build.created_at),
         "request": request,
     }
 
@@ -536,14 +543,15 @@ def create_share_link(
             db_session.add(share)
             try:
                 db_session.commit()
-                return {
-                    "token": share.token,
-                    "build_id": share.build_id,
-                    "slug": share.slug,
-                    "url": f"/api/share/{share.token}",
-                }
             except SQLAlchemyError:
                 db_session.rollback()  # token collision; try another one
+                continue
+            return {
+                "token": share.token,
+                "build_id": share.build_id,
+                "slug": share.slug,
+                "url": f"/api/share/{share.token}",
+            }
         raise SQLAlchemyError("could not allocate a unique share token")
 
 
@@ -575,7 +583,7 @@ def get_share_link(
                     "token": share.token,
                     "slug": share.slug,
                     "views": share.views,
-                    "created_at": _serialize_datetime(share.created_at),
+                    "created_at": serialize_datetime(share.created_at),
                 }
             }
         )
@@ -657,7 +665,7 @@ def list_feedback(
                 "matched": row.matched,
                 "delta": row.delta,
                 "note": row.note,
-                "created_at": _serialize_datetime(row.created_at),
+                "created_at": serialize_datetime(row.created_at),
             }
             for row in rows
         ]
@@ -897,7 +905,7 @@ def record_metric_event(
     """
     if event not in METRIC_EVENT_NAMES:
         raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
-    if not session_id or not isinstance(session_id, str) or len(session_id) > 100:
+    if not session_id or len(session_id) > 100:
         raise ValueError("session_id must be a non-empty string of at most 100 chars")
     if took_ms is not None:
         took_ms = int(took_ms)

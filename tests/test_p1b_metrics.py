@@ -11,7 +11,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -38,7 +38,7 @@ def _recorded_events():
 
 
 # Fixed beta timeline: 2 complete weeks, UTC-naive (storage convention).
-BETA_START = datetime(2026, 7, 23, 0, 0, 0)
+BETA_START = datetime(2026, 7, 23, 0, 0, 0)  # noqa: DTZ001 - naive by convention
 BETA_END = BETA_START + timedelta(days=14)
 NOW = BETA_END
 DAY = timedelta(days=1)
@@ -144,7 +144,7 @@ def _write_staleness_report(path, checked_at, patch="16.15"):
         json.dumps(
             {
                 "patch": patch,
-                "checked_at": checked_at.replace(tzinfo=timezone.utc).isoformat(),
+                "checked_at": checked_at.replace(tzinfo=UTC).isoformat(),
                 "champions": {"Ahri": {"stale": False}},
                 "items": {},
             }
@@ -246,7 +246,10 @@ def _test_password_hash(password="secret"):
 
     salt = b"p1b-invite-salt"
     digest = hashlib.scrypt(password.encode(), salt=salt, n=16_384, r=8, p=1)
-    enc = lambda value: base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+    def enc(value):
+        return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
     return f"scrypt$16384$8$1${enc(salt)}${enc(digest)}"
 
 

@@ -106,8 +106,8 @@ def role_quest_meta(role: str, complete: bool) -> dict[str, object]:
 
 def max_champion_level(role: str, complete: bool) -> int:
     """Return the sourced level cap for the selected role-quest state."""
-    # Direct engine/unit-test callers historically supply level 20 without a
-    # role object.  Keep that internal contract; public loadouts use
+    # Direct engine/unit-test callers supply level 20 without a role object;
+    # that internal contract holds.  Public loadouts use
     # ``require_level_within_cap`` above and therefore still require the
     # completed top quest explicitly.
     if not role:
@@ -161,14 +161,32 @@ def boot_upgrade_contract() -> dict[str, dict[str, str]]:
     }
 
 
+def _quest_role(role: str, role_quest_complete: bool) -> str:
+    """The validated role, which a completed role quest requires."""
+    parsed_role = validate_role(role)
+    if role_quest_complete and not parsed_role:
+        raise ValueError("role is required when role_quest_complete is true")
+    return parsed_role
+
+
+def inventory_capacity(role: str, role_quest_complete: bool) -> int:
+    """Return combat-item slots for the selected role state."""
+    bottom = _quest_role(role, role_quest_complete) == "bottom"
+    return 7 if bottom and role_quest_complete else 6
+
+
+def required_boots_tier(role: str, role_quest_complete: bool) -> int:
+    """Return the only boots tier legal for the selected role state."""
+    mid = _quest_role(role, role_quest_complete) == "mid"
+    return 3 if mid and role_quest_complete else 2
+
+
 def role_quest_domain_contract() -> dict[str, object]:
     """Return the role-dependent limits used by every public client.
 
     The browser needs these values to shape controls.  Keep the calculation
     functions as the owners and publish only their JSON-safe result here.
     """
-    from .loadout_rules import inventory_capacity, required_boots_tier
-
     states = (("incomplete", False), ("complete", True))
     return {
         "roles": sorted(ROLES),

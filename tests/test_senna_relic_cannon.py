@@ -82,11 +82,11 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, ONE_ROTATION_DURATION, run_fight
+from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.slotlib import find_named_leveling
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -365,7 +365,8 @@ class TestSourceEvidence:
         calcs = passive["mSpell"].get("mSpellCalculations", {})
         bonus = calcs.get("BonusOnHitDamage", {})
         parts = bonus.get("mFormulaParts", [])
-        assert parts and parts[0].get("mCoefficient") == pytest.approx(0.2)
+        assert parts
+        assert parts[0].get("mCoefficient") == pytest.approx(0.2)
         assert parts[0].get("mStat") == 2
         assert "mStatFormula" not in bonus  # total AD, not bonus AD
 
@@ -491,7 +492,7 @@ class TestSourceEvidence:
                         else registered[str(level)]["sustained"][build_name]
                     )
                     data = json.loads(json.dumps(_CHAMPION_DATA["Senna"]))
-                    stats = calculate_total_stats(data, level, build_items)
+                    calculate_total_stats(data, level, build_items)
                     result = run_fight(
                         data,
                         level,
@@ -681,7 +682,8 @@ class TestRiderAutoPath:
         assert abilities["P2"]["on_hit"]["name"] == "Relic Cannon (on-hit)"
         assert abilities["P2"]["on_hit"]["damage_per_hit"] == pytest.approx(0.2 * 130.0)
         passive = abilities["passive"]
-        assert "on_hit_extra" not in passive and "on_hits" not in passive
+        assert "on_hit_extra" not in passive
+        assert "on_hits" not in passive
         assert passive["on_hit"]["name"] == "Weakened Soul (mark consume)"
         result = _fight(
             {"senna_mist_stacks": 40}, duration=10.0, auto_attack_uptime=1.0

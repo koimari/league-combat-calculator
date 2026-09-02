@@ -141,11 +141,11 @@ class TestSoulSiphonPricesTheHoldersCharges:
     def test_the_current_item_authors_no_damage_anywhere(self):
         """The pre-rework damage half is gone from the cached record.
 
-        Soul Siphon used to consume its charges into magic damage on the
-        nearest enemy.  The live text converts damage *into* a heal and
-        nothing else, so the item's only reachable packet kind is a heal —
-        asserted against the cached sentence rather than against a memory of
-        which patch removed it.
+        The live text converts damage *into* a heal and nothing else — no
+        charges consumed into magic damage on the nearest enemy — so the
+        item's only reachable packet kind is a heal, asserted against the
+        cached sentence rather than against a memory of which patch removed
+        the damage half.
         """
         response = _roster(HEAL_HOLDER, (HELIA,), main="Ahri")
         assert {packet["kind"] for packet in _packets(response, self.SOURCE)} == {
@@ -207,9 +207,8 @@ class TestCommandAmpsTheMainChampionFromAnAlly:
         """The mechanic is a multiplier; no row may carry it as damage."""
         held = _roster(IMMOBILIZE_HOLDER, (MANDATE,), main="Pantheon")
         packets = _packets(held, self.SOURCE)
-        assert packets and all(
-            packet["kind"] == "damage_modifier" for packet in packets
-        )
+        assert packets
+        assert all(packet["kind"] == "damage_modifier" for packet in packets)
         assert all(packet["multiplier"] > 1.0 for packet in packets)
 
 

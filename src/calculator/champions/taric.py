@@ -41,13 +41,17 @@ below; every number in it is read from the cached wiki entry.
 """
 
 import re
+from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
+from ..healing_helpers import ability_json, parsed_rank
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slotlib import (
+    PER_LEVEL_SCALING,
     ability_name,
     extract_named,
     find_named_leveling,
@@ -56,8 +60,6 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
-from ..healing_helpers import ability_json, parsed_rank
-from .inputs import champion_stat
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
 
@@ -69,7 +71,6 @@ PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb
 # Every read below fails closed: a wiki rewrite that moves or renames a
 # term raises here naming the champion and the missing term, rather than
 # silently falling back to a stale literal.
-_BRAVADO_SCALING_ATTRIBUTE = "Per-Level Scaling"
 _BRAVADO_WINDOW_RE = re.compile(
     r"empowers his next (?P<attacks>[a-z]+) basic attacks within "
     r"(?P<seconds>\d+(?:\.\d+)?) seconds"
@@ -87,7 +88,7 @@ _BRAVADO_ARMED_BY = ("Q", "W", "E", "R")
 _BRAVADO_REFRESH_ON_CONSUME = True
 
 
-def _bravado_window_terms(ability: dict[str, Any]) -> tuple[int, float, float]:
+def _bravado_window_terms(ability: Mapping[str, Any]) -> tuple[int, float, float]:
     """Read (empowered attacks, window seconds, bonus-armor ratio) from cache.
 
     Raises:
@@ -135,11 +136,11 @@ def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P", 0)
     if ability is None:
         return None
-    leveling = find_named_leveling(ability, _BRAVADO_SCALING_ATTRIBUTE)
+    leveling = find_named_leveling(ability, PER_LEVEL_SCALING)
     if leveling is None:
         raise ValueError(
             "Taric P (Bravado): the cached P entry has no "
-            f"'{_BRAVADO_SCALING_ATTRIBUTE}' leveling row for its "
+            f"'{PER_LEVEL_SCALING}' leveling row for its "
             "on-attack bonus magic damage"
         )
     charges, duration, armor_ratio = _bravado_window_terms(ability)
@@ -199,7 +200,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "E's sourced 1.5-second stun counts as target action downtime",
     "W (Bastion) shields Taric and the linked selected teammate the "
     "sourced Shield Strength as a live % of the PROTECTED TARGET's "
@@ -273,7 +275,7 @@ def _starlights_touch(
         flags=re.IGNORECASE,
     )
     if per_charge_match is None or charges <= 0.0:
-        return 0.0, max(0, int(round(charges)))
+        return 0.0, max(0, round(charges))
     maximum_health = champion_stat(champion_stats, "health", champion="Taric")
     ability_power = champion_stat(champion_stats, "ability_power", champion="Taric")
 
@@ -299,17 +301,17 @@ def _starlights_touch(
                 float(maximum_match.group(3)),
             ),
         )
-    return max(0.0, heal), max(0, int(round(charges)))
+    return max(0.0, heal), max(0, round(charges))
 
 
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Starlight's Touch pays its per-charge heal on each Q cast.
 
     This rule is the one ledger owner of the Q heal.  The support

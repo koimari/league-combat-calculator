@@ -50,7 +50,10 @@ INPUTS = DamageInputs(
 )
 
 
-def _formula(*terms: Term, floor=NoFloor(), scaling=None) -> DamageFormula:
+_NO_FLOOR = NoFloor()
+
+
+def _formula(*terms: Term, floor=_NO_FLOOR, scaling=None) -> DamageFormula:
     """A formula over *terms*, magic by default so the class is never the point."""
     from src.calculator.ability_spec import DamageClass
     from src.calculator.item_behavior import NoScaling

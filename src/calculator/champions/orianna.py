@@ -31,6 +31,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -43,7 +45,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -92,7 +93,10 @@ def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
 _clockwork_windup.phase = ONHIT
 
 
-def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _command_attack(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: primary-target magic damage plus reduced hits beyond the first.
 
     The cached prose: the ball "deal[s] magic damage to enemies it
@@ -101,10 +105,6 @@ def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     exactly 70% of "Magic Damage" at every rank.  Each secondary target
     selected via ``q_secondary_targets`` takes one reduced hit.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     primary = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -139,17 +139,16 @@ def _command_attack(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _command_protect(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _command_protect(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: pass-through magic damage; zero when the ball stops on an ally.
 
     ``extract_named`` skips effect[0]'s "Bonus Resistances" and the
     "Shield Strength" row by name — only the fly-through "Magic Damage"
     is a damage source, and only when the ball crosses the target.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = 0.0
     if ctx.option("e_passes_through_target"):

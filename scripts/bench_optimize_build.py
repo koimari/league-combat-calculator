@@ -51,19 +51,26 @@ import subprocess
 import sys
 import time
 import timeit
+from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.calculator import damage, item_behavior_catalog, item_effects  # noqa: E402
-from src.calculator import pipeline  # noqa: E402
-from src.calculator.data_fetcher import get_champion, get_item_by_name  # noqa: E402
-from src.calculator.optimizer import get_selectable_items  # noqa: E402
-from src.calculator.optimizer import optimize_build  # noqa: E402
-from src.calculator.pipeline import FightParams, run_fight  # noqa: E402
+from src.calculator import (
+    damage,
+    item_behavior_catalog,
+    item_effects,
+    pipeline,
+)
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.optimizer import (
+    get_selectable_items,
+    optimize_build,
+)
+from src.calculator.pipeline import FightParams, run_fight
 
 REPEATS = 7
 
@@ -76,7 +83,7 @@ BUILD_SIZES = (1, 2, 3, 4, 6)
 ROUNDS = 5
 
 
-def one_search() -> dict:
+def one_search() -> dict[str, Any]:
     """One full search, returning the optimizer's own response."""
     return optimize_build(
         get_champion(CHAMPION),
@@ -86,7 +93,7 @@ def one_search() -> dict:
     )
 
 
-def measure(repeats: int = REPEATS) -> dict:
+def measure(repeats: int = REPEATS) -> dict[str, Any]:
     """Warm once, then engine and wall readings over ``repeats`` searches.
 
     The warmup is not optional: the first search of a process pays the item
@@ -113,7 +120,7 @@ def measure(repeats: int = REPEATS) -> dict:
     }
 
 
-def _print_table(report: dict) -> None:
+def _print_table(report: Mapping) -> None:
     """One row per reading, in the shape ``benchmarks.md`` holds."""
     spread = report["engine_worst_ms"] - report["engine_best_ms"]
     print(f"{CHAMPION} level {LEVEL}, {MAX_LEGENDARY_SLOTS} legendary slots")
@@ -126,19 +133,24 @@ def _print_table(report: dict) -> None:
     print(f"  score: {report['total_damage']}")
 
 
-def profile(rows: int = 30) -> None:
-    """cProfile one search, warmed first so the catalogue parse is not the top row."""
-    one_search()
+def _profiled_search() -> pstats.Stats:
+    """cProfile statistics over one search."""
     profiler = cProfile.Profile()
     profiler.enable()
     one_search()
     profiler.disable()
-    stats = pstats.Stats(profiler)
+    return pstats.Stats(profiler)
+
+
+def profile(rows: int = 30) -> None:
+    """cProfile one search, warmed first so the catalogue parse is not the top row."""
+    one_search()
+    stats = _profiled_search()
     stats.sort_stats("tottime").print_stats(rows)
     stats.sort_stats("cumulative").print_stats(rows)
 
 
-def _elected_build(result: dict) -> list[dict]:
+def _elected_build(result: Mapping) -> list[dict]:
     """The item rows the search elected, boots last."""
     names = list(result["items"])
     if result.get("boots"):
@@ -222,11 +234,7 @@ def _captured_term(label: str, calls: list, key: tuple[str, str]) -> Term:
 
 def _profile_totals() -> tuple[dict, float]:
     """Exact call counts and cumulative time per (file, function) over one search."""
-    profiler = cProfile.Profile()
-    profiler.enable()
-    one_search()
-    profiler.disable()
-    stats = pstats.Stats(profiler)
+    stats = _profiled_search()
     totals: dict[tuple[str, str], list[float]] = {}
     for (filename, _line, func), row in stats.stats.items():
         entry = totals.setdefault((Path(filename).name, func), [0, 0.0])
@@ -236,7 +244,7 @@ def _profile_totals() -> tuple[dict, float]:
 
 
 def _budget_terms(
-    champion: dict, params: FightParams, items: list[dict], captured: dict
+    champion: dict, params: FightParams, items: list[dict], captured: Mapping
 ) -> list[Term]:
     """The terms `benchmarks.md` prices, called the way an evaluation calls them."""
     owners = [item_effects.resolved_item_name(item) for item in items]
@@ -274,7 +282,7 @@ def _budget_terms(
         ),
         Term(
             "item_effects._item_names",
-            partial(item_effects._item_names, items),
+            partial(item_effects._item_names, items),  # noqa: SLF001 - the fold
             1,
             None,
             ("item_effects.py", "_item_names"),
@@ -282,7 +290,7 @@ def _budget_terms(
     ]
 
 
-def budget(repeats: int = REPEATS) -> dict:
+def budget(repeats: int = REPEATS) -> dict[str, Any]:
     """Each term's real share of one evaluation, beside what the profiler says."""
     warmup = one_search()
     champion = get_champion(CHAMPION)
@@ -319,7 +327,7 @@ def budget(repeats: int = REPEATS) -> dict:
     }
 
 
-def _print_budget(report: dict) -> None:
+def _print_budget(report: Mapping) -> None:
     """The per-term table, in the shape ``benchmarks.md`` holds."""
     print(f"one evaluation: {report['evaluation_us']} us")
     print(f"  build: {', '.join(report['build'])}")
@@ -373,7 +381,7 @@ def _run_sample(tree: Path, size: int, names: list[str]) -> float:
     return float(json.loads(completed.stdout)["per_evaluation_us"])
 
 
-def by_build_size(rounds: int = ROUNDS, against: str | None = None) -> dict:
+def by_build_size(rounds: int = ROUNDS, against: str | None = None) -> dict[str, Any]:
     """Per-evaluation microseconds by items held, trees alternated round by round."""
     names = [item_effects.resolved_item_name(i) for i in _elected_build(one_search())]
     trees = [ROOT] + ([Path(against).resolve()] if against else [])
@@ -396,7 +404,7 @@ def by_build_size(rounds: int = ROUNDS, against: str | None = None) -> dict:
     }
 
 
-def _print_by_build_size(report: dict) -> None:
+def _print_by_build_size(report: Mapping) -> None:
     """One row per tree, one column per build size."""
     print(f"per-evaluation us, cold build, median over {report['rounds']} rounds")
     print(f"  build: {', '.join(report['build'])}")

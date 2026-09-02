@@ -41,8 +41,11 @@ the survival result is unpublishable and the named denial receipts stand.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
-from .module_helpers import buff_window_share
+from .inputs import int_option
+from .module_contract import coverage
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -55,9 +58,6 @@ from .slotlib import (
     proc_damage,
     with_control_event,
 )
-from .inputs import int_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "384ce3a01847e53d1b8cdaaa0d444174ecfba6cfb31d913a020a45fab7d189fa"
 
@@ -372,12 +372,9 @@ _leverage = proc_damage(
 )
 
 
-def _bailout(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bailout(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: the self cast's ramping attack speed, at the ramp's mean."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     on_self = str(ctx.option("w_bailout_target")) == _W_SELF_CAST
     start = extract_named(ability, "Bonus Attack Speed", rank, ctx.stats, {})
@@ -498,7 +495,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     int_option(
         "p_leverage_procs",
         1,
@@ -509,15 +507,14 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "P Leverage is an on-hit mark applied/refreshed by the auto "
-                "stream — self-state, no cross-slot cast edge."
-            ),
+            "note": "P Leverage is an on-hit mark applied/refreshed by the auto "
+            "stream — self-state, no cross-slot cast edge.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Leverage) is an on-hit mark: the first basic attack on an "
     "unmarked target deals bonus magic damage equal to 1% : 2% (based on "
     "level) (+ 2% per 100 AP) of the target's maximum health — the "
@@ -556,7 +553,8 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "impact on the recipient in this model.",
 ]
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     {
         "key": "w_bailout_target",
         "type": "select",
@@ -565,10 +563,8 @@ OPTIONS = list(OPTIONS) + [
         "rotation": {
             "role": "self_state",
             "slot": "W",
-            "note": (
-                "Names who W lands on; only the self branch reaches this "
-                "fighter's stats."
-            ),
+            "note": "Names who W lands on; only the self branch reaches this "
+            "fighter's stats.",
         },
         "choices": [
             {"value": _W_SELF_CAST, "label": "Renata herself"},

@@ -10,12 +10,15 @@ silently disappear from the other (see tests/test_endpoint_parity.py).
 
 import math
 from collections.abc import Mapping
+from typing import Any
 from urllib.parse import urlsplit
 
 from .capabilities import FIGHT_EFFECTIVE_STATS
 from .champions import engine_registration_kind
-
-from .timeline_coverage import combine_timeline_coverages
+from .scenario import ChampionLoadout
+from .timeline_coverage import (
+    aggregate_timeline_coverage,
+)
 
 ICON_HOSTS = frozenset(
     {
@@ -26,8 +29,11 @@ ICON_HOSTS = frozenset(
 )
 
 
-def https_icon(url: str) -> str:
-    """Return one allow-listed HTTPS icon URL or an empty public value."""
+def https_icon(url: object) -> str:
+    """Return one allow-listed HTTPS icon URL or an empty public value.
+
+    ``url`` is a cached icon field, so anything but a string is unsourced.
+    """
     if not isinstance(url, str):
         return ""
     if url.startswith("http://"):
@@ -56,7 +62,7 @@ def public_engine_mode(champion_name: str) -> str:
     return "unregistered"
 
 
-def public_loadout_summary(loadout) -> dict:
+def public_loadout_summary(loadout: ChampionLoadout) -> dict[str, Any]:
     """Sanitize one resolved loadout for the stable browser response."""
     summary = loadout.public_summary()
     summary["icon"] = https_icon(summary["icon"])
@@ -179,7 +185,7 @@ def _public_damage_event(event: Mapping[str, object]) -> dict[str, object]:
     return row
 
 
-def serialize_fight_result(result: Mapping[str, object]) -> dict:
+def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
     """Translate one engine result into the stable public response shape."""
     breakdown = result.get("breakdown", {})
     api_breakdown = {}
@@ -317,15 +323,7 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict:
     }
 
 
-def _aggregate_timeline_coverage(results: list[dict]) -> dict:
-    """Combine per-target ordering receipts without overstating precision."""
-    return combine_timeline_coverages(
-        (result.get("timeline_coverage", {}) for result in results),
-        target_count=len(results),
-    )
-
-
-def _primary_value(result: dict, key: str) -> object:
+def _primary_value(result: Mapping, key: str) -> object:
     """Copy the primary target's value defensively (mapping/list containers)."""
     value = result[key]
     if isinstance(value, Mapping):
@@ -390,7 +388,8 @@ def _sum_breakdown(results: list[dict]) -> dict:
     return breakdown
 
 
-def aggregate_public_results(results: list[dict]) -> dict:
+# pylint: disable-next=too-many-branches  # one branch per combine policy
+def aggregate_public_results(results: list[dict[str, Any]]) -> dict[str, Any]:
     """Sum the same selected damage package across every hit target.
 
     Driven by ``_PUBLIC_FIELD_POLICIES`` so every key the single-target
@@ -398,14 +397,13 @@ def aggregate_public_results(results: list[dict]) -> dict:
     flattened per-target stream stamped with ``target_index``).
     """
     primary = results[0]
-    timeline_coverage = _aggregate_timeline_coverage(results)
+    timeline_coverage = aggregate_timeline_coverage(results)
     damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
     for result in results:
         for damage_type, amount in result["damage_by_type"].items():
             damage_types[damage_type] = damage_types.get(damage_type, 0.0) + amount
 
     aggregated: dict[str, object] = {}
-    # pylint: disable=too-many-branches  # one branch per combine policy
     for key, policy in _PUBLIC_FIELD_POLICIES.items():
         if policy == "primary":
             aggregated[key] = _primary_value(primary, key)

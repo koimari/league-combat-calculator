@@ -14,9 +14,6 @@ paths agree by construction.
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
@@ -24,6 +21,9 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
+from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
 
 _APHELIOS_ITEMS = [
     get_item_by_name(name)
@@ -79,8 +79,8 @@ def _assert_severum_conversion_present(survival):
 
 def test_aphelios_severum_score_path_matches_receipt():
     """The optimizer score path (compiled walk) must deep-equal the legacy
-    score receipt when Severum's overheal-to-shield is active — previously
-    the compiled walk silently erased the shield (11.2 EHP in this
+    score receipt when Severum's overheal-to-shield is active — the
+    compiled walk must not silently erase the shield (11.2 EHP in this
     fixture)."""
     for items in ([], _APHELIOS_ITEMS):
         legacy_score = _aphelios_timeline(items, include_receipt=False)
@@ -118,12 +118,12 @@ def test_compiler_fails_closed_on_overheal_to_shield():
             "main",
             0,
             "enemy:X",
-            1,
-            {},
-            10.0,
-            {},
-            [],
-            0,
+            defender_i=1,
+            grievous_by_dtype={},
+            duration=10.0,
+            heal_dedup={},
+            id_strings=[],
+            defender_index=0,
         )
     assert exc.value.receipt == "overheal_to_shield"
     assert exc.value.source == "Severum"
@@ -151,12 +151,12 @@ def test_compiler_carries_vamp_healing_category():
         "main",
         0,
         "enemy:X",
-        1,
-        {},
-        10.0,
-        {},
-        [],
-        0,
+        defender_i=1,
+        grievous_by_dtype={},
+        duration=10.0,
+        heal_dedup={},
+        id_strings=[],
+        defender_index=0,
     )
     heal = next(action for action in compiler.actions if action.kind.name == "HEAL")
     assert heal.healing_category == "vamp"
@@ -225,12 +225,12 @@ def test_compiler_fails_closed_on_execute_threshold_damage():
             "main",
             0,
             "enemy:X",
-            1,
-            {},
-            10.0,
-            {},
-            [],
-            0,
+            defender_i=1,
+            grievous_by_dtype={},
+            duration=10.0,
+            heal_dedup={},
+            id_strings=[],
+            defender_index=0,
         )
     assert exc.value.receipt == "execute_threshold=The Collector"
 

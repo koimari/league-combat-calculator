@@ -30,20 +30,19 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
-from .engine import SlotCtx
-from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module
-from .slotlib import extract_named
-
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
     missing_health_scaled_heal,
-    payments,
     parsed_rank,
+    payments,
     trigger_fields,
 )
+from .engine import SlotCtx
+from .healing_contract import self_healing_rule
 from .module_contract import coverage
+from .packet_module import build_packet_module
+from .slotlib import extract_named
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
 # active at once" — 10 at level 18 (the test level).
@@ -148,13 +147,13 @@ MODULE_COVERAGE = coverage(no_damage="PR")
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Primal Surge pays a missing-health-scaled heal on each E CAST.
 
     Wiki "Minimum Heal" / "Maximum Heal": the heal triggers on the cast
@@ -166,17 +165,17 @@ def derive_self_healing(
     e_rank = parsed_rank(ability_damages, "E")
     min_heal = extract_named(ability, "Minimum Heal", e_rank, champion_stats)
     max_heal = extract_named(ability, "Maximum Heal", e_rank, champion_stats)
-    for payment in payments(HealAnchor.CAST, "E", damage_events, cast_timeline):
-        healing.append(
-            {
-                "time": float(payment.event.get("time", 0.0)),
-                "amount": 0.0,
-                "amount_formula": missing_health_scaled_heal(min_heal, max_heal),
-                "source": "Primal Surge",
-                "kind": "champion_ability",
-                **trigger_fields(payment.event),
-            }
-        )
+    healing.extend(
+        {
+            "time": float(payment.event.get("time", 0.0)),
+            "amount": 0.0,
+            "amount_formula": missing_health_scaled_heal(min_heal, max_heal),
+            "source": "Primal Surge",
+            "kind": "champion_ability",
+            **trigger_fields(payment.event),
+        }
+        for payment in payments(HealAnchor.CAST, "E", damage_events, cast_timeline)
+    )
     return healing
 
 

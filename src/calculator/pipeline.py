@@ -7,10 +7,24 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 
 import math
 import re
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
-from collections.abc import Mapping
 from typing import Any
 
+from . import item_effects, minion_stats, resource_ledger
+from .auto_attack_policy import (
+    AUTO_ATTACK_UPTIME_MODE_CALCULATED,
+    AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
+    AUTO_ATTACK_UPTIME_MODE_LEGACY,
+    AUTO_ATTACK_UPTIME_MODES,
+    resolve_auto_attack_policy,
+)
+from .cast_dependency import (
+    BASE_CAST_SLOTS,
+    check_order_satisfies_dependencies,
+    expand_user_order,
+    orderable_slots,
+)
 from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_dependencies,
@@ -19,53 +33,48 @@ from .champions import (
     get_custom_cast_order_unavailable_reason,
     parse_champion_abilities,
 )
-from .rotation_resolver import (
-    build_rotation_receipt,
-    detect_aoe_cap,
-    resolve_cast_order,
-)
 from .champions.skill_orders import get_ability_rank
 from .damage import (
-    FightConfig,
     MINION_SOURCED_TARGET_FIELDS,
+    FightConfig,
     calculate_fight_damage,
     sourced_minion_target,
     split_auto_vs_ability,
     split_by_damage_type,
 )
-from . import item_effects
-from . import minion_stats
-from . import resource_ledger
+from .data_registry import data_version
+from .healing import derive_self_healing, self_heal_rule_owner
+from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .interpreters import sustain
+from .interpreters.crit_profile import declared_crit_profile
 from .interpreters.sustain import declared_sustain
 from .item_behavior import (
     PostMitigationHealRule,
     ResourceDrainRule,
     SustainStat,
 )
-from .interpreters.crit_profile import declared_crit_profile
 from .item_effects import (
+    BuildDamageEffects,
     resolve_damage_effects,
     resolved_item_name,
     validate_item_input_options,
 )
-from .healing import derive_self_healing, self_heal_rule_owner
-from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
-from .support_effects import derive_self_state_effects
-from .auto_attack_policy import (
-    AUTO_ATTACK_UPTIME_MODE_CALCULATED,
-    AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
-    AUTO_ATTACK_UPTIME_MODE_LEGACY,
-    AUTO_ATTACK_UPTIME_MODES,
-    resolve_auto_attack_policy,
+from .request_parsing import (
+    request_bool as _request_bool,
 )
-from .role_quests import max_champion_level, validate_role
 from .request_parsing import (
     request_index_map,
-    request_bool as _request_bool,
-    request_int as _request_int,
     request_string,
+)
+from .request_parsing import (
+    request_int as _request_int,
+)
+from .role_quests import max_champion_level, validate_role
+from .rotation_resolver import (
+    build_rotation_receipt,
+    detect_aoe_cap,
+    resolve_cast_order,
 )
 from .rune_effects import (
     KeystoneConquerorEffect,
@@ -79,14 +88,8 @@ from .rune_effects import (
     validate_rune_page,
 )
 from .stats import get_item_stats, resolve_pre_combat_stats
+from .support_effects import derive_self_state_effects
 from .trigger_stream import applies_control
-from .data_registry import data_version
-from .cast_dependency import (
-    BASE_CAST_SLOTS,
-    check_order_satisfies_dependencies,
-    expand_user_order,
-    orderable_slots,
-)
 
 DEFAULT_TARGET: dict[str, float] = {
     "health": 1000.0,
@@ -125,10 +128,9 @@ def rank_allocation_contract() -> dict[str, object]:
     """Return the backend-owned rank allocation modes for public clients."""
     return {
         "default": "manual",
-        "by_champion": {
-            champion: "level_derived"
-            for champion in sorted(_NONSTANDARD_RANK_CHAMPIONS)
-        },
+        "by_champion": dict.fromkeys(
+            sorted(_NONSTANDARD_RANK_CHAMPIONS), "level_derived"
+        ),
     }
 
 
@@ -348,9 +350,9 @@ def _item_self_healing_events(
 
     # Item-provided health regeneration is a timestamped stat contribution.
     # Keep champion base regeneration out of the item self-heal stream (the
-    # public one-pair result has historically exposed only sourced packets),
-    # while still applying every item's flat/percent contribution in the
-    # coupled survival ledger.  The contribution is computed from typed item
+    # public one-pair result exposes only sourced packets), while still
+    # applying every item's flat/percent contribution in the coupled
+    # survival ledger.  The contribution is computed from typed item
     # accessors, not from a call-site literal.
     item_regen_flat = 0.0
     item_regen_percent = 0.0
@@ -666,7 +668,7 @@ def _keystone_self_healing_events(
 
 
 def _saturated_omnivamp_percent(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
     fight_duration_seconds: float,
     *,
     is_melee: bool = True,
@@ -687,9 +689,10 @@ def _saturated_omnivamp_percent(
 
 def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     params: "FightParams",
-    champion_data: dict[str, Any],
-    items: list[dict[str, Any]],
-    item_damage_effects: Any,
+    champion_data: Mapping[str, Any],
+    items: Iterable[dict[str, Any]],
+    item_damage_effects: BuildDamageEffects,
+    *,
     fight_stats: Mapping[str, Any],
     ability_damages: Mapping[str, Any],
 ) -> LedgerInputs:
@@ -717,6 +720,7 @@ def _attach_engine_receipts(
     params: "FightParams",
     items: list[dict[str, Any]],
     fight_stats: Mapping[str, Any],
+    *,
     auto_attack_policy: Mapping[str, Any],
 ) -> None:
     """Decorate a finished engine result with the receipts this module owns.
@@ -809,7 +813,7 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
 
 
 def _annotate_deathfire_categories(
-    ability_damages: dict[str, dict[str, Any]],
+    ability_damages: Mapping[str, dict[str, Any]],
     champion_data: Mapping[str, Any],
 ) -> None:
     """Attach conservative typed damage categories for Deathfire Touch."""
@@ -865,7 +869,7 @@ def _bounded_request_float(
     return parsed
 
 
-def validate_cast_order_shape(cast_order: Any, *, field: str) -> None:
+def validate_cast_order_shape(cast_order: object, *, field: str) -> None:
     """Reject a requested cast order no champion could satisfy.
 
     Champion-agnostic on purpose: a cast order is a non-empty list of distinct
@@ -1077,7 +1081,9 @@ class FightParams(FightConfig):
         requested_uptime = _bounded_request_float(
             data, "auto_attack_uptime", DEFAULT_AUTO_ATTACK_UPTIME
         )
-        rotation_count = _request_int(data, "rotations", 1, 1, MAX_ROTATIONS)
+        rotation_count = _request_int(
+            data, "rotations", 1, minimum=1, maximum=MAX_ROTATIONS
+        )
         uptime_mode = data.get(
             "auto_attack_uptime_mode", AUTO_ATTACK_UPTIME_MODE_LEGACY
         )
@@ -1375,6 +1381,7 @@ def run_fight(
     level: int,
     items: list[dict[str, Any]],
     params: FightParams,
+    *,
     precomputed_stats: dict[str, float] | None = None,
     validated: bool = False,
     score_only: bool = False,
@@ -1546,8 +1553,8 @@ def run_fight(
                 champion_data,
                 items,
                 item_damage_effects,
-                fight_stats,
-                ability_damages,
+                fight_stats=fight_stats,
+                ability_damages=ability_damages,
             )
         )
         is ResultProjection.LIGHT_TUPLE_LEDGER
@@ -1597,7 +1604,6 @@ def run_fight(
     # event-order panel. ``order`` is the engine's actual cooldown-aware
     # cast sequence; ``rationale`` explains the combo.
     result["rotation"] = build_rotation_receipt(
-        champion_data.get("name", ""),
         cast_order=list(params.cast_order or []),
         cast_timeline=list(result.get("cast_timeline", [])),
         rule=resolved_rotation_rule,
@@ -1606,7 +1612,9 @@ def run_fight(
         ),
         user_order=resolved_user_order,
     )
-    _attach_engine_receipts(result, params, items, fight_stats, auto_attack_policy)
+    _attach_engine_receipts(
+        result, params, items, fight_stats, auto_attack_policy=auto_attack_policy
+    )
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so
         # the empty list is the exact value the call would return.

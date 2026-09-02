@@ -4,6 +4,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_helpers import named_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -14,7 +16,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -75,14 +76,13 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _terrashape(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Terrashape's bonus is an on-hit rider, not a direct spell hit."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    entry = ability_on_hit_entry(
+    return ability_on_hit_entry(
         "Terrashape element",
         rank,
         "magic",
@@ -92,27 +92,12 @@ def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         },
     )
-    return entry
 
 
 _terrashape.phase = ONHIT
 
 
-def _supreme_display(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
-    return entry
+_supreme_display = named_damage("Physical Damage", "physical", time_offset=0.0)
 
 
 SLOTS = {
@@ -154,7 +139,8 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Royal Privilege and Terrashape are modeled as on-hit riders; they are not free direct spell damage.",
+    "Royal Privilege and Terrashape are modeled as on-hit riders; they are not free "
+    "direct spell damage.",
     "Terrain Q's increased damage is enabled only when the target-below-half state is explicit.",
     "Element control and per-target passive cooldowns remain explicit scenario state.",
 ]

@@ -22,6 +22,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from src import app as app_module
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.delivery_eligibility import (
     SPELL_SHIELD_ONE_USE_RULE,
     DefenseWindow,
@@ -29,9 +31,7 @@ from src.calculator.delivery_eligibility import (
     SpellShieldComposition,
     SpellShieldEligibility,
 )
-
-from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.item_behavior import FightFacts
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.amp import LiveAmpRider, live_amp_for, live_amp_riders
 from src.calculator.program.compile import action_from_event
@@ -114,7 +114,10 @@ def _walk(actions, target, *, state_edits=None):
     does not land.
     """
     observed = [dict(action.event or {}) for action in actions]
-    staged = [action._replace(event=event) for action, event in zip(actions, observed)]
+    staged = [
+        action._replace(event=event)
+        for action, event in zip(actions, observed, strict=False)
+    ]
     states = build_states([target], (0.0,))
     if state_edits is not None:
         state_edits(states)
@@ -289,10 +292,12 @@ def test_the_interpreter_reads_shadowflames_own_declaration():
     """Threshold, fraction and typing come from the rule, not from here."""
     riders = live_amp_riders(
         ["Shadowflame"],
-        level=18,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
     assert len(riders) == 1
     rider = riders[0]
@@ -301,7 +306,8 @@ def test_the_interpreter_reads_shadowflames_own_declaration():
     assert rider.amp.threshold == pytest.approx(0.4)
     assert rider.amp.fraction == pytest.approx(0.2)
     assert rider.damage_types == frozenset({"magic", "true"})
-    assert rider.rides("magic") and not rider.rides("physical")
+    assert rider.rides("magic")
+    assert not rider.rides("physical")
 
 
 def test_a_build_declaring_no_live_predicate_declares_no_rider():
@@ -309,10 +315,12 @@ def test_a_build_declaring_no_live_predicate_declares_no_rider():
     assert (
         live_amp_riders(
             ["Void Staff"],
-            level=18,
-            fight_duration_seconds=8.0,
-            target_bonus_health=0.0,
-            holder_is_melee=False,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=8.0,
+                target_bonus_health=0.0,
+                holder_is_melee=False,
+            ),
         )
         == ()
     )
@@ -383,7 +391,7 @@ def test_the_contribution_rises_in_a_multi_attacker_roster():
     Add one ally and the same holder's own packets land on a target the
     roster took low sooner and harder — precisely the input a pair engine
     cannot see and the pair preview therefore cannot price.  The claim is
-    the *rise*: the solo figure is no longer zero (this holder alone now
+    the *rise*: the solo figure is not zero (this holder alone
     reaches the 40% threshold inside the window), so the two rosters are
     compared against each other rather than against a stale zero.
     """
@@ -429,7 +437,8 @@ def test_removing_the_coupled_interpreter_drops_it_to_zero_not_to_the_preview(
     body = _roster((ALLY,))
     applied = _applied(body)
     preview = body["breakdown"]["shadowflame_Shadowflame"]["total_damage"]
-    assert applied > 0.0 and preview > 0.0
+    assert applied > 0.0
+    assert preview > 0.0
     _roster.cache_clear()
     monkeypatch.setattr(
         participant_timeline, "_live_amps_of", lambda attacker, defender, params: ()

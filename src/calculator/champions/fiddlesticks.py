@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -16,8 +18,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import bool_option, int_option
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -29,11 +29,8 @@ def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _terrify(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _terrify(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     feared = bool(ctx.option("q_target_already_feared"))
     attr = "Increased Magic Damage" if feared else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -77,15 +74,15 @@ _terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Durat
 
 def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
     if bool(ctx.option("q_target_already_feared")):
+        # pylint: disable-next=no-value-for-parameter  # ranked_slot takes (ctx)
         return _terrify(ctx)
     return _terrify_fearing(ctx)
 
 
-def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _bountiful_harvest(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     ticks = min(max(int(ctx.option("w_ticks")), 1), 8)
     per_instance = extract_named(
         ability, "Damage per Instance", rank, ctx.stats, ctx.target
@@ -111,28 +108,17 @@ def _bountiful_harvest(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _reap(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.4),)
-    return entry
+_reap = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.4,
+)
 
 
-def _crowstorm(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _crowstorm(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     ticks = min(max(int(ctx.option("r_ticks")), 1), 20)
     per_tick = extract_named(
         ability, "Magic Damage per Tick", rank, ctx.stats, ctx.target
@@ -186,9 +172,12 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q's doubled branch is selected only for an already-feared target; current-health and minimum-damage thresholds remain sourced.",
-    "W and R expose explicit tick counts and intervals; W's final missing-health tick is not averaged into the channel.",
-    "Fear, silence, reveal, healing and Effigy behavior are recorded as state/utility, not invented TDD.",
+    "Q's doubled branch is selected only for an already-feared target; current-health "
+    "and minimum-damage thresholds remain sourced.",
+    "W and R expose explicit tick counts and intervals; W's final missing-health tick "
+    "is not averaged into the channel.",
+    "Fear, silence, reveal, healing and Effigy behavior are recorded as "
+    "state/utility, not invented TDD.",
 ]
 
 SOURCES = load_champion_sources("Fiddlesticks")
@@ -196,21 +185,19 @@ SOURCES = load_champion_sources("Fiddlesticks")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Fiddlesticks self-healing events from its authored packet."""
     healing = []
     w_ability = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
     portion = (
-        _healing.extract_named(
-            w_ability, "Champion Heal Portion", w_rank, champion_stats, {}
-        )
+        extract_named(w_ability, "Champion Heal Portion", w_rank, champion_stats, {})
         / 100.0
     )
     for event in _healing.attributed_events(

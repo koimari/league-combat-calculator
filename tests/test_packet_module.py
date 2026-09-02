@@ -14,21 +14,22 @@ champions a test session happens to import first.
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.engine import SlotCtx
 from src.calculator.champions.packet_module import (
     _packet_parser,
     build_packet_module,
     packet_spec_sha256,
 )
-from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.scenario import load_public_champion
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from scripts.source_receipt import cache_patch  # noqa: E402
+from scripts.source_receipt import cache_patch
 
 LEVEL = 18
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -65,9 +66,11 @@ def _packet_specs():
             if spec.get("kind") == "packet":
                 rows.append((champion, slot, spec))
             elif spec.get("kind") == "variants":
-                for variant in spec.get("variants") or []:
-                    if variant.get("kind") == "packet":
-                        rows.append((champion, slot, variant))
+                rows.extend(
+                    (champion, slot, variant)
+                    for variant in spec.get("variants") or []
+                    if variant.get("kind") == "packet"
+                )
     return rows
 
 
@@ -93,7 +96,7 @@ def _ctx(champion: str, slot: str) -> SlotCtx:
     )
 
 
-def _source_ability(champion: str, slot: str, spec: dict):
+def _source_ability(champion: str, slot: str, spec: dict) -> dict[str, Any] | None:
     source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
     entries = (load_public_champion(champion).get("abilities") or {}).get(source[0], [])
     return entries[source[1]] if source[1] < len(entries) else None
@@ -177,7 +180,7 @@ class TestPacketCooldownProvenance:
         assert varying > 100
 
     @pytest.mark.parametrize(
-        "champion,slot",
+        ("champion", "slot"),
         [("Thresh", "Q"), ("Vladimir", "E"), ("Talon", "R"), ("Samira", "Q")],
     )
     def test_a_maxed_ability_is_served_its_maxed_cooldown(
@@ -306,7 +309,8 @@ class TestModuleOverrides:
             return parse
 
         parser, slots, *_ = self._build("Singed", slot_wrappers={"Q": certify})
-        assert seen and slots["Q"] is not seen[0]
+        assert seen
+        assert slots["Q"] is not seen[0]
         assert self._parse(parser, "Singed")["Q"]["detail"] == "wrapped"
 
     def test_a_wrapper_for_a_slot_nothing_compiled_is_refused(self) -> None:

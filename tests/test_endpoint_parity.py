@@ -113,7 +113,7 @@ def test_roster_calculate_preserves_damage_events():
     ]
     flattened = roster_body["damage_events"]
     assert len(flattened) == len(per_target)
-    for (target_index, source), stamped in zip(per_target, flattened):
+    for (target_index, source), stamped in zip(per_target, flattened, strict=False):
         assert stamped["target_index"] == target_index
         assert {
             key: value for key, value in stamped.items() if key != "target_index"
@@ -126,7 +126,8 @@ def test_single_target_keys_are_subset_of_roster_keys():
     client = _client()
     single = client.post("/api/calculate", json=_ahri_payload(enemies=[]))
     roster = client.post("/api/calculate", json=_ahri_payload())
-    assert single.status_code == 200 and roster.status_code == 200
+    assert single.status_code == 200
+    assert roster.status_code == 200
 
     single_keys = set(single.get_json())
     roster_keys = set(roster.get_json())
@@ -248,8 +249,7 @@ def test_calculate_and_bis_share_coverage_boundary_for_main_build():
 
 def test_calculate_optimize_bis_share_coverage_boundary_for_allies():
     """An ally carrying a calc-blocked item is a 400 with the identical
-    message on every endpoint (optimize previously failed deep in the
-    optimizer instead)."""
+    message on every endpoint, optimize included."""
     payload = _ahri_payload(
         allies=[
             {
@@ -380,7 +380,6 @@ def test_optimize_consults_and_populates_cache(monkeypatch):
 
     def fake_get(key):
         calls["get"].append(key)
-        return None
 
     def fake_set(key, payload):
         calls["set"].append((key, payload))

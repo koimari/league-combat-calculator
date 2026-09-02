@@ -38,10 +38,13 @@ axis, which the label does not close:
   no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
 """
 
+from typing import Any
+
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from ..stat_conversion import BonusHealthConversion
-from .packet_module import build_packet_module
 from .engine import SlotCtx
+from .module_contract import coverage
+from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -49,7 +52,6 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
-from .module_contract import coverage
 
 PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
 
@@ -75,7 +77,7 @@ _R_DAMAGE_BONUS_AD_RATIO = _R_THRESHOLD_BONUS_AD_RATIO * _R_REDUCED_DAMAGE
 _R_DAMAGE_PER_LETHALITY = _R_THRESHOLD_PER_LETHALITY * _R_REDUCED_DAMAGE
 
 
-def _death_from_below(ctx: SlotCtx):
+def _death_from_below(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: level-based physical damage row + 40% bAD + 0.75 per Lethality."""
     ability = ctx.ability("R", 0)
     if ability is None:
@@ -132,7 +134,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Gift of the Drowned Ones) stores 9% (+ 0.2% per 1 Lethality) of "
     "post-mitigation damage taken as grey health (40% + 0.4% per "
     "Lethality with 2+ visible enemies), capped at 80 + 800% bonus AD "

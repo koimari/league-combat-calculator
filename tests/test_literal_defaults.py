@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-import literal_defaults  # noqa: E402  (path set above)
+import literal_defaults
 
 CALCULATOR = Path(__file__).resolve().parent.parent / "src" / "calculator"
 
@@ -127,6 +127,7 @@ ROW_READS = frozenset(
         ("damage.py", "_layer_on_hit_effects", "dict.get", '"casts"', 1),
         ("damage.py", "_muramana_cast_receipt", "dict.get", '"total_damage"', 1),
         ("damage.py", "_muramana_cast_receipt", "or-default", '"total_damage"', 1),
+        ("damage.py", "_next_authored_event", "dict.get", '"event_precision"', 1),
         ("damage.py", "_ordered_damage_events", "dict.get", '"casts"', 1),
         ("damage.py", "_ordered_damage_events", "dict.get", '"count"', 1),
         ("damage.py", "_ordered_damage_events", "dict.get", '"slot"', 1),
@@ -184,13 +185,6 @@ ROW_READS = frozenset(
         ("damage.py", "_row_damage_parts", "dict.get", '"total_damage"', 1),
         ("damage.py", "_schedule_enlighten", "dict.get", '"tick"', 1),
         ("damage.py", "_self_shield_times", "dict.get", '"time"', 1),
-        (
-            "damage.py",
-            "_shaped_charge_proc_receipts",
-            "dict.get",
-            '"event_precision"',
-            1,
-        ),
         ("damage.py", "_slot_ordinals", "dict.get", '"ordinal"', 1),
         ("damage.py", "_slot_ordinals", "dict.get", '"slot"', 1),
         ("damage.py", "_slot_ordinals", "or-default", '"ordinal"', 1),
@@ -199,7 +193,7 @@ ROW_READS = frozenset(
             "_stacked_champion_proc_times",
             "dict.get",
             '"event_precision"',
-            2,
+            1,
         ),
         ("damage.py", "_stacked_champion_proc_times", "dict.get", '"total_damage"', 3),
         ("damage.py", "add", "dict.get", '"cc_duration"', 1),
@@ -425,23 +419,10 @@ LOADOUT_NAMES = frozenset(
 ATOM_ROWS = frozenset(
     {
         ("item_effects.py", "counter_trigger", "dict.get", '"counter_trigger"', 1),
-        (
-            "item_effects.py",
-            "dorans_helm_helping_hand_minion_damage",
-            "dict.get",
-            '"values"',
-            1,
-        ),
+        ("item_effects.py", "_atom_pinned_value", "dict.get", '"values"', 1),
         (
             "item_effects.py",
             "guardian_angel_rebirth_declaration",
-            "dict.get",
-            '"values"',
-            1,
-        ),
-        (
-            "item_effects.py",
-            "ionian_insight_summoner_spell_haste",
             "dict.get",
             '"values"',
             1,
@@ -578,27 +559,6 @@ CACHED_SOURCE_ROW = frozenset(
         ),
         ("champions/ambessa.py", "_parse_passive_damage", "dict.get", '"effects"', 1),
         ("champions/ambessa.py", "_parse_passive_damage", "dict.get", '"modifiers"', 1),
-        (
-            "champions/ambessa.py",
-            "_repudiation_shield_amount",
-            "dict.get",
-            '"modifiers"',
-            1,
-        ),
-        (
-            "champions/ambessa.py",
-            "_repudiation_shield_amount",
-            "dict.get",
-            '"units"',
-            1,
-        ),
-        (
-            "champions/ambessa.py",
-            "_repudiation_shield_amount",
-            "dict.get",
-            '"values"',
-            1,
-        ),
         ("champions/aphelios.py", "derive_self_healing", "dict.get", '"P"', 1),
         ("champions/aphelios.py", "derive_self_healing", "dict.get", '"abilities"', 1),
         ("champions/ashe.py", "_require_q_rows", "dict.get", '"effects"', 1),
@@ -662,8 +622,6 @@ CACHED_SOURCE_ROW = frozenset(
         ("champions/gragas.py", "derive_self_healing", "dict.get", '"description"', 1),
         ("champions/gragas.py", "derive_self_healing", "dict.get", '"effects"', 1),
         ("champions/gwen.py", "_snip_times", "dict.get", '"castTime"', 1),
-        ("champions/heimerdinger.py", "_require_row", "dict.get", '"effects"', 1),
-        ("champions/heimerdinger.py", "_require_row", "dict.get", '"leveling"', 1),
         ("champions/jayce.py", "_transform_ability", "dict.get", '"R"', 1),
         (
             "champions/karthus.py",
@@ -674,8 +632,6 @@ CACHED_SOURCE_ROW = frozenset(
         ),
         ("champions/karthus.py", "_defile_mana_per_second", "dict.get", '"values"', 1),
         ("champions/karthus.py", "_defile_mana_per_second", "or-default", '"cost"', 1),
-        ("champions/ksante.py", "_require_row", "dict.get", '"effects"', 1),
-        ("champions/ksante.py", "_require_row", "dict.get", '"leveling"', 1),
         ("champions/maokai.py", "derive_self_healing", "dict.get", '"modifiers"', 1),
         ("champions/maokai.py", "derive_self_healing", "dict.get", '"values"', 1),
         ("champions/maokai.py", "derive_self_healing", "or-default", '"cooldown"', 1),
@@ -774,90 +730,6 @@ CACHED_SOURCE_ROW = frozenset(
         ("champions/slotlib.py", "_modifier_value", "dict.get", '"values"', 1),
         ("champions/slotlib.py", "_require_seconds", "dict.get", '"units"', 1),
         ("champions/slotlib.py", "extract_cooldown", "dict.get", '"values"', 1),
-        (
-            "champions/slotlib.py",
-            "extract_description_control_durations",
-            "or-default",
-            '"description"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_control_durations",
-            "or-default",
-            '"effects"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_damage_reduction",
-            "or-default",
-            '"description"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_damage_reduction",
-            "or-default",
-            '"effects"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_damage_reduction_cap",
-            "or-default",
-            '"description"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_damage_reduction_cap",
-            "or-default",
-            '"effects"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_duration",
-            "or-default",
-            '"description"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_duration",
-            "or-default",
-            '"effects"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_invulnerability_timing",
-            "or-default",
-            '"description"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_invulnerability_timing",
-            "or-default",
-            '"effects"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_shield_duration",
-            "or-default",
-            '"description"',
-            1,
-        ),
-        (
-            "champions/slotlib.py",
-            "extract_description_shield_duration",
-            "or-default",
-            '"effects"',
-            1,
-        ),
         ("champions/slotlib.py", "extract_recharge", "or-default", '"rechargeRate"', 1),
         ("champions/slotlib.py", "extract_resource_cost", "dict.get", '"modifiers"', 1),
         ("champions/slotlib.py", "extract_resource_cost", "dict.get", '"values"', 1),
@@ -893,9 +765,6 @@ CACHED_SOURCE_ROW = frozenset(
         ("champions/udyr.py", "_target_max_health_percent", "dict.get", '"values"', 1),
         ("champions/vi.py", "_carry_blast_shield", "dict.get", '"description"', 1),
         ("champions/vi.py", "_carry_blast_shield", "dict.get", '"effects"', 1),
-        ("champions/viktor.py", "_siphon_shield", "dict.get", '"modifiers"', 1),
-        ("champions/viktor.py", "_siphon_shield", "dict.get", '"units"', 1),
-        ("champions/viktor.py", "_siphon_shield", "dict.get", '"values"', 1),
         ("champions/xayah.py", "_bladecaller", "dict.get", '"values"', 2),
         (
             "champions/xayah.py",
@@ -927,14 +796,14 @@ CACHED_SOURCE_ROW = frozenset(
             1,
         ),
         (
-            "champions/module_helpers.py",
+            "champions/yasuo_yone.py",
             "q3_knockup_duration",
             "or-default",
             '"description"',
             1,
         ),
         (
-            "champions/module_helpers.py",
+            "champions/yasuo_yone.py",
             "q3_knockup_duration",
             "or-default",
             '"effects"',
@@ -983,8 +852,6 @@ CACHED_SOURCE_ROW = frozenset(
         ("healing_helpers.py", "ability_json", "dict.get", '"abilities"', 1),
         ("healing_helpers.py", "leveling_modifier", "dict.get", '"effects"', 1),
         ("healing_helpers.py", "leveling_modifier", "dict.get", '"leveling"', 1),
-        ("healing_helpers.py", "leveling_modifier", "dict.get", '"modifiers"', 1),
-        ("healing_helpers.py", "leveling_modifier", "dict.get", '"values"', 1),
         ("healing_helpers.py", "leveling_ratio", "dict.get", '"effects"', 1),
         ("healing_helpers.py", "leveling_ratio", "dict.get", '"leveling"', 1),
         ("healing_helpers.py", "leveling_ratio", "dict.get", '"modifiers"', 1),
@@ -992,8 +859,8 @@ CACHED_SOURCE_ROW = frozenset(
         ("healing_helpers.py", "leveling_ratio", "dict.get", '"values"', 1),
         ("healing_helpers.py", "leveling_value", "dict.get", '"effects"', 1),
         ("healing_helpers.py", "leveling_value", "dict.get", '"leveling"', 1),
-        ("healing_helpers.py", "leveling_value", "dict.get", '"modifiers"', 1),
-        ("healing_helpers.py", "leveling_value", "dict.get", '"values"', 1),
+        ("healing_helpers.py", "modifier_at_rank", "dict.get", '"modifiers"', 1),
+        ("healing_helpers.py", "modifier_at_rank", "dict.get", '"values"', 1),
         (
             "interpreters/__init__.py",
             "uncompilable_item_receipt",
@@ -1102,11 +969,9 @@ CACHED_SOURCE_ROW = frozenset(
         ("stats.py", "calculate_total_stats", "dict.get", '"manaRegen"', 2),
         ("stats.py", "calculate_total_stats", "dict.get", '"perLevel"', 3),
         ("stats.py", "champion_stat_conversion", "dict.get", '"name"', 1),
-        ("stats.py", "get_flat", "dict.get", '"flat"', 1),
         ("stats.py", "get_item_stats", "dict.get", '"name"', 1),
         ("stats.py", "get_item_stats", "dict.get", '"stats"', 1),
         ("stats.py", "get_item_stats", "or-default", '"name"', 1),
-        ("stats.py", "get_percent", "dict.get", '"percent"', 1),
     }
 )
 
@@ -1125,7 +990,6 @@ AUTHORED_DECLARATION = frozenset(
             '"key"',
             1,
         ),
-        ("champions/ambessa.py", "_public_execution", "dict.get", '"parts"', 1),
         ("champions/ambessa.py", "_repudiation", "dict.get", '"name"', 1),
         ("champions/ambessa.py", "_repudiation", "dict.get", '"rank"', 1),
         ("champions/ambessa.py", "_repudiation", "or-default", '"rank"', 1),
@@ -1659,7 +1523,6 @@ ENGINE_ROW = frozenset(
             '"armor_penetration_bonus_percent"',
             1,
         ),
-        ("stats.py", "get_champion_base_stats", "dict.get", '"attackSpeedRatio"', 1),
     }
 )
 
@@ -1669,21 +1532,6 @@ ENGINE_ROW = frozenset(
 #: it is a source fact about that module, not a cached-data miss.
 MODULE_DECLARATION = frozenset(
     {
-        (
-            "champions/__init__.py",
-            "get_champion_cast_order",
-            "getattr",
-            '"CAST_ORDER"',
-            1,
-        ),
-        (
-            "champions/__init__.py",
-            "get_custom_cast_order_unavailable_reason",
-            "getattr",
-            '"CUSTOM_CAST_ORDER_UNAVAILABLE_REASON"',
-            1,
-        ),
-        ("champions/ambessa.py", "<module>", "getattr", '"phase"', 1),
         ("champions/engine.py", "_apply_module_cc", "getattr", '"cc_kind"', 1),
         (
             "champions/engine.py",
@@ -1769,7 +1617,14 @@ MODULE_DECLARATION = frozenset(
         ),
         ("champions/nocturne.py", "_tether_fear", "getattr", '"phase"', 1),
         ("champions/packet_module.py", "_variant_slot", "getattr", '"phase"', 1),
-        ("data_updater.py", "_process_champions", "getattr", '"name"', 1),
+        (
+            "champions/__init__.py",
+            "_module_declaration",
+            "getattr",
+            "attribute",
+            1,
+        ),
+        ("data_updater.py", "_bulk_pass", "getattr", '"name"', 1),
         (
             "interpreters/__init__.py",
             "_validate_authority_agreement",
@@ -1965,7 +1820,7 @@ def _covered_findings():
         )
         for finding in literal_defaults.scan(_covered_files())
     )
-    return {key + (count,) for key, count in occurrences.items()}
+    return {(*key, count) for key, count in occurrences.items()}
 
 
 def test_no_ability_payload_read_carries_a_literal_default():

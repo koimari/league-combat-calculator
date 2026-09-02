@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import bool_option, champion_stat, float_option, int_option
+from .module_helpers import no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
 
 _GWEN_Q_SPELL = spell_object("Gwen", "GwenQ")
 _GWEN_E_SPELL = spell_object("Gwen", "GwenE")
@@ -49,7 +50,8 @@ def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         }
         entry["detail"] = (
-            "1% + 0.6% per 100 AP of target maximum health per qualifying hit; champion heal is sustain."
+            "1% + 0.6% per 100 AP of target maximum health per qualifying hit; "
+            "champion heal is sustain."
         )
     return entry
 
@@ -66,7 +68,7 @@ _Q_FIRST_SNIP_SECONDS = 0.13
 _Q_BONUS_SNIP_SECONDS = (0.23, 0.35, 0.4, 0.45)
 
 
-def _snip_times(ability: dict[str, Any], bonus: int) -> tuple[float, ...]:
+def _snip_times(ability: Mapping[str, Any], bonus: int) -> tuple[float, ...]:
     """Every snip instant of one cast, first to last (the final snip last).
 
     ``bonus`` is how many Snippy snips the cast consumes, and each takes
@@ -81,18 +83,13 @@ def _snip_times(ability: dict[str, Any], bonus: int) -> tuple[float, ...]:
             "the final snip's sourced instant ('the last one at the end "
             "of the cast time') cannot be read"
         ) from exc
-    return (
-        (_Q_FIRST_SNIP_SECONDS,)
-        + tuple(sorted(_Q_BONUS_SNIP_SECONDS[:bonus]))
-        + (final,)
-    )
+    return (_Q_FIRST_SNIP_SECONDS, *tuple(sorted(_Q_BONUS_SNIP_SECONDS[:bonus])), final)
 
 
-def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _snip_snip(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("q_snippy_stacks")), 0), 4)
     center = bool(ctx.option("q_center"))
     # Gwen "snips at least twice", and "if Gwen has any Snippy stacks, she
@@ -116,7 +113,7 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         "mixed" if center else "magic",
     )
     parts: list[DamagePart] = []
-    for time_offset, amount in zip(times, per_snip):
+    for time_offset, amount in zip(times, per_snip, strict=False):
         if center:
             # "The center of each snip converts 50% of the damage to true
             # damage" — the magic half leads, as a mixed entry requires.
@@ -149,18 +146,20 @@ def _hallowed_mist(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Hallowed Mist",
-        reason="Mist untargetability and bonus resistances are defensive state; no outgoing damage.",
+        reason=(
+            "Mist untargetability and bonus resistances are defensive state; no "
+            "outgoing damage."
+        ),
     )
 
 
 _hallowed_mist.phase = BUFF
 
 
-def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _skip_n_slash(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     bonus = _E_BASE_DAMAGE + 0.20 * ctx.stat("ability_power")
     entry = damage_entry(
         ability_name(ability),
@@ -178,11 +177,10 @@ def _skip_n_slash(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _needlework(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _needlework(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     casts = min(max(int(ctx.option("r_casts")), 1), 3)
     attrs = (
         "Damage with A Thousand Cuts",
@@ -276,17 +274,17 @@ SOURCES = load_champion_sources("Gwen")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Gwen self-healing events from its authored packet."""
     healing = []
     p_level = int(champion_stat(champion_stats, "level"))
-    per_instance_cap = _healing.extract_named(
+    per_instance_cap = extract_named(
         _healing.ability_json(champion_data, "P"),
         "Bonus Damage",
         p_level,

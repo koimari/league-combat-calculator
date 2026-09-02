@@ -70,6 +70,9 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -80,8 +83,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the 4-stack cap is wiki prose
 # ("stacking up to 4 times for a maximum 100% increase"); the damage
@@ -95,12 +96,11 @@ _E_MAX_STACKS = int(
 _Q_DURATION_SOURCE = "Tristana.Q[0].effects[0].description"
 
 
-def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _explosive_charge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the detonation — base + e_stacks x per-stack bonus."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     stacks = min(_E_MAX_STACKS, max(0, int(ctx.options.get("e_stacks", _E_MAX_STACKS))))
     base = extract_named(
@@ -128,7 +128,10 @@ def _explosive_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _rapid_fire(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the sourced 7-second attack-speed window (no enemy damage).
 
     Both numbers ride typed ability atoms and fail closed when the cache
@@ -136,10 +139,6 @@ def _rapid_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     :func:`required_ranked_attribute_atom` and the window through
     :func:`required_ability_atom`.  Nothing here is a literal.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     bonus_as_pct, _as_atom = required_ranked_attribute_atom(

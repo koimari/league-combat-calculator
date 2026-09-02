@@ -33,7 +33,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import ability_cast_times
+from .inputs import float_option, int_option
+from .module_helpers import ability_cast_times, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -46,7 +47,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.
 # Tibbers pet numbers come from the LoL Wiki "Annie#Pets" entry:
@@ -139,7 +139,7 @@ def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
         "magic",
         per_attack,
         _tibbers_attack_times(attack_count),
-        (
+        detail=(
             f"{attack_count} Tibbers auto attack(s) at {per_attack:.2f} "
             f"magic each (5 enrage attacks, then "
             f"{1.0 / _TIBBERS_BASE_ATTACK_SPEED:.1f}s cadence)"
@@ -147,16 +147,15 @@ def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
     )
 
 
-def _summon_tibbers(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _summon_tibbers(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: % magic-pen stat buff + initial burst + Tibbers aura.
 
     Supports the ``tibbers_aura_seconds`` option (default 5.0) — how
     many seconds of aura damage to include in the R total.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     # R passive: % magic penetration, applied to the shared stats
     # context (BUFF phase runs before every damage slot) and reported
@@ -255,7 +254,9 @@ def _stun_seconds(ability: dict[str, Any], level: int) -> float:
             "'stun enemies hit for A / B / C (based on level)'"
         )
     steps = [float(value) for value in match.groups()]
-    for seconds, breakpoint_level in zip(reversed(steps), _STUN_BREAKPOINT_LEVELS):
+    for seconds, breakpoint_level in zip(
+        reversed(steps), _STUN_BREAKPOINT_LEVELS, strict=False
+    ):
         if level >= breakpoint_level:
             return seconds
     return steps[0]
@@ -324,7 +325,10 @@ def _pyromania(ctx: SlotCtx) -> None:
     ctx.results["P"] = entry
 
 
-def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _molten_shield(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the shield's sourced retaliation landing.
 
     "While Molten Shield is active, enemies that deal damage to it take
@@ -335,10 +339,6 @@ def _molten_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     attacks.  One landing is a certified single hit; several are one
     aggregate, because nothing sources when each enemy strikes.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     if find_named_leveling(ability, "Magic Damage") is None:
         raise ValueError(
             "Annie E: the cached Molten Shield entry no longer carries a "

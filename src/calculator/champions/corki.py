@@ -44,9 +44,11 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..damage import effective_cooldown
 from ..binary_roots import data_value, spell_object
+from ..stats import effective_cooldown
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import float_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -58,7 +60,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Corki
@@ -134,12 +135,11 @@ def _hextech_munitions(ctx: SlotCtx) -> dict[str, Any] | None:
 _hextech_munitions.phase = ONHIT
 
 
-def _valkyrie(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _valkyrie(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: one blazing patch's 5 ticks, scaled by the target's patch uptime."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     uptime = _fraction_option(ctx, "w_patch_uptime")
     ticks = _ticks_at_uptime(_W_TICKS, uptime)
@@ -170,16 +170,15 @@ def _valkyrie(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _gatling_gun(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _gatling_gun(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: 16 ticks in a cone, ramping a flat armor/MR shred one per tick.
 
     The ticks are one part; the engine's ``stacks`` ramp lands a stack
     after each of the first four HITS of it.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     uptime = _fraction_option(ctx, "e_cone_uptime")
     ticks = _ticks_at_uptime(_E_TICKS, uptime)
@@ -270,17 +269,16 @@ def _missile_count(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> tuple[in
     )
 
 
-def _missile_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _missile_barrage(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the fight's missiles, with every third one a double-damage Big One.
 
     Per-missile damage is reported per missile (the charge-ability rule);
     the counts live on the parts because the fight engine casts an
     ultimate exactly once, so it never repeats them itself.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     regular = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     big_one = extract_named(

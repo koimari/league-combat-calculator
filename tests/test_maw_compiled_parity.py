@@ -141,19 +141,21 @@ threshold in both walks), and ``tests/test_item_coverage.py``
 disjoint and pins only the Maw acceptance observables.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
 from src import app as app_module
-from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator import item_effects
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
 from src.calculator.defensive_effects import (
     StartingDefenses,
+    defense_source,
     resolve_starting_defenses,
 )
+from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     require_certified_target_timeline,
     target_item_model_coverage,
@@ -172,19 +174,14 @@ from src.calculator.participant_timeline import (
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
 from src.calculator.state_lifecycle import SourceReceipt
-
-# The retired per-item ``_X_SOURCE`` constant, read from the one home it
-# moved to: the declaration's own resolved citation.
-from src.calculator.defensive_effects import defense_source
-from src.calculator.item_behavior import DefenseMechanic
+from src.calculator.stats import calculate_total_stats
 
 # Ours' declaration layer raises its own fail-closed error where main's
 # accessor raised KeyError; both refuse the corrupted value.
 from src.calculator.value_ref import ValueRefError
-from tests.survival_probe import simulate_survival
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival
 
 _SOURCE = defense_source("Maw of Malmortius", DefenseMechanic.LIFELINE_MAW)
 
@@ -930,10 +927,10 @@ def _maw_timed_request() -> dict:
 def test_calculate_api_certifies_the_timed_maw_fight_it_once_withheld():
     """The frontier closed: Shen's Q is event-ordered, so the fight computes.
 
-    This case used to be the API's uncertified subject.  Every registered
-    attacker now reaches ``event_order_certified`` on a plain timed fight,
-    so the *premise* retired rather than the gate — which is why the fight
-    is pinned as certified here and the withholding is driven below.
+    Every registered attacker reaches ``event_order_certified`` on a plain
+    timed fight, so this case has no uncertified subject to withhold — the
+    *premise* retired rather than the gate, which is why the fight is
+    pinned as certified here and the withholding is driven below.
     """
     client = app_module.app.test_client()
     response = client.post("/api/calculate", json=_maw_timed_request())
@@ -1113,7 +1110,9 @@ def test_score_path_agrees_with_receipt_on_every_lifeline_observable():
             == receipt["participants"][1]["survival"]
         )
         assert surface["duration"] == receipt["duration"]
-        for score_row, receipt_row in zip(surface["breakdown"], receipt["breakdown"]):
+        for score_row, receipt_row in zip(
+            surface["breakdown"], receipt["breakdown"], strict=False
+        ):
             assert score_row["participant_id"] == receipt_row["participant_id"]
             assert score_row["total_damage"] == receipt_row["total_damage"]
             assert score_row["incoming_damage"] == receipt_row["incoming_damage"]
@@ -1196,12 +1195,12 @@ def test_maw_enemy_holder_poisons_the_compiled_context():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Janna", level=18, items=[ITEM_NAME]).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Ahri", 18, main_stats, []),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Ahri", 18, main_stats, []),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, [], params, include_receipt=False, **kwargs
     )
@@ -1218,7 +1217,7 @@ def test_maw_enemy_holder_poisons_the_compiled_context():
     )
     assert fast == legacy
     # P3-3T: the roster-side Maw holder compiles like the main holder —
-    # the capability scan no longer poisons the context.
+    # the capability scan does not poison the context.
     assert ctx.uncompilable is False
     assert ctx.panels
 
@@ -1242,12 +1241,12 @@ def test_tuple_ledger_champion_holding_maw_fails_closed_with_parity():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Cassiopeia", level=18, items=[]).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Riven", 18, main_stats, items),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Riven", 18, main_stats, items),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, items, params, include_receipt=False, **kwargs
     )

@@ -20,7 +20,6 @@ interpreter reads this key and the read matters" is the claim under test.
 from __future__ import annotations
 
 import dataclasses
-import json
 
 import pytest
 
@@ -186,7 +185,8 @@ class TestReceipt:
         matrix = receipt["option_matrix"]
         assert matrix["champions"] == len(fetch_champion_data())
         assert matrix["states_walked"] > matrix["champions"]
-        assert matrix["levels"] and matrix["builds"]
+        assert matrix["levels"]
+        assert matrix["builds"]
 
 
 class TestInferredKindCoverage:
@@ -205,7 +205,8 @@ class TestInferredKindCoverage:
         gap = gaps[0]
         assert gap["ledger"] == "inferred_kind_coverage"
         assert gap["member"] == "enhanced_consume"
-        assert "D-88" in gap["decision"] and "H6" in gap["decision"]
+        assert "D-88" in gap["decision"]
+        assert "H6" in gap["decision"]
         assert len(gap["dated"]) == len("YYYY-MM-DD")
         assert gap["reason"].strip()
 
@@ -296,7 +297,7 @@ class TestDeclarations:
             if entry.get("name") == "Syndra"
         )
         _label, options = option_states("Syndra")[0]
-        parsed = _parse(data, 18, (), {}, options)
+        parsed = _parse(data, 18, (), {}, options=options)
         declarations = get_champion_cast_dependencies("Syndra")
 
         confirmed: dict[tuple[str, str, str], set[str]] = {}
@@ -305,13 +306,13 @@ class TestDeclarations:
             data,
             parsed,
             options,
-            declarations,
-            SimpleNamespace(
+            declarations=declarations,
+            receipt=SimpleNamespace(
                 confirmed_by_inference=(
                     "E requires Q (declared cc_enabler): the detector agrees",
                 )
             ),
-            confirmed,
+            routes=confirmed,
         )
         assert "confirmed_by_inference" in confirmed[("Syndra", "E", "Q")]
         assert "confirmed_by_inference" not in confirmed[("Syndra", "E", "Q2")]
@@ -322,9 +323,9 @@ class TestDeclarations:
             data,
             parsed,
             options,
-            declarations,
-            SimpleNamespace(confirmed_by_inference=()),
-            silent,
+            declarations=declarations,
+            receipt=SimpleNamespace(confirmed_by_inference=()),
+            routes=silent,
         )
         assert all("confirmed_by_inference" not in routes for routes in silent.values())
 
@@ -471,7 +472,7 @@ class TestMarkerSurfaceIsDerived:
         """The rule itself, driven both ways (criterion 10).
 
         A key the interpreter newly reads with no negative test fails, and
-        a negative test naming a key the interpreter no longer reads fails
+        a negative test naming a key the interpreter does not read fails
         too — otherwise the mapping could outlive the read it describes.
         """
         observed = {

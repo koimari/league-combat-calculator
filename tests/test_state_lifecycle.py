@@ -59,7 +59,7 @@ class TestDeterministicOrdering:
 
 class TestStackRuleFailClosed:
     def test_validation_names_state_and_source(self):
-        with pytest.raises(ValueError, match="TestState.*duration_seconds"):
+        with pytest.raises(ValueError, match=r"TestState.*duration_seconds"):
             sl.StackRule(
                 name="TestState",
                 max_stacks=3,
@@ -326,7 +326,8 @@ class TestStackRefreshPolicies:
         )
         state.apply_gain(0.0, kind="hit", sequence=0)
         first = state.reset(1.0, sequence=1, reason="cash_in")
-        assert first is not None and first.kind == "reset"
+        assert first is not None
+        assert first.kind == "reset"
         assert first.detail["reason"] == "cash_in"
         assert state.reset(1.0, sequence=1, reason="cash_in") is None  # silent
 
@@ -572,7 +573,8 @@ class TestTriggerGate:
         strict.arm(1.0)
         assert inclusive.accepts(6.0 - 5e-10)
         assert not strict.accepts(6.0 - 5e-10)
-        assert inclusive.accepts(6.0) and strict.accepts(6.0)
+        assert inclusive.accepts(6.0)
+        assert strict.accepts(6.0)
 
     def test_an_explicit_cooldown_overrides_the_declared_one(self):
         gate = sl.TriggerGate(inclusive=False)

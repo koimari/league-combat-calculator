@@ -70,14 +70,14 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.sylas import (
-    ASSUMPTIONS,
-    MODULE_COVERAGE,
-    OPTIONS,
     _MAX_UNSHACKLED_STACKS,
     _PRIMARY_AP_RATIO,
     _PRIMARY_TOTAL_AD_RATIO,
     _SECONDARY_AP_RATIO,
     _SECONDARY_TOTAL_AD_RATIO,
+    ASSUMPTIONS,
+    MODULE_COVERAGE,
+    OPTIONS,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
@@ -491,7 +491,8 @@ class TestWithheldRiders:
         assert _SECONDARY_TOTAL_AD_RATIO == 0.40
         assert _SECONDARY_AP_RATIO == 0.20
         text = " ".join(effect["description"] for effect in _P_ENTRY["effects"])
-        assert "40% AD" in text and "20% AP" in text
+        assert "40% AD" in text
+        assert "20% AP" in text
 
         conversion = _conversion(procs=1)
         primary_only = _PRIMARY_TOTAL_AD_RATIO * _AD + _PRIMARY_AP_RATIO * _AP

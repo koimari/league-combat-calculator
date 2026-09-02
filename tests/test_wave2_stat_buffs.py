@@ -242,8 +242,8 @@ def test_twitch_ambush_grants_its_row_only_once_the_stealth_breaks():
     and defaulted OFF: casting Ambush enters the camouflage rather than
     leaving it, so the unasserted fight must not hold the steroid at all.
     The held side therefore asserts the absence of ``stat_buff`` — a
-    stronger statement than the zero it used to read, which a slot that
-    silently stopped computing its grant could also have produced.
+    stronger statement than reading a zero, which a slot that silently
+    stopped computing its grant could also produce.
     """
     held = _slot_entry("Twitch", "Q")
     armed = _slot_entry("Twitch", "Q", q_ambush_break=True)

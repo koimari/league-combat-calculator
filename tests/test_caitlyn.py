@@ -15,12 +15,14 @@ Reference damage (200 total AD unless stated, level 13, 2000 HP target):
 import pytest
 
 from src.calculator.champions import (
+    caitlyn,
     get_champion_options_meta,
+)
+from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.champions import caitlyn
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

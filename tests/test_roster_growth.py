@@ -24,7 +24,7 @@ def _grown_size() -> int:
 
 def _cache_with_synthetic_champion() -> dict:
     """Every cached champion plus one synthetic champion."""
-    with open(ROOT / "data" / "champions.json", encoding="utf-8") as handle:
+    with (ROOT / "data" / "champions.json").open(encoding="utf-8") as handle:
         champions = json.load(handle)
     base = next(value for value in champions.values() if value.get("name") == "Ahri")
     synthetic = copy.deepcopy(base)
@@ -79,6 +79,7 @@ def test_builder_cli_mains_succeed_with_a_larger_cached_roster(tmp_path):
         cwd=ROOT,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert catalog.returncode == 0, catalog.stderr
 
@@ -97,6 +98,7 @@ def test_builder_cli_mains_succeed_with_a_larger_cached_roster(tmp_path):
         cwd=ROOT,
         capture_output=True,
         text=True,
+        check=False,
     )
     assert bis.returncode == 0, bis.stderr
 
@@ -108,11 +110,11 @@ def test_registry_grows_with_a_manifest_entry(monkeypatch):
         registered_champion_names,
     )
 
-    with open(ROOT / "data" / "champions.json", encoding="utf-8") as handle:
+    with (ROOT / "data" / "champions.json").open(encoding="utf-8") as handle:
         cache_names = {value["name"] for value in json.load(handle).values()}
     assert set(registered_champion_names()) == cache_names
 
-    monkeypatch.setitem(_CHAMPION_MODULES, "Synthetic 174", "ahri")
+    monkeypatch.setitem(_CHAMPION_MODULES, "Synthetic 174", _CHAMPION_MODULES["Ahri"])
     grown = registered_champion_names()
     assert "Synthetic 174" in grown
     assert len(grown) == len(cache_names) + 1

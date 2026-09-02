@@ -7,8 +7,11 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .inputs import bool_option
+from .module_contract import coverage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -17,9 +20,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 
 def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -55,12 +55,11 @@ def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
 _E_TETHER_SECONDS = data_value(spell_object("LeBlanc", "LeblancE"), "TetherDuration")
 
 
-def _ethereal_chains(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _ethereal_chains(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the chain's hit, then the tether's fracture 1.5s later."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     completes = bool(ctx.option("e_chain_complete"))
     parts = [DamagePart("magic", initial, time_offset=0.0, cc_kind="none")]

@@ -9,15 +9,14 @@ silence; the tests derive everything else from the modules themselves.
 Per-champion packet facts live in that champion's own test file.
 """
 
-import importlib
 import urllib.parse
 
 import pytest
 
 from src.calculator.champions import (
-    get_champion_module_contract,
     _CHAMPION_MODULES,
     engine_registration_kind,
+    get_champion_module_contract,
     get_champion_options_meta,
     parse_champion_abilities,
 )
@@ -153,9 +152,7 @@ _SLOTS = {"passive", "Q", "W", "E", "R"}
 
 
 def _module(name: str):
-    return importlib.import_module(
-        f"src.calculator.champions.{_CHAMPION_MODULES[name]}"
-    )
+    return _CHAMPION_MODULES[name]
 
 
 def _armed_options(name: str) -> dict:

@@ -11,53 +11,21 @@ or crowd-control behavior that the packets do not provide.
 
 from __future__ import annotations
 
+import math
 from bisect import bisect_left
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
-import math
 from operator import itemgetter
 from typing import Any, TypeVar
 
-from .defensive_effects import StartingDefenses
 from . import rune_effects
-from .pipeline import FightParams, run_fight
-from .roster_composition import (
-    ActorRequest,
-    Combatant,
-    actor_params as _actor_params,
-    actor_params_with_resource_restores as _actor_params_with_resource_restores,
-    mana_spent_heal_slot as _mana_spent_heal_slot,
-    resource_restores as _declared_resource_restores,
-    coalesce_darius_q_heals as _coalesce_darius_q_heals,
-    defensive_signature as _defensive_signature,
-    from_loadout as _from_loadout,
-    main_combatant as _main_combatant,
-    target_params as _target_params,
-    target_overrides as _target_overrides,
-)
-from .scenario import ResolvedLoadout
-from .timeline_coverage import combine_timeline_coverages
-from .item_coverage import ATTACKER_LANES, item_model_coverage
+from .ability_spec import AttackClass, DamageClass
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
-from .support_effects import derive_ally_effects
-from .item_support_effects import (
-    derive_item_support_effects,
-    RETARGETABLE_SCOPES,
-    repriced_for_recipient,
-    resolve_knights_vow_tether,
-    schedule_knights_vow,
-)
-from .trigger_stream import (
-    TriggerKind,
-    enriched_view_items,
-    event_triggers,
-    holders_in,
-    is_immobilizing_event,
-)
 from .champions.inputs import declared_option_defaults
 from .champions.skill_orders import get_ability_rank
 from .champions.slotlib import extract_cooldown, extract_named
+from .defensive_effects import StartingDefenses, armed_revive
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     champion_grievous_wound_sources,
@@ -66,54 +34,46 @@ from .healing_reduction import (
 from .interpreters import uncompilable_item_receipt as _uncompilable_item_receipt
 from .interpreters.damage_routing import (
     walk_deferral as _walk_deferral,
+)
+from .interpreters.damage_routing import (
     walk_execution as _walk_execution,
+)
+from .interpreters.damage_routing import (
     walk_venom as _walk_venom,
 )
+from .interpreters.delta_amp import (
+    StaticHolderAmps,
+    resolve_static_holder_amps,
+)
 from .interpreters.reactive import thorns_effects
-from .interpreters.sustain import SustainSlot, walk_slot as _sustain_walk_slot
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
 )
+from .interpreters.sustain import SustainSlot
+from .interpreters.sustain import walk_slot as _sustain_walk_slot
 from .item_behavior import (
     BelowHalfHealingRule,
+    FightFacts,
     PacketKind,
     RegenerationRule,
     ThresholdRegenRule,
     is_denial_receipt,
     is_packet_kind,
 )
-from .ability_spec import AttackClass, DamageClass
-from .state_lifecycle import TriggerGate
-from .interpreters.delta_amp import (
-    StaticHolderAmps,
-    resolve_static_holder_amps,
-)
+from .item_coverage import ATTACKER_LANES, item_model_coverage
 from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
 )
-from .resistance import apply_resistance
-from .survival import (
-    BARRIER_GRANT_KINDS,
-    EVENT_SLOTS,
-    SUPPORT_RANK_KEY,
-    ActionKind,
-    ReceiptLedger,
-    ScoreLedger,
-    SurvivalAction,
-    RegenerationWindow,
-    TransitionContext,
-    TransitionRank,
-    UncompilableActionError,
-    accumulate_damage_totals,
-    accumulate_support_values,
-    action_key as _action_key,
-    build_states,
-    coalesce_darius_q_heals,
-    resolve_grievous as _grievous_pack,
-    support_transition_rank,
-    thorns_return_damage,
+from .item_support_effects import (
+    RETARGETABLE_SCOPES,
+    derive_item_support_effects,
+    repriced_for_recipient,
+    resolve_knights_vow_tether,
+    schedule_knights_vow,
 )
+from .pipeline import FightParams, run_fight
+from .program import route as program_route
 
 # The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
 # both layers, so this module is where the logical builder and the kernel it
@@ -137,23 +97,6 @@ from .program.build import (
     dropped_pair_previews,
     roster_program,
 )
-from .program.dependency import (
-    CrossPassDependency,
-    IncompleteDependency,
-    PassRequest,
-    run_passes,
-)
-from .program.identity import MechanicId, PIdx
-from .program import route as program_route
-from .program.rung import (
-    CompiledFast,
-    CompiledFull,
-    FallbackScope,
-    ReceiptWalk,
-    SearchPoisoned,
-    counter_entry,
-    gate_rung,
-)
 from .program.compile import (
     PairView,
     WalkCompiler,
@@ -165,10 +108,26 @@ from .program.compile import (
     knights_vow_target_factor,
     modifier_delivery_receipt,
     pair_view,
-    routed_declaration,
     revive_candidate_actions,
+    routed_declaration,
     stage_knights_vow_heals,
     stage_knights_vow_redirect_actions,
+)
+from .program.dependency import (
+    CrossPassDependency,
+    IncompleteDependency,
+    PassRequest,
+    run_passes,
+)
+from .program.identity import MechanicId, PIdx
+from .program.rung import (
+    CompiledFast,
+    CompiledFull,
+    FallbackScope,
+    ReceiptWalk,
+    SearchPoisoned,
+    counter_entry,
+    gate_rung,
 )
 from .program.views import DISCARD as _DISCARD
 from .program.views import LeafWriter as _LeafWriter
@@ -176,7 +135,79 @@ from .program.views import breakdown as _breakdown_view
 from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
 from .program.views import survival as _survival_view
-from .program.walk import AttackerOutcome, ObjectiveFold, walk as _walk
+from .program.walk import AttackerOutcome, ObjectiveFold, WalkResult
+from .program.walk import walk as _walk
+from .resistance import apply_resistance
+from .roster_composition import (
+    ActorRequest,
+    Combatant,
+)
+from .roster_composition import (
+    actor_params as _actor_params,
+)
+from .roster_composition import (
+    actor_params_with_resource_restores as _actor_params_with_resource_restores,
+)
+from .roster_composition import (
+    coalesce_darius_q_heals as _coalesce_darius_q_heals,
+)
+from .roster_composition import (
+    defensive_signature as _defensive_signature,
+)
+from .roster_composition import (
+    from_loadout as _from_loadout,
+)
+from .roster_composition import (
+    main_combatant as _main_combatant,
+)
+from .roster_composition import (
+    mana_spent_heal_slot as _mana_spent_heal_slot,
+)
+from .roster_composition import (
+    resource_restores as _declared_resource_restores,
+)
+from .roster_composition import (
+    target_overrides as _target_overrides,
+)
+from .roster_composition import (
+    target_params as _target_params,
+)
+from .scenario import ResolvedLoadout
+from .state_lifecycle import TriggerGate
+from .support_effects import derive_ally_effects
+from .survival import (
+    BARRIER_GRANT_KINDS,
+    EVENT_SLOTS,
+    SUPPORT_RANK_KEY,
+    ActionKind,
+    ReceiptLedger,
+    RegenerationWindow,
+    ScoreLedger,
+    SurvivalAction,
+    TransitionContext,
+    TransitionRank,
+    UncompilableActionError,
+    accumulate_damage_totals,
+    accumulate_support_values,
+    build_states,
+    coalesce_darius_q_heals,
+    support_transition_rank,
+    thorns_return_damage,
+)
+from .survival import (
+    action_key as _action_key,
+)
+from .survival import (
+    resolve_grievous as _grievous_pack,
+)
+from .timeline_coverage import combine_timeline_coverages
+from .trigger_stream import (
+    TriggerKind,
+    enriched_view_items,
+    event_triggers,
+    holders_in,
+    is_immobilizing_event,
+)
 from .work_counters import WorkCounterSink, record_rung
 
 # The survival kernel's compiler, aliased here because importers reach it
@@ -203,6 +234,7 @@ def _pair_run_fight(
     champion_data: Mapping[str, Any],
     level: int,
     items: list[dict[str, Any]],
+    *,
     params: FightParams,
     **kwargs: Any,
 ) -> dict[str, Any]:
@@ -266,7 +298,7 @@ def _compiled_lane_is_open(
     search_context: CoupledSearchContext | None,
     *,
     include_receipt: bool,
-    pair_result_cache: Mapping[tuple[Any, ...], PairView] | None,
+    pair_result_cache: Mapping[PairCacheKey, PairView] | None,
     enemies: Sequence[ResolvedLoadout],
     params: FightParams,
 ) -> bool:
@@ -290,12 +322,16 @@ def _compiled_lane_is_open(
     )
 
 
+#: Every input that priced one cached pair packet, restores included.
+PairCacheKey = tuple[str, str, tuple[float | str, ...], tuple[tuple[float, float], ...]]
+
+
 def _pair_cache_key(
     attacker_id: str,
     defender_id: str,
-    defensive: tuple[Any, ...],
+    defensive: tuple[float | str, ...],
     restores: tuple[tuple[float, float], ...],
-) -> tuple[Any, ...]:
+) -> PairCacheKey:
     """Every input that priced one cached pair packet, restores included."""
     return (attacker_id, defender_id, defensive, restores)
 
@@ -348,10 +384,14 @@ def _holder_amps_of(
             )
             > 0.0
         ),
-        level=attacker.level,
-        fight_duration_seconds=params.fight_duration_seconds,
-        target_bonus_health=max(0.0, float(defender.stats.get("bonus_health", 0.0))),
-        holder_is_melee=bool(attacker.stats.get("is_melee")),
+        facts=FightFacts(
+            level=attacker.level,
+            fight_duration_seconds=params.fight_duration_seconds,
+            target_bonus_health=max(
+                0.0, float(defender.stats.get("bonus_health", 0.0))
+            ),
+            holder_is_melee=bool(attacker.stats.get("is_melee")),
+        ),
     )
 
 
@@ -367,10 +407,14 @@ def _live_amps_of(
     """
     return live_amp_riders(
         [str(item.get("name", "")) for item in attacker.items],
-        level=attacker.level,
-        fight_duration_seconds=params.fight_duration_seconds,
-        target_bonus_health=max(0.0, float(defender.stats.get("bonus_health", 0.0))),
-        holder_is_melee=bool(attacker.stats.get("is_melee")),
+        facts=FightFacts(
+            level=attacker.level,
+            fight_duration_seconds=params.fight_duration_seconds,
+            target_bonus_health=max(
+                0.0, float(defender.stats.get("bonus_health", 0.0))
+            ),
+            holder_is_melee=bool(attacker.stats.get("is_melee")),
+        ),
     )
 
 
@@ -543,7 +587,7 @@ def _routed_pair_defender_id(
 def _support_target_ids(
     attacker: Combatant,
     effect: Mapping[str, Any],
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
 ) -> tuple[list[str], str]:
     """Resolve a sourced support packet to selected teammates.
 
@@ -653,7 +697,7 @@ def _support_selection(
 def _apply_item_support_selection(
     attacker: Combatant,
     template: Mapping[str, Any],
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
 ) -> dict[str, Any]:
     """Apply an authored recipient choice to a one-target item packet.
 
@@ -693,7 +737,7 @@ def _apply_item_support_selection(
 
 
 def _guardian_target(
-    holder: Combatant, all_actors: list[Combatant]
+    holder: Combatant, all_actors: Iterable[Combatant]
 ) -> tuple[Combatant, str] | None:
     """Resolve Guardian's one explicit protected teammate."""
     if holder.team == "ally" and not getattr(
@@ -724,7 +768,6 @@ def _guardian_selection_template() -> dict[str, Any]:
     """Return the public selection contract for Guardian's Guard target."""
     return {
         "source": "Guardian · Guard target",
-        "target_scope": "one_teammate",
         "target_selection_key": "guardian:target",
     }
 
@@ -733,8 +776,8 @@ def _guardian_selection_template() -> dict[str, Any]:
 _KeystoneEffect = TypeVar("_KeystoneEffect")
 
 
-def _keystone_holder(
-    all_actors: list[Combatant],
+def _keystone_holder[KeystoneEffect](
+    all_actors: Iterable[Combatant],
     keystone_name: str,
     name: str,
     effect_type: type[_KeystoneEffect],
@@ -809,8 +852,8 @@ def _reactive_candidate(
 
 def _schedule_guardian_events(
     all_actors: list[Combatant],
-    incoming: dict[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    incoming: Mapping[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -956,7 +999,7 @@ def _trigger_reading_order(
 def _schedule_aftershock_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -972,7 +1015,7 @@ def _schedule_aftershock_events(
         holder.level, holder.stats, "magic_resistance"
     )
     gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
-    for event, cc_kind, duration in _immobilizing_controls(
+    for event, cc_kind, _duration in _immobilizing_controls(
         outgoing.get(holder.participant_id, [])
     ):
         trigger_time = float(event.get("time", 0.0) or 0.0)
@@ -1007,7 +1050,7 @@ def _schedule_aftershock_events(
 def _schedule_grasp_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1058,7 +1101,7 @@ def _schedule_grasp_events(
 def _schedule_glacial_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1164,7 +1207,7 @@ def _schedule_glacial_events(
 def _schedule_stormraider_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1590,14 +1633,7 @@ def _support_effect_templates(
     #  W rank 0 -> no cast -> no packet).  The packet rides the Slice 4
     #  item-cleanse kernel (per-fight one-use latch, interval truncation,
     #  named denials); the heal is the separate E1 self-heal receipt.
-    champion_name = str(
-        getattr(attacker.champion_data, "name", "")
-        or (
-            attacker.champion_data.get("name", "")
-            if isinstance(attacker.champion_data, Mapping)
-            else ""
-        )
-    )
+    champion_name = str(attacker.champion_data.get("name", ""))
     if champion_name == "Gangplank":
         for cast_index, cast in enumerate(result.get("cast_timeline", ())):
             if str(cast.get("slot", "")) != "W":
@@ -1735,8 +1771,8 @@ def _support_effect_templates(
         r_rank = 1
         if isinstance(request_ranks, dict):
             r_rank = max(1, min(3, int(request_ranks.get("R", 1) or 1)))
-        _OLAF_R_BONUS_RESISTS = (10.0, 15.0, 20.0)[r_rank - 1]
-        _OLAF_R_FIRST_SECOND_MS = (20.0, 45.0, 70.0)[r_rank - 1]
+        olaf_r_bonus_resists = (10.0, 15.0, 20.0)[r_rank - 1]
+        olaf_r_first_second_ms = (20.0, 45.0, 70.0)[r_rank - 1]
         # P2 Slice 9 (Ragnarok): the R cast IS the activation (no toggle,
         # no typed option) — one cast authors FOUR separate receipts: the
         # cast-time CLEANSE (Slice 4 kernel; the displacement family
@@ -1790,8 +1826,8 @@ def _support_effect_templates(
                     "time": cast_time,
                     "amount": 0.0,
                     "duration": 3.0,
-                    "bonus_armor": _OLAF_R_BONUS_RESISTS,
-                    "bonus_magic_resistance": _OLAF_R_BONUS_RESISTS,
+                    "bonus_armor": olaf_r_bonus_resists,
+                    "bonus_magic_resistance": olaf_r_bonus_resists,
                     "target_scope": "self",
                     "target_policy": "self",
                     "source": "Olaf R — Ragnarok",
@@ -1805,7 +1841,7 @@ def _support_effect_templates(
                 {
                     "kind": PacketKind.MOVEMENT.value,
                     "time": cast_time,
-                    "amount": _OLAF_R_FIRST_SECOND_MS,
+                    "amount": olaf_r_first_second_ms,
                     "duration": 1.0,
                     "target_scope": "self",
                     "target_policy": "self",
@@ -1864,7 +1900,8 @@ def _attach_support_effects(
     attacker: Combatant,
     result: Mapping[str, Any],
     all_actors: list[Combatant],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
+    *,
     outgoing: dict[str, list[dict[str, Any]]] | None = None,
     incoming: dict[str, list[dict[str, Any]]] | None = None,
     denial_receipts: list[dict[str, Any]] | None = None,
@@ -2274,7 +2311,7 @@ def _target_allocation_receipt(
 
 
 def _schedule_thorns_events(
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
     incoming: dict[str, list[dict[str, Any]]],
     outgoing: dict[str, list[dict[str, Any]]],
 ) -> None:
@@ -2539,8 +2576,9 @@ def _grey_health_receipts(
     champion_data: Mapping[str, Any],
     level: int,
     stats: Mapping[str, float],
+    *,
     incoming: list[tuple[float, float, float]],
-    outgoing: list[tuple[float, float, float]],
+    outgoing: Iterable[tuple[float, float, float]],
     cast_timeline: Iterable[Mapping[str, Any]],
     duration: float,
     enemy_count: int,
@@ -2549,7 +2587,7 @@ def _grey_health_receipts(
 ) -> tuple[
     list[tuple[float, str, float]],
     list[tuple[float, str, float, float]],
-    dict[str, float],
+    dict[str, float | str],
 ]:
     """Author the grey-health consumes for one grey-health main champion.
 
@@ -2950,32 +2988,30 @@ def _grey_health_event_receipt(
 
 def _routing_build(
     combatant: Combatant, duration: float
-) -> tuple[list[str], dict[str, Any]]:
-    """One participant's item names and the build facts a routing rule reads.
-
-    ``BuildContext``'s fight facts are keyword-only and defaultless, so this
-    assembles them once for the three walk-lane resolvers.  A routing rule
-    moves a packet rather than scaling one, so ``target_bonus_health`` is 0.
+) -> tuple[list[str], FightFacts]:
+    """One participant's item names and the fight facts a routing rule reads,
+    assembled once for the three walk-lane resolvers.  A routing rule moves a
+    packet rather than scaling one, so ``target_bonus_health`` is 0.
     """
-    return [str(item.get("name", "")) for item in combatant.items], {
-        "level": int(combatant.stats.get("level", 1) or 1),
-        "fight_duration_seconds": duration,
-        "target_bonus_health": 0.0,
-        "holder_is_melee": bool(combatant.stats.get("is_melee", True)),
-    }
+    return [str(item.get("name", "")) for item in combatant.items], FightFacts(
+        level=int(combatant.stats.get("level", 1) or 1),
+        fight_duration_seconds=duration,
+        target_bonus_health=0.0,
+        holder_is_melee=bool(combatant.stats.get("is_melee", True)),
+    )
 
 
 def _venom_profile(combatant: Combatant, duration: float) -> tuple[float, float] | None:
     """The ``(keep, duration)`` pair the kernel's shield ledger reads."""
     owners, facts = _routing_build(combatant, duration)
-    venom = _walk_venom(owners, **facts)
+    venom = _walk_venom(owners, facts=facts)
     return None if venom is None else (venom.keep, venom.duration)
 
 
 def _execution_rider(combatant: Combatant, duration: float) -> Any:
     """The Execute rider this participant's own declarations arm, or ``None``."""
     owners, facts = _routing_build(combatant, duration)
-    return _walk_execution(owners, **facts)
+    return _walk_execution(owners, facts=facts)
 
 
 def _simulate_survival(
@@ -2984,10 +3020,11 @@ def _simulate_survival(
     healing: Mapping[str, list[dict[str, Any]]],
     support_effects: Mapping[str, list[dict[str, Any]]],
     duration: float,
+    *,
     annotate: bool = True,
     receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
     work_counters: WorkCounterSink | None = None,
-) -> "WalkResult":
+) -> WalkResult:
     """Resolve damage, shields, healing, and death for every participant.
 
     Returns the frozen :class:`~.program.walk.WalkResult` rather than the
@@ -3097,7 +3134,7 @@ def _simulate_survival(
         if float(combatant.defenses.damage_deferral_fraction) <= 0.0:
             continue
         owners, facts = _routing_build(combatant, duration)
-        rider = _walk_deferral(owners, **facts)
+        rider = _walk_deferral(owners, facts=facts)
         if rider is None:
             raise ValueError(
                 f"{participant_id} resolves a damage deferral and declares no "
@@ -3416,20 +3453,10 @@ def _simulate_survival(
     # the rest.  This preserves exact packet ordering without guessing which
     # packet becomes lethal before shields, overkill, or prior healing resolve.
     for participant_id, events in list(expanded_incoming.items()):
-        defenses = combatant_by_id[participant_id].defenses
-        revive_amount = max(0.0, float(defenses.revive_health_amount))
-        revive_delay = max(0.0, float(defenses.revive_delay))
-        if revive_amount <= 0.0 or revive_delay <= 0.0:
+        revive = armed_revive(combatant_by_id[participant_id].defenses)
+        if revive is None:
             continue
-        # E8d follow-up: the revive source is the champion's own passive when
-        # the module declares one (Anivia Rebirth, Zac Cell Division, Zilean
-        # Chronoshift); Guardian Angel remains the item-source label.
-        revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
-        revive_key = (
-            f"revive_{revive_source.replace(' ', '_')}"
-            if revive_source != "Guardian Angel (Rebirth)"
-            else "revive_Guardian Angel"
-        )
+        revive_amount, revive_delay, revive_source, revive_key = revive
         candidates: list[dict[str, Any]] = []
         for index, event in enumerate(events):
             if str(event.get("kind", "")) in {
@@ -3535,16 +3562,16 @@ def _simulate_survival(
             )
     for participant_id, events in healing.items():
         subject = index_of[participant_id]
-        for event in events:
-            actions.append(
-                action_from_event(
-                    event,
-                    TransitionRank.RECOVERY,
-                    subject,
-                    index_of,
-                    subject_id=participant_id,
-                )
+        actions.extend(
+            action_from_event(
+                event,
+                TransitionRank.RECOVERY,
+                subject,
+                index_of,
+                subject_id=participant_id,
             )
+            for event in events
+        )
     actions.sort(key=itemgetter(0))
     # Ledger slots, allocated once the total order is fixed.  The score
     # adapter has always carried them (its parallel arrays *are* indexed by
@@ -3616,34 +3643,35 @@ class CoupledSearchContext:
     """
 
     __slots__ = (
-        "panels",
-        "roster_actors",
         "actor_params",
-        "main_request",
-        "index_of",
-        "grievous_packs",
-        "thorns_profiles",
-        "main_pair_params",
-        "roster_pair_params",
-        "pair_id_strings",
-        # The panels' own positional event-id strings, keyed by the whole
-        # pair: ``pair_id_strings`` is the main attacker's, so its defender
-        # key alone would collide across roster attackers.
-        "panel_id_strings",
-        # Each roster attacker's wound-declaring sources, champion-fixed and
-        # derived once per search like the main's.
-        "roster_champion_wounds",
         "base_compiler",
+        "base_heal_dedup",
         "base_sorted",
+        "compiled_walk_enabled",
+        "grievous_packs",
+        "index_of",
         # Knight's Vow: the redirected child action for each parent damage
         # action the base panel split, keyed by the parent's event slot.
         # The kernel cancels the child beside its parent, so the map has to
         # travel with the panel that staged the split.
         "kv_redirect_children",
-        "base_heal_dedup",
         # The main champion's wound-declaring sources are champion-fixed;
         # derived once per search instead of once per evaluation.
         "main_champion_wounds",
+        "main_pair_params",
+        "main_request",
+        "pair_id_strings",
+        # The panels' own positional event-id strings, keyed by the whole
+        # pair: ``pair_id_strings`` is the main attacker's, so its defender
+        # key alone would collide across roster attackers.
+        "panel_id_strings",
+        "panels",
+        "roster_actors",
+        # Each roster attacker's wound-declaring sources, champion-fixed and
+        # derived once per search like the main's.
+        "roster_champion_wounds",
+        "roster_pair_params",
+        "thorns_profiles",
         # Set when search-invariant compilation (roster pairs or a signature
         # panel) hit an unrepresentable transition; the compiled path is then
         # skipped for the rest of the search.
@@ -3653,7 +3681,6 @@ class CoupledSearchContext:
         # Both are inert unless a caller installs them, and neither can
         # change a number: the two walks are pinned equivalent.
         "work_counters",
-        "compiled_walk_enabled",
     )
 
     def __init__(
@@ -3662,7 +3689,7 @@ class CoupledSearchContext:
         work_counters: WorkCounterSink | None = None,
         compiled_walk_enabled: bool = True,
     ) -> None:
-        self.panels: dict[tuple[Any, ...], "_SignaturePanel"] = {}
+        self.panels: dict[tuple[Any, ...], _SignaturePanel] = {}
         self.uncompilable = False
         self.work_counters = work_counters
         self.compiled_walk_enabled = compiled_walk_enabled
@@ -3693,7 +3720,7 @@ class _SignaturePanel:  # pylint: disable=too-few-public-methods
     both.
     """
 
-    __slots__ = ("sig", "n_actions", "sorted_actions", "kv_redirect_children")
+    __slots__ = ("kv_redirect_children", "n_actions", "sig", "sorted_actions")
 
     def __init__(
         self,
@@ -3751,9 +3778,10 @@ def _context_setup(
     params: FightParams,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
+    *,
     champion_name: str,
     level: int,
-    pair_result_cache: dict[tuple[Any, ...], PairView],
+    pair_result_cache: dict[PairCacheKey, PairView],
     all_actors_by_index: list[Combatant],
 ) -> None:
     """Derive the search-invariant roster state on the context's first use.
@@ -3896,7 +3924,7 @@ def _context_setup(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    context.roster_pair_params[pair_id],
+                    params=context.roster_pair_params[pair_id],
                     validated=True,
                 ),
                 attacker.participant_id,
@@ -3913,12 +3941,12 @@ def _context_setup(
             attacker.participant_id,
             attacker_i,
             defender.participant_id,
-            context.index_of[defender.participant_id],
-            context.grievous_packs[attacker_i],
-            params.fight_duration_seconds,
-            context.base_heal_dedup[attacker_i],
-            context.panel_id_strings[pair_id],
-            defender_index,
+            defender_i=context.index_of[defender.participant_id],
+            grievous_by_dtype=context.grievous_packs[attacker_i],
+            duration=params.fight_duration_seconds,
+            heal_dedup=context.base_heal_dedup[attacker_i],
+            id_strings=context.panel_id_strings[pair_id],
+            defender_index=defender_index,
             champion_wounds=wounds,
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
@@ -3963,9 +3991,9 @@ def _context_setup(
                 wearer_i,
                 strikes,
                 profiles,
-                context.grievous_packs[wearer_i],
-                params.fight_duration_seconds,
-                "base",
+                grievous_by_dtype=context.grievous_packs[wearer_i],
+                duration=params.fight_duration_seconds,
+                id_namespace="base",
             )
     # A roster holder's active Warmog's Heart ticks are search-invariant:
     # author the same events the receipt walk schedules and convert them
@@ -3993,7 +4021,7 @@ def _context_setup(
         if kv_tether is None:
             continue
         base_aidx = stage_knights_vow_redirect_actions(
-            base, all_actors_by_index, kv_tether, kv_children, base_aidx
+            base, all_actors_by_index, kv_tether, kv_children, next_aidx=base_aidx
         )
         base_aidx = stage_knights_vow_heals(
             base, all_actors_by_index, kv_tether, base_aidx
@@ -4008,10 +4036,11 @@ def _build_signature_panel(
     context: CoupledSearchContext,
     main: Combatant,
     params: FightParams,
-    pair_result_cache: dict[tuple[Any, ...], PairView],
-    signature: tuple[Any, ...],
+    pair_result_cache: dict[PairCacheKey, PairView],
+    *,
+    signature: tuple[float | str, ...],
     all_actors: list[Combatant],
-) -> "_SignaturePanel":
+) -> _SignaturePanel:
     """Compile every roster pair fight for one main defensive signature.
 
     Pair packets come from (or land in) the shared ``pair_result_cache``
@@ -4044,7 +4073,7 @@ def _build_signature_panel(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    replace(
+                    params=replace(
                         context.actor_params[attacker.participant_id],
                         enforce_resource_limits=True,
                         # An enemy attacker's ordered defenders are
@@ -4073,11 +4102,11 @@ def _build_signature_panel(
             attacker.participant_id,
             attacker_i,
             "main",
-            0,
-            context.grievous_packs[attacker_i],
-            duration,
-            dict(context.base_heal_dedup.get(attacker_i) or {}),
-            context.panel_id_strings[(attacker.participant_id, "main")],
+            defender_i=0,
+            grievous_by_dtype=context.grievous_packs[attacker_i],
+            duration=duration,
+            heal_dedup=dict(context.base_heal_dedup.get(attacker_i) or {}),
+            id_strings=context.panel_id_strings[(attacker.participant_id, "main")],
             champion_wounds=wounds,
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
@@ -4106,7 +4135,7 @@ def _build_signature_panel(
         if kv_tether is None or kv_tether["target"].participant_id != "main":
             continue
         sig_aidx = stage_knights_vow_redirect_actions(
-            sig, all_actors, kv_tether, sig_children, sig_aidx
+            sig, all_actors, kv_tether, sig_children, next_aidx=sig_aidx
         )
     sig.next_aidx = sig_aidx
     return _SignaturePanel(context.base_sorted, sig, kv_redirect_children=sig_children)
@@ -4119,10 +4148,10 @@ def _score_with_search_context(
     params: FightParams,
     *,
     main_stats: dict[str, float],
-    main_defenses: Any,
+    main_defenses: StartingDefenses,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
-    pair_result_cache: dict[tuple[Any, ...], PairView],
+    pair_result_cache: dict[PairCacheKey, PairView],
     context: CoupledSearchContext,
     reuse_main_stats: bool,
     published: bool,
@@ -4170,10 +4199,10 @@ def _score_with_search_context(
                 params,
                 enemies,
                 allies,
-                str(champion_data.get("name", "")),
-                level,
-                pair_result_cache,
-                [placeholder, *setup_allies, *setup_enemies],
+                champion_name=str(champion_data.get("name", "")),
+                level=level,
+                pair_result_cache=pair_result_cache,
+                all_actors_by_index=[placeholder, *setup_allies, *setup_enemies],
             )
         except UncompilableActionError as exc:
             # Roster pair compilation is search-invariant: one failure means
@@ -4209,7 +4238,12 @@ def _score_with_search_context(
     if panel is None:
         try:
             panel = _build_signature_panel(
-                context, main, params, pair_result_cache, signature, all_actors
+                context,
+                main,
+                params,
+                pair_result_cache,
+                signature=signature,
+                all_actors=all_actors,
             )
         except UncompilableActionError as exc:
             # Signature-panel compilation is invariant per defensive
@@ -4244,7 +4278,7 @@ def _score_with_search_context(
             main.champion_data,
             main.level,
             list(main.items),
-            pair_params,
+            params=pair_params,
             precomputed_stats=reusable_stats,
             validated=True,
             score_only=True,
@@ -4261,12 +4295,12 @@ def _score_with_search_context(
             "main",
             0,
             defender.participant_id,
-            context.index_of[defender.participant_id],
-            main_packs,
-            duration,
-            heal_dedup,
-            context.pair_id_strings[defender.participant_id],
-            defender_index,
+            defender_i=context.index_of[defender.participant_id],
+            grievous_by_dtype=main_packs,
+            duration=duration,
+            heal_dedup=heal_dedup,
+            id_strings=context.pair_id_strings[defender.participant_id],
+            defender_index=defender_index,
             champion_wounds=main_champion_wounds,
             live_amps=_live_amps_of(main, defender, params),
             holder_amps=_holder_amps_of(main, defender, params),
@@ -4345,9 +4379,9 @@ def _score_with_search_context(
                 wearer_i,
                 strikes,
                 profiles,
-                context.grievous_packs[wearer_i],
-                duration,
-                "fresh",
+                grievous_by_dtype=context.grievous_packs[wearer_i],
+                duration=duration,
+                id_namespace="fresh",
             )
     main_thorns = thorns_effects(list(main.items))
     if main_thorns:
@@ -4359,14 +4393,20 @@ def _score_with_search_context(
         ]
         if strikes:
             fresh.add_thorns(
-                main, 0, strikes, main_thorns, main_packs, duration, "fresh"
+                main,
+                0,
+                strikes,
+                main_thorns,
+                grievous_by_dtype=main_packs,
+                duration=duration,
+                id_namespace="fresh",
             )
 
     # Grey-health consume heals (E8a) are compiled from the same incoming
     # (enemy -> main, plus enemy thorns) and outgoing (main) damage actions
     # the walk applies, with the candidate's own stats/ranks, so the
     # compiled score walk matches the ordered receipt's fixed amounts.
-    grey_summary: dict[str, float] = {}
+    grey_summary: dict[str, float | str] = {}
     if (
         str(champion_data.get("name", "")) in GREY_HEALTH_RULE_CHAMPIONS
         and enemy_actors
@@ -4432,26 +4472,26 @@ def _score_with_search_context(
             champion_data,
             level,
             main.stats,
-            in_records,
-            out_records,
-            main_cast_timeline,
-            duration,
-            len(enemy_actors),
-            params.ability_ranks,
-            params.champion_options,
+            incoming=in_records,
+            outgoing=out_records,
+            cast_timeline=main_cast_timeline,
+            duration=duration,
+            enemy_count=len(enemy_actors),
+            ability_ranks=params.ability_ranks,
+            champion_options=params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
-                grey_health_heal_action(heal_time, source, amount, index, aidx)
+                grey_health_heal_action(heal_time, source, amount, index, aidx=aidx)
             )
         for index, (grant_time, source, amount, window) in enumerate(grey_shields):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
                 grey_health_shield_action(
-                    grant_time, source, amount, window, index, aidx
+                    grant_time, source, amount, window, index=index, aidx=aidx
                 )
             )
 
@@ -4565,7 +4605,7 @@ def _score_with_search_context(
         fresh.support_entries,
         base.support_entries,
         panel.sig.support_entries,
-        count,
+        count=count,
     )
     totals = accumulate_damage_totals(
         survival_rows,
@@ -4776,11 +4816,11 @@ def build_participant_timeline(
     params: FightParams,
     *,
     main_stats: dict[str, float],
-    main_defenses: Any,
+    main_defenses: StartingDefenses,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str = "main",
-    pair_result_cache: dict[tuple[Any, ...], PairView] | None = None,
+    pair_result_cache: dict[PairCacheKey, PairView] | None = None,
     include_receipt: bool = True,
     reuse_main_stats: bool = False,
     search_context: CoupledSearchContext | None = None,
@@ -4840,11 +4880,11 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     params: FightParams,
     *,
     main_stats: dict[str, float],
-    main_defenses: Any,
+    main_defenses: StartingDefenses,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
     focus_participant_id: str,
-    pair_result_cache: dict[tuple[Any, ...], PairView] | None,
+    pair_result_cache: dict[PairCacheKey, PairView] | None,
     include_receipt: bool,
     reuse_main_stats: bool,
     search_context: CoupledSearchContext | None,
@@ -5037,7 +5077,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                             attacker.champion_data,
                             attacker.level,
                             list(attacker.items),
-                            _target_params(pair_params, defender),
+                            params=_target_params(pair_params, defender),
                             precomputed_stats=reusable_stats,
                         ),
                         attacker.participant_id,
@@ -5208,15 +5248,15 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             attacker.champion_data,
             attacker.level,
             list(attacker.items),
-            actor_params,
+            params=actor_params,
         )
         _attach_support_effects(
             attacker,
             fallback,
             all_actors,
             support_effects,
-            outgoing,
-            incoming,
+            outgoing=outgoing,
+            incoming=incoming,
             denial_receipts=item_denial_receipts,
         )
         support_attached.add(attacker.participant_id)
@@ -5320,7 +5360,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     # event set the walk applies; the consume heals carry fixed sourced
     # amounts and ride the ordinary heal application (Grievous, overheal
     # caps), matching the E1 ``_heal_from_damage`` plumbing.
-    grey_summary: dict[str, float] = {}
+    grey_summary: dict[str, float | str] = {}
     grey_heals: list[dict[str, Any]] = []
     main_name = str(champion_data.get("name", ""))
     if main_name in GREY_HEALTH_RULE_CHAMPIONS and enemy_actors:
@@ -5356,13 +5396,13 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             champion_data,
             level,
             main_stats,
-            in_records,
-            out_records,
-            main_cast_timeline,
-            duration,
-            len(enemy_actors),
-            params.ability_ranks,
-            params.champion_options,
+            incoming=in_records,
+            outgoing=out_records,
+            cast_timeline=main_cast_timeline,
+            duration=duration,
+            enemy_count=len(enemy_actors),
+            ability_ranks=params.ability_ranks,
+            champion_options=params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             heal_event: dict[str, Any] = {
@@ -5543,7 +5583,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         ),
         None,
     )
-    focus_survival = survival.get(focus_participant_id)
+    survival.get(focus_participant_id)
     focus_support = sum(
         float(event.get("applied_amount", 0.0))
         for events in support_effects.values()

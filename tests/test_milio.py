@@ -10,11 +10,9 @@ cached text it was read from, and prove it reaches the event ledger.
 import pytest
 
 from src.calculator.calculate import calculate_payload
-from src.calculator.champions import get_champion_module_contract
-from tests import rider_probe
-from src.calculator.champions import milio
+from src.calculator.champions import get_champion_module_contract, milio
 from src.calculator.data_fetcher import get_champion
-from tests import cc_review
+from tests import cc_review, rider_probe
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"Q": "knocks back and stuns the first enemy it hits over 1 second"}
@@ -79,6 +77,6 @@ class TestFiredUpRider:
         assert rider_probe.RIDER_ROW not in result["breakdown"]
 
     def test_every_slot_now_prices_something(self):
-        assert get_champion_module_contract("Milio").coverage == {
-            slot: "modeled" for slot in "PQWER"
-        }
+        assert get_champion_module_contract("Milio").coverage == dict.fromkeys(
+            "PQWER", "modeled"
+        )

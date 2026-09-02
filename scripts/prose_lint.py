@@ -24,6 +24,7 @@ import json
 import re
 import sys
 import tokenize
+from collections.abc import Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -33,17 +34,18 @@ SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
 EVIDENCE = re.compile(
-    r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar", re.I
+    r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar",
+    re.IGNORECASE,
 )
 HISTORY = re.compile(
     r"\bretired\b|\bused to\b|\bpreviously\b|\b(?-i:legacy)\b|\bno longer\b"
     r"|\b(?:issue|PR) #\d+"
     r"|\b(?<!\{)(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)(?:[0-9a-f]{7,8}|[0-9a-f]{40})\b",
-    re.I,
+    re.IGNORECASE,
 )
 POINTER = re.compile(
     r"\bAmendment\b|\bRuling\b|\bD-\d{2,3}\b|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -54,7 +56,9 @@ def _span(nodes: list[ast.stmt]) -> int:
 def _docstring(node: ast.AST) -> ast.Constant | None:
     body = node.body if isinstance(node, SCOPES) else []
     head = body[0].value if body and isinstance(body[0], ast.Expr) else None
-    return head if isinstance(getattr(head, "value", None), str) else None
+    return (
+        head if isinstance(head, ast.Constant) and isinstance(head.value, str) else None
+    )
 
 
 def _comment_blocks(source: str) -> list[tuple[int, list[str]]]:
@@ -81,7 +85,7 @@ def _definition_spans(funcs: list[ast.stmt]) -> dict[int, int]:
 
 
 def _comment_bound(
-    line: int, block: list[str], funcs: list[ast.stmt], heads: dict[int, int]
+    line: int, block: list[str], funcs: list[ast.stmt], heads: Mapping[int, int]
 ) -> int | None:
     """How many lines this run may hold, or ``None`` if it heads a section."""
     holders = [f for f in funcs if f.lineno <= line <= f.end_lineno]
@@ -90,7 +94,7 @@ def _comment_bound(
     return heads.get(line + len(block))
 
 
-def _cite(found: dict[str, list], where: str, line: int, text: str) -> None:
+def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
     for offset, raw in enumerate(text.splitlines()):
         if EVIDENCE.search(raw):
             continue
@@ -102,7 +106,7 @@ def _cite(found: dict[str, list], where: str, line: int, text: str) -> None:
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
     """Report the four findings over every ``.py`` file under ``TARGETS``."""
-    found: dict[str, list[str]] = {k: [] for k in FAILING + ("pointer",)}
+    found: dict[str, list[str]] = {k: [] for k in (*FAILING, "pointer")}
     paths = (
         p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
     )

@@ -12,9 +12,10 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import float_option, int_option
+from .module_helpers import named_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 _Q_CAST_TIME = 0.25
 _Q_TORNADO_FIRST_TICK = 0.75
@@ -54,12 +55,11 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _winds_of_war(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: gust at cast end, then four max-health tornado ticks."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     gust = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     ap = float(ctx.stat("ability_power"))
@@ -102,12 +102,11 @@ def _winds_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _shield_of_durand(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _shield_of_durand(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: damage grows in eight 25% steps over the first 1.25 seconds."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     charge = min(
         _W_MAX_CHARGE,
@@ -139,12 +138,11 @@ def _shield_of_durand(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _justice_punch(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: champion damage at cast time plus the selected dash travel."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     distance = min(
         650.0,
         max(250.0, float(ctx.option("e_dash_distance"))),
@@ -164,24 +162,14 @@ def _justice_punch(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _heros_entrance(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: impact damage after the sourced 2.75-second channel."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", total, time_offset=_R_LANDING_TIME),)
-    entry["cast_time"] = _R_LANDING_TIME
-    entry["detail"] = "impact after 2.75s channel; allied cast target assumed"
-    return entry
+# R: impact damage after the sourced 2.75-second channel.
+_heros_entrance = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=_R_LANDING_TIME,
+    cast_time=_R_LANDING_TIME,
+    detail="impact after 2.75s channel; allied cast target assumed",
+)
 
 
 OPTIONS: list[dict[str, Any]] = [

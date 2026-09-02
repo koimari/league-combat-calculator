@@ -56,6 +56,12 @@ from operator import itemgetter
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
+from ..defensive_effects import armed_revive
+from ..delivery_eligibility import CombatantFacts
+from ..healing_reduction import amplifies_recovery
+from ..interpreters.delta_amp import StaticHolderAmps
+from ..item_effects import ThornsEffect
+from ..ledger_projection import LightRow
 from ..resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
@@ -83,10 +89,10 @@ from ..survival.compile import (
     champion_wound_tuple,
     heal_trigger_key,
     thorns_return_damage,
+    trigger_time_key,
     unrepresentable_damage_receipt,
     unrepresentable_heal_receipt,
     unrepresentable_template_receipt,
-    trigger_time_key,
 )
 from ..survival.pricing import (
     AuthoredDeclaration,
@@ -94,8 +100,6 @@ from ..survival.pricing import (
     RoutingProvenance,
     route_declared_packet,
 )
-from ..healing_reduction import amplifies_recovery
-from ..ledger_projection import LightRow
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
@@ -106,7 +110,12 @@ from .build import (
     dropped_pair_previews,
     pair_preview_sources,
 )
-from .caches import program_fingerprint, roster_fingerprint
+from .caches import (
+    ProgramFingerprint,
+    RosterFingerprint,
+    program_fingerprint,
+    roster_fingerprint,
+)
 from .identity import event_id_text
 
 # Kinds a compiled damage action may carry; a revive candidate is authored
@@ -151,26 +160,26 @@ class PairView:
         # The engine's own result, unmodified: what the per-pair ``fights``
         # receipt publishes and what the score panels compile.
         "engine",
-        "result",
-        "live_amps",
-        "holder_amps",
-        "events",
-        "heals",
-        "source_names",
-        "support",
-        "support_denials",
         # The event-id string of each compiled damage action, so a self-heal
         # can publish the id of the hit that caused it.  The compiler already
         # resolved that link by action index; this is the same link one
         # representation over.
         "event_id_by_aidx",
+        "events",
+        "heals",
+        "holder_amps",
+        "live_amps",
+        "result",
+        "source_names",
+        "support",
+        "support_denials",
     )
 
     def __init__(
         self,
         result: Mapping[str, Any],
         live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: Any = None,
+        holder_amps: StaticHolderAmps | None = None,
     ) -> None:
         self.engine: Mapping[str, Any] = result
         self.result: Mapping[str, Any] = result
@@ -189,6 +198,7 @@ def _enriched_damage_event(  # pylint: disable=too-many-arguments
     attacker_id: str,
     defender_id: str,
     event_id: str,
+    *,
     is_ability: bool,
     ability_instance: Any,
     basic_attack: bool,
@@ -279,7 +289,7 @@ def pair_view(
     *,
     champion_wounds: Mapping[str, Any] | None = None,
     live_amps: Sequence[LiveAmpRider] = (),
-    holder_amps: Any = None,
+    holder_amps: StaticHolderAmps | None = None,
 ) -> PairView:
     """One pair fight's receipt view, through the one packet compiler.
 
@@ -295,12 +305,12 @@ def pair_view(
         attacker_id,
         -1,
         defender_id,
-        -1,
-        {},
-        0.0,
-        {},
-        [],
-        defender_index,
+        defender_i=-1,
+        grievous_by_dtype={},
+        duration=0.0,
+        heal_dedup={},
+        id_strings=[],
+        defender_index=defender_index,
         champion_wounds=champion_wounds,
         live_amps=live_amps,
         holder_amps=holder_amps,
@@ -355,7 +365,10 @@ def ability_instance_for_event(
 
 
 def declared_packet_of(
-    declaration: Any, damage_type: str, source_key: str, holder_amps: Any
+    declaration: Any,
+    damage_type: str,
+    source_key: str,
+    holder_amps: StaticHolderAmps | None,
 ) -> DeclaredPacket:
     """One re-priced packet's declaration, composed for the walk to price.
 
@@ -444,11 +457,11 @@ def action_from_event(
         phase,
         kind_str,
         execute_ratio_raw,
-        deferred_raw,
-        redirected_raw,
-        raw_formula,
-        raw_damage,
-        grievous_duration,
+        deferred_raw=deferred_raw,
+        redirected_raw=redirected_raw,
+        raw_formula=raw_formula,
+        raw_damage=raw_damage,
+        grievous_duration=grievous_duration,
     )
     attacker_id = get("attacker")
     attacker_index = index_of.get(str(attacker_id), -1) if attacker_id else -1
@@ -668,7 +681,7 @@ def pair_resistance_baselines(
 
 
 def modifier_delivery_receipt(
-    compilers: Iterable["WalkCompiler"],
+    compilers: Iterable[WalkCompiler],
 ) -> str | None:
     """Refuse an armed modifier the compiled walk cannot classify against.
 
@@ -684,7 +697,7 @@ def modifier_delivery_receipt(
 
 def revive_candidate_actions(
     actions: Iterable[SurvivalAction],
-    combatants: Iterable[Any],
+    combatants: Iterable[CombatantFacts],
     next_aidx: int,
 ) -> tuple[list[SurvivalAction], int]:
     """Author revive candidates beside every incoming damage action.
@@ -701,17 +714,10 @@ def revive_candidate_actions(
     candidates: list[SurvivalAction] = []
     aidx = next_aidx
     for actor_index, actor in enumerate(combatant_list):
-        defenses = actor.defenses
-        revive_amount = max(0.0, float(defenses.revive_health_amount))
-        revive_delay = max(0.0, float(defenses.revive_delay))
-        if revive_amount <= 0.0 or revive_delay <= 0.0:
+        revive = armed_revive(actor.defenses)
+        if revive is None:
             continue
-        revive_source = str(defenses.revive_source) or "Guardian Angel (Rebirth)"
-        revive_key = (
-            f"revive_{revive_source.replace(' ', '_')}"
-            if revive_source != "Guardian Angel (Rebirth)"
-            else "revive_Guardian Angel"
-        )
+        revive_amount, revive_delay, revive_source, revive_key = revive
         for action in actions:
             if action.subject != actor_index or action.kind not in _DAMAGE_ACTION_KINDS:
                 continue
@@ -773,14 +779,14 @@ class WalkCompiler:
 
     __slots__ = (
         "actions",
-        "damage_order",
-        "thorns_order",
-        "support_entries",
         "auto_strikes_into",
         "coverage",
+        "damage_order",
         "next_aidx",
-        "unclassified_delivery",
         "staged_modifier",
+        "support_entries",
+        "thorns_order",
+        "unclassified_delivery",
     )
 
     def __init__(self, first_aidx: int = 0) -> None:
@@ -812,6 +818,7 @@ class WalkCompiler:
         attacker_id: str,
         attacker_i: int,
         defender_id: str,
+        *,
         defender_i: int,
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
@@ -820,9 +827,9 @@ class WalkCompiler:
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
         live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: Any = None,
+        holder_amps: StaticHolderAmps | None = None,
         suppress_actor_wide_heals: bool = False,
-        view: "PairView | None" = None,
+        view: PairView | None = None,
     ) -> None:
         """Compile one pair fight from the engine's own rows.
 
@@ -1054,7 +1061,7 @@ class WalkCompiler:
             else:
                 damage_type = row["damage_type"]
                 wound_damage = row["damage"]
-                damage = wound_damage if wound_damage > 0.0 else 0.0
+                damage = max(0.0, wound_damage)
                 raw_formula = row.get("raw_formula")
                 raw_damage = float(row.get("raw_damage", 0.0) or 0.0)
                 declaration = row.get("declared")
@@ -1150,31 +1157,31 @@ class WalkCompiler:
                             else ActionKind.DAMAGE
                         ),
                         defender_i,
-                        attacker_i,
-                        aidx,
-                        damage,
-                        damage_type,
-                        live_formula,
-                        raw_damage,
-                        grievous,
-                        wound,
-                        source_key,
-                        source,
-                        slot_of(event_id),
-                        sequence,
-                        live_amp,
-                        declared,
-                        is_ability,
-                        basic_attack,
-                        baseline_armor,
-                        baseline_mr,
-                        immobilized,
-                        cc_kind,
-                        cc_duration,
-                        skillshot,
-                        damage_over_time,
-                        area_damage,
-                        ability_instance,
+                        attacker=attacker_i,
+                        aidx=aidx,
+                        amount=damage,
+                        damage_type=damage_type,
+                        raw_formula=live_formula,
+                        raw_damage=raw_damage,
+                        grievous=grievous,
+                        wound=wound,
+                        source_key=source_key,
+                        source=source,
+                        event_slot=slot_of(event_id),
+                        sequence=sequence,
+                        live_amp=live_amp,
+                        declared=declared,
+                        is_ability=is_ability,
+                        basic_attack=basic_attack,
+                        baseline_effective_armor=baseline_armor,
+                        baseline_effective_mr=baseline_mr,
+                        immobilized=immobilized,
+                        cc_kind=cc_kind,
+                        cc_duration=cc_duration,
+                        skillshot=skillshot,
+                        damage_over_time=damage_over_time,
+                        area_damage=area_damage,
+                        ability_instance=ability_instance,
                     )
                 )
                 if time_value <= duration:
@@ -1191,16 +1198,16 @@ class WalkCompiler:
                         attacker_id,
                         defender_id,
                         event_id,
-                        is_ability,
-                        ability_instance,
-                        basic_attack,
-                        wound,
-                        time_value,
-                        result_breakdown.get(source_key),
-                        baseline_fields,
-                        live_amp,
-                        declared,
-                        sort_key,
+                        is_ability=is_ability,
+                        ability_instance=ability_instance,
+                        basic_attack=basic_attack,
+                        wound=wound,
+                        time_value=time_value,
+                        source_row=result_breakdown.get(source_key),
+                        baseline_fields=baseline_fields,
+                        live_amp=live_amp,
+                        declared=declared,
+                        sort_key=sort_key,
                     )
                 )
                 view.event_id_by_aidx[aidx] = event_id
@@ -1661,10 +1668,11 @@ class WalkCompiler:
 
     def add_thorns(
         self,
-        wearer: Any,
+        wearer: CombatantFacts,
         wearer_i: int,
-        strikes: Iterable[tuple[int, float, int, Any, int]],
-        profiles: tuple[Any, ...],
+        strikes: Iterable[tuple[int, float, int, CombatantFacts, int]],
+        profiles: tuple[ThornsEffect, ...],
+        *,
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
         id_namespace: str,
@@ -1791,7 +1799,7 @@ def knights_vow_target_factor(
             float(source.stats.get("armor_penetration_percent", 0.0) or 0.0) / 100.0,
             float(source.stats.get("armor_penetration_bonus_percent", 0.0) or 0.0)
             / 100.0,
-            float(target.stats.get("bonus_armor", 0.0) or 0.0),
+            bonus_armor=float(target.stats.get("bonus_armor", 0.0) or 0.0),
         )
     elif damage_type == "magic":
         effective = apply_magic_penetration(
@@ -1841,11 +1849,32 @@ def routed_declaration(declared: Any, share: float) -> Any:
     return route_declared_packet(declared, RoutingProvenance(KNIGHTS_VOW_ROUTER, share))
 
 
+def _tether_indexes(
+    tether: Mapping[str, Any], combatants: Sequence[Any]
+) -> tuple[str, int, str, int] | None:
+    """The holder and target ids and combatant indexes of an armed Knight's Vow tether,
+    or ``None`` when it is out of range, unready, or names nobody present."""
+    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+        return None
+    holder_id = str(tether["holder"].participant_id)
+    target_id = str(tether["target"].participant_id)
+    holder_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == holder_id), -1
+    )
+    target_i = next(
+        (i for i, c in enumerate(combatants) if c.participant_id == target_id), -1
+    )
+    if holder_i < 0 or target_i < 0:
+        return None
+    return holder_id, holder_i, target_id, target_i
+
+
 def stage_knights_vow_redirect_actions(
     compiler: WalkCompiler,
     combatants: Sequence[Any],
     tether: Mapping[str, Any],
     redirect_children: MutableMapping[int, SurvivalAction],
+    *,
     next_aidx: int,
 ) -> int:
     """Stage the receipt walk's Knight's Vow pre-mitigation split onto one
@@ -1864,32 +1893,14 @@ def stage_knights_vow_redirect_actions(
     fraction with a named reason, and the compiled path simply never stages
     them.
     """
-    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+    indexes = _tether_indexes(tether, combatants)
+    if indexes is None:
         return next_aidx
+    holder_id, holder_i, target_id, target_i = indexes
     target = tether["target"]
     holder = tether["holder"]
     fraction = max(0.0, min(1.0, float(tether["redirect_fraction"])))
     threshold = float(tether["threshold"])
-    target_id = str(target.participant_id)
-    holder_id = str(holder.participant_id)
-    target_i = next(
-        (
-            i
-            for i, combatant in enumerate(combatants)
-            if combatant.participant_id == target_id
-        ),
-        -1,
-    )
-    holder_i = next(
-        (
-            i
-            for i, combatant in enumerate(combatants)
-            if combatant.participant_id == holder_id
-        ),
-        -1,
-    )
-    if target_i < 0 or holder_i < 0:
-        return next_aidx
     aidx = next_aidx
     rebuilt: list[SurvivalAction] = []
     for action in compiler.actions:
@@ -1941,13 +1952,13 @@ def stage_knights_vow_redirect_actions(
         if raw_amount is None or not math.isfinite(raw_amount):
             rebuilt.append(action)
             continue
-        split = dict(
-            damage_type=str(action.damage_type),
-            basic_attack=bool(action.basic_attack),
-            damage_over_time=bool(action.damage_over_time),
-            source=source,
-            raw_amount=raw_amount,
-        )
+        split = {
+            "damage_type": str(action.damage_type),
+            "basic_attack": bool(action.basic_attack),
+            "damage_over_time": bool(action.damage_over_time),
+            "source": source,
+            "raw_amount": raw_amount,
+        }
         protected_share = knights_vow_target_factor(target=target, **split)
         holder_share = knights_vow_target_factor(target=holder, **split)
         if protected_share is None or holder_share is None:
@@ -2043,22 +2054,12 @@ def stage_knights_vow_heals(
     panel: the Worthy ally's outgoing physical/magic/true damage packets
     author a holder heal (kind ``HEAL``, subject = the Knight's Vow holder,
     gated by the typed holder-health ratio the kernel enforces)."""
-    if tether["within_range"] <= 0.0 or tether["holder_health_ready"] <= 0.0:
+    indexes = _tether_indexes(tether, combatants)
+    if indexes is None:
         return next_aidx
-    holder = tether["holder"]
-    target = tether["target"]
+    holder_id, holder_i, _, target_i = indexes
     heal_fraction = max(0.0, float(tether["heal_fraction"]))
     threshold = float(tether["threshold"])
-    holder_id = str(holder.participant_id)
-    target_id = str(target.participant_id)
-    holder_i = next(
-        (i for i, c in enumerate(combatants) if c.participant_id == holder_id), -1
-    )
-    target_i = next(
-        (i for i, c in enumerate(combatants) if c.participant_id == target_id), -1
-    )
-    if holder_i < 0 or target_i < 0:
-        return next_aidx
     aidx = next_aidx
     appended: list[SurvivalAction] = []
     for action in compiler.actions:
@@ -2106,7 +2107,7 @@ def stage_knights_vow_heals(
 
 
 def grey_health_heal_action(
-    heal_time: float, source: str, amount: float, index: int, aidx: int
+    heal_time: float, source: str, amount: float, index: int, *, aidx: int
 ) -> SurvivalAction:
     """One main-participant grey-health regeneration tick, as an action.
 
@@ -2142,6 +2143,7 @@ def grey_health_shield_action(  # pylint: disable=too-many-arguments
     source: str,
     amount: float,
     duration: float,
+    *,
     index: int,
     aidx: int,
 ) -> SurvivalAction:
@@ -2188,8 +2190,8 @@ class ProgramKey(NamedTuple):
     of serving a number computed from inputs it does not hold.
     """
 
-    roster: tuple
-    program: tuple
+    roster: RosterFingerprint
+    program: ProgramFingerprint
     projection: str
 
 
@@ -2379,7 +2381,7 @@ def compile_program(
         return tuple(actions)
     return tuple(
         action._replace(event={"_event_id": event_id_text(event.id)})
-        for action, event in zip(actions, program.events)
+        for action, event in zip(actions, program.events, strict=False)
     )
 
 

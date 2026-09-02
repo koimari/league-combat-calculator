@@ -18,12 +18,13 @@ import importlib
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from tests import cc_review
+from src.calculator.item_behavior import FightFacts
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -240,7 +241,7 @@ class TestDarkSphereCharges:
         assert abilities["Q2"]["resource_cost"] == abilities["Q"]["resource_cost"]
         assert abilities["Q2"]["resource_type"] == "MANA"
 
-    @pytest.mark.parametrize("rank, expected", [(1, 40.0), (3, 50.0), (5, 60.0)])
+    @pytest.mark.parametrize(("rank", "expected"), [(1, 40.0), (3, 50.0), (5, 60.0)])
     def test_the_charge_is_priced_at_its_parents_rank(
         self, syndra_data, rank, expected
     ) -> None:
@@ -385,7 +386,8 @@ class TestRotationOrder:
         abilities = _parse(syndra_data)
         order, rule = resolve_cast_order("Syndra", abilities, champion_data=syndra_data)
         assert order == ["Q", "Q2", "E", "W", "R"]
-        assert rule is not None and rule.derived is True
+        assert rule is not None
+        assert rule.derived is True
         assert "Syndra" not in CAST_ORDER_OVERRIDES
         assert "sphere" in rule.rationale.lower()
         assert "cc_enabler" in rule.rationale
@@ -403,7 +405,7 @@ class TestRotationOrder:
 # ---------------------------------------------------------------------------
 
 
-def _coupled_baseline():
+def _coupled_baseline() -> dict[str, dict[str, Any]]:
     """The committed coupled baseline — the binding home of the totals."""
     path = _REPO_ROOT / "scripts" / "golden_coupled_baseline.json"
     return json.loads(path.read_text(encoding="utf-8"))["coupled_scenarios"]
@@ -805,11 +807,11 @@ class TestFightIntegration:
 def _command_slot():
     """Command's declared chain slot, resolved for a Mandate holder.
 
-    The window arithmetic used to be two module helpers in ``damage.py``
-    taking a duration nobody sourced at the call site; Phase 3 moved both
-    into the rule's ``TriggerWindow(IMMOBILIZE, merge=EXTEND,
-    boundary=OPEN_CLOSED)`` and its interpreter.  These tests follow, so
-    they keep pinning the behaviour rather than a deleted spelling.
+    The window arithmetic lives in the rule's ``TriggerWindow(IMMOBILIZE,
+    merge=EXTEND, boundary=OPEN_CLOSED)`` and its interpreter (Phase 3), not
+    in ``damage.py`` helpers taking a duration nobody sourced at the call
+    site.  These tests follow, so they keep pinning the behaviour rather
+    than a deleted spelling.
     """
     from src.calculator.interpreters import delta_amp
     from src.calculator.item_behavior import AmpChainSlot
@@ -817,10 +819,12 @@ def _command_slot():
     slot = delta_amp.resolve_slot(
         ["Imperial Mandate"],
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     return slot

@@ -1,10 +1,10 @@
 """Typed cross-participant item packets and explicit trigger contracts."""
 
 import ast
+import re
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-import re
 from types import MappingProxyType, SimpleNamespace
 from typing import get_args, get_type_hints
 
@@ -12,22 +12,29 @@ import pytest
 
 from src.app import app
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator import item_support_effects, ledger_projection, pipeline
-from src.calculator.item_behavior import PacketKind, Persistence
+from src.calculator import (
+    item_support_effects,
+    ledger_projection,
+    pipeline,
+    trigger_stream,
+)
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.item_behavior import PacketKind, Persistence
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    ally_item_effect_value,
+    ally_item_level_value,
+)
 from src.calculator.item_source import effect_entries, effect_text
-from src.calculator.item_effects import ITEM_EFFECTS, ally_item_effect_value
-from src.calculator.item_effects import ally_item_level_value
-from src.calculator.roster_composition import ActorRequest
 from src.calculator.item_support_effects import (
     _declared_authorities,
     derive_item_support_effects,
     producer_item,
     schedule_knights_vow,
 )
-from src.calculator import trigger_stream
 from src.calculator.program.views import ViewTag
+from src.calculator.roster_composition import ActorRequest
 from src.calculator.trigger_stream import CAPABILITIES
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
@@ -339,8 +346,8 @@ def test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients
     }
     # "{{pp|50 to 230 for 13|1;7 to 18|type=your level}}": Going Sledding's
     # ramp is the *holder's* level, so the level-12 ally receives the same
-    # bonus health the level-18 holder does.  The emitter used to read each
-    # recipient's own level and hand the ally 131.8.
+    # bonus health the level-18 holder does, not the 131.8 an emitter reading
+    # each recipient's own level would hand the ally.
     assert [p["amount"] for p in solstice] == pytest.approx([230.0, 230.0])
 
 
@@ -676,11 +683,11 @@ def test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts():
 def _damage_modifier_call_sites() -> dict[str, str]:
     """Every ``kind="damage_modifier"`` ``_packet`` site's source and authority.
 
-    The static half of the binding P2c installs: the module used to *derive*
-    its authority table from these call sites, and now the table is
-    ``trigger_stream.CAPABILITIES`` and these call sites are checked against
-    it.  Returns ``{source literal: Authority member name}``; a site naming
-    neither literally is a failure here rather than a hole in the table.
+    The static half of the binding P2c installs: the authority table is
+    ``trigger_stream.CAPABILITIES``, not something derived from these call
+    sites, and the call sites are checked against it.  Returns ``{source
+    literal: Authority member name}``; a site naming neither literally is a
+    failure here rather than a hole in the table.
     """
     body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
     declared: dict[str, str] = {}
@@ -695,21 +702,22 @@ def _damage_modifier_call_sites() -> dict[str, str]:
         if not _is_packet_kind_node(kind, "damage_modifier"):
             continue
         source = _packet_keyword(node, "source")
-        assert isinstance(source, ast.Constant) and isinstance(source.value, str), (
+        no_literal = (
             f"the damage_modifier packet at line {node.lineno} names no literal "
             "source; the registry cannot be checked against an expression"
         )
+        assert isinstance(source, ast.Constant), no_literal
+        assert isinstance(source.value, str), no_literal
         authority = _packet_keyword(node, "authority")
-        assert (
-            isinstance(authority, ast.Attribute)
-            and isinstance(authority.value, ast.Name)
-            and authority.value.id == "Authority"
-            and authority.attr in Authority.__members__
-        ), (
+        no_member = (
             f"{source.value} declares no literal Authority.<member> at line "
             f"{node.lineno}; one of "
             f"{sorted(member.value for member in Authority)} is required (D-07)"
         )
+        assert isinstance(authority, ast.Attribute), no_member
+        assert isinstance(authority.value, ast.Name), no_member
+        assert authority.value.id == "Authority", no_member
+        assert authority.attr in Authority.__members__, no_member
         declared[source.value] = authority.attr
     return declared
 
@@ -825,7 +833,7 @@ class TestCrossParticipantAuthorities:
 # the one item these slices move.  The ally is an Ahri rather than the
 # baseline's Pantheon because C3 types the curse: Pantheon's only damage into
 # the cursed enemy after the arming timestamp is physical, so with a magic-only
-# Unmake his rows carry no multiplier at all and the roster could no longer show
+# Unmake his rows carry no multiplier at all and the roster cannot show
 # an amped ally.  Ahri's Q lands magic *and* true damage into the same enemy at
 # the same instant, which is the whole of C3 in one packet pair.
 _ABYSSAL_ROSTER = {
@@ -906,9 +914,9 @@ class TestOwnerIsPresentIffSplit:
 def _is_packet_kind_node(node, kind: str) -> bool:
     """Whether a ``_packet(kind=...)`` node names ``PacketKind.<KIND>.value``.
 
-    The kind used to be a bare string literal at every site; ER1 moved it
-    onto the enum, so the three source walks below ask this one question
-    instead of each matching a spelling.
+    ER1 put the kind on the enum rather than a bare string literal at every
+    site, so the three source walks below ask this one question instead of
+    each matching a spelling.
     """
     return (
         isinstance(node, ast.Attribute)
@@ -923,15 +931,12 @@ def _is_packet_kind_node(node, kind: str) -> bool:
 def _packet_keyword(call, name):
     """The value node of one keyword argument of a ``_packet(...)`` call.
 
-    Moved out of ``item_support_effects`` at P2c.  The module used to walk
-    its own source to derive an authority table; ``CAPABILITIES`` is that
-    table now, so the walk over its construction sites is purely a
-    test-side source assertion and lives with the assertions.
+    Moved out of ``item_support_effects`` at P2c.  ``CAPABILITIES`` is the
+    authority table, not a walk of the module's own source, so the walk
+    over its construction sites is purely a test-side source assertion and
+    lives with the assertions.
     """
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return None
+    return next((k.value for k in call.keywords if k.arg == name), None)
 
 
 def declared_packet_keywords(*names):
@@ -971,7 +976,7 @@ def _evaluate_declaration(expression):
     """One declared keyword's value, or ``None`` when the site omits it."""
     if expression is None:
         return None
-    return eval(  # pylint: disable=eval-used
+    return eval(  # noqa: S307 - evaluates the module's own declaration AST  # pylint: disable=eval-used
         compile(ast.Expression(expression), "<declaration>", "eval"),
         vars(item_support_effects),
     )
@@ -1002,9 +1007,7 @@ def timed_cross_participant_producers():
         ):
             continue
         for owner in catalog.owners_for(producer):
-            mechanic = (
-                f"{catalog._mechanic_slug(owner)}.{producer.value}"  # noqa: SLF001
-            )
+            mechanic = f"{catalog._mechanic_slug(owner)}.{producer.value}"
             sources.add(trigger_stream.CAPABILITIES[mechanic].packet_source)
     return sources
 
@@ -1249,7 +1252,7 @@ class TestAbyssalMaskOwnerHandshake:
         ``DEBUFF_ARM`` and missed the packets at its own timestamp; C4 moved
         it to ``AURA_ARM``, so the restriction has nothing left to exclude
         and keeping it would hide the class rule on exactly the exchange
-        that used to have no rule at all.
+        C3 left without a rule.
         """
         response = app.test_client().post("/api/calculate", json=_ABYSSAL_ROSTER)
         assert response.status_code == 200
@@ -1340,8 +1343,8 @@ class TestEventViewTupleGate:
         assert "Fimbulwinter" in trigger_stream.enriched_view_items()
         body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
         # 3.6 replaced the item-name guard with the declared producer; the
-        # branch is found by the declaration it now reads rather than by the
-        # name it used to spell.
+        # branch is found by the declaration it reads rather than by an item
+        # name.
         everlasting = body.split("if everlasting is not None:")[1].split("\n    if ")[0]
         # The claim is unchanged — the shield carries its trigger's event id,
         # and an unenriched shield carries an absent link rather than an empty
@@ -1353,10 +1356,10 @@ class TestEventViewTupleGate:
     def test_every_event_view_holder_is_named_by_exactly_one_stream(self):
         """The registry is the map's one home, so neither can drift.
 
-        The claim used to be checked against ``EVENT_VIEW_STREAMS``, the
-        hand map P2c deleted; it is now read straight off the capability
-        declarations, which is where "which holders read which stream" now
-        lives and the only place it does.
+        The claim is read straight off the capability declarations, not off
+        ``EVENT_VIEW_STREAMS``, the hand map P2c deleted; the declarations
+        are where "which holders read which stream" lives and the only place
+        it does.
         """
         holders = trigger_stream.tuple_incapable_items()
         pairs = item_support_effects._starved_streams(holders)

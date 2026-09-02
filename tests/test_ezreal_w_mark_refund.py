@@ -44,6 +44,7 @@ W = 50, E = 70, R = 100.  At level 6: W rank 1 (damage 80), Q rank 3
 """
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -87,18 +88,18 @@ _EPS = 1e-9
 
 
 def _params(*, duration=12.0, one_rotation=False, item_options=None, **overrides):
-    base = dict(
-        target_health=2000.0,
-        target_bonus_health=0.0,
-        target_armor=50.0,
-        target_magic_resistance=40.0,
-        fight_duration_seconds=duration,
-        auto_attack_uptime=0.0,
-        one_rotation=one_rotation,
-        include_actives=True,
-        deterministic=True,
-        item_options=item_options or {},
-    )
+    base = {
+        "target_health": 2000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 50.0,
+        "target_magic_resistance": 40.0,
+        "fight_duration_seconds": duration,
+        "auto_attack_uptime": 0.0,
+        "one_rotation": one_rotation,
+        "include_actives": True,
+        "deterministic": True,
+        "item_options": item_options or {},
+    }
     base.update(overrides)
     return FightParams(**base)
 
@@ -403,7 +404,7 @@ def test_w_damage_rank_values_and_refund_flat_at_rank_1_and_5():
     ranks (rank-flat).  The refund amount itself uses the DETONATING
     ability's rank cost: Q rank 3 costs 34 at level 6, Q rank 5 costs 40 at
     level 18, so the refunds are 94 and 100."""
-    for level, rank, w_raw, q_cost, expected_refund in (
+    for level, _rank, w_raw, q_cost, expected_refund in (
         (6, 1, 80.0, Q_COST_R3, 94.0),
         (18, 5, 300.0, Q_COST_R5, 100.0),
     ):
@@ -422,7 +423,8 @@ def test_w_damage_rank_values_and_refund_flat_at_rank_1_and_5():
             for r in result["resource_ledger"]["receipts"]
             if r["operation"] == "spend" and r["detail"]["slot"] == "W"
         ]
-        assert w_spends and all(r["amount"] == pytest.approx(W_COST) for r in w_spends)
+        assert w_spends
+        assert all(r["amount"] == pytest.approx(W_COST) for r in w_spends)
 
 
 # ---------------------------------------------------------------------------
@@ -436,7 +438,7 @@ def test_ability_detonation_amount_receipt_shape_and_stream_order():
     130), lands at the detonating cast's timestamp on the restore tier, and
     the receipt stream places it AFTER the detonating spend (cast, hit,
     refund) yet BEFORE any later same-time cast (see the cap/order test)."""
-    champ = get_champion(EZREAL)
+    get_champion(EZREAL)
     for cast_order, det_slot, det_cost, expected, expected_count in (
         (["W", "Q"], "Q", Q_COST_R5, 100.0, 2),
         (["W", "E"], "E", E_COST, 130.0, 1),
@@ -455,9 +457,9 @@ def test_ability_detonation_amount_receipt_shape_and_stream_order():
             assert refund["detail"]["detonating_cost"] == pytest.approx(det_cost)
         # Refund time == the detonating cast's time (Q#1 at 0.25 for W->Q;
         # the first cast of each slot is staggered by the 0.25 cast time).
-        first_other = [
+        first_other = next(
             c for c in result["cast_timeline"] if c["slot"] != "W" and c["ordinal"] == 1
-        ][0]
+        )
         assert refunds[0]["time"] == pytest.approx(first_other["time"], abs=1e-6)
         # Stream order: the unique spend at that timestamp precedes the gain.
         spends_at = [
@@ -501,7 +503,8 @@ def test_basic_attack_detonation_never_refunds_and_never_arms():
         assert section["declaration"]["detonation"] == "basic_attack"
         assert section["declaration"]["atoms"] == []
         marks = section["marks"]
-        assert marks and all(m["reason"] == "basic_attack_detonation" for m in marks)
+        assert marks
+        assert all(m["reason"] == "basic_attack_detonation" for m in marks)
         assert all(m["accepted"] is False for m in marks)
         assert all(m["refund_amount"] == 0.0 for m in marks)
         assert all(m["detonating_slot"] is None for m in marks)
@@ -667,7 +670,8 @@ def test_one_refund_per_mark_fifo_consumption():
     marks = result["resource_ledger"]["mark_refunds"]["marks"]
     refunds = _refunds(result)
     applied = [m for m in marks if m["reason"] == "applied"]
-    assert applied and len(applied) == len(refunds)
+    assert applied
+    assert len(applied) == len(refunds)
 
     seen: set[tuple[str, int]] = set()
     for refund in refunds:
@@ -936,7 +940,7 @@ def test_multi_target_mark_attribution_is_not_modeled():
     monster, or structure' — a per-target mark state the 1v1 model cannot
     express.  The fight prices ONE target; the only multi-target knob the
     engine exposes (``roster_target_index`` / ``roster_target_count``,
-    used to split a single ability's shared AoE charges across a roster)
+    which split a single ability's shared AoE charges across a roster)
     has NO effect on which mark gets consumed or refunded — the refund
     stream stays byte-identical no matter which roster slot/count is
     supplied, proving no per-target mark surface exists to attribute a
@@ -1016,7 +1020,7 @@ def test_score_parity_full_vs_score_only_refund_surface():
     """score_only must not change cast acceptance, resource totals, the
     ledger receipt stream (refunds included), or the mark_refunds section."""
     for cast_order in (["W", "Q"], ["W"]):
-        kwargs = dict(level=18, cast_order=cast_order)
+        kwargs = {"level": 18, "cast_order": cast_order}
         full = _fight(**kwargs)
         score = _fight(**kwargs, score_only=True)
         assert full["resource_spent"] == pytest.approx(score["resource_spent"])
@@ -1114,7 +1118,7 @@ def test_multi_declaration_fails_closed():
     # authoring error (validated before the uniqueness guard).
     del abilities["Q"]["mark_refund"]
     abilities["Q"]["mark_refund"] = {"flat": -1.0, "source": "x", "atoms": ()}
-    with pytest.raises(ValueError, match="mark_refund.flat"):
+    with pytest.raises(ValueError, match=re.escape("mark_refund.flat")):
         calculate_fight_damage(
             stats,
             abilities,

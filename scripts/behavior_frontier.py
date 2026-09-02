@@ -112,11 +112,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # pylint: disable=wrong-import-position
-from src.calculator import interpreters  # noqa: E402
-from src.calculator import item_behavior_catalog as catalog  # noqa: E402
-from src.calculator import item_coverage  # noqa: E402
-from src.calculator.data_fetcher import fetch_item_data  # noqa: E402
-from src.calculator.item_behavior import ReceiptOnly, ReceiptScope  # noqa: E402
+from src.calculator import (
+    interpreters,
+    item_coverage,
+)
+from src.calculator import item_behavior_catalog as catalog
+from src.calculator.data_fetcher import fetch_item_data
+from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
 
 # The one refusal the hand set answers, so the one the derivation reads.
 LEDGER_SCOPE = ReceiptScope.SURVIVAL_LEDGER_TRANSITION
@@ -660,7 +662,7 @@ CAMPAIGN_STAGES = ROOT / "docs" / "receipts" / "campaign-stages.json"
 CAMPAIGN_SLICE_TAGS = ROOT / "docs" / "receipts" / "campaign-slice-tags.json"
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _campaign_stages_block() -> Mapping[str, Any]:
     """The ruled artifact, read once per process."""
     return json.loads(CAMPAIGN_STAGES.read_text(encoding="utf-8"))
@@ -731,7 +733,7 @@ COUNTER_4_DEFERRALS: Mapping[str, str] = {
 }
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _tag_first_seen() -> Mapping[str, str]:
     """Every slice tag of the campaign range, mapped to its earliest sha.
 
@@ -1140,7 +1142,8 @@ def no_runtime_behavior_block() -> dict[str, Any]:
         "sourced": sorted(
             name
             for name in members
-            if name in item_coverage._SOURCE_REFS  # noqa: SLF001
+            if name
+            in item_coverage._SOURCE_REFS  # noqa: SLF001 - the frontier reads the map
         ),
         "declaring": sorted(
             name
@@ -1463,13 +1466,13 @@ def _unserved_lane_failures(
             f"{measured['unreceipted']} are declared, unserved and named by no "
             "receipt at all"
         )
-    for key in ("dated", "per_rule_receipted"):
-        if set(recorded.get(key, ())) != set(measured[key]):
-            failures.append(
-                f"counter 4: the committed {key} set differs from the tree's "
-                f"(committed-only={sorted(set(recorded.get(key, ())) - set(measured[key]))}, "
-                f"measured-only={sorted(set(measured[key]) - set(recorded.get(key, ())))})"
-            )
+    failures.extend(
+        f"counter 4: the committed {key} set differs from the tree's "
+        f"(committed-only={sorted(set(recorded.get(key, ())) - set(measured[key]))}, "
+        f"measured-only={sorted(set(measured[key]) - set(recorded.get(key, ())))})"
+        for key in ("dated", "per_rule_receipted")
+        if set(recorded.get(key, ())) != set(measured[key])
+    )
     failures.extend(_route_failures(recorded.get("dated", {}), measured["dated"]))
     return failures
 

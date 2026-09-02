@@ -29,12 +29,15 @@ from ..item_behavior import (
     CritDamageBonusRule,
     CritOccurrence,
     EngineLane,
+    FightFacts,
     ForcedCritRule,
     KernelField,
     RuleFamily,
+    compiled_value,
+    flat_fields,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
+from ..value_ref import AnyValueRef, resolve
 
 # The field names a crit-profile rule compiles to.  One per declared number,
 # named for what it *is* rather than for the item it came from.
@@ -120,18 +123,12 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
     :func:`crit_fields`.  A reference needing a level or a fight fact is a
     stop naming the shape, exactly as sustain's fight-free reader refuses one.
     """
-    references = crit_references(rule)
-    try:
-        values = resolve_flat([reference for _, reference in references])
-    except ValueRefError as exc:
-        raise CritProfileInterpretationError(
-            f"{rule.mechanic_id} declares a reference that needs a level or a "
-            "fight fact, and this accessor has neither; read it through "
-            "resolve_profile, which is handed the context it resolves against"
-        ) from exc
-    return tuple(
-        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for (name, _), value in zip(references, values)
+    return flat_fields(
+        rule,
+        crit_references(rule),
+        lane,
+        CritProfileInterpretationError,
+        reader="resolve_profile",
     )
 
 
@@ -191,12 +188,12 @@ def crit_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 
 def _field(fields: tuple[KernelField, ...], name: str) -> float:
     """One compiled field by name, or a stop naming the question asked."""
-    for compiled in fields:
-        if compiled.name == name:
-            return float(compiled.value)
-    raise CritProfileInterpretationError(
+    return compiled_value(
+        fields,
+        name,
+        CritProfileInterpretationError,
         f"no crit-profile field named {name!r} was compiled; the engine asked "
-        "a declaration a question it does not answer"
+        "a declaration a question it does not answer",
     )
 
 
@@ -232,10 +229,7 @@ def _forced_crit(rule: BehaviorRule, fields: tuple[KernelField, ...]) -> ForcedC
 def resolve_profile(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> CritProfile:
     """Fold every holder's crit declarations into one profile.
 
@@ -249,13 +243,7 @@ def resolve_profile(
         owners,
         lambda rule: crit_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         ),
     )
@@ -311,9 +299,6 @@ __all__ = [
     "COOLDOWN_REFUND_FIELD",
     "CRIT_DAMAGE_BONUS_FIELD",
     "CRIT_PAYLOAD_REFERENCES",
-    "CooldownRefund",
-    "CritProfile",
-    "CritProfileInterpretationError",
     "FORCED_CRIT_COOLDOWN_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD",
@@ -321,6 +306,9 @@ __all__ = [
     "FORCED_CRIT_HEAL_REFERENCES",
     "FORCED_CRIT_RATIO_FIELD",
     "FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD",
+    "CooldownRefund",
+    "CritProfile",
+    "CritProfileInterpretationError",
     "ForcedCrit",
     "crit_fields",
     "crit_references",

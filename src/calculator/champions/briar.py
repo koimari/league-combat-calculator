@@ -42,15 +42,17 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_atoms import (
     AbilityAtomQuery,
+    atom_receipt,
     ranked_ability_atom_value,
     required_ability_atom,
 )
 from ..ability_spec import AttackClass, ControlEvent, DamageClass, DamagePart
+from ..binary_roots import data_value, spell_object
 from ..survival.actions import TransitionRank
+from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
-from .engine import BUFF, DEBUFF, SlotCtx, build_parser
-from .module_helpers import missing_hp_fraction
+from .module_helpers import missing_hp_fraction, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -59,7 +61,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from ..binary_roots import data_value, spell_object
 
 # The P/Q/R effect records carry the duration, stack, and ratio values; the
 # level-banded bleed base and bonus-AD ratio remain prose/leveling-backed.
@@ -131,12 +132,11 @@ def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _head_rush(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _head_rush(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: physical hit + item on-hit application + armor/MR shred."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -247,23 +247,10 @@ _E_REDUCTION_SOURCE = "Briar.E[0].effects[0].description"
 _E_CONTROL_SOURCE = "Briar.E[0].effects[3].description"
 
 
-def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
-    """Keep the provenance fields that identify one runtime atom."""
-    return {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
-
-
-def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _chilling_scream(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: fully-charged magic damage, wall bonus, and the sourced
     charge-window damage reduction + terrain-collision control.
 
@@ -279,10 +266,6 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
     stun that land on the primary target (control-only events, like the
     other reviewed control packets).
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
     if ctx.option("e_wall_collision"):
@@ -356,8 +339,8 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
                 "duration": charge_seconds,
                 "source": f"{ability_name(ability)} · damage reduction",
                 "source_atoms": [
-                    _atom_receipt(reduction_atom),
-                    _atom_receipt(duration_atom),
+                    atom_receipt(reduction_atom),
+                    atom_receipt(duration_atom),
                 ],
                 # The reduction covers every damage type Briar takes while
                 # charging (physical, magic, and true — the sourced prose
@@ -414,11 +397,14 @@ def _chilling_scream(ctx: SlotCtx) -> dict[str, Any] | None:
                 time_offset=E_FULL_CHARGE_SECONDS + knockup_seconds,
             ),
         )
-        entry["control_source_atoms"] = [_atom_receipt(control_atom)]
+        entry["control_source_atoms"] = [atom_receipt(control_atom)]
     return entry
 
 
-def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _certain_death(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: explosion magic damage + armor/MR/life-steal/move-speed buffs.
 
     The explosion is counted once, against the primary target. The
@@ -426,10 +412,6 @@ def _certain_death(ctx: SlotCtx) -> dict[str, Any] | None:
     re-triggers Blood Frenzy — covered by the ``blood_frenzy_active``
     toggle's default.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -555,21 +537,19 @@ SOURCES = load_champion_sources("Briar")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Briar self-healing events from its authored packet."""
     healing = []
     ability = _healing.ability_json(champion_data, "E")
     rank = _healing.parsed_rank(ability_damages, "E")
-    per_tick = _healing.extract_named(
-        ability, "Heal Per Tick", rank, champion_stats, {}
-    )
-    maximum = _healing.extract_named(ability, "Maximum Heal", rank, champion_stats, {})
+    per_tick = extract_named(ability, "Heal Per Tick", rank, champion_stats, {})
+    maximum = extract_named(ability, "Maximum Heal", rank, champion_stats, {})
     if per_tick > 0.0 and maximum > 0.0:
         # The ticks are the charge's, not the scream's: Briar is "charging
         # for up to 1 second, during which she ... heals herself every 0.25
@@ -584,19 +564,19 @@ def derive_self_healing(
         for payment in _healing.payments(
             _healing.HealAnchor.CAST_SCHEDULE, "E", damage_events, cast_timeline
         ):
-            ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
-            for index in range(1, ticks + 1):
-                healing.append(
-                    {
-                        "time": payment.cast_time + index * 0.25,
-                        "amount": min(
-                            float(per_tick),
-                            max(0.0, maximum - per_tick * (index - 1)),
-                        ),
-                        "source": "Chilling Scream",
-                        "kind": "champion_ability",
-                    }
-                )
+            ticks = max(1, min(4, math.ceil(maximum / per_tick)))
+            healing.extend(
+                {
+                    "time": payment.cast_time + index * 0.25,
+                    "amount": min(
+                        float(per_tick),
+                        max(0.0, maximum - per_tick * (index - 1)),
+                    ),
+                    "source": "Chilling Scream",
+                    "kind": "champion_ability",
+                }
+                for index in range(1, ticks + 1)
+            )
     # P (Crimson Curse) bleed self-heal: "The bleed always heals Briar
     # for 25% of the pre-mitigation damage dealt" (cached passive prose).
     # The bleed's own per-stack heal rows (2.5 : 12.5 + 12.5% bonus AD
@@ -629,7 +609,7 @@ def derive_self_healing(
     # bite's hit event; the CAST anchor keeps that one payment even if a
     # future W is priced as several hits.
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    heal_percent = _healing.extract_named(
+    heal_percent = extract_named(
         _healing.ability_json(champion_data, "W", 1),
         "Heal Percentage",
         w_rank,
@@ -650,7 +630,7 @@ def derive_self_healing(
     # Hematomania lasts; life steal heals for the sourced percentage of
     # the post-mitigation damage dealt by basic attacks.
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    life_steal = _healing.extract_named(
+    life_steal = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Life Steal",
         r_rank,

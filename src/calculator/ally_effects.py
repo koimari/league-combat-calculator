@@ -1,9 +1,9 @@
 """Opt-in outgoing ally effects with explicit sourced formulas."""
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 import math
 import re
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from .interpreters.ally_packet import AllyPacketSlot, resolve_slots

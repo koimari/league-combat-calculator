@@ -9,6 +9,8 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import float_option, int_option
+from .module_helpers import between_rows, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -17,7 +19,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -42,11 +43,8 @@ def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
 _warpath.phase = BUFF
 
 
-def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _rampage(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("q_stacks")), 0), 3)
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
@@ -69,11 +67,10 @@ def _rampage(ctx: SlotCtx) -> dict[str, Any] | None:
 _W_TICKS = 5
 
 
-def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _spirit_of_dread(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     ticks = min(max(int(ctx.options.get("w_ticks", _W_TICKS)), 1), _W_TICKS)
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -89,22 +86,25 @@ def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart("magic", per_tick, count=ticks, time_offset=0.0, hit_interval=1.0),
     )
     entry["detail"] = (
-        "One sourced area tick per second; healing and bonus resistances remain state in the ledger."
+        "One sourced area tick per second; healing and bonus resistances remain state "
+        "in the ledger."
     )
     return entry
 
 
-def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _devastating_charge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     distance = min(max(float(ctx.option("e_charge")), 0.0), 1.0)
-    low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
-    high = extract_named(
-        ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
+    value = between_rows(
+        ctx,
+        ability,
+        rank,
+        "Minimum Physical Damage",
+        high="Maximum Physical Damage",
+        fraction=distance,
     )
-    value = low + (high - low) * distance
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -127,20 +127,8 @@ def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _warpath,
-    "Q": _rampage,
-    "W": _spirit_of_dread,
-    "E": _devastating_charge,
-    "R": lambda ctx: _r(ctx),
-}
-
-
-def _r(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _r(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     return damage_entry(
         ability_name(ability),
         rank,
@@ -156,6 +144,15 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 # knockback.  R's riders damage on the way through and Hecarim then "fears
 # nearby enemies" on arrival.  P is the bonus-AD conversion row and applies
 # nothing.
+SLOTS = {
+    "P": _warpath,
+    "Q": _rampage,
+    "W": _spirit_of_dread,
+    "E": _devastating_charge,
+    "R": _r,
+}
+
+
 MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear"}
 
 parse_abilities = build_parser(SLOTS, "Hecarim", cc_kinds=MODULE_CC)
@@ -181,9 +178,12 @@ OPTIONS = [
     ),
 ]
 ASSUMPTIONS = [
-    "Warpath reads the explicit bonus-movement-speed input and updates bonus AD before later casts.",
-    "Rampage stacks and Spirit of Dread ticks are explicit ordered state; ally healing, fear and displacement are utility.",
-    "Devastating Charge is one empowered basic attack and therefore shares the item/on-hit timeline.",
+    "Warpath reads the explicit bonus-movement-speed input and updates bonus AD "
+    "before later casts.",
+    "Rampage stacks and Spirit of Dread ticks are explicit ordered state; ally "
+    "healing, fear and displacement are utility.",
+    "Devastating Charge is one empowered basic attack and therefore shares the "
+    "item/on-hit timeline.",
 ]
 SOURCES = load_champion_sources("Hecarim")
 
@@ -202,13 +202,13 @@ _SPIRIT_OF_DREAD_WINDOW_SECONDS = data_value(_HECARIM_W_SPELL, "BuffDuration")
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Hecarim self-healing events from its authored packet.
 
     Window membership comes from the engine's own cast timeline, and every

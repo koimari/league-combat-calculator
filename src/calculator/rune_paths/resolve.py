@@ -7,10 +7,11 @@ to a refusal carrying the reason. Overgrowth is the exception — its stacks
 buy maximum health, which the fight's stat block does read.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition
+from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneEffect,
@@ -127,8 +128,9 @@ def _compile_shield_bash(entry: Mapping[str, Any]) -> RuneProcEffect:
     name = "Shield Bash"
     effects = RuneValues(name, entry.get("effects", {}))
     base_by_level = required_leveling(name, effects)
-    bonus_health_ratio = effects.number("bonus_health_ratio")
-    shield_ratio = effects.number("shield_amount_ratio")
+    bonus_health_ratio, shield_ratio = effects.numbers(
+        "bonus_health_ratio", "shield_amount_ratio"
+    )
 
     def raw(inputs: DamageInputs) -> float:
         bonus_health = champion_stat(inputs.champion_stats, "health") - champion_stat(

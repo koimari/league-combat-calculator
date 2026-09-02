@@ -20,10 +20,13 @@ E3 additions over the CP10.9 packet module:
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -32,8 +35,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
 )
-from .. import healing_helpers as _healing
-from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
@@ -130,13 +131,12 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
 _relentless_storm.phase = BUFF
 
 
-def _frenzied_maul(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _frenzied_maul(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: base physical damage; the Wounded 2nd bite adds the sourced
     increased-damage part (50% + 25% per 100 bonus AD of the base)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
@@ -230,7 +230,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "relentless_storm_stacks",
         _RELENTLESS_STORM_MAX_STACKS,
@@ -241,7 +242,8 @@ OPTIONS = list(OPTIONS) + [
     bool_option("w_wounded", True, label="W hits an already-Wounded target (2nd bite)"),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "The Relentless Storm stack count is user-set (default 5 = fully "
     "stacked); the 6-second stack window and which damage events refresh "
     "it are not simulated",
@@ -263,28 +265,21 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Volibear self-healing events from its authored packet."""
     healing = []
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats, {})
+    w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
     w_missing_pct = _healing.leveling_modifier(w, "Heal", w_rank, 1)
 
-    def frenzied_maul_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = w_flat,
-        missing_pct: float = w_missing_pct,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-
+    frenzied_maul_heal = _healing.flat_plus_missing_heal(w_flat, w_missing_pct)
     # One bite, one heal: the cached note is "Frenzied Maul deals bonus
     # damage and heals if the target is still Wounded after the cast time",
     # so the payment is the cast, not the parts this module prices that bite

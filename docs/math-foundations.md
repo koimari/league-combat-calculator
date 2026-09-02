@@ -488,7 +488,7 @@ counting, crit expectation, clip identities, strongest-wins GW, saturating
 grey-health accumulator, earliest-trigger revive). The approximations found are
 all **documented in code** (burn GCD estimate, BC stack constant, Terminus pen
 average, R single-cast, DoT even-split, stat rounding, prefix double-on-hit
-attribution) — none is silently presented as exact. The one previously-suspect
+attribution) — none is silently presented as exact. The one once-suspect
 rule (percent reduction on negative armor) matches the League Wiki's stated
 boundary ("percentage armor reduction cannot [reduce below 0]"), with a
 game-file-verification footnote remaining. No combat formula was found

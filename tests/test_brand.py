@@ -11,6 +11,7 @@ Sanity anchors (magic damage, pre-mitigation, 100 AP):
 """
 
 import pytest
+
 from src.calculator.champions import brand, parse_champion_abilities
 from tests import cc_review
 

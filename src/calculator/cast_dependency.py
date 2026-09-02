@@ -206,6 +206,11 @@ class SuppressedInference:
     reason: str
     latent_reason: str | None = None
 
+    @property
+    def triple(self) -> tuple[str, str, str]:
+        """The identity of the inferred edge this suppresses."""
+        return (self.setup, self.consume, self.kind)
+
 
 @dataclass(frozen=True, slots=True)
 class CastDependency:
@@ -485,7 +490,7 @@ def _validate_suppressions(dep: CastDependency, *, module: str) -> None:
                 f"{suppression.consume} declares a blank latent_reason; either "
                 "say why the inference is absent or leave it None"
             )
-        triple = (suppression.setup, suppression.consume, suppression.kind)
+        triple = suppression.triple
         if triple in seen:
             raise DuplicateDependencyError(
                 f"{module}: suppression {suppression.setup}->"
@@ -511,7 +516,7 @@ def _first_declared_cycle(
         path.append(node)
         for successor in successors.get(node, ()):
             if successor in visiting:
-                return tuple(path[path.index(successor) :] + [successor])
+                return (*path[path.index(successor) :], successor)
             if successor not in settled:
                 found = walk(successor)
                 if found is not None:

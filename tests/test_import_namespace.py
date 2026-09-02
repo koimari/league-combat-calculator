@@ -1,8 +1,8 @@
 """Issue #164 — one calculator package namespace + canonical math owners.
 
-The Flask entry point used to insert ``src/`` on ``sys.path`` and import
-``calculator.*`` while tests and scripts imported ``src.calculator.*``,
-loading two distinct module trees in one process.  These tests pin the
+A Flask entry point that inserts ``src/`` on ``sys.path`` and imports
+``calculator.*`` while tests and scripts import ``src.calculator.*`` loads
+two distinct module trees in one process.  These tests pin the
 single-namespace contract and guard against re-importing duplicate growth,
 cooldown, and resistance formulas outside their canonical owners.
 """
@@ -24,7 +24,7 @@ def _src_text(relpath: str) -> str:
 def _code_lines(text: str) -> list[str]:
     """Source lines with comments AND docstrings stripped (enough for the
     formula guards — prose may cite the formula, code may not)."""
-    without_docstrings = re.sub(r'""".*?"""', "", text, flags=re.S)
+    without_docstrings = re.sub(r'""".*?"""', "", text, flags=re.DOTALL)
     lines = []
     for raw in without_docstrings.splitlines():
         line = re.sub(r"\s*#.*$", "", raw).strip()
@@ -129,7 +129,7 @@ def test_growth_formula_lives_only_in_stats():
 
 
 def test_growth_multiplier_enforces_level_bound():
-    import src.calculator.stats as stats
+    from src.calculator import stats
 
     assert stats.growth_multiplier(1) == pytest.approx(0.7025)
     assert stats.growth_multiplier(18) == pytest.approx(0.7025 + 0.0175 * 17)
@@ -138,11 +138,11 @@ def test_growth_multiplier_enforces_level_bound():
             stats.growth_multiplier(bad)
 
 
-def test_cooldown_formula_lives_only_in_damage():
-    """Ability-haste cooldown math is owned by damage.effective_cooldown."""
+def test_cooldown_formula_lives_only_in_stats():
+    """Ability-haste cooldown math is owned by stats.effective_cooldown."""
     rr = _src_text("src/calculator/rotation_resolver.py")
     import_line = next(
-        line for line in rr.splitlines() if line.startswith("from .damage import")
+        line for line in rr.splitlines() if line.startswith("from .stats import")
     )
     assert "effective_cooldown" in import_line
     for lineno, line in enumerate(_code_lines(rr), 1):

@@ -17,7 +17,7 @@ authored and the tests pin the absence instead:
   fight engine does not simulate for abilities); it is not a sustain
   self-heal that fires on cast.
 
-Yuumi P (Feline Friendship) was a third such absence and no longer is.
+Yuumi P (Feline Friendship) is not such an absence; it is sourced.
 The cached innate spends its buff "upon hitting them with the basic
 attack or Prowling Projectile", which is a damaging-hit anchor over the
 ``auto_attacks`` and ``Q`` source keys, and the innate carries its own
@@ -25,6 +25,7 @@ per-level recharge row; both are read live by ``yuumi.derive_self_healing``,
 so the tests below pin the amount and the gate rather than the absence.
 """
 
+import itertools
 import json
 import re
 from pathlib import Path
@@ -32,6 +33,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
+from src.calculator.healing_helpers import modifier_at_rank
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _ENEMY = {
@@ -93,13 +95,7 @@ def _leveling_modifier(
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, modifier_index, rank)
     raise AssertionError(f"{champion} {slot} has no leveling attribute {attribute!r}")
 
 
@@ -137,7 +133,8 @@ def test_rakan_gleaming_quill_heals_per_level_plus_ap():
     # The heal fires 3 seconds after the Q hit (no ally enters the radius
     # in a 1v1) and is inside the 10s window.
     in_window = [event for event in heals if event["time"] <= 10.0]
-    assert in_window and in_window[0]["time"] == pytest.approx(3.0)
+    assert in_window
+    assert in_window[0]["time"] == pytest.approx(3.0)
     expected = flat + ratio / 100.0 * ap
     assert in_window[0]["amount"] == pytest.approx(expected, abs=0.06)
 
@@ -255,10 +252,10 @@ def test_bard_caretakers_shrine_has_no_sourced_fight_trigger():
 def test_yuumi_feline_friendship_pays_the_level_row_on_a_damaging_hit():
     """Yuumi P moved OUT of this file's absence list: it is now sourced.
 
-    The absence this used to pin rested on "the ledger contains no
-    empowerment state, so every auto/Q event is an unfaithful trigger".
-    That is retired: the cached innate spends the buff on hitting with a
-    basic attack or Prowling Projectile, which is exactly
+    The absence claim "the ledger contains no empowerment state, so every
+    auto/Q event is an unfaithful trigger" does not hold: the cached innate
+    spends the buff on hitting with a basic attack or Prowling Projectile,
+    which is exactly
     ``HealAnchor.DAMAGING_HIT`` over those two source keys, and the
     innate's own per-level cooldown row is the recharge.  The heal is
     per-LEVEL (20 entries for levels 1-20): 20 : 120.59 (+ 30% AP), so
@@ -296,7 +293,8 @@ def test_yuumi_feline_friendship_is_gated_by_its_own_recharge_row():
     ]
     assert len(times) >= 2, "a 30s fight should re-arm the gate at least once"
     assert all(
-        later - earlier >= recharge - 1e-6 for earlier, later in zip(times, times[1:])
+        later - earlier >= recharge - 1e-6
+        for earlier, later in itertools.pairwise(times)
     )
 
 

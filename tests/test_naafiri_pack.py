@@ -54,12 +54,12 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.naafiri import (
-    ASSUMPTIONS,
     _HUNT_AD_PERCENT,
     _HUNT_DURATION,
     _PACKMATE_CAP_BY_LEVEL,
     _PACKMATE_DAMAGE_ATTR,
     _R_CHANNEL_TIME,
+    ASSUMPTIONS,
     _packmate_count,
 )
 from src.calculator.data_fetcher import fetch_champion_data
@@ -186,16 +186,16 @@ class TestHuntSteroid:
         """20.0 in the module == NaafiriADPercentBoost 0.20 in the game file."""
         binary = game_binary.data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
         assert all(value == pytest.approx(0.20, abs=1e-6) for value in binary)
-        assert _HUNT_AD_PERCENT / 100.0 == pytest.approx(binary[0], abs=1e-6)
+        assert pytest.approx(binary[0], abs=1e-6) == _HUNT_AD_PERCENT / 100.0
 
     def test_hunt_duration_matches_the_binary(self):
         binary = game_binary.data_value(_BIN_R_RECORD, "Duration")
-        assert _HUNT_DURATION == pytest.approx(binary[0])
+        assert pytest.approx(binary[0]) == _HUNT_DURATION
 
     def test_steroid_is_unranked(self):
         """Both channels agree the 20% does not scale with W rank."""
         binary = game_binary.data_value(_BIN_R_RECORD, "NaafiriADPercentBoost")
-        assert len(set(round(v, 6) for v in binary)) == 1
+        assert len({round(v, 6) for v in binary}) == 1
 
     def test_w_does_not_exist_at_level_one(self):
         """Level 1 has one skill point and the default ladder spends it on Q.
@@ -240,7 +240,7 @@ class TestHuntSteroid:
         _, abilities = _parse(18)
         assert abilities["W"]["total_raw"] == pytest.approx(0.0)
 
-    @pytest.mark.parametrize("slot,ratio", [("Q", 1.4), ("E", 1.2), ("R", 1.0)])
+    @pytest.mark.parametrize(("slot", "ratio"), [("Q", 1.4), ("E", 1.2), ("R", 1.0)])
     def test_downstream_slots_consume_the_buffed_bonus_ad(self, slot, ratio):
         """Q/E/R gain exactly (their bonus-AD ratio) x the hunt buff.
 
@@ -274,7 +274,7 @@ class TestPackmateCap:
 
     @pytest.mark.parametrize("level", list(range(1, 21)))
     def test_base_cap_reproduces_the_binary_step_function(self, level):
-        expected = 2 + sum(1 for breakpoint in (9, 12, 15) if level >= breakpoint)
+        expected = 2 + sum(1 for threshold in (9, 12, 15) if level >= threshold)
         assert _packmate_count(level, hunt=False) == expected
 
     @pytest.mark.parametrize("level", list(range(1, 21)))
@@ -300,7 +300,7 @@ class TestPackmateTotalsMatchTheWikiTable:
     """
 
     @pytest.mark.parametrize(
-        "level,hunt_off_total,hunt_on_total",
+        ("level", "hunt_off_total", "hunt_on_total"),
         [
             (6, 25.0, 55.04),
             (11, 60.0, 107.3),
@@ -448,7 +448,7 @@ class TestPackRowFailsClosed:
         assert buffed > build["move_speed"]
 
     @pytest.mark.parametrize(
-        "seconds, expected", [(5.0, 436.6), (10.0, 391.0), (30.0, 357.0)]
+        ("seconds", "expected"), [(5.0, 436.6), (10.0, 391.0), (30.0, 357.0)]
     )
     def test_the_grant_is_weighted_by_the_hunt_window(self, seconds, expected):
         """A 5s hunt must not read the same in a 5s fight and a 30s one.
@@ -480,7 +480,7 @@ class TestCoverageAndOptions:
         # coverage from SLOTS and the module declares no MODULE_COVERAGE
         # (restating the derived table is a contract error).
         coverage = get_champion_module_meta("Naafiri")["coverage"]
-        assert coverage == {slot: "modeled" for slot in "PQWER"}
+        assert coverage == dict.fromkeys("PQWER", "modeled")
 
     def test_w_hunt_option_is_exposed_and_defaults_on(self):
         meta = get_champion_options_meta("Naafiri")
@@ -497,5 +497,5 @@ class TestCoverageAndOptions:
         the contract derives the whole table from SLOTS.
         """
         coverage = get_champion_module_meta("Mordekaiser")["coverage"]
-        assert coverage == {slot: "modeled" for slot in "PQWER"}
+        assert coverage == dict.fromkeys("PQWER", "modeled")
         assert "out_of_scope" not in set(coverage.values())

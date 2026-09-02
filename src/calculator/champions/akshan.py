@@ -44,13 +44,15 @@ atoms-confirmed zero-HP-number effect), not left silently absent.
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -64,7 +66,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 # R bullets can crit at 30% effectiveness (3% damage per 10% crit chance) and
 # scale up to +200% based on the target's missing health. The binary stores
@@ -133,7 +134,7 @@ def _extract_e_per_shot(
 
 
 def _parse_passive_proc_damage(
-    passive: dict[str, Any],
+    passive: Mapping[str, Any],
     level: int,
     stats_context: dict[str, float] | None = None,
 ) -> float:
@@ -184,7 +185,7 @@ def _parse_passive_proc_damage(
     return 0.0
 
 
-def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
+def _extract_double_shot_ratio(passive: Mapping[str, Any]) -> float:
     """Extract the double shot AD ratio from the passive description.
 
     The description says the additional shot deals ``50% AD`` physical
@@ -238,17 +239,16 @@ def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _comeuppance(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _comeuppance(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: min damage per bullet x stored bullets + crit/missing-HP flags.
 
     Uses "Minimum Physical Damage per Bullet" — the JSON's "Maximum"
     variant already has the 3x missing-HP multiplier baked in; the
     fight engine applies that scaling itself from the flags.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_bullet = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target
@@ -318,11 +318,6 @@ _DIRTY_FIGHTING_SHIELD_DURATION_SECONDS = data_value(
 )
 
 
-def _dirty_fighting_shield(passive: dict[str, Any], ctx: SlotCtx) -> float:
-    """Dirty Fighting 3-stack proc shield amount (40:280 + 35% bAD by level)."""
-    return extract_named(passive, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
-
-
 def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     """Emit the 3-stack proc with its sourced auto-stack cadence.
 
@@ -344,7 +339,10 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     if passive is not None:
         attach_self_shield(
             entry,
-            amount=_dirty_fighting_shield(passive, ctx),
+            # The 3-stack proc shield: 40:280 + 35% bAD by level.
+            amount=extract_named(
+                passive, "Bonus Damage", ctx.level, ctx.stats, ctx.target
+            ),
             duration=_DIRTY_FIGHTING_SHIELD_DURATION_SECONDS,
             source="Dirty Fighting (3-Stack Shield)",
             detail=(
@@ -358,31 +356,22 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _going_rogue(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: stealth/mark/resurrection utility — sourced zero-enemy-damage row.
-
-    The cached W entry carries ``damageType: None``; every effect row is
-    Scoundrel-marking, resurrection, camouflage, or recast-timing text with
-    no HP number against an enemy champion. The one leveling row on the
-    ability (Bonus Movement Speed, conditional on facing a marked Scoundrel
-    during camouflage) is documented as a sourced-but-unmodeled rider in
-    ASSUMPTIONS rather than an unconditional stat_buff.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Going Rogue is stealth/Scoundrel-mark/resurrection utility "
-            "with no enemy-damage attribute of its own (data/champions.json "
-            "Akshan W carries damageType: None); its conditional bonus "
-            "movement speed (80-120 by rank, only while facing a marked "
-            "Scoundrel in camouflage) has no default-on consumer for a "
-            "one-rotation combat calc and stays a documented rider."
-        ),
-    )
+# W: stealth/mark/resurrection utility — sourced zero-enemy-damage row.
+#
+# The cached W entry carries ``damageType: None``; every effect row is
+# Scoundrel-marking, resurrection, camouflage, or recast-timing text with
+# no HP number against an enemy champion. The one leveling row on the
+# ability (Bonus Movement Speed, conditional on facing a marked Scoundrel
+# during camouflage) is documented as a sourced-but-unmodeled rider in
+# ASSUMPTIONS rather than an unconditional stat_buff.
+_going_rogue = no_damage_slot(
+    "Going Rogue is stealth/Scoundrel-mark/resurrection utility "
+    "with no enemy-damage attribute of its own (data/champions.json "
+    "Akshan W carries damageType: None); its conditional bonus "
+    "movement speed (80-120 by rank, only while facing a marked "
+    "Scoundrel in camouflage) has no default-on consumer for a "
+    "one-rotation combat calc and stays a documented rider."
+)
 
 
 OPTIONS = [

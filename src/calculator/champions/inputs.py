@@ -33,23 +33,24 @@ number's one home, stated once and with a reason.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 __all__ = [
+    "CHAMPION_STATS",
+    "RESERVED_OPTION_DEFAULTS",
+    "SCALING_INPUTS",
+    "TARGET_STATS",
     "ChampionInputError",
     "InputDefault",
-    "CHAMPION_STATS",
-    "TARGET_STATS",
-    "SCALING_INPUTS",
-    "RESERVED_OPTION_DEFAULTS",
-    "champion_stat",
-    "target_stat",
-    "scaling_input",
-    "declared_option_defaults",
     "bool_option",
-    "int_option",
+    "champion_stat",
+    "declared_option_defaults",
     "float_option",
+    "int_option",
+    "scaling_input",
+    "target_stat",
 ]
 
 
@@ -91,8 +92,8 @@ class InputDefault:
             raise ValueError("an input default without a reason is a literal")
 
 
-def _build(reason: str, value: float = 0.0) -> InputDefault:
-    return InputDefault(value, "BUILD", reason)
+def _build(reason: str) -> InputDefault:
+    return InputDefault(0.0, "BUILD", reason)
 
 
 _ABSENT_MEANS_NONE = "the build grants none of this stat, so the formula's term is zero"
@@ -304,6 +305,7 @@ def _option(
     key: str,
     default: Any,
     label: str,
+    *,
     minimum: float | None,
     maximum: float | None,
     extra: dict[str, Any],
@@ -324,28 +326,34 @@ def _option(
 
 def bool_option(key: str, default: bool, label: str, **extra: Any) -> dict[str, Any]:
     """A checkbox row: a piece of fight state the user turns on or off."""
-    return _option("bool", key, default, label, None, None, extra)
+    return _option("bool", key, default, label, minimum=None, maximum=None, extra=extra)
 
 
 def int_option(
     key: str,
     default: int,
+    *,
     minimum: int,
     maximum: int,
     label: str,
     **extra: Any,
 ) -> dict[str, Any]:
     """A whole-count row (stacks, casts, targets) and the range it accepts."""
-    return _option("int", key, default, label, minimum, maximum, extra)
+    return _option(
+        "int", key, default, label, minimum=minimum, maximum=maximum, extra=extra
+    )
 
 
 def float_option(
     key: str,
     default: float,
+    *,
     minimum: float,
     maximum: float,
     label: str,
     **extra: Any,
 ) -> dict[str, Any]:
     """A fractional row (shares, seconds, uptimes) and the range it accepts."""
-    return _option("float", key, default, label, minimum, maximum, extra)
+    return _option(
+        "float", key, default, label, minimum=minimum, maximum=maximum, extra=extra
+    )

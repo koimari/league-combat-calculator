@@ -18,21 +18,20 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator import survival
 from src.calculator.ability_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.item_effects import required_effect_value
 from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.compile import action_from_event
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.survival.actions import TransitionRank
 
 # The literal C5 retired: the five kinds the walk itself decided were
 # immobilizing.  Pinned here, not read from the tree, because it is the
-# thing that no longer exists — and because the widening's size is what
+# thing the tree does not hold — and because the widening's size is what
 # makes these tests green over something (D-26).
 RETIRED_WALK_LITERAL = frozenset(
     {"immobilize", "stun", "root", "knockup", "suppression"}
@@ -153,7 +152,7 @@ class TestTheWidenedPredicateReachesSteadfast:
 
     @pytest.mark.parametrize("cc_kind", sorted(IMMOBILIZING_CC_KINDS))
     def test_every_immobilizing_kind_grants_the_immobilize_stack_count(self, cc_kind):
-        """All fifteen, not the five the walk used to know."""
+        """All fifteen, not the retired walk literal's five."""
         stacks, row = _stacks_after_one_cast(cc_kind=cc_kind)
         assert stacks == FORCE_IMMOBILIZE_STACKS, (
             f"D-08: cc_kind {cc_kind!r} is in IMMOBILIZING_CC_KINDS, so "
@@ -250,11 +249,12 @@ class TestOneHome:
                     continue
                 if "cc_kind" not in ast.unparse(node.left):
                     continue
-                for comparator in node.comparators:
-                    if not isinstance(comparator, ast.Name):
-                        offenders.append(f"{module.name}:{node.lineno}")
-                    elif comparator.id != "IMMOBILIZING_CC_KINDS":
-                        offenders.append(f"{module.name}:{node.lineno}")
+                offenders.extend(
+                    f"{module.name}:{node.lineno}"
+                    for comparator in node.comparators
+                    if not isinstance(comparator, ast.Name)
+                    or comparator.id != "IMMOBILIZING_CC_KINDS"
+                )
         assert offenders == [], (
             "D-08: a cc_kind membership test in survival/ names something "
             "other than ability_spec.IMMOBILIZING_CC_KINDS"

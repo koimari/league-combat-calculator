@@ -18,13 +18,15 @@ import argparse
 import hashlib
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator.atomizer import Atom, write_atoms, write_manifest  # noqa: E402
-from src.calculator.atomizer_domains import (  # noqa: E402
+from src.calculator.atomizer import Atom, write_atoms, write_manifest
+from src.calculator.atomizer_domains import (
     atomize_abilities,
     atomize_economics,
     atomize_item_catalogue,
@@ -44,7 +46,7 @@ def _load_data() -> dict[str, Path]:
     }
 
 
-def atomize_champions(champions: dict) -> dict[str, list]:
+def atomize_champions(champions: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Delegate to the specialist classifier and normalize its atoms."""
     import importlib.util
 
@@ -93,7 +95,7 @@ def atomize_champions(champions: dict) -> dict[str, list]:
     wiki_types = module.load_wiki_damage_types()
     atom_relations = module.load_atom_relations()
 
-    def normalize(champion_name: str, atom: dict) -> dict:
+    def normalize(champion_name: str, atom: Mapping) -> dict:
         provenance = atom.get("provenance")
         if not isinstance(provenance, dict):
             raise ValueError(f"{champion_name} atom has no provenance")
@@ -101,12 +103,16 @@ def atomize_champions(champions: dict) -> dict[str, list]:
         receipt = provenance.get("evidence")
         if isinstance(receipt, str) and receipt and receipt != "unknown":
             evidence.append(receipt)
-        for wiki_page in provenance.get("wiki", []):
-            if str(wiki_page).strip():
-                evidence.append(f"wiki:{wiki_page}")
-        for binary_name in provenance.get("binary", []):
-            if str(binary_name).strip():
-                evidence.append(f"binary:{binary_name}")
+        evidence.extend(
+            f"wiki:{wiki_page}"
+            for wiki_page in provenance.get("wiki", [])
+            if str(wiki_page).strip()
+        )
+        evidence.extend(
+            f"binary:{binary_name}"
+            for binary_name in provenance.get("binary", [])
+            if str(binary_name).strip()
+        )
         if provenance.get("source"):
             evidence.append(f"source:{provenance['source']}")
         if provenance.get("inherited_from"):
@@ -167,10 +173,10 @@ def atomize_champions(champions: dict) -> dict[str, list]:
             path,
             keyword_index,
             vocab,
-            passive_map,
-            tag_map,
-            wiki_types,
-            atom_relations,
+            passive_map=passive_map,
+            tag_map=tag_map,
+            wiki_types=wiki_types,
+            atom_relations=atom_relations,
         )
         results[name] = [normalize(name, atom) for atom in result["atoms"]]
     return results
@@ -182,10 +188,10 @@ def _source_ref(path: Path) -> str:
     return f"{path.relative_to(REPO_ROOT)}@sha256:{digest}"
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "domains", nargs="*", help="one of %s or 'all'" % "|".join(DOMAINS)
+        "domains", nargs="*", help="one of {} or 'all'".format("|".join(DOMAINS))
     )
     parser.add_argument("--list", action="store_true", help="list domains and exit")
     parser.add_argument("--out", default=str(REPO_ROOT / "data" / "atoms"))

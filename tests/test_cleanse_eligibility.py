@@ -180,19 +180,18 @@ from typing import Any
 import pytest
 
 from src.app import app
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import delivery_eligibility as de
+from src.calculator.crowd_control_eligibility import classify_control
+from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import (
-    ActionKind,
     TransitionRank,
     support_transition_rank,
 )
-from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
+from tests.survival_probe import simulate_survival, survival_of
 
 try:  # P2 Slice 4 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import cleanse_eligibility as ce
@@ -278,7 +277,7 @@ def _calculate_status(payload: dict) -> tuple[int, dict]:
     response = app.test_client().post("/api/calculate", json=payload)
     try:
         body = response.get_json()
-    except Exception:  # pragma: no cover - non-JSON error bodies
+    except Exception:  # noqa: BLE001 - non-JSON body  # pragma: no cover
         body = {}
     return response.status_code, body
 
@@ -353,7 +352,7 @@ def _lulu_qw() -> dict:
     only the one ``lulu_whimsy_target`` names — the default is the self
     buff, which authors no control at all.  A fixture that wants the
     polymorph has to say so, which is the point: an enemy Lulu who was
-    never told to cast W at anybody no longer polymorphs the board.
+    never told to cast W at anybody does not polymorph the board.
 
     The enemy cast is targeted ("onto the target enemy champion"), so one
     friendly holds it: the roster's first defender, which is the main
@@ -699,7 +698,7 @@ def test_r1_mikaels_heals_the_selected_ally_only_and_truncates_nothing_today():
     assert outcomes["cleanse"]["event_count"] == 1
 
     # NEW-CONTRACT: recipient cleanse receipt + caster use-state receipt.
-    ce = _require_contract()
+    _require_contract()
     receipt = jinx["cleanse"]
     assert receipt["item"] == "Mikael's Blessing"
     assert receipt["target"] == "ally:Jinx"
@@ -732,7 +731,7 @@ def test_r1_mikaels_heals_the_selected_ally_only_and_truncates_nothing_today():
 
 
 @pytest.mark.parametrize(
-    "selected,selected_ally,other_ally",
+    ("selected", "selected_ally", "other_ally"),
     [(0, "ally:Jinx", "ally:Ashe"), (1, "ally:Ashe", "ally:Jinx")],
 )
 def test_r2_mikaels_target_choice_receipt_follows_the_selection(
@@ -775,7 +774,7 @@ def test_r2_mikaels_target_choice_receipt_follows_the_selection(
 
     # NEW-CONTRACT: the receipt names the selected ally; the other ally has
     # none; the caster consumed exactly one use.
-    ce = _require_contract()
+    _require_contract()
     receipt = selected_row["cleanse"]
     assert receipt["item"] == "Mikael's Blessing"
     assert receipt["target"] == selected_ally
@@ -834,7 +833,7 @@ def test_r3_mikaels_truncates_only_the_selected_allys_interval():
     assert result["ally:two"]["action_downtime"] == pytest.approx(2.0)
 
     # NEW-CONTRACT: only ally:one's interval is truncated.
-    ce = _require_contract()
+    _require_contract()
     receipt = one["cleanse"]
     assert receipt["target"] == "ally:one"
     assert receipt["decision"]["reason"] == ""
@@ -964,8 +963,6 @@ def test_r5_mikaels_excluded_kinds_per_sourced_wording():
     )
     # Blind/disarm are known SOFT kinds (never add downtime) and nearsight
     # is not even in the known set — the exclusion stays sourced per item.
-    from src.calculator.crowd_control_eligibility import classify_control
-
     assert classify_control(SimpleNamespace(cc_kind="blind")).unknown is False
     assert classify_control(SimpleNamespace(cc_kind="nearsight")).unknown is True
 
@@ -1001,7 +998,7 @@ def test_r6_mikaels_does_not_cleanse_suppression():
     assert result["target"]["action_downtime"] == pytest.approx(2.5)
 
     # NEW-CONTRACT: stun removed, suppression rejected and preserved.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == ""
     assert receipt["removed_controls"] == [
@@ -1037,7 +1034,7 @@ def test_r6_mikaels_does_not_cleanse_suppression():
 
 
 @pytest.mark.parametrize(
-    "item,source",
+    ("item", "source"),
     [
         ("Quicksilver Sash", QUICKSILVER_SOURCE),
         ("Mercurial Scimitar", MERCURIAL_SOURCE),
@@ -1182,7 +1179,7 @@ def test_a_self_cast_is_denied_under_stasis_as_it_is_under_suppression():
     """``CAST_BLOCKING_CONTROL_KINDS`` is both kinds, and only the
     suppression half was pinned.  A champion in Time Stop casts nothing."""
     ce = _require_contract()
-    assert ce.CAST_BLOCKING_CONTROL_KINDS == frozenset({"stasis", "suppression"})
+    assert frozenset({"stasis", "suppression"}) == ce.CAST_BLOCKING_CONTROL_KINDS
     decision = _eligibility("Quicksilver Sash").decide(
         _CleanseAction(
             active_controls=[
@@ -1207,7 +1204,7 @@ def test_a_self_cast_is_denied_under_stasis_as_it_is_under_suppression():
 
 
 @pytest.mark.parametrize(
-    "item,packet_builder",
+    ("item", "packet_builder"),
     [
         ("Mikael's Blessing", _purify_packet),
         ("Quicksilver Sash", _cleanse_packet),
@@ -1241,7 +1238,7 @@ def test_r8_airborne_is_never_cleansed(item, packet_builder):
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     assert result["target"]["action_downtime"] == pytest.approx(2.0)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["item"] == item
     assert receipt["removed_controls"] == []
@@ -1328,7 +1325,7 @@ def test_r10_no_active_control_qss_use_consumed_receipt_names_the_rule():
     result = simulate_survival(combatants, {}, {}, support_effects, 10.0)
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["use_consumed"] is True
@@ -1366,7 +1363,7 @@ def test_r10_no_active_control_mikaels_heal_still_fires():
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
     # NEW-CONTRACT: control_not_active decision + heal entry.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["heal"]["amount"] == pytest.approx(100.0)
@@ -1393,7 +1390,7 @@ def test_r10_no_active_control_mercurial_movement_still_grants():
     result = simulate_survival(combatants, {}, {}, support_effects, 10.0)
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == "control_not_active"
     movement = receipt["movement"]
@@ -1438,7 +1435,7 @@ def test_r11_control_before_at_and_after_activation():
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # NEW-CONTRACT: A remains [0.5,1.5]; B clamped [1.0,2.0]; C removed;
     # D applies [3.0,4.0].
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["activation_time"] == pytest.approx(2.0)
     assert receipt["decision"]["reason"] == ""
@@ -1490,7 +1487,7 @@ def test_r12_overlapping_stun_and_suppression_only_stun_truncated():
         "target": [_purify_packet(2.5, target="target", attacker="caster")]
     }
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == ""
     assert receipt["removed_controls"] == [
@@ -1549,7 +1546,7 @@ def test_r13_two_controls_ending_at_different_times_each_tail_removed():
     }
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == ""
     assert receipt["removed_controls"] == [
@@ -1601,7 +1598,7 @@ def test_r14_repeated_use_second_activation_fails_closed():
     }
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
 
-    ce = _require_contract()
+    _require_contract()
     # First activation truncates; the second is denied and truncates nothing.
     first = result["target"]["cleanse"]
     assert first["decision"]["reason"] == ""
@@ -1645,28 +1642,8 @@ def test_r14_repeated_use_second_activation_fails_closed():
 # ---------------------------------------------------------------------------
 
 
-def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
-    """Kernel + timeline: what an *unknown* control kind means here.
-
-    The merge ruling: ours keeps the closed ``ability_spec.CC_KIND_VOCABULARY``
-    and ``trigger_stream`` raises on anything outside it, because a misspelled
-    kind must never author a no-op control.  So a ``'dance'`` packet can no
-    longer reach the walk at all -- the branch main's version of this test
-    drove (apply the interval, then deny the cleanse with ``unknown_control``)
-    is unreachable *through the timeline*, and asserting it there would pin a
-    fail-open path this tree does not have.
-
-    Three halves, at the two seams that still exist:
-
-    * the timeline refuses the kind by name (ours' ruling);
-    * ``classify_control`` and the cleanse eligibility still answer
-      ``unknown`` for a kind handed straight to them -- they are pure
-      classifiers with no engine in front, and "an unknown control is not
-      cleansable and truncates nothing" is still their contract;
-    * a real non-blocking vocabulary kind (``slow``) carries the walk-level
-      half: it is authored, it adds no action downtime, and the activation
-      finds no active control to remove.
-    """
+def _r15_world():
+    """An enemy, a main target, and one cleanse packet on that target."""
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("target", "main"),
@@ -1674,8 +1651,13 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
+    return combatants, support_effects
 
-    # 1. The closed vocabulary refuses the kind, by name, before the walk.
+
+def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
+    """The timeline refuses a kind outside ``CC_KIND_VOCABULARY`` by name,
+    before the walk: a misspelled kind never authors a no-op control."""
+    combatants, support_effects = _r15_world()
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         simulate_survival(
             combatants,
@@ -1685,11 +1667,12 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
             10.0,
         )
 
-    # 2. The kernel seam still classifies an unknown kind as unknown, and an
-    #    unknown control is neither cleansable nor truncatable.
-    ce = _require_contract()
-    from src.calculator.crowd_control_eligibility import classify_control
 
+def test_r15_the_kernel_seam_classifies_an_unknown_kind_as_unknown():
+    """``classify_control`` and the cleanse eligibility are pure classifiers
+    with no engine in front: a kind handed straight to them is ``unknown``,
+    and an unknown control is neither cleansable nor truncatable."""
+    ce = _require_contract()
     profile = classify_control(SimpleNamespace(cc_kind="dance"))
     assert profile.unknown is True
     decision = _eligibility("Quicksilver Sash").decide(
@@ -1703,9 +1686,12 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
     assert kept == [_interval("dance", 1.0, 3.0)]
     assert removed == []
 
-    # 3. The walk-level half, on a kind the vocabulary declares: a slow is
-    #    known and non-blocking, so it authors no downtime interval and the
-    #    activation names control_not_active with nothing removed.
+
+def test_r15_a_known_non_blocking_kind_authors_no_downtime():
+    """A slow is in the vocabulary and non-blocking: it authors no downtime
+    interval, and the activation names control_not_active with nothing
+    removed."""
+    combatants, support_effects = _r15_world()
     assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
     result = simulate_survival(
         combatants,
@@ -1751,7 +1737,7 @@ def test_r16_spell_shield_blocked_control_not_present_at_cleanse():
     assert result["target"]["spell_shield_used"] is True
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["removed_controls"] == []
@@ -1778,7 +1764,7 @@ def test_r16_immunity_blocked_control_not_present_at_cleanse():
     assert "crowd_control" not in control
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["removed_controls"] == []
@@ -1821,7 +1807,7 @@ def test_r16_app_spell_shield_blocks_control_mikaels_heal_still_fires():
     assert survival_of(combat, "main")["action_downtime"] == pytest.approx(1.8)
     assert survival_of(combat, "ally:Jinx")["action_downtime"] == pytest.approx(1.8)
 
-    ce = _require_contract()
+    _require_contract()
     assert sivir["cleanse"]["decision"]["reason"] == "control_not_active"
     assert sivir["cleanse"]["removed_controls"] == []
 
@@ -1859,7 +1845,7 @@ def test_r17_same_timestamp_control_and_cleanse_total_order():
     second = run()
     assert first == second  # deterministic
 
-    ce = _require_contract()
+    _require_contract()
     receipt = first["target"]["cleanse"]
     assert receipt["activation_time"] == pytest.approx(2.0)
     assert receipt["removed_controls"] == [
@@ -1917,7 +1903,7 @@ def test_r18_parity_downtime_equals_removed_intervals():
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["downtime_before"] == pytest.approx(1.0)
     assert receipt["downtime_after"] == pytest.approx(0.5)
@@ -1960,7 +1946,7 @@ def test_r18_app_parity_today():
         assert row["action_downtime"] == pytest.approx(
             sum(interval["end"] - interval["start"] for interval in intervals)
         )
-        for event, interval in zip(applied, intervals):
+        for event, interval in zip(applied, intervals, strict=False):
             assert event["crowd_control"]["duration"] == pytest.approx(
                 interval["end"] - interval["start"]
             )
@@ -1971,7 +1957,7 @@ def test_r18_app_parity_today():
     jinx = survival_of(combat, "ally:Jinx")
     assert purify["applied_amount"] == pytest.approx(jinx["healing_received"], abs=0.05)
 
-    ce = _require_contract()
+    _require_contract()
     receipt = jinx["cleanse"]
     assert [(i["start"], i["end"]) for i in receipt["intervals_after"]] == [
         (i["start"], i["end"]) for i in jinx["crowd_control_intervals"]
@@ -2028,13 +2014,13 @@ def test_r19_compiled_walk_current_fail_closed_surface():
                 {"main": 0, "caster": 1},
             )
         except Exception as exc:  # noqa: BLE001 - the named receipt is the contract
-            assert receipt in str(exc)
+            assert receipt in str(exc)  # noqa: PT017 - the receipt is the contract
         else:  # pragma: no cover - today the compile must fail closed
             raise AssertionError(f"{kind} compiled without a fail-closed receipt")
 
     # NEW-CONTRACT: the heal+cleanse template fails closed after integration
     # (today it compiles as a plain HEAL — the pinned gap).
-    ce = _require_contract()
+    _require_contract()
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse": True}
@@ -2054,7 +2040,7 @@ def test_r19_compiled_walk_current_fail_closed_surface():
     try:
         compiler.add_support_templates([template], 0, {"main": 0, "caster": 1})
     except Exception as exc:  # noqa: BLE001 - the named receipt is the contract
-        assert "support_cleanse" in str(exc)
+        assert "support_cleanse" in str(exc)  # noqa: PT017 - the gate is the contract
     else:  # pragma: no cover - the gate must fail closed after integration
         raise AssertionError(
             "heal+cleanse template compiled without the named support_cleanse gate"
@@ -2100,7 +2086,7 @@ def test_r20_public_receipt_field_sets():
     required fields demand — declaration receipt, decision receipt,
     recipient survival-row cleanse receipt, caster cleanse_use receipt,
     removed/rejected entries, heal and movement entries."""
-    ce = _require_contract()
+    _require_contract()
 
     declaration = _declaration("Mikael's Blessing")
     decl_receipt = declaration
@@ -2241,7 +2227,7 @@ def test_r21_timeline_self_cast_cleanse_rides_the_gate_today():
     assert cleanse["applied_amount"] == pytest.approx(1.0)
 
     # NEW-CONTRACT: the self-cast fires and truncates its own stun.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == ""
     assert receipt["removed_controls"] == [
@@ -2306,7 +2292,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
 
     # NEW-CONTRACT: the gate stays (no truncation) and the use receipt names
     # the rule; the gated activation does NOT consume a use.
-    ce = _require_contract()
+    _require_contract()
     assert result["target"]["healing_received"] == pytest.approx(0.0)
     assert result["target"]["action_downtime"] == pytest.approx(2.0)
     assert [
@@ -2347,7 +2333,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
 # NOTE: the CURRENT "rejected with a named 400" variant (neither self item
 # declared an active option in ITEM_INPUT_OPTIONS, so an explicit active
 # option was rejected with "Unknown item option target: <item>") was removed
-# here — it no longer describes the tree.  The owner landed the P2 Slice 4
+# here — it does not describe the tree.  The owner landed the P2 Slice 4
 # active option for both Quicksilver Sash and Mercurial Scimitar, so the
 # named-400 rejection this row asserted is not reachable anymore; it is
 # superseded, not merely unpinned.  The PRIMARY variant directly below
@@ -2361,7 +2347,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
 
 
 @pytest.mark.parametrize(
-    "item,source",
+    ("item", "source"),
     [
         ("Quicksilver Sash", QUICKSILVER_SOURCE),
         ("Mercurial Scimitar", MERCURIAL_SOURCE),
@@ -2446,13 +2432,13 @@ def test_r24_mercurial_movement_is_a_separate_utility_effect():
     result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
     # CURRENT: the movement utility is recorded in native units (50% / 2s);
     # the cleanse truncates nothing.
-    cleanse, movement = support_effects["target"]
+    _cleanse, movement = support_effects["target"]
     # CURRENT: the movement utility is recorded in native units (50% / 2s).
     assert movement["applied_amount"] == pytest.approx(50.0)
     assert movement["duration"] == pytest.approx(2.0)
 
     # NEW-CONTRACT: truncation + the movement entry with its own atoms.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["item"] == "Mercurial Scimitar"
     assert receipt["decision"]["reason"] == ""
@@ -2508,8 +2494,8 @@ def test_r26_cleanse_and_movement_arm_after_the_controls_at_their_time():
     same-timestamp damage and control packets that arm at ``DAMAGE`` —
     which is the total-order baseline the same-timestamp row (R17) pins;
     the stable event key keeps the deterministic identity.  Read off the
-    one rank ladder, because the parallel float table it used to read is
-    retired and a second home for one ordering is how the two drift."""
+    one rank ladder: there is no parallel float table, and a second home
+    for one ordering is how the two drift."""
     for kind in ("cleanse", "movement"):
         rank = support_transition_rank({"kind": kind})
         assert rank is TransitionRank.UTILITY_ARM
@@ -2527,7 +2513,7 @@ def test_r26_cleanse_and_movement_arm_after_the_controls_at_their_time():
 
 
 @pytest.mark.parametrize(
-    "item,source,kind",
+    ("item", "source", "kind"),
     [
         ("Quicksilver Sash", QUICKSILVER_SOURCE, "stun"),
         ("Quicksilver Sash", QUICKSILVER_SOURCE, "charm"),
@@ -2562,7 +2548,7 @@ def test_r27_self_cast_fires_while_caster_is_stunned_or_charmed(item, source, ki
     assert cleanse["applied_amount"] == pytest.approx(1.0)
 
     # NEW-CONTRACT: fires + truncates the caster's own interval + receipt.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["item"] == item
     assert receipt["decision"]["reason"] == ""

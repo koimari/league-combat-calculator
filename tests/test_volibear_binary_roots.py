@@ -6,7 +6,7 @@ from src.calculator.binary_roots import data_value, spell_object
 
 
 def test_volibear_w_wounded_damage_multiplier_comes_from_the_binary():
-    import src.calculator.champions.volibear as volibear
+    from src.calculator.champions import volibear
 
     w = spell_object("Volibear", "VolibearW")
     assert data_value(w, "W2DamageMultiplier") - 1.0 == pytest.approx(
@@ -15,7 +15,7 @@ def test_volibear_w_wounded_damage_multiplier_comes_from_the_binary():
 
 
 def test_volibear_w_wounded_bonus_ad_multiplier_comes_from_the_binary():
-    import src.calculator.champions.volibear as volibear
+    from src.calculator.champions import volibear
 
     w = spell_object("Volibear", "VolibearW")
     assert data_value(w, "W2BonusADDamageMultiplier") * 100.0 == pytest.approx(

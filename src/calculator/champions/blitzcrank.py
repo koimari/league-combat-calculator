@@ -36,7 +36,10 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -47,8 +50,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Blitzcrank
@@ -67,12 +68,11 @@ MANA_BARRIER_SHIELD_RATIO = data_value(_MANA_BARRIER_SPELL, "ManaPercent")
 MANA_BARRIER_DURATION_SECONDS = data_value(_MANA_BARRIER_SPELL, "ShieldDuration")
 
 
-def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _overdrive(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: bonus AS for the fight's first 5s, time-averaged over the window."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     duration = ctx.options.get("fight_duration_seconds")
@@ -93,12 +93,11 @@ def _overdrive(ctx: SlotCtx) -> dict[str, Any] | None:
 _overdrive.phase = BUFF
 
 
-def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _power_fist(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: hand-authored 100% AD + 25% AP bonus riding the next auto."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     bonus = POWER_FIST_TOTAL_AD_RATIO * ctx.stat(
         "attack_damage"
@@ -123,12 +122,11 @@ def _power_fist(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _static_field(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _static_field(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: active burst only — the passive bolt entry is skipped by design."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     # Both R damage entries are named "Magic Damage"; only the skipped
     # passive carries a '% maximum mana' modifier.

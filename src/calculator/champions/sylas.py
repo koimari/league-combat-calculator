@@ -102,13 +102,13 @@ from dataclasses import replace
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..binary_roots import calculation_coefficients, spell_object
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module
 from .inputs import int_option
 from .module_contract import coverage
-from .slotlib import ability_name
-from ..binary_roots import calculation_coefficients, spell_object
+from .packet_module import build_packet_module
+from .slotlib import ability_name, extract_named
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 
@@ -235,7 +235,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "passive_procs",
         0,
@@ -246,7 +247,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Petricite Burst) prices the empowered basic attack as a CONVERSION, "
     "not as bonus on-hit damage: each Unshackled stack spent REPLACES one "
     "ordinary physical swing with a single 130% total AD (+ 30% AP) magic "
@@ -304,19 +306,19 @@ MODULE_COVERAGE = coverage(out_of_scope="R")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Sylas self-healing events from its authored packet."""
     healing = []
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    min_heal = _healing.extract_named(w, "Minimum Heal", w_rank, champion_stats)
-    max_heal = _healing.extract_named(w, "Maximum Heal", w_rank, champion_stats)
+    min_heal = extract_named(w, "Minimum Heal", w_rank, champion_stats)
+    max_heal = extract_named(w, "Maximum Heal", w_rank, champion_stats)
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):
@@ -340,7 +342,8 @@ def derive_self_healing(
 
 SELF_HEALING_RULE = self_healing_rule("Sylas")(derive_self_healing)
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "E (Abscond/Abduct) carries no shield in the current kit: the CP-era "
     "SylasEShield atom (80/115/150/185/220 + 100% AP for 2s) was removed "
     "in V10.2 (wiki patch history: 'Abscond Removed: ... No longer "

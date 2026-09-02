@@ -183,14 +183,12 @@ AMBIGUITY NOTES for the coordinator:
    receipt, mirroring the Asol _StardustRule pattern.
 """
 
-import copy
 import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import (
@@ -200,6 +198,7 @@ from src.calculator.champions import (
 )
 from src.calculator.champions.slotlib import extract_named, find_named_leveling
 from src.calculator.champions.zeri import PACKET_SHA256
+from tests.committed_bytes import sha256_as_committed
 
 # Coverage has one home now: the validated module contract (a module only
 # restates it as ``MODULE_COVERAGE`` when it differs from what SLOTS derive).
@@ -617,7 +616,7 @@ class TestSourceEvidence:
         # No threshold numbers anywhere in the passive/execute atoms (the
         # 70.0 that appears elsewhere in the catalog is ZeriR's cast
         # radius - unrelated to the execute threshold).
-        for atom in execute_atoms + [_atom("damage.basic-attack", "ZeriPassive")]:
+        for atom in [*execute_atoms, _atom("damage.basic-attack", "ZeriPassive")]:
             for value in atom.get("values", []):
                 assert value not in (70.0, 170.59, 20.0)
 
@@ -739,7 +738,7 @@ class TestExecuteSemantics:
         result = _fight(
             level=18,
             ap=0.0,
-            ranks={k: 0 for k in "QWER"},
+            ranks=dict.fromkeys("QWER", 0),
             target_health=159.99,
             auto_attack_uptime=1.0,
             duration=2.0,
@@ -750,7 +749,7 @@ class TestExecuteSemantics:
         result = _fight(
             level=18,
             ap=0.0,
-            ranks={k: 0 for k in "QWER"},
+            ranks=dict.fromkeys("QWER", 0),
             target_health=160.0,
             auto_attack_uptime=1.0,
             duration=2.0,
@@ -763,7 +762,7 @@ class TestExecuteSemantics:
         # untouched (no damage priced, no execute).  Post-completion the
         # seam must keep it: above the threshold the zap never executes.
         result = _fight(
-            level=18, ap=0.0, ranks={k: 0 for k in "QWER"}, target_health=160.01
+            level=18, ap=0.0, ranks=dict.fromkeys("QWER", 0), target_health=160.01
         )
         assert result["target_ending_health"] == pytest.approx(160.01)
 
@@ -776,7 +775,7 @@ class TestExecuteSemantics:
         result = _fight(
             level=18,
             ap=0.0,
-            ranks={k: 0 for k in "QWER"},
+            ranks=dict.fromkeys("QWER", 0),
             target_health=180.0,
             auto_attack_uptime=1.0,
             duration=2.0,
@@ -832,7 +831,7 @@ class TestUnchargedVsFullCharge:
         # dead) and no detail references the full-charge 110% AP.  This
         # guard stays live through the completion - the execute-range
         # seam must never re-price the full-charge attack.
-        stats, abilities = _parse(18, 0.0)
+        _stats, abilities = _parse(18, 0.0)
         entry = abilities["passive"]
         assert entry["total_raw"] == 0.0
         detail = str(entry.get("detail", ""))
@@ -965,7 +964,7 @@ class TestSourceAndAtomReceipts:
         # Mirror the Asol _StardustRule pattern: a typed rule with a
         # public receipt and an atom_ids surface for the threshold
         # (per-level values + 20% AP), whose hashes trip on data drift.
-        from src.calculator.champions.zeri import ZERI_P_EXECUTE_RULE  # noqa: F401
+        from src.calculator.champions.zeri import ZERI_P_EXECUTE_RULE
 
         receipt = ZERI_P_EXECUTE_RULE.public_receipt()
         assert receipt["threshold_level_1"] == pytest.approx(70.0)
@@ -1036,7 +1035,9 @@ class TestScoreReceiptParity:
         assert full["notes"] == scored["notes"]
         shared = ("time", "slot", "name", "ordinal", "resource_cost")
         assert len(full["cast_timeline"]) == len(scored["cast_timeline"])
-        for full_row, scored_row in zip(full["cast_timeline"], scored["cast_timeline"]):
+        for full_row, scored_row in zip(
+            full["cast_timeline"], scored["cast_timeline"], strict=False
+        ):
             assert {k: full_row[k] for k in shared} == {
                 k: scored_row[k] for k in shared
             }

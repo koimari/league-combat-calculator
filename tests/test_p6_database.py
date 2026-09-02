@@ -8,8 +8,9 @@ isolated SQLite file; the layer itself is dialect-agnostic, so the same
 models and helpers run against PostgreSQL in production.
 """
 
+import contextlib
 import threading
-import time
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import event
@@ -296,11 +297,12 @@ def test_cache_set_get_round_trip(sqlite_database):
     assert stats["cached_entries"] == 1
 
 
-def test_cache_ttl_expiry(sqlite_database):
+def test_cache_ttl_expiry(sqlite_database, monkeypatch):
     key = db.stable_cache_key("calculate", {"champion": "Ahri"})
     db.cache_set(key, {"total_damage": 1.0}, ttl_seconds=1)
     assert db.cache_get(key) == {"total_damage": 1.0}
-    time.sleep(1.1)
+    later = db._utcnow() + timedelta(seconds=2)
+    monkeypatch.setattr(db, "_utcnow", lambda: later)
     assert db.cache_get(key) is None
     assert db.cache_stats()["cached_entries"] == 0
 
@@ -358,10 +360,8 @@ def test_concurrent_cache_set_on_one_key_never_raises(sqlite_database):
 
     def hold_after_existence_check(_conn, _cursor, statement, *_rest):
         if "cached_results" in statement and statement.lstrip()[:6].upper() == "SELECT":
-            try:
+            with contextlib.suppress(threading.BrokenBarrierError):
                 barrier.wait()
-            except threading.BrokenBarrierError:
-                pass
 
     errors = []
 

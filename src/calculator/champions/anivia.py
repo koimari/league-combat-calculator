@@ -65,12 +65,12 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value_at_rank, spell_object
-from .inputs import champion_stat, float_option
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import champion_stat, float_option
+from .module_contract import coverage
+from .module_helpers import no_damage_slot, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_named, simple_damage
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 # Glacial Storm's own cadence: the blizzard "deal[s] magic damage every 0.5
 # seconds to enemies within and slow[s] them for 1 second, refreshing every
@@ -83,12 +83,11 @@ _R_TICK_INTERVAL = data_value_at_rank(_ANIVIA_R_SPELL, "TickRate", 1)
 _R_GROWTH_SECONDS = data_value_at_rank(_ANIVIA_R_SPELL, "GrowthTime", 1)
 
 
-def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _glacial_storm(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: three initial half-second ticks, then empowered ticks."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     duration = max(float(ctx.option("r_duration")), 1.5)
     total_ticks = int(duration / 0.5)
@@ -135,33 +134,24 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _crystallize(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: knockback wall — documented zero-damage row (no_damage).
-
-    The cached ability's leveling rows are all geometry (Width, Number of
-    ice segments, inter-segment distances) — no damage/heal/shield
-    attribute exists. Confirmed against both the atoms capture
-    (data/atoms/anivia.atoms.json: Crystallize's "damage_type": null) and
-    the game binary (data/bin/characters/anivia.bin.json's
-    CrystallizeAbility DataValues: WallDuration, WallWidth, WallChunks,
-    ChampPushDistance, NonChampPushDistance — no damage field).
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Crystallize summons a 5-second knockback wall (width and "
-            "segment count scale by rank); the cached W entry carries no "
-            "damage/heal/shield leveling row at all (data/champions.json "
-            "Anivia W), confirmed against the atoms capture "
-            "(damage_type: null) and the game binary's DataValues "
-            "(WallDuration/WallWidth/WallChunks/ChampPushDistance/"
-            "NonChampPushDistance — no damage field)."
-        ),
-    )
+# W: knockback wall — documented zero-damage row (no_damage).
+#
+# The cached ability's leveling rows are all geometry (Width, Number of
+# ice segments, inter-segment distances) — no damage/heal/shield
+# attribute exists. Confirmed against both the atoms capture
+# (data/atoms/anivia.atoms.json: Crystallize's "damage_type": null) and
+# the game binary (data/bin/characters/anivia.bin.json's
+# CrystallizeAbility DataValues: WallDuration, WallWidth, WallChunks,
+# ChampPushDistance, NonChampPushDistance — no damage field).
+_crystallize = no_damage_slot(
+    "Crystallize summons a 5-second knockback wall (width and "
+    "segment count scale by rank); the cached W entry carries no "
+    "damage/heal/shield leveling row at all (data/champions.json "
+    "Anivia W), confirmed against the atoms capture "
+    "(damage_type: null) and the game binary's DataValues "
+    "(WallDuration/WallWidth/WallChunks/ChampPushDistance/"
+    "NonChampPushDistance — no damage field)."
+)
 
 
 OPTIONS = [

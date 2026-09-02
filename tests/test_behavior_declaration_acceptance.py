@@ -34,28 +34,28 @@ from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
-from src.calculator import interpreters
+from src.calculator import interpreters, item_effects, trigger_stream
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator import item_effects, item_support_effects, trigger_stream
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass, DamagePart
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import (
     AmpChainSlot,
     Compilable,
     EngineLane,
+    FightFacts,
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
     Subject,
 )
-from src.calculator.program.views import ViewTag
-from src.calculator.roster_composition import ActorRequest
-from src.calculator.interpreters import delta_amp
 from src.calculator.item_support_effects import (
     EventViewStarvationError,
     derive_item_support_effects,
     require_event_view,
 )
+from src.calculator.program.views import ViewTag
+from src.calculator.roster_composition import ActorRequest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -188,10 +188,12 @@ def test_the_pair_engine_prices_a_declaration_only_amp(declared) -> None:
     slot = delta_amp.resolve_slot(
         (amp,),
         AmpChainSlot.WHOLE_TOTAL,
-        level=18,
-        fight_duration_seconds=FIGHT_DURATION,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=FIGHT_DURATION,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
     assert slot is not None, "the declared whole-total slot resolved to nothing"
     (fraction,) = slot.fractions
@@ -335,7 +337,7 @@ def test_deleting_an_interpreter_withholds_the_synthetic_item_too(
     than something the item's own branch would have produced anyway.
     """
     amp, _, lifeline = declared
-    from src.calculator import item_coverage  # noqa: PLC0415  (local by design)
+    from src.calculator import item_coverage
 
     for owner, family, lane in (
         (amp, RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE),
@@ -374,11 +376,11 @@ def test_no_file_outside_this_fixture_names_a_synthetic_owner() -> None:
             if path.resolve() == Path(__file__).resolve():
                 continue
             text = path.read_text(encoding="utf-8")
-            for name in synthetic:
-                if name in text:
-                    offenders.append(
-                        f"{path.relative_to(REPO_ROOT).as_posix()}: {name}"
-                    )
+            offenders.extend(
+                f"{path.relative_to(REPO_ROOT).as_posix()}: {name}"
+                for name in synthetic
+                if name in text
+            )
     assert offenders == []
 
 

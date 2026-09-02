@@ -14,8 +14,8 @@ file:
 This is a test helper, not a test module: it holds no assertions.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import parse_champion_abilities
@@ -51,7 +51,8 @@ CONTROL_WORDS = (
 # Wiki uses at all, not just the classes an item passive keys on.  A slot
 # reviewed as uncontrolled whose text carries one of these owes the
 # reader a named reason (its test's ``UNCONTROLLED_MENTIONS``).
-ANY_CONTROL_WORDS = CONTROL_WORDS + (
+ANY_CONTROL_WORDS = (
+    *CONTROL_WORDS,
     "cripple",
     "disarm",
     "drowsy",

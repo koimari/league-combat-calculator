@@ -52,7 +52,7 @@ class TestEveryLiveKindClassifies:
     """One case per packet kind the tree authors today."""
 
     @pytest.mark.parametrize(
-        "packet,family",
+        ("packet", "family"),
         [
             ({"kind": "revive", "amount": 800.0}, events.Revive),
             ({"kind": "stasis", "duration": 2.5}, events.CombatState),

@@ -26,6 +26,7 @@ from ..item_behavior import (
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
     EngineLane,
+    FightFacts,
     KernelField,
     RepeatingStrikeRule,
     RuleFamily,
@@ -186,7 +187,7 @@ def _row(
         item_name=rule.owner,
         breakdown_key=key,
         display_name=name,
-        damage_type=payload.formula.damage_class.value,
+        damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
         basic_damage=basic_damage,
     )
@@ -368,10 +369,7 @@ def charged_strike_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 def resolve_slots(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> ChargedStrikeSlots:
     """Every charged strike this build declares, split by shape.
 
@@ -385,13 +383,7 @@ def resolve_slots(
     buff: UltimateAutoBuffEffect | None = None
     schedules: list[SwingScheduleRule] = []
     for rule in charged_strike_rules(owners):
-        ctx = build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        )
+        ctx = build_context(rule.owner, facts)
         payload = rule.payload
         if isinstance(payload, EmpoweredHitRule):
             first_autos.append(_first_auto_effect(rule, ctx))
@@ -414,7 +406,7 @@ def resolve_slots(
         stacking_on_hits=tuple(stacking),
         shaped_charges=tuple(shaped),
         empowered_auto_buff=buff,
-        swing_schedule=_merged_schedule(schedules, level),
+        swing_schedule=_merged_schedule(schedules, facts.level),
     )
 
 

@@ -57,6 +57,9 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
+from .inputs import int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -65,8 +68,6 @@ from .slotlib import (
     extract_cooldown,
     with_control_event,
 )
-from .inputs import int_option
-from .module_contract import coverage
 
 # The thorns flat damage and ratios are binary DataValues (DefensiveBallCurl
 # — W — FlatDamageReturn / DamageArmorRatio / DamageMRRatio); the cached W
@@ -137,12 +138,11 @@ _spiked_shell.phase = BUFF
 PACKET_SHA256 = "e48aa5766d5565b485a6d7fa34421f25d11f56fdcfdec5bb0c0823acc991e0f0"
 
 
-def _defensive_ball_curl(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _defensive_ball_curl(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the thorns damage per enemy basic attack during the stance."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     autos = min(max(int(ctx.option("w_thorns_autos")), 0), 30)
     armor = float(ctx.stat("armor") or 0.0)
     magic_resistance = float(ctx.stat("magic_resistance") or 0.0)
@@ -223,7 +223,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "w_thorns_autos",
         0,
@@ -233,7 +234,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Defensive Ball Curl) prices the thorns damage — 15 + 10% total "
     "armor + 10% total magic resistance magic damage per enemy basic "
     "attack that hits Rammus during the stance (cached W description "

@@ -19,6 +19,9 @@ P1-3 closures:
   parser adds it explicitly from the same leveling row.
 """
 
+from typing import Any
+
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
@@ -31,7 +34,6 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1f62c9ad3216116b491935d3b92ff91949b3bea5a6a7381af05e7b6cfcbf5577"
 
@@ -43,7 +45,7 @@ _W_SHIELD_MAX_HEALTH_RATIO = data_value(_SKARNER_W_SPELL, "InitialShieldRatio")
 _W_SHIELD_DURATION = data_value(_SKARNER_W_SPELL, "ShieldDuration")
 
 
-def _seismic_bastion(ctx: SlotCtx):
+def _seismic_bastion(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: shockwave magic damage + the 8%-max-health self-shield."""
     ranked = ctx.ranked()
     if ranked is None:
@@ -73,7 +75,7 @@ def _seismic_bastion(ctx: SlotCtx):
     return entry
 
 
-def _ixtals_impact(ctx: SlotCtx):
+def _ixtals_impact(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: terrain-collision physical damage (flat + bAD + % max health)."""
     ranked = ctx.ranked()
     if ranked is None:
@@ -165,7 +167,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Seismic Bastion) shields Skarner for 8% of his maximum health "
     "for 2.5 seconds (cached W prose) via the shared self_shield_events "
     "interface; the shockwave damage is unchanged.",

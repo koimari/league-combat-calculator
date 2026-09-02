@@ -18,12 +18,12 @@ from pathlib import Path
 
 import pytest
 
+import src.app as app_module
 from src.calculator import rune_effects
 from src.calculator.ability_spec import DamagePart
 from src.calculator.calculate import calculate_payload
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.rune_paths import precision
-import src.app as app_module
 
 # ---------------------------------------------------------------------------
 # The roster
@@ -72,7 +72,8 @@ class TestTheCachedRoster:
     def test_the_shard_table_is_three_rows_of_three_with_its_revision(self):
         shards = rune_effects.RUNE_SHARDS
         assert shards["source"].endswith("/Rune")
-        assert isinstance(shards["revision"], int) and shards["revision"] > 0
+        assert isinstance(shards["revision"], int)
+        assert shards["revision"] > 0
         assert [slot["name"] for slot in shards["slots"]] == [
             "Offense",
             "Flex",
@@ -88,7 +89,8 @@ class TestTheCachedRoster:
     def test_the_adaptive_conversion_is_read_off_its_own_template(self):
         adaptive = rune_effects.ADAPTIVE_FORCE
         assert adaptive["source"].endswith("Template:Adaptive")
-        assert isinstance(adaptive["revision"], int) and adaptive["revision"] > 0
+        assert isinstance(adaptive["revision"], int)
+        assert adaptive["revision"] > 0
         assert adaptive["attack_damage_ratio"] == 0.6
 
 
@@ -101,8 +103,8 @@ class TestTheCachedRoster:
 def fixture_uncompiled_rune(monkeypatch):
     """One roster rune with its compiler taken away, and its name.
 
-    Every rune the roster offers compiles now, so the refusal an *unmodeled*
-    rune is owed can no longer be proved by naming one — it is proved by
+    Every rune the roster offers compiles, so the refusal an *unmodeled*
+    rune is owed cannot be proved by naming one — it is proved by
     removing a compiler. The merged vocabulary is cached, so the cache is
     cleared on the way in and again on the way out, once monkeypatch has put
     the compiler back.
@@ -143,7 +145,7 @@ class TestPageValidation:
 
     def test_two_runes_in_one_row_name_both_and_the_row(self):
         """The rules of the page are checked before this engine's coverage."""
-        with pytest.raises(ValueError, match="one rune per row.*Sorcery row 3"):
+        with pytest.raises(ValueError, match=r"one rune per row.*Sorcery row 3"):
             rune_effects.validate_rune_page("", ["Scorch", "Waterwalking"])
 
     def test_a_keystone_in_the_minor_list_is_refused(self):
@@ -247,7 +249,7 @@ def _compile_every_minor(monkeypatch):
     the rule instead of today's coverage.
     """
     stub = dict(rune_effects._compilers())
-    for name, entry in rune_effects.RUNE_EFFECTS.items():
+    for name in rune_effects.RUNE_EFFECTS:
         stub.setdefault(name, lambda entry: None)
     monkeypatch.setattr(rune_effects, "_compilers", lambda: stub)
 
@@ -475,7 +477,7 @@ class TestTheRunePageOverHttp:
         assert any("Absolute Focus" in note for note in result["notes"])
 
     @pytest.mark.parametrize(
-        "payload,rule",
+        ("payload", "rule"),
         [
             ({"minor_runes": ["Scorch", "Waterwalking"]}, "one rune per row"),
             ({"minor_runes": ["Fake Rune"]}, "Unknown rune"),

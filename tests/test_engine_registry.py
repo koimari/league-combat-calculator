@@ -1,6 +1,7 @@
 """Contracts for the complete runnable champion registration surface."""
 
 import json
+from pathlib import Path
 
 from src.calculator.champions import (
     _CHAMPION_MODULES,
@@ -10,7 +11,7 @@ from src.calculator.champions import (
 
 
 def _champions() -> dict:
-    with open("data/champions.json", encoding="utf-8") as handle:
+    with Path("data/champions.json").open(encoding="utf-8") as handle:
         return json.load(handle)
 
 

@@ -2,8 +2,7 @@
 
 `item_behavior_catalog.TAG_FAMILY` maps all thirty-eight tags to a family
 whose compiler builds a declaration an interpreter prices.
-`item_effects._resolve_damage_effects_uncached` used to branch on eight of
-them and compile a second number for six.  It branches on two now, and
+`item_effects._resolve_damage_effects_uncached` branches on two of them, and
 neither prices anything: `ult_empowered_autos` and `ult_attack_speed_buff`
 quote the catalog's attack-speed digits into an assumption note, which is
 the one prose surface the projection owns.
@@ -29,8 +28,31 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interpreters import crit_profile, damage_routing, delta_amp
+from src.calculator.interpreters.crit_profile import (
+    CRIT_PAYLOAD_REFERENCES,
+    CritProfileInterpretationError,
+    declared_crit_profile,
+    resolve_profile,
+)
+from src.calculator.interpreters.damage_routing import (
+    FLAT_ROUTING_REFERENCES,
+    DamageRoutingInterpretationError,
+    declared_execution,
+    resolve_execution,
+    walk_rules,
+)
+from src.calculator.interpreters.stat_derivation import (
+    declared_stat_derivations,
+    reference_fields,
+    stat_derivation_rules,
+)
+from src.calculator.interpreters.sustain import declared_sustain
 from src.calculator.item_behavior import (
+    EngineLane,
+    FightFacts,
     FlatStatGrantRule,
     OnHitHealRule,
     RuleFamily,
@@ -47,28 +69,6 @@ from src.calculator.item_effects import (
     required_effect_value,
     resolve_damage_effects,
 )
-from src.calculator.ability_spec import AttackClass, DamageClass
-from src.calculator.interpreters import crit_profile, damage_routing, delta_amp
-from src.calculator.interpreters.crit_profile import (
-    CRIT_PAYLOAD_REFERENCES,
-    CritProfileInterpretationError,
-    declared_crit_profile,
-    resolve_profile,
-)
-from src.calculator.interpreters.damage_routing import (
-    DamageRoutingInterpretationError,
-    FLAT_ROUTING_REFERENCES,
-    declared_execution,
-    resolve_execution,
-    walk_rules,
-)
-from src.calculator.interpreters.stat_derivation import (
-    declared_stat_derivations,
-    reference_fields,
-    stat_derivation_rules,
-)
-from src.calculator.interpreters.sustain import declared_sustain
-from src.calculator.item_behavior import EngineLane
 from tests.coverage_resolver import tag_dispatch_branches
 
 # The fight the catalog's contextual resolvers are asked about.  Declared
@@ -79,7 +79,7 @@ DURATION = 10.0
 TARGET_BONUS_HEALTH = 0.0
 HOLDER_IS_MELEE = False
 
-CATALOG_CONTEXT = dict(
+CATALOG_CONTEXT = FightFacts(
     level=LEVEL,
     fight_duration_seconds=DURATION,
     target_bonus_health=TARGET_BONUS_HEALTH,
@@ -134,7 +134,7 @@ def test_execute_is_retired_from_the_ladder_and_owned_by_the_catalog():
     — so the projection carries no field for it and both engines read the
     threshold through the fight-free reader."""
     owner = _sole("execute")
-    catalog = resolve_execution([owner], **CATALOG_CONTEXT)
+    catalog = resolve_execution([owner], facts=CATALOG_CONTEXT)
     assert catalog.owner == owner
     assert catalog.threshold == pytest.approx(required_effect_value(owner, "threshold"))
     assert not hasattr(_ladder(owner), "execute")
@@ -146,11 +146,12 @@ def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
     beside the crit declarations that already held the same numbers."""
     owner = "Infinity Edge"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    catalog = resolve_profile([owner], **CATALOG_CONTEXT)
+    catalog = resolve_profile([owner], facts=CATALOG_CONTEXT)
     assert catalog.damage_bonus == pytest.approx(
         required_effect_value(owner, "bonus_crit_damage")
     )
-    assert catalog.forced_crit is None and catalog.cooldown_refund is None
+    assert catalog.forced_crit is None
+    assert catalog.cooldown_refund is None
     ladder = _ladder(owner)
     for retired in ("crit_damage_bonus", "navori_refund_percent"):
         assert not hasattr(ladder, retired)
@@ -160,7 +161,7 @@ def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
 def test_attack_cooldown_refund_is_the_catalogs_alone():
     owner = "Navori Flickerblade"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    catalog = resolve_profile([owner], **CATALOG_CONTEXT)
+    catalog = resolve_profile([owner], facts=CATALOG_CONTEXT)
     assert catalog.cooldown_refund.owner == owner
     assert catalog.cooldown_refund.fraction == pytest.approx(
         required_effect_value(owner, "cd_refund_percent")
@@ -171,7 +172,7 @@ def test_a_build_holding_both_crit_items_folds_both_sub_branches():
     """The two crit_modifier sub-branches compose the way the ladder folded
     them: the bonus sums into one slot and the refund fills another."""
     catalog = resolve_profile(
-        ["Infinity Edge", "Navori Flickerblade"], **CATALOG_CONTEXT
+        ["Infinity Edge", "Navori Flickerblade"], facts=CATALOG_CONTEXT
     )
     assert catalog.damage_bonus == pytest.approx(
         required_effect_value("Infinity Edge", "bonus_crit_damage")
@@ -184,7 +185,7 @@ def test_first_auto_crit_is_retired_from_the_ladder_and_owned_by_the_catalog():
     carried is a key of the forced-crit declaration, read here against the
     registry so a dropped reference fails rather than defaults."""
     owner = _sole("first_auto_crit")
-    catalog = resolve_profile([owner], **CATALOG_CONTEXT).forced_crit
+    catalog = resolve_profile([owner], facts=CATALOG_CONTEXT).forced_crit
     assert catalog.owner == owner
     for field, key in (
         ("reduced_ratio", "reduced_crit_ratio"),
@@ -227,7 +228,7 @@ def test_the_flat_crit_reader_answers_what_the_contextual_one_answers():
     numbers a build holding every crit item carries — which is what lets a
     caller with item names and no fight read the declaration instead of the
     ladder's projection."""
-    contextual = resolve_profile(list(CRIT_HOLDERS), **CATALOG_CONTEXT)
+    contextual = resolve_profile(list(CRIT_HOLDERS), facts=CATALOG_CONTEXT)
     flat = declared_crit_profile(list(CRIT_HOLDERS))
     assert flat.damage_bonus == pytest.approx(contextual.damage_bonus)
     assert flat.cooldown_refund == contextual.cooldown_refund
@@ -236,7 +237,9 @@ def test_the_flat_crit_reader_answers_what_the_contextual_one_answers():
 
 def test_the_flat_execution_reader_answers_what_the_contextual_one_answers():
     owner = _sole("execute")
-    assert declared_execution([owner]) == resolve_execution([owner], **CATALOG_CONTEXT)
+    assert declared_execution([owner]) == resolve_execution(
+        [owner], facts=CATALOG_CONTEXT
+    )
     assert declared_execution([]) is None
 
 
@@ -248,7 +251,8 @@ def test_every_declared_crit_payload_has_a_reference_row():
         for rule in behavior_rules(owner)
         if rule.family is RuleFamily.CRIT_PROFILE
     }
-    assert declared and declared <= set(CRIT_PAYLOAD_REFERENCES)
+    assert declared
+    assert declared <= set(CRIT_PAYLOAD_REFERENCES)
 
 
 def test_every_declared_routing_payload_has_a_reference_row():
@@ -260,7 +264,8 @@ def test_every_declared_routing_payload_has_a_reference_row():
     declared = {
         type(rule.payload) for owner in ITEM_EFFECTS for rule in walk_rules([owner])
     }
-    assert declared and declared <= set(FLAT_ROUTING_REFERENCES)
+    assert declared
+    assert declared <= set(FLAT_ROUTING_REFERENCES)
     assert {
         shape for shape, refs in FLAT_ROUTING_REFERENCES.items() if not refs
     } < declared
@@ -325,7 +330,8 @@ def test_the_two_part_amp_selectors_are_disjoint_and_total():
         for damage_class in DamageClass
         for rule in delta_amp.damage_class_amp_rules([owner], damage_class)
     }
-    assert by_attack and by_damage
+    assert by_attack
+    assert by_damage
     assert not by_attack & by_damage
     assert by_attack | by_damage == every
 
@@ -380,14 +386,16 @@ def test_the_overdrive_note_quotes_the_catalogs_numbers():
             rule,
             build_context(
                 owner,
-                LEVEL,
-                fight_duration_seconds=DURATION,
-                target_bonus_health=TARGET_BONUS_HEALTH,
-                holder_is_melee=melee,
+                FightFacts(
+                    level=LEVEL,
+                    fight_duration_seconds=DURATION,
+                    target_bonus_health=TARGET_BONUS_HEALTH,
+                    holder_is_melee=melee,
+                ),
             ),
             EngineLane.STAT_RESOLVER,
         )
-        amount = [field.value for field in fields if field.name == "amount"][0]
+        amount = next(field.value for field in fields if field.name == "amount")
         assert f"{amount:.0f}%" in note
 
 

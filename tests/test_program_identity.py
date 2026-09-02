@@ -89,9 +89,9 @@ class TestTheLegacyFormatsAreStillSpelledThatWay:
     def test_the_pair_format_has_exactly_one_producer(self) -> None:
         """One compiler authors it, for the score walk and the receipt alike.
 
-        It used to be spelled twice — once where the timeline enriched a pair
-        packet and once where the score compiler rebuilt it — which is the
-        arrangement that made every other field of an enriched event two
+        Spelled twice — once where the timeline enriches a pair packet and
+        once where the score compiler rebuilds it — it would be the
+        arrangement that makes every other field of an enriched event two
         facts wearing one name.
         """
         pair_format = 'f"{attacker_id}:{defender_id}:{index}"'

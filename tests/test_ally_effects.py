@@ -1,5 +1,6 @@
 """Fail-closed contracts for cached ally item effects."""
 
+import re
 from copy import deepcopy
 
 import pytest
@@ -40,7 +41,9 @@ def test_staff_rapids_non_numeric_stat_fails_closed():
     item = _staff()
     item["passives"][0]["stats"]["abilityHaste"]["flat"] = "unknown"
 
-    with pytest.raises(ValueError, match="abilityHaste.flat must be numeric"):
+    with pytest.raises(
+        ValueError, match=re.escape("abilityHaste.flat must be numeric")
+    ):
         resolve_ally_stat_effects((item,))
 
 
@@ -103,7 +106,7 @@ def test_a_cached_record_that_outran_the_declaration_is_a_named_stop():
     item = _staff()
     item["passives"][0]["stats"]["abilityHaste"]["flat"] = 20.0
 
-    with pytest.raises(ValueError, match="bonus_ability_haste=15.0"):
+    with pytest.raises(ValueError, match=re.escape("bonus_ability_haste=15.0")):
         resolve_ally_stat_effects((item,))
 
 

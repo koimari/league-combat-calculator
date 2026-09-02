@@ -28,9 +28,10 @@ from ..healing_helpers import (
     leveling_value,
     trigger_fields,
 )
-from .inputs import bool_option, champion_stat
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -51,12 +52,11 @@ _ATTACHED_TICKS = 2
 _ATTACHED_TICK_INTERVAL = 0.75
 
 
-def _sapling_toss(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _sapling_toss(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: Sapling Toss — plain explosion or brush-empowered burst+burn."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     cooldown = extract_cooldown(ability, rank)
     if not bool(ctx.option("sapling_empowered")):
         explosion = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)

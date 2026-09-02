@@ -12,6 +12,7 @@ coordinator's implementations:
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -21,7 +22,7 @@ from src.calculator.support_effects import derive_ally_effects
 
 @pytest.fixture(scope="module")
 def champion_data():
-    return json.load(open("data/champions.json"))
+    return json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 
 
 def _resolve(champ: str, level: int = 18, *, items=(), **stats):
@@ -122,9 +123,9 @@ def test_rakan_p_shield_rides_q(champion_data):
         18,
         0.0,
         {},
-        {},
-        {"health": 2000.0, "ability_power": 0.0},
-        {},
+        champion_options={},
+        champion_stats={"health": 2000.0, "ability_power": 0.0},
+        target_stats={},
     )
     q = out.get("Q", {})
     payload = q.get("self_shield_events")

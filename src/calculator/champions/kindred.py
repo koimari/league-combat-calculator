@@ -49,12 +49,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage, typed_damage
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import no_damage, ranked_slot, typed_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -64,8 +66,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .module_contract import coverage
 
 
 def _dance_of_arrows(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -111,6 +111,20 @@ def _marks(ctx: SlotCtx) -> int:
     return min(max(int(ctx.option("marks")), 0), _MARK_MAX)
 
 
+def _mark_scaled_override(
+    ctx: SlotCtx, marks: int, unit_phrase: str, per_mark: float, *, target_stat: str
+):
+    """A modifier override: the unit naming *unit_phrase* grows *per_mark* per Mark."""
+
+    def override(unit: str, value: float) -> float | None:
+        if unit_phrase not in unit:
+            return None
+        percent = value + per_mark * marks
+        return percent / 100.0 * float(ctx.target_stat(target_stat) or 0.0)
+
+    return override
+
+
 def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: Mark state row (bonus range, Q AS, E missing-health scaling)."""
     ability = ctx.ability()
@@ -129,12 +143,11 @@ def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _mounting_dread(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: Mounting Dread — third-stack Wolf pounce."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     stacks = min(max(int(ctx.option("e_stacks")), 1), _E_STACK_MAX)
     if stacks < _E_STACK_MAX:
         return no_damage(
@@ -152,16 +165,19 @@ def _mounting_dread(ctx: SlotCtx) -> dict[str, Any] | None:
     if leveling is None:
         return None
 
-    def per_mark_override(unit: str, value: float) -> float | None:
-        """Kindred E's missing-health modifier: 5% (+ 0.5% per Mark)."""
-        if "of target's missing health" not in unit:
-            return None
-        percent = value + 0.5 * marks
-        missing = float(ctx.target_stat("target_missing_health") or 0.0)
-        return percent / 100.0 * missing
-
+    # E's missing-health modifier: 5% (+ 0.5% per Mark).
     damage = sum_modifiers(
-        leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
+        leveling,
+        rank,
+        ctx.stats,
+        ctx.target,
+        modifier_override=_mark_scaled_override(
+            ctx,
+            marks,
+            "of target's missing health",
+            0.5,
+            target_stat="target_missing_health",
+        ),
     )
     entry = damage_entry(
         ability_name(ability),
@@ -228,7 +244,10 @@ def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _wolfs_frenzy(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: Wolf's Frenzy — Wolf basic attacks over the fight window.
 
     Wolf's attacks are magic and the rate scales with 25% of Kindred's
@@ -238,26 +257,25 @@ def _wolfs_frenzy(ctx: SlotCtx) -> dict[str, Any] | None:
     through the same modifier override Mounting Dread uses, so the
     sourced formula prices exactly.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     attacks = min(max(int(ctx.option("w_attacks")), 1), 8)
     marks = _marks(ctx)
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
         return None
 
-    def per_mark_override(unit: str, value: float) -> float | None:
-        """Wolf's current-health modifier: 1.5% (+ 1% per Mark)."""
-        if "of target's current health" not in unit:
-            return None
-        percent = value + 1.0 * marks
-        current = float(ctx.target_stat("target_current_health") or 0.0)
-        return percent / 100.0 * current
-
+    # Wolf's current-health modifier: 1.5% (+ 1% per Mark).
     per = sum_modifiers(
-        leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
+        leveling,
+        rank,
+        ctx.stats,
+        ctx.target,
+        modifier_override=_mark_scaled_override(
+            ctx,
+            marks,
+            "of target's current health",
+            1.0,
+            target_stat="target_current_health",
+        ),
     )
     entry = damage_entry(
         ability_name(ability),
@@ -344,18 +362,18 @@ MODULE_COVERAGE = coverage(no_damage="PR")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Kindred self-healing events from its authored packet."""
     healing = []
     r = _healing.ability_json(champion_data, "R")
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(r, "Heal", r_rank, champion_stats)
+    r_heal = extract_named(r, "Heal", r_rank, champion_stats)
     duration = max(0.0, float(fight_duration_seconds or 0.0))
     for cast_time in _healing.cast_slot_times(cast_timeline, "R"):
         heal_time = cast_time + 4.0
@@ -379,7 +397,7 @@ def derive_self_healing(
     # health (the wiki says it is not triggered there).
     if "W_vigor" in ability_damages:
         level = int(champion_stat(champion_stats, "level"))
-        heal = _healing.extract_named(
+        heal = extract_named(
             _healing.ability_json(champion_data, "W"), "Heal", level, champion_stats, {}
         )
         for event in _healing.attributed_events(

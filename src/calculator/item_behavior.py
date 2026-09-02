@@ -31,10 +31,11 @@ live meanings of that word already.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass, is_dataclass
+from dataclasses import fields as dataclass_fields
 from enum import Enum
-from typing import NamedTuple, Union
+from typing import ClassVar, NamedTuple, get_args
 
 from .ability_spec import (
     AttackClass,
@@ -42,7 +43,14 @@ from .ability_spec import (
     DamageClass,
     ZeroPolicy,
 )
-from .value_ref import AnyValueRef, LevelValueRef, SourceReceipt, VALUE_REF_TYPES
+from .value_ref import (
+    VALUE_REF_TYPES,
+    AnyValueRef,
+    LevelValueRef,
+    SourceReceipt,
+    ValueRefError,
+    resolve_flat,
+)
 
 
 class BehaviorRuleError(ValueError):
@@ -232,7 +240,7 @@ class ReceiptOnly:
             raise BehaviorRuleError("ReceiptOnly needs a reason")
 
 
-Compilability = Union[Compilable, ReceiptOnly]
+Compilability = Compilable | ReceiptOnly
 
 COMPILABILITY_TYPES: tuple[type, ...] = (Compilable, ReceiptOnly)
 
@@ -379,14 +387,14 @@ class LivePredicate:
         return True
 
 
-Activation = Union[
-    Always,
-    AbsoluteWindow,
-    TriggerWindow,
-    AfterTrigger,
-    ExcludeTrigger,
-    LivePredicate,
-]
+Activation = (
+    Always
+    | AbsoluteWindow
+    | TriggerWindow
+    | AfterTrigger
+    | ExcludeTrigger
+    | LivePredicate
+)
 
 ACTIVATION_TYPES: tuple[type, ...] = (
     Always,
@@ -422,7 +430,7 @@ class NEvents:
     count: AnyValueRef
 
 
-Consumption = Union[Persist, NextEventOnly, NEvents]
+Consumption = Persist | NextEventOnly | NEvents
 
 CONSUMPTION_TYPES: tuple[type, ...] = (Persist, NextEventOnly, NEvents)
 
@@ -545,14 +553,14 @@ class StatScaled:
     stat: HolderStat
 
 
-Magnitude = Union[
-    Fixed,
-    RampPerSecond,
-    TargetBonusHealthScaled,
-    RampPerStack,
-    MeleeRangedSplit,
-    StatScaled,
-]
+Magnitude = (
+    Fixed
+    | RampPerSecond
+    | TargetBonusHealthScaled
+    | RampPerStack
+    | MeleeRangedSplit
+    | StatScaled
+)
 
 MAGNITUDE_TYPES: tuple[type, ...] = (
     Fixed,
@@ -760,8 +768,8 @@ class LevelSteppedRate:
     schema that needs this pays a melee holder more at both ends.
     """
 
-    base: Union[AnyValueRef, "MeleeRangedSplit"]
-    per_level: Union[AnyValueRef, "MeleeRangedSplit"]
+    base: AnyValueRef | MeleeRangedSplit
+    per_level: AnyValueRef | MeleeRangedSplit
     from_level: AnyValueRef
 
 
@@ -776,7 +784,7 @@ class Term:
     where it grows with the holder's level past a declared one.
     """
 
-    coefficient: Union[AnyValueRef, MeleeRangedSplit, LevelSteppedRate]
+    coefficient: AnyValueRef | MeleeRangedSplit | LevelSteppedRate
     basis: Basis
 
 
@@ -792,7 +800,7 @@ class AtLeast:
     value: AnyValueRef
 
 
-Floor = Union[NoFloor, AtLeast]
+Floor = NoFloor | AtLeast
 
 FLOOR_TYPES: tuple[type, ...] = (NoFloor, AtLeast)
 
@@ -828,7 +836,7 @@ class TimesMissingHealth:
     bonus_at_full_missing: AnyValueRef
 
 
-Scaling = Union[NoScaling, TimesValue, TimesMissingHealth]
+Scaling = NoScaling | TimesValue | TimesMissingHealth
 
 SCALING_TYPES: tuple[type, ...] = (NoScaling, TimesValue, TimesMissingHealth)
 
@@ -853,6 +861,11 @@ class DamageFormula:
     floor: Floor
     damage_class: DamageClass
 
+    @property
+    def damage_type(self) -> str:
+        """The damage class as the engine names it."""
+        return self.damage_class.value
+
     def __post_init__(self) -> None:
         """A formula with no terms is a number nobody declared."""
         if not self.terms:
@@ -864,8 +877,6 @@ class DamageFormula:
             raise BehaviorRuleError("a DamageFormula declares its scaling")
         if not isinstance(self.floor, FLOOR_TYPES):
             raise BehaviorRuleError("a DamageFormula declares its floor")
-        if not isinstance(self.damage_class, DamageClass):
-            raise BehaviorRuleError("a DamageFormula declares what mitigates it")
 
 
 @dataclass(frozen=True, slots=True)
@@ -2530,10 +2541,10 @@ class PacketSpec:
 class LevelSubject(Enum):
     """Whose level a support packet's level ramp is read at.
 
-    The cached Wiki sentence *states* this and the emitters used to guess it:
-    every ramp was read at the recipient's level, so the four producers the
-    source scales on the holder were priced at whatever level the ally
-    happened to be.  Members are spelled the way the source spells them —
+    The cached Wiki sentence *states* this, so the emitters read it rather
+    than guess: a ramp read at the wrong level prices the four producers the
+    source scales on the holder at whatever level the ally happens to be.
+    Members are spelled the way the source spells them —
     ``{{pp|150 to 350|type=target's level}}`` against an unqualified
     ``{{pp|80 to 250}}``, whose bare "based on level" is the item owner's —
     so a declaration and the sentence it was read from compare without a
@@ -2613,54 +2624,54 @@ class AllyPacketRule:
     ramps: tuple[LevelRamp, ...]
 
 
-RulePayload = Union[
-    ActiveCastRule,
-    EmpoweredAutoBuffRule,
-    EmpoweredHitRule,
-    SwingScheduleRule,
-    RepeatingStrikeRule,
-    ShapedChargeRule,
-    CooldownProcRule,
-    UltimateProcRule,
-    PeriodicRule,
-    SpellbladeRule,
-    AllyPacketRule,
-    DeltaAmpRule,
-    PartAmpRule,
-    OnHitStrikeRule,
-    ResistanceShredRule,
-    SecondaryTargetRule,
-    CritDamageBonusRule,
-    ForcedCritRule,
-    AttackCooldownRefundRule,
-    ExecuteRule,
-    ShieldBypassRule,
-    DamageDeferralRule,
-    SustainStatRule,
-    OnHitHealRule,
-    PostMitigationHealRule,
-    ResourceDrainRule,
-    ManaSpentHealRule,
-    RegenerationRule,
-    ReceivedHealingRule,
-    BelowHalfHealingRule,
-    StatConversionRule,
-    StatMultiplierRule,
-    PenetrationChannelRule,
-    RestrictedChannelRule,
-    ResourceRestoreRule,
-    ManaflowRule,
-    StackedStatRule,
-    FlatStatGrantRule,
-    StatAuraRule,
-    ThresholdRegenRule,
-    UltimateRefundRule,
-    ActiveWindowCastEconomyRule,
-    OpeningDefenseRule,
-    ThresholdDefenseRule,
-    CombatStateRule,
-    ReactiveRule,
-]
+RulePayload = (
+    ActiveCastRule
+    | EmpoweredAutoBuffRule
+    | EmpoweredHitRule
+    | SwingScheduleRule
+    | RepeatingStrikeRule
+    | ShapedChargeRule
+    | CooldownProcRule
+    | UltimateProcRule
+    | PeriodicRule
+    | SpellbladeRule
+    | AllyPacketRule
+    | DeltaAmpRule
+    | PartAmpRule
+    | OnHitStrikeRule
+    | ResistanceShredRule
+    | SecondaryTargetRule
+    | CritDamageBonusRule
+    | ForcedCritRule
+    | AttackCooldownRefundRule
+    | ExecuteRule
+    | ShieldBypassRule
+    | DamageDeferralRule
+    | SustainStatRule
+    | OnHitHealRule
+    | PostMitigationHealRule
+    | ResourceDrainRule
+    | ManaSpentHealRule
+    | RegenerationRule
+    | ReceivedHealingRule
+    | BelowHalfHealingRule
+    | StatConversionRule
+    | StatMultiplierRule
+    | PenetrationChannelRule
+    | RestrictedChannelRule
+    | ResourceRestoreRule
+    | ManaflowRule
+    | StackedStatRule
+    | FlatStatGrantRule
+    | StatAuraRule
+    | ThresholdRegenRule
+    | UltimateRefundRule
+    | ActiveWindowCastEconomyRule
+    | OpeningDefenseRule
+    | ThresholdDefenseRule
+    | CombatStateRule
+    | ReactiveRule
+)
 
 # Which family each payload type belongs to.  One entry per payload; each
 # migration slice adds its family's payload here, so a rule can never carry
@@ -2714,20 +2725,22 @@ PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ReactiveRule: RuleFamily.REACTIVE,
 }
 
-# The four defence payloads, as one tuple the validator and the resolver both
-# read: every defence declaration answers "which mechanic, which state, which
-# numbers" and the family it lands in says *when* rather than *what*.
-DEFENSE_PAYLOAD_TYPES: tuple[type, ...] = (
-    OpeningDefenseRule,
-    ThresholdDefenseRule,
-    CombatStateRule,
-    ReactiveRule,
-    # Shaped like a defence and filed under another family: the resolver
-    # builds them at the opening with every other defence, and what they do
-    # with the damage is a different question from where they are built.
-    DamageDeferralRule,
-    ReceivedHealingRule,
+# The defence payloads, one union the validator, the resolver and the
+# interpreter all read: every defence declaration answers "which mechanic,
+# which state, which numbers" and the family it lands in says *when* rather
+# than *what*.  DamageDeferralRule and ReceivedHealingRule are shaped like a
+# defence and filed under another family: the resolver builds them at the
+# opening with every other defence, and what they do with the damage is a
+# different question from where they are built.
+DefensePayload = (
+    OpeningDefenseRule
+    | ThresholdDefenseRule
+    | CombatStateRule
+    | ReactiveRule
+    | DamageDeferralRule
+    | ReceivedHealingRule
 )
+DEFENSE_PAYLOAD_TYPES: tuple[type[DefensePayload], ...] = get_args(DefensePayload)
 
 
 # ── the rule ──────────────────────────────────────────────────────────────
@@ -2754,10 +2767,6 @@ def validate_rule(rule: BehaviorRule) -> None:
     whether an interpreter is registered and whether the numbers resolve are
     later tiers' questions, deliberately not asked here.
     """
-    if not isinstance(rule, BehaviorRule):
-        raise BehaviorRuleError(f"{rule!r} is not a BehaviorRule")
-    if not isinstance(rule.family, RuleFamily):
-        raise BehaviorRuleError(f"{rule.owner!r}: family must be a RuleFamily")
     if not rule.owner.strip():
         raise BehaviorRuleError("a BehaviorRule names an owner")
     if not rule.mechanic_id.strip():
@@ -2776,12 +2785,6 @@ def validate_rule(rule: BehaviorRule) -> None:
         )
     if not isinstance(rule.compilability, COMPILABILITY_TYPES):
         raise BehaviorRuleError(f"{rule.mechanic_id}: compilability is not declared")
-    if not isinstance(rule.receipt, SourceReceipt):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: receipt is not a SourceReceipt")
-    if not isinstance(rule.zero_policy, ZeroPolicy):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: zero_policy is required and has no default (D-24)"
-        )
     _validate_policy_types(rule)
     _validate_payload(rule)
 
@@ -2941,10 +2944,6 @@ def _validate_cooldown_proc(rule: BehaviorRule, payload: CooldownProcRule) -> No
         {"attack_cooldown_refund": payload.attack_cooldown_refund},
         optional=True,
     )
-    if not isinstance(payload.trigger, ProcTrigger):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a cooldown proc says what arms it"
-        )
     for name in (
         "repeat_on_cooldown",
         "is_ability_damage",
@@ -2981,11 +2980,6 @@ def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
         },
         optional=True,
     )
-    if not isinstance(payload.double_on_hit, bool):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: double_on_hit is a declared bool; whether the "
-            "empowered attack applies on-hit effects twice has no default answer"
-        )
     for pair in (
         (payload.mana_restore_base_ad_ratio, payload.mana_restore_crit_ratio),
         (payload.self_heal_ap_ratio, payload.self_heal_bonus_health_ratio),
@@ -2999,10 +2993,6 @@ def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
 
 def _validate_periodic(rule: BehaviorRule, payload: PeriodicRule) -> None:
     """A periodic strike names a cadence and only that cadence's fields."""
-    if not isinstance(payload.cadence, PeriodicCadence):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a periodic strike says how it spreads over time"
-        )
     _validate_formula(rule, payload.formula)
     _validate_refs(rule, {"interval": payload.interval})
     allowed = PERIODIC_CADENCE_FIELDS[payload.cadence]
@@ -3087,8 +3077,6 @@ def _validate_swing_schedule(rule: BehaviorRule, payload: SwingScheduleRule) -> 
 
 def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
     """A formula's terms are sourced shares of declared bases."""
-    if not isinstance(formula, DamageFormula):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: payload declares no formula")
     for term in formula.terms:
         if not isinstance(term, Term):
             raise BehaviorRuleError(f"{rule.mechanic_id}: a formula holds Terms")
@@ -3115,11 +3103,6 @@ def _validate_secondary_target(
             raise BehaviorRuleError(
                 f"{rule.mechanic_id}: {field_name} is a sourced reference"
             )
-    if not isinstance(payload.applies_on_hit, bool):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a secondary target says whether it carries "
-            "on-hit effects; there is no default answer"
-        )
 
 
 def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
@@ -3169,22 +3152,6 @@ def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
     ever checked in one direction is a field a second producer can quietly
     stop filling in.
     """
-    if not isinstance(payload.producer, AllyProducer):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: producer is not an AllyProducer")
-    if not isinstance(payload.trigger, PacketTrigger):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: an ally packet says what fires it"
-        )
-    if not isinstance(payload.persistence, Persistence):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: an ally packet says how long it is in force"
-        )
-    if not isinstance(payload.redirects_incoming_damage, bool):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: redirects_incoming_damage is a declared bool; "
-            "a producer that re-routes another participant's damage is not "
-            "representable by the compiled kernel and must not default"
-        )
     if not payload.packets:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a producer that emits no packet is an item "
@@ -3280,22 +3247,6 @@ def _validate_secondary_recipients(rule: BehaviorRule, payload: AllyPacketRule) 
 
 def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) -> None:
     """A shred names a resistance, a ramp and the damage that applies a stack."""
-    if not isinstance(payload.resistance, Resistance):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a shred says which resistance it reduces"
-        )
-    if not isinstance(payload.ramp, StackRamp):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: ramp is not a StackRamp")
-    if not isinstance(payload.ramp.accrual, TriggerEvent):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a shred says what event applies a stack"
-        )
-    if not isinstance(payload.ramp.model, RampModel):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a shred says how its stack history is summed"
-        )
-    if not isinstance(payload.typing, Typing):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
     if payload.subject is not Subject.TARGET:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a resistance shred acts on the target's "
@@ -3719,6 +3670,18 @@ class KernelField(NamedTuple):
 
 
 @dataclass(frozen=True, slots=True)
+class FightFacts:
+    """The fight facts a build-time magnitude scales with: the holder's level and
+    range class, the fight's length, the target's bonus health.  All are fixed
+    before the first event and all are required (see :class:`BuildContext`)."""
+
+    level: int
+    fight_duration_seconds: float
+    target_bonus_health: float
+    holder_is_melee: bool
+
+
+@dataclass(frozen=True, slots=True)
 class BuildContext:
     """What an interpreter may read at build time.
 
@@ -3810,13 +3773,150 @@ class DefenseOutcome:
     sentence is presentation and criterion 6 admits no open string as policy.
     """
 
-    fields: tuple["KernelField", ...]
+    fields: tuple[KernelField, ...]
     notes: tuple[str, ...]
+
+
+def typed_payload[T](
+    rule: BehaviorRule, payload_type: type[T], stop: type[Exception], noun: str
+) -> T:
+    """*rule*'s payload as *payload_type*, or *stop* saying it is not *noun*."""
+    payload = rule.payload
+    if not isinstance(payload, payload_type):
+        raise stop(f"{rule.mechanic_id} is not {noun}")
+    return payload
+
+
+def declared_mechanic_id(
+    owner: str,
+    rules: Sequence[BehaviorRule],
+    stop: type[Exception],
+    *,
+    authors: str,
+    declares: str,
+) -> str:
+    """The mechanic id of *owner*'s first rule, or *stop*.
+
+    A stop rather than a default: an unstamped pair row keeps the pair
+    engine's number in every roster total while the walk prices the same
+    declaration, and that is a double count.
+    """
+    if not rules:
+        raise stop(
+            f"{owner} authors {authors} and declares no {declares} rule, so its "
+            "pair row has no mechanic to be a preview of"
+        )
+    return rules[0].mechanic_id
+
+
+def compiled_value(
+    fields: Iterable[KernelField], name: str, stop: type[Exception], missing: str
+) -> float:
+    """The compiled field named *name*, or *stop* with the *missing* message."""
+    for field in fields:
+        if field.name == name:
+            return float(field.value)
+    raise stop(missing)
+
+
+def sole_declaration[T](
+    items: Sequence[T],
+    owners: Sequence[str],
+    payload_type: type,
+    stop: type[Exception],
+) -> T | None:
+    """A build's one declaration of a shape that does not compose, or ``None``.
+
+    ``None`` is an answer and not a zero: no holder declares the shape.  Two
+    holders is a stop, because nothing declares how two of them compose.
+    """
+    if not items:
+        return None
+    if len(items) > 1:
+        raise stop(
+            f"{owners} all declare {payload_type.__name__} and no rule declares "
+            "how two of them compose; the slice that declares a second one owns "
+            "the fold"
+        )
+    return items[0]
+
+
+def flat_fields(
+    rule: BehaviorRule,
+    references: Sequence[tuple[str, AnyValueRef]],
+    lane: EngineLane,
+    stop: type[Exception],
+    *,
+    reader: str,
+) -> tuple[KernelField, ...]:
+    """*references* resolved without any fight context, as compiled fields.
+
+    A reference needing a level or a fight fact is *stop* naming *reader*,
+    the accessor that is handed the context it resolves against.
+    """
+    try:
+        values = resolve_flat([reference for _, reference in references])
+    except ValueRefError as exc:
+        raise stop(
+            f"{rule.mechanic_id} declares a reference that needs a level or a "
+            f"fight fact, and this accessor has neither; read it through {reader}, "
+            "which is handed the context it resolves against"
+        ) from exc
+    return tuple(
+        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+        for (name, _), value in zip(references, values, strict=False)
+    )
+
+
+class CompiledSlot:
+    """A rule with its compiled fields: ``value`` reads one by name or stops.
+
+    A slot class names its family's ``stop`` and the ``missing`` message it
+    formats with ``mechanic_id`` and ``name``.
+    """
+
+    __slots__ = ()
+    rule: BehaviorRule
+    fields: tuple[KernelField, ...]
+    stop: ClassVar[type[Exception]]
+    missing: ClassVar[str]
+
+    def value(self, name: str) -> float:
+        """One compiled field of the slot's rule, or a stop."""
+        return compiled_value(
+            self.fields,
+            name,
+            self.stop,
+            self.missing.format(mechanic_id=self.rule.mechanic_id, name=name),
+        )
 
 
 __all__ = [
     "ACTIVATION_TYPES",
     "AMP_CHAIN_ORDER",
+    "COMPILABILITY_TYPES",
+    "CONSUMPTION_TYPES",
+    "DEFENSE_FIELD_COMBINE",
+    "DEFENSE_PAYLOAD_TYPES",
+    "DURABILITY_STATS",
+    "FLOOR_TYPES",
+    "MAGNITUDE_TYPES",
+    "PAYLOAD_FAMILY",
+    "PERIODIC_CADENCE_FIELDS",
+    "POLICY_IDENTIFIER_FIELDS",
+    "RESTRICTED_CHANNEL_PACKETS",
+    "RULE_FAMILY_COUNT",
+    "SCALING_TYPES",
+    "STAT_CHANNEL_PAYLOADS",
+    "STAT_DERIVATION_OPTIONAL_REFERENCES",
+    "STAT_DERIVATION_PAYLOADS",
+    "STAT_DERIVATION_REQUIRED_REFERENCES",
+    "STAT_DERIVATION_TARGET_PAYLOADS",
+    "STAT_DERIVATION_UNGRANTED_PAYLOADS",
+    "SUBJECT_AUTHORITY",
+    "SUSTAIN_PAYLOAD_REFERENCES",
+    "SUSTAIN_VALUE_PAYLOADS",
+    "TRIGGER_STREAM",
     "AbsoluteWindow",
     "Activation",
     "ActiveCastRule",
@@ -3834,21 +3934,17 @@ __all__ = [
     "BelowHalfHealingRule",
     "BonusTyping",
     "BuildContext",
-    "COMPILABILITY_TYPES",
-    "CONSUMPTION_TYPES",
     "ChainTargets",
     "ChargedSplash",
     "CombatStateRule",
     "Comparison",
     "Compilability",
     "Compilable",
+    "CompiledSlot",
     "Consumption",
     "CooldownProcRule",
     "CritDamageBonusRule",
     "CritOccurrence",
-    "DEFENSE_FIELD_COMBINE",
-    "DEFENSE_PAYLOAD_TYPES",
-    "DURABILITY_STATS",
     "DamageDeferralRule",
     "DamageFormula",
     "DamageThreshold",
@@ -3860,6 +3956,7 @@ __all__ = [
     "DefenseMechanic",
     "DefenseOption",
     "DefenseOutcome",
+    "DefensePayload",
     "DefenseSubject",
     "DeltaAmpRule",
     "DerivedStat",
@@ -3869,7 +3966,6 @@ __all__ = [
     "EngineLane",
     "ExcludeTrigger",
     "ExecuteRule",
-    "FLOOR_TYPES",
     "Fixed",
     "FlatStatGrantRule",
     "Floor",
@@ -3882,7 +3978,6 @@ __all__ = [
     "LevelSteppedRate",
     "LevelSubject",
     "LivePredicate",
-    "MAGNITUDE_TYPES",
     "Magnitude",
     "ManaSpentHealRule",
     "ManaflowRule",
@@ -3894,9 +3989,6 @@ __all__ = [
     "OnHitHealRule",
     "OnHitStrikeRule",
     "OpeningDefenseRule",
-    "PAYLOAD_FAMILY",
-    "PERIODIC_CADENCE_FIELDS",
-    "POLICY_IDENTIFIER_FIELDS",
     "PacketKind",
     "PacketSpec",
     "PacketTrigger",
@@ -3911,8 +4003,6 @@ __all__ = [
     "PostMitigationHealRule",
     "Probe",
     "ProcTrigger",
-    "RESTRICTED_CHANNEL_PACKETS",
-    "RULE_FAMILY_COUNT",
     "RampModel",
     "RampPerSecond",
     "RampPerStack",
@@ -3934,16 +4024,6 @@ __all__ = [
     "RestrictedPacket",
     "RuleFamily",
     "RulePayload",
-    "SCALING_TYPES",
-    "STAT_CHANNEL_PAYLOADS",
-    "STAT_DERIVATION_OPTIONAL_REFERENCES",
-    "STAT_DERIVATION_PAYLOADS",
-    "STAT_DERIVATION_REQUIRED_REFERENCES",
-    "STAT_DERIVATION_TARGET_PAYLOADS",
-    "STAT_DERIVATION_UNGRANTED_PAYLOADS",
-    "SUBJECT_AUTHORITY",
-    "SUSTAIN_PAYLOAD_REFERENCES",
-    "SUSTAIN_VALUE_PAYLOADS",
     "Scaling",
     "SecondaryTargetRule",
     "SelfShield",
@@ -3964,7 +4044,6 @@ __all__ = [
     "SustainStat",
     "SustainStatRule",
     "SwingScheduleRule",
-    "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
     "TemporaryLethality",
     "Term",
@@ -3982,10 +4061,15 @@ __all__ = [
     "WindowMerge",
     "ZeroPolicy",
     "chain_rank",
+    "compiled_value",
+    "declared_mechanic_id",
+    "flat_fields",
     "is_denial_receipt",
     "is_packet_kind",
     "is_value_reference",
     "policy_values",
     "policy_walk",
+    "sole_declaration",
+    "typed_payload",
     "validate_rule",
 ]

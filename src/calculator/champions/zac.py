@@ -25,14 +25,16 @@ for it, through the two channels ``COVERAGE_CHANNELS`` names.
 """
 
 from dataclasses import replace
+from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .engine import CC_PER_PART, SlotCtx, SlotParser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .engine import CC_PER_PART, SlotCtx
-from .module_helpers import no_damage
-from .packet_module import build_packet_module, full_plus_reduced_parser
+from .module_helpers import no_damage, ranked_slot
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -40,7 +42,6 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
-from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
 
@@ -83,12 +84,11 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 # empowered second Stretching Strike that replaces Zac's next basic
 # attack while the tether persists.  The second strike has a sourced
 # 0.25-second cast time.
-def _stretching_strikes(ctx: SlotCtx):
+@ranked_slot
+def _stretching_strikes(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: both Stretching Strikes — 2 x the sourced per-hit Magic Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -109,7 +109,7 @@ def _stretching_strikes(ctx: SlotCtx):
     return entry
 
 
-def _lets_bounce(packet_r):
+def _lets_bounce(packet_r: SlotParser) -> SlotParser:
     """R: the opening bounce displaces; the later bounces only slow.
 
     "Each bounce deals magic damage to enemies hit, knocks them back over 1
@@ -120,7 +120,7 @@ def _lets_bounce(packet_r):
     reduced ones.
     """
 
-    def parse(ctx: SlotCtx):
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = packet_r(ctx)
         if entry is None:
             return None
@@ -180,15 +180,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "W": simple_damage(
             attr="Magic Damage",
-            dmg_type="magic",
             source=("W", 0),
             event_order_certified="single_hit",
         ),
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage Per Hit",
-            reduced_attr="Reduced Damage Per Hit",
-            dmg_type="magic",
-            reduced_count=3,
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage Per Hit",
+            repeat_attr="Reduced Damage Per Hit",
+            repeats=3,
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=3.0,
@@ -213,7 +211,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 # of Zac's level-18 itemless maximum health — plus the Goo chunk heal the
 # healing rule authors, so P names both channels.
 COVERAGE_CHANNELS = {"P": ("starting_revive_defense", "self_healing_rule")}
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced "
     "per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row "
     "(data/champions.json Q; 120-360 + 60% AP + 6% of bonus health at "
@@ -235,13 +234,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Zac self-healing events from its authored packet.
 
     The chunk pays a percentage of Zac's own MAXIMUM health, which the
@@ -253,23 +252,21 @@ def derive_self_healing(
     healing = []
     p = _healing.ability_json(champion_data, "P")
     level = int(champion_stat(champion_stats, "level"))
-    chunk_pct = _healing.extract_named(
-        p, "Max Health Damage", level, champion_stats, {}
-    )
+    chunk_pct = extract_named(p, "Max Health Damage", level, champion_stats, {})
     amount = max(0.0, champion_stat(champion_stats, "health") * chunk_pct / 100.0)
 
-    for event in _healing.attributed_events(
-        damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
-    ):
-        healing.append(
-            {
-                "time": float(event.get("time", 0.0)),
-                "amount": amount,
-                "source": "Cell Division",
-                "kind": "champion_passive",
-                **_healing.trigger_fields(event),
-            }
+    healing.extend(
+        {
+            "time": float(event.get("time", 0.0)),
+            "amount": amount,
+            "source": "Cell Division",
+            "kind": "champion_passive",
+            **_healing.trigger_fields(event),
+        }
+        for event in _healing.attributed_events(
+            damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
         )
+    )
     return healing
 
 

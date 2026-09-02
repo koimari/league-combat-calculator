@@ -9,10 +9,8 @@ probe below is the reason it exists.
 
 import pytest
 
-from src.calculator.champions import get_champion_module_contract
-from tests import rider_probe
-from src.calculator.champions import seraphine
-from tests import cc_review
+from src.calculator.champions import get_champion_module_contract, seraphine
+from tests import cc_review, rider_probe
 
 
 class TestReviewedCrowdControl:
@@ -60,6 +58,6 @@ class TestStagePresenceRider:
         assert rider_probe.RIDER_ROW not in result["breakdown"]
 
     def test_every_slot_now_prices_something(self):
-        assert get_champion_module_contract("Seraphine").coverage == {
-            slot: "modeled" for slot in "PQWER"
-        }
+        assert get_champion_module_contract("Seraphine").coverage == dict.fromkeys(
+            "PQWER", "modeled"
+        )

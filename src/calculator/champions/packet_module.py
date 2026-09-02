@@ -9,22 +9,23 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from dataclasses import dataclass
 from typing import Any
 
 from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency, validate_cast_dependencies
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx, SlotParser, build_parser
 from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
@@ -84,7 +85,7 @@ def repeat_damage_parser(
     hit_interval: float = 0.0,
     dot_duration: float | None = None,
     name: str | None = None,
-):
+) -> SlotParser:
     """One per-tick attribute priced ``count`` times (E2-3 repeat fix).
 
     ``per_tick * count`` equals the wiki's "Total ..." row at every rank;
@@ -125,21 +126,21 @@ def repeat_damage_parser(
     return parse
 
 
-def initial_plus_ticks_parser(
+def first_plus_repeats_parser(
     *,
-    initial_attr: str,
-    tick_attr: str,
-    dmg_type: str,
-    tick_count: int,
+    first_attr: str,
+    repeat_attr: str,
+    repeats: int,
     time_offset: float,
     hit_interval: float,
     dot_duration: float | None = None,
-    name: str | None = None,
-):
-    """One impact hit plus ``tick_count`` channel ticks (Viktor R).
+) -> SlotParser:
+    """One hit at the cast plus ``repeats`` hits of a second row.
 
-    ``initial + tick_count * per_tick`` equals the wiki's "Total Magic
-    Damage" row at every rank (impact + 6 storm bolts for Arcane Storm).
+    ``first + repeats * repeat`` equals the wiki's "Total ..." row at every
+    rank: an impact plus channel ticks (Viktor R's impact + 6 storm bolts),
+    or a full-strength hit plus reduced ones (Zac's initial bounce + 3 half
+    bounces; Yuumi's first wave + 4 waves at 25% damage).
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -147,79 +148,25 @@ def initial_plus_ticks_parser(
         if ranked is None:
             return None
         ability, rank = ranked
-        initial = extract_named(
-            ability, initial_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        first = extract_named(
+            ability, first_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
-        per_tick = extract_named(
-            ability, tick_attr, rank, ctx.stats, ctx.target, level=ctx.level
-        )
-        entry = damage_entry(
-            name or ability.get("name", f"Ability {ctx.slot}"),
-            rank,
-            extract_cooldown(ability, rank, level=ctx.level),
-            initial + per_tick * tick_count,
-            dmg_type,
-        )
-        entry["parts"] = (
-            DamagePart(dmg_type, amount=initial, time_offset=0.0),
-            DamagePart(
-                dmg_type,
-                amount=per_tick,
-                count=tick_count,
-                time_offset=time_offset,
-                hit_interval=hit_interval,
-            ),
-        )
-        if dot_duration is not None:
-            entry["dot_duration"] = dot_duration
-        return entry
-
-    parse.phase = "damage"
-    return parse
-
-
-def full_plus_reduced_parser(
-    *,
-    full_attr: str,
-    reduced_attr: str,
-    dmg_type: str,
-    reduced_count: int,
-    time_offset: float,
-    hit_interval: float,
-    dot_duration: float | None = None,
-    name: str | None = None,
-):
-    """One full-strength hit plus ``reduced_count`` reduced hits.
-
-    The wiki's "Total ..." row equals ``full + reduced_count * reduced``
-    at every rank (Zac's initial bounce + 3 half bounces; Yuumi's first
-    wave + 4 waves at 25% damage).
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, rank = ranked
-        full = extract_named(
-            ability, full_attr, rank, ctx.stats, ctx.target, level=ctx.level
-        )
-        reduced = extract_named(
-            ability, reduced_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        repeat = extract_named(
+            ability, repeat_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
         entry = damage_entry(
-            name or ability.get("name", f"Ability {ctx.slot}"),
+            ability.get("name", f"Ability {ctx.slot}"),
             rank,
             extract_cooldown(ability, rank, level=ctx.level),
-            full + reduced * reduced_count,
-            dmg_type,
+            first + repeat * repeats,
+            "magic",
         )
         entry["parts"] = (
-            DamagePart(dmg_type, amount=full, time_offset=0.0),
+            DamagePart("magic", amount=first, time_offset=0.0),
             DamagePart(
-                dmg_type,
-                amount=reduced,
-                count=reduced_count,
+                "magic",
+                amount=repeat,
+                count=repeats,
                 time_offset=time_offset,
                 hit_interval=hit_interval,
             ),
@@ -252,14 +199,16 @@ def _ranked(values: list[float], rank: int) -> float:
     return float(values[min(max(rank, 1) - 1, len(values) - 1)])
 
 
-def _packet_cooldown(ctx: SlotCtx, spec: dict[str, Any], slot: str, rank: int) -> float:
+def _packet_cooldown(
+    ctx: SlotCtx, spec: Mapping[str, Any], slot: str, rank: int
+) -> float:
     """The cast's cooldown from ``data/champions.json``: the packet holds rank 1."""
     source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
     ability = ctx.ability(*source)
     return extract_cooldown(ability, rank, level=ctx.level) if ability else 0.0
 
 
-def _one_hit(spec: dict[str, Any]) -> bool:
+def _one_hit(spec: Mapping[str, Any]) -> bool:
     """Whether a packet row is exactly one hit (a packet without ``count`` is)."""
     return int(spec.get("count", 1)) == 1
 
@@ -375,7 +324,7 @@ def _packet_parser(
     return parse
 
 
-def _override_packet_static(ctx: SlotCtx, fix: dict[str, Any], rank: int) -> float:
+def _override_packet_static(ctx: SlotCtx, fix: Mapping[str, Any], rank: int) -> float:
     """Re-resolve a packet's per-hit base from an override (Nunu E).
 
     The pinned packet priced the wrong leveling row, so the fix carries the
@@ -402,7 +351,7 @@ def _override_packet_static(ctx: SlotCtx, fix: dict[str, Any], rank: int) -> flo
 
 
 def _apply_packet_tick_fix(
-    ctx: SlotCtx, entry: dict[str, Any], spec: dict[str, Any], fix: dict[str, Any]
+    ctx: SlotCtx, entry: dict[str, Any], spec: Mapping[str, Any], fix: dict[str, Any]
 ) -> dict[str, Any]:
     """Price one full multi-tick cast instead of a single tick.
 
@@ -483,7 +432,7 @@ def _apply_packet_tick_fix(
     return entry
 
 
-def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
+def _ticked_wiki_attribute_parser(spec: Mapping[str, Any], fix: Mapping[str, Any]):
     """A ``wiki_attribute`` slot whose value is per-tick (Nasus R).
 
     Reads the named per-tick attribute and multiplies by the sourced tick
@@ -570,6 +519,7 @@ def _apply_slot_overrides(
     slots: PacketSlotMap,
     slot_parsers: dict[str, Any] | None,
     slot_wrappers: dict[str, Any] | None,
+    *,
     slot_order: tuple[str, ...] | None,
 ) -> None:
     """Apply a module's slot overrides to the compiled map, in place.
@@ -669,7 +619,7 @@ def _variant_parsers(
 
 
 def _variant_slot(
-    spec: dict[str, Any], slot: str, overrides: SlotOverrides
+    spec: Mapping[str, Any], slot: str, overrides: SlotOverrides
 ) -> tuple[Any, dict[str, Any]]:
     """A variants slot: the parser that reads its option, and that option."""
     variants = spec["variants"]
@@ -680,7 +630,7 @@ def _variant_slot(
         ctx: SlotCtx,
         parsers=tuple(parsers),
         key=option_key,
-        default=spec.get("default", 0),
+        default=spec.get("default", 0),  # noqa: B008 - bound at definition
     ):
         try:
             index = int(ctx.options.get(key, default))
@@ -766,7 +716,13 @@ def build_packet_module(
     packet_part_timings: dict[str, dict[str, Any]] | None = None,
     cast_dependencies: tuple[CastDependency, ...] = (),
     cc_kinds: dict[str, str] | None = None,
-):
+) -> tuple[
+    Callable[..., dict[str, dict[str, Any]]],
+    PacketSlotMap,
+    list[str],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
     """Compile one named module's reviewed packet declaration.
 
     Champion-specific timing, parser, and assumption choices are passed by
@@ -855,7 +811,9 @@ def build_packet_module(
         if option is not None:
             options.append(option)
 
-    _apply_slot_overrides(champion_name, slots, slot_parsers, slot_wrappers, slot_order)
+    _apply_slot_overrides(
+        champion_name, slots, slot_parsers, slot_wrappers, slot_order=slot_order
+    )
 
     # The digest above proves the evidence is the reviewed one; this
     # proves the declarations are about slots that evidence compiled.  A

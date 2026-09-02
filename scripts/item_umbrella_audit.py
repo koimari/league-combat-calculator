@@ -22,8 +22,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -52,7 +53,7 @@ RECEIPT_PATH = ROOT / "docs" / "item-umbrella-audit.json"
 ABSENT = "<absent>"
 
 
-def _names(items: list[Mapping[str, Any]]) -> set[str]:
+def _names(items: Iterable[Mapping[str, Any]]) -> set[str]:
     """Return stable item names from a runtime pool."""
 
     return {str(item.get("name", "")) for item in items if item.get("name")}
@@ -74,7 +75,7 @@ def _keyed_by_item(receipt: Mapping[str, Any]) -> dict[str, Any]:
 
 def receipt_diff(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
-) -> tuple[tuple[str, Any, Any], ...]:
+) -> tuple[tuple[str, object, object], ...]:
     """Every ``(path, committed, fresh)`` where two audit receipts disagree.
 
     The committed receipt is a coverage answer for 209 items, refreshed by
@@ -85,9 +86,9 @@ def receipt_diff(
     ``tests/test_item_umbrella_audit.py`` are its two callers.
     """
 
-    def walk(old: Any, new: Any, path: str) -> list[tuple[str, Any, Any]]:
+    def walk(old: object, new: object, path: str) -> list[tuple[str, object, object]]:
         if isinstance(old, Mapping) and isinstance(new, Mapping):
-            found: list[tuple[str, Any, Any]] = []
+            found: list[tuple[str, object, object]] = []
             for key in sorted(set(old) | set(new)):
                 child = f"{path}.{key}" if path else str(key)
                 found.extend(walk(old.get(key, ABSENT), new.get(key, ABSENT), child))

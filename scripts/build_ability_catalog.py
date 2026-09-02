@@ -9,24 +9,24 @@ champion registry.
 
 from __future__ import annotations
 
-import argparse
 import json
 import sys
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.source_receipt import cache_patch, source_receipt
+from scripts.source_receipt import cache_patch, catalog_arguments, source_receipt
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.champions import registered_champion_names
 
 
-def _first_nonempty(values: list[Any]) -> Any:
+def _first_nonempty(values: Iterable[Any]) -> Any:
     return next((value for value in values if value not in (None, "")), None)
 
 
-def rank_count(ability: dict[str, Any], slot: str) -> int:
+def rank_count(ability: Mapping[str, Any], slot: str) -> int:
     """The catalogue's rank cardinality for one ability, clamped to the UI's five.
 
     Distinct from ``scenario._ability_max_rank``, which reads the same cache to
@@ -105,7 +105,7 @@ def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
     }
 
 
-def catalogue_champions(raw: dict[str, Any]) -> list[dict[str, Any]]:
+def catalogue_champions(raw: Mapping[str, Any]) -> list[dict[str, Any]]:
     """The cached champion rows a catalogue publishes, by display name.
 
     Every cached champion is here: an unregistered one is still a legal ally or
@@ -153,15 +153,9 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parents[1]
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, default=root / "data" / "champions.json")
-    parser.add_argument(
-        "--output", type=Path, default=root / "static" / "ability-catalog.json"
+    args = catalog_arguments(
+        __doc__, source="champions.json", output="ability-catalog.json"
     )
-    # Default derived from the cache, so a rebuild cannot stamp a stale patch.
-    parser.add_argument("--patch", default=None)
-    args = parser.parse_args()
 
     catalog = build_catalog(args.source.resolve(), args.patch or cache_patch())
     if not catalog["champions"]:

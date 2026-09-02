@@ -1,10 +1,10 @@
 """Issue #159 — one transition kernel drives every shield absorption path.
 
-Absorption order and shield/health mutation used to be hand-maintained in
-five places: two ordered walks in ``damage.py``, the authoritative receipt
-walk, and both damage branches of the compiled score walk.  Issue #137's
-survival kernel folded the last three into one damage transition; #159 makes
-that transition and both ``damage.py`` walks execute ``shield_ledger.absorb``.
+Absorption order and shield/health mutation have five sites: two ordered
+walks in ``damage.py``, the authoritative receipt walk, and both damage
+branches of the compiled score walk.  Issue #137's survival kernel folds the
+last three into one damage transition; #159 makes that transition and both
+``damage.py`` walks execute ``shield_ledger.absorb``.
 
 The per-transition contract lives in ``tests/test_shield_ledger.py``; these
 are the ownership guards and the end-to-end proof that the two engines agree.
@@ -17,13 +17,13 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
+from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
 
 SRC = Path(__file__).parents[1] / "src" / "calculator"
 LEDGER = SRC / "shield_ledger.py"

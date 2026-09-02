@@ -64,7 +64,8 @@ class TestMixedRowSummation:
     def test_each_term_is_read_on_its_own_axis(self) -> None:
         _, leveling = _row("Zoe", "Q", "Maximum Magic Damage")
         per_level, per_rank, ap_ratio = (_values(leveling, i) for i in range(3))
-        assert len(per_level) >= 18 and len(per_rank) == 5
+        assert len(per_level) >= 18
+        assert len(per_rank) == 5
 
         total = sum_modifiers(leveling, 5, dict(STATS), level=LEVEL)
 
@@ -85,7 +86,7 @@ class TestMixedRowSummation:
         )
 
     @pytest.mark.parametrize(
-        "champion,slot,attribute",
+        ("champion", "slot", "attribute"),
         [
             ("Mordekaiser", "Q", "Magic Damage"),
             ("Tahm Kench", "Q", "Magic Damage"),

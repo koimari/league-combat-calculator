@@ -19,9 +19,9 @@ from src.calculator.program.compile import action_from_event
 from src.calculator.survival.actions import (
     EVENT_SLOTS,
     NO_SLOT,
-    TransitionRank,
     EventSlots,
     SurvivalAction,
+    TransitionRank,
 )
 
 ROOT = Path(__file__).parents[1]
@@ -89,13 +89,13 @@ class TestThereIsOneRegistry:
         constructions = []
         for path in sorted(SRC_ROOT.rglob("*.py")):
             tree = ast.parse(path.read_text(encoding="utf-8"))
-            for node in ast.walk(tree):
-                if (
-                    isinstance(node, ast.Call)
-                    and isinstance(node.func, ast.Name)
-                    and node.func.id == "EventSlots"
-                ):
-                    constructions.append(path.relative_to(ROOT).as_posix())
+            constructions.extend(
+                path.relative_to(ROOT).as_posix()
+                for node in ast.walk(tree)
+                if isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "EventSlots"
+            )
         assert constructions == ["src/calculator/survival/actions.py"], (
             "the one construction is the module singleton EVENT_SLOTS -- "
             f"found {constructions}"

@@ -1,8 +1,9 @@
 """Revision-backed formulas, state controls, and event order for Taliyah."""
 
+import itertools
+
 import pytest
 
-from tests.ability_math import parts_raw_total
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,
@@ -11,6 +12,7 @@ from src.calculator.champions import (
     taliyah,
 )
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -203,7 +205,7 @@ def test_timed_q_cadence_uses_fresh_then_worked_cooldowns(taliyah_data, parse_at
     assert boulder_times[0] == pytest.approx(
         (_Q_CAST_TIME + _Q5_FRESH_CD) + _Q_CAST_TIME + boulder_travel
     )
-    deltas = [b - a for a, b in zip(boulder_times, boulder_times[1:])]
+    deltas = [b - a for a, b in itertools.pairwise(boulder_times)]
     assert deltas == pytest.approx([_WORKED_CADENCE] * 3)
 
 
@@ -277,7 +279,9 @@ def test_timed_haste_shortens_the_worked_cadence(taliyah_data, parse_at):
     assert len(hasted["Q"]["parts"]) > len(unhasted["Q"]["parts"])
     hasted_deltas = [
         b.time_offset - a.time_offset
-        for a, b in zip(hasted["Q"]["parts"][5:], hasted["Q"]["parts"][6:])
+        for a, b in zip(
+            hasted["Q"]["parts"][5:], hasted["Q"]["parts"][6:], strict=False
+        )
     ]
     assert all(delta < _WORKED_CADENCE for delta in hasted_deltas)
 

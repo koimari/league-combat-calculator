@@ -16,8 +16,8 @@ composition and the score compiler build the same keys.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable, Iterable, Mapping
 from enum import Enum, IntEnum
-from collections.abc import Iterable, Mapping
 from threading import Lock
 from typing import Any, NamedTuple
 
@@ -295,7 +295,7 @@ class EventSlots:
     be walked.
     """
 
-    __slots__ = ("_by_text", "_texts", "_lock")
+    __slots__ = ("_by_text", "_lock", "_texts")
 
     def __init__(self) -> None:
         self._by_text: dict[str, int] = {}
@@ -592,11 +592,11 @@ def declared_modifier_classes(
 # only spell 2**N of them, which is what bounds this table.  ``frozenset()``
 # is not a CPython singleton the way ``()`` is, so the empty set gets its own
 # name: an absent declaration is the common case and it allocated per action.
-_NO_CLASSES: frozenset = frozenset()
-_CLASS_SETS: dict[frozenset, frozenset] = {}
+_NO_CLASSES: frozenset[Enum] = frozenset()
+_CLASS_SETS: dict[frozenset[Enum], frozenset[Enum]] = {}
 
 
-def declared_class_set(value: Any, vocabulary: type) -> frozenset:
+def declared_class_set(value: object, vocabulary: type[Enum]) -> frozenset[Enum]:
     """One packet's declared class set, failing closed to the empty set.
 
     An absent declaration is empty rather than guessed; a declaration
@@ -605,10 +605,11 @@ def declared_class_set(value: Any, vocabulary: type) -> frozenset:
     """
     if not value:
         return _NO_CLASSES
-    members = frozenset(value if isinstance(value, Iterable) else (value,))
-    if not all(isinstance(member, vocabulary) for member in members):
+    declared = frozenset(value if isinstance(value, Iterable) else (value,))
+    members = frozenset(item for item in declared if isinstance(item, vocabulary))
+    if len(members) != len(declared):
         raise TypeError(
-            f"a packet declared {sorted(map(str, members))} where "
+            f"a packet declared {sorted(map(str, declared))} where "
             f"{vocabulary.__name__} members are required"
         )
     return _CLASS_SETS.setdefault(members, members)
@@ -628,7 +629,7 @@ def event_sequence(event: Mapping[str, Any]) -> int:
         return 0
 
 
-def participant_order(participant_id: Any) -> tuple[int, str]:
+def participant_order(participant_id: object) -> tuple[int, str]:
     """Use a deterministic side order when sources share a timestamp."""
     text = str(participant_id or "")
     if text == "main":
@@ -685,6 +686,7 @@ def compiled_damage_action(
     time: float,
     kind: ActionKind,
     subject: int,
+    *,
     attacker: int,
     aidx: int,
     amount: float,
@@ -775,45 +777,28 @@ def compiled_damage_action(
     return tuple.__new__(SurvivalAction, row)
 
 
+#: The walk's total order for one action: time, ordering slot, sequence,
+#: participant order (side, id), participant id, event id, source.
+ActionSortKey = tuple[float, TransitionRank, int, int, str, str, str, str]
+
+
 def action_key(
     event_time: float,
     phase: TransitionRank,
     participant_id: str,
     event: Mapping[str, Any],
-) -> tuple[Any, ...]:
-    """Order event phases without ever comparing payload dictionaries.
+) -> ActionSortKey:
+    """The survival walk's total order over event phases, never comparing
+    payload dictionaries; pair packets precompute it per event (``_sk``).
 
-    The survival walk's total order.  Pair packets precompute it per event
-    (``_sk``) because the walk re-sorts the same roster events for every
-    optimizer candidate.
-
-    Element 1 is the rank's :func:`ordering_slot`, not the rank: one pair of
-    ranks resolves together, and folding it here keeps the inline sort tuples in
-    ``compile.py`` comparable with this one.
-
-    The ``_event_id`` component is a dead tie-break for engine damage events:
-    ``sequence`` is unique per pair fight, and events from different pairs
-    already differ at the source/participant components.  The compiler's
-    pair-local event numbering depends on that, so an engine event arriving
-    without its sequence is rejected rather than letting numbering become
-    order-relevant.
-
-    The timestamp must be **finite** here rather than at the one constructor:
-    ``float()`` already rejects a malformed time, and NaN/inf is the one value
-    it accepts that no total order can place.  Every action reaches this
-    function, so one guard covers every author.
+    Element 1 is the rank's :func:`ordering_slot`, so one pair of ranks
+    resolves together and ``compile.py``'s inline sort tuples stay comparable
+    with this one.  ``_event_id`` is a dead tie-break for engine damage
+    events: ``sequence`` is unique per pair fight, so an event without one is
+    rejected rather than letting numbering become order-relevant.  NaN/inf is
+    the one time ``float()`` accepts that no total order can place, and every
+    action reaches this function, so the one guard is here.
     """
-    # Element 1 must be a rank on every key or the keys are not
-    # comparable in one order: a caller holding a number would put its
-    # ``0.0`` ahead of a ``BARRIER_GRANT`` that is spelled ``1``, which
-    # is how a hostile control came to resolve before the Black Shield
-    # that blocks it.  Every author now names a rank, so a non-member
-    # is a defect rather than an older spelling to translate.
-    if not isinstance(phase, TransitionRank):
-        raise TypeError(
-            f"action_key: phase must be a TransitionRank, got "
-            f"{phase!r} (event_id={event.get('_event_id')!r})"
-        )
     time_value = float(event_time)
     if not math.isfinite(time_value):
         raise ValueError(
@@ -976,10 +961,11 @@ def classify_prefetched(
     event: Mapping[str, Any],
     phase: TransitionRank,
     kind: str,
-    execute_ratio_raw: Any,
-    deferred_raw: Any,
-    redirected_raw: Any,
-    raw_formula: Any,
+    execute_ratio_raw: float | None,
+    *,
+    deferred_raw: bool | None,
+    redirected_raw: bool | None,
+    raw_formula: Callable[..., float] | None,
     raw_damage: float,
     grievous_duration: float,
 ) -> ActionKind:
@@ -1032,11 +1018,11 @@ def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> Acti
         phase,
         str(get("kind", "")),
         get("execute_threshold_ratio"),
-        get("_deferred"),
-        get("_redirected"),
-        get("raw_formula"),
-        float(get("raw_damage", 0.0) or 0.0),
-        float(get("grievous_duration", 0.0) or 0.0),
+        deferred_raw=get("_deferred"),
+        redirected_raw=get("_redirected"),
+        raw_formula=get("raw_formula"),
+        raw_damage=float(get("raw_damage", 0.0) or 0.0),
+        grievous_duration=float(get("grievous_duration", 0.0) or 0.0),
     )
 
 
@@ -1045,17 +1031,50 @@ def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> Acti
 # hot fields and resolves a packet's declared class sets: a leading
 # underscore on a name another layer must call is a boundary nobody can
 # see.  What stays here is the vocabulary that constructor converts *into*.
+
+
+class TriggerLinkage:
+    """Trigger-linkage status by event slot, the protocol every ledger carries.
+
+    ``trigger_status`` is the adapter's own dict; a slot is ``"applied"`` or
+    ``"blocked"`` once its packet resolved and absent until then.
+    """
+
+    __slots__ = ()
+    trigger_status: dict[int, str]
+
+    def trigger_applied(self, action: SurvivalAction) -> bool:
+        """Whether this action's trigger applied; no trigger passes, and a
+        skipped trigger fails closed rather than silently applying."""
+        if action.trigger_slot == NO_SLOT:
+            return True
+        return self.trigger_status.get(action.trigger_slot) == "applied"
+
+    def mark_applied(self, action: SurvivalAction) -> None:
+        """Mark this action's event as applied for trigger linkage."""
+        self._mark(action, "applied")
+
+    def mark_blocked(self, action: SurvivalAction) -> None:
+        """Mark this action's event as blocked for trigger linkage."""
+        self._mark(action, "blocked")
+
+    def _mark(self, action: SurvivalAction, status: str) -> None:
+        if action.event_slot != NO_SLOT:
+            self.trigger_status[action.event_slot] = status
+
+
 __all__ = [
-    "ActionKind",
     "EVENT_SLOTS",
+    "NO_SLOT",
+    "SUPPORT_RANK_KEY",
+    "UTILITY_KINDS",
+    "ActionKind",
     "EventSlots",
     "LiveAmp",
     "LiveProbe",
-    "NO_SLOT",
-    "SUPPORT_RANK_KEY",
     "SurvivalAction",
     "TransitionRank",
-    "UTILITY_KINDS",
+    "TriggerLinkage",
     "action_key",
     "attack_class_of",
     "classify_event_kind",

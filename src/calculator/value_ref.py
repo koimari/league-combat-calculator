@@ -33,9 +33,9 @@ with the rule union.
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Literal
 
 from . import item_effects, rune_effects
 
@@ -124,7 +124,7 @@ class SourceReceipt:
         """Reject a receipt that cites nothing checkable."""
         if not self.url.startswith("http"):
             raise ValueRefError(f"SourceReceipt url must be a URL, got {self.url!r}")
-        if isinstance(self.revision_id, bool) or not isinstance(self.revision_id, int):
+        if isinstance(self.revision_id, bool):
             raise ValueRefError("SourceReceipt revision_id must be an int")
         if self.revision_id < 0:
             raise ValueRefError("SourceReceipt revision_id must not be negative")
@@ -221,7 +221,7 @@ class Const:
                 f"Const reason {self.reason!r} is not one of "
                 f"{sorted(STRUCTURAL_REASONS)}"
             )
-        if isinstance(self.value, bool) or not isinstance(self.value, (int, float)):
+        if isinstance(self.value, bool):
             raise ValueRefError("Const value must be a number")
         if not math.isfinite(self.value):
             raise ValueRefError("Const value must be finite")
@@ -257,7 +257,7 @@ class ValueRef:
         if not self.owner or not self.key:
             raise ValueRefError("a ValueRef names an owner and a key")
 
-    def get(self, level: int | None = None) -> float:
+    def get(self, level: int | None = None) -> float:  # sightline-ok: 37 - subclass
         """Read the number now, raising with owner and key context if absent."""
         del level
         if self.registry == "ITEM_EFFECTS":
@@ -281,6 +281,11 @@ class LevelValueRef:
     min_key: str
     max_key: str
     scale: LevelScale
+
+    @property
+    def key(self) -> str:
+        """The key a declaration names the ramp by: its low end."""
+        return self.min_key
 
     def __post_init__(self) -> None:
         """Reject a scale outside the union, or one its registry cannot serve."""
@@ -340,6 +345,11 @@ class LateLevelValueRef:
     start_key: str
     end_key: str
 
+    @property
+    def key(self) -> str:
+        """The key a declaration names the ramp by: its low end."""
+        return self.min_key
+
     def __post_init__(self) -> None:
         """Reject a ramp that does not name all four of its keys."""
         if self.registry not in VALUE_REGISTRIES:
@@ -375,7 +385,7 @@ class DerivedValueRef:
     """
 
     op: DerivedOp
-    operands: tuple["AnyValueRef", ...]
+    operands: tuple[AnyValueRef, ...]
 
     def __post_init__(self) -> None:
         """Reject an op outside the union or an arity the op cannot fold."""
@@ -412,7 +422,7 @@ class DerivedValueRef:
         return product
 
 
-AnyValueRef = Union[Const, ValueRef, LevelValueRef, LateLevelValueRef, DerivedValueRef]
+AnyValueRef = Const | ValueRef | LevelValueRef | LateLevelValueRef | DerivedValueRef
 
 VALUE_REF_TYPES: tuple[type, ...] = (
     Const,
@@ -463,25 +473,41 @@ def resolve_flat(references: Sequence[AnyValueRef]) -> tuple[float, ...]:
     return tuple(reference.get() for reference in references)
 
 
+def declared_reference[T](
+    values: Iterable[object],
+    kind: type[T],
+    key: str,
+    stop: type[Exception],
+    *,
+    missing: str,
+) -> T:
+    """The *kind* reference in *values* declared under *key*, or *stop*."""
+    for reference in values:
+        if isinstance(reference, kind) and reference.key == key:
+            return reference
+    raise stop(missing)
+
+
 __all__ = [
+    "DERIVED_OPS",
+    "LEVEL_SCALES",
+    "STRUCTURAL_REASONS",
+    "VALUE_REF_TYPES",
+    "VALUE_REGISTRIES",
     "AnyValueRef",
     "Const",
-    "DERIVED_OPS",
     "DerivedOp",
     "DerivedValueRef",
-    "LEVEL_SCALES",
     "LateLevelValueRef",
     "LevelScale",
     "LevelValueRef",
-    "STRUCTURAL_REASONS",
     "SourceReceipt",
     "StructuralReason",
     "UnsourcedDeclarationError",
-    "VALUE_REF_TYPES",
-    "VALUE_REGISTRIES",
     "ValueRef",
     "ValueRefError",
     "ValueRegistry",
+    "declared_reference",
     "receipt_for",
     "resolve",
     "resolve_flat",

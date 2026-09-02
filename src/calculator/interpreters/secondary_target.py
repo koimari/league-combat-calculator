@@ -22,7 +22,9 @@ from dataclasses import dataclass
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
     SecondaryTargetRule,
@@ -75,21 +77,16 @@ def routing_fields(
 
 
 @dataclass(frozen=True, slots=True)
-class SecondaryTargetSlot:
+class SecondaryTargetSlot(CompiledSlot):
     """One build's declared secondary-target strike, resolved."""
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
-
-    def value(self, name: str) -> float:
-        """One compiled field of the slot's rule, or a stop."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise SecondaryTargetInterpretationError(
-            f"{self.rule.mechanic_id} compiles no {name!r} field; the engine "
-            "asked its declaration a question it does not answer"
-        )
+    stop = SecondaryTargetInterpretationError
+    missing = (
+        "{mechanic_id} compiles no {name!r} field; the engine asked its "
+        "declaration a question it does not answer"
+    )
 
     def bolt_count(self, roster_target_count: int) -> int:
         """How many *extra* targets the bolts reach: the declared cap, less the
@@ -127,10 +124,7 @@ class SecondaryTargetSlot:
 def resolve_slot(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> SecondaryTargetSlot | None:
     """This build's secondary-target strike, or ``None`` if nobody declares one.
 
@@ -156,13 +150,7 @@ def resolve_slot(
         rule=rule,
         fields=routing_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         ),
     )

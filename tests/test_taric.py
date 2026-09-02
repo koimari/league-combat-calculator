@@ -7,10 +7,8 @@ says makes the whole timed fight fall back to coarse ordering.
 
 import pytest
 
-from src.calculator.champions import get_champion_module_contract
-from tests import rider_probe
-from src.calculator.champions import taric
-from tests import cc_review
+from src.calculator.champions import get_champion_module_contract, taric
+from tests import cc_review, rider_probe
 
 
 class TestReviewedCrowdControl:
@@ -37,7 +35,7 @@ class TestReviewedCrowdControl:
 class TestBravadoRider:
     """Taric P prices the attacks an ability cast empowers (slice 6).
 
-    MERGE: the count is no longer a player-declared ``p_empowered_attacks``
+    MERGE: the count is not a player-declared ``p_empowered_attacks``
     option.  The entry declares an ``empower_window`` (armed by a cast, two
     charges, refreshing rather than stacking) that ``damage.py`` walks
     against the accepted cast timeline — the more capable of the two models,

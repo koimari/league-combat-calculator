@@ -120,8 +120,8 @@ class TestReviewedCrowdControl:
 
     def test_severum_pays_one_heal_per_attack_that_dealt_damage(self):
         """ "Severum's attacks heal Aphelios for ... the post-mitigation
-        damage dealt" — six attacks, six shares, same total as the one
-        payment the unspread row used to make.
+        damage dealt" — six attacks, six shares, same total as one
+        unspread payment.
         """
         payload = calculate_payload(
             {
@@ -238,8 +238,8 @@ class TestWeaponBranches:
         entry, _ = _p_effects("Calibrum")
         stated = _CALIBRUM_MARK_RE.search(effect_description(entry, 1))
         assert stated, "the cached Calibrum effect no longer states the mark bonus"
-        assert aphelios._CALIBRUM_MARK_FLAT == float(stated["flat"])
-        assert aphelios._CALIBRUM_MARK_BONUS_AD_RATIO == float(stated["ratio"]) / 100.0
+        assert float(stated["flat"]) == aphelios._CALIBRUM_MARK_FLAT
+        assert float(stated["ratio"]) / 100.0 == aphelios._CALIBRUM_MARK_BONUS_AD_RATIO
 
     def test_calibrums_mark_bonus_prices_both_of_its_terms(self):
         assert _parse("calibrum").get("passive", {}).get("on_hit") is None
@@ -258,7 +258,7 @@ class TestWeaponBranches:
         entry, _ = _p_effects("Infernum")
         stated = _INFERNUM_BOLT_RE.search(effect_description(entry, 0))
         assert stated, "the cached Infernum effect no longer states the bolt's AD"
-        assert aphelios._INFERNUM_PRIMARY_AD_RATIO == float(stated["ratio"]) / 100.0
+        assert float(stated["ratio"]) / 100.0 == aphelios._INFERNUM_PRIMARY_AD_RATIO
         stats = calculate_total_stats(cc_review.kit("Aphelios"), 18, [])
         on_hit = _parse("infernum")["passive"]["on_hit"]
         assert on_hit["damage_per_hit"] == pytest.approx(0.10 * stats["attack_damage"])
@@ -385,7 +385,8 @@ class TestDuskwaveAppliesTheOnHits:
         duskwave = [
             row for row in matrix["champions"]["Aphelios"] if row["name"] == "Duskwave"
         ]
-        assert duskwave and duskwave[0]["effectiveness"] == 1.0
+        assert duskwave
+        assert duskwave[0]["effectiveness"] == 1.0
 
 
 class TestModuleCoverage:

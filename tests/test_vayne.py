@@ -675,7 +675,8 @@ class TestReviewedCrowdControl:
         # W and R are absent rather than "none": Silver Bolts is an on-hit
         # shell that rides a basic attack and Final Hour is a pure stat
         # buff, so neither authors an ability part a review could reach.
-        assert "W" not in vayne.MODULE_CC and "R" not in vayne.MODULE_CC
+        assert "W" not in vayne.MODULE_CC
+        assert "R" not in vayne.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
 

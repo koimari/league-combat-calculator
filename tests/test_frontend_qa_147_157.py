@@ -47,12 +47,12 @@ def css() -> str:
     return CSS.read_text(encoding="utf-8")
 
 
-@pytest.fixture()
+@pytest.fixture
 def page() -> str:
     return app_module.app.test_client().get("/").get_data(as_text=True)
 
 
-@pytest.fixture()
+@pytest.fixture
 def soup(page: str) -> BeautifulSoup:
     return BeautifulSoup(page, "html.parser")
 
@@ -76,7 +76,7 @@ def rule_block(css_text: str, selector: str) -> str:
 def test_stylesheet_braces_balance(css: str):
     """An unclosed block silently scopes the rest of the file to one media
     query. Nothing may be left open at EOF."""
-    without_comments = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    without_comments = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
     depth = 0
     for line_number, line in enumerate(without_comments.splitlines(), start=1):
         depth += line.count("{") - line.count("}")
@@ -88,7 +88,7 @@ def test_hidden_attribute_contract_is_unconditional(css: str):
     """``[hidden]`` drives every JS-toggled surface; it must not sit inside a
     media query (issue #147's inert dismiss, #157's ever-present legend)."""
     index = css.index("[hidden]")
-    prefix = re.sub(r"/\*.*?\*/", "", css[:index], flags=re.S)
+    prefix = re.sub(r"/\*.*?\*/", "", css[:index], flags=re.DOTALL)
     assert prefix.count("{") == prefix.count(
         "}"
     ), "[hidden] is nested inside an unclosed block"
@@ -105,7 +105,9 @@ def test_share_controls_initialize_without_quick_view(source: str):
     assert "function initShareControls()" in source
     assert re.search(r"^initShareControls\(\);", source, re.MULTILINE)
 
-    share_block = source.split("function initShareControls()")[1].split("\n}\n")[0]
+    share_block = source.split("function initShareControls()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     for control in ("shareOpenEditor", "shareDismiss", "shareAnalystButton"):
         assert control in share_block, f"{control} is not wired by initShareControls"
 
@@ -115,7 +117,9 @@ def test_share_controls_initialize_without_quick_view(source: str):
 
 def test_share_token_is_read_outside_quick_view_init(source: str):
     """``?share=`` must be honored on a template with no quick view."""
-    share_block = source.split("function initShareControls()")[1].split("\n}\n")[0]
+    share_block = source.split("function initShareControls()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert 'params.get("share")' in share_block
     assert "renderSharedBuild(shareToken)" in share_block
 
@@ -123,9 +127,13 @@ def test_share_token_is_read_outside_quick_view_init(source: str):
 def test_shared_payload_waits_for_the_item_catalogue(source: str):
     """The payload resolves item *names* against the catalogue, so applying it
     before the patch snapshot loads would drop every item silently."""
-    share_block = source.split("function initShareControls()")[1].split("\n}\n")[0]
+    share_block = source.split("function initShareControls()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "whenEngineReady(() => renderSharedBuild(shareToken))" in share_block
-    ready = source.split("function whenEngineReady(callback)")[1].split("\n}\n")[0]
+    ready = source.split("function whenEngineReady(callback)")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "engine.itemCatalogReady" in ready
     assert "scryglass:engine-ready" in ready
 
@@ -133,20 +141,26 @@ def test_shared_payload_waits_for_the_item_catalogue(source: str):
 def test_share_controls_bind_before_the_snapshot_loads(source: str):
     """Binding must not be deferred with the payload — inert controls are the
     bug (#147). The listeners attach in the same synchronous pass."""
-    share_block = source.split("function initShareControls()")[1].split("\n}\n")[0]
+    share_block = source.split("function initShareControls()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     bind_section = share_block.split("whenEngineReady")[0]
     for control in ("shareOpenEditor", "shareDismiss"):
         assert control in bind_section
 
 
 def test_share_dismiss_clears_the_query_parameter(source: str):
-    block = source.split("function initShareControls()")[1].split("\n}\n")[0]
+    block = source.split("function initShareControls()")[1].split("\n}\n", maxsplit=1)[
+        0
+    ]
     assert 'searchParams.delete("share")' in block
     assert "history.replaceState" in block
 
 
 def test_open_in_editor_does_not_depend_on_quick_view(source: str):
-    block = source.split("function openSharedBuildInEditor()")[1].split("\n}\n")[0]
+    block = source.split("function openSharedBuildInEditor()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "loadSharedBuildIntoAnalyst(payload)" in block
     assert "quickView" not in block
     # A share that never resolved must say so rather than sit inert.
@@ -154,16 +168,16 @@ def test_open_in_editor_does_not_depend_on_quick_view(source: str):
 
 
 def test_shared_build_render_targets_the_analyst_view(source: str):
-    """The shared payload renders into the live result column; the old
-    ``#quickResults`` host no longer exists in the template."""
+    """The shared payload renders into the live result column; there is no
+    ``#quickResults`` host in the template."""
     block = source.split("async function renderSharedBuild(token)")[1].split(
-        "\nfunction "
+        "\nfunction ", maxsplit=1
     )[0]
     assert "quickResults" not in block
     assert "loadSharedBuildIntoAnalyst(payload)" in block
     assert "showShareError(" in block, "invalid/expired shares must surface an error"
     error_surface = source.split("function showShareError(message)")[1].split(
-        "\nfunction "
+        "\nfunction ", maxsplit=1
     )[0]
     assert 'host.id = "shareError"' in error_surface
     assert "engine-error" in error_surface
@@ -272,7 +286,9 @@ def test_active_game_state_summary_is_a_live_region(soup: BeautifulSoup):
 def test_game_state_summary_follows_the_selected_mode(source: str):
     """The visible summary is derived from the active button's description —
     one home for the copy, no duplicated strings in JS."""
-    block = source.split("function renderScenarioRail()")[1].split("\n}\n")[0]
+    block = source.split("function renderScenarioRail()")[1].split("\n}\n", maxsplit=1)[
+        0
+    ]
     assert "gameStateHelp" in block
     assert "aria-describedby" in block or "describedby" in block
 
@@ -283,7 +299,9 @@ def test_game_state_summary_follows_the_selected_mode(source: str):
 
 
 def test_invalidation_keeps_the_last_known_loadout_stats(source: str):
-    block = source.split("function invalidateOptimization()")[1].split("\n}\n")[0]
+    block = source.split("function invalidateOptimization()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert (
         "engine.loadoutStats = null" not in block
     ), "dropping the cached stats blanks the panel mid-recalculation"
@@ -291,14 +309,18 @@ def test_invalidation_keeps_the_last_known_loadout_stats(source: str):
 
 
 def test_stats_grid_shows_a_scoped_pending_state(source: str):
-    block = source.split("function renderPrototypeChampion()")[1].split("\n}\n")[0]
+    block = source.split("function renderPrototypeChampion()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "statsGrid" in block
     assert "aria-busy" in block
     assert "is-pending" in block
 
 
 def test_stats_placeholder_only_appears_before_any_stats_exist(source: str):
-    block = source.split("function renderPrototypeChampion()")[1].split("\n}\n")[0]
+    block = source.split("function renderPrototypeChampion()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     placeholder_line = next(
         line for line in block.splitlines() if "matrix-placeholder" in line
     )
@@ -306,7 +328,9 @@ def test_stats_placeholder_only_appears_before_any_stats_exist(source: str):
 
 
 def test_loadout_stats_ignores_out_of_order_responses(source: str):
-    block = source.split("function scheduleLoadoutStats()")[1].split("\n}\n")[0]
+    block = source.split("function scheduleLoadoutStats()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "loadoutStatsRequestId" in block
 
 
@@ -330,16 +354,20 @@ def test_bis_prerequisite_is_evaluated_on_every_render(source: str):
     """``render()`` reaches the prerequisite pass through the capability
     refusal pass, which runs first so a refused family stays disabled."""
     assert "function applyPrerequisiteGates()" in source
-    render_block = source.split("\nfunction render() {")[1].split("\n}\n")[0]
+    render_block = source.split("\nfunction render() {")[1].split("\n}\n", maxsplit=1)[
+        0
+    ]
     assert "applyControlCapabilities();" in render_block
     capability_block = source.split("function applyControlCapabilities()")[1].split(
-        "\n}\n"
+        "\n}\n", maxsplit=1
     )[0]
     assert "applyPrerequisiteGates();" in capability_block
 
 
 def test_bis_button_disables_without_a_complete_enemy(source: str):
-    block = source.split("function applyPrerequisiteGates()")[1].split("\n}\n")[0]
+    block = source.split("function applyPrerequisiteGates()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "bisButton" in block
     assert "bisReadyForPath" in block or "state.targets" in block
     assert "disabled" in block
@@ -361,7 +389,9 @@ def test_bis_button_exposes_its_prerequisite_to_assistive_tech(soup: BeautifulSo
 
 
 def test_blocked_bis_offers_a_direct_path_to_add_enemy(source: str):
-    block = source.split("function applyPrerequisiteGates()")[1].split("\n}\n")[0]
+    block = source.split("function applyPrerequisiteGates()")[1].split(
+        "\n}\n", maxsplit=1
+    )[0]
     assert "bisAddEnemy" in block or "addEnemy" in block
     soup = BeautifulSoup(
         app_module.app.test_client().get("/").get_data(as_text=True), "html.parser"
@@ -412,7 +442,7 @@ def test_constraints_copy_uses_readable_ink(css: str):
 
 def test_best_buy_controls_reflow_at_narrow_widths(css: str):
     """The rail becomes a full-width block rather than an inline sentence."""
-    narrow = css.split("@media (max-width: 860px)")[1].split("@media")[0]
+    narrow = css.split("@media (max-width: 860px)")[1].split("@media", maxsplit=1)[0]
     assert ".app-grid" in narrow
     assert "grid-template-columns: minmax(0, 1fr)" in narrow
 
@@ -420,22 +450,25 @@ def test_best_buy_controls_reflow_at_narrow_widths(css: str):
 def test_best_buy_disabled_state_stays_legible(css: str):
     block = rule_block(css, ".rail-primary:disabled")
     match = re.search(r"opacity:\s*([\d.]+)", block)
-    assert match and float(match.group(1)) >= 0.4
+    assert match
+    assert float(match.group(1)) >= 0.4
 
 
 def test_optimizer_receipt_has_a_visible_home(soup: BeautifulSoup, source: str):
     """The optimizer's own result is a canvas band, never a toast — and it is
-    actually rendered (``state.optimizer.summary`` used to be written in seven
-    places and read in none, so every best-buy receipt was invisible)."""
+    actually rendered (a ``state.optimizer.summary`` written in seven places
+    and read in none would leave every best-buy receipt invisible)."""
     band = soup.select_one("#buyBand")
-    assert band is not None and band.has_attr("hidden")
+    assert band is not None
+    assert band.has_attr("hidden")
     assert band.find_parent(class_="canvas") is not None
     assert "function renderBuyBand()" in source
     assert (
-        "renderBuyBand()" in source.split("\nfunction render() {")[1].split("\n}\n")[0]
+        "renderBuyBand()"
+        in source.split("\nfunction render() {")[1].split("\n}\n", maxsplit=1)[0]
     )
     # Every truncation / withholding note survives into the band.
-    receipt = source.split("function renderBuyBand()")[1].split("\n}\n")[0]
+    receipt = source.split("function renderBuyBand()")[1].split("\n}\n", maxsplit=1)[0]
     assert "summary.notes" in receipt
     assert "Nothing applied" in receipt
 
@@ -456,13 +489,16 @@ def test_keystone_icon_has_an_explicit_size_contract(css: str):
 def test_keystone_image_is_bounded_and_cropped(css: str):
     block = rule_block(css, ".duel-row .item-icon img")
     assert "object-fit" in block
-    assert "width: 100%" in block and "height: 100%" in block
+    assert "width: 100%" in block
+    assert "height: 100%" in block
 
 
 def test_keystone_slot_matches_the_item_slot_grammar(source: str):
     """The keystone row is built from the same duel-row grammar as an item
     slot — same class, same icon + copy structure, its own picker."""
-    render = source.split("function renderDuelSide(")[1].split("\nfunction ")[0]
+    render = source.split("function renderDuelSide(")[1].split(
+        "\nfunction ", maxsplit=1
+    )[0]
     assert 'class="duel-row is-keystone' in render
     assert 'data-picker="keystone"' in render
     assert 'class="item-icon"' in render
@@ -480,13 +516,17 @@ def test_keystone_label_wraps_instead_of_stretching_the_card(css: str):
 
 
 def test_timeline_renders_one_lane_per_event(source: str):
-    block = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
+    block = source.split("function renderEventTimeline(")[1].split(
+        "\nfunction ", maxsplit=1
+    )[0]
     assert "timeline-event" in block
     assert "<ol" in block, "ordered-list semantics expose event order to AT"
 
 
 def test_timeline_labels_are_not_truncated_to_fragments(source: str):
-    block = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
+    block = source.split("function renderEventTimeline(")[1].split(
+        "\nfunction ", maxsplit=1
+    )[0]
     assert ".slice(0, 3)" not in block, "3-character source fragments are unreadable"
 
 
@@ -494,12 +534,14 @@ def test_timeline_lanes_are_the_one_home_for_events(source: str):
     """Each lane carries the event's ledger index; the ledger table below keeps
     the summaries (objective, event order, healing, support) and the damage
     breakdown neither repeats the event rows."""
-    timeline = source.split("function renderEventTimeline(")[1].split("\nfunction ")[0]
+    timeline = source.split("function renderEventTimeline(")[1].split(
+        "\nfunction ", maxsplit=1
+    )[0]
     assert "data-event-index" in timeline
-    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n")[0]
-    breakdown = source.split("function renderExactBreakdown(")[1].split("\nfunction ")[
-        0
-    ]
+    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n", maxsplit=1)[0]
+    breakdown = source.split("function renderExactBreakdown(")[1].split(
+        "\nfunction ", maxsplit=1
+    )[0]
     assert "eventRows" not in ledger
     assert "combat?.events" not in breakdown
 
@@ -507,7 +549,8 @@ def test_timeline_lanes_are_the_one_home_for_events(source: str):
 def test_timeline_label_size_meets_the_legibility_floor(css: str):
     block = rule_block(css, ".timeline-event")
     match = re.search(r"font-size:\s*(\d+(?:\.\d+)?)px", block)
-    assert match and float(match.group(1)) >= 12
+    assert match
+    assert float(match.group(1)) >= 12
 
 
 def test_dense_timelines_scroll_instead_of_overlapping(css: str):
@@ -596,12 +639,13 @@ def test_sparse_timeline_names_every_source_in_full():
     # The old renderer cut these to "Orb" and "Cha".
     assert "Orb of Deception" in html
     assert "Charm" in html
-    assert "0.5s" in html and "3.3s" in html
+    assert "0.5s" in html
+    assert "3.3s" in html
     assert "2 ordered events, oldest first" in html
 
 
 def test_simultaneous_events_get_separate_lanes():
-    """Same-timestamp events used to stack markers on top of each other."""
+    """Same-timestamp events get separate lanes, never stacked markers."""
     html = run_timeline_renderer(
         [event(4.0, "Orb of Deception"), event(4.0, "Spellblade"), event(4.0, "Comet")],
         10,
@@ -624,7 +668,8 @@ def test_timeline_lanes_carry_their_index_and_position():
     html = run_timeline_renderer([event(0.0, "Q"), event(5.0, "R")], 10)
     assert 'data-event-index="0"' in html
     assert 'data-event-index="1"' in html
-    assert "--at:0%" in html and "--at:50%" in html
+    assert "--at:0%" in html
+    assert "--at:50%" in html
 
 
 def test_timeline_escapes_untrusted_source_text():
@@ -735,4 +780,5 @@ def test_certainty_chips_meet_the_readable_size_floor(css: str):
 def test_legend_note_stays_readable_on_its_surface(css: str):
     block = rule_block(css, ".trust-legend-note")
     match = re.search(r"font-size:\s*(\d+(?:\.\d+)?)px", block)
-    assert match and float(match.group(1)) >= 12
+    assert match
+    assert float(match.group(1)) >= 12

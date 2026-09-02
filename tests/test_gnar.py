@@ -83,7 +83,7 @@ class TestMegaStatConstants:
     formula at levels 1 and 18."""
 
     @pytest.mark.parametrize(
-        "constant, level1, level18",
+        ("constant", "level1", "level18"),
         [
             (MEGA_BONUS_HEALTH, 100.0, 831.0),  # 640/122 vs 540/79
             (MEGA_BONUS_AD, 6.0, 45.1),  # 66/5.5 vs 60/3.2
@@ -516,7 +516,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """Mega adds Wallop's stun and GNAR!'s knock away."""
-        assert _CC.kinds(**{"mega": True}) == {
+        assert _CC.kinds(mega=True) == {
             "Q": ["slow"],
             "W": ["stun"],
             "E": ["slow"],

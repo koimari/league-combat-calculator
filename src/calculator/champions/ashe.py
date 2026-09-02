@@ -30,17 +30,18 @@ out_of_scope to no_damage (an atoms-confirmed zero-HP-number effect), not
 left silently absent.
 """
 
+from collections.abc import Mapping
 from typing import Any
 
-from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from ..binary_roots import data_value, spell_object
+from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
+from ..stats import calculate_attack_speed
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage
-from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
-from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from ..stats import calculate_attack_speed
+from .module_helpers import no_damage_slot
+from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
+from .source_receipts import load_champion_sources
 
 # Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers
 # are prose in the reviewed cache entry (Ashe Q effect 0: "basic attacks
@@ -80,7 +81,7 @@ ASHE_FOCUS_STACK_RULE = StackRule(
 )
 
 
-def _require_q_rows(ability: dict[str, Any]) -> None:
+def _require_q_rows(ability: Mapping[str, Any]) -> None:
     """Fail loud when the Q leveling rows are missing (P1 Slice 10).
 
     The flurry/AS pricing must never fall back to a silent zero when the
@@ -178,26 +179,17 @@ def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _hawkshot(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: vision utility — sourced zero-enemy-damage row (no_damage).
-
-    The cached E entry carries ``damageType: None`` and neither effect row
-    has a ``leveling`` attribute — Hawkshot grants vision along its path
-    and at its destination; it has no HP number against an enemy
-    champion anywhere.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Hawkshot is pure vision utility with no enemy-damage "
-            "attribute of its own (data/champions.json Ashe E carries "
-            "damageType: None and no effect row has a leveling entry)."
-        ),
-    )
+# E: vision utility — sourced zero-enemy-damage row (no_damage).
+#
+# The cached E entry carries ``damageType: None`` and neither effect row
+# has a ``leveling`` attribute — Hawkshot grants vision along its path
+# and at its destination; it has no HP number against an enemy
+# champion anywhere.
+_hawkshot = no_damage_slot(
+    "Hawkshot is pure vision utility with no enemy-damage "
+    "attribute of its own (data/champions.json Ashe E carries "
+    "damageType: None and no effect row has a leveling entry)."
+)
 
 
 OPTIONS = [

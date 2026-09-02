@@ -13,15 +13,16 @@ alive-window model in both modes.
 """
 
 import math
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import DEBUFF, SlotCtx, build_parser
-from .module_helpers import clamp
+from .inputs import bool_option, int_option
+from .module_helpers import clamp, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, spell_object
 
 _KARTHUS_W_SPELL = spell_object("Karthus", "KarthusWallOfPain")
 _W_MR_REDUCTION_PERCENT = data_value(_KARTHUS_W_SPELL, "MagicResistShred")
@@ -41,11 +42,10 @@ _R_CHANNEL_DURATION = 3.0
 _R_CAST_TIME = 0.25
 
 
-def _wall_of_pain(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _wall_of_pain(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     entry: dict[str, Any] = {
         "name": ability_name(ability),
         "rank": rank,
@@ -68,11 +68,10 @@ def _wall_of_pain(ctx: SlotCtx) -> dict[str, Any] | None:
 _wall_of_pain.phase = DEBUFF
 
 
-def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _lay_waste(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     requested_isolated = bool(ctx.option("q_isolated"))
     roster_count = int(ctx.target_stat("roster_target_count"))
@@ -96,7 +95,7 @@ def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _defile_mana_per_second(ability: dict[str, Any], rank: int) -> float:
+def _defile_mana_per_second(ability: Mapping[str, Any], rank: int) -> float:
     """Defile's sourced toggle drain: its cost row is mana per second."""
     return float(
         (ability.get("cost") or {})
@@ -168,11 +167,8 @@ def _defile_timed(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str,
     return entry
 
 
-def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _defile(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     if ctx.options.get("fight_duration_seconds") is not None:
         return _defile_timed(ctx, ability, rank)
 
@@ -212,11 +208,8 @@ def _defile(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _requiem(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _requiem(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     hit_time = _R_CAST_START + _R_CAST_TIME + _R_CHANNEL_DURATION
     entry = damage_entry(

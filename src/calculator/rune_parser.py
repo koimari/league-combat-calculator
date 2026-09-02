@@ -92,8 +92,9 @@ the stat-shard table and the adaptive-force conversion.
 
 import ast
 import re
+from collections.abc import Iterable, Mapping
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 _PARAM_LINE = re.compile(r"^\|(\w+)\s*=\s?(.*)$")
 _PP_TEMPLATE = re.compile(r"\{\{pp\|([^{}]+)\}\}")
@@ -974,6 +975,14 @@ def _resolve_recurring(match: re.Match) -> str:
     return repr(value)
 
 
+def _first_group(match: re.Match) -> str:
+    return match.group(1)
+
+
+def _percent_ratio(value: str) -> float:
+    return float(value) / 100.0
+
+
 def _resolve_display_templates(text: str) -> str:
     """Inline ``{{fd}}``/``{{ap}}``/``{{sti}}`` wrappers to a fixpoint.
 
@@ -984,9 +993,9 @@ def _resolve_display_templates(text: str) -> str:
     """
     for _ in range(4):
         resolved = _RECURRING.sub(_resolve_recurring, text)
-        resolved = _VARDEFINEECHO.sub(lambda match: match.group(1), resolved)
-        resolved = _FD_NUMBER.sub(lambda match: match.group(1), resolved)
-        resolved = _STI_WRAPPER.sub(lambda match: match.group(1), resolved)
+        resolved = _VARDEFINEECHO.sub(_first_group, resolved)
+        resolved = _FD_NUMBER.sub(_first_group, resolved)
+        resolved = _STI_WRAPPER.sub(_first_group, resolved)
         resolved = _AP_ARITHMETIC.sub(_resolve_ap_arithmetic, resolved)
         if resolved == text:
             break
@@ -1048,7 +1057,7 @@ def _parse_leveling(
 
 
 def _record_key_span(
-    named: dict[str, str], range_spec: str | None, recorder: _EffectRecorder
+    named: Mapping[str, str], range_spec: str | None, recorder: _EffectRecorder
 ) -> None:
     """Record what a non-level table's columns are keyed by, when it says.
     A ``type=`` plus a column-count span means the table is read by game
@@ -1368,32 +1377,32 @@ def _parse_scalar_templates(
         )
 
     glacial_fields = (
-        (_GLACIAL_RAY_COUNT, "glacial_ray_count", lambda value: int(value)),
+        (_GLACIAL_RAY_COUNT, "glacial_ray_count", int),
         (_GLACIAL_ZONE_WIDTH, "glacial_zone_width_units", float),
         (
             _GLACIAL_SLOW_BASE,
             "glacial_slow_base_ratio",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_SLOW_BONUS_AD,
             "glacial_slow_bonus_ad_ratio_per_100",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_SLOW_AP,
             "glacial_slow_ap_ratio_per_100",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_SLOW_HEAL_SHIELD,
             "glacial_slow_heal_shield_ratio_per_10",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_DAMAGE_REDUCTION,
             "glacial_damage_reduction_ratio",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
     )
     for pattern, key, converter in glacial_fields:
@@ -1457,18 +1466,16 @@ def _parse_scalar_templates(
         except ValueError as exc:
             recorder.warn(f"Fleet Footwork healing: {exc}")
 
-    fleet_scalings = _FLEET_HEAL_SCALING.findall(description)
-    if fleet_scalings:
-        for percent_melee, percent_ranged, stat in fleet_scalings:
-            key = (
-                "fleet_bonus_ad_ratio_melee_ranged"
-                if stat.upper() == "AD"
-                else "fleet_ap_ratio_melee_ranged"
-            )
-            recorder.record(
-                key,
-                [float(percent_melee) / 100.0, float(percent_ranged) / 100.0],
-            )
+    for percent_melee, percent_ranged, stat in _FLEET_HEAL_SCALING.findall(description):
+        key = (
+            "fleet_bonus_ad_ratio_melee_ranged"
+            if stat.upper() == "AD"
+            else "fleet_ap_ratio_melee_ranged"
+        )
+        recorder.record(
+            key,
+            [float(percent_melee) / 100.0, float(percent_ranged) / 100.0],
+        )
 
     fleet_move_speed = _FLEET_MOVE_SPEED.search(description)
     if fleet_move_speed:
@@ -1534,57 +1541,62 @@ def _parse_scalar_templates(
         recorder.record("deathfire_ap_ratios_by_state", deathfire_ratios["AP"][:2])
 
 
+def _percent_ratio(raw: str) -> float:
+    return float(raw) / 100.0
+
+
+def _record_scalars(
+    recorder: _EffectRecorder, description: str, rules: Iterable[tuple]
+) -> None:
+    """Record group 1 of each rule's first matching pattern, cast, under its key.
+
+    A rule is ``(key, cast, pattern, ...)``; a rule no pattern matches records
+    nothing.
+    """
+    for key, cast, *patterns in rules:
+        for pattern in patterns:
+            match = pattern.search(description)
+            if match:
+                recorder.record(key, cast(match.group(1)))
+                break
+
+
 def _parse_prose_rules(
     description: str,
     recorder: _EffectRecorder,
     rune_name: str | None = None,
 ) -> None:
     """Read the prose-form rules: buff windows, stack rules, proc delays."""
-    window_match = _BUFF_WINDOW.search(description)
-    if window_match:
-        recorder.record("buff_duration_seconds", float(window_match.group(1)))
+    _record_scalars(
+        recorder, description, (("buff_duration_seconds", float, _BUFF_WINDOW),)
+    )
 
     stack_match = _STACK_RULE.search(description)
     if stack_match:
         recorder.record("stacks_required", int(stack_match.group(1)))
         recorder.record("stack_window_seconds", float(stack_match.group(2)))
 
-    duration_match = _STACK_DURATION.search(description)
-    if duration_match:
-        recorder.record("stack_duration_seconds", float(duration_match.group(1)))
-
-    conqueror_duration = _CONQUEROR_STACK_DURATION.search(description)
-    if conqueror_duration:
-        recorder.record(
-            "conqueror_stack_duration_seconds", float(conqueror_duration.group(1))
-        )
-
-    conqueror_interval = _CONQUEROR_CAST_INSTANCE_INTERVAL.search(description)
-    if conqueror_interval:
-        recorder.record(
-            "conqueror_cast_instance_interval_seconds",
-            float(conqueror_interval.group(1)),
-        )
-
-    conqueror_stacks = _CONQUEROR_STACKS_PER_APPLICATION.search(description)
-    if conqueror_stacks:
-        recorder.record(
-            "conqueror_stacks_per_application", int(conqueror_stacks.group(1))
-        )
-
-    deathfire_tick = _DEATHFIRE_TICK.search(description)
-    if deathfire_tick:
-        recorder.record(
-            "deathfire_tick_interval_seconds", float(deathfire_tick.group(1))
-        )
-
-    deathfire_delay = _DEATHFIRE_AMP_DELAY.search(description)
-    if deathfire_delay:
-        recorder.record("deathfire_amp_delay_seconds", float(deathfire_delay.group(1)))
-
-    deathfire_amp = _DEATHFIRE_AMP_RATIO.search(description)
-    if deathfire_amp:
-        recorder.record("deathfire_amp_ratio", float(deathfire_amp.group(1)) / 100.0)
+    _record_scalars(
+        recorder,
+        description,
+        (
+            ("stack_duration_seconds", float, _STACK_DURATION),
+            ("conqueror_stack_duration_seconds", float, _CONQUEROR_STACK_DURATION),
+            (
+                "conqueror_cast_instance_interval_seconds",
+                float,
+                _CONQUEROR_CAST_INSTANCE_INTERVAL,
+            ),
+            (
+                "conqueror_stacks_per_application",
+                int,
+                _CONQUEROR_STACKS_PER_APPLICATION,
+            ),
+            ("deathfire_tick_interval_seconds", float, _DEATHFIRE_TICK),
+            ("deathfire_amp_delay_seconds", float, _DEATHFIRE_AMP_DELAY),
+            ("deathfire_amp_ratio", _percent_ratio, _DEATHFIRE_AMP_RATIO),
+        ),
+    )
 
     deathfire_durations = {
         category.strip().lower().replace(" ", "_"): float(duration)
@@ -1593,55 +1605,45 @@ def _parse_prose_rules(
     if deathfire_durations:
         recorder.record("deathfire_duration_seconds", deathfire_durations)
 
-    max_stacks_match = _MAX_STACKS.search(description) or _STACK_CEILING.search(
-        description
+    _record_scalars(
+        recorder, description, (("max_stacks", int, _MAX_STACKS, _STACK_CEILING),)
     )
-    if max_stacks_match:
-        recorder.record("max_stacks", int(max_stacks_match.group(1)))
 
-    grasp_stacks = (
-        _GRASP_COMBAT_STACKS.search(description) if rune_name == _GRASP_NAME else None
-    )
-    if grasp_stacks:
-        recorder.record(
-            "combat_stack_cadence_seconds", float(grasp_stacks.group(1) or 1.0)
+    if rune_name == _GRASP_NAME:
+        grasp_stacks = _GRASP_COMBAT_STACKS.search(description)
+        if grasp_stacks:
+            recorder.record(
+                "combat_stack_cadence_seconds", float(grasp_stacks.group(1) or 1.0)
+            )
+            recorder.record(
+                "combat_stack_generation_seconds", float(grasp_stacks.group(2))
+            )
+        _record_scalars(
+            recorder,
+            description,
+            (("ready_window_seconds", float, _GRASP_READY_WINDOW),),
         )
-        recorder.record("combat_stack_generation_seconds", float(grasp_stacks.group(2)))
-
-    grasp_window = (
-        _GRASP_READY_WINDOW.search(description) if rune_name == _GRASP_NAME else None
-    )
-    if grasp_window:
-        recorder.record("ready_window_seconds", float(grasp_window.group(1)))
 
     hail_stacks = _HAIL_INITIAL_STACKS.search(description)
     if hail_stacks:
         recorder.record("hail_initial_stacks", int(hail_stacks.group(1)))
         recorder.record("hail_stack_duration_seconds", float(hail_stacks.group(2)))
 
-    hail_reset_limit = _HAIL_RESET_STACK_LIMIT.search(description)
-    if hail_reset_limit:
-        recorder.record("hail_reset_stack_limit", int(hail_reset_limit.group(1)))
-
-    lethal_stack_duration = _LETHAL_TEMPO_STACK_DURATION.search(description)
-    if lethal_stack_duration:
-        recorder.record(
-            "lethal_tempo_stack_duration_seconds", float(lethal_stack_duration.group(1))
-        )
-
-    lethal_expiry_step = _LETHAL_TEMPO_EXPIRY_STEP.search(description)
-    if lethal_expiry_step:
-        recorder.record(
-            "lethal_tempo_expiry_step_seconds", float(lethal_expiry_step.group(1))
-        )
-
-    threshold_match = _STACK_THRESHOLD.search(description)
-    if threshold_match:
-        recorder.record("stack_threshold", int(threshold_match.group(1)))
-
-    arming_match = _ARMING_WINDOW.search(description)
-    if arming_match:
-        recorder.record("arming_window_seconds", float(arming_match.group(1)))
+    _record_scalars(
+        recorder,
+        description,
+        (
+            ("hail_reset_stack_limit", int, _HAIL_RESET_STACK_LIMIT),
+            (
+                "lethal_tempo_stack_duration_seconds",
+                float,
+                _LETHAL_TEMPO_STACK_DURATION,
+            ),
+            ("lethal_tempo_expiry_step_seconds", float, _LETHAL_TEMPO_EXPIRY_STEP),
+            ("stack_threshold", int, _STACK_THRESHOLD),
+            ("arming_window_seconds", float, _ARMING_WINDOW),
+        ),
+    )
 
     level_gates = [
         [int(level), float(bonus)]
@@ -1652,19 +1654,22 @@ def _parse_prose_rules(
 
     _parse_conditional_amp(description, recorder, rune_name)
 
-    delay_match = (
-        _PROC_DELAY.search(description)
-        or _POUNCE_DELAY.search(description)
-        or _LANDING_DELAY.search(description)
-        or _AFTER_DELAY.search(description)
-        or _PAYOUT_DELAY.search(description)
+    _record_scalars(
+        recorder,
+        description,
+        (
+            (
+                "proc_delay_seconds",
+                float,
+                _PROC_DELAY,
+                _POUNCE_DELAY,
+                _LANDING_DELAY,
+                _AFTER_DELAY,
+                _PAYOUT_DELAY,
+            ),
+            ("tick_interval_seconds", float, _TICK_INTERVAL),
+        ),
     )
-    if delay_match:
-        recorder.record("proc_delay_seconds", float(delay_match.group(1)))
-
-    tick_match = _TICK_INTERVAL.search(description)
-    if tick_match:
-        recorder.record("tick_interval_seconds", float(tick_match.group(1)))
 
 
 def _parse_conditional_amp(
@@ -1685,9 +1690,9 @@ def _parse_conditional_amp(
     under its own escalated keys rather than as a second value for the first
     ones, which the recorder would (rightly) drop as a conflict.
     """
-    amp_match = _DAMAGE_AMP.search(description)
-    if amp_match:
-        recorder.record("damage_amp_ratio", float(amp_match.group(1)) / 100.0)
+    _record_scalars(
+        recorder, description, (("damage_amp_ratio", _percent_ratio, _DAMAGE_AMP),)
+    )
 
     for prefix, pattern in _AMP_RAMP_ENDS:
         gate_match = pattern.search(description)
@@ -1719,64 +1724,37 @@ def _parse_conditional_amp(
         recorder.record("self_health_gate", f"self_{self_gate.group(1)}")
         recorder.record("self_health_gate_ratio", float(self_gate.group(2)) / 100.0)
 
-    dark_harvest_damage = (
-        _DARK_HARVEST_DAMAGE.search(description)
-        if rune_name == _DARK_HARVEST_NAME
-        else None
-    )
-    if dark_harvest_damage:
-        recorder.record("base_damage", float(dark_harvest_damage.group(1)))
-        recorder.record("soul_damage", float(dark_harvest_damage.group(2)))
-
-    dark_harvest_threshold = (
-        _DARK_HARVEST_THRESHOLD.search(description)
-        if rune_name == _DARK_HARVEST_NAME
-        else None
-    )
-    if dark_harvest_threshold:
-        recorder.record(
-            "health_threshold_ratio", (float(dark_harvest_threshold.group(1)) / 100.0)
+    if rune_name == _DARK_HARVEST_NAME:
+        dark_harvest_damage = _DARK_HARVEST_DAMAGE.search(description)
+        if dark_harvest_damage:
+            recorder.record("base_damage", float(dark_harvest_damage.group(1)))
+            recorder.record("soul_damage", float(dark_harvest_damage.group(2)))
+        _record_scalars(
+            recorder,
+            description,
+            (
+                ("health_threshold_ratio", _percent_ratio, _DARK_HARVEST_THRESHOLD),
+                ("takedown_reset_seconds", float, _DARK_HARVEST_TAKEDOWN_RESET),
+            ),
         )
 
-    dark_harvest_reset = (
-        _DARK_HARVEST_TAKEDOWN_RESET.search(description)
-        if rune_name == _DARK_HARVEST_NAME
-        else None
+    # Guardian, Aftershock and Summon Aery timings. Aery carries two separate
+    # flight times and a target linger in prose, kept as separate fields so a
+    # consumer never applies the damage landing time to the ally shield.
+    _record_scalars(
+        recorder,
+        description,
+        (
+            ("trigger_window_seconds", float, _GUARDIAN_TRIGGER_WINDOW),
+            ("shield_duration_seconds", float, _GUARDIAN_SHIELD_DURATION),
+            ("resistance_duration_seconds", float, _AFTERSHOCK_DURATION),
+            ("shockwave_radius", float, _AFTERSHOCK_RADIUS),
+            ("damage_flight_seconds", float, _AERY_DAMAGE_FLIGHT),
+            ("shield_flight_seconds", float, _AERY_SHIELD_FLIGHT),
+            ("shield_duration_seconds", float, _AERY_SHIELD_DURATION),
+            ("linger_seconds", float, _AERY_LINGER),
+        ),
     )
-    if dark_harvest_reset:
-        recorder.record("takedown_reset_seconds", float(dark_harvest_reset.group(1)))
-
-    guardian_window = _GUARDIAN_TRIGGER_WINDOW.search(description)
-    if guardian_window:
-        recorder.record("trigger_window_seconds", float(guardian_window.group(1)))
-
-    guardian_duration = _GUARDIAN_SHIELD_DURATION.search(description)
-    if guardian_duration:
-        recorder.record("shield_duration_seconds", float(guardian_duration.group(1)))
-
-    aftershock_duration = _AFTERSHOCK_DURATION.search(description)
-    if aftershock_duration:
-        recorder.record(
-            "resistance_duration_seconds", float(aftershock_duration.group(1))
-        )
-
-    aftershock_radius = _AFTERSHOCK_RADIUS.search(description)
-    if aftershock_radius:
-        recorder.record("shockwave_radius", float(aftershock_radius.group(1)))
-
-    # Summon Aery carries two separate flight times and a target linger in
-    # prose.  Keep these source-specific fields separate so a consumer never
-    # applies the damage landing time to the ally shield.
-    aery_fields = (
-        (_AERY_DAMAGE_FLIGHT, "damage_flight_seconds"),
-        (_AERY_SHIELD_FLIGHT, "shield_flight_seconds"),
-        (_AERY_SHIELD_DURATION, "shield_duration_seconds"),
-        (_AERY_LINGER, "linger_seconds"),
-    )
-    for pattern, key in aery_fields:
-        match = pattern.search(description)
-        if match:
-            recorder.record(key, float(match.group(1)))
 
 
 def rune_payload(
@@ -1815,7 +1793,9 @@ def rune_payload(
     return payload
 
 
-def _certify_roster_agreement(params: dict[str, str], path: str, row: int) -> list[str]:
+def _certify_roster_agreement(
+    params: Mapping[str, str], path: str, row: int
+) -> list[str]:
     """Warn when the wiki template disagrees with the Data Dragon roster.
 
     The template spells its slot ``Keystone`` on row 0 and the row number

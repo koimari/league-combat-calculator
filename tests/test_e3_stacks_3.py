@@ -43,6 +43,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import parse_champion_abilities
+from src.calculator.healing_helpers import modifier_at_rank
 from src.calculator.stats import calculate_total_stats
 
 _DATA = json.loads(
@@ -123,13 +124,7 @@ def _value(
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, modifier_index, rank)
     raise AssertionError(f"{champion} {slot} has no leveling attribute {attribute!r}")
 
 
@@ -512,7 +507,8 @@ class TestZac:
 
     def test_kit_still_parses_and_fights(self) -> None:
         _, abilities = _parse("Zac")
-        assert "Q" in abilities and "W" in abilities
+        assert "Q" in abilities
+        assert "W" in abilities
         combat = _fight("Zac")
         assert len(_main_events(combat, "Q")) >= 1
         assert len(_main_events(combat, "R")) == 4  # 1 + 3 reduced bounces

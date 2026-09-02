@@ -82,12 +82,16 @@ explicit state assertion.
   control event.
 """
 
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -97,8 +101,6 @@ from .slotlib import (
     stat_buff,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Deadly Venom per-stack total true damage over 6 seconds by level
@@ -128,7 +130,7 @@ _Q_ATTACK_SPEED_WINDOW = data_value(
 )
 
 
-def _poison_stacks(options: dict[str, Any]) -> int:
+def _poison_stacks(options: Mapping[str, Any]) -> int:
     return min(
         _POISON_MAX_STACKS,
         max(0, int(options.get("poison_stacks", _POISON_MAX_STACKS))),
@@ -138,7 +140,9 @@ def _poison_stacks(options: dict[str, Any]) -> int:
 def _poison_total_per_stack(level: int, ap: float) -> float:
     """One stack's full 6s true damage at a champion level."""
     base = _POISON_TOTAL_BREAKPOINTS[-1]
-    for min_level, value in zip(_POISON_BREAKPOINT_LEVELS, _POISON_TOTAL_BREAKPOINTS):
+    for min_level, value in zip(
+        _POISON_BREAKPOINT_LEVELS, _POISON_TOTAL_BREAKPOINTS, strict=False
+    ):
         if level >= min_level:
             base = value
     return base + _POISON_AP_RATIO * ap
@@ -190,12 +194,11 @@ def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _contaminate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _contaminate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: base + per-stack physical (+35% bonus AD) + per-stack 35% AP magic."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base = extract_named(ability, "Base Physical Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(

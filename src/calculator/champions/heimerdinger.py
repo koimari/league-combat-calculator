@@ -6,7 +6,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import int_option
+from .module_helpers import no_damage, ranked_slot, require_named_leveling
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -15,7 +16,6 @@ from .slotlib import (
     extract_recharge,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -187,30 +187,13 @@ class _GrenadeRule:
 HEIMER_E_GRENADE_RULE = _GrenadeRule()
 
 
-def _require_row(ability: dict[str, Any], attribute: str) -> None:
-    """Fail loud when the named leveling row is absent (cache corruption).
-
-    The degraded W/E rows must never price a silent zero: a missing row
-    raises naming the champion, ability and attribute (the repo's
-    fail-closed convention for missing keys).
-    """
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return
-    raise KeyError(
-        f"Heimerdinger {ability_name(ability)} has no {attribute!r} " "leveling row"
-    )
-
-
-def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _micro_rockets(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
-    _require_row(ability, "Initial Rocket Magic Damage")
-    _require_row(ability, "Subsequent Rocket Magic Damage")
+    require_named_leveling("Heimerdinger", ability, "Initial Rocket Magic Damage")
+    require_named_leveling("Heimerdinger", ability, "Subsequent Rocket Magic Damage")
     first = extract_named(
         ability, "Initial Rocket Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -249,7 +232,7 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     if variant == 0:
-        _require_row(ability, "Magic Damage")
+        require_named_leveling("Heimerdinger", ability, "Magic Damage")
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     else:
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
@@ -274,7 +257,10 @@ def _upgrade(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="UPGRADE!!!",
-        reason="The ultimate is an empowerment toggle; its selected Q/W/E variant carries the outgoing damage.",
+        reason=(
+            "The ultimate is an empowerment toggle; its selected Q/W/E variant "
+            "carries the outgoing damage."
+        ),
     )
 
 
@@ -321,14 +307,17 @@ OPTIONS = [
     ),
 ]
 ASSUMPTIONS = [
-    "Turret shot/beam values and cadences are copied from the full Wiki Pets entry because the champion slot template intentionally contains no pet formula rows.",
+    "Turret shot/beam values and cadences are copied from the full Wiki Pets entry "
+    "because the champion slot template intentionally contains no pet formula rows.",
     "Q is a charge ability: its cooldown is the 20s rechargeRate (the "
     "JSON cooldown field is only the 1s inter-cast timer), so one deploy "
     "is priced per 20s window; the q_turrets/q_turret_attacks options set "
     "how many turrets and shots one deploy contributes.",
     "The R upgrade is the q_variant option: the H-28Q Apex Turret rows "
     "scale by R rank (shots 80-120 +35% AP, beams 100-180 +70% AP).",
-    "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one champion hit is counted for the upgraded grenade.",
-    "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not extra direct champion damage.",
+    "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one "
+    "champion hit is counted for the upgraded grenade.",
+    "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not "
+    "extra direct champion damage.",
 ]
 SOURCES = load_champion_sources("Heimerdinger")

@@ -20,7 +20,7 @@ def receipt_tolerance(predicted_tdd: float) -> float:
     )
 
 
-def validate_damage_number(value: Any, label: str) -> float:
+def validate_damage_number(value: object, label: str) -> float:
     """Validate one finite, non-negative public damage amount."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{label} must be a number")
@@ -78,7 +78,7 @@ def parse_observed_paste(text: str) -> dict[str, Any]:
     text = text.strip()
     if not text:
         raise ValueError("observed paste is empty")
-    if text.startswith("{") or text.startswith("["):
+    if text.startswith(("{", "[")):
         try:
             parsed = json.loads(text)
         except json.JSONDecodeError as exc:

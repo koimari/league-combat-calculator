@@ -1,12 +1,12 @@
 """CI checks out the tree, not the repository.
 
 Every gate the workflow runs answers from the files in the checkout.  Four
-places used to answer from commits instead — the corpus anchor's merge base,
-the campaign's slice tags, the migration counters' receipt-to-receipt diff and
-the P2a breach's tree extraction — and between them they held ``fetch-depth: 0``
-on the test job for records that were already closed.  The records are pinned
-now, so the two halves of that are asserted together: the workflow pins no
-depth, and no gate reads a commit the depth-1 checkout does not have.
+records — the corpus anchor's merge base, the campaign's slice tags, the
+migration counters' receipt-to-receipt diff and the P2a breach's tree
+extraction — are closed and pinned, so none of them needs a commit and none
+justifies ``fetch-depth: 0`` on the test job.  The two halves of that are
+asserted together: the workflow pins no depth, and no gate reads a commit the
+depth-1 checkout does not have.
 """
 
 from __future__ import annotations
@@ -25,7 +25,9 @@ HISTORY_WALKING = ("log", "archive", "merge-base", "rev-list", "for-each-ref")
 #: ``git`` and the subcommand, however the call spells the gap between them:
 #: ``git log`` in prose, ``["git", "log", ...]``, ``_git("merge-base", ...)``,
 #: and the same wrapped across lines.
-_WALK = re.compile(r"""git['"]?[\s,(_-]+['"]?(?:%s)\b""" % "|".join(HISTORY_WALKING))
+_WALK = re.compile(
+    r"""git['"]?[\s,(_-]+['"]?(?:{})\b""".format("|".join(HISTORY_WALKING))
+)
 
 
 def test_the_workflow_pins_no_fetch_depth():

@@ -36,7 +36,7 @@ Time scaling — the wave upgrades — is a separate, larger gap with its own
 receipt: see :data:`MINION_SCALING_AUTHORITY`. The short version is that
 the upgrade table is machine-readable but *ambiguous*: eight candidate
 configurations exist and nothing reachable binds one of them to Classic
-Summoner's Rift. :func:`time_scaled_base_stats` therefore always raises.
+Summoner's Rift, so no accessor scales a stat by elapsed time.
 Consequently every constant in this module is a **spawn-time** stat, and
 :data:`MINION_BASE_STATS` must never be read as "the minion's stats at
 minute N".
@@ -44,8 +44,8 @@ minute N".
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 from .application_errors import ApplicationError
 
@@ -68,12 +68,6 @@ class MinionStatUnavailable(ApplicationError):
     """A requested minion stat is not stated by the cached record."""
 
     error_code = "minion_stat_unsourced"
-
-
-class MinionScalingUnavailable(ApplicationError):
-    """Time-scaled minion stats have no decidable cached source."""
-
-    error_code = "minion_time_scaling_unsourced"
 
 
 @dataclass(frozen=True)
@@ -288,7 +282,6 @@ MINION_SCALING_AUTHORITY: Mapping[str, object] = {
     ),
     # What a caller is refused until the binding is found.
     "denied_reads": (
-        "time_scaled_base_stats",
         "wave_upgrade_count",
         "upgrade_interval_seconds",
     ),
@@ -351,39 +344,3 @@ def sourced_stat(minion_type: str, stat: str) -> float:
             source_patch=SOURCE_PATCH,
         )
     return float(value)
-
-
-def unsourced_stats(minion_type: str) -> tuple[str, ...]:
-    """Every stat name :func:`sourced_stat` refuses for this type.
-
-    The reads carry no default, so a :data:`SOURCE_FIELDS` key that is not a
-    field raises as the table typo it is, never as one more unavailable stat.
-    """
-    stats = _require_type(minion_type)
-    absent_here = tuple(
-        name for name in sorted(SOURCE_FIELDS) if getattr(stats, name) is None
-    )
-    return tuple(sorted(ABSENT_FROM_EVERY_RECORD)) + absent_here
-
-
-def time_scaled_base_stats(minion_type: str, elapsed_seconds: float) -> None:
-    """Always refuses: the wave-upgrade table is not bound to Classic.
-
-    The type and time are validated first so a caller learns about a bad
-    minion type as a bad minion type, not as this denial.
-    """
-    _require_type(minion_type)
-    if elapsed_seconds < 0.0:
-        raise ValueError(f"elapsed_seconds must be >= 0; got {elapsed_seconds!r}")
-    raise MinionScalingUnavailable(
-        "Time-scaled minion stats have no decidable source: map11.bin.json "
-        "holds four distinct BarracksConfig upgrade tables (upgrade "
-        "intervals 90s, 60s, 60s and 40s) and nothing reachable binds one "
-        "to Classic Summoner's Rift. "
-        f"MINION_BASE_STATS[{minion_type!r}] is spawn-time only.",
-        minion_type=minion_type,
-        elapsed_seconds=float(elapsed_seconds),
-        reason=MINION_SCALING_AUTHORITY["reason"],
-        candidate_count=len(MINION_SCALING_AUTHORITY["candidates"]),
-        source_patch=SOURCE_PATCH,
-    )

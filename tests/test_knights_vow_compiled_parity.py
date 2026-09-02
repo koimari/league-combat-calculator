@@ -141,11 +141,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_coverage import item_model_coverage, target_item_model_coverage
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.interpreters import uncompilable_item_receipt
+from src.calculator.item_coverage import (
+    ATTACKER_LANES,
+    item_model_coverage,
+    target_item_model_coverage,
+)
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_EFFECTS,
@@ -164,7 +167,6 @@ from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.program.compile import knights_vow_target_factor
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.interpreters import uncompilable_item_receipt
 from tests.survival_probe import simulate_survival
 
 ITEM_NAME = "Knight's Vow"
@@ -1122,7 +1124,9 @@ def test_score_path_agrees_with_receipt_on_every_observable():
         assert surface["participants"][0]["survival"] == _main_survival(receipt)
         assert surface["participants"][1]["survival"] == _ally_survival(receipt)
         assert surface["duration"] == receipt["duration"]
-        for score_row, receipt_row in zip(surface["breakdown"], receipt["breakdown"]):
+        for score_row, receipt_row in zip(
+            surface["breakdown"], receipt["breakdown"], strict=False
+        ):
             assert score_row["participant_id"] == receipt_row["participant_id"]
             assert score_row["incoming_damage"] == receipt_row["incoming_damage"]
             assert score_row["health_damage"] == receipt_row["health_damage"]
@@ -1196,7 +1200,9 @@ def test_compiled_panels_carry_the_knights_vow_fight():
     # mirror them into.
     assert fast["participants"] == legacy["participants"]
     assert fast["duration"] == legacy["duration"]
-    for fast_row, legacy_row in zip(fast["breakdown"], legacy["breakdown"]):
+    for fast_row, legacy_row in zip(
+        fast["breakdown"], legacy["breakdown"], strict=False
+    ):
         assert fast_row["participant_id"] == legacy_row["participant_id"]
         assert fast_row["health_damage"] == legacy_row["health_damage"]
         assert fast_row["healing_received"] == legacy_row["healing_received"]
@@ -1238,12 +1244,12 @@ def test_enemy_holder_poisons_the_compiled_context_and_falls_back():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Janna", level=18, items=(ITEM_NAME,)).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Ahri", 18, main_stats, []),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Ahri", 18, main_stats, []),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, [], params, include_receipt=False, **kwargs
     )
@@ -1260,7 +1266,7 @@ def test_enemy_holder_poisons_the_compiled_context_and_falls_back():
     )
     assert fast == legacy
     # P3-3S: the roster-side Knight's Vow holder compiles — the capability
-    # scan no longer poisons the context and panels are built (the enemy
+    # scan does not poison the context and panels are built (the enemy
     # holder has no Worthy teammates in this fixture, so the tether is
     # empty and the staging no-ops with byte parity).
     assert ctx.uncompilable is False
@@ -1281,12 +1287,12 @@ def test_roster_holder_compiles_after_certification():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Janna", level=18, items=(ITEM_NAME,)).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Ahri", 18, main_stats, []),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Ahri", 18, main_stats, []),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, [], params, include_receipt=False, **kwargs
     )

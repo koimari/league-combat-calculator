@@ -27,6 +27,8 @@ row (``build_packet_module``'s ``no_damage`` branch): MODULE_COVERAGE
 reads "no_damage", not "out_of_scope".
 """
 
+from typing import Any
+
 from ..ability_spec import DamagePart
 from ..binary_roots import (
     calculation_coefficient,
@@ -35,6 +37,7 @@ from ..binary_roots import (
     spell_object,
 )
 from .engine import SlotCtx
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -44,7 +47,6 @@ from .slotlib import (
     extract_named,
     with_control,
 )
-from .module_contract import coverage
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
 
@@ -71,7 +73,7 @@ _R_SHIELD_PER_CHAMPION_AP_RATIO = calculation_coefficient(
 _R_SHIELD_DURATION = data_value_at_rank(_NEEKO_R_SPELL, "ShieldDuration", 1)
 
 
-def _blooming_burst(ctx: SlotCtx):
+def _blooming_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: initial burst + up to 2 re-blooms (Total Maximum Magic Damage)."""
     ranked = ctx.ranked()
     if ranked is None:
@@ -109,7 +111,7 @@ def _blooming_burst(ctx: SlotCtx):
     return entry
 
 
-def _pop_blossom(ctx: SlotCtx):
+def _pop_blossom(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: magic damage + the 2s self-shield (1 nearby enemy champion)."""
     ranked = ctx.ranked()
     if ranked is None:
@@ -175,7 +177,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Blooming Burst) prices the full three-burst chain: Initial Magic "
     "Damage + 2 x Subsequent Magic Damage == the wiki's Total Maximum "
     "Magic Damage row (data/champions.json Q); each re-bloom fires "

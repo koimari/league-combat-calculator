@@ -72,9 +72,11 @@ import shutil
 import subprocess
 import sys
 import urllib.request
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = REPO_ROOT / "data"
@@ -128,7 +130,7 @@ CHAMPION_STAT_MAP = [
 # AbilityResourceSlotInfo hashed fields, verified against the game files
 # because the hashes are not in cdtb's public hash lists.
 RESOURCE_POOL = "{726ee5cd}"  # base pool
-RESOURCE_POOL_PER_LEVEL = "{6216bf7b}"  # pool per level
+RESOURCE_POOL_PER_LEVEL = "{6216bf7b}"
 RESOURCE_REGEN = "{c4ab3550}"  # base regen, x5 for the per-5s figure
 RESOURCE_REGEN_PER_LEVEL = "{3a509002}"  # regen per level, x5
 
@@ -165,6 +167,8 @@ ITEM_STAT_MAP = [
 ]
 
 _SLOT_ORDER = ("Q", "W", "E", "R")
+#: ddragon tooltip rows per slot: {"Q": {"cooldown": [..] | None, "cost": [..] | None}}
+DdragonRows = dict[str, dict[str, list[float] | None]]
 
 
 # ---------------------------------------------------------------------------
@@ -172,12 +176,12 @@ _SLOT_ORDER = ("Q", "W", "E", "R")
 # ---------------------------------------------------------------------------
 
 
-def within_tolerance(cached, game, relative=REL_TOLERANCE, flat=FLAT_TOLERANCE):
+def within_tolerance(cached: float, game: float, flat: float = FLAT_TOLERANCE) -> bool:
     """True when a drift is rounding noise (inside 0.5% or +-flat)."""
     if cached == game:
         return True
     delta = abs(game - cached)
-    return delta <= flat or delta <= relative * abs(cached)
+    return delta <= flat or delta <= REL_TOLERANCE * abs(cached)
 
 
 # ---------------------------------------------------------------------------
@@ -185,10 +189,10 @@ def within_tolerance(cached, game, relative=REL_TOLERANCE, flat=FLAT_TOLERANCE):
 # ---------------------------------------------------------------------------
 
 
-def resolve_patch(cdtb_bin=None):
+def resolve_patch(cdtb_bin: str | None = None) -> str:
     """Return the live game patch version via `cdtb versions game -a`."""
     binary = cdtb_bin or CDTB_BIN
-    if not binary or (not os.path.isfile(binary) and shutil.which(binary) is None):
+    if not binary or (not Path(binary).is_file() and shutil.which(binary) is None):
         raise RuntimeError(
             "cdtb not found — install it and set CDTB_BIN, or pin with "
             "--patch <version>"
@@ -215,7 +219,7 @@ def resolve_patch(cdtb_bin=None):
     return lines[-1]
 
 
-def _download(url, dest):
+def _download(url: str, dest: Path) -> Path:
     """Download one URL to dest (browser UA; raw CDN 403s default agents)."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     if dest.exists() and dest.stat().st_size > 0:
@@ -229,12 +233,12 @@ def _download(url, dest):
     return dest
 
 
-def champion_dir(name):
+def champion_dir(name: str) -> str:
     """A cache champion key as its CommunityDragon dir: lowercase alphanumeric."""
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
 
-def extract_ddragon_version(champions_cache):
+def extract_ddragon_version(champions_cache: Mapping[str, Any]) -> str | None:
     """Derive the Data Dragon patch from the cache's champion icon URLs.
 
     The cache pins icons to one CDN release (e.g. 16.15.1 for game 16.15);
@@ -259,7 +263,12 @@ def extract_ddragon_version(champions_cache):
     return None
 
 
-def fetch_ddragon_for_pending(ddragon_version, pending, game_dir, concurrency=8):
+def fetch_ddragon_for_pending(
+    ddragon_version: str,
+    pending: Iterable[str],
+    game_dir: str | Path,
+    concurrency: int = 8,
+) -> dict[str, DdragonRows]:
     """Fetch Riot's official per-spell tooltip data for champions that need
     cooldown/cost arbitration (targeted; never the whole roster)."""
     game_dir = Path(game_dir)
@@ -277,21 +286,17 @@ def fetch_ddragon_for_pending(ddragon_version, pending, game_dir, concurrency=8)
         url, dest, name = target
         try:
             _download(url, dest)
-            with open(dest, encoding="utf-8") as handle:
+            with Path(dest).open(encoding="utf-8") as handle:
                 payload = json.load(handle)
             return name, ddragon_rows_by_slot(payload["data"][name])
         except (OSError, KeyError, json.JSONDecodeError):
             return name, None
 
-    rows = {}
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
-        for name, row in pool.map(fetch, targets):
-            if row is not None:
-                rows[name] = row
-    return rows
+        return {name: row for name, row in pool.map(fetch, targets) if row is not None}
 
 
-def _parse_burn(burn):
+def _parse_burn(burn: str | None) -> list[float] | None:
     """Parse a ddragon 'cooldownBurn'/'costBurn' string into floats."""
     if burn is None:
         return None
@@ -304,11 +309,11 @@ def _parse_burn(burn):
     return values
 
 
-def ddragon_rows_by_slot(ddragon_champion):
+def ddragon_rows_by_slot(ddragon_champion: Mapping[str, Any]) -> DdragonRows:
     """Map ddragon spells (Q/W/E/R order) to cooldown/cost value rows."""
     by_slot = {}
     spells = ddragon_champion.get("spells") or []
-    for slot, spell in zip(_SLOT_ORDER, spells):
+    for slot, spell in zip(_SLOT_ORDER, spells, strict=False):
         cooldown = _parse_burn(spell.get("cooldownBurn"))
         cost = _parse_burn(spell.get("costBurn"))
         by_slot[slot] = {
@@ -318,7 +323,7 @@ def ddragon_rows_by_slot(ddragon_champion):
     return by_slot
 
 
-def _expanded_match(wiki_values, dd_values, flat_tolerance):
+def _expanded_match(wiki_values, dd_values, flat_tolerance: float):
     """Match wiki values against ddragon values (constants expand to rank)."""
     if not dd_values:
         return False
@@ -327,7 +332,12 @@ def _expanded_match(wiki_values, dd_values, flat_tolerance):
     return _slices_match(wiki_values, dd_values, flat_tolerance)
 
 
-def download_game_files(patch, game_dir, champion_names, concurrency=8):
+def download_game_files(
+    patch: str,
+    game_dir: str | Path,
+    champion_names: Iterable[str],
+    concurrency: int = 8,
+) -> Path:
     """Fetch the cdtb raw exports for the given champions + the items bin."""
     game_dir = Path(game_dir)
     champions_dir = game_dir / "characters"
@@ -349,7 +359,9 @@ def download_game_files(patch, game_dir, champion_names, concurrency=8):
 # ---------------------------------------------------------------------------
 
 
-def _character_record_key(bin_data, champion_name):
+def _character_record_key(
+    bin_data: Mapping[str, Any], champion_name: str
+) -> str | None:
     """Pick the champion's own CharacterRecord key.
 
     A bin can carry several records (Gnar ships Mini + Mega/GnarBig, and
@@ -368,7 +380,9 @@ def _character_record_key(bin_data, champion_name):
     return keys[0]
 
 
-def champion_game_stats(bin_data, champion_name=""):
+def champion_game_stats(
+    bin_data: Mapping[str, Any], champion_name: str = ""
+) -> tuple[dict[tuple[str, str], float], int | None]:
     """Extract the CharacterRecord stat snapshot from a champion bin."""
     record_key = _character_record_key(bin_data, champion_name)
     if record_key is None:
@@ -406,7 +420,9 @@ def champion_game_stats(bin_data, champion_name=""):
     return stats, ar_type
 
 
-def compare_champion_stats(cache_stats, game_stats):
+def compare_champion_stats(
+    cache_stats: Mapping[str, Any], game_stats: Mapping[tuple[str, str], float]
+) -> tuple[dict[str, dict[str, float]], int, int]:
     """Return (stat_drift, checked_count, unchecked_count).
 
     ``stat_drift`` maps "stat.component" -> {"cached": .., "game": ..} for
@@ -462,7 +478,7 @@ def _is_scaled_display_row(units):
     return "based on" in text or "stack" in text
 
 
-def _downsample_match(wiki_values, game_values, flat_tolerance):
+def _downsample_match(wiki_values, game_values, flat_tolerance: float):
     """Try matching every-other wiki value, for interpolated display rows: a
     3-rank game cooldown shown as five (100/85/70 -> 100/92.5/85/77.5/70)
     matches exactly at the odd positions."""
@@ -471,7 +487,7 @@ def _downsample_match(wiki_values, game_values, flat_tolerance):
     return False
 
 
-def _slices_match(wiki_values, game_values, flat_tolerance):
+def _slices_match(wiki_values, game_values, flat_tolerance: float):
     """True when any contiguous rank-slice of game_values equals wiki_values."""
     n = len(wiki_values)
     if n == 0 or not game_values:
@@ -480,13 +496,13 @@ def _slices_match(wiki_values, game_values, flat_tolerance):
         window = game_values[start : start + n]
         if all(
             isinstance(g, (int, float)) and within_tolerance(w, g, flat=flat_tolerance)
-            for w, g in zip(wiki_values, window)
+            for w, g in zip(wiki_values, window, strict=False)
         ):
             return True
     return False
 
 
-def _data_value_matches(wiki_values, spell):
+def _data_value_matches(wiki_values, spell: Mapping[str, Any]):
     """Return (matched, game_row_name) against the spell's DataValues rows."""
     for data_value in spell.get("DataValues") or []:
         row = data_value.get("values") or []
@@ -514,7 +530,7 @@ def _normalize_attr(name):
     return re.sub(r"[^a-z0-9]", "", (name or "").lower())
 
 
-def _attr_matches_game_row(attribute, spell):
+def _attr_matches_game_row(attribute, spell: Mapping[str, Any]):
     """True when the wiki attribute name equals a DataValues row name."""
     normalized = _normalize_attr(attribute)
     if not normalized:
@@ -525,7 +541,9 @@ def _attr_matches_game_row(attribute, spell):
     )
 
 
-def game_spells_by_slot(bin_data, champion_name, cache_abilities):
+def game_spells_by_slot(
+    bin_data: Mapping[str, Any], champion_name: str
+) -> dict[str, list[dict[str, Any]]]:
     """Locate the game SpellDataResource per wiki ability slot (best-effort).
 
     Q/W/E/R come from CharacterRecord.spellNames in slot order; form-heavy
@@ -573,7 +591,12 @@ def game_spells_by_slot(bin_data, champion_name, cache_abilities):
     return by_slot
 
 
-def compare_ability_rows(cache_abilities, bin_data, champion_name, ddragon=None):
+def compare_ability_rows(
+    cache_abilities: Mapping[str, Any],
+    bin_data: Mapping[str, Any],
+    champion_name: str,
+    ddragon: Mapping[str, Any] | None = None,
+) -> tuple[int, int, int, list[str], set[str]]:
     """Compare wiki ability rows against the game bin (best-effort).
 
     ``ddragon`` is the champion's official tooltip row dict keyed by slot
@@ -582,7 +605,7 @@ def compare_ability_rows(cache_abilities, bin_data, champion_name, ddragon=None)
     needs_ddragon names the slots whose cooldown/cost rows could not be
     arbitrated from the bin alone.
     """
-    by_slot = game_spells_by_slot(bin_data, champion_name, cache_abilities)
+    by_slot = game_spells_by_slot(bin_data, champion_name)
     checked = 0
     stale = 0
     unchecked = 0
@@ -638,7 +661,9 @@ def _wiki_row_count(entry):
     return count
 
 
-def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
+def _compare_entry_rows(
+    entry, spell: dict[str, Any], slot: str, index: int, *, ddragon=None
+):
     """Compare one wiki ability entry against one game spell.
 
     ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),
@@ -789,7 +814,7 @@ def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
 # ---------------------------------------------------------------------------
 
 
-def items_by_id(game_items):
+def items_by_id(game_items: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     """Map game ItemData entries by itemID (as strings)."""
     by_id = {}
     for entry in game_items.values():
@@ -801,7 +826,9 @@ def items_by_id(game_items):
     return by_id
 
 
-def compare_item_stats(cache_item, game_item):
+def compare_item_stats(
+    cache_item: Mapping[str, Any], game_item: Mapping[str, Any]
+) -> tuple[dict[str, dict[str, float]], int, int]:
     """Return (stat_drift, checked_count, unchecked_count) for one item."""
     drift = {}
     checked = 0
@@ -830,14 +857,21 @@ def compare_item_stats(cache_item, game_item):
 # ---------------------------------------------------------------------------
 
 
-def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None):
+def build_staleness(
+    patch: str,
+    champions_cache: Mapping[str, Any],
+    items_cache: Mapping[str, Any],
+    game_dir: str | Path,
+    *,
+    ddragon: Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], dict[str, list[str]]]:
     """Compare the wiki cache against the game files -> staleness document.
 
     ``ddragon`` (optional) maps champion name -> official tooltip rows and is
     used only to arbitrate cooldown/cost rows (see _compare_entry_rows).
     """
     game_dir = Path(game_dir)
-    with open(game_dir / "items.bin.json", encoding="utf-8") as handle:
+    with (game_dir / "items.bin.json").open(encoding="utf-8") as handle:
         game_items = json.load(handle)
     game_items_by_id = items_by_id(game_items)
 
@@ -846,7 +880,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
     for name, cache_entry in champions_cache.items():
         bin_path = game_dir / "characters" / f"{champion_dir(name)}.bin.json"
         try:
-            with open(bin_path, encoding="utf-8") as handle:
+            with Path(bin_path).open(encoding="utf-8") as handle:
                 bin_data = json.load(handle)
         except OSError as exc:
             champions[name] = {
@@ -914,7 +948,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
 
     document = {
         "patch": patch,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
         "champions": champions,
         "items": items,
     }
@@ -926,7 +960,12 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
 # ---------------------------------------------------------------------------
 
 
-def verify_wads(patch, champion_names, game_dir, storage=None):
+def verify_wads(
+    patch: str,
+    champion_names: Iterable[str],
+    game_dir: str | Path,
+    storage: str | None = None,
+) -> dict[str, dict[str, Any]]:
     """Download real champion WADs via cdtb and diff CharacterRecords.
 
     Uses the wad-env interpreter that has cdtb installed; the helper script
@@ -934,7 +973,8 @@ def verify_wads(patch, champion_names, game_dir, storage=None):
     champion bin, then ``cdtb bin-dump --json`` produces the ground truth.
     Returns a per-champion report of stat deltas (empty = identical).
     """
-    storage = storage or str(Path(os.environ.get("TMPDIR", "/tmp")) / "lcc-p3-cdtb")
+    tmp_root = os.environ.get("TMPDIR", "/tmp")  # noqa: S108 - cdtb scratch
+    storage = storage or str(Path(tmp_root) / "lcc-p3-cdtb")
     report = {}
     for name in champion_names:
         champ_dir = champion_dir(name)
@@ -972,7 +1012,9 @@ def verify_wads(patch, champion_names, game_dir, storage=None):
     return report
 
 
-def extract_champion_bin_via_cdtb(patch, name, storage, python_bin):
+def extract_champion_bin_via_cdtb(
+    patch: str, name: str, storage: str, python_bin: str
+) -> str | None:
     """Download/extract one champion WAD through the cdtb Python API.
 
     Returns the path of the extracted champion bin, or None on failure.
@@ -1011,7 +1053,7 @@ print(os.path.abspath(game.elem.extract_path(files[0])))
     if result.returncode != 0:
         return None
     wad_path = result.stdout.strip().splitlines()[-1]
-    if not os.path.isfile(wad_path):
+    if not Path(wad_path).is_file():
         return None
     extract_dir = wad_path + ".x"
     extract = subprocess.run(
@@ -1032,7 +1074,7 @@ print(os.path.abspath(game.elem.extract_path(files[0])))
 # ---------------------------------------------------------------------------
 
 
-def main(argv=None):
+def main(argv: None | list[str] = None) -> int:
     parser = argparse.ArgumentParser(
         description="Compare the wiki cache against game-file ground truth.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1073,9 +1115,9 @@ def main(argv=None):
         print(f"FAIL: {exc}", file=sys.stderr)
         return 2
     data_dir = Path(args.data_dir)
-    with open(data_dir / "champions.json", encoding="utf-8") as handle:
+    with (data_dir / "champions.json").open(encoding="utf-8") as handle:
         champions_cache = json.load(handle)
-    with open(data_dir / "items.json", encoding="utf-8") as handle:
+    with (data_dir / "items.json").open(encoding="utf-8") as handle:
         items_cache = json.load(handle)
     names = list(champions_cache)
     if args.limit:

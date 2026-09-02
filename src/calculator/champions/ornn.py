@@ -17,7 +17,9 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stats import MAX_LEVEL
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -27,14 +29,12 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
-def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _bellows_breath(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
     )
@@ -165,11 +165,10 @@ _R_RECAST_DELAY = 1.25
 _R_PASS_CC_KINDS = ("slow", "immobilize")
 
 
-def _call_of_the_forge_god(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _call_of_the_forge_god(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     attr = "Total Magic Damage" if passes == 2 else "Magic Damage"
     total = extract_named(ability, attr, rank, ctx.stats, ctx.target)
@@ -239,8 +238,11 @@ parse_abilities = build_parser(SLOTS, "Ornn", cc_kinds=MODULE_CC)
 OPTIONS = [int_option("r_passes", 2, minimum=1, maximum=2, label="R elemental passes")]
 
 ASSUMPTIONS = [
-    "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout Brittle state in its detail receipt.",
-    "Call of the Forge God defaults to both sourced passes; one pass is an explicit option, and Temper's Brittle consume rides the second pass, so a one-pass fight prices no consume.",
+    "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout "
+    "Brittle state in its detail receipt.",
+    "Call of the Forge God defaults to both sourced passes; one pass is an explicit "
+    "option, and Temper's Brittle consume rides the second pass, so a one-pass fight "
+    "prices no consume.",
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
     "P (Temper) is modeled through Call of the Forge God: the recast pass "
     "immobilises a target the first pass made Brittle, so every two-pass R "

@@ -1,8 +1,8 @@
 """The documented direct Flask entry point must remain importable."""
 
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 
 def test_app_script_reaches_flask_run_without_import_errors():

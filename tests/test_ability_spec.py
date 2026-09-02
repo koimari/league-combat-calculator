@@ -9,14 +9,14 @@ four closed vocabularies the leaf declares, member for member.
 import ast
 import importlib.util
 import sys
+from dataclasses import FrozenInstanceError
 from enum import Enum
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import ability_spec, trigger_stream
-from tests import ability_math
+from src.calculator import ability_spec
 from src.calculator.ability_spec import (
     AttackClass,
     Authority,
@@ -27,6 +27,7 @@ from src.calculator.ability_spec import (
 )
 from src.calculator.damage import _evaluate_cast_parts
 from src.calculator.resistance import apply_resistance
+from tests import ability_math
 
 
 def _stub_state(
@@ -161,38 +162,25 @@ class TestClosedVocabularies:
             if id(node) in deferred:
                 continue
             if isinstance(node, ast.ImportFrom):
-                assert node.level == 0 and not str(node.module).startswith(
-                    "src.calculator"
-                ), f"ability_spec.py:{node.lineno} imports a sibling module"
+                sibling = f"ability_spec.py:{node.lineno} imports a sibling module"
+                assert node.level == 0, sibling
+                assert not str(node.module).startswith("src.calculator"), sibling
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     assert not alias.name.startswith("src.calculator")
 
-    def test_the_leaf_defers_exactly_one_sibling_import_and_it_is_named(self) -> None:
-        """``Starved.read`` raises ``ProjectionStarvation``, whose home is not here.
-
-        D-72 puts the ``Quantity`` algebra in this leaf and D-25 keeps
-        ``ProjectionStarvation`` in ``trigger_stream`` — which imports this
-        module.  A module-scope import would be a cycle, so the raise fetches
-        the class at raise time, the repo's own idiom for the same collision
-        (``champions/engine.py`` defers ``slotlib``).  One exception, pinned by
-        name and by the function it sits in, so the allowance cannot widen
-        into a category.
-        """
+    def test_the_leaf_defers_no_sibling_import(self) -> None:
+        """``Starved.read`` raises ``ProjectionStarvation``, which lives here,
+        so no function in the leaf fetches a sibling at call time."""
         tree = _module_tree()
         deferred = [
-            (function.name, node)
+            node
             for function in ast.walk(tree)
             if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef))
             for node in ast.walk(function)
             if isinstance(node, (ast.Import, ast.ImportFrom))
         ]
-        assert len(deferred) == 1
-        owner, node = deferred[0]
-        assert owner == "_projection_starvation"
-        assert isinstance(node, ast.ImportFrom)
-        assert (node.level, node.module) == (1, "trigger_stream")
-        assert [alias.name for alias in node.names] == ["ProjectionStarvation"]
+        assert deferred == []
 
     def test_the_leaf_loads_with_no_package_around_it(self) -> None:
         """The property the AST rules stand for, checked by execution.
@@ -200,13 +188,13 @@ class TestClosedVocabularies:
         The file is executed on its own, with no package to resolve a
         relative import against.  It loads and its vocabulary works, which is
         what "dependency-free leaf" means and what an AST rule can only
-        approximate — the deferred import is deferred in fact, not merely in
-        indentation.
+        approximate.
         """
         spec = importlib.util.spec_from_file_location(
             "ability_spec_standalone", ability_spec.__file__
         )
-        assert spec is not None and spec.loader is not None
+        assert spec is not None
+        assert spec.loader is not None
         standalone = importlib.util.module_from_spec(spec)
         # ``dataclasses`` resolves a field's annotations through
         # ``sys.modules[cls.__module__]``, so the module has to be registered
@@ -476,10 +464,11 @@ def test_a_withheld_quantity_with_no_receipt_cannot_be_constructed() -> None:
 
 def test_reading_a_starved_quantity_raises_projection_starvation() -> None:
     """D-25: lazily, on first read, carrying field/producer/reason."""
-    with pytest.raises(trigger_stream.ProjectionStarvation) as excinfo:
+    with pytest.raises(ability_spec.ProjectionStarvation) as excinfo:
         STARVED.read()
     message = str(excinfo.value)
-    assert "cc" in message and "Imperial Mandate" in message
+    assert "cc" in message
+    assert "Imperial Mandate" in message
     assert "tuple ledger carries no cc stream" in message
 
 
@@ -504,8 +493,8 @@ def test_measured_folds_with_measured() -> None:
 
 def test_measured_folds_with_structural_zero_which_contributes_zero() -> None:
     """The invariant table's "``STRUCTURAL_ZERO`` contributes 0.0"."""
-    assert MEASURED + STRUCTURAL == ability_spec.Measured(amount=3.0)
-    assert STRUCTURAL + MEASURED == ability_spec.Measured(amount=3.0)
+    assert ability_spec.Measured(amount=3.0) == MEASURED + STRUCTURAL
+    assert ability_spec.Measured(amount=3.0) == STRUCTURAL + MEASURED
 
 
 def test_two_structural_zeros_fold_to_a_measured_zero() -> None:
@@ -515,7 +504,7 @@ def test_two_structural_zeros_fold_to_a_measured_zero() -> None:
     declarations are their own receipts and not the total's, and
     ``StructuralZero`` carries one reason with no way to merge two.
     """
-    assert STRUCTURAL + STRUCTURAL_OTHER == ability_spec.Measured(amount=0.0)
+    assert ability_spec.Measured(amount=0.0) == STRUCTURAL + STRUCTURAL_OTHER
 
 
 def test_a_withheld_member_makes_the_total_withheld_naming_it() -> None:
@@ -545,7 +534,7 @@ def test_a_starved_member_raises_from_every_side_of_a_fold() -> None:
         (STARVED, STRUCTURAL),
         (STARVED, STARVED),
     ):
-        with pytest.raises(trigger_stream.ProjectionStarvation):
+        with pytest.raises(ability_spec.ProjectionStarvation):
             _ = left + right
 
 
@@ -555,9 +544,9 @@ def test_starved_beats_withheld_in_both_orders() -> None:
     A withheld total that quietly swallowed a programming error would be
     exactly the failure this campaign is named after, wearing a receipt.
     """
-    with pytest.raises(trigger_stream.ProjectionStarvation):
+    with pytest.raises(ability_spec.ProjectionStarvation):
         _ = WITHHELD + STARVED
-    with pytest.raises(trigger_stream.ProjectionStarvation):
+    with pytest.raises(ability_spec.ProjectionStarvation):
         _ = STARVED + WITHHELD
 
 
@@ -569,7 +558,7 @@ def test_the_matrix_is_covered_in_every_direction() -> None:
         for right in members:
             try:
                 total = left + right
-            except trigger_stream.ProjectionStarvation:
+            except ability_spec.ProjectionStarvation:
                 assert ability_spec.Starved in (type(left), type(right))
             else:
                 assert isinstance(total, (ability_spec.Measured, ability_spec.Withheld))
@@ -607,7 +596,9 @@ def test_five_measured_components_and_one_withheld_do_not_make_a_measured_total(
 def test_the_algebra_is_frozen_so_a_fold_cannot_mutate_its_operands() -> None:
     """Value type: every member is a frozen dataclass with slots."""
     for member in (MEASURED, STRUCTURAL, WITHHELD, STARVED):
-        with pytest.raises(Exception):
+        # A frozen slots dataclass refuses a field with FrozenInstanceError and any other
+        # name with TypeError (CPython rebinds the class for slots); both are refusals.
+        with pytest.raises((FrozenInstanceError, TypeError)):
             member.disposition = Disposition.MEASURED  # type: ignore[misc]
 
 

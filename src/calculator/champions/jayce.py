@@ -86,6 +86,8 @@ from ..binary_roots import (
 )
 from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import bool_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -97,8 +99,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
 
 # The stance numbers are binary mSpellCalculations level-breakpoint nodes
 # from data/bin/characters/jayce.bin.json (JayceStanceHtG: Resists /
@@ -151,7 +151,7 @@ def _is_hammer(ctx: SlotCtx) -> bool:
 
 def _level_tier(level: int) -> int:
     """Index into R's per-level tables, which step at level, not rank."""
-    return sum(1 for breakpoint in TRANSFORM_BREAKPOINTS if level >= breakpoint)
+    return sum(1 for threshold in TRANSFORM_BREAKPOINTS if level >= threshold)
 
 
 # ---------------------------------------------------------------------------

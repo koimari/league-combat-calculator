@@ -45,6 +45,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -55,7 +57,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 # The binary roots the cleave's 2-stack cycle; R's beam bonus counts champions
 # pulled beyond the first, up to 5 total, which remains a mechanic cap.
@@ -173,12 +174,11 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _lunar_rush(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _lunar_rush(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: dash damage, twice per activation when Moonlight resets it."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_dash = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     dashes = 2 if ctx.option("moonlight_reset") else 1
@@ -195,13 +195,12 @@ def _lunar_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _moonfall(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _moonfall(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the delayed beam — base plus a bonus per champion pulled
     beyond the first (the pull itself deals no damage)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     pulled = int(ctx.option("champions_pulled"))
     pulled = min(max(pulled, 1), _R_MAX_CHAMPIONS_PULLED)

@@ -24,6 +24,7 @@ from src import app as app_module
 from src.calculator.champions import (
     _CHAMPION_MODULES,
     get_champion_module_contract,
+    module_basename,
     parse_champion_abilities,
 )
 from src.calculator.champions.slotlib import extract_named
@@ -543,7 +544,6 @@ class TestYunara:
 
 class TestCoverageFlags:
     def test_audit_flagged_slots_are_modeled(self) -> None:
-        import importlib
 
         # Every audit-flagged slot (the P1-2 closure list) must be marked
         # modeled in its module's MODULE_COVERAGE.
@@ -572,7 +572,7 @@ class TestCoverageFlags:
             name = next(
                 display
                 for display, candidate in _CHAMPION_MODULES.items()
-                if candidate == module_name
+                if module_basename(candidate) == module_name
             )
             coverage = get_champion_module_contract(name).coverage
             for slot, status in flagged.items():

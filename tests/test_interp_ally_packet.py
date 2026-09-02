@@ -15,25 +15,26 @@ import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
-from src.calculator.item_behavior import (
-    AllyPacketRule,
-    AllyProducer,
-    Compilable,
-    EngineLane,
-    LevelSubject,
-    PacketKind,
-    PacketTrigger,
-    Recipients,
-    ReceiptOnly,
-    ReceiptScope,
-    RuleFamily,
-)
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters.ally_packet import (
     AllyPacketInterpretationError,
     AllyPacketSlot,
     packet_fields,
     resolve_slots,
+)
+from src.calculator.item_behavior import (
+    AllyPacketRule,
+    AllyProducer,
+    Compilable,
+    EngineLane,
+    FightFacts,
+    LevelSubject,
+    PacketKind,
+    PacketTrigger,
+    ReceiptOnly,
+    ReceiptScope,
+    Recipients,
+    RuleFamily,
 )
 
 
@@ -69,7 +70,7 @@ class TestTheProducerVocabularyIsBoundToPhaseTwo:
     def test_every_producer_names_a_declared_walk_capability(self) -> None:
         """A producer whose mechanic no capability declares is unreachable."""
         mechanics = {
-            f"{catalog._mechanic_slug(owner)}.{producer.value}"  # noqa: SLF001
+            f"{catalog._mechanic_slug(owner)}.{producer.value}"
             for producer in AllyProducer
             for owner in catalog.owners_for(producer)
         }
@@ -159,7 +160,7 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
 
     def test_two_holders_of_one_producer_are_a_stop(self) -> None:
         """Two ledgers with nothing saying how they combine."""
-        from src.calculator.item_support_effects import _producer  # noqa: PLC0415
+        from src.calculator.item_support_effects import _producer
 
         slots = resolve_slots(catalog.owners_for(AllyProducer.SHARED_RICHES))
         assert (
@@ -296,10 +297,12 @@ class TestTheWalkLaneCompilesTheDeclaredNumbers:
             rule,
             catalog.build_context(
                 rule.owner,
-                11,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=False,
+                FightFacts(
+                    level=11,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=False,
+                ),
             ),
             EngineLane.RECEIPT_WALK,
         )
@@ -318,10 +321,12 @@ class TestTheWalkLaneCompilesTheDeclaredNumbers:
                 rule,
                 catalog.build_context(
                     rule.owner,
-                    11,
-                    fight_duration_seconds=5.0,
-                    target_bonus_health=0.0,
-                    holder_is_melee=False,
+                    FightFacts(
+                        level=11,
+                        fight_duration_seconds=5.0,
+                        target_bonus_health=0.0,
+                        holder_is_melee=False,
+                    ),
                 ),
                 EngineLane.RECEIPT_WALK,
             )

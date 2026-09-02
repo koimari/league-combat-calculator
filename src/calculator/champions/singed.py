@@ -27,18 +27,14 @@ cached magnitude to put in it — see the ASSUMPTIONS entry.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
-from .module_helpers import buff_window_share
+from .module_contract import coverage
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
     extract_value,
 )
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "d6e04f1cd92d4f7ddd569c7ba4bb306cdd06c18e230c7ed2a57ef89ba45b3c9c"
 
@@ -69,35 +65,30 @@ _INSANITY_POTION_STATS = (
 )
 
 
-def _insanity_potion(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _insanity_potion(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: one Bonus Stats row granted as AP, resistances and move speed."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Stats", rank)
     bonus = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
     # BUFF phase: Q's poison ticks and E's fling both carry AP ratios and
     # parse after this slot, so the ultimate amplifies its own kit.
     ctx.stats["ability_power"] = ctx.stat("ability_power") + bonus
-    entry = damage_entry(
-        ability_name(ability),
+    return steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "magic",
-        zero_policy=STEROID_ZERO,
+        dict.fromkeys(_INSANITY_POTION_STATS, bonus),
+        (
+            f"+{granted:g} ability power, armour, magic resistance and movement "
+            f"speed for {_R_DURATION_SECONDS:g}s ({bonus:g} over the fight "
+            "window); the same row's health/mana regeneration has no stat_buff "
+            "key, and its Grievous Wounds is an enemy-healing effect the "
+            "one-pair fight cannot apply"
+        ),
+        dmg_type="magic",
     )
-    entry["stat_buff"] = {stat_key: bonus for stat_key in _INSANITY_POTION_STATS}
-    entry["detail"] = (
-        f"+{granted:g} ability power, armour, magic resistance and movement "
-        f"speed for {_R_DURATION_SECONDS:g}s ({bonus:g} over the fight "
-        "window); the same row's health/mana regeneration has no stat_buff "
-        "key, and its Grievous Wounds is an enemy-healing effect the "
-        "one-pair fight cannot apply"
-    )
-    return entry
 
 
 _insanity_potion.phase = BUFF
@@ -128,7 +119,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Mega Adhesive) stays out of MODULE_CC: its slow is sourced "
     "(the cached 'Slow' row, 50/55/60/65/70%) but its window is not. "
     "The field lasts 3 seconds by the effect description alone, and the "

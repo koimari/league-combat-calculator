@@ -14,7 +14,6 @@ import builtins
 import importlib
 import importlib.util
 import inspect
-import json
 import re
 import sys
 from collections.abc import Mapping
@@ -26,8 +25,17 @@ import pytest
 
 from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator import trigger_stream as ts
+from src.calculator.ability_spec import (
+    CC_KIND_VOCABULARY,
+    IMMOBILIZING_CC_KINDS,
+    Authority,
+    DamagePart,
+    Disposition,
+    ProjectionStarvation,
+    projection_starvation,
+)
+from src.calculator.champions.engine import _validate_cc_event_contract
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.item_behavior import (
     AllyProducer,
@@ -35,23 +43,16 @@ from src.calculator.item_behavior import (
     LivePredicate,
     RuleFamily,
 )
-from src.calculator.ability_spec import (
-    CC_KIND_VOCABULARY,
-    IMMOBILIZING_CC_KINDS,
-    Authority,
-    DamagePart,
-    Disposition,
-)
-from src.calculator.champions.engine import _validate_cc_event_contract
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.item_support_effects import (
     EventViewStarvationError,
     _declared_authorities,
     derive_item_support_effects,
 )
 from src.calculator.program.compile import WalkCompiler, action_from_event
-from src.calculator.survival.actions import TransitionRank
 from src.calculator.program.views import ViewTag
 from src.calculator.roster_composition import ActorRequest
+from src.calculator.survival.actions import TransitionRank
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
@@ -90,9 +91,10 @@ def _enclosing(tree: ast.AST, node: ast.AST) -> str:
         ):
             continue
         end = candidate.end_lineno or candidate.lineno
-        if candidate.lineno <= node.lineno <= end:
-            if best is None or candidate.lineno > best.lineno:
-                best = candidate
+        if candidate.lineno <= node.lineno <= end and (
+            best is None or candidate.lineno > best.lineno
+        ):
+            best = candidate
     return best.name if best else "<module>"
 
 
@@ -215,7 +217,7 @@ def test_trigger_rejects_a_misspelled_cc_kind():
 
 
 @pytest.mark.parametrize(
-    "field, value",
+    ("field", "value"),
     [
         ("time", float("inf")),
         ("damage", -1.0),
@@ -281,7 +283,7 @@ def test_trigger_is_frozen_hashable_and_unordered():
     with pytest.raises(AttributeError):
         trigger.time = 2.0  # type: ignore[misc]
     with pytest.raises(TypeError):
-        _ = trigger < trigger  # type: ignore[operator]
+        _ = trigger < trigger  # noqa: PLR0124 - the refusal  # type: ignore[operator]
 
 
 def test_an_unmarked_row_classifies_unreviewed_and_never_none():
@@ -516,7 +518,7 @@ def test_authored_triggers_skips_rows_that_are_not_mappings():
 
 def test_a_tuple_ledger_starves_a_declared_stream():
     """The campaign's ``STARVED`` leaf, as a control-flow signal (D-25)."""
-    with pytest.raises(ts.ProjectionStarvation) as excinfo:
+    with pytest.raises(ProjectionStarvation) as excinfo:
         ts.authored_triggers(
             {"damage_events_tuple": [(0.0, "main", 1.0)]},
             streams=frozenset({ts.Stream.CC}),
@@ -569,7 +571,7 @@ PAIR_OUTCOME = frozenset({"Cryptbloom"})
 
 
 @pytest.mark.parametrize(
-    "projection, expected",
+    ("projection", "expected"),
     [
         (ts.tuple_incapable_items, TUPLE_INCAPABLE),
         (ts.enriched_view_items, ENRICHED_VIEW),
@@ -862,7 +864,7 @@ def _capability(**overrides) -> ts.MechanicCapability:
 
 
 @pytest.mark.parametrize(
-    "overrides, message",
+    ("overrides", "message"),
     [
         ({"mechanic": "Synthetic Mechanic"}, "mechanic id"),
         ({"owner": "Synthetic"}, "MechanicOwner"),
@@ -911,7 +913,7 @@ def test_a_paired_capability_pointing_at_a_walk_half_is_rejected(monkeypatch):
     )
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match="Engine.PAIR"):
+    with pytest.raises(ts.TriggerRegistryError, match=re.escape("Engine.PAIR")):
         ts._validate_registry()
 
 
@@ -1256,9 +1258,7 @@ def legacy_name_set_sites(
                 name = node.id
             elif isinstance(node, ast.Attribute):
                 name = node.attr
-            elif isinstance(node, ast.alias):
-                name = node.name
-            elif isinstance(node, ast.FunctionDef):
+            elif isinstance(node, (ast.alias, ast.FunctionDef)):
                 name = node.name
             if name in sites:
                 sites[name].add(path)
@@ -1285,8 +1285,8 @@ def test_a4_has_a_permanent_injection_seam():
 # imports, names, attributes — so a retired name surviving as prose in a
 # comment or a docstring passes them.  That gap is not hypothetical: the
 # phase-2 sign-off found ``_cc_triggers`` still named in ``trigger_stream``'s
-# own ``Trigger`` docstring, describing what the retired scanner used to
-# accept.  Prose is exactly where a retired name does its remaining damage —
+# own ``Trigger`` docstring, describing what the retired scanner accepted.
+# Prose is exactly where a retired name does its remaining damage —
 # it is what a reader greps, and a docstring that discusses a symbol reads as
 # a symbol that still exists — so the criterion is checked as written rather
 # than narrowed to what the parser sees.
@@ -1400,13 +1400,13 @@ def takedown_synthesis_sites(
     for node in ast.walk(ast.parse(text)):
         if not isinstance(node, ast.Assign):
             continue
-        for target in node.targets:
-            if (
-                isinstance(target, ast.Subscript)
-                and isinstance(target.slice, ast.Constant)
-                and target.slice.value == "takedown_events"
-            ):
-                sites.append(f"participant_timeline.py:{node.lineno}")
+        sites.extend(
+            f"participant_timeline.py:{node.lineno}"
+            for target in node.targets
+            if isinstance(target, ast.Subscript)
+            and isinstance(target.slice, ast.Constant)
+            and target.slice.value == "takedown_events"
+        )
     return tuple(sites)
 
 
@@ -1594,7 +1594,9 @@ def pairing_defects(
             defects.append(f"{mechanic}: pair_of resolves to no capability")
             continue
         module, attribute = partner.impl.rsplit(".", 1)
-        resolved = importlib.import_module(f"src.calculator.{module}")
+        resolved = importlib.import_module(  # sightline-ok: 24 - dotted receipt
+            f"src.calculator.{module}"
+        )
         if not hasattr(resolved, attribute):
             defects.append(f"{mechanic}: pair half {partner.impl} does not import")
     return tuple(defects)
@@ -1738,7 +1740,8 @@ def test_a9_every_declared_stream_is_load_bearing():
         if capability.reads & frozenset(_STREAM_PROBE)
     }
     for mechanic, row in matrix.items():
-        assert row and all(row.values()), f"{mechanic} declares an inert stream: {row}"
+        assert row, f"{mechanic} declares an inert stream: {row}"
+        assert all(row.values()), f"{mechanic} declares an inert stream: {row}"
     # Every SUPPORT_TRIGGER reader is reachable through the same projection,
     # even though its stream is built from authored templates rather than
     # parsed off raw rows.
@@ -1949,7 +1952,7 @@ def test_the_single_catch_has_a_permanent_injection_seam():
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
-        "from .trigger_stream import ProjectionStarvation\n"
+        "from .ability_spec import ProjectionStarvation\n"
         "\n"
         "def swallow(run):\n"
         "    try:\n"
@@ -1992,7 +1995,7 @@ def test_the_request_boundary_converts_a_starvation_into_a_named_500():
     import src.app as app_module
 
     def _starving():
-        raise ts.ProjectionStarvation("cc", "Imperial Mandate", "tuple ledger")
+        raise projection_starvation("cc", "Imperial Mandate", "tuple ledger")
 
     guarded = app_module._within_starvation_boundary(_starving)
     with app_module.app.test_request_context("/api/calculate", method="POST"):
@@ -2104,16 +2107,16 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
             False,
             "Q",
             "physical",
-            10.0,
-            0.0,
-            0,
-            0.0,
-            "ability",
-            1,
-            authored,
-            True,
-            False,
-            None,
+            damage=10.0,
+            time=0.0,
+            sequence=0,
+            order_value=0.0,
+            phase="ability",
+            ordinal=1,
+            fields=authored,
+            is_ability=True,
+            vamp_source=False,
+            shield_events=None,
         )
         assert "cc_kind" not in row or row.get("cc_reviewed") is True
 
@@ -2121,9 +2124,9 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
 def test_the_certification_gate_selects_its_holder_from_a_declaration():
     """Who the gate certifies, and what it calls the refusal, are derived (3.9).
 
-    The gate used to ask ``requires_authored_control_event`` — a registry-key
-    read — and then spell ``Fimbulwinter`` twice more: once as the bus holder
-    tag and once inside the note.  It now asks the ally-packet declarations
+    The gate does not read ``requires_authored_control_event`` off a registry
+    key and then spell ``Fimbulwinter`` twice more, once as the bus holder
+    tag and once inside the note.  It asks the ally-packet declarations
     for the shape it actually owes proof of, a shield the holder receives on a
     control event, and builds both receipts out of the declaration it found.
 
@@ -2196,10 +2199,10 @@ def test_the_certification_gate_propagates_the_damage_field_contract():
 def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
     """The damage stream's type vocabulary stops at the damage stream.
 
-    ``Trigger.__post_init__`` used to check ``damage_type`` for every kind,
-    so a control-only holder — one whose ``reads`` never mentions
-    ``Stream.DAMAGE`` — was judged by a contract it does not consume: a
-    control row typed ``"mixed"`` raised out of
+    A ``Trigger.__post_init__`` that checks ``damage_type`` for every kind
+    judges a control-only holder — one whose ``reads`` never mentions
+    ``Stream.DAMAGE`` — by a contract it does not consume: a control row
+    typed ``"mixed"`` raises out of
     ``derive_item_support_effects`` where the retired ``_cc_triggers``
     accepted it.  That is precisely the move ``source_key``'s own narrowing
     refused — "requiring one there would reject authored control the legacy
@@ -2242,7 +2245,8 @@ def test_a_control_only_holder_scans_a_mixed_typed_row(item):
     of them raised ``ValueError`` on this row.
     """
     reads = ts.streams_for(frozenset({item}))
-    assert ts.Stream.CC in reads and ts.Stream.DAMAGE not in reads
+    assert ts.Stream.CC in reads
+    assert ts.Stream.DAMAGE not in reads
     holder = _support_actor("ally:Lulu", "ally", (item,))
     ally = _support_actor("main:Ahri", "main", ())
     enemy = _support_actor("enemy:Aatrox", "enemy", ())
@@ -2452,8 +2456,8 @@ class TestTheSupportTriggerLinkRaise:
     def test_the_emitted_link_is_declined_one_branch_earlier(self):
         """Everlasting's own declaration refuses it before any template gate.
 
-        The 3 s duration used to be that earlier decline; the typed shield
-        ledger now stages a timed shield, so the duration refuses nothing and
+        The 3 s duration is not that earlier decline: the typed shield
+        ledger stages a timed shield, so the duration refuses nothing and
         the template receipt admits this packet.  What still shadows the
         guard is a branch earlier still — Everlasting is declared a SELF
         shield, and the compiled kernel cannot stage one at all — so the
@@ -2528,8 +2532,8 @@ def test_a_support_scan_row_carrying_a_garbage_number_is_dropped_not_raised():
     and ``_stack_triggers`` then drops the row for carrying no damage.
     44e10ea named this softening for ``time`` only.
 
-    So the direction moved twice, and opposite ways: garbage no longer
-    raises, and infinity no longer stacks.
+    So the bus lands both cases opposite to the scan: garbage does not
+    raise, and infinity does not stack.
     """
     holder = _support_actor("main:Annie", "main", ("Black Cleaver",))
     enemy = _support_actor("enemy:Aatrox", "enemy", ())
@@ -2559,7 +2563,7 @@ def test_the_receipt_token_is_the_rows_own_token_on_every_rung():
     """b2882ec reordered the ladder and moved no ``cc_kind`` token.
 
     ``verify-P2b``'s second pass read the reorder as also propagating the
-    token onto rungs that used to blank it — ``{"cc_kind": "none",
+    token onto rungs the retired ladder blanked — ``{"cc_kind": "none",
     "hard_cc": True}`` yielding ``cc_kind="none"`` where it once yielded
     ``""``.  It does not: the retired ladder returned the normalised token
     whenever it was non-empty and ``""`` exactly when it was empty, which
@@ -2573,7 +2577,7 @@ def test_the_receipt_token_is_the_rows_own_token_on_every_rung():
     """
     flags = ("immobilized", "hard_cc", "slowed", "slow", "crowd_control")
     rows = 0
-    for kind in sorted(CC_KIND_VOCABULARY) + [""]:
+    for kind in [*sorted(CC_KIND_VOCABULARY), ""]:
         for bits in range(1 << len(flags)):
             row = {
                 "cc_kind": kind,
@@ -2677,7 +2681,7 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         # request boundary names.
         with pytest.raises(ValueError) as excinfo:
             ts.is_immobilizing_event({"cc_kind": self.UNKNOWN_KIND})
-        assert not isinstance(excinfo.value, ts.ProjectionStarvation)
+        assert not isinstance(excinfo.value, ProjectionStarvation)
 
     def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self):
         """What the endpoint actually does with it — measured, not reasoned.
@@ -2711,7 +2715,8 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         payload = response.get_json()
         assert sorted(payload) == ["error"]
         assert str(raised) == payload["error"]
-        assert "disposition" not in payload and "starved" not in payload
+        assert "disposition" not in payload
+        assert "starved" not in payload
 
 
 # ---------------------------------------------------------------------------
@@ -2734,7 +2739,7 @@ def test_every_half_tags_exactly_the_engine_it_runs_on():
 
 
 @pytest.mark.parametrize(
-    "overrides, message",
+    ("overrides", "message"),
     [
         (
             {"pairing": ts.Pairing.PAIRED, "pair_of": "abyssal_mask.magic_amp"},
@@ -2784,7 +2789,8 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
     joined on 2026-08-16, when ``active_cast``, ``cast_proc``,
     ``charged_strike``, ``on_hit_strike`` and ``periodic`` retired off the pair
     engine, and on 2026-08-17 the seven spellblades with ``spellblade`` and
-    Wind's Fury with ``secondary_target``, the last of the fourteen.  Their answer is per-holder for the same reason and one step more
+    Wind's Fury with ``secondary_target``, the last of the fourteen.  Their answer is
+    per-holder for the same reason and one step more
     plainly: each one's walk half prices *its own holder's* packet, so two
     roster members holding one item pay two packets and an aura key would
     silently drop the second — which is the incident's own shape mandated by

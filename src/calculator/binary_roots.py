@@ -16,7 +16,8 @@ substitutes zero, skips, or falls back.
 import json
 import math
 import re
-from functools import lru_cache
+from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,7 @@ def champion_key(name: str) -> str:
     return _NONALNUM.sub("", str(name).lower())
 
 
-@lru_cache(maxsize=None)
+@cache
 def character_bin(champion_name: str) -> dict[str, Any]:
     """One champion's full parsed binary dump, keyed by object path."""
     path = _BIN_DIR / f"{champion_key(champion_name)}.bin.json"
@@ -79,7 +80,7 @@ def character_record_root(champion_name: str) -> dict[str, Any]:
     )
 
 
-def record_value(root: dict[str, Any], field: str) -> float:
+def record_value(root: Mapping[str, Any], field: str) -> float:
     """One ModifiableFloat-style record field's ``baseValue``, snapped the
     same way :func:`data_value` snaps spell DataValues."""
     value = root.get(field)
@@ -99,15 +100,13 @@ def record_value(root: dict[str, Any], field: str) -> float:
     raise RuntimeError(f"record field {field!r} not found")
 
 
-def _breakpoint_level(breakpoint: Any) -> float:
+def _breakpoint_level(step: Any) -> float:
     """One breakpoint's sort key: its numeric ``mLevel``, or raise."""
-    if isinstance(breakpoint, dict) and "mLevel" in breakpoint:
-        level = breakpoint["mLevel"]
+    if isinstance(step, dict) and "mLevel" in step:
+        level = step["mLevel"]
         if isinstance(level, (int, float)):
             return float(level)
-    raise RuntimeError(
-        f"calculation breakpoint row without a numeric mLevel: {breakpoint!r}"
-    )
+    raise RuntimeError(f"calculation breakpoint row without a numeric mLevel: {step!r}")
 
 
 def calculation_breakpoints(
@@ -145,9 +144,9 @@ def calculation_breakpoints(
                 raise RuntimeError(
                     f"calculation {calculation_name!r}: mBreakpoints is not a list"
                 )
-            for breakpoint in sorted(raw_breakpoints, key=_breakpoint_level):
+            for step in sorted(raw_breakpoints, key=_breakpoint_level):
                 try:
-                    current += float(breakpoint["mAdditionalBonusAtThisLevel"])
+                    current += float(step["mAdditionalBonusAtThisLevel"])
                 except (KeyError, TypeError, ValueError) as exc:
                     raise RuntimeError(
                         f"calculation {calculation_name!r}: unusable breakpoint row"
@@ -162,10 +161,8 @@ def calculation_breakpoints(
     )
 
 
-def calculation_interpolation(
-    spell_obj: dict[str, Any], calculation_name: str
-) -> tuple[float, float]:
-    """A calculation's finite character-level interpolation endpoints."""
+def _formula_parts(spell_obj: dict[str, Any], calculation_name: str) -> list:
+    """A calculation's non-empty ``mFormulaParts``, or raise naming it."""
     spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
     calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
     node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
@@ -174,6 +171,14 @@ def calculation_interpolation(
         raise RuntimeError(
             f"calculation {calculation_name!r} not found or has no formula parts"
         )
+    return parts
+
+
+def calculation_interpolation(
+    spell_obj: dict[str, Any], calculation_name: str
+) -> tuple[float, float]:
+    """A calculation's finite character-level interpolation endpoints."""
+    parts = _formula_parts(spell_obj, calculation_name)
     matches = [
         part
         for part in parts
@@ -199,14 +204,7 @@ def calculation_interpolation(
 
 def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) -> float:
     """A calculation's one finite scalar coefficient, or raise if ambiguous."""
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    parts = _formula_parts(spell_obj, calculation_name)
     matches = [
         part for part in parts if isinstance(part, dict) and "mCoefficient" in part
     ]
@@ -231,14 +229,7 @@ def calculation_stat_coefficient(
     spell_obj: dict[str, Any], calculation_name: str, stat: int
 ) -> float:
     """One calculation coefficient attached to an exact ``mStat`` part."""
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    parts = _formula_parts(spell_obj, calculation_name)
     matches = [
         part
         for part in parts
@@ -275,14 +266,7 @@ def calculation_coefficients(
     coefficient; missing or malformed coefficients fail closed instead of
     silently dropping a component.
     """
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    parts = _formula_parts(spell_obj, calculation_name)
     coefficients = []
     for index, part in enumerate(parts):
         if not isinstance(part, dict) or "mCoefficient" not in part:
@@ -349,6 +333,6 @@ def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
 
 def data_value_at_rank(spell_obj: dict[str, Any], value_name: str, rank: int) -> float:
     """A named ranked DataValue using the game's one-based spell rank index."""
-    if isinstance(rank, bool) or not isinstance(rank, int) or rank < 1:
+    if isinstance(rank, bool) or rank < 1:
         raise RuntimeError(f"DataValue {value_name!r}: rank must be a positive integer")
     return _data_value_at_index(spell_obj, value_name, rank, f"rank {rank}")

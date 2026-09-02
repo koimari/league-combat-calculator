@@ -16,12 +16,13 @@ partially refreshed tree.
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import sys
 import tempfile
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -87,12 +88,14 @@ def load_item_atoms(path: Path | None = None) -> dict[str, list[dict]]:
     return objects
 
 
-def _family_of(atom: dict) -> str:
+def _family_of(atom: Mapping) -> str:
     """Family of an item atom: the ``atom_id`` prefix, no ``family`` field."""
     return atom["atom_id"].split(".", 1)[0]
 
 
-def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
+def champion_receipt(
+    name: str, champ: Mapping[str, Any], audits: Mapping[str, Any]
+) -> dict[str, Any]:
     atoms = []
     atoms_file = ATOMS_DIR / f"{name.lower()}.atoms.json"
     if atoms_file.exists():
@@ -112,18 +115,18 @@ def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
         "audit_gap": audit.get("gap_summary", "")[:200],
         "ability_damage_types": {
             slot: (
-                (
-                    abs_[0].get("damageType")
-                    if abs_ and isinstance(abs_[0], dict)
-                    else None
-                )
+                abs_[0].get("damageType")
+                if abs_ and isinstance(abs_[0], dict)
+                else None
             )
             for slot, abs_ in (champ.get("abilities") or {}).items()
         },
     }
 
 
-def item_receipt(item_id: str, item: dict, atoms: list[dict] | None = None) -> dict:
+def item_receipt(
+    item_id: str, item: Mapping[str, Any], atoms: list[dict[str, Any]] | None = None
+) -> dict[str, Any]:
     """One item receipt from the Atomizer item domain.
 
     ``atoms`` may be injected for tests; the default loads and validates the
@@ -159,7 +162,7 @@ def _manifest_items() -> dict | None:
     return None
 
 
-def build() -> dict:
+def build() -> dict[str, dict[str, dict[str, Any]]]:
     """Compute every receipt and the summary; publish atomically."""
     champs = json.loads(CHAMPS_JSON.read_text())
     items = json.loads(ITEMS_JSON.read_text())
@@ -246,7 +249,7 @@ def build() -> dict:
             dest = OUT / child
             if dest.exists():
                 shutil.rmtree(dest)
-            os.replace(tmp / child, dest)
+            (tmp / child).replace(dest)
 
     print(f"champions: {len(summary['champions'])} | items: {len(summary['items'])}")
     verdicts = Counter(v["verdict"] for v in summary["champions"].values())

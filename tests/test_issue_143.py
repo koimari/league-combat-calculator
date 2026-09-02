@@ -11,26 +11,27 @@ with provable id linkage, and the applied totals.
 """
 
 import inspect
+from functools import partial
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion
-from src.calculator.healing import derive_self_healing
+from src.calculator import support_effects
 from src.calculator.champions.taric import _starlights_touch
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
+from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
+from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
 from src.calculator.support_effects import (
     _MODULE_AUTHORED_HEAL_SLOTS,
     _MODULE_AUTHORED_SHIELD_SLOTS,
     derive_ally_effects,
 )
-import src.calculator.support_effects as support_effects
 
 
 def test_registry_membership_and_single_definition():
@@ -40,31 +41,34 @@ def test_registry_membership_and_single_definition():
     shadows the first at import time — the E9-3/E9-2 history).  Rakan Q is
     deliberately absent: its scanner ally branch stays at its own amount
     (see ``_SCOPE_OVERRIDES``)."""
-    assert _MODULE_AUTHORED_HEAL_SLOTS == frozenset(
-        {
-            ("Shyvana", "W"),
-            ("Naafiri", "Q"),
-            ("Taric", "Q"),
-            ("Sona", "W"),
-            ("Janna", "R"),
-            ("Milio", "R"),
-            ("Irelia", "Q"),
-            ("Vladimir", "Q"),
-            ("Volibear", "W"),
-            ("Ekko", "R"),
-            ("Gangplank", "W"),
-            ("Kha'Zix", "W"),
-            ("Tahm Kench", "Q"),
-            ("Sylas", "W"),
-            ("Tryndamere", "Q"),
-            ("Talon", "Q"),
-            ("Yorick", "Q"),
-            ("Kindred", "W"),
-            ("Soraka", "Q"),
-            ("Vladimir", "R"),
-            ("Locke", "W"),
-            ("Zilean", "R"),
-        }
+    assert (
+        frozenset(
+            {
+                ("Shyvana", "W"),
+                ("Naafiri", "Q"),
+                ("Taric", "Q"),
+                ("Sona", "W"),
+                ("Janna", "R"),
+                ("Milio", "R"),
+                ("Irelia", "Q"),
+                ("Vladimir", "Q"),
+                ("Volibear", "W"),
+                ("Ekko", "R"),
+                ("Gangplank", "W"),
+                ("Kha'Zix", "W"),
+                ("Tahm Kench", "Q"),
+                ("Sylas", "W"),
+                ("Tryndamere", "Q"),
+                ("Talon", "Q"),
+                ("Yorick", "Q"),
+                ("Kindred", "W"),
+                ("Soraka", "Q"),
+                ("Vladimir", "R"),
+                ("Locke", "W"),
+                ("Zilean", "R"),
+            }
+        )
+        == _MODULE_AUTHORED_HEAL_SLOTS
     )
     source = inspect.getsource(support_effects)
     assert source.count("_MODULE_AUTHORED_HEAL_SLOTS = frozenset(") == 1
@@ -265,18 +269,17 @@ def test_taric_compiled_score_path_matches_receipt():
         stats = calculate_total_stats(taric, 18, [], role="support")
         defenses = resolve_starting_defenses("Taric", 18, stats, [])
 
-        def timeline(**kwargs):
-            return build_participant_timeline(
-                taric,
-                18,
-                [],
-                params,
-                main_stats=stats,
-                main_defenses=defenses,
-                enemies=enemies,
-                allies=allies,
-                **kwargs,
-            )
+        timeline = partial(
+            build_participant_timeline,
+            taric,
+            18,
+            [],
+            params,
+            main_stats=stats,
+            main_defenses=defenses,
+            enemies=enemies,
+            allies=allies,
+        )
 
         legacy_score = timeline(include_receipt=False)
         fast = timeline(

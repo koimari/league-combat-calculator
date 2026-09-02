@@ -29,6 +29,9 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
+from .inputs import int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -39,8 +42,6 @@ from .slotlib import (
     extract_value,
     with_item_on_hits,
 )
-from .inputs import int_option
-from .module_contract import coverage
 
 # The Q second-strike ratios and R base ratio are rooted in named binary
 # calculation fields; the cached descriptions corroborate their semantics.
@@ -172,12 +173,11 @@ def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
 MODULE_CC = {"Q": "none", "W": "stun", "R": "slow"}
 
 
-def _harrowed_path(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _harrowed_path(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the 30-50% attack speed Viego holds while inside his own mist."""
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0
@@ -217,7 +217,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "q_second_strike",
         0,
@@ -227,10 +228,8 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "Q",
-            "note": (
-                "Mark applied and consumed by Q's own passive autos "
-                "(auto-stream self-consumed mark) — no cross-slot edge."
-            ),
+            "note": "Mark applied and consumed by Q's own passive autos "
+            "(auto-stream self-consumed mark) — no cross-slot edge.",
         },
     ),
     int_option(
@@ -242,15 +241,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "E",
-            "note": (
-                "Positional uptime of E's own mist — self-state, with no "
-                "cross-slot cast edge."
-            ),
+            "note": "Positional uptime of E's own mist — self-state, with no "
+            "cross-slot cast edge.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Viego Q's mark-consuming second strike requires a prior damaging "
     "ability and the next marked basic attack; that stateful rider is "
     "option-gated by this named module.",

@@ -86,9 +86,9 @@ from src.calculator.champions.bard import (
     _MEEP_RECHARGE_TIERS,
     _MEEP_STOCK_TIERS,
 )
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.champions.slotlib import find_named_leveling
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -249,10 +249,10 @@ class TestSourceAndTypedValues:
         # state receipt will publish) discloses every meep number: the
         # on-hit formula (30 base, +6 per 5 chimes, 40% AP) and the two
         # independent availability breakpoint tables.
-        assert _MEEP_BASE == pytest.approx(30.0)
-        assert _MEEP_PER_TIER == pytest.approx(6.0)
+        assert pytest.approx(30.0) == _MEEP_BASE
+        assert pytest.approx(6.0) == _MEEP_PER_TIER
         assert _CHIMES_PER_TIER == 5
-        assert _MEEP_AP_RATIO == pytest.approx(0.40)
+        assert pytest.approx(0.40) == _MEEP_AP_RATIO
         assert _DEFAULT_CHIMES == 35  # the brief's "3.5 default" is 35
         assert _MEEP_STOCK_TIERS == (
             (100, 9),
@@ -554,7 +554,7 @@ class TestPermanentCounter:
         # per-hit equals the seeded parse per-hit (mitigated by the
         # fight's 40 MR) and the meep count equals the seeded max_procs
         # (autos permitting) — never re-priced mid-fight by any ledger.
-        for seed, per_hit, windowed in (
+        for seed, _per_hit, windowed in (
             (0, 30.0, 2),
             (35, 72.0, 4),
             (100, 150.0, 8),
@@ -789,7 +789,7 @@ class TestScoreReceiptParity:
             assert len(full["cast_timeline"]) == len(scored["cast_timeline"])
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared

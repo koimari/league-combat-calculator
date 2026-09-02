@@ -11,8 +11,7 @@ import pytest
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
-from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions import ezreal, karma, morgana
+from src.calculator.champions import ezreal, karma, morgana, parse_champion_abilities
 from src.calculator.damage import (
     FightConfig,
     _control_armed_event_coverage,
@@ -156,7 +155,7 @@ class TestMixedAbilityReviewStamps:
         assert result["timeline_coverage"]["complete"] is True
 
     @pytest.mark.parametrize(
-        "champion,slot,kind",
+        ("champion", "slot", "kind"),
         [
             ("Teemo", "Q", "blind"),
             ("Malphite", "E", "cripple"),
@@ -236,7 +235,8 @@ class TestFailClosedReviewState:
         )
         assert complete is False
         assert source == "fimbulwinter_everlasting"
-        assert "Fimbulwinter" in note and "Everlasting" in note
+        assert "Fimbulwinter" in note
+        assert "Everlasting" in note
 
     def test_unknown_cc_kind_is_refused_and_never_shields(self):
         """An unspellable kind is refused outright, not read as no control.

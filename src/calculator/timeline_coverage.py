@@ -1,6 +1,6 @@
 """Shared receipts for fight-event ordering precision."""
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 # These packets have a complete aggregate calculation, but a generic cast
@@ -72,3 +72,11 @@ def combine_timeline_coverages(
         "coarse_sources": coarse_sources,
         "note": note,
     }
+
+
+def aggregate_timeline_coverage(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Combine per-target ordering receipts without overstating precision."""
+    return combine_timeline_coverages(
+        (result.get("timeline_coverage", {}) for result in results),
+        target_count=len(results),
+    )

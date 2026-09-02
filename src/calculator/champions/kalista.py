@@ -42,7 +42,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_contract import coverage
+from .module_helpers import named_damage, no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -51,25 +53,8 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
-
-def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
-    return entry
+_pierce = named_damage("Physical Damage", "physical", time_offset=0.0)
 
 
 def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -89,11 +74,8 @@ def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _rend(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("rend_stacks")), 1), 254)
     first = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     additional = extract_named(
@@ -112,58 +94,40 @@ def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _martial_poise(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the windup-dash mechanic — documented zero-damage row.
-
-    All four cached effect rows carry empty leveling; Martial Poise is
-    pure movement/state (the dash itself and the Oathsworn Bond
-    declaration), with no damage attribute of its own.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Martial Poise is the windup-dash mechanic and the Oathsworn "
-            "Bond declaration; all four cached effect rows carry empty "
-            "leveling (data/champions.json Kalista P) and the game "
-            "binary's dash spells (KalistaPassiveDashSpell(Actual)) carry "
-            "no mSpellCalculations table — only dash duration/speed/range "
-            "parameters. P prices nothing."
-        ),
-    )
+# P: the windup-dash mechanic — documented zero-damage row.
+#
+# All four cached effect rows carry empty leveling; Martial Poise is
+# pure movement/state (the dash itself and the Oathsworn Bond
+# declaration), with no damage attribute of its own.
+_martial_poise = no_damage_slot(
+    "Martial Poise is the windup-dash mechanic and the Oathsworn "
+    "Bond declaration; all four cached effect rows carry empty "
+    "leveling (data/champions.json Kalista P) and the game "
+    "binary's dash spells (KalistaPassiveDashSpell(Actual)) carry "
+    "no mSpellCalculations table — only dash duration/speed/range "
+    "parameters. P prices nothing."
+)
 
 
-def _fates_call(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: the ally-retrieval/CC ultimate — documented zero-damage row.
-
-    R's only sourced number is Airborne Duration (a CC duration, not
-    damage); every other effect is a state applied to the Oathsworn ally
-    (retrieval, cleanse, invulnerability) or a knockback on enemies.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Fate's Call retrieves and holds the Oathsworn ally (cleanse, "
-            "invulnerability, untargetable), lets them dash with "
-            "displacement immunity, then knocks back and keeps nearby "
-            "enemies airborne on landing — no damage sentence anywhere in "
-            "the cached entry (data/champions.json Kalista R); its only "
-            "leveling row is 'Airborne Duration' (1/1.5/2s), a CC "
-            "duration. Corroborated by the game binary (KalistaRx and its "
-            "child spells): the only named DataValues entry is "
-            "KnockupDuration [0, 1, 1.5, 2, ...], matching the wiki "
-            "value, and no spell record carries a mSpellCalculations "
-            "table. R prices nothing; its effects land on the Oathsworn "
-            "ally or as pure enemy CC."
-        ),
-    )
+# R: the ally-retrieval/CC ultimate — documented zero-damage row.
+#
+# R's only sourced number is Airborne Duration (a CC duration, not
+# damage); every other effect is a state applied to the Oathsworn ally
+# (retrieval, cleanse, invulnerability) or a knockback on enemies.
+_fates_call = no_damage_slot(
+    "Fate's Call retrieves and holds the Oathsworn ally (cleanse, "
+    "invulnerability, untargetable), lets them dash with "
+    "displacement immunity, then knocks back and keeps nearby "
+    "enemies airborne on landing — no damage sentence anywhere in "
+    "the cached entry (data/champions.json Kalista R); its only "
+    "leveling row is 'Airborne Duration' (1/1.5/2s), a CC "
+    "duration. Corroborated by the game binary (KalistaRx and its "
+    "child spells): the only named DataValues entry is "
+    "KnockupDuration [0, 1, 1.5, 2, ...], matching the wiki "
+    "value, and no spell record carries a mSpellCalculations "
+    "table. R prices nothing; its effects land on the Oathsworn "
+    "ally or as pure enemy CC."
+)
 
 
 SLOTS = {
@@ -212,7 +176,8 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "W damage is withheld unless the Oathsworn and Kalista marks are explicitly armed.",
-    "Rend defaults to one lodged spear; the stack count is explicit and capped at the sourced 254-stack limit.",
+    "Rend defaults to one lodged spear; the stack count is explicit and capped at the "
+    "sourced 254-stack limit.",
     "Fate's Call and Martial Poise are utility/state effects with no direct enemy damage.",
     "P (Martial Poise) and R (Fate's Call) carry no sourced damage/heal/shield "
     "row of their own (P's four effect rows are all empty leveling; R's only "

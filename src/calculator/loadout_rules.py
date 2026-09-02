@@ -4,12 +4,14 @@ Every entry point uses this module.  The browser may prevent an illegal
 selection for convenience, but the API and optimizer remain the authority.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .role_quests import (
     SUPPORT_QUEST_STARTER_STAGES,
     SUPPORT_QUEST_UPGRADED_STAGE,
+    inventory_capacity,
+    required_boots_tier,
     support_quest_item_stage,
     validate_role,
 )
@@ -92,22 +94,6 @@ def conflicts_with_groups(item_name: str, groups: set[str]) -> bool:
     return bool(ITEM_TO_EXCLUSIVITY_GROUPS.get(item_name, frozenset()) & groups)
 
 
-def inventory_capacity(role: str, role_quest_complete: bool) -> int:
-    """Return combat-item slots for the selected role state."""
-    parsed_role = validate_role(role)
-    if role_quest_complete and not parsed_role:
-        raise ValueError("role is required when role_quest_complete is true")
-    return 7 if parsed_role == "bottom" and role_quest_complete else 6
-
-
-def required_boots_tier(role: str, role_quest_complete: bool) -> int:
-    """Return the only boots tier legal for the selected role state."""
-    parsed_role = validate_role(role)
-    if role_quest_complete and not parsed_role:
-        raise ValueError("role is required when role_quest_complete is true")
-    return 3 if parsed_role == "mid" and role_quest_complete else 2
-
-
 # Lane-class tags come from the wiki shop category system.  An item that
 # carries a lane class besides SUPPORT (e.g. Morellonomicon is MAGE+SUPPORT,
 # Frozen Heart is TANK+SUPPORT) is buyable by that lane in the real shop and
@@ -130,7 +116,7 @@ def role_scoped_shop_items(
     parsed_role = validate_role(role)
     candidates = list(items)
 
-    def tags_of(item: dict[str, Any]) -> set[str]:
+    def tags_of(item: Mapping[str, Any]) -> set[str]:
         return {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
 
     if parsed_role == "support":

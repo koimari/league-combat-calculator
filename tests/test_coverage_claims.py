@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from scripts import capture_coverage_classification
+from src.calculator import item_behavior_catalog, item_coverage, item_outcomes
 from src.calculator.coverage_evidence import (
     EVIDENCE_TYPES,
     UTILITY_DIMENSIONS,
@@ -48,22 +49,19 @@ from src.calculator.coverage_evidence import (
     SourceRef,
     Symbol,
     TestRef,
+    claim_name,
     validate_claim,
 )
 from src.calculator.data_fetcher import fetch_item_data
-from src.calculator import item_behavior_catalog
-from src.calculator import item_coverage
-from src.calculator import item_outcomes
 from src.calculator.item_coverage import (
     COVERAGE_EVIDENCE,
     FRONTIER,
-    item_model_coverage,
     target_item_model_coverage,
 )
 from src.calculator.item_effects import (
+    _KNOWN_EFFECT_TYPES,
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
-    _KNOWN_EFFECT_TYPES,
 )
 from src.calculator.trigger_stream import CAPABILITIES
 
@@ -316,6 +314,7 @@ def test_node_ids_split_into_the_parts_the_rules_read() -> None:
 def test_the_fabricated_claim_is_itself_well_formed() -> None:
     """The load tier accepts the claim these cases resolve, so a failure is the tier's."""
     validate_claim(MANDATE_CLAIM)
+    assert claim_name(MANDATE_CLAIM)
 
 
 @BOTH_TIERS
@@ -733,7 +732,8 @@ def test_ci_runs_pytest_with_no_keyword_marker_or_path_filter() -> None:
     value_options = {"-n", "--numprocesses", "-p", "--dist", "--cov"}
     for invocation in invocations:
         arguments = invocation[invocation.index("pytest") + 1 :]
-        assert "-k" not in arguments and "--keyword" not in arguments
+        assert "-k" not in arguments
+        assert "--keyword" not in arguments
         assert "-m" not in arguments
         positional = []
         skip_next = False
@@ -1670,7 +1670,7 @@ def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None
     *assumed*, which is the disposition this campaign refuses to let look like
     a computed one.
     """
-    record = CACHE[item]
+    CACHE[item]
     assert _attacker(item).optimizer_eligible
     path, home = item_coverage._ATTACKER_STATE_HOMES[item]
     kind, _, value = home.partition(":")
@@ -1695,9 +1695,10 @@ def test_a_reviewed_stats_only_item_adds_no_outgoing_damage(item: str) -> None:
     and the optimiser may score it rather than withholding it.  A regression
     that starts blocking one of these fails here with the item's name.
     """
-    record = CACHE[item]
+    CACHE[item]
     coverage = _attacker(item)
-    assert coverage.optimizer_eligible and coverage.calculation_eligible
+    assert coverage.optimizer_eligible
+    assert coverage.calculation_eligible
     entry = _audit_entry(item)
     assert entry["status"] == "ready"
 
@@ -1813,12 +1814,12 @@ def test_a_target_event_certified_item_needs_a_certified_timeline(item: str) -> 
 def test_a_target_blocked_item_stops_the_run() -> None:
     """A withheld target record refuses the calculation by name.
 
-    The population is no longer a table of one: since 3.8's flip the target
-    lane passes the attacker ladder's refusal through, so every cached record
+    The population is not a table of one: since 3.8's flip the target lane
+    passes the attacker ladder's refusal through, so every cached record
     whose described passive nothing declares stops a target build rather than
-    being called irrelevant.  Guardian's Horn used to be named here by hand;
-    it left the population when Undaunted got its declaration, so the whole
-    population is checked as a set and nothing is named twice.
+    being called irrelevant.  Guardian's Horn left the population when
+    Undaunted got its declaration, so the whole population is checked as a
+    set and nothing is named by hand.
     """
     refused = [
         name
@@ -1926,18 +1927,20 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
     claim of their own — the refs have one home per item, which is the same
     rule the load gate applies to a negative claim's ``Absence``.
     """
-    lanes = {
-        "_ATTACKER_STATE_HOMES": "attacker",
-        "NO_RUNTIME_BEHAVIOR": "attacker",
-        "_TARGET_MODELED_IMPLS": "target",
-        "_TARGET_CERTIFIED_IMPLS": "target",
-        "UTILITY_OUTCOMES": "utility",
-    }
+    lanes = (
+        ("_ATTACKER_STATE_HOMES", item_coverage._ATTACKER_STATE_HOMES, "attacker"),
+        ("NO_RUNTIME_BEHAVIOR", item_coverage.NO_RUNTIME_BEHAVIOR, "attacker"),
+        ("_TARGET_MODELED_IMPLS", item_coverage._TARGET_MODELED_IMPLS, "target"),
+        ("_TARGET_CERTIFIED_IMPLS", item_coverage._TARGET_CERTIFIED_IMPLS, "target"),
+        ("UTILITY_OUTCOMES", item_coverage.UTILITY_OUTCOMES, "utility"),
+    )
     unclaimed: list[str] = []
-    for container_name, lane in lanes.items():
-        for item in getattr(item_coverage, container_name):
-            if ("item", item, lane) not in COVERAGE_EVIDENCE:
-                unclaimed.append(f"{container_name}:{item}")
+    for container_name, container, lane in lanes:
+        unclaimed.extend(
+            f"{container_name}:{item}"
+            for item in container
+            if ("item", item, lane) not in COVERAGE_EVIDENCE
+        )
     for item, refs in item_coverage._REVIEW_ISSUE_REFS.items():
         carriers = [
             key
@@ -2084,7 +2087,7 @@ def test_every_declared_dimension_is_a_member_of_the_closed_set() -> None:
         for dimensions in item_outcomes.UTILITY_OUTCOMES.values()
         for dimension in dimensions
     }
-    assert UTILITY_DIMENSIONS == measured
+    assert measured == UTILITY_DIMENSIONS
     for claim in COVERAGE_EVIDENCE.values():
         assert set(claim.dimensions) <= UTILITY_DIMENSIONS
     for item, dimensions in item_outcomes.UTILITY_OUTCOMES.items():
@@ -2102,7 +2105,8 @@ def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_trac
     criterion asks for.  Every reason carries the issue that tracks it.
     """
     for key, reason in FRONTIER.items():
-        assert not key.endswith("@attacker") and not key.endswith("@target"), key
+        assert not key.endswith("@attacker"), key
+        assert not key.endswith("@target"), key
         assert re.search(r"#\d+", reason), key
     assert not set(FRONTIER) & {
         f"{kind}:{subject}@{lane}" for kind, subject, lane in COVERAGE_EVIDENCE
@@ -2156,7 +2160,7 @@ def _only(claim: Claim, kind: type):
 
 
 def _importer_without(module: str, attribute: str):
-    """An importer for which *module* no longer defines *attribute*.
+    """An importer for which *module* does not define *attribute*.
 
     A rename is indistinguishable from a deletion as far as a claim naming
     the old name is concerned, so one shim serves M1 and M2 both.
@@ -2444,13 +2448,12 @@ def test_the_mutation_suite_is_nine_mutations_that_write_nothing() -> None:
 def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     """The receipt's provenance is derived from the functions, not typed.
 
-    ``metadata.classifiers`` used to be read off ``classify.__name__`` and
-    became a hand-written map when the attacker lane turned into a lambda that
-    supplies the lane set.  A hand-written producer name survives the rename of
-    the thing it names: the receipt would go on citing a symbol nothing
-    defines, and every gate over it would stay green.  The names come off the
-    wrapped functions again, and this asserts what that buys — each one
-    resolves to a callable on the module the receipt says it is on.
+    A hand-written ``metadata.classifiers`` map — the shape the attacker
+    lane's lambda invites — survives the rename of the thing it names: the
+    receipt would go on citing a symbol nothing defines, and every gate over
+    it would stay green.  The names come off the wrapped functions, and this
+    asserts what that buys — each one resolves to a callable on the module
+    the receipt says it is on.
     """
     receipt = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
     recorded = receipt["metadata"]["classifiers"]
@@ -2460,5 +2463,6 @@ def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     for lane, dotted in recorded.items():
         module, _, symbol = dotted.rpartition(".")
         assert module == "src.calculator.item_coverage", lane
-        assert callable(getattr(item_coverage, symbol)), dotted
+        resolved = getattr(item_coverage, symbol)  # sightline-ok: 24 - receipt symbol
+        assert callable(resolved), dotted
         assert symbol == capture_coverage_classification.CLASSIFIER_NAMES[lane]

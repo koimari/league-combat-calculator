@@ -103,17 +103,13 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
 from src.calculator.champions.slotlib import (
-    extract_cooldown,
     extract_named,
-    find_named_leveling,
-    sum_modifiers,
 )
 from src.calculator.cleanse_eligibility import (
     CHAMPION_CLEANSE_DECLARATIONS,
@@ -126,10 +122,11 @@ from src.calculator.cleanse_eligibility import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _RENGAR_DATA = _CHAMPION_DATA["Rengar"]
@@ -602,7 +599,8 @@ class TestSourceAndTypedValues:
         assert w["ferocity_parts"][0].amount == pytest.approx(300.0)
         assert w["area_damage"] is True
         assert "Ferocity-empowered" in w["detail"]
-        assert "resource_cost" not in w and "resource_type" not in w
+        assert "resource_cost" not in w
+        assert "resource_type" not in w
 
     def test_w_public_receipt_present_in_fight_result(self):
         # The W public receipt in the fight result: the breakdown row
@@ -709,7 +707,7 @@ class TestBaseVsEmpowered:
         ferocity = _leveling("Bonus Magic Damage", ferocity=True)
         assert len(base["modifiers"][0]["values"]) == 5
         assert len(ferocity["modifiers"][0]["values"]) == 20
-        for rank, want in zip(range(1, 6), _W_BASE_FLAT):
+        for rank, want in zip(range(1, 6), _W_BASE_FLAT, strict=False):
             _, abilities = _parse({"p_ferocity": 0}, ranks={**_RANKS, "W": rank})
             assert abilities["W"]["total_raw"] == pytest.approx(want + _W_AP_PERCENT)
 
@@ -717,7 +715,7 @@ class TestBaseVsEmpowered:
         # The cooldown row 16..10 by rank applies to BOTH branches: the
         # parse cooldown is identical at every seed and the fight W casts
         # are spaced by the rank-5 10s cooldown.
-        for rank, want in zip(range(1, 6), _W_COOLDOWN):
+        for rank, want in zip(range(1, 6), _W_COOLDOWN, strict=False):
             _, abilities = _parse({"p_ferocity": 0}, ranks={**_RANKS, "W": rank})
             assert abilities["W"]["cooldown"] == pytest.approx(want)
             _, empowered = _parse({"p_ferocity": 4}, ranks={**_RANKS, "W": rank})
@@ -773,7 +771,8 @@ class TestFerocityCondition:
         assert w_flags == [False, False, False]
         combat = _app_combat({"p_ferocity": 0})
         survival = _main_survival(combat)
-        assert "cleanse" not in survival and "cleanse_denied" not in survival
+        assert "cleanse" not in survival
+        assert "cleanse_denied" not in survival
         assert _cleanse_event_count(combat) == 0
 
     def test_seed_4_base_w_at_zero_no_cleanse(self):
@@ -792,7 +791,8 @@ class TestFerocityCondition:
         # packet is ever authored from a base cast even at the seed.
         combat = _app_combat({"p_ferocity": 4}, duration=5.0)
         survival = _main_survival(combat)
-        assert "cleanse" not in survival and "cleanse_denied" not in survival
+        assert "cleanse" not in survival
+        assert "cleanse_denied" not in survival
         assert _cleanse_event_count(combat) == 0
 
     def test_live_empowered_flags_are_the_deterministic_condition(self):
@@ -862,8 +862,6 @@ class TestFerocityCondition:
         result = _fight({"p_ferocity": 4}, one_rotation=True, cast_order=["W"])
         (w_cast,) = [c for c in result["cast_timeline"] if c["slot"] == "W"]
         assert w_cast["time"] == pytest.approx(0.0)
-        combat = _app_combat({"p_ferocity": 4}, duration=10.0)
-        assert True  # contract below needs the app-level W-first rotation
 
     def test_empowered_w_cleanse_fires_timed(self):
         # P2-6 contract: in the 22s seed-4 fight the live walk marks W@10
@@ -924,14 +922,14 @@ class TestCrowdControlAndSuppression:
         # (caster_control_blocks_cleanse, use NOT consumed); an unknown
         # kind fails closed with unknown_control.
         eligibility = CleanseEligibility(declaration=dict(_RENGAR_DECLARATION))
-        base = dict(
-            time=1.5,
-            source_key="Rengar W",
-            sequence=0,
-            event_id="w:0",
-            target="main",
-            holder="main",
-        )
+        base = {
+            "time": 1.5,
+            "source_key": "Rengar W",
+            "sequence": 0,
+            "event_id": "w:0",
+            "target": "main",
+            "holder": "main",
+        }
         foreign_action = dict(base)
         foreign_action["target"] = "ally"
         foreign = eligibility.decide(SimpleNamespace(**foreign_action))
@@ -1101,8 +1099,8 @@ class TestCrowdControlAndSuppression:
         # F-9: cripple is an attack-speed slow — real reviewed control, but
         # not action downtime, so the walk arms no interval for it and
         # Battle Roar reports control_not_active rather than pretending it
-        # removed something.  It used to read unknown_control, and the
-        # cripple used to add downtime it does not cause.
+        # removed something: not unknown_control, and no downtime the
+        # cripple does not cause.
         result = _kernel_survival(
             controls=[_control_packet(1.0, "cripple", 2.0, source="E")],
             cleanses=[_rengar_cleanse_packet(1.5, 0)],
@@ -1130,7 +1128,7 @@ class TestCrowdControlAndSuppression:
         # canCastWhileDisabled true; the base RengarW record lacks the
         # flag).  Absent today: the heal is attacker-state-gated.
         combat = _app_combat({"p_ferocity": 4}, duration=6.0, enemy="Ahri")
-        survival = _main_survival(combat)
+        _main_survival(combat)
         heals = _main_grey_heals(combat)
         assert heals[0]["skipped_reason"] == "attacker_state_blocked"
 
@@ -1420,7 +1418,8 @@ class TestNamedDenials:
             assert _cleanse_event_count(combat) == 1
         combat = _app_combat({"p_ferocity": 4}, duration=5.0)
         survival = _main_survival(combat)
-        assert "cleanse" not in survival and "cleanse_use" not in survival
+        assert "cleanse" not in survival
+        assert "cleanse_use" not in survival
         assert _cleanse_event_count(combat) == 0
         combat = _app_combat({"p_ferocity": 4}, duration=22.0)
         survival = _main_survival(combat)
@@ -1743,7 +1742,7 @@ class TestModeParity:
                 assert full["total_damage"] == scored["total_damage"]
                 shared = ("time", "slot", "name", "ordinal", "resource_cost")
                 for full_row, scored_row in zip(
-                    full["cast_timeline"], scored["cast_timeline"]
+                    full["cast_timeline"], scored["cast_timeline"], strict=False
                 ):
                     assert {k: full_row[k] for k in shared} == {
                         k: scored_row[k] for k in shared
@@ -1888,9 +1887,7 @@ class TestUnchangedBoundaries:
 # ---------------------------------------------------------------------------
 # S15 — Regression surface (run list)
 # ---------------------------------------------------------------------------
-# Run ONLY this file plus the mandated sanity list (the repo gate):
 #
-#   .venv/bin/python -m pytest tests/test_rengar_w_cleanse.py #     tests/test_aurelion_sol_stardust_ledger.py #     tests/test_senna_souls_ledger.py tests/test_bard_chimes_ledger.py #     tests/test_heimerdinger_multihit.py tests/test_ksante_w_resistance.py #     tests/test_rengar_ferocity_ledger.py tests/test_gangplank_w_cleanse.py #     tests/test_cleanse_eligibility.py tests/test_cleanse_eligibility_kernel.py #     tests/test_cleanse_eligibility_consumers.py tests/test_state_lifecycle.py #     tests/test_state_lifecycle_consumers.py tests/test_resource_ledger.py #     tests/test_resource_ledger_consumers.py #     tests/test_resource_ledger_champion_consumers.py #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py #     tests/test_mana_restore_refund.py tests/test_app.py
 #
 # The broader regression surface (every test that touches rengar /
 # ferocity / grey health / battle roar / cleanse, per the brief contract

@@ -38,6 +38,9 @@ absence of damage rather than an unmodeled gap.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -48,8 +51,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3
@@ -87,12 +88,11 @@ def _tumble(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _silver_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _silver_bolts(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: %maxHP true damage every 3rd hit, in the on-hit shell."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_hit = pct_health_per_hit(
         ability,

@@ -29,9 +29,10 @@ Design rules (HANDOVER §11):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import math
-from typing import Any, Literal, Mapping
+from collections.abc import Hashable, Mapping
+from dataclasses import dataclass, field
+from typing import Any, Literal
 
 from .ability_spec import IMMOBILIZING_CC_KINDS
 
@@ -62,7 +63,7 @@ class SourceReceipt:
     key: str | None = None
 
     @classmethod
-    def from_mapping(cls, mapping: Mapping[str, Any]) -> "SourceReceipt":
+    def from_mapping(cls, mapping: Mapping[str, Any]) -> SourceReceipt:
         """Adapt the two receipt spellings used in this codebase.
 
         Item option rows publish ``source_url``/``source_revision_id``;
@@ -357,6 +358,12 @@ class StackRule:
     cap_behavior: CapBehavior = "noop"
     combat_extension_seconds: float = 0.0
     payload: Mapping[str, Any] = field(default_factory=dict)
+
+    @property
+    def per_stack_timers(self) -> bool:
+        """``refresh="none"``: every stack expires on its own clock."""
+        return self.refresh == "none"
+
     source: SourceReceipt | None = None
 
     def validate(self) -> None:
@@ -508,7 +515,7 @@ class TimedStackState:
         return self._timeline
 
     def _expires_at(self) -> float | None:
-        if self.rule.refresh == "none":
+        if self.rule.per_stack_timers:
             if not self._entries:
                 return None
             return min(entry.gained_at for entry in self._entries) + (
@@ -526,7 +533,7 @@ class TimedStackState:
         out: list[Transition] = []
         if self._is_frozen(time) or not self._entries:
             return out
-        if self.rule.refresh == "none":
+        if self.rule.per_stack_timers:
             # Per-stack timers: each stack dies 1 duration after its own
             # gain, oldest first.
             while self._entries:
@@ -754,7 +761,7 @@ class TimedStackState:
             after = self.stacks
             expires_at = self._shared_deadline
             transition_kind: TransitionKind = "replace"
-        elif self.rule.refresh == "none":
+        elif self.rule.per_stack_timers:
             self._entries.append(_StackEntry(time, kind or "trigger"))
             self._last_gain_time = time
             after = self.stacks
@@ -865,13 +872,8 @@ class TimedStackState:
                 },
             )
             return None
-        before = self.stacks
-        self._entries.clear()
-        self._last_gain_time = None
-        self._shared_deadline = None
-        self._decay_steps_applied = 0
-        self._instances.clear()
-        transition = self._timeline.record(
+        before = self._wipe()
+        return self._timeline.record(
             time,
             "consume",
             sequence=sequence,
@@ -885,7 +887,16 @@ class TimedStackState:
                 "trigger_source": str((meta or {}).get("source") or "consume"),
             },
         )
-        return transition
+
+    def _wipe(self) -> int:
+        """Drop every entry and timer; returns the stack count they held."""
+        before = self.stacks
+        self._entries.clear()
+        self._last_gain_time = None
+        self._shared_deadline = None
+        self._decay_steps_applied = 0
+        self._instances.clear()
+        return before
 
     def reset(
         self,
@@ -899,12 +910,7 @@ class TimedStackState:
         to = max(0, min(int(to), self.rule.max_stacks))
         if self.stacks == to and reason != "reset":
             return None
-        before = self.stacks
-        self._entries.clear()
-        self._last_gain_time = None
-        self._shared_deadline = None
-        self._decay_steps_applied = 0
-        self._instances.clear()
+        before = self._wipe()
         if before == to:
             return None
         return self._timeline.record(
@@ -1208,7 +1214,7 @@ class CooldownState:
         key = target if self.rule.per_target else "default"
         cooldown_until = time + self.rule.cooldown_seconds
         self._ready_at[key] = cooldown_until
-        transition = self._timeline.record(
+        return self._timeline.record(
             time,
             "cooldown_start",
             sequence=sequence,
@@ -1221,7 +1227,6 @@ class CooldownState:
                 "trigger_source": str((meta or {}).get("source") or "trigger"),
             },
         )
-        return transition
 
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe public receipt."""
@@ -1249,20 +1254,20 @@ class TriggerGate:
     inheriting a default that would move its numbers.
     """
 
-    __slots__ = ("cooldown_seconds", "inclusive", "_ready_at", "_seen")
+    __slots__ = ("_ready_at", "_seen", "cooldown_seconds", "inclusive")
 
     def __init__(self, cooldown_seconds: float = 0.0, *, inclusive: bool) -> None:
         self.cooldown_seconds = cooldown_seconds
         self.inclusive = inclusive
         self._ready_at = float("-inf")
-        self._seen: set[Any] = set()
+        self._seen: set[Hashable] = set()
 
     @property
     def ready_at(self) -> float:
         """When the next trigger may be accepted."""
         return self._ready_at
 
-    def accepts(self, time: float, key: Any = None) -> bool:
+    def accepts(self, time: float, key: Hashable | None = None) -> bool:
         """Whether this trigger authors.  An accepted key is consumed."""
         if key is not None and key in self._seen:
             return False
@@ -1319,9 +1324,8 @@ class InstanceCadence:
     def allow(self, time: float, instance: str | None) -> bool:
         """Whether a trigger for *instance* may proceed at *time*.
 
-        A consumed instance is recorded here; the caller must NOT retry
-        the same instance later (matches Fimbulwinter's seen-casts
-        consumption semantics).
+        An allowed instance is recorded here, so a repeat of it is judged
+        against that record (Fimbulwinter's seen-casts consumption).
         """
         if instance is None:
             return True

@@ -22,33 +22,18 @@ slot.
 
 from typing import Any
 
+from .engine import BUFF, SlotCtx
+from .module_helpers import innate_on_hit, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
-from .engine import BUFF, ONHIT, SlotCtx
 from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
     extract_value,
-    on_hit_entry,
 )
 
 PACKET_SHA256 = "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
 
 
-def _harrier(ctx: SlotCtx):
-    """P: on-hit bonus physical damage against Harrier-marked targets."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
-    per_hit = extract_named(
-        ability, "Bonus Physical Damage", ctx.level, ctx.stats, ctx.target
-    )
-    return on_hit_entry(ability_name(ability), per_hit, "physical")
-
-
-_harrier.phase = ONHIT
+# P: on-hit bonus physical damage against Harrier-marked targets.
+_harrier = innate_on_hit("Bonus Physical Damage", "physical")
 
 
 # P4: the Harrier CRIT boundary — the bonus is priced NON-crit because
@@ -66,34 +51,28 @@ _harrier.phase = ONHIT
 # flip-switch.
 
 
-def _heightened_senses(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _heightened_senses(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the Harrier-auto attack-speed buff (28-80%), refreshed per auto."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
-    )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     # "Passive: Whenever Quinn uses a basic attack ... she gains bonus
     # attack speed" (cached W effect 0): the trigger is the auto stream, so
     # autos-only is the mode that keeps it up rather than the one that ends it.
-    entry["innate_grant"] = True
-    entry["detail"] = (
-        f"+{bonus_as:g}% bonus attack speed for 2s per Harrier auto — the "
-        "same auto stream P prices keeps it refreshed; the row's "
-        f"+{movement:g}% bonus movement speed has no stat_buff key"
+    return steroid_entry(
+        ability,
+        rank,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{bonus_as:g}% bonus attack speed for 2s per Harrier auto — the "
+            "same auto stream P prices keeps it refreshed; the row's "
+            f"+{movement:g}% bonus movement speed has no stat_buff key"
+        ),
+        innate_grant=True,
     )
-    return entry
 
 
 _heightened_senses.phase = BUFF
@@ -127,7 +106,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Harrier) prices the wiki's on-hit row: 15 : 132.35 (based on "
     "level) (+ 40% bonus AD) bonus physical damage when a basic attack "
     "consumes the Harrier mark (data/champions.json P 'Bonus Physical "

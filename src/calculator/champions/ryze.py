@@ -8,8 +8,8 @@ its own sourced reason, so the slot is emitted as a sourced zero row
 rather than left unmodeled.
 """
 
-from .packet_module import build_packet_module
 from .module_contract import coverage
+from .packet_module import build_packet_module
 
 PACKET_SHA256 = "9da3638ceb40ffff52f60102f737c9576d5d5c13e67a3149499cf273105ff4f2"
 

@@ -17,7 +17,8 @@ Why each slot is non-generic:
   cannot crit, applies on-hit and proc-style item effects (spellblade,
   energized, Kraken-style stack procs) at 50% effectiveness — except
   Sundered Sky, which does not apply at all — and +25% damage per
-  soldier past the first (those extra instances apply no on-hit). The W entry itself deals no direct damage — all soldier
+  soldier past the first (those extra instances apply no on-hit). The W entry
+  itself deals no direct damage — all soldier
   damage rides the auto stream, never a cast row too (no double
   count). The "Per-Level Scaling" leveling entry (20-100%) is the
   reduced damage to targets BEYOND the closest in the spear line —
@@ -41,12 +42,12 @@ fight ledger never invents an enemy hit for it.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
-from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
-from .source_receipts import load_champion_sources
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
+from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
+from .source_receipts import load_champion_sources
 
 # HARDCODED: wiki-prose soldier mechanics with no JSON home — verify on
 # patch updates. https://wiki.leagueoflegends.com/en-us/Azir

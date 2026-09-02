@@ -79,14 +79,24 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from collections.abc import Callable, Iterable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts import patch_regression
+from scripts.build_bis_profiles import build_profiles
+from scripts.build_reviewed_modules import (
+    _wiki_revisions,
+    resolve_axword_source,
+    resolve_wiki_db,
+)
+from scripts.build_reviewed_modules import (
+    build as build_reviewed_packets,
+)
 from scripts.patch_mechanics import (
     DEFAULT_BIN_DIR,
     DEFAULT_CHAMPIONS,
@@ -99,22 +109,15 @@ from scripts.patch_mechanics import (
     name_delta,
     run_fetch,
 )
-from scripts.build_bis_profiles import build_profiles
-from scripts.build_reviewed_modules import (
-    _wiki_revisions,
-    build as build_reviewed_packets,
-    resolve_axword_source,
-    resolve_wiki_db,
-)
 from scripts.refresh_economics_data import stale_reasons
 from scripts.source_receipt import cache_patch, source_receipt
 from src.calculator.champions import registered_champion_names
-from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.item_effects import (
-    ALLY_ITEM_EFFECTS,
     _STATIC_VALUE_KEYS_BY_ITEM,
+    ALLY_ITEM_EFFECTS,
 )
 from src.calculator.item_source import branch_losses, source_audit
+from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.patch_identity import (
     PatchIdentityError,
     canonical_patch,
@@ -163,39 +166,52 @@ def _detail_lines(diffs):
     return lines
 
 
-def champion_audit_lines(old_champs, new_champs):
+def _flagged_diff_lines(
+    name: str, old: Mapping[str, Any], new: Mapping[str, Any]
+) -> list[str]:
+    """One entry's audit lines, flagged for numeric change; none when unchanged."""
+    diffs = drop_noise(list(leaf_diffs(old, new)))
+    if not diffs:
+        return []
+    flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
+    return [f"  {name} ({flag}):", *_detail_lines(diffs)]
+
+
+def champion_audit_lines(
+    old_champs: Mapping[str, Any], new_champs: Mapping[str, Any]
+) -> list[str]:
     """Audit section for registered champions plus the roster delta."""
     lines = ["== Registered champions =="]
     for name in registered_champion_names():
-        diffs = drop_noise(list(leaf_diffs(old_champs.get(name), new_champs.get(name))))
-        if not diffs:
+        entry_lines = _flagged_diff_lines(
+            name, old_champs.get(name), new_champs.get(name)
+        )
+        if not entry_lines:
             continue
-        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
-        lines.append(f"  {name} ({flag}):")
-        lines.extend(_detail_lines(diffs))
+        lines.extend(entry_lines)
     if len(lines) == 1:
         lines.append("  (no changes)")
 
     added, removed = name_delta(old_champs, new_champs)
     if added or removed:
         lines.append("== Roster delta (new champions need a named module) ==")
-        for name in added:
-            lines.append(f"  + {name}")
-        for name in removed:
-            lines.append(f"  - {name}")
+        lines.extend(f"  + {name}" for name in added)
+        lines.extend(f"  - {name}" for name in removed)
     return lines
 
 
-def item_audit_lines(old_items, new_items):
+def item_audit_lines(
+    old_items: Mapping[str, Any], new_items: Mapping[str, Any]
+) -> list[str]:
     """Audit section for configured items plus the shop-wide add/remove delta."""
     lines = ["== Configured items =="]
     for name in sorted(_ITEM_PARSE_CONFIG):
-        diffs = drop_noise(list(leaf_diffs(old_items.get(name), new_items.get(name))))
-        if not diffs:
+        entry_lines = _flagged_diff_lines(
+            name, old_items.get(name), new_items.get(name)
+        )
+        if not entry_lines:
             continue
-        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
-        lines.append(f"  {name} ({flag}):")
-        lines.extend(_detail_lines(diffs))
+        lines.extend(entry_lines)
         static_keys = _STATIC_VALUE_KEYS_BY_ITEM.get(name)
         if static_keys:
             lines.append(
@@ -208,8 +224,9 @@ def item_audit_lines(old_items, new_items):
     added, removed = name_delta(old_items, new_items)
     if added or removed:
         lines.append("== Shop delta ==")
-        for name in added:
-            lines.append(f"  + {name} (new item — consider /add-item-effect)")
+        lines.extend(
+            f"  + {name} (new item — consider /add-item-effect)" for name in added
+        )
         for name in removed:
             implemented = (
                 " ** IMPLEMENTED — code must be updated **"
@@ -220,7 +237,9 @@ def item_audit_lines(old_items, new_items):
     return lines
 
 
-def item_source_lines(old_items, new_items):
+def item_source_lines(
+    old_items: Mapping[str, Any], new_items: Mapping[str, Any]
+) -> tuple[list[str], bool]:
     """Source-completeness section, plus whether the patch may proceed.
 
     Two things stop a patch here. An effect branch that disappeared is almost
@@ -255,8 +274,7 @@ def item_source_lines(old_items, new_items):
         lines.append(f"    {conflict['note']}")
     blocking = blocking or bool(audit["unreviewed_conflicts"])
 
-    for warning in audit["warnings"]:
-        lines.append(f"  note: {warning}")
+    lines.extend(f"  note: {warning}" for warning in audit["warnings"])
 
     if len(lines) == 1:
         lines.append("  (every source branch is accounted for)")
@@ -269,12 +287,14 @@ def item_source_lines(old_items, new_items):
     return lines, not blocking
 
 
-def _authored_keys(record):
+def _authored_keys(record: Mapping[str, Any]):
     """The hand-typed numeric keys of one ALLY_ITEM_EFFECTS record."""
     return sorted(key for key in record if key not in _ALLY_SOURCE_KEYS)
 
 
-def ally_effect_lines(old_items, new_items):
+def ally_effect_lines(
+    old_items: Mapping[str, Any], new_items: Mapping[str, Any]
+) -> tuple[list[str], bool]:
     """Audit section for the hand-authored cross-participant item values.
 
     ``ALLY_ITEM_EFFECTS`` is typed by hand from the Wiki and is where four of
@@ -301,12 +321,12 @@ def ally_effect_lines(old_items, new_items):
                 f"ALLY_ITEM_EFFECTS still prices {_authored_keys(record)}"
             )
             continue
-        diffs = drop_noise(list(leaf_diffs(old_items.get(name), new_items.get(name))))
-        if not diffs:
+        entry_lines = _flagged_diff_lines(
+            name, old_items.get(name), new_items.get(name)
+        )
+        if not entry_lines:
             continue
-        flag = "NEEDS REVIEW" if any(is_numeric_diff(d) for d in diffs) else "text-only"
-        lines.append(f"  {name} ({flag}):")
-        lines.extend(_detail_lines(diffs))
+        lines.extend(entry_lines)
         lines.append(
             f"    NOTE: hand-authored values {_authored_keys(record)} do not "
             "refresh — re-read the Wiki entry and update "
@@ -322,7 +342,7 @@ def ally_effect_lines(old_items, new_items):
     return lines, not blocking
 
 
-def escalated_cached_data_lines(receipt_path=None):
+def escalated_cached_data_lines(receipt_path: Path | None = None) -> list[str]:
     """Audit section for the cached-data defects waiting on a re-pull.
 
     ``docs/receipts/escalated-defects-cached-data.json`` holds defects in
@@ -355,7 +375,9 @@ def escalated_cached_data_lines(receipt_path=None):
     return lines
 
 
-def economics_lines(tables, new_items, ddragon_version):
+def economics_lines(
+    tables: Mapping[str, Any], new_items: Mapping[str, Any], ddragon_version: str | None
+) -> tuple[list[str], bool]:
     """Audit section for the sourced gold table the purchase optimizer prices from.
 
     ``data/economics-sourced.json`` is DDragon's item gold table pinned to one
@@ -366,8 +388,7 @@ def economics_lines(tables, new_items, ddragon_version):
     """
     lines = ["== Item economics (data/economics-sourced.json) =="]
     reasons = stale_reasons(tables, new_items, ddragon_version)
-    for reason in reasons:
-        lines.append(f"  BLOCKING: {reason}")
+    lines.extend(f"  BLOCKING: {reason}" for reason in reasons)
     if reasons:
         lines.append(
             "  ** BLOCKING — run scripts/refresh_economics_data.py, or record a "
@@ -380,7 +401,7 @@ def economics_lines(tables, new_items, ddragon_version):
     return lines, not reasons
 
 
-def print_audit():
+def print_audit() -> bool:
     """Print the full audit report (champions, items, deltas).
 
     Returns whether the source-completeness, hand-authored ally, and item
@@ -415,7 +436,7 @@ def print_audit():
     return source_ok and ally_ok and economics_ok
 
 
-def print_detail(names):
+def print_detail(names: Iterable[str]) -> None:
     """Full leaf diffs vs HEAD for arbitrary champions/items by display name."""
     old_champs, new_champs, old_items, new_items = load_old_and_new()
     for name in names:
@@ -463,7 +484,10 @@ def fetch_cdragon_live_patch(fetch: Callable[[], bytes] | None = None) -> str:
     for tests — it must return the raw response body bytes.
     """
     if fetch is None:
-        fetch = lambda: _download_bytes(CDRAGON_CONTENT_METADATA)
+
+        def fetch():
+            return _download_bytes(CDRAGON_CONTENT_METADATA)
+
     try:
         payload = json.loads(fetch())
     except urllib.error.HTTPError as exc:
@@ -530,7 +554,7 @@ def detect_report(
         "live_patch": live_identity.client_patch,
         "live_patch_source": live_source,
         "cached_patch": cached_identity.client_patch,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
     }
 
 
@@ -569,7 +593,7 @@ def clear_wiki_caches():
             print(f"Cleared {path.relative_to(REPO_ROOT)}")
 
 
-def run_pull():
+def run_pull() -> str | None:
     """Stream data_updater.update_data(), returning the new patch string.
 
     Modifier-parse ERROR spam from lolstaticdata (Bard chimes, Jhin crit
@@ -617,7 +641,7 @@ def refresh_economics() -> int:
 # ---------------------------------------------------------------------------
 
 
-def rebuild_static_artifacts():
+def rebuild_static_artifacts() -> int:
     """Rebuild the derived catalogues the web UI fetches at runtime.
 
     app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
@@ -822,16 +846,14 @@ def _receipt_problems(
         return problems
 
     asset_names = set(asset.get("champions") or {})
-    for name in sorted(cached_names - asset_names):
-        problems.append(
-            f"{name} is in data/champions.json but missing from "
-            "reviewed-packets.json"
-        )
-    for name in sorted(asset_names - cached_names):
-        problems.append(
-            f"{name} is in reviewed-packets.json but missing from "
-            "data/champions.json"
-        )
+    problems.extend(
+        f"{name} is in data/champions.json but missing from " "reviewed-packets.json"
+        for name in sorted(cached_names - asset_names)
+    )
+    problems.extend(
+        f"{name} is in reviewed-packets.json but missing from " "data/champions.json"
+        for name in sorted(asset_names - cached_names)
+    )
 
     try:
         revisions = _wiki_revisions(wiki_db)
@@ -1138,7 +1160,7 @@ def run_coverage_census(output: Path | None = None) -> int:
     return result.returncode
 
 
-def run_gates():
+def run_gates() -> int:
     """pytest, golden compare, and (only on green tests) baseline re-capture.
 
     Returns process exit code: 0 when tests pass and the baseline was
@@ -1183,8 +1205,8 @@ def run_gamefile_refresh(
     patch: str | None,
     *,
     force: bool = False,
-    resolver=None,
-    fetch=None,
+    resolver: Callable[[], str] | None = None,
+    fetch: Callable[..., tuple[dict[str, Any], int]] | None = None,
 ) -> int:
     """Re-download data/gamefiles/ before the staleness gate compares against it.
 
@@ -1228,7 +1250,7 @@ def run_full(
     audit_output: Path | None = None,
     staleness_out: Path | None = None,
     patch: str | None = None,
-):
+) -> int:
     """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
 
     Order (issue #134 — golden capture stays last and conditional): wiki pull,
@@ -1432,7 +1454,6 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"status": "ok", **report}, indent=2, sort_keys=True))
         return 0
 
-    # args.command == "packets"
     report = reviewed_packet_report(
         asset_path=args.static_path,
         champions_source=args.source,

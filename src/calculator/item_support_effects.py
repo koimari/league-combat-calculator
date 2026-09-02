@@ -8,10 +8,10 @@ assumes an active or a trigger that is absent from the authored event stream.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from dataclasses import replace
-from functools import lru_cache
-import math
+from functools import cache, lru_cache
 from types import MappingProxyType
 from typing import Any
 
@@ -20,6 +20,57 @@ from .ability_spec import (
     Authority,
     DamageClass,
 )
+
+# The closed support-scope vocabulary and the kernel's typed trigger,
+# cooldown and cadence rules an item packet arms under.
+from .capabilities import SUPPORT_TARGET_SCOPES
+from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
+from .interpreters.resistance_shred import ShredSlot
+from .interpreters.resistance_shred import walk_slot as _shred_walk_slot
+
+# Phase 3's declarations, and the interpreter that resolves them.  A producer
+# is reached through the rule its registry entry declares — "does this holder
+# declare Everlasting?" — rather than by spelling the item that has it, and
+# every number comes back through the rule's own references, so a key no
+# declaration carries is a stop instead of a silent registry read.
+from .item_behavior import (
+    AllyProducer,
+    FightFacts,
+    LevelSubject,
+    PacketKind,
+    Resistance,
+)
+from .item_effects import (
+    AUTHORIZED_MANA_GATE_STATUSES,
+    ITEM_INPUT_OPTIONS,
+    fimbulwinter_mana_gate_authority,
+    fimbulwinter_nearby_enemy_range_authority,
+    required_effect_value,
+)
+
+# Phase 4's routing layer.  A crowd-control mark's subject is a decision the
+# ability's ``CcScope`` makes and ``resolve_route`` delivers, never the roster
+# position a pair scan happened to stamp.  ``program`` imports nothing from
+# here, so the edge is one-way.
+from .program import route as program_route
+from .program.identity import PIdx
+from .program.scope import Unreviewed, reviewed_scope, scope_policy
+from .roster_composition import Combatant
+from .state_lifecycle import (
+    CcTriggerRule,
+    CooldownRule,
+    CooldownState,
+    InstanceCadence,
+    SourceReceipt,
+)
+
+# The item layer's one edge into the survival kernel: packet authors declare
+# when their packet arms, in the walk's vocabulary, so there is no second
+# ordering language to keep in sync.  Note the reach — importing
+# ``.survival.actions`` executes ``survival/__init__.py``, so the whole
+# kernel package loads with this module.  Acyclic: nothing under
+# ``survival/`` imports ``item_support_effects``.
+from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
 # The typed bus: one home for "what does this raw row mean?" and one for
 # "which streams does this holder read?".  A hand name set drifts from the
@@ -35,49 +86,6 @@ from .trigger_stream import (
     cross_participant_packet_source,
     streams_for,
     tuple_incapable_items,
-)
-from .item_effects import ITEM_INPUT_OPTIONS
-
-# Phase 3's declarations, and the interpreter that resolves them.  A producer
-# is reached through the rule its registry entry declares — "does this holder
-# declare Everlasting?" — rather than by spelling the item that has it, and
-# every number comes back through the rule's own references, so a key no
-# declaration carries is a stop instead of a silent registry read.
-from .item_behavior import AllyProducer, LevelSubject, PacketKind, Resistance
-from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
-from .interpreters.resistance_shred import ShredSlot, walk_slot as _shred_walk_slot
-
-# Phase 4's routing layer.  A crowd-control mark's subject is a decision the
-# ability's ``CcScope`` makes and ``resolve_route`` delivers, never the roster
-# position a pair scan happened to stamp.  ``program`` imports nothing from
-# here, so the edge is one-way.
-from .program import route as program_route
-from .program.identity import PIdx
-from .program.scope import Unreviewed, reviewed_scope, scope_policy
-
-# The item layer's one edge into the survival kernel: packet authors declare
-# when their packet arms, in the walk's vocabulary, so there is no second
-# ordering language to keep in sync.  Note the reach — importing
-# ``.survival.actions`` executes ``survival/__init__.py``, so the whole
-# kernel package loads with this module.  Acyclic: nothing under
-# ``survival/`` imports ``item_support_effects``.
-from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
-
-# The closed support-scope vocabulary and the kernel's typed trigger,
-# cooldown and cadence rules an item packet arms under.
-from .capabilities import SUPPORT_TARGET_SCOPES
-from .state_lifecycle import (
-    CcTriggerRule,
-    CooldownRule,
-    CooldownState,
-    InstanceCadence,
-    SourceReceipt,
-)
-from .item_effects import (
-    AUTHORIZED_MANA_GATE_STATUSES,
-    fimbulwinter_mana_gate_authority,
-    fimbulwinter_nearby_enemy_range_authority,
-    required_effect_value,
 )
 
 # The one packet kind that changes how much damage some *other* participant
@@ -96,7 +104,7 @@ def _same_side(attacker: Any, actor: Any) -> bool:
     return left == right
 
 
-def _teammates(attacker: Any, all_actors: Iterable[Any]) -> list[Any]:
+def _teammates(attacker: Combatant, all_actors: Iterable[Combatant]) -> list[Combatant]:
     attacker_id = getattr(attacker, "participant_id", None)
     return [
         actor
@@ -106,7 +114,7 @@ def _teammates(attacker: Any, all_actors: Iterable[Any]) -> list[Any]:
     ]
 
 
-def _item_names(attacker: Any) -> set[str]:
+def _item_names(attacker: Combatant) -> set[str]:
     return {str(item.get("name", "")) for item in attacker.items}
 
 
@@ -167,10 +175,12 @@ def _shred_ramp(
     slot = _shred_walk_slot(
         sorted(frozenset(names)),
         resistance,
-        level=int(attacker.stats.get("level", 1) or 1),
-        fight_duration_seconds=0.0,
-        target_bonus_health=0.0,
-        holder_is_melee=bool(attacker.stats.get("is_melee", False)),
+        facts=FightFacts(
+            level=int(attacker.stats.get("level", 1) or 1),
+            fight_duration_seconds=0.0,
+            target_bonus_health=0.0,
+            holder_is_melee=bool(attacker.stats.get("is_melee", False)),
+        ),
     )
     if slot is None:
         raise ValueError(
@@ -378,14 +388,14 @@ def _recipient_amount(
     return fields
 
 
-@lru_cache(maxsize=None)
+@cache
 def reprice_slot(owner: str, producer_value: str) -> AllyPacketSlot | None:
     """*owner*'s declared producer, compiled once per owner and producer."""
     return _producer(resolve_slots({owner}), AllyProducer(producer_value))
 
 
 def repriced_for_recipient(
-    template: Mapping[str, Any], recipient: Any
+    template: Mapping[str, Any], recipient: Combatant
 ) -> dict[str, Any]:
     """*template* with any recipient-scaled amount re-read at *recipient*.
 
@@ -415,7 +425,7 @@ def repriced_for_recipient(
 
 
 def _support_triggers(
-    trigger_effects: Iterable[Mapping[str, Any]], attacker: Any
+    trigger_effects: Iterable[Mapping[str, Any]], attacker: Combatant
 ) -> list[Mapping[str, Any]]:
     """Return ally heal/shield packets that can trigger item passives."""
     return [
@@ -848,9 +858,9 @@ def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
 
 
 def derive_item_support_effects(
-    attacker: Any,
+    attacker: Combatant,
     result: Mapping[str, Any],
-    all_actors: list[Any],
+    all_actors: list[Combatant],
     trigger_effects: Iterable[Mapping[str, Any]] = (),
 ) -> list[dict[str, Any]]:
     """Compile the holder's explicit cross-participant item packets."""
@@ -1064,11 +1074,7 @@ def derive_item_support_effects(
             source_meta = ITEM_INPUT_OPTIONS["Umbral Glaive"]
             lethality = max(
                 0.0,
-                (
-                    float(attacker.stats.get("lethality", 0.0) or 0.0)
-                    if isinstance(attacker.stats, Mapping)
-                    else 0.0
-                ),
+                float(attacker.stats.get("lethality", 0.0) or 0.0),
             )
             packets.append(
                 _packet(
@@ -1184,9 +1190,11 @@ def derive_item_support_effects(
             )
 
         if not isinstance(holder_identity, str) or not holder_identity.strip():
-            for event in everlasting_events:
-                if _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee):
-                    packets.append(_denial(event, "missing_holder_identity"))
+            packets.extend(
+                _denial(event, "missing_holder_identity")
+                for event in everlasting_events
+                if _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
+            )
             everlasting_events = []
 
         # Ambiguous / unknown / ranged-slow metadata: every CC-adjacent
@@ -1294,7 +1302,7 @@ def derive_item_support_effects(
             # Evaluate holder-centered range: count enemies whose
             # position is within the sourced 1200 units.  Spatial input
             # flows from the actor stats (stats.position tuple).
-            from .spatial import enemies_within_range, SPATIAL_UNAVAILABLE
+            from .spatial import SPATIAL_UNAVAILABLE, enemies_within_range
 
             nearby_count: int
             nearby_count, spatial_reason = enemies_within_range(
@@ -1376,44 +1384,44 @@ def derive_item_support_effects(
     if unmake is not None:
         unmake.declared(PacketKind.DAMAGE_MODIFIER)
         curse = unmake.value("magic_damage_amp")
-        for target in (
-            actor for actor in all_actors if not _same_side(attacker, actor)
-        ):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=0.0,
-                    kind=PacketKind.DAMAGE_MODIFIER.value,
-                    source="Abyssal Mask — Unmake",
-                    amount=curse,
-                    multiplier=1.0 + curse,
-                    all_sources=True,
-                    persistent=True,
-                    # Unmake is an aura, not a triggered debuff: an enemy
-                    # inside the radius is cursed from the first frame, so
-                    # the curse must be in force for the damage that lands
-                    # at the packet's own timestamp.  The kind ladder's
-                    # ``DEBUFF_ARM`` armed it *after* that damage, which
-                    # made the opening exchange the one exchange Unmake did
-                    # not price (C4).
-                    rank=TransitionRank.AURA_ARM,
-                    range_assumption="within_700_units",
-                    # "receive 12% increased *magic* damage from all
-                    # sources": one damage class, every attack class.  The
-                    # walk applied it to physical and true damage too until
-                    # this declaration existed to say otherwise.
-                    damage_classes=frozenset({DamageClass.MAGIC}),
-                    attack_classes=frozenset(AttackClass),
-                    authority=Authority.SPLIT,
-                    # The holder's own Unmake is priced pair-side, as the
-                    # ``magic_amp`` term of the damage engine's build
-                    # projection.  Without this handshake the walk amps the
-                    # holder a second time and the holder's magic arrives at
-                    # 1.12 squared.
-                    owner=attacker.participant_id,
-                )
+        packets.extend(
+            _packet(
+                attacker=attacker,
+                target=target,
+                time=0.0,
+                kind=PacketKind.DAMAGE_MODIFIER.value,
+                source="Abyssal Mask — Unmake",
+                amount=curse,
+                multiplier=1.0 + curse,
+                all_sources=True,
+                persistent=True,
+                # Unmake is an aura, not a triggered debuff: an enemy
+                # inside the radius is cursed from the first frame, so
+                # the curse must be in force for the damage that lands
+                # at the packet's own timestamp.  The kind ladder's
+                # ``DEBUFF_ARM`` armed it *after* that damage, which
+                # made the opening exchange the one exchange Unmake did
+                # not price (C4).
+                rank=TransitionRank.AURA_ARM,
+                range_assumption="within_700_units",
+                # "receive 12% increased *magic* damage from all
+                # sources": one damage class, every attack class.  The
+                # walk applied it to physical and true damage too until
+                # this declaration existed to say otherwise.
+                damage_classes=frozenset({DamageClass.MAGIC}),
+                attack_classes=frozenset(AttackClass),
+                authority=Authority.SPLIT,
+                # The holder's own Unmake is priced pair-side, as the
+                # ``magic_amp`` term of the damage engine's build
+                # projection.  Without this handshake the walk amps the
+                # holder a second time and the holder's magic arrives at
+                # 1.12 squared.
+                owner=attacker.participant_id,
             )
+            for target in (
+                actor for actor in all_actors if not _same_side(attacker, actor)
+            )
+        )
 
     expose_weakness = _producer(slots, AllyProducer.EXPOSE_WEAKNESS)
     if expose_weakness is not None:
@@ -1564,21 +1572,21 @@ def derive_item_support_effects(
                 float(attacker.stats.get("ability_power", 0.0) or 0.0)
                 * nova.value("life_from_death_ap_ratio")
             )
-            for recipient in (attacker, *teammates):
-                packets.append(
-                    _packet(
-                        attacker=attacker,
-                        target=recipient,
-                        time=takedown.time,
-                        kind="heal",
-                        source="Cryptbloom — Life From Death",
-                        amount=amount,
-                        duration=nova.value("life_from_death_nova_duration"),
-                        target_scope="nova_allied_champions",
-                        trigger="explicit_takedown_within_damage_window",
-                        cooldown=nova.value("life_from_death_cooldown"),
-                    )
+            packets.extend(
+                _packet(
+                    attacker=attacker,
+                    target=recipient,
+                    time=takedown.time,
+                    kind="heal",
+                    source="Cryptbloom — Life From Death",
+                    amount=amount,
+                    duration=nova.value("life_from_death_nova_duration"),
+                    target_scope="nova_allied_champions",
+                    trigger="explicit_takedown_within_damage_window",
+                    cooldown=nova.value("life_from_death_cooldown"),
                 )
+                for recipient in (attacker, *teammates)
+            )
 
     # Triggered enchanter passives.  The target is carried by the authored
     # champion packet; no cursor or radius is guessed.
@@ -1589,41 +1597,37 @@ def derive_item_support_effects(
         time = _event_time(trigger)
         if sanctify is not None:
             packets.extend(
-                (
-                    _packet(
-                        attacker=attacker,
-                        target=recipient,
-                        time=time,
-                        kind="stat_buff",
-                        source="Ardent Censer — Sanctify",
-                        amount=sanctify.value("sanctify_bonus_attack_speed"),
-                        duration=sanctify.value("sanctify_duration"),
-                        bonus_attack_speed_percent=sanctify.value(
-                            "sanctify_bonus_attack_speed"
-                        ),
-                        on_hit_magic_damage=sanctify.value("sanctify_on_hit_magic"),
-                        recipient_role="holder_and_healed_ally",
-                    )
-                    for recipient in (attacker, target)
+                _packet(
+                    attacker=attacker,
+                    target=recipient,
+                    time=time,
+                    kind="stat_buff",
+                    source="Ardent Censer — Sanctify",
+                    amount=sanctify.value("sanctify_bonus_attack_speed"),
+                    duration=sanctify.value("sanctify_duration"),
+                    bonus_attack_speed_percent=sanctify.value(
+                        "sanctify_bonus_attack_speed"
+                    ),
+                    on_hit_magic_damage=sanctify.value("sanctify_on_hit_magic"),
+                    recipient_role="holder_and_healed_ally",
                 )
+                for recipient in (attacker, target)
             )
         if rapids is not None:
             packets.extend(
-                (
-                    _packet(
-                        attacker=attacker,
-                        target=recipient,
-                        time=time,
-                        kind="stat_buff",
-                        source="Staff of Flowing Water — Rapids",
-                        amount=rapids.value("bonus_ability_power"),
-                        duration=rapids.value("duration"),
-                        ability_power=rapids.value("bonus_ability_power"),
-                        ability_haste=rapids.value("bonus_ability_haste"),
-                        recipient_role="holder_and_healed_ally",
-                    )
-                    for recipient in (attacker, target)
+                _packet(
+                    attacker=attacker,
+                    target=recipient,
+                    time=time,
+                    kind="stat_buff",
+                    source="Staff of Flowing Water — Rapids",
+                    amount=rapids.value("bonus_ability_power"),
+                    duration=rapids.value("duration"),
+                    ability_power=rapids.value("bonus_ability_power"),
+                    ability_haste=rapids.value("bonus_ability_haste"),
+                    recipient_role="holder_and_healed_ally",
                 )
+                for recipient in (attacker, target)
             )
         if starlit_grace is not None:
             candidates = [
@@ -1785,47 +1789,47 @@ def derive_item_support_effects(
                     trigger="authored_immobilize_or_slow",
                 )
             )
-            for recipient in (attacker, *teammates):
-                packets.append(
-                    _packet(
-                        attacker=attacker,
-                        target=recipient,
-                        time=time,
-                        kind="stat_buff",
-                        source="Bandlepipes — Fanfare",
-                        amount=fanfare.value(as_key),
-                        duration=fanfare.value(duration_key),
-                        bonus_attack_speed_percent=fanfare.value(as_key),
-                        trigger="authored_immobilize_or_slow",
-                    )
+            packets.extend(
+                _packet(
+                    attacker=attacker,
+                    target=recipient,
+                    time=time,
+                    kind="stat_buff",
+                    source="Bandlepipes — Fanfare",
+                    amount=fanfare.value(as_key),
+                    duration=fanfare.value(duration_key),
+                    bonus_attack_speed_percent=fanfare.value(as_key),
+                    trigger="authored_immobilize_or_slow",
                 )
+                for recipient in (attacker, *teammates)
+            )
         if going_sledding is not None and teammates:
             going_sledding.declared(PacketKind.TEMPORARY_HEALTH)
             target = teammates[0]
-            for recipient in (attacker, target):
-                packets.append(
-                    _packet(
-                        attacker=attacker,
-                        target=recipient,
-                        time=time,
-                        kind="temporary_health",
-                        source="Solstice Sleigh — Going Sledding",
-                        amount=_ramp_value(
-                            going_sledding,
-                            "temporary_health_min",
-                            holder=attacker,
-                            recipient=recipient,
-                        ),
-                        duration=going_sledding.value("duration"),
-                        bonus_move_speed_percent=going_sledding.value(
-                            "bonus_move_speed_percent"
-                        ),
-                        cooldown=going_sledding.value("cooldown"),
-                        target_scope=(
-                            "self" if recipient is attacker else "most_wounded_ally"
-                        ),
-                    )
+            packets.extend(
+                _packet(
+                    attacker=attacker,
+                    target=recipient,
+                    time=time,
+                    kind="temporary_health",
+                    source="Solstice Sleigh — Going Sledding",
+                    amount=_ramp_value(
+                        going_sledding,
+                        "temporary_health_min",
+                        holder=attacker,
+                        recipient=recipient,
+                    ),
+                    duration=going_sledding.value("duration"),
+                    bonus_move_speed_percent=going_sledding.value(
+                        "bonus_move_speed_percent"
+                    ),
+                    cooldown=going_sledding.value("cooldown"),
+                    target_scope=(
+                        "self" if recipient is attacker else "most_wounded_ally"
+                    ),
                 )
+                for recipient in (attacker, target)
+            )
         if command is not None and cc.cc is CcClass.IMMOBILIZE:
             # H2's recorded ruling, *deferred, default shipped*: no ability
             # declares a reviewed crowd-control scope yet, so every mark takes
@@ -1838,39 +1842,39 @@ def derive_item_support_effects(
                 Unreviewed(ability=_cc_ability_label(cc, all_actors))
             )
             amp = command.value("command_damage_amp")
-            for target in _cc_mark_subjects(attacker, cc, all_actors, scope):
-                packets.append(
-                    _packet(
-                        attacker=attacker,
-                        target=target,
-                        time=time,
-                        kind=PacketKind.DAMAGE_MODIFIER.value,
-                        source="Imperial Mandate — Command",
-                        amount=amp,
-                        duration=command.value("command_duration"),
-                        multiplier=1.0 + amp,
-                        all_sources=True,
-                        # "increasing the damage they take from all sources
-                        # by 7%": every class on both axes.
-                        damage_classes=frozenset(DamageClass),
-                        attack_classes=frozenset(AttackClass),
-                        # The holder's pair engine prices its own amp
-                        # (damage._apply_command_amp); the walk applies
-                        # this packet to every other participant only.
-                        # Command's authority move to
-                        # coupled-authoritative-with-preview is what H2 still
-                        # blocks; the umbrella's recorded default is SPLIT and
-                        # this phase does not move it.
-                        authority=Authority.SPLIT,
-                        owner=attacker.participant_id,
-                        cc_scope=type(scope).__name__,
-                        **(
-                            {"cc_scope_disclosure": disclosures[0].reason}
-                            if disclosures
-                            else {}
-                        ),
-                    )
+            packets.extend(
+                _packet(
+                    attacker=attacker,
+                    target=target,
+                    time=time,
+                    kind=PacketKind.DAMAGE_MODIFIER.value,
+                    source="Imperial Mandate — Command",
+                    amount=amp,
+                    duration=command.value("command_duration"),
+                    multiplier=1.0 + amp,
+                    all_sources=True,
+                    # "increasing the damage they take from all sources
+                    # by 7%": every class on both axes.
+                    damage_classes=frozenset(DamageClass),
+                    attack_classes=frozenset(AttackClass),
+                    # The holder's pair engine prices its own amp
+                    # (damage._apply_command_amp); the walk applies
+                    # this packet to every other participant only.
+                    # Command's authority move to
+                    # coupled-authoritative-with-preview is what H2 still
+                    # blocks; the umbrella's recorded default is SPLIT and
+                    # this phase does not move it.
+                    authority=Authority.SPLIT,
+                    owner=attacker.participant_id,
+                    cc_scope=type(scope).__name__,
+                    **(
+                        {"cc_scope_disclosure": disclosures[0].reason}
+                        if disclosures
+                        else {}
+                    ),
                 )
+                for target in _cc_mark_subjects(attacker, cc, all_actors, scope)
+            )
 
     # Explicit item-actives.  A non-zero timestamp is the complete trigger
     # contract; the packet is not emitted at t=0 by default.
@@ -1878,25 +1882,25 @@ def derive_item_support_effects(
     active_time = _active_seconds(attacker, devotion)
     if devotion is not None and active_time > 0.0:
         devotion.declared(PacketKind.SHIELD)
-        for target in (attacker, *teammates):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=active_time,
-                    kind="shield",
-                    source="Locket of the Iron Solari — Devotion",
-                    **_recipient_amount(
-                        devotion,
-                        "shield_min",
-                        holder=attacker,
-                        recipient=target,
-                        scope="all_selected_teammates",
-                    ),
-                    duration=devotion.value("shield_duration"),
-                    target_scope="all_selected_teammates",
-                )
+        packets.extend(
+            _packet(
+                attacker=attacker,
+                target=target,
+                time=active_time,
+                kind="shield",
+                source="Locket of the Iron Solari — Devotion",
+                **_recipient_amount(
+                    devotion,
+                    "shield_min",
+                    holder=attacker,
+                    recipient=target,
+                    scope="all_selected_teammates",
+                ),
+                duration=devotion.value("shield_duration"),
+                target_scope="all_selected_teammates",
             )
+            for target in (attacker, *teammates)
+        )
     purify = _producer(slots, AllyProducer.PURIFY)
     active_time = _active_seconds(attacker, purify)
     if purify is not None and active_time > 0.0 and teammates:
@@ -1964,26 +1968,26 @@ def derive_item_support_effects(
         intervention.declared(PacketKind.HEAL)
         beam_delay = intervention.value("beam_delay")
         range_units = intervention.value("target_area_range_units")
-        for target in (attacker, *teammates):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=active_time + beam_delay,
-                    kind="heal",
-                    source="Redemption — Intervention",
-                    **_recipient_amount(
-                        intervention,
-                        "heal_min",
-                        holder=attacker,
-                        recipient=target,
-                        scope="redemption_allies_in_radius",
-                    ),
-                    target_scope="redemption_allies_in_radius",
-                    beam_delay=beam_delay,
-                    range_assumption=f"within_{range_units:g}_units",
-                )
+        packets.extend(
+            _packet(
+                attacker=attacker,
+                target=target,
+                time=active_time + beam_delay,
+                kind="heal",
+                source="Redemption — Intervention",
+                **_recipient_amount(
+                    intervention,
+                    "heal_min",
+                    holder=attacker,
+                    recipient=target,
+                    scope="redemption_allies_in_radius",
+                ),
+                target_scope="redemption_allies_in_radius",
+                beam_delay=beam_delay,
+                range_assumption=f"within_{range_units:g}_units",
             )
+            for target in (attacker, *teammates)
+        )
         # Intervention is also an area true-damage packet.  The calculator has
         # no map coordinates, so every selected enemy is an explicit roster
         # target under the sourced area-radius assumption; no proximity order
@@ -2027,44 +2031,44 @@ def derive_item_support_effects(
         # the sourced 2.5s beam_delay.  The sourced call-down window is
         # the receipt: neither the wiki text nor the binary names a separate
         # reveal duration.
-        for target in (
-            actor for actor in all_actors if not _same_side(attacker, actor)
-        ):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=active_time,
-                    kind=PacketKind.VISION.value,
-                    source="Redemption — Intervention",
-                    amount=beam_delay,
-                    duration=beam_delay,
-                    reveal_duration=beam_delay,
-                    target_scope="enemy_champions_in_radius",
-                    range_assumption=f"within_{range_units:g}_units",
-                    beam_delay=beam_delay,
-                )
+        packets.extend(
+            _packet(
+                attacker=attacker,
+                target=target,
+                time=active_time,
+                kind=PacketKind.VISION.value,
+                source="Redemption — Intervention",
+                amount=beam_delay,
+                duration=beam_delay,
+                reveal_duration=beam_delay,
+                target_scope="enemy_champions_in_radius",
+                range_assumption=f"within_{range_units:g}_units",
+                beam_delay=beam_delay,
             )
+            for target in (
+                actor for actor in all_actors if not _same_side(attacker, actor)
+            )
+        )
     inspiring_speech = _producer(slots, AllyProducer.INSPIRING_SPEECH)
     active_time = _active_seconds(attacker, inspiring_speech)
     if inspiring_speech is not None and active_time > 0.0:
         inspiring_speech.declared(PacketKind.MOVEMENT)
-        for target in (attacker, *teammates):
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=target,
-                    time=active_time,
-                    kind=PacketKind.MOVEMENT.value,
-                    source="Shurelya's Battlesong — Inspiring Speech",
-                    amount=inspiring_speech.value("bonus_move_speed_percent"),
-                    duration=inspiring_speech.value("duration"),
-                    bonus_move_speed_percent=inspiring_speech.value(
-                        "bonus_move_speed_percent"
-                    ),
-                    target_scope="all_selected_teammates",
-                )
+        packets.extend(
+            _packet(
+                attacker=attacker,
+                target=target,
+                time=active_time,
+                kind=PacketKind.MOVEMENT.value,
+                source="Shurelya's Battlesong — Inspiring Speech",
+                amount=inspiring_speech.value("bonus_move_speed_percent"),
+                duration=inspiring_speech.value("duration"),
+                bonus_move_speed_percent=inspiring_speech.value(
+                    "bonus_move_speed_percent"
+                ),
+                target_scope="all_selected_teammates",
             )
+            for target in (attacker, *teammates)
+        )
     shockwave = _producer(slots, AllyProducer.BREAKING_SHOCKWAVE)
     active_time = _active_seconds(attacker, shockwave)
     if shockwave is not None and active_time > 0.0:
@@ -2116,10 +2120,10 @@ def derive_item_support_effects(
 
 
 def schedule_knights_vow(
-    all_actors: list[Any],
+    all_actors: list[Combatant],
     incoming: Mapping[str, list[dict[str, Any]]],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
 ) -> None:
     """Attach one deterministic Worthy tether and redirect/heal receipts."""
     for holder in all_actors:

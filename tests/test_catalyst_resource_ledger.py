@@ -37,12 +37,24 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import calculate_fight_damage
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.interpreters import (
+    compilability_for,
+    uncompilable_item_receipt,
+)
+from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
 from src.calculator.item_effects import sustain_effect_value
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
+)
+from src.calculator.pipeline import (
+    FightParams,
+    _item_self_healing_events,
+    run_fight,
 )
 
 # MERGE: the producer seam moved to ``roster_composition`` and dropped the
@@ -52,20 +64,8 @@ from src.calculator.participant_timeline import (
 from src.calculator.roster_composition import (
     resource_restores as _catalyst_resource_restores,
 )
-from src.calculator.pipeline import (
-    FightParams,
-    _item_self_healing_events,
-    run_fight,
-)
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.champions import parse_champion_abilities
-from src.calculator.interpreters import (
-    compilability_for,
-    uncompilable_item_receipt,
-)
-from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
 
 CATALYST = "Catalyst of Aeons"
 ETERNITY = "Catalyst of Aeons (Eternity)"
@@ -92,18 +92,18 @@ def _typed_values():
 
 
 def _catalyst_params(**overrides):
-    base = dict(
-        target_health=10000.0,
-        target_bonus_health=0.0,
-        target_armor=0.0,
-        target_magic_resistance=0.0,
-        fight_duration_seconds=4.0,
-        auto_attack_uptime=0.0,
-        one_rotation=False,
-        include_actives=True,
-        deterministic=True,
-        enforce_resource_limits=True,
-    )
+    base = {
+        "target_health": 10000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 0.0,
+        "target_magic_resistance": 0.0,
+        "fight_duration_seconds": 4.0,
+        "auto_attack_uptime": 0.0,
+        "one_rotation": False,
+        "include_actives": True,
+        "deterministic": True,
+        "enforce_resource_limits": True,
+    }
     base.update(overrides)
     return FightParams(**base)
 
@@ -214,10 +214,9 @@ def _karthus_fixture(duration=20.0):
     to exhaust the pool now that the fixture runs as Karthus rather than
     under a renamed generic parser; ten seconds accepts every cast.
     """
-    # MERGE: the fixture used to rename the champion so the generic parser
-    # would take it.  There is no generic parser now -- an unknown name
-    # fails closed -- so it runs as Karthus, whose named module is what the
-    # mana ledger under test is fed by anyway.
+    # MERGE: there is no generic parser -- an unknown name fails closed --
+    # so the fixture runs as Karthus, whose named module is what the mana
+    # ledger under test is fed by anyway.
     champ = get_champion("Karthus")
     params = _catalyst_params(
         target_health=2000.0,
@@ -275,7 +274,7 @@ def test_accepted_spends_create_heals_at_25_percent_capped_at_20():
     (0.25 * 300 = 75, capped at the per-cast 20).  Times are the cast
     times, never aggregated.
     """
-    result, accepted, denied = _catalyst_fight(60.0, 2.0, 6.0)
+    result, accepted, _denied = _catalyst_fight(60.0, 2.0, 6.0)
     assert [r["time"] for r in accepted] == [0.0, 2.25, 4.5]
     heals = _catalyst_heal_packets(result, 6.0)
     assert sorted((e["time"], e["amount"]) for e in heals) == [
@@ -314,7 +313,7 @@ def test_denied_casts_produce_no_heal():
     the heal stream never contains a denied cast's time, and the stream
     still equals the accepted-spend-derived function (denials contribute
     zero)."""
-    result, accepted, denied, heals = _karthus_fixture()
+    _result, accepted, denied, heals = _karthus_fixture()
     assert denied, "fixture must actually deny casts"
     assert all(
         not r["accepted"] and r["reason"] == "insufficient_resource" for r in denied
@@ -339,7 +338,7 @@ def test_per_second_cap_clamps_bucket_totals_to_20():
     """Casts at 0.0 / 0.5 / 1.0 / 1.5 / 2.0 (60 mana each -> 15 uncapped
     per cast) produce heal totals of 20 / 20 / 15 per floor-time bucket:
     the second cast inside one second is clamped to the bucket remainder."""
-    result, accepted, _ = _catalyst_fight(60.0, 0.25, 2.0)
+    result, _accepted, _ = _catalyst_fight(60.0, 0.25, 2.0)
     heals = _catalyst_heal_packets(result, 2.0)
     assert sorted((e["time"], e["amount"]) for e in heals) == [
         (0.0, 15.0),
@@ -360,7 +359,7 @@ def test_per_second_cap_binds_even_when_no_single_cast_hits_20():
     """Each individual heal is only 15 (< 20 per-cast cap); the 20/s clamp
     is what suppresses the second heal inside one second — proving the
     per-second cap is a separate, bucket-scoped constraint."""
-    result, accepted, _ = _catalyst_fight(60.0, 0.25, 2.0)
+    result, _accepted, _ = _catalyst_fight(60.0, 0.25, 2.0)
     heals = _catalyst_heal_packets(result, 2.0)
     assert len(heals) == 5  # 5 casts, 5 packets, but two are clamped
     assert all(e["amount"] <= 15.0 for e in heals)
@@ -398,7 +397,7 @@ def test_restores_land_on_the_ledger_at_the_hit_timestamp():
     """The derived restore rows enter the SAME mana account as cast
     admission: one gain receipt per restore at the hit time, source
     Eternity, on the restore tier."""
-    result, accepted, _ = _catalyst_fight(
+    result, _accepted, _ = _catalyst_fight(
         60.0, 2.0, 6.0, restore_events=((1.0, 20.0), (2.5, 10.0))
     )
     gains = [

@@ -37,16 +37,15 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
-from .packet_module import build_packet_module, initial_plus_ticks_parser
+from .module_contract import coverage
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     attach_self_shield,
     extract_named,
     find_named_leveling,
-    is_flat_unit,
-    resolve_scaling,
+    sum_modifiers,
     with_control_event,
 )
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the shield window (2.5s) and the
 # Discharge window (4s) are wiki Q prose; the shield base row and the
@@ -61,12 +60,8 @@ PACKET_SHA256 = "542116107f7a930a0dbae3ed0dfb602d84d0b90cb6bf86f2b4832bae1c8ad13
 
 
 def _siphon_shield(ctx: SlotCtx) -> float:
-    """Q's shield: per-LEVEL base (40 : 140, 18 cached values) + 25% AP.
-
-    ``extract_named`` indexes the 18-value row by RANK (values[4] at
-    rank 5), but the wiki prose is "40 : 140 (based on level)"; long
-    arrays (>= 18 values) are level-indexed here, the Ambessa W
-    convention.
+    """Q's shield: per-LEVEL base (40 : 140, 18 cached values) + 25% AP;
+    the long row reads at the level.
     """
     ability = ctx.ability()
     if ability is None:
@@ -74,25 +69,9 @@ def _siphon_shield(ctx: SlotCtx) -> float:
     leveling = find_named_leveling(ability, "Bonus Damage")
     if leveling is None:
         raise ValueError("Viktor Q shield leveling row is unavailable")
-    total = 0.0
-    rank = ctx.rank_for()
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-        if len(values) >= 18:
-            index = min(max(ctx.level - 1, 0), len(values) - 1)
-        else:
-            index = min(max(rank - 1, 0), len(values) - 1)
-        value = float(values[index])
-        unit = units[index] if index < len(units) else ""
-        total += (
-            value
-            if is_flat_unit(unit)
-            else resolve_scaling(unit, value, ctx.stats, ctx.target)
-        )
-    return total
+    return sum_modifiers(
+        leveling, ctx.rank_for(), ctx.stats, ctx.target, level=ctx.level
+    )
 
 
 def _siphon_power(packet_q):
@@ -165,11 +144,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # module-authored self-shield payload onto the event row.
     single_hit_slots=frozenset({"E", "Q"}),
     slot_parsers={
-        "R": initial_plus_ticks_parser(
-            initial_attr="Magic Damage",
-            tick_attr="Magic Damage Per Tick",
-            dmg_type="magic",
-            tick_count=6,
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage",
+            repeat_attr="Magic Damage Per Tick",
+            repeats=6,
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=6.5,
@@ -193,7 +171,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Siphon Power) shields Viktor for the per-level 40 : 140 (+ 25% AP) "
     "for 2.5 seconds (the cache's 'Bonus Damage' row is the shield base, "
     "level-indexed); the shield is granted at the cast (E8c "

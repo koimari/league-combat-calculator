@@ -64,33 +64,29 @@ read them from ``required_effect_value`` / the parser-owned registry, and
 this file pins the fail-loud behavior for a missing key.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
 from src.app import _load_public_champion
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator import participant_timeline
 from src.calculator.ability_spec import DamagePart
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.interpreters import cast_proc
-from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.interpreters import (
+    cast_proc,
+    compilability_for,
+    uncompilable_item_receipt,
+)
+from src.calculator.item_behavior import FightFacts, ReceiptOnly, ReceiptScope
 from src.calculator.item_effects import (
     eclipse_trigger_gate,
     required_effect_value,
-    resolve_damage_effects,
 )
-import src.calculator.participant_timeline as participant_timeline
 from src.calculator.participant_timeline import Combatant, build_participant_timeline
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.interpreters import (
-    compilability_for,
-    uncompilable_item_receipt,
-)
-from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
+from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.timeline_coverage import (
     EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES,
     applicability_exclusion_sources,
@@ -181,10 +177,12 @@ def _eclipse_proc():
         proc
         for proc in cast_proc.resolve_slots(
             ("Eclipse",),
-            level=11,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=11,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ).cooldown_procs
         if proc.source.item_name == "Eclipse"
     )
@@ -355,7 +353,7 @@ class TestTypedContract:
         assert required_effect_value("Eclipse", "shield_duration") == 2.0
 
     def test_missing_typed_key_fails_loud_naming_item_and_key(self) -> None:
-        with pytest.raises(KeyError, match="Eclipse.*shield_missing_key_3c"):
+        with pytest.raises(KeyError, match=r"Eclipse.*shield_missing_key_3c"):
             required_effect_value("Eclipse", "shield_missing_key_3c")
 
     def test_trigger_gate_rule_is_typed_and_source_backed(self) -> None:
@@ -677,9 +675,9 @@ class TestShieldPacket:
         assert len(shields) == 1  # one completed pair -> exactly one packet
         shield = shields[0]
         proc_id = _proc_event_id(result)
-        proc_event = [
+        proc_event = next(
             event for event in result["events"] if event.get("source") == "proc_Eclipse"
-        ][0]
+        )
         assert shield["time"] == pytest.approx(proc_event["time"])
         assert shield["trigger_event_id"] == proc_id
         assert shield["event_id"] == f"{proc_id}:shield"
@@ -738,11 +736,11 @@ class TestShieldPacket:
         assert shield["target_scope"] == "self"
         assert shield["time"] == pytest.approx(
             float(
-                [
+                next(
                     event
                     for event in result["events"]
                     if event.get("source") == "proc_Eclipse"
-                ][0]["time"]
+                )["time"]
             )
         )
 

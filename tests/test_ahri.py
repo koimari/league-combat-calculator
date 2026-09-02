@@ -7,11 +7,10 @@ the 16.13.1 JSON), plus an Ahri fight-level check of the Actualizer ability amp
 
 import pytest
 
-from tests.ability_math import parts_raw_total
-
 from src.calculator.champions import ahri
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 
 class TestParseAhriAbilities:

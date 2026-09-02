@@ -1,7 +1,7 @@
 """The front door for the spellblade interpreter.
 
-Seven items share one mechanic and used to differ, inside the registry's own
-compiler, by a table of *item names* deciding which sibling mechanic each
+Seven items share one mechanic.  The retired registry compiler told them
+apart by a table of *item names* deciding which sibling mechanic each
 carried and a ``values.get(key, 0.0)`` fallback for every other.  What is
 pinned here is that the sibling groups come off the registry's schema instead
 of that table, that a group is declared whole or not at all, that the fail
@@ -14,6 +14,7 @@ import pytest
 from src.calculator.interpreters import spellblade
 from src.calculator.item_behavior import (
     EngineLane,
+    FightFacts,
     RuleFamily,
     SpellbladeRule,
     validate_rule,
@@ -32,10 +33,12 @@ def _armed(*owners: str, is_melee: bool = True):
     """The spellblade a build of *owners* arms."""
     return spellblade.resolve_slot(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -51,7 +54,7 @@ def _inputs(**stats: float) -> DamageInputs:
 
 
 def test_every_spellblade_entry_declares_exactly_one_rule() -> None:
-    """Counter 3's half: the tag is no longer engine code in the registry."""
+    """Counter 3's half: the tag is not engine code in the registry."""
     for owner, entry in ITEM_EFFECTS.items():
         if entry.get("type") != "spellblade":
             continue
@@ -76,7 +79,9 @@ def test_the_three_formulas_sum_their_declared_shares() -> None:
         _armed(WITH_ABILITY_POWER),
         _armed(WITH_CRIT),
     )
-    assert plain is not None and magical is not None and critical is not None
+    assert plain is not None
+    assert magical is not None
+    assert critical is not None
     assert plain.source.raw_damage(_inputs(**stats)) == pytest.approx(
         float(ITEM_EFFECTS[PLAIN]["base_ad_ratio"]) * 100.0  # type: ignore[arg-type]
     )
@@ -186,10 +191,12 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     (rule,) = spellblade.spellblade_rules([PLAIN])
     ctx = build_context(
         PLAIN,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = spellblade.spellblade_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == spellblade.SPELLBLADE_COOLDOWN_FIELD
@@ -205,10 +212,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Tiamat",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(spellblade.SpellbladeInterpretationError):
         spellblade.spellblade_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

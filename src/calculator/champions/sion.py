@@ -29,21 +29,20 @@ hardcoded.
 
 from typing import Any
 
-from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
-from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import float_option
 from .module_contract import coverage
+from .module_helpers import no_damage_parser, ranked_slot
+from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
-def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _decimating_smash(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: minimum/maximum physical damage interpolated by charge time."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     fraction = max(0.0, min(1.0, float(ctx.option("q_charge_fraction"))))
     low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
     high = extract_named(
@@ -76,7 +75,10 @@ def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _roar_of_the_slayer(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: magic damage + the sourced 25% armor reduction for 4 seconds.
 
     The cached E description pins the debuff ("inflicts them with 25%
@@ -84,12 +86,8 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
     AFTER this ability's own damage, so every later physical hit (autos,
     Q, R) benefits but the E hit itself does not.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = {
+    return {
         "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
@@ -108,7 +106,6 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
             "hit."
         ),
     }
-    return entry
 
 
 ASSUMPTIONS = [

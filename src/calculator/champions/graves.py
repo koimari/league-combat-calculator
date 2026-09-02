@@ -6,7 +6,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -16,7 +17,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _level_scaling(
@@ -24,6 +24,7 @@ def _level_scaling(
     occurrence: int,
     level: int,
     stats: dict[str, float],
+    *,
     target: dict[str, float],
 ) -> float:
     leveling = find_named_leveling(ability, "Per-Level Scaling", occurrence)
@@ -36,14 +37,19 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    total_ratio = _level_scaling(ability, 2, ctx.level, ctx.stats, ctx.target)
+    total_ratio = _level_scaling(ability, 2, ctx.level, ctx.stats, target=ctx.target)
     critical = bool(ctx.option("p_critical_pellets"))
     if critical:
-        total_ratio = _level_scaling(ability, 3, ctx.level, ctx.stats, ctx.target)
+        total_ratio = _level_scaling(
+            ability, 3, ctx.level, ctx.stats, target=ctx.target
+        )
     entry = no_damage(
         ctx,
         name="New Destiny",
-        reason="Shotgun reload/pellet state is explicit; all pellets hitting one target is the selected auto packet.",
+        reason=(
+            "Shotgun reload/pellet state is explicit; all pellets hitting one target "
+            "is the selected auto packet."
+        ),
         slot="P",
     )
     if entry is not None:
@@ -53,16 +59,16 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "physical",
         }
         entry["detail"] = (
-            f"{total_ratio:g}% AD across the authored pellet cone; critical pellet branch={'on' if critical else 'off'}."
+            f"{total_ratio:g}% AD across the authored pellet cone; critical pellet "
+            f"branch={'on' if critical else 'off'}."
         )
     return entry
 
 
-def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _end_of_line(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     initial = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     detonation = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -82,31 +88,18 @@ def _end_of_line(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _smoke_screen(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.25),)
-    entry["detail"] = (
-        "Impact damage plus 4-second nearsight cloud; slow/vision are utility."
-    )
-    return entry
+_smoke_screen = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.25,
+    detail="Impact damage plus 4-second nearsight cloud; slow/vision are utility.",
+)
 
 
-def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _quickdraw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("e_true_grit_stacks")), 0), 8)
     armor = extract_named(ability, "Bonus Armor", rank, ctx.stats, ctx.target) * stacks
     mr = (
@@ -116,7 +109,10 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason=f"{stacks} True Grit stack(s): +{armor:g} armor/+{mr:g} MR; dash/reload are state-only.",
+        reason=(
+            f"{stacks} True Grit stack(s): +{armor:g} armor/+{mr:g} MR; dash/reload "
+            f"are state-only."
+        ),
     )
     if entry is not None:
         entry["stat_buff"] = {"armor": armor, "magic_resistance": mr}
@@ -126,26 +122,16 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
 _quickdraw.phase = BUFF
 
 
-def _collateral_damage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    secondary = bool(ctx.option("r_secondary_target"))
-    attr = "Reduced Damage" if secondary else "Physical Damage"
-    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", value, time_offset=0.25),)
-    entry["detail"] = (
-        "Primary shell or reduced cone explosion branch selected explicitly."
-    )
-    return entry
+_collateral_damage = named_damage(
+    lambda ctx: (
+        "Reduced Damage"
+        if bool(ctx.option("r_secondary_target"))
+        else "Physical Damage"
+    ),
+    "physical",
+    time_offset=0.25,
+    detail="Primary shell or reduced cone explosion branch selected explicitly.",
+)
 
 
 SLOTS = {
@@ -170,8 +156,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "The auto packet assumes all pellets hit the primary target; reload timing is exposed as state rather than replacing the attack stream with guessed cadence.",
-    "End of the Line keeps pass and detonation as separate ordered physical events; terrain collision is an explicit source note.",
+    "The auto packet assumes all pellets hit the primary target; reload timing is "
+    "exposed as state rather than replacing the attack stream with guessed cadence.",
+    "End of the Line keeps pass and detonation as separate ordered physical events; "
+    "terrain collision is an explicit source note.",
     "True Grit armor/MR is a selected defensive state and cannot inflate outgoing damage.",
 ]
 

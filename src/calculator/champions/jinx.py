@@ -8,11 +8,12 @@ damage is sourced from the same Wiki snapshot as the generated roster.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
+from .inputs import int_option
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_value
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
 
@@ -30,11 +31,10 @@ _JINX_PASSIVE_AS_PERCENT = data_value(
 )
 
 
-def _switcheroo(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _switcheroo(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     weapon = str(ctx.option("jinx_weapon")).lower()
     entry = damage_entry(
         ability_name(ability),

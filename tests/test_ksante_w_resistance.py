@@ -349,15 +349,21 @@ def _denial_reasons(result: dict) -> list[str]:
     if walk:
         receipts = walk.get("receipts", [])
         if isinstance(receipts, list):
-            for row in receipts:
-                if not row.get("accepted", True):
-                    reasons.append(str(row.get("reason", "")))
-    for row in result.get("resource_ledger", {}).get("receipts", []):
-        if not row.get("accepted", True):
-            reasons.append(str(row.get("reason", "")))
-    for note in result.get("notes") or []:
-        if isinstance(note, dict):
-            reasons.append(str(note.get("reason", note.get("message", ""))))
+            reasons.extend(
+                str(row.get("reason", ""))
+                for row in receipts
+                if not row.get("accepted", True)
+            )
+    reasons.extend(
+        str(row.get("reason", ""))
+        for row in result.get("resource_ledger", {}).get("receipts", [])
+        if not row.get("accepted", True)
+    )
+    reasons.extend(
+        str(note.get("reason", note.get("message", "")))
+        for note in result.get("notes") or []
+        if isinstance(note, dict)
+    )
     return reasons
 
 
@@ -415,11 +421,12 @@ class TestSourceAndTypedValues:
         assert cap["modifiers"][0]["values"] == [180, 260, 340, 420, 500]
         # Cross-check: Total Maximum Mixed flat == physical flat + max true
         # flat at every rank (45+36, 75+60, ...), and 14.4 == 8 + 6.4.
-        for rank, p, h, t in zip(
+        for _rank, p, h, t in zip(
             range(1, 6),
             physical["modifiers"][0]["values"],
             high["modifiers"][0]["values"],
             total["modifiers"][0]["values"],
+            strict=False,
         ):
             assert t == p + h
         assert total["modifiers"][1]["values"][0] == (
@@ -982,8 +989,9 @@ class TestResistanceState:
             8.0 + 2.0 * 20.0 / 100.0 + 2.0 * 10.0 / 100.0
         ) / 100.0 * _TARGET_MAX_HP == pytest.approx(physical)
         assert (
-            8.0 + 2.0 * 20.0 / 100.0 + 2.0 * 10.0 / 100.0
-        ) / 100.0 * _TARGET_MAX_HP == pytest.approx(172.0)
+            pytest.approx(172.0)
+            == (8.0 + 2.0 * 20.0 / 100.0 + 2.0 * 10.0 / 100.0) / 100.0 * _TARGET_MAX_HP
+        )
         # The old total-attribution term (196) is GONE — asserting the
         # fixed price never equals it.
         assert physical != pytest.approx(flat + 196.0)
@@ -1092,7 +1100,7 @@ class TestUnchangedBoundaries:
         # "Bonus Damage" + "Max Health Damage" %maxHP, plus the authored
         # All Out extra (1% + 1% per 100 bonus armor/MR) when all_out —
         # all sourced from the cached P rows / module constants.
-        stats, abilities = _parse({"p_marks": 1})
+        _stats, abilities = _parse({"p_marks": 1})
         p = abilities["passive"]
         assert p["name"] == "Dauntless Instinct"
         base = extract_value(_ability("P"), "Bonus Damage", _LEVEL)
@@ -1113,7 +1121,7 @@ class TestUnchangedBoundaries:
         assert abilities["passive"]["total_raw"] == pytest.approx(want * 3)
         assert abilities["passive"]["proc_count"] == 3
         # The All Out extra reads BONUS armor/MR (correct keys).
-        assert 0.01 + 0.01 * 20.0 / 100.0 + 0.01 * 10.0 / 100.0 == pytest.approx(0.013)
+        assert pytest.approx(0.013) == 0.01 + 0.01 * 20.0 / 100.0 + 0.01 * 10.0 / 100.0
 
     def test_q_unchanged(self):
         # Ntofo Strikes prices the cached "Physical Damage" row (which
@@ -1220,7 +1228,7 @@ class TestScoreReceiptParity:
                 assert full["resource_ledger"] == scored["resource_ledger"]
                 shared = ("time", "slot", "name", "ordinal", "resource_cost")
                 for full_row, scored_row in zip(
-                    full["cast_timeline"], scored["cast_timeline"]
+                    full["cast_timeline"], scored["cast_timeline"], strict=False
                 ):
                     assert {k: full_row[k] for k in shared} == {
                         k: scored_row[k] for k in shared

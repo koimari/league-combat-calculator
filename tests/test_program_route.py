@@ -53,7 +53,7 @@ class TestEachPolicyDeliversWhatItNames:
     """One assertion per delivery shape, against one context."""
 
     @pytest.mark.parametrize(
-        "policy,subjects",
+        ("policy", "subjects"),
         [
             (route.SelfOnly(), (0,)),
             (route.Holder(), (0,)),

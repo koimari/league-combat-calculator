@@ -18,13 +18,15 @@ Reference damage (wiki: https://wiki.leagueoflegends.com/en-us/Camille):
 import pytest
 
 from src.calculator.champions import (
+    camille,
     get_champion_options_meta,
+)
+from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.resistance import apply_resistance
-from src.calculator.champions import camille
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

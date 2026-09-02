@@ -14,7 +14,14 @@ from ..ability_spec import DamagePart
 from ..healing_helpers import ability_json, cast_slot_times, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
+from .inputs import bool_option
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    no_damage,
+    ranked_slot,
+    typed_damage,
+    with_item_on_hit_specs,
+)
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -24,7 +31,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
 
 
 def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -50,11 +56,8 @@ def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _kayle_e(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _kayle_e(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     passive = extract_named(ability, "Passive Damage", rank, ctx.stats, ctx.target)
     active = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     result = ability_on_hit_entry(
@@ -62,7 +65,7 @@ def _kayle_e(ctx: SlotCtx) -> dict[str, Any] | None:
         rank,
         "magic",
         {"name": "Starfire passive", "damage_per_hit": passive, "damage_type": "magic"},
-        extract_cooldown(ability, rank),
+        cooldown=extract_cooldown(ability, rank),
     )
     result["parts"] = (DamagePart("magic", active, basic_damage=True, time_offset=0.1),)
     result["total_raw"] = active
@@ -119,23 +122,7 @@ _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
 }
 
-_parse_abilities = parse_abilities
-
-
-def parse_abilities(*args, **kwargs):
-    """Parse abilities, then declare wiki-sourced item on-hit application."""
-    result = _parse_abilities(*args, **kwargs)
-    for slot, spec in _ON_HIT_SPECS.items():
-        entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
-        if entry is not None:
-            entry["applies_item_on_hits"] = dict(spec)
-    return result
-
-
-# The wrapper is the module's published parser, so it republishes the
-# wiring the inner parser holds — the contract proves declaration and
-# wiring are one dict off whichever function the module exports.
-parse_abilities.cc_kinds = _parse_abilities.cc_kinds
+parse_abilities = with_item_on_hit_specs(parse_abilities, _ON_HIT_SPECS)
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -158,7 +145,7 @@ def derive_self_healing(
     w_heal = extract_named(
         ability_json(champion_data, "W"), "Heal", w_rank, champion_stats
     )
-    healing = [
+    return [
         {
             "time": cast_time,
             "amount": w_heal,
@@ -168,7 +155,6 @@ def derive_self_healing(
         }
         for cast_time in cast_slot_times(cast_timeline, "W")
     ]
-    return healing
 
 
 SELF_HEALING_RULE = self_healing_rule("Kayle")(derive_self_healing)

@@ -44,6 +44,7 @@ them, and this module proves the weaker fact by source scan instead
 """
 
 import ast
+import contextlib
 import importlib
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -733,10 +734,8 @@ def relevance_failure(ref: TestRef, claim: Claim, ctx: ResolverContext) -> str |
     if node is not None:
         parametrization = node.parametrization
     haystacks = [parametrization.lower()]
-    try:
+    with contextlib.suppress(OSError):
         haystacks.append(ctx.read_source(module_path).lower())
-    except OSError:
-        pass
     if any(token.lower() in haystack for token in tokens for haystack in haystacks):
         return None
     return (
@@ -1296,7 +1295,7 @@ def resolve_effect_tag(tag: EffectTag, claim: Claim, ctx: ResolverContext) -> No
     they sit on the frontier naming H4 instead of carrying this member.
     """
     try:
-        known = getattr(ctx.importer(f"{PACKAGE}.item_effects"), "_KNOWN_EFFECT_TYPES")
+        known = ctx.importer(f"{PACKAGE}.item_effects")._KNOWN_EFFECT_TYPES
     except (ImportError, AttributeError) as missing:
         raise _unresolved(
             claim, tag, "item_effects._KNOWN_EFFECT_TYPES does not resolve"
@@ -1334,7 +1333,7 @@ def resolve_option_schema(
     of it.
     """
     try:
-        options = getattr(ctx.importer(f"{PACKAGE}.item_effects"), "ITEM_INPUT_OPTIONS")
+        options = ctx.importer(f"{PACKAGE}.item_effects").ITEM_INPUT_OPTIONS
     except (ImportError, AttributeError) as missing:
         raise _unresolved(
             claim, option, "item_effects.ITEM_INPUT_OPTIONS does not resolve"
@@ -1381,7 +1380,7 @@ def resolve_source_ref(
 
     The revision is what makes it reproducible, so url and revision are
     matched together: a url whose revision has moved on is a citation of a
-    page that no longer says what the claim says it says.  For an **item**
+    page that does not say what the claim says it says.  For an **item**
     claim the entry additionally has to be that item's — a review of some
     other item is not a review of this one.
     """
@@ -1560,7 +1559,9 @@ def imported_package_modules(module_text: str) -> frozenset[str]:
             )
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            if node.level or module != PACKAGE and not module.startswith(f"{PACKAGE}."):
+            if node.level or (
+                module != PACKAGE and not module.startswith(f"{PACKAGE}.")
+            ):
                 continue
             if module == PACKAGE:
                 found.update(alias.name for alias in node.names)

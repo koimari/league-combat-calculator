@@ -8,7 +8,8 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import bool_option, float_option, int_option
+from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -17,20 +18,12 @@ from .slotlib import (
     proc_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
-
-def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    """One Z-Drive Resonance detonation: the third stack consumes all
-    three to deal the sourced bonus magic damage (30 : 150 by level,
-    + 80% AP).  The detonation is priced per completed 3-stack cycle."""
-    return extract_named(
-        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-    )
-
-
+# One Z-Drive Resonance detonation: the third stack consumes all three to
+# deal the sourced bonus magic damage (30 : 150 by level, + 80% AP).  The
+# detonation is priced per completed 3-stack cycle.
 _resonance_proc = proc_damage(
-    _resonance,
+    level_row("Bonus Magic Damage"),
     "magic",
     count_option="p_procs",
     default_count=0,
@@ -39,11 +32,10 @@ _resonance_proc = proc_damage(
 )
 
 
-def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _timewinder(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     initial = extract_named(
         ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -67,16 +59,18 @@ def _timewinder(ctx: SlotCtx) -> dict[str, Any] | None:
     return return_entry
 
 
-def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _parallel_convergence(
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
+) -> dict[str, Any] | None:
     ready = bool(ctx.option("w_passive_ready"))
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason="Active W creates a sourced shield/stun zone; its passive on-hit is opt-in below 30% target health.",
+        reason=(
+            "Active W creates a sourced shield/stun zone; its passive on-hit is "
+            "opt-in below 30% target health."
+        ),
     )
     if entry is None:
         return None
@@ -102,48 +96,23 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
 _parallel_convergence.phase = ONHIT
 
 
-def _phase_dive(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        bonus,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", bonus),)
-    entry["empowers_next_auto"] = True
+_phase_dive = named_damage(
+    "Bonus Magic Damage",
+    "magic",
+    empowers_next_auto=True,
     # One empowered swing, landing with that swing.
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Empowers one basic attack; the blink and attack reset are state-only."
-    )
-    return entry
+    event_order_certified="single_hit",
+    detail="Empowers one basic attack; the blink and attack reset are state-only.",
+)
 
 
-def _chronobreak(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", damage, time_offset=0.5),)
-    entry["event_order_certified"] = "single arrival explosion"
-    entry["detail"] = (
-        "Explosion at the afterimage; the sourced self-heal/stasis is not outgoing damage."
-    )
-    return entry
+_chronobreak = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.5,
+    event_order_certified="single arrival explosion",
+    detail="Explosion at the afterimage; the sourced self-heal/stasis is not outgoing damage.",
+)
 
 
 SLOTS = {
@@ -182,10 +151,16 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Resonance stacks up to 3 (cap) and the third stack consumes all three to detonate; each p_procs entry is one completed 3-stack detonation (30 : 150 by level + 80% AP), priced because the rotation does not imply three prior applications.",
-    "Resonance's per-target 4-second stack window and monster 270% multiplier are boundary state; the detonation value is the champion-target sourced value.",
-    "Q's return is a separate authored event and W's passive is disabled unless the target-health gate is selected.",
-    "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the arrival explosion enters damage.",
+    "Resonance stacks up to 3 (cap) and the third stack consumes all three to "
+    "detonate; each p_procs entry is one completed 3-stack detonation (30 : 150 by "
+    "level + 80% AP), priced because the rotation does not imply three prior "
+    "applications.",
+    "Resonance's per-target 4-second stack window and monster 270% multiplier are "
+    "boundary state; the detonation value is the champion-target sourced value.",
+    "Q's return is a separate authored event and W's passive is disabled unless the "
+    "target-health gate is selected.",
+    "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the "
+    "arrival explosion enters damage.",
 ]
 
 SOURCES = load_champion_sources("Ekko")
@@ -193,17 +168,17 @@ SOURCES = load_champion_sources("Ekko")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Ekko self-healing events from its authored packet."""
     healing = []
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(
+    r_heal = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Minimum Heal",
         r_rank,

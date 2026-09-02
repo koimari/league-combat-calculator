@@ -24,6 +24,10 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # the tool venv's parsers; imported lazily where they run
+    from league_tools import WAD
 
 LO_APP = "/Applications/League of Legends.app"
 GAME_DIR = Path(LO_APP) / "Contents/LoL/Game"
@@ -35,26 +39,21 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = _REPO_ROOT / "data" / "bin"
 
 
-def _download(url: str, dest: Path, chunk=1 << 20) -> None:
+def _download(url: str, dest: Path, chunk: int = 1 << 20) -> None:
     import requests
 
     dest.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(url, stream=True, timeout=600) as r:
         r.raise_for_status()
-        with open(dest, "wb") as f:
-            for chunk_ in r.iter_content(chunk):
-                f.write(chunk_)
+        with Path(dest).open("wb") as f:
+            f.writelines(r.iter_content(chunk))
 
 
-def ensure_hash_tables() -> dict[int, str]:
+def ensure_hash_tables() -> None:
+    """Fetch the CommunityDragon hash files cdtb reads from disk."""
     if not HASH_FILE.exists():
         print(f"downloading {HASH_FILE.name} ...")
         _download(f"{HASH_URL_BASE}/hashes.game.txt", HASH_FILE)
-    table: dict[int, str] = {}
-    with open(HASH_FILE) as f:
-        for line in f:
-            h, _, path = line.partition(" ")
-            table[int(h, 16)] = path.rstrip("\n")
     for name in [
         "hashes.binhashes.txt",
         "hashes.binfields.txt",
@@ -65,16 +64,15 @@ def ensure_hash_tables() -> dict[int, str]:
         if not dest.exists():
             print(f"downloading {name} ...")
             _download(f"{HASH_URL_BASE}/{name}", dest)
-    return table
 
 
-def open_wad(path: Path):
+def open_wad(path: Path) -> WAD:
     from league_tools import WAD
 
     return WAD(str(path))
 
 
-def extract_path(wad, table, path: str) -> bytes | None:
+def extract_path(wad: WAD, path: str) -> bytes | None:
     h = wad.get_hash(path)
     for sec in wad.files:
         if sec.path_hash == h:
@@ -84,9 +82,10 @@ def extract_path(wad, table, path: str) -> bytes | None:
     return None
 
 
-def parse_bin(data: bytes, name: str):
-    from cdtb.binfile import BinFile
+def parse_bin(data: bytes) -> dict[str, Any]:
     import io
+
+    from cdtb.binfile import BinFile
 
     bf = BinFile(io.BytesIO(data))
     return bf.to_serializable()
@@ -100,18 +99,18 @@ def champion_wads():
         yield f
 
 
-def decompose_champions(table, out: Path) -> list[str]:
+def decompose_champions(out: Path) -> list[str]:
 
     done = []
     for wad_path in champion_wads():
         name = wad_path.stem.replace(".wad", "")
         target = f"data/characters/{name.lower()}/{name.lower()}.bin"
         w = open_wad(wad_path)
-        data = extract_path(w, table, target)
+        data = extract_path(w, target)
         if data is None:
             # try without lowercase
             continue
-        rec = parse_bin(data, name)
+        rec = parse_bin(data)
         dest = out / "characters" / f"{name.lower()}.bin.json"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(json.dumps(rec, default=str, indent=1))
@@ -119,11 +118,11 @@ def decompose_champions(table, out: Path) -> list[str]:
     return done
 
 
-def decompose_items(table, out: Path):
+def decompose_items(out: Path) -> tuple[Path, int, int, str]:
     """Item data: local data/items/items.bin if present, else the pinned
     16.15 CommunityDragon dump (identical client version 16.15.8024387)."""
     w = open_wad(FINAL_DIR / "Global.wad.client")
-    data = extract_path(w, table, "data/items/items.bin")
+    data = extract_path(w, "data/items/items.bin")
     source = "local"
     if data is None:
         import requests
@@ -138,13 +137,14 @@ def decompose_items(table, out: Path):
         if r.status_code != 200:
             raise RuntimeError(
                 "items.bin unavailable locally and 16.15 CDN dump 404; "
-                "item decomposition will use per-item Lua scripts (data/items/<id>.lua) in a later step"
+                "item decomposition will use per-item Lua scripts "
+                "(data/items/<id>.lua) in a later step"
             )
         data = r.content
         source = "cdragon-16.15"
     # try parse as bin first, else treat as pre-parsed json
     try:
-        rec = parse_bin(data, "items")
+        rec = parse_bin(data)
     except Exception:
         rec = json.loads(data)
     dest = out / "items" / "items.bin.json"
@@ -153,17 +153,17 @@ def decompose_items(table, out: Path):
     return dest, len(data), len(json.dumps(rec, default=str)), source
 
 
-def decompose_map11(table, out: Path):
+def decompose_map11(out: Path) -> tuple[Path | None, int]:
 
     map_wads = list((FINAL_DIR / "Maps/Shipping").glob("*.wad.client"))
     for mw in map_wads:
         try:
             w = open_wad(mw)
-        except Exception:
+        except Exception:  # noqa: S112 - skip an unreadable wad
             continue
-        data = extract_path(w, table, "data/maps/map11/map11.bin")
+        data = extract_path(w, "data/maps/map11/map11.bin")
         if data:
-            rec = parse_bin(data, "map11")
+            rec = parse_bin(data)
             dest = out / "maps" / "map11.bin.json"
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text(json.dumps(rec, default=str, indent=1))
@@ -182,13 +182,13 @@ def main():
     if not any([args.champions, args.items, args.map11]):
         ap.error("choose at least one of --champions/--items/--map11")
 
-    table = ensure_hash_tables()
+    ensure_hash_tables()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     receipt: dict = {"source": "local client 16.15.8024387", "files": {}}
 
     if args.items:
-        dest, raw, parsed, source = decompose_items(table, out)
+        dest, raw, parsed, source = decompose_items(out)
         receipt["files"]["items"] = {
             "path": str(dest),
             "raw_bytes": raw,
@@ -198,12 +198,12 @@ def main():
         print(f"items -> {dest} ({raw} raw bytes)")
 
     if args.champions:
-        done = decompose_champions(table, out)
+        done = decompose_champions(out)
         receipt["files"]["champions"] = {"count": len(done), "sample": done[:10]}
         print(f"champions parsed: {len(done)}")
 
     if args.map11:
-        dest, raw = decompose_map11(table, out)
+        dest, raw = decompose_map11(out)
         if dest:
             receipt["files"]["map11"] = {"path": str(dest), "raw_bytes": raw}
             print(f"map11 -> {dest}")

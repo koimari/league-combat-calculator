@@ -33,8 +33,6 @@ import copy
 import json
 from pathlib import Path
 
-import pytest
-
 from src.calculator.ability_atoms import AbilityAtomQuery, required_ability_atom
 from src.calculator.atomizer_domains import atomize_abilities
 from src.calculator.champions import parse_champion_abilities
@@ -105,14 +103,15 @@ def test_catalog_sequence_row_matches_live_and_preserves_both_values():
     ]
     assert len(catalog_matches) == 1, catalog_matches
     assert catalog_matches[0] == live
-    assert 0.5 in catalog_matches[0]["values"] and 0.3 in catalog_matches[0]["values"]
+    assert 0.5 in catalog_matches[0]["values"]
+    assert 0.3 in catalog_matches[0]["values"]
 
 
 def test_scalar_row_as_observed_today():
     # P3-3J: the scalar is emitted from the FIRST control-bearing effect of
     # the entry only, so its evidence is exactly the one receipt from the
     # effect that sourced its value (0.5 root); effects[1]'s different
-    # durations no longer over-claim this row.
+    # durations do not over-claim this row.
     row = _scalar_row(_r_timing_rows(_ksante()))
     assert row["values"] == [0.5]
     assert row["units"] == ["s"]

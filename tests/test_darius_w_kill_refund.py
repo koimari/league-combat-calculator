@@ -94,12 +94,12 @@ import pytest
 
 from src import app as app_module
 from src.calculator.atomizer_domains import atomize_abilities
+from src.calculator.champions import darius as darius_module
 from src.calculator.champions import (
     get_champion_option_rotation,
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions import darius as darius_module
 from src.calculator.damage import FightConfig, _empower_hits, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
@@ -203,18 +203,18 @@ def _fight(
     **params,
 ) -> dict:
     """Pipeline fight at the reference build with optional kill assertion."""
-    base = dict(
-        target_health=2500.0,
-        target_bonus_health=0.0,
-        target_armor=100.0,
-        target_magic_resistance=50.0,
-        fight_duration_seconds=duration,
-        auto_attack_uptime=auto_attack_uptime,
-        one_rotation=one_rotation,
-        include_actives=True,
-        deterministic=True,
-        champion_options=options or {},
-    )
+    base = {
+        "target_health": 2500.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 100.0,
+        "target_magic_resistance": 50.0,
+        "fight_duration_seconds": duration,
+        "auto_attack_uptime": auto_attack_uptime,
+        "one_rotation": one_rotation,
+        "include_actives": True,
+        "deterministic": True,
+        "champion_options": options or {},
+    }
     base.update(params)
     if cast_order is not None:
         base["cast_order"] = cast_order
@@ -371,10 +371,8 @@ class TestSourceEvidence:
         live_w = list(atomize_abilities(W_DATA_KEY, get_champion(W_DATA_KEY))["W"])
         assert len(catalog_w) == len(live_w) == len(W_ATOMS) == 4
         for row in catalog_w + live_w:
-            assert (
-                not row["source"].endswith("effects[1]")
-                and "effects[1]" not in row["source"]
-            ), row["source"]
+            assert not row["source"].endswith("effects[1]"), row["source"]
+            assert "effects[1]" not in row["source"], row["source"]
             assert "effects[2]" not in row["source"], row["source"]
         by_id = {row["atom_id"]: row for row in catalog_w}
         assert (
@@ -403,13 +401,12 @@ class TestSourceEvidence:
         built for the exact cached champion name."""
         assert darius_module.SLOTS["W"] is darius_module._crippling_strike
         assert darius_module.parse_abilities is not None
-        assert "Darius" in darius_module.parse_abilities.__module__ or True
 
     def test_module_options_and_assumptions_declare_the_current_state(self) -> None:
         """Post-contract declaration: the three options (the existing two
         plus ``w_kill_assertion``) and the replaced assumption line — the
         assertion contract with the jungle-plant exclusion (the S5
-        receipt) where the not-modeled line used to be."""
+        receipt) in place of any not-modeled line."""
         meta = get_champion_options_meta(CHAMPION)
         assert [option["key"] for option in meta["options"]] == [
             "r_execute_recast",
@@ -438,7 +435,7 @@ class TestEmpoweredAutoBaseline:
         """Rank-5 bonus 0.6 x 262.325 = 157.395; with no auto stream the
         row carries the consumed basic attack (the Blitzcrank/Caitlyn
         rule) — the swing damage is the bonus plus the base."""
-        stats, abilities = _parse()
+        _stats, abilities = _parse()
         w = abilities["W"]
         assert w["rank"] == 5
         assert w["cooldown"] == pytest.approx(W_COOLDOWN)
@@ -574,7 +571,7 @@ class TestKillPath:
         refunds = _refunds(result)
         spends = _w_spends(result)
         assert len(refunds) == len(spends) == 4
-        for refund, spend in zip(refunds, spends):
+        for refund, spend in zip(refunds, spends, strict=False):
             assert refund["amount"] == pytest.approx(W_COST)
             assert refund["kind"] == "mana"
             assert refund["tier"] == pytest.approx(TIER_RESTORE)
@@ -644,8 +641,10 @@ class TestExcludedTargets:
         Structures") but the notes never exclude them from the kill rule —
         there is no structure exclusion in the source."""
         notes = get_champion(W_DATA_KEY)["abilities"]["W"][0]["notes"]
-        assert "The cooldown reduction and mana refund will not trigger when "
-        "killing jungle plants." in notes
+        assert (
+            "The cooldown reduction and mana refund will not trigger when "
+            "killing jungle plants."
+        ) in notes
         assert "jungle plants" in notes
         assert "structure" not in notes.lower()
 

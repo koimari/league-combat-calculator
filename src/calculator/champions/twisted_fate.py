@@ -23,10 +23,11 @@ hardcoded.
 
 from typing import Any
 
-from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
 from ..ability_spec import DamagePart
+from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import int_option
+from .module_contract import coverage
+from .module_helpers import no_damage_parser
 from .slotlib import (
     damage_entry,
     extract_cooldown,
@@ -35,8 +36,7 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
-from .inputs import int_option
-from .module_contract import coverage
+from .source_receipts import load_champion_sources
 
 # Pick a Card's three card branches, in the cycle order the game presents
 # (gold -> red -> blue).  The wiki JSON stores the "Magic Damage" rows as

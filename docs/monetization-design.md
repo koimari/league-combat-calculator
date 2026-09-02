@@ -179,7 +179,7 @@ These are hard rules for any aggregation, not suggestions:
 - All of the above are additive to the existing `db.py` models; no change
   to the engine or the calculation API.
 - Rate limits: keep receipts on the `calculate` budget (§P7) so Pro cannot
-  be used to farm engine time.
+  be a way to farm engine time.
 
 ## 8. Metrics & rollout
 

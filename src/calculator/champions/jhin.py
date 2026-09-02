@@ -7,7 +7,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, float_option, int_option
+from .module_helpers import at_level, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -18,7 +19,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Whisper's final round "always critically strikes ... and deals bonus
@@ -26,14 +26,6 @@ from .inputs import bool_option, float_option, int_option
 # target's missing health" (level brackets 1 / 6 / 11, the wiki's
 # standard three-breakpoint pattern).
 _FOURTH_SHOT_MISSING_RATIOS = ((11, 0.25), (6, 0.20), (1, 0.15))
-
-
-def _fourth_shot_missing_ratio(level: int) -> float:
-    """The final round's missing-health ratio: 15/20/25% at levels 1/6/11."""
-    for min_level, ratio in _FOURTH_SHOT_MISSING_RATIOS:
-        if level >= min_level:
-            return ratio
-    return _FOURTH_SHOT_MISSING_RATIOS[-1][1]
 
 
 def _final_round_active(ctx: SlotCtx) -> bool:
@@ -82,7 +74,7 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
     if entry is not None:
         entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
         if _final_round_active(ctx):
-            missing = _fourth_shot_missing_ratio(ctx.level)
+            missing = at_level(_FOURTH_SHOT_MISSING_RATIOS, ctx.level)
             entry["parts"] = (
                 DamagePart(
                     "physical",
@@ -120,7 +112,9 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     missing_ratio = min(max(float(ctx.option("p_missing_health")), 0.0), 1.0)
-    per_round = _fourth_shot_missing_ratio(ctx.level) * target_max * missing_ratio
+    per_round = (
+        at_level(_FOURTH_SHOT_MISSING_RATIOS, ctx.level) * target_max * missing_ratio
+    )
     if per_round <= 0.0:
         return None
     count = _final_round_count(ctx)
@@ -134,17 +128,16 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
         "proc_count": count,
         "detail": (
             f"{count} final round(s) x {per_round:.2f} bonus physical damage "
-            f"({_fourth_shot_missing_ratio(ctx.level):.0%} of target missing "
+            f"({at_level(_FOURTH_SHOT_MISSING_RATIOS, ctx.level):.0%} of target missing "
             "health at the declared missing-health ratio)."
         ),
     }
 
 
-def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _dancing_grenade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     bounces = min(max(int(ctx.option("q_bounces")), 1), 4)
     deaths = min(max(int(ctx.option("q_target_deaths")), 0), 3)
     value = extract_named(
@@ -168,7 +161,10 @@ def _dancing_grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _captive_audience(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the summoned Lotus Trap's detonation damage.
 
     One trap detonates for the full "Magic Damage" row (20-260 + 120%
@@ -178,10 +174,6 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
     (default 1, max 2 — the charge cap) prices the first trap full and
     each further trap at the reduced row.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     traps = min(max(int(ctx.option("e_traps")), 1), 2)
     full = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
@@ -208,11 +200,10 @@ def _captive_audience(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _curtain_call(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _curtain_call(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     shots = min(max(int(ctx.option("r_shots")), 1), 4)
     minimum = extract_named(
         ability, "Minimum Physical Damage per Bullet", rank, ctx.stats, ctx.target

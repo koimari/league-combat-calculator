@@ -29,11 +29,11 @@ from src.calculator.program.build import (
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
-from src.calculator.stats import calculate_total_stats
 from src.calculator.program.compile import WalkCompiler
+from src.calculator.program.views import ViewTag
+from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.actions import EVENT_SLOTS
 from src.calculator.trigger_stream import CAPABILITIES, Authority, Engine
-from src.calculator.program.views import ViewTag
 
 HOLDER = "Jax"
 ALLY = "Lulu"
@@ -254,11 +254,11 @@ def _compile_engine_result():
         "main",
         0,
         "enemy:Aatrox",
-        1,
-        {},
-        8.0,
-        {},
-        [],
+        defender_i=1,
+        grievous_by_dtype={},
+        duration=8.0,
+        heal_dedup={},
+        id_strings=[],
     )
     return compiler.actions
 
@@ -359,7 +359,8 @@ def test_the_retired_shred_family_has_no_preview_to_double_count() -> None:
         assert walk.engine is Engine.WALK, partner
         assert walk.view_tags[Engine.WALK] is ViewTag.APPLIED, partner
         assert walk.pair_of == mechanic, partner
-        assert isinstance(walk.packet_source, str) and walk.packet_source, partner
+        assert isinstance(walk.packet_source, str), partner
+        assert walk.packet_source, partner
 
 
 # ---------------------------------------------------------------------------
@@ -421,8 +422,8 @@ def test_a_composed_fight_runs_the_reprice_half_of_the_walk_alone():
         composed["breakdown"][BURN_ROW]["total_damage"]
         == solo["breakdown"][BURN_ROW]["total_damage"]
     )
-    # More than the row leaves: the holder's own whole-total amp no longer
-    # levies a share on a number the composition throws away.
+    # More than the row leaves: the holder's own whole-total amp levies no
+    # share on a number the composition throws away.
     dropped = solo["breakdown"][SHADOWFLAME_ROW]["total_damage"]
     assert solo["total_damage"] - composed["total_damage"] > dropped
 

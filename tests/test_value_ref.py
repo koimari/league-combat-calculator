@@ -13,12 +13,12 @@ import pytest
 
 from src.calculator import item_effects, rune_effects
 from src.calculator.value_ref import (
+    VALUE_REGISTRIES,
     Const,
     DerivedValueRef,
     LevelValueRef,
     SourceReceipt,
     UnsourcedDeclarationError,
-    VALUE_REGISTRIES,
     ValueRef,
     ValueRefError,
     receipt_for,
@@ -29,8 +29,9 @@ from src.calculator.value_ref import (
 
 def test_the_registry_union_is_three_members() -> None:
     """D-46: three registries own runtime numbers and a fourth is Phase 1's."""
-    assert VALUE_REGISTRIES == frozenset(
-        {"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"}
+    assert (
+        frozenset({"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"})
+        == VALUE_REGISTRIES
     )
     assert "ITEM_INPUT_OPTIONS" not in VALUE_REGISTRIES
 

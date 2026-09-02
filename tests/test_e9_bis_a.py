@@ -114,7 +114,7 @@ def _bis(champion: str, *, role: str) -> dict:
 
 
 @pytest.mark.parametrize("champion", CHAMPIONS)
-@pytest.mark.parametrize("one_rotation", (False, True))
+@pytest.mark.parametrize("one_rotation", [False, True])
 def test_calculate_timeline_coverage_is_complete(champion, one_rotation):
     """One-rotation and time-based fights both certify every damaging row."""
     data = _calculate(champion, one_rotation=one_rotation)
@@ -122,7 +122,7 @@ def test_calculate_timeline_coverage_is_complete(champion, one_rotation):
     assert coverage["complete"] is True, coverage
     assert coverage["certification"] == "event_order_certified", coverage
     assert coverage["coarse_sources"] == [], coverage
-    # The exact source that previously kept every build partial must now
+    # The exact source that keeps every build partial while coarse must
     # carry authored event order.
     assert PREVIOUSLY_COARSE[champion].issubset(
         set(coverage["exact_sources"])
@@ -139,7 +139,7 @@ def test_calculate_certifies_with_the_auto_ledger_enabled(champion):
 
 
 @pytest.mark.parametrize("champion", CHAMPIONS)
-@pytest.mark.parametrize("role", ("mid", "bottom"))
+@pytest.mark.parametrize("role", ["mid", "bottom"])
 def test_bis_certifies_candidates(champion, role):
     """BIS must certify a positive candidate count (was 0 for all five)."""
     body = _bis(champion, role=role)

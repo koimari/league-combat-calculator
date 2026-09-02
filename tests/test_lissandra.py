@@ -2,10 +2,10 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import lissandra
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 
 def test_lissandra_full_rotation_uses_each_direct_hit(lissandra_data, parse_at):

@@ -151,10 +151,10 @@ def coverage_of_a_whole_response(response: Mapping) -> dict[str, set[str]]:
 # The three payloads, checked against live runs rather than against fixtures
 # ---------------------------------------------------------------------------
 
-import importlib.util  # noqa: E402
-import json  # noqa: E402
-import sys  # noqa: E402
-from pathlib import Path  # noqa: E402
+import importlib.util
+import json
+import sys
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -422,7 +422,8 @@ class TestARetaggedFieldFailsTheRankingSurfaces:
         """The positive control: the refusal is the tag, not the mechanism."""
         score, metric, components, _ = self._scored(_combat())
         assert isinstance(score, float)
-        assert metric and components
+        assert metric
+        assert components
 
     def test_one_retagged_leaf_refuses_the_whole_ranking(self) -> None:
         """A preview in the map, and BIS declines to name a winner."""
@@ -491,10 +492,10 @@ class TestTheTwoScoreServingPayloads:
     class pins is the other half of umbrella criterion 1: the numbers they
     publish carry dispositions too, or the two largest numeric surfaces in the
     calculator serve undispositioned numbers while every other criterion
-    passes.  It is the reverse direction that was missing -- the old version
-    asserted two named leaves were *present* in the map and never asked what
-    else the payload held, which is how 14 959 of BIS's 18 807 numbers stayed
-    unnamed, the objective's own four score components among them.
+    passes.  It is the reverse direction that was missing -- asserting two
+    named leaves are *present* in the map never asks what else the payload
+    holds, which is how 14 959 of BIS's 18 807 numbers stayed unnamed, the
+    objective's own four score components among them.
     """
 
     def test_the_bis_payload_names_every_number_it_publishes(self) -> None:

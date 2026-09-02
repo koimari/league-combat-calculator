@@ -115,12 +115,16 @@ def _expected_missing_health_heals(
     and healing at 1.0).  Returns (time, expected_raw_amount) pairs.
     """
     rows: list[tuple[float, int, object]] = []
-    for event in combat.get("events", []):
-        if event.get("target") == "main" and float(event.get("damage", 0.0) or 0.0) > 0:
-            rows.append((float(event["time"]), 0, float(event["damage"])))
-    for heal in combat.get("healing_events", []):
-        if heal.get("attacker") == "main":
-            rows.append((float(heal["time"]), 1, heal))
+    rows.extend(
+        (float(event["time"]), 0, float(event["damage"]))
+        for event in combat.get("events", [])
+        if event.get("target") == "main" and float(event.get("damage", 0.0) or 0.0) > 0
+    )
+    rows.extend(
+        (float(heal["time"]), 1, heal)
+        for heal in combat.get("healing_events", [])
+        if heal.get("attacker") == "main"
+    )
     rows.sort(key=lambda row: (row[0], row[1]))
 
     main = next(
@@ -199,7 +203,7 @@ def test_lissandra_frozen_tomb_heals_ticks_scaled_by_missing_health():
         assert minimum <= tick["raw_amount"] <= maximum
     expected = _expected_missing_health_heals(combat, "Frozen Tomb", minimum, maximum)
     assert len(expected) == 10
-    for (time, amount), tick in zip(expected, ticks):
+    for (_time, amount), tick in zip(expected, ticks, strict=False):
         assert tick["raw_amount"] == pytest.approx(amount, abs=0.1)
 
 
@@ -214,7 +218,7 @@ def test_nidalee_primal_surge_heals_scaled_by_missing_health():
         assert minimum <= heal["raw_amount"] <= maximum
     expected = _expected_missing_health_heals(combat, "Primal Surge", minimum, maximum)
     assert len(expected) == len(heals)
-    for (time, amount), heal in zip(expected, heals):
+    for (_time, amount), heal in zip(expected, heals, strict=False):
         assert heal["raw_amount"] == pytest.approx(amount, abs=0.1)
 
 
@@ -265,7 +269,7 @@ def test_sylas_kingslayer_heals_scaled_by_missing_health():
         assert minimum <= heal["raw_amount"] <= maximum
     expected = _expected_missing_health_heals(combat, "Kingslayer", minimum, maximum)
     assert len(expected) == len(heals)
-    for (time, amount), heal in zip(expected, heals):
+    for (_time, amount), heal in zip(expected, heals, strict=False):
         assert heal["raw_amount"] == pytest.approx(amount, abs=0.1)
 
 
@@ -280,7 +284,7 @@ def test_lissandra_and_sylas_heals_stay_within_ap_scaled_bounds():
     for tick in ticks:
         assert liss_min <= tick["raw_amount"] <= liss_max
     expected = _expected_missing_health_heals(combat, "Frozen Tomb", liss_min, liss_max)
-    for (time, amount), tick in zip(expected, ticks):
+    for (_time, amount), tick in zip(expected, ticks, strict=False):
         assert tick["raw_amount"] == pytest.approx(amount, abs=0.1)
 
     sylas_min, sylas_max = _sourced_min_max("Sylas", "W", 5, [_RABADONS])
@@ -294,5 +298,5 @@ def test_lissandra_and_sylas_heals_stay_within_ap_scaled_bounds():
     expected = _expected_missing_health_heals(
         combat, "Kingslayer", sylas_min, sylas_max
     )
-    for (time, amount), heal in zip(expected, heals):
+    for (_time, amount), heal in zip(expected, heals, strict=False):
         assert heal["raw_amount"] == pytest.approx(amount, abs=0.1)

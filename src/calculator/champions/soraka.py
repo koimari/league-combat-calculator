@@ -34,7 +34,9 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -45,15 +47,11 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
 
 
-def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _equinox(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """E: initial hit plus the optional equal-damage eruption."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     second_hit = bool(ctx.option("e_second_hit"))
@@ -191,23 +189,21 @@ MODULE_COVERAGE = coverage(no_damage="P")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Soraka self-healing events from its authored packet."""
     healing = []
     ability = _healing.ability_json(champion_data, "Q")
     rank = _healing.parsed_rank(ability_damages, "Q")
-    per_tick = _healing.extract_named(
-        ability, "Heal per Tick", rank, champion_stats, {}
-    )
-    total = _healing.extract_named(ability, "Total Heal", rank, champion_stats, {})
+    per_tick = extract_named(ability, "Heal per Tick", rank, champion_stats, {})
+    total = extract_named(ability, "Total Heal", rank, champion_stats, {})
     tick_count = (
-        max(1, min(100, int(round(total / per_tick))))
+        max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0
         else 0
     )
@@ -215,16 +211,16 @@ def derive_self_healing(
         if _healing.event_source(event) != "Q" or tick_count <= 0:
             continue
         trigger = _healing.trigger_fields(event)
-        for index in range(1, tick_count + 1):
-            healing.append(
-                {
-                    "time": float(event.get("time", 0.0)) + index * 0.2,
-                    "amount": float(per_tick),
-                    "source": "Starcall · Rejuvenation",
-                    "kind": "champion_ability",
-                    **trigger,
-                }
-            )
+        healing.extend(
+            {
+                "time": float(event.get("time", 0.0)) + index * 0.2,
+                "amount": float(per_tick),
+                "source": "Starcall · Rejuvenation",
+                "kind": "champion_ability",
+                **trigger,
+            }
+            for index in range(1, tick_count + 1)
+        )
     return healing
 
 

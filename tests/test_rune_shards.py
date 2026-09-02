@@ -60,7 +60,7 @@ def _description(row: int, name: str) -> str:
 
 class TestEachShardCompilesFromItsCachedEntry:
     @pytest.mark.parametrize(
-        "row,name,stat,amount,quoted",
+        ("row", "name", "stat", "amount", "quoted"),
         [
             (1, "Adaptive Force", rune_effects.RuneStat.ADAPTIVE_FORCE, 9.0, "9"),
             (
@@ -89,7 +89,7 @@ class TestEachShardCompilesFromItsCachedEntry:
 
     @pytest.mark.parametrize("row", [2, 3])
     @pytest.mark.parametrize(
-        "level,health", [(1, 10.0), (9, 90.0), (18, 180.0), (20, 200.0)]
+        ("level", "health"), [(1, 10.0), (9, 90.0), (18, 180.0), (20, 200.0)]
     )
     def test_health_scaling_reads_its_level_table(self, row, level, health):
         """``{{pp|10 * x for 20}}``: 10 bonus health per level, 200 at the cap."""
@@ -269,7 +269,7 @@ class TestTheShardsMoveTheFightTheyAreOn:
 
 class TestThePageRulesTheShardsObey:
     @pytest.mark.parametrize(
-        "shard_list,rule",
+        ("shard_list", "rule"),
         [
             (["Health"], "names shard row 1"),
             (["Adaptive Force", "Attack Speed"], "names shard row 2"),

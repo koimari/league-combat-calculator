@@ -30,19 +30,19 @@ hardcoded.
 
 from typing import Any
 
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
+from .module_contract import coverage
+from .module_helpers import no_damage_parser, ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
     extract_value,
     simple_damage,
 )
-from ..ability_spec import DamagePart
-from .module_contract import coverage
+from .source_receipts import load_champion_sources
 
 # Death Mark detonates at the binary RDeathMarkDuration; the wiki prose
 # corroborates ("renders the target Marked for Death for 3 seconds",
@@ -51,12 +51,11 @@ _ZED_R_SPELL = spell_object("Zed", "ZedR")
 _DEATH_MARK_DETONATION_DELAY = data_value(_ZED_R_SPELL, "RDeathMarkDuration")
 
 
-def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _death_mark(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: 100% AD + 25/40/55% of the mark's stored pre-mitigation damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     # Leveling row "Physical Damage": modifier 0 = 100 (% AD), modifier 1
     # = 25 / 40 / 55 (% of damage stored).  Read each modifier's raw value
@@ -79,7 +78,7 @@ def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
     stored_damage = (stored_percent / 100.0) * stored_pool
 
     total = ad_damage + stored_damage
-    entry = {
+    return {
         "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
@@ -98,7 +97,6 @@ def _death_mark(ctx: SlotCtx) -> dict[str, Any] | None:
             "3s after the mark"
         ),
     }
-    return entry
 
 
 ASSUMPTIONS = [
@@ -170,7 +168,7 @@ _SHADOW_MIMICS_Q_AND_E = (
 # detonation offset. Neither direction is a dependency both surfaces
 # would agree to, and a declaration that contradicts one of them is worse
 # than the seed it would retire.
-CAST_DEPENDENCIES = (
+CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
     CastDependency(
         slot="Q",
         requires="W",

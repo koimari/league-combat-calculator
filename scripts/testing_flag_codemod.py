@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import ast
 import re
+from collections.abc import Sequence
 from pathlib import Path
 
 ASSIGNMENT = re.compile(r"^(\s*)[\w.]*\bconfig\[[\"']TESTING[\"']\]\s*=\s*True\s*$")
@@ -41,7 +42,7 @@ def removable(source: str) -> tuple[list[int], list[int]]:
     return deletable, refused
 
 
-def _has_a_sibling(lines: list[str], number: int, match: re.Match) -> bool:
+def _has_a_sibling(lines: Sequence[str], number: int, match: re.Match) -> bool:
     """Whether another statement shares this line's block."""
     indent = len(match.group(1))
     for offset in (-1, 1):

@@ -9,8 +9,9 @@ final loadouts through the existing fight pipeline.
 from __future__ import annotations
 
 import collections
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
@@ -98,7 +99,7 @@ def combine_cost(item: dict[str, Any]) -> int:
     return combined
 
 
-def recipe_demand(item: dict[str, Any]) -> dict[int, int]:
+def recipe_demand(item: Mapping[str, Any]) -> dict[int, int]:
     """Return the direct recipe demand as {item_id: count} (multiset)."""
     demand: dict[int, int] = collections.Counter()
     for component_id in item.get("buildsFrom", []) or []:
@@ -106,7 +107,7 @@ def recipe_demand(item: dict[str, Any]) -> dict[int, int]:
     return dict(demand)
 
 
-def is_transformation_item(item: dict[str, Any]) -> bool:
+def is_transformation_item(item: Mapping[str, Any]) -> bool:
     """True for an item reachable only by a ``specialRecipe`` transition."""
     return bool(int(item.get("specialRecipe", 0) or 0))
 
@@ -122,9 +123,7 @@ def is_purchasable(item: dict[str, Any], include_starters: bool = False) -> bool
     ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
     if not ranks & _PURCHASABLE_RANKS:
         return False
-    if STARTER in ranks and not include_starters:
-        return False
-    return True
+    return not (STARTER in ranks and not include_starters)
 
 
 def _stackable_epics() -> frozenset[str]:
@@ -148,7 +147,7 @@ def _stackable_epics() -> frozenset[str]:
     )
 
 
-def is_stackable(item: dict[str, Any]) -> bool:
+def is_stackable(item: Mapping[str, Any]) -> bool:
     """Return whether duplicate copies of the item are legal mid-inventory."""
     ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
     if ranks & _STACKABLE_RANKS:
@@ -231,7 +230,7 @@ def _combinable_recipe_rows(
 
 
 def combine_candidates(
-    inventory: dict[int, int],
+    inventory: Mapping[int, int],
     by_id: dict[int, dict[str, Any]],
 ) -> list[tuple[int, dict[int, int], int]]:
     """Return every recipe currently satisfiable by the inventory multiset.
@@ -256,11 +255,10 @@ def apply_purchase_plan(
     owned_boots: dict[str, Any] | None,
     buys: Iterable[dict[str, Any]],
     gold_on_hand: int,
+    *,
     sell_items: Iterable[dict[str, Any]] | None = None,
     combine_items: Iterable[dict[str, Any]] | None = None,
     combine_policy: str = "shop_combine",
-    role: str = "",
-    role_quest_complete: bool = False,
     flag_incomplete_combine: bool = True,
 ) -> PurchasePlan:
     """Apply a real-shop plan to the owned inventory and return the priced result.

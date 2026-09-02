@@ -11,16 +11,19 @@ Pinned companion suite: tests/test_delivery_interaction_eligibility.py
 (the RLM-2 acceptance matrix, owned by the test-matrix child).
 """
 
+from operator import itemgetter
+
 import pytest
 
 from src.app import app
 from src.calculator.delivery_eligibility import (
     DefenseEligibility,
     DeliveryAcceptance,
-    DefenseWindow,
     SourceSelection,
 )
 from tests.survival_probe import survival_of
+
+_BY_TIME = itemgetter("time")
 
 
 def _calculate(payload: dict) -> dict:
@@ -76,7 +79,7 @@ class TestNewReceiptFields:
         )
         q_events = sorted(
             _events(combat, target="enemy:Braum", source="Q"),
-            key=lambda event: event["time"],
+            key=_BY_TIME,
         )
         first, later = q_events[0], q_events[1]
         assert first["damage"] == pytest.approx(0.0)
@@ -193,7 +196,7 @@ class TestEventIdSelection:
         )
         q_events = sorted(
             _events(combat, target="enemy:Braum", source="Q"),
-            key=lambda event: event["time"],
+            key=_BY_TIME,
         )
         assert [event["event_id"] for event in q_events] == [
             "main:enemy:Braum:1",
@@ -234,7 +237,7 @@ class TestEventIdSelection:
         )
         q_events = sorted(
             _events(combat, target="enemy:Yasuo", source="Q"),
-            key=lambda event: event["time"],
+            key=_BY_TIME,
         )
         first, selected = q_events
         assert first["damage"] > 0.0
@@ -353,7 +356,7 @@ class TestWindowBoundaries:
         )
         q_events = sorted(
             _events(combat, target="enemy:Braum", source="Q"),
-            key=lambda event: event["time"],
+            key=_BY_TIME,
         )
         assert q_events[0]["projectile_defense"]["mode"] == "full_block"
 
@@ -378,7 +381,7 @@ class TestWindowBoundaries:
         )
         q_events = sorted(
             _events(combat, target="enemy:Braum", source="Q"),
-            key=lambda event: event["time"],
+            key=_BY_TIME,
         )
         # Q at 0.25 is exactly at the end (exclusive) -> passes.
         assert q_events[0]["damage"] > 0.0

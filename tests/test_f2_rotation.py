@@ -16,8 +16,8 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
 """
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import pytest
 
@@ -373,7 +373,8 @@ class TestCastOrderOverrides:
     def test_resolve_cast_order_uses_table_then_default(self) -> None:
         order, rule = resolve_cast_order("Cassiopeia", {})
         assert order == ["Q", "E", "W", "R"]
-        assert rule is not None and rule.champion == "Cassiopeia"
+        assert rule is not None
+        assert rule.champion == "Cassiopeia"
         # A champion with no combo signal keeps the engine default (with Q2).
         order, rule = resolve_cast_order("NoSuchChampion", {})
         assert rule is None
@@ -388,9 +389,9 @@ class TestCastOrderOverrides:
 class TestDerivedPathRotations:
     """Champions whose order the derivation computes, not a hand seed.
 
-    Every row here used to live in ``_OVERRIDE_CHAMPIONS``.  A retirement
+    Every row here is a retired ``_OVERRIDE_CHAMPIONS`` seed.  A retirement
     moves its assertions rather than deleting them: the same order, the
-    same mechanic, now asserted on the path that computes it.  Syndra's
+    same mechanic, asserted on the path that computes it.  Syndra's
     row additionally demands the declared kind and the wiki revision in
     the rationale, which a hand seed's prose never carried; the others
     were seeds the derivation already reproduced, held only until a
@@ -545,7 +546,8 @@ class TestDerivedPathRotations:
             _parse_for(champion_by_name[champion]),
             champion_data=champion_by_name[champion],
         )
-        assert rule is not None and rule.derived is True
+        assert rule is not None
+        assert rule.derived is True
         assert rule.override_reason is None
         assert champion not in CAST_ORDER_OVERRIDES
 
@@ -716,9 +718,9 @@ class TestDpsRanking:
         five = rank_ability_dps(abilities, aoe=aoe, target_count=5)
         assert [slot for slot, *_ in five] == ["W", "Q"]
         # The multiplier is min(target_count, cap), never more than the cap.
-        w_dps = dict((s, d) for s, d, *_ in five)["W"]
+        w_dps = {s: d for s, d, *_ in five}["W"]
         capped = rank_ability_dps(abilities, aoe=aoe, target_count=9)
-        assert dict((s, d) for s, d, *_ in capped)["W"] == w_dps
+        assert {s: d for s, d, *_ in capped}["W"] == w_dps
 
 
 # ---------------------------------------------------------------------------
@@ -837,11 +839,11 @@ class TestTimedCadence:
     def test_zeds_declaration_refuses_an_order_that_skips_the_shadow(
         self, champion_by_name
     ) -> None:
-        """The fixed default order is no longer a legal request for Zed.
+        """The fixed default order is not a legal request for Zed.
 
         D-86 at a champion the phase's criteria never name: a declared
-        prerequisite states impossibility, so ``Q, W, E, R`` — the control
-        the test above used to run — comes back as a refusal quoting the
+        prerequisite states impossibility, so ``Q, W, E, R`` — the fixed
+        default — comes back as a refusal quoting the
         Shadow-placement mechanic rather than as a fight priced against a
         kit Zed cannot cast.
         """
@@ -865,7 +867,6 @@ class TestTimedCadence:
 
     def test_receipt_fallback_documents_the_default_order(self) -> None:
         receipt = build_rotation_receipt(
-            "NoSuchChampion",
             cast_order=list(DEFAULT_CAST_ORDER),
             cast_timeline=[],
             rule=None,

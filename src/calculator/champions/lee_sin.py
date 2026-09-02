@@ -20,7 +20,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .inputs import bool_option
+from .module_contract import coverage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -29,8 +31,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the recast lands ~0.5s after the
 # wave (Sonic Wave's 0.25s cast time plus the recast reaction); the
@@ -39,17 +39,16 @@ from .module_contract import coverage
 _RECAST_TIME_OFFSET = 0.5
 
 
-def _sonic_wave_and_resonating_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _sonic_wave_and_resonating_strike(
+    ctx: SlotCtx, wave: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: Sonic Wave hit + the Resonating Strike recast on the mark.
 
     The recast reads the cached Minimum/Maximum Physical Damage rows of
     Q[1] and interpolates by the target's missing-health fraction at each
     cast, so the fight prices the two-stage combo honestly.
     """
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    wave, rank = ranked
 
     sonic = extract_named(wave, "Physical Damage", rank, ctx.stats, ctx.target)
     parts = [DamagePart("physical", sonic, time_offset=0.0)]
@@ -128,7 +127,8 @@ OPTIONS: list[dict[str, Any]] = [
     bool_option("q_recast", True, label="Resonating Strike recast follows Sonic Wave"),
 ]
 
-ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(REVIEWED_MODULE_ASSUMPTIONS),
     "Q is the two-stage combo: Sonic Wave (Physical Damage row) plus the "
     "Resonating Strike recast, which reads Q[1]'s Minimum/Maximum "
     "Physical Damage rows and interpolates by the target's missing-health "

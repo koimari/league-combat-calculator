@@ -30,9 +30,11 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..damage import effective_cooldown
+from ..stats import effective_cooldown
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import clamp, no_damage
+from .inputs import float_option, int_option
+from .module_contract import coverage
+from .module_helpers import clamp, no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -41,8 +43,6 @@ from .slotlib import (
     extract_resource_cost,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
-from .module_contract import coverage
 
 _E_CAST_START = 0.0
 _W_CAST_START = 0.25
@@ -79,19 +79,15 @@ def _worked_travel_time(distance: float) -> float:
     return max(0.0, distance - _Q_ORIGIN_OFFSET) / _Q_WORKED_SPEED
 
 
-def _is_primary_target(ctx: SlotCtx) -> bool:
-    return int(ctx.target_stat("roster_target_index")) == 0
-
-
 def _boulder_damage(ctx: SlotCtx, ability: dict, rank: int) -> tuple[float, bool]:
     """Worked Ground boulder damage and whether this is the primary target."""
-    primary = _is_primary_target(ctx)
+    primary = int(ctx.target_stat("roster_target_index")) == 0
     attribute = "Empowered Damage" if primary else "Secondary Target Damage"
     return extract_named(ability, attribute, rank, ctx.stats, ctx.target), primary
 
 
 def _volley_parts(
-    ctx: SlotCtx, ability: dict, rank: int, distance: float, start: float
+    ctx: SlotCtx, ability: dict, rank: int, distance: float, *, start: float
 ) -> tuple[DamagePart, ...]:
     """One full fresh-ground volley: 5 shards from a cast starting at ``start``.
 
@@ -133,7 +129,7 @@ def _timed_cast_starts(
 
 
 def _timed_threaded_volley(
-    ctx: SlotCtx, ability: dict, rank: int, distance: float, duration: float
+    ctx: SlotCtx, ability: dict, rank: int, distance: float, *, duration: float
 ) -> dict[str, Any]:
     """Timed Q: the module-owned Worked Ground walk, cast exactly once.
 
@@ -158,7 +154,7 @@ def _timed_threaded_volley(
     )
     boulder, primary = _boulder_damage(ctx, ability, rank)
     boulder_travel = _worked_travel_time(distance)
-    parts = _volley_parts(ctx, ability, rank, distance, starts[0]) + tuple(
+    parts = _volley_parts(ctx, ability, rank, distance, start=starts[0]) + tuple(
         # The empowered cast is the one that controls: "dealing 180% damage
         # to them and normal damage to nearby enemies, slowing all targets
         # hit for 1.5 seconds".
@@ -192,11 +188,10 @@ def _timed_threaded_volley(
     return entry
 
 
-def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _threaded_volley(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     ground = str(ctx.option("q_ground"))
     if ground not in {"normal", "worked"}:
@@ -207,7 +202,9 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     # q_ground select prices the two states in one-rotation mode only.
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        return _timed_threaded_volley(ctx, ability, rank, distance, float(duration))
+        return _timed_threaded_volley(
+            ctx, ability, rank, distance, duration=float(duration)
+        )
 
     if ground == "worked":
         raw, primary = _boulder_damage(ctx, ability, rank)
@@ -233,7 +230,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         return entry
 
-    parts = _volley_parts(ctx, ability, rank, distance, _Q_CAST_START)
+    parts = _volley_parts(ctx, ability, rank, distance, start=_Q_CAST_START)
     total = parts[0].amount + 4.0 * parts[1].amount
     entry = damage_entry(
         ability_name(ability),
@@ -249,12 +246,11 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _seismic_shove(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W deals no damage but spends its sourced cast and mana cost."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     return {
         "name": ability_name(ability),
         "rank": rank,
@@ -266,11 +262,10 @@ def _seismic_shove(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _unraveled_earth(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _unraveled_earth(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     requested = int(ctx.option("e_detonations"))
     detonations = int(clamp(float(requested), 0.0, 4.0))
@@ -368,54 +363,36 @@ ASSUMPTIONS = [
 ]
 
 
-def _rock_surfing(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: bonus move speed, a sourced zero-enemy-damage row.
-
-    No effect row carries a damage instance (empty ``leveling``, ``affects``
-    Self), and percent move speed reaches damage only through Swiftmarch's
-    build-time read of total speed — the settled ``no_damage`` shape (Sivir
-    P, Akshan W, Aurora W), not an ``out_of_scope`` receipt.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Innate: 10% / 15% / 25% / 40% (based on level) bonus movement "
-            "speed near terrain — self movement state with no damage "
-            "instance, and it is suppressed while casting or in champion "
-            "combat."
-        ),
-    )
+# P: bonus move speed, a sourced zero-enemy-damage row.
+#
+# No effect row carries a damage instance (empty ``leveling``, ``affects``
+# Self), and percent move speed reaches damage only through Swiftmarch's
+# build-time read of total speed — the settled ``no_damage`` shape (Sivir
+# P, Akshan W, Aurora W), not an ``out_of_scope`` receipt.
+_rock_surfing = no_damage_slot(
+    "Innate: 10% / 15% / 25% / 40% (based on level) bonus movement "
+    "speed near terrain — self movement state with no damage "
+    "instance, and it is suppressed while casting or in champion "
+    "combat."
+)
 
 
-def _weavers_wall(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: terrain + knockback — a sourced zero-enemy-damage row.
-
-    Every one of Weaver's Wall's four cached effect rows has an empty
-    ``leveling`` array and the entry's ``damageType`` is ``None``: the
-    ultimate summons terrain, knocks champions aside and lets Taliyah
-    surf it.  The slot's atom catalog holds only ``timing.active_duration``
-    (4.0s, the cast channel) and the cooldown row.  The knockback carries
-    no sourced duration attribute anywhere in the slot, so no control
-    event is authored — an invented duration is exactly what this module
-    refuses to do (contrast Udyr E in the same batch, whose 0.75s stun IS
-    a validated ``timing.control_duration`` atom).
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Terrain wall plus a knockback on champions hit: no damage row "
-            "exists in the slot, and the knockback has no sourced duration "
-            "attribute to author a control event from."
-        ),
-    )
+# R: terrain + knockback — a sourced zero-enemy-damage row.
+#
+# Every one of Weaver's Wall's four cached effect rows has an empty
+# ``leveling`` array and the entry's ``damageType`` is ``None``: the
+# ultimate summons terrain, knocks champions aside and lets Taliyah
+# surf it.  The slot's atom catalog holds only ``timing.active_duration``
+# (4.0s, the cast channel) and the cooldown row.  The knockback carries
+# no sourced duration attribute anywhere in the slot, so no control
+# event is authored — an invented duration is exactly what this module
+# refuses to do (contrast Udyr E in the same batch, whose 0.75s stun IS
+# a validated ``timing.control_duration`` atom).
+_weavers_wall = no_damage_slot(
+    "Terrain wall plus a knockback on champions hit: no damage row "
+    "exists in the slot, and the knockback has no sourced duration "
+    "attribute to author a control event from."
+)
 
 
 SOURCES = load_champion_sources("Taliyah")

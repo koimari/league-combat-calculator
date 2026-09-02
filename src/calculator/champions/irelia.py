@@ -8,6 +8,8 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import float_option, int_option
+from .module_helpers import between_rows, named_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -18,7 +20,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 
 def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
@@ -43,7 +44,8 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         }
     entry["detail"] = (
-        f"{stacks} Ionian Fervor stack(s), +{bonus_as:g}% bonus attack speed; max-stack on-hit is explicit."
+        f"{stacks} Ionian Fervor stack(s), +{bonus_as:g}% bonus attack speed; "
+        f"max-stack on-hit is explicit."
     )
     return entry
 
@@ -51,44 +53,33 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
 _fervor.phase = BUFF
 
 
-def _bladesurge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart("physical", value, basic_damage=True, time_offset=0.2),
-    )
-    entry["applies_item_on_hits"] = {
+_bladesurge = named_damage(
+    "Physical Damage",
+    "physical",
+    basic_damage=True,
+    time_offset=0.2,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit",),
-    }
-    entry["detail"] = (
-        "One dash attack; reset, heal and Unsteady mark consumption are state branches."
-    )
-    return entry
+    },
+    detail="One dash attack; reset, heal and Unsteady mark consumption are state branches.",
+)
 
 
-def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _defiant_dance(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
-    low = extract_named(ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target)
-    high = extract_named(
-        ability, "Maximum Physical Damage", rank, ctx.stats, ctx.target
+    value = between_rows(
+        ctx,
+        ability,
+        rank,
+        "Minimum Physical Damage",
+        high="Maximum Physical Damage",
+        fraction=charge,
     )
-    value = low + (high - low) * charge
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -103,28 +94,17 @@ def _defiant_dance(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _flawless_duet(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.4),)
-    return entry
+_flawless_duet = named_damage(
+    "Magic Damage",
+    "magic",
+    time_offset=0.4,
+)
 
 
-def _vanguard(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _vanguard(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     passes = min(max(int(ctx.option("r_passes")), 1), 2)
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -175,27 +155,30 @@ OPTIONS = [
     int_option("r_passes", 2, minimum=1, maximum=2, label="Vanguard's Edge passes"),
 ]
 ASSUMPTIONS = [
-    "Ionian Fervor's per-stack attack speed is applied before damage and its max-stack on-hit is explicit.",
-    "Bladesurge is one full-effectiveness basic attack; Defiant Dance exposes the sourced charge interval.",
-    "Vanguard's Edge models the initial barrage and one perimeter pass; marks, stun and slow are utility.",
+    "Ionian Fervor's per-stack attack speed is applied before damage and its "
+    "max-stack on-hit is explicit.",
+    "Bladesurge is one full-effectiveness basic attack; Defiant Dance exposes the "
+    "sourced charge interval.",
+    "Vanguard's Edge models the initial barrage and one perimeter pass; marks, stun "
+    "and slow are utility.",
 ]
 SOURCES = load_champion_sources("Irelia")
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Irelia self-healing events from its authored packet."""
     healing = []
     ability = _healing.ability_json(champion_data, "Q")
     rank = _healing.parsed_rank(ability_damages, "Q")
-    amount = _healing.extract_named(ability, "Heal", rank, champion_stats, {})
+    amount = extract_named(ability, "Heal", rank, champion_stats, {})
     for event in damage_events:
         if _healing.event_source(event) == "Q":
             _healing.heal_from_damage(healing, event, amount, "Bladesurge")

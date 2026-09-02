@@ -16,7 +16,7 @@ def test_famine_parser_sources_base_and_melee_ranged_ratios() -> None:
     parsed = parse_item_effect("Endless Hunger", fetch_item_data())
     if parsed is None:
         pytest.fail("Endless Hunger parser returned no values")
-    values = cast(dict[str, float], parsed)
+    values = cast("dict[str, float]", parsed)
 
     assert values.get("famine_base_ability_haste") == pytest.approx(5.0)
     assert values.get("famine_bonus_ad_to_ability_haste_melee") == pytest.approx(0.13)
@@ -55,7 +55,7 @@ def test_famine_missing_parser_value_fails_closed(
     broken.pop("famine_base_ability_haste")
     monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Endless Hunger", broken)
 
-    with pytest.raises(KeyError, match="Endless Hunger.*famine_base_ability_haste"):
+    with pytest.raises(KeyError, match=r"Endless Hunger.*famine_base_ability_haste"):
         endless_hunger_ability_haste(
             [{"name": "Endless Hunger"}],
             bonus_attack_damage=65.0,

@@ -446,9 +446,9 @@ def test_nocturne_unspeakable_horror_prices_four_tether_ticks():
 
 def test_nunu_snowball_barrage_prices_three_snowball_hits():
     """E rank 5: "Magic Damage Per Hit" 45 (+ 12% AP), "Total Magic
-    Damage" 135 (+ 36% AP) -> 3 snowballs in the volley.  The pinned
-    packet previously priced the Snowbound root row (20-60 + 80% AP);
-    the per-hit row is sourced from the same ability entry."""
+    Damage" 135 (+ 36% AP) -> 3 snowballs in the volley.  The per-hit row
+    is priced, not the Snowbound root row (20-60 + 80% AP) beside it in
+    the same ability entry."""
     _assert_ticked_ability(
         "Nunu & Willump",
         "E",

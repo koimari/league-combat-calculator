@@ -21,6 +21,7 @@ from src.calculator.ability_spec import DamageClass
 from src.calculator.interpreters import INTERPRETERS, resistance_shred
 from src.calculator.item_behavior import (
     EngineLane,
+    FightFacts,
     RampModel,
     Resistance,
     ResistanceShredRule,
@@ -42,10 +43,12 @@ def _slot(*owners: str, resistance: Resistance) -> "resistance_shred.ShredSlot |
     return resistance_shred.resolve_slot(
         owners,
         resistance,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -79,8 +82,8 @@ def test_both_shreds_are_declared_and_act_on_the_target() -> None:
 
 def test_the_two_summation_models_are_declared_not_inferred() -> None:
     """Which model a number came from is now readable off the declaration."""
-    assert _armor()._payload.ramp.model is RampModel.CESARO_APPROX  # noqa: SLF001
-    assert _magic()._payload.ramp.model is RampModel.EXACT  # noqa: SLF001
+    assert _armor()._payload.ramp.model is RampModel.CESARO_APPROX
+    assert _magic()._payload.ramp.model is RampModel.EXACT
 
 
 def test_the_carve_leading_hit_assumption_is_declared() -> None:

@@ -21,8 +21,8 @@ from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS
 from src.calculator.interpreters.damage_routing import (
-    DamageRoutingInterpretationError,
     EXECUTE_THRESHOLD_FIELD,
+    DamageRoutingInterpretationError,
     pair_fields,
     resolve_deferral,
     resolve_execution,
@@ -34,6 +34,7 @@ from src.calculator.item_behavior import (
     DefenseMechanic,
     EngineLane,
     ExecuteRule,
+    FightFacts,
     RuleFamily,
     ShieldBypassRule,
     Subject,
@@ -93,10 +94,12 @@ def test_the_execution_is_the_registry_threshold() -> None:
     """The Collector's share of maximum health, read rather than carried."""
     execution = resolve_execution(
         [EXECUTE_HOLDER],
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert execution is not None
     assert execution.owner == EXECUTE_HOLDER
@@ -110,10 +113,12 @@ def test_nobody_executing_is_an_answer_not_a_zero() -> None:
     assert (
         resolve_execution(
             ["Boots"],
-            level=13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         is None
     )
@@ -127,10 +132,12 @@ def test_the_bypass_share_follows_the_holders_range(is_melee, key) -> None:
     """Melee and ranged holders are paid the shares the registry states."""
     bypass = resolve_shield_bypass(
         [BYPASS_HOLDER],
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
     assert bypass is not None
     assert bypass.fraction == pytest.approx(
@@ -199,10 +206,12 @@ def test_the_pair_interpreter_refuses_the_deferral() -> None:
             rule,
             catalog.build_context(
                 rule.owner,
-                13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             EngineLane.PAIR_ENGINE,
         )
@@ -215,10 +224,12 @@ def test_the_compiled_execute_field_is_the_one_engines_ask_for() -> None:
         rule,
         catalog.build_context(
             rule.owner,
-            13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.PAIR_ENGINE,
     )

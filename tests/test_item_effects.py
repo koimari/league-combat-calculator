@@ -19,50 +19,51 @@ from src.calculator.interpreters import (
     spellblade,
 )
 from src.calculator.interpreters.crit_profile import declared_crit_profile
-from src.calculator.interpreters.delta_amp import declared_magic_amp
 from src.calculator.interpreters.damage_routing import declared_execution
+from src.calculator.interpreters.delta_amp import declared_magic_amp
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
+    actualizer_active_seconds,
+    ally_item_effect_value,
     ap_multiplier,
+    axiom_arc_ultimate_refund_fraction,
     basic_ability_haste,
     bloodmail_bonus_ad,
     bloodmail_retribution_bonus_ad,
-    mana_to_health_bonus,
+    dawncore_bonus_ap,
+    endless_hunger_input_omnivamp,
     energized_proc_indices,
     energized_schedule_receipt,
+    essence_reaver_mana_restore_per_proc,
+    flowing_water_bonus_ap,
+    hubris_eminence_bonus_ad,
+    hubris_input_bonus_ad,
     hydra_cleave_secondary_ad_damage,
     hydra_secondary_target_damage,
+    input_option_crit_chance,
+    input_option_retribution_bonus_ad,
     item_bonus_health_multiplier,
-    dawncore_bonus_ap,
-    flowing_water_bonus_ap,
+    item_input_options_meta,
+    item_state_receipts,
     mana_to_ap_bonus,
+    mana_to_health_bonus,
     muramana_bonus_ad,
     passive_attack_speed_bonus,
     permanent_ap_multiplier,
+    refresh_item_effects,
+    required_effect_value,
+    resolve_damage_effects,
+    resolve_stat_effects,
     riftmaker_bonus_ap,
     saturated_grant,
-    hubris_eminence_bonus_ad,
-    axiom_arc_ultimate_refund_fraction,
-    essence_reaver_mana_restore_per_proc,
-    yun_tal_permanent_crit_chance,
     statikk_chain_target_bounds,
     statikk_chain_target_count,
     steraks_bonus_ad,
     terminus_max_stack_bonuses,
-    refresh_item_effects,
-    resolve_damage_effects,
-    resolve_stat_effects,
-    item_input_options_meta,
-    input_option_retribution_bonus_ad,
-    input_option_crit_chance,
-    hubris_input_bonus_ad,
-    endless_hunger_input_omnivamp,
-    actualizer_active_seconds,
-    item_state_receipts,
     validate_item_input_options,
-    required_effect_value,
-    ally_item_effect_value,
+    yun_tal_permanent_crit_chance,
 )
 
 
@@ -89,10 +90,12 @@ def _charged_strikes(*owners: str, is_melee: bool = True):
     """The charged strikes a build declares, through their rules."""
     return charged_strike.resolve_slots(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -100,10 +103,12 @@ def _cast_proc_slots(*owners: str, is_melee: bool = True):
     """The cast-triggered procs a build declares, through their rules."""
     return cast_proc.resolve_slots(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -111,10 +116,12 @@ def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
     """The spellblade a build arms, resolved through its declaration."""
     return spellblade.resolve_slot(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -197,10 +204,12 @@ def test_giant_slayer_scales_on_the_targets_bonus_health_not_the_holders() -> No
         slot = delta_amp.resolve_slot(
             ["Lord Dominik's Regards"],
             AmpChainSlot.WHOLE_TOTAL,
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=target_bonus_health,
+                holder_is_melee=True,
+            ),
         )
         assert slot is not None
         return slot.sources()[0][1]
@@ -361,10 +370,12 @@ def _declared_per_hits(*owners: str, level: int = 18):
     """The on-hit strikes a build declares, through their own rules."""
     return on_hit_strike.per_hit_effects(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -376,7 +387,7 @@ class TestResolveDamageEffects:
     ) -> None:
         _patch_effect(monkeypatch, "Nashor's Tooth", base=100.0, ap_ratio=0.5)
 
-        effects = resolve_damage_effects(_build("Nashor's Tooth"))
+        resolve_damage_effects(_build("Nashor's Tooth"))
         inputs = DamageInputs(
             champion_stats={"ability_power": 200.0},
             level=18,
@@ -408,7 +419,7 @@ class TestResolveDamageEffects:
         broken.pop("mr_reduction")
         monkeypatch.setitem(ITEM_EFFECTS, "Malignance", broken)
 
-        with pytest.raises(KeyError, match="Malignance.*mr_reduction"):
+        with pytest.raises(KeyError, match=r"Malignance.*mr_reduction"):
             _cast_proc_slots("Malignance")
 
     def test_unknown_effect_type_names_item_and_type(
@@ -418,7 +429,7 @@ class TestResolveDamageEffects:
         broken["type"] = "on_hit_onc"
         monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
 
-        with pytest.raises(ValueError, match="Statikk Shiv.*on_hit_onc"):
+        with pytest.raises(ValueError, match=r"Statikk Shiv.*on_hit_onc"):
             resolve_damage_effects(_build("Statikk Shiv"))
 
     def test_one_item_can_emit_multiple_behaviors(self) -> None:
@@ -437,8 +448,8 @@ class TestResolveDamageEffects:
     def test_cull_compiles_its_sourced_on_hit_health_receipt(self) -> None:
         """SD9 retired this tag's ladder branch: the SUSTAIN declaration is
         the one owner, and the projection carries no second copy."""
-        from src.calculator.item_behavior import OnHitHealRule
         from src.calculator.interpreters.sustain import declared_sustain
+        from src.calculator.item_behavior import OnHitHealRule
 
         slot = declared_sustain(["Cull"], OnHitHealRule)
         assert slot.owner == "Cull"
@@ -464,7 +475,8 @@ class TestResolveDamageEffects:
     def test_spellblade_sibling_values_are_typed(self) -> None:
         essence = _spellblade_slot("Essence Reaver")
         dusk = _spellblade_slot("Dusk and Dawn")
-        assert essence is not None and dusk is not None
+        assert essence is not None
+        assert dusk is not None
         assert essence.mana_restore_base_ad_ratio == pytest.approx(0.625)
         assert essence.mana_restore_crit_ratio == pytest.approx(25.0)
         assert dusk.self_heal_ap_ratio == pytest.approx(0.10)
@@ -502,7 +514,7 @@ class TestResolveDamageEffects:
         broken.pop("energized_attack_stacks")
         monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
 
-        with pytest.raises(KeyError, match="Statikk Shiv.*energized_attack_stacks"):
+        with pytest.raises(KeyError, match=r"Statikk Shiv.*energized_attack_stacks"):
             energized_proc_indices("Statikk Shiv", 3, initial_stacks=100)
 
     def test_statikk_chain_target_bounds_are_parser_owned(self) -> None:
@@ -661,7 +673,7 @@ class TestResolveDamageEffects:
         monkeypatch.setitem(ITEM_EFFECTS, "Voltaic Cyclosword", broken)
 
         with pytest.raises(
-            KeyError, match="Voltaic Cyclosword.*temporary_lethality_duration"
+            KeyError, match=r"Voltaic Cyclosword.*temporary_lethality_duration"
         ):
             _charged_strikes("Voltaic Cyclosword")
 
@@ -1274,12 +1286,12 @@ class TestRefreshItemEffects:
         refresh_item_effects()
 
         assert ITEM_EFFECTS is binding_before  # same object, not rebound
-        assert ITEM_EFFECTS == fake_registry
+        assert fake_registry == ITEM_EFFECTS
         assert item_effects.ITEM_EFFECTS is binding_before
 
     def test_refresh_drops_stale_entries(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """clear() before update(): entries absent from the rebuild vanish."""
-        monkeypatch.setattr(item_effects, "_build_item_effects", lambda: {})
+        monkeypatch.setattr(item_effects, "_build_item_effects", dict)
         item_effects.ITEM_EFFECTS["Removed Item"] = {"type": "on_hit"}
         refresh_item_effects()
         assert "Removed Item" not in ITEM_EFFECTS
@@ -1296,7 +1308,7 @@ class TestRefreshItemEffects:
         before = copy.deepcopy(item_effects.ITEM_EFFECTS)
         with pytest.raises(RuntimeError):
             refresh_item_effects()
-        assert item_effects.ITEM_EFFECTS == before
+        assert before == item_effects.ITEM_EFFECTS
 
 
 class TestDeclaredSiblingReads:
@@ -1339,7 +1351,7 @@ class TestDeclaredSiblingReads:
         broken = dict(item_effects.ITEM_EFFECTS["Malignance"])
         broken.pop("ultimate_haste")
         monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Malignance", broken)
-        with pytest.raises(KeyError, match="Malignance.*ultimate_haste"):
+        with pytest.raises(KeyError, match=r"Malignance.*ultimate_haste"):
             _stat_bonuses("Malignance")
 
     def test_undeclared_ultimate_haste_is_an_absence(self) -> None:
@@ -1358,11 +1370,13 @@ class TestDeclaredSiblingReads:
         """
         assert "Dream Maker" not in item_effects.ITEM_EFFECTS
         empty = _stat_bonuses("Dream Maker").ultimate_haste
-        assert empty == 0 and isinstance(empty, int)
+        assert empty == 0
+        assert isinstance(empty, int)
 
         assert "Infinity Edge" in item_effects.ITEM_EFFECTS
         declared = _stat_bonuses("Infinity Edge").ultimate_haste
-        assert declared == 0.0 and isinstance(declared, float)
+        assert declared == 0.0
+        assert isinstance(declared, float)
 
     def test_dropped_energized_distance_names_item_and_key(
         self, monkeypatch: pytest.MonkeyPatch

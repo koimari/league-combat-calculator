@@ -19,9 +19,9 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.slotlib import find_named_leveling
 
 LEVEL = 18
 _FULL_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -183,7 +183,7 @@ def test_shyvana_w_carries_the_sourced_self_shield():
     """W's shield = 'Shield Strength' 60-140 by rank + 12% bonus health,
     plus the 'Increased shield per champion' 18-42 by rank + 3.6% bonus
     health per nearby enemy champion (1 in a 1v1 duel)."""
-    stats, abilities = _parse("Shyvana")
+    _stats, abilities = _parse("Shyvana")
     (shield,) = abilities["W"]["self_shield_events"]
     assert shield["amount"] == pytest.approx(140.0 + 42.0)  # rank 5, no items
     assert shield["duration"] == pytest.approx(1.0)  # consumed at the recast
@@ -316,16 +316,12 @@ def test_xerath_r_arcane_perfection_stacks_bonus():
     Stack' bonus (capped at 'Maximum Stacks' 3/4/5): with 5 stacks at rank
     3 the six barrages deal 270/300/330/360/390/420 == 2070."""
     stats, abilities = _parse("Xerath", options={"r_arcane_perfection": 5})
-    recasts = int(
-        round(_leveling_at("Xerath", "R", "Number of Recasts", 3, stats, 2000.0))
-    )
+    recasts = round(_leveling_at("Xerath", "R", "Number of Recasts", 3, stats, 2000.0))
     per_shot = _leveling_at("Xerath", "R", "Magic Damage", 3, stats, 2000.0)
     per_stack = _leveling_at(
         "Xerath", "R", "Increased Damage per Stack", 3, stats, 2000.0
     )
-    maximum = int(
-        round(_leveling_at("Xerath", "R", "Maximum Stacks", 3, stats, 2000.0))
-    )
+    maximum = round(_leveling_at("Xerath", "R", "Maximum Stacks", 3, stats, 2000.0))
     expected = sum(
         per_shot + min(index, 5, maximum) * per_stack for index in range(recasts)
     )

@@ -1,5 +1,6 @@
 """Cross-worker abuse-control contracts."""
 
+import contextlib
 import sqlite3
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -102,9 +103,7 @@ def test_store_init_survives_a_sibling_worker_holding_the_write_lock(
         store = TokenBucketStore(database)
     finally:
         releaser.cancel()
-        try:
+        with contextlib.suppress(sqlite3.Error):
             sibling.rollback()
-        except sqlite3.Error:
-            pass
         sibling.close()
     assert store.consume("calculate", capacity=1, refill_per_second=1, now=0)[0]

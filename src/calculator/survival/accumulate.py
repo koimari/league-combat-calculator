@@ -9,7 +9,8 @@ recorded.
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 
 def accumulate_support_values(
@@ -17,6 +18,7 @@ def accumulate_support_values(
     fresh_entries: Sequence[tuple[str, int, int, bool]],
     base_entries: Sequence[tuple[str, int, int, bool]],
     sig_entries: Sequence[tuple[str, int, int, bool]],
+    *,
     count: int,
 ) -> tuple[list[float], list[float]]:
     """Per-attacker support value and healing output.

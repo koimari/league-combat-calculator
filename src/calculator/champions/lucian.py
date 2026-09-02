@@ -43,9 +43,9 @@ fallback text.
 from typing import Any
 
 from .engine import SlotCtx
-from .module_helpers import no_damage
-from .packet_module import build_packet_module
 from .module_contract import coverage
+from .module_helpers import at_level, no_damage
+from .packet_module import build_packet_module
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
 # level-banded.  The cached P JSON carries only the prose "50% / 55% /
@@ -60,14 +60,6 @@ _LIGHTSLINGER_RATIO_BANDS: tuple[tuple[int, float], ...] = (
 )
 
 
-def _lightslinger_ratio(level: int) -> float:
-    """The second shot's AD ratio at a champion level."""
-    for min_level, ratio in _LIGHTSLINGER_RATIO_BANDS:
-        if level >= min_level:
-            return ratio
-    return _LIGHTSLINGER_RATIO_BANDS[-1][1]
-
-
 def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: second shot after each ability — the engine double-shot path."""
     passive = ctx.ability("P")
@@ -80,7 +72,7 @@ def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
         "parts": (),
         "double_shot": {
             "name": "Lightslinger",
-            "ad_ratio": _lightslinger_ratio(ctx.level),
+            "ad_ratio": at_level(_LIGHTSLINGER_RATIO_BANDS, ctx.level),
         },
     }
 
@@ -140,7 +132,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (The Culling) prices all 22 sourced shots of the 3-second "
     "channel (per-shot x 22; the wiki cache carries only the per-shot "
     "row and the prose shot count, not a Total row).  The "

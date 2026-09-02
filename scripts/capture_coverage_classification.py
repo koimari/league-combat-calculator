@@ -124,7 +124,7 @@ def capture() -> dict[str, Any]:
             "and cannot represent a collision"
         )
     records = {
-        lane: {name: classify(item) for name, item in zip(names, items)}
+        lane: {name: classify(item) for name, item in zip(names, items, strict=False)}
         for lane, classify in CLASSIFIERS.items()
     }
     return {
@@ -160,15 +160,15 @@ def record_count(snapshot: Mapping[str, Any]) -> int:
 
 
 def differing_leaves(
-    old: Any, new: Any, path: str = ""
-) -> tuple[tuple[str, Any, Any], ...]:
+    old: object, new: object, path: str = ""
+) -> tuple[tuple[str, object, object], ...]:
     """Every ``(path, old, new)`` where two snapshots disagree on a leaf.
 
     A record present on one side only is reported whole, as one diff against
     ``ABSENT`` — a dropped item is a coverage move, not a hundred leaf moves.
     """
     if isinstance(old, Mapping) and isinstance(new, Mapping):
-        diffs: list[tuple[str, Any, Any]] = []
+        diffs: list[tuple[str, object, object]] = []
         for key in sorted(set(old) | set(new)):
             child = f"{path}.{key}" if path else str(key)
             if key not in old:

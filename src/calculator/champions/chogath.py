@@ -31,11 +31,13 @@ Why each slot is non-generic:
 import re
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import delayed_damage
+from .inputs import int_option
+from .module_helpers import delayed_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -48,8 +50,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import int_option
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
 # attribute of its own; the JSON's "Total Magic Damage" entry is exactly
@@ -85,7 +85,10 @@ def _feast_stacks(ctx: SlotCtx) -> int:
     return int(ctx.options.get("feast_stacks", _DEFAULT_FEAST_STACKS))
 
 
-def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _vorpal_spikes(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: 3 empowered attacks; per hit = base + 30% AP + %maxHP + rider.
 
     The empowered hits are real basic attacks: with an auto stream they
@@ -94,10 +97,6 @@ def _vorpal_spikes(ctx: SlotCtx) -> dict[str, Any] | None:
     swings, which the fight engine appends via ``empowers_next_auto``'s
     ``hits`` count.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     leveling = find_named_leveling(ability, "Magic Damage")
     if leveling is None:
         return None
@@ -157,7 +156,8 @@ def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _feast(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R (BUFF): stack bonus health first, then true damage off buffed stats.
 
     Unranked R emits nothing — without a rank there are no Feast stacks
@@ -165,10 +165,6 @@ def _feast(ctx: SlotCtx) -> dict[str, Any] | None:
     (BUFF-phase guarantee) so R's own "% bonus health" ratio — and any
     other read of Cho'Gath's health — sees stacks plus item health.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     stack_health = _feast_stacks(ctx) * extract_value(
         ability, "Bonus Health Per Stack", rank
@@ -281,13 +277,13 @@ SOURCES = load_champion_sources("Cho'Gath")
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Price Carnivore: one heal per kill Cho'Gath's user declares.
 
     "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
@@ -300,19 +296,19 @@ def derive_self_healing(
     carnivore = ability_payload(ability_damages, "passive").get("self_heal_state")
     if isinstance(carnivore, dict):
         amount = float(carnivore.get("amount", 0.0) or 0.0)
-        for payment in _healing.takedown_payments(
-            int(carnivore.get("kills", 0) or 0), damage_events
-        ):
-            healing.append(
-                {
-                    "time": float(payment.event.get("time", 0.0)),
-                    "amount": amount,
-                    "source": "Carnivore",
-                    "kind": "champion_passive",
-                    "actor_wide": True,
-                    **_healing.trigger_fields(payment.event),
-                }
+        healing.extend(
+            {
+                "time": float(payment.event.get("time", 0.0)),
+                "amount": amount,
+                "source": "Carnivore",
+                "kind": "champion_passive",
+                "actor_wide": True,
+                **_healing.trigger_fields(payment.event),
+            }
+            for payment in _healing.takedown_payments(
+                int(carnivore.get("kills", 0) or 0), damage_events
             )
+        )
     return healing
 
 

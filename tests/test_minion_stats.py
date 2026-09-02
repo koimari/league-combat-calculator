@@ -24,9 +24,9 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
-from tests.app_config import app_config
 from src.calculator import damage, item_effects, minion_stats
 from src.calculator.damage import FightConfig
+from tests.app_config import app_config
 
 BIN_DIR = Path(__file__).resolve().parent.parent / "data" / "bin" / "characters"
 
@@ -70,13 +70,13 @@ def _field(record: dict, name: str) -> float:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("stat, expected", sorted(MELEE_ANCHOR.items()))
+@pytest.mark.parametrize(("stat", "expected"), sorted(MELEE_ANCHOR.items()))
 def test_the_melee_anchor_is_what_the_module_answers(stat, expected):
     """The named anchor, read through the accessor callers use."""
     assert minion_stats.sourced_stat("melee", stat) == expected
 
 
-@pytest.mark.parametrize("stat, expected", sorted(MELEE_ANCHOR.items()))
+@pytest.mark.parametrize(("stat", "expected"), sorted(MELEE_ANCHOR.items()))
 def test_the_melee_anchor_is_what_the_binary_states(stat, expected):
     """The same anchor, read out of the tracked record itself.
 
@@ -187,21 +187,8 @@ def test_the_siege_attack_speed_ratio_is_absent_from_its_record_alone():
     assert minion_stats.sourced_stat("siege", "attack_speed") == 1.0
 
 
-@pytest.mark.parametrize("minion_type", minion_stats.MINION_TYPES)
-def test_unsourced_stats_lists_exactly_what_the_accessor_refuses(minion_type):
-    """The advertised refusal list and the accessor's behaviour are one."""
-    refused = minion_stats.unsourced_stats(minion_type)
-    for stat in refused:
-        with pytest.raises(minion_stats.MinionStatUnavailable):
-            minion_stats.sourced_stat(minion_type, stat)
-    answerable = set(minion_stats.SOURCE_FIELDS) - set(refused)
-    for stat in sorted(answerable):
-        assert isinstance(minion_stats.sourced_stat(minion_type, stat), float)
-    assert ("attack_speed_ratio" in refused) == (minion_type == "siege")
-
-
 def test_the_source_field_table_names_only_real_stat_fields():
-    """What lets ``unsourced_stats`` read without a default.
+    """What lets ``sourced_stat`` read a table key without a default.
 
     Every SOURCE_FIELDS key must be a field of the stat block, so a typo in
     the table raises instead of being reported as one more unavailable stat.
@@ -221,31 +208,6 @@ def test_an_unknown_stat_name_is_refused_rather_than_defaulted():
         minion_stats.sourced_stat("caster", "health")
 
 
-@pytest.mark.parametrize("minion_type", minion_stats.MINION_TYPES)
-@pytest.mark.parametrize("elapsed", [0.0, 90.0, 900.0])
-def test_time_scaled_stats_always_fail_closed(minion_type, elapsed):
-    """No elapsed time gets a scaled answer, including zero.
-
-    Spawn time is the one moment the constants ARE correct, and it still
-    refuses: answering there would make the function look usable and hand a
-    caller a spawn-time number for minute fifteen.
-    """
-    with pytest.raises(minion_stats.MinionScalingUnavailable) as excinfo:
-        minion_stats.time_scaled_base_stats(minion_type, elapsed)
-    context = excinfo.value.context
-    assert context["reason"] == "barracks_config_not_bound_to_classic"
-    assert context["candidate_count"] > 1
-    assert context["elapsed_seconds"] == elapsed
-
-
-def test_a_bad_minion_type_is_reported_as_a_bad_type_not_as_the_scaling_gap():
-    """A caller learns about the typo, not about the unrelated denial."""
-    with pytest.raises(KeyError):
-        minion_stats.time_scaled_base_stats("caster", 90.0)
-    with pytest.raises(ValueError):
-        minion_stats.time_scaled_base_stats("melee", -1.0)
-
-
 def test_the_scaling_receipt_names_what_is_missing_and_why():
     """The receipt has to carry the denial's whole reason, not a flag.
 
@@ -261,7 +223,7 @@ def test_the_scaling_receipt_names_what_is_missing_and_why():
     intervals = {entry["upgrade_interval_seconds"] for entry in candidates}
     assert len(intervals) > 1, "one interval would not be ambiguous"
     assert receipt["searched"], "a denial cites the routes that came back empty"
-    assert "time_scaled_base_stats" in receipt["denied_reads"]
+    assert "wave_upgrade_count" in receipt["denied_reads"]
 
 
 def test_the_scaling_denial_is_the_only_way_to_read_a_scaled_stat():

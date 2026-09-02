@@ -19,8 +19,11 @@ the wound rides the module's Q damage receipts at the patch-wide
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
+from .inputs import bool_option, float_option
+from .module_contract import coverage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -30,9 +33,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # Bear Trap on a Rope lands twice and the cache times the second hit: the
 # trap "collides with the first enemy champion ... forming a tether
@@ -44,12 +44,11 @@ from ..binary_roots import data_value, spell_object
 _Q_TETHER_SECONDS = data_value(spell_object("Kled", "KledQ"), "TetherPopTime")
 
 
-def _bear_trap(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bear_trap(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the trap's own hit, then the tether's pull hit 1.75s later."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     # Two cached rows share the name "Physical Damage" — the trap's
     # (30 : 130 + 60% bonus AD) and the pull's (60 : 260 + 120% bonus AD).
     # The first is the one a name lookup reaches, and the cached "Total
@@ -105,7 +104,7 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": 0.0,
             "damage_type": "physical",
         },
-        0.0,
+        cooldown=0.0,
     )
     result["parts"] = (
         DamagePart("physical", value, basic_damage=True, time_offset=0.1),
@@ -120,11 +119,8 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _charge(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _charge(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     fraction = max(0.0, min(1.0, float(ctx.option("charge_fraction"))))
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
@@ -192,7 +188,8 @@ MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Skaarl the Cowardly Lizard (P): the mounted duo's damage is suffered "
     "by Skaarl, whose 400 : 1400 (based on level) base health is the "
     "mounted pool (data/champions.json P 'Bonus Damage'); the "
@@ -222,9 +219,9 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
     "form of the cached stat row is escalated, not patched here.",
 ]
 
-# HARDCODED: verify on patch updates.  Kled's Grievous Wounds (historically
-# on the Bear Trap on a Rope pull) was REMOVED in V25.14 — the e8-interactions
-# worklist entry is stale and the wiki cache carries no wound on either Q
+# HARDCODED: verify on patch updates.  Kled's Grievous Wounds (the Bear Trap on
+# a Rope pull's wound) was REMOVED in V25.14 — the e8-interactions worklist
+# entry is stale and the wiki cache carries no wound on either Q
 # entry (autoresearch pass 11, 2026-08-07).  Empty declaration = no wound.
 GRIEVOUS_WOUNDS_SOURCES = frozenset()
 

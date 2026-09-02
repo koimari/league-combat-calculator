@@ -11,8 +11,8 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import morgana
-from src.calculator.data_fetcher import get_champion
 from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.data_fetcher import get_champion
 from tests import cc_review
 
 # The phrase each declared kind was read from, in that slot's cached text.

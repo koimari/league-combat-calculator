@@ -249,7 +249,7 @@ class TestIllaoiTentacleHeal:
             heal_time = float(heal["time"])
             damage_up_to = sum(
                 amount
-                for time, amount in zip(incoming_times, incoming)
+                for time, amount in zip(incoming_times, incoming, strict=False)
                 if time <= heal_time + 1e-9
             )
             heals_before = sum(

@@ -39,10 +39,14 @@ All numeric values are read from the champion JSON data.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -53,9 +57,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import bool_option
-from .module_contract import coverage
 
 
 def _true_split_parts(
@@ -85,12 +86,11 @@ def _q_true_ratio(ability: dict[str, Any], level: int) -> float:
     return min(extract_value(ability, "Bonus True Damage", level), 100.0) / 100.0
 
 
-def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _precision_protocol(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q1: next basic attack deals +20-40% total AD physical, no crit."""
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     total_ad = ctx.stat("attack_damage")
@@ -147,12 +147,11 @@ def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _tactical_sweep(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tactical_sweep(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: inner cone physical + optional outer-cone % max HP sweet spot."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if ctx.option("w_outer_cone"):
@@ -205,12 +204,11 @@ def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
 _hookshot.phase = BUFF
 
 
-def _hextech_ultimatum(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _hextech_ultimatum(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: zero upfront damage; current-health magic rider on zone autos."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     percent = extract_value(ability, "Bonus Magic Damage", rank)
     window = extract_value(ability, "Zone Duration", rank)
@@ -245,7 +243,7 @@ OPTIONS: list[dict[str, Any]] = [
 # passive description (data/champions.json, Camille P): "grants her a
 # shield equal to 20% of her maximum health, lasting for 2 seconds and
 # absorbing damage from either exclusively physical damage or magic damage,
-# based on which type the target has previously dealt most of" (wiki text).
+# based on which type the target has ... dealt most of" (wiki text).
 _CAMILLE_P_SPELL = spell_object("Camille", "CamillePassive")
 # The duration is the binary CamillePassive.ShieldDuration DataValue; the
 # ratio stays wiki prose (no amount row in the dump).
@@ -264,6 +262,7 @@ def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:
     documented boundary — the ledger's payload grants a general shield
     that absorbs both types.
     """
+    # pylint: disable-next=no-value-for-parameter  # a compiled (ctx) parser
     entry = _packet_w(ctx)
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
@@ -352,20 +351,18 @@ COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Camille self-healing events from its authored packet."""
     healing = []
     w_ability = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    base_raw = _healing.extract_named(
-        w_ability, "Physical Damage", w_rank, champion_stats, {}
-    )
+    base_raw = extract_named(w_ability, "Physical Damage", w_rank, champion_stats, {})
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):

@@ -35,7 +35,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import missing_hp_fraction
+from .inputs import bool_option, float_option, int_option
+from .module_helpers import missing_hp_fraction, ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -50,7 +51,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
 # Blight's stack cap is the binary VarusW.MaxStacks DataValue; the cached
 # prose corroborates ("stacks up to 3 times"); abilities detonate all stacks.
@@ -116,12 +116,11 @@ def _charge_fraction(ctx: SlotCtx) -> float:
     return min(max(fraction, 0.0), 1.0)
 
 
-def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _piercing_arrow(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: charge-interpolated arrow damage + the Blight detonation."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     fraction = _charge_fraction(ctx)
     minimum = extract_named(
@@ -180,12 +179,11 @@ def _piercing_arrow(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _blighted_quiver(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _blighted_quiver(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: flat on-hit magic per basic attack (Blight stacks ride it)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     leveling = find_named_leveling(ability, "Bonus Magic Damage")
     if leveling is None:

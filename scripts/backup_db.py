@@ -37,7 +37,9 @@ import sys
 from pathlib import Path
 
 BACKUP_PREFIX = "scryglass-db"
-_FALLBACK_SQLITE_PATH = "/tmp/lol-calculator-fallback.sqlite3"
+_FALLBACK_SQLITE_PATH = (
+    "/tmp/lol-calculator-fallback.sqlite3"  # noqa: S108 - the container fallback db
+)
 # Mirrors db.py's fallback when DATABASE_URL is unset.
 _TIMESTAMP_PATTERN = re.compile(r"^" + BACKUP_PREFIX + r"-(\d{8}-\d{6})\.(sql|sqlite)$")
 
@@ -50,7 +52,7 @@ def _resolve_target(database_url: str | None) -> tuple[str, str]:
     url = (database_url or "").strip()
     if not url:
         return "sqlite", _FALLBACK_SQLITE_PATH
-    if url.startswith("postgres://") or url.startswith("postgresql://"):
+    if url.startswith(("postgres://", "postgresql://")):
         return "postgres", url
     if url.startswith("sqlite:///"):
         return "sqlite", url[len("sqlite:///") :]
@@ -70,7 +72,8 @@ def build_commands(
     ``timestamp`` defaults to local ``YYYYMMDD-HHMMSS``; Redis SAVE is only
     included when ``include_redis`` is true AND ``redis_url`` is configured.
     """
-    stamp = timestamp or _datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    now = _datetime.datetime.now()  # noqa: DTZ005 - local time names the file
+    stamp = timestamp or now.strftime("%Y%m%d-%H%M%S")
     destination = Path(out_dir)
     kind, source = _resolve_target(database_url)
     if kind == "postgres":
@@ -86,9 +89,11 @@ def build_commands(
 def _backup_files(out_dir: str | Path) -> list[Path]:
     """Existing backup files in the output directory, newest first."""
     matches = []
-    for path in Path(out_dir).glob(f"{BACKUP_PREFIX}-*"):
-        if _TIMESTAMP_PATTERN.match(path.name):
-            matches.append(path)
+    matches.extend(
+        path
+        for path in Path(out_dir).glob(f"{BACKUP_PREFIX}-*")
+        if _TIMESTAMP_PATTERN.match(path.name)
+    )
     matches.sort(key=lambda p: p.name, reverse=True)
     return matches
 
@@ -153,7 +158,9 @@ def main(argv: list[str] | None = None) -> int:
         if not out_dir.exists():
             out_dir.mkdir(parents=True)
         for command in commands:
-            result = subprocess.run(command, shell=True, check=False)
+            result = subprocess.run(  # noqa: S602 - operator-built lines
+                command, shell=True, check=False
+            )
             if result.returncode != 0:
                 print(f"[backup_db] FAILED: {command}", file=sys.stderr)
                 return result.returncode

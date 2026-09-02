@@ -2,7 +2,7 @@
 
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Collection, Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -93,9 +93,13 @@ def _audit_entries() -> dict[str, dict]:
             payload = json.loads(path.read_text(encoding="utf-8"))
             if not isinstance(payload, dict):
                 continue
-            for name, entry in payload.items():
-                if isinstance(name, str) and isinstance(entry, dict):
-                    entries[name] = entry
+            entries.update(
+                {
+                    name: entry
+                    for name, entry in payload.items()
+                    if isinstance(name, str) and isinstance(entry, dict)
+                }
+            )
     except (OSError, TypeError, ValueError, json.JSONDecodeError):
         entries = {}
     _AUDIT_CACHE["loaded"] = True
@@ -104,7 +108,7 @@ def _audit_entries() -> dict[str, dict]:
 
 
 def _option_affects_slot(
-    option: Mapping[str, Any], slot: str, ability_names: dict[str, list[str]]
+    option: Mapping[str, Any], slot: str, ability_names: Mapping[str, list[str]]
 ) -> bool:
     """Whether one OPTIONS entry is a player-controlled input for ``slot``."""
     key = str(option.get("key", "")).lower()
@@ -118,10 +122,9 @@ def _option_affects_slot(
         return slot == "P"
     if re.search(rf"\b{slot}\b", label):
         return True
-    for name in ability_names.get(slot, ()):
-        if name and name.lower() in label.lower():
-            return True
-    return False
+    return any(
+        name and name.lower() in label.lower() for name in ability_names.get(slot, ())
+    )
 
 
 def classify_assumption(text: str) -> str | None:
@@ -136,7 +139,7 @@ def classify_assumption(text: str) -> str | None:
 
 
 def _line_mentions_slot(
-    line: str, slot: str, ability_names: dict[str, list[str]]
+    line: str, slot: str, ability_names: Mapping[str, list[str]]
 ) -> bool:
     """Whether an assumption line talks about ``slot`` (letter, name, or
     the passive keyword)."""
@@ -144,26 +147,21 @@ def _line_mentions_slot(
         return True
     if slot == "P" and re.search(r"\bpassive\b", line, re.IGNORECASE):
         return True
-    for name in ability_names.get(slot, ()):
-        if name and name in line:
-            return True
-    return False
+    return any(name and name in line for name in ability_names.get(slot, ()))
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-return-statements
-# pylint: disable=too-many-locals
-def _slot_certainty(
+_Verdict = tuple[str, str]
+
+
+def _certified_boundary(
     slot: str,
-    options: list[Mapping[str, Any]],
-    assumptions: list[str],
     coverage: Mapping[str, str],
-    module_slots: list[str],
-    ability_names: dict[str, list[str]],
+    *,
+    module_slots: Collection[str],
+    ability_names: Mapping[str, list[str]],
     audit: Mapping[str, Any] | None,
-    registration: str,
-) -> tuple[str, str]:
-    """Derive one slot's certainty level and its human-readable reason."""
-    # 1. Certified slot state from the P1 audit / module coverage.
+) -> _Verdict | None:
+    """The boundary the audit, the module coverage or an absent slot entry documents."""
     audit_state = None
     if audit and isinstance(audit.get("slots"), dict):
         audit_state = audit["slots"].get(slot)
@@ -183,38 +181,54 @@ def _slot_certainty(
             f"{slot} is not modeled: the champion module has no slot entry "
             f"for it, so no damage row is priced."
         )
+    return None
 
-    # 2. Player-controlled defaulted options on this slot.
+
+def _option_labels(options: Iterable[Mapping[str, Any]]) -> str:
+    """``'key' (default value)`` for each option, comma-joined."""
+    return ", ".join(
+        f"'{option.get('key')}' (default {option.get('default')})" for option in options
+    )
+
+
+def _slot_option_estimate(
+    slot: str, options: Iterable[Mapping[str, Any]], ability_names: dict[str, list[str]]
+) -> _Verdict | None:
+    """The estimate the slot's own player-controlled defaulted options impose."""
     slot_options = [
         option
         for option in options
         if _option_affects_slot(option, slot, ability_names)
     ]
-    if slot_options:
-        labels = ", ".join(
-            f"'{option.get('key')}' (default {option.get('default')})"
-            for option in slot_options
-        )
-        return CERTAINTY_ESTIMATE, (
-            f"Uses player-controlled defaulted option(s): {labels}; the "
-            f"damage row depends on the supplied value."
-        )
+    if not slot_options:
+        return None
+    return CERTAINTY_ESTIMATE, (
+        f"Uses player-controlled defaulted option(s): {_option_labels(slot_options)}; "
+        f"the damage row depends on the supplied value."
+    )
 
-    # 3. Documented assumptions mentioning this slot.
+
+def _assumption_verdict(
+    slot: str, assumptions: Iterable[str], ability_names: dict[str, list[str]]
+) -> _Verdict | None:
+    """What a documented assumption naming the slot classifies to, boundary first."""
     slot_lines = [
         line for line in assumptions if _line_mentions_slot(line, slot, ability_names)
     ]
     for line in slot_lines:
-        classified = classify_assumption(line)
-        if classified == CERTAINTY_BOUNDARY:
+        if classify_assumption(line) == CERTAINTY_BOUNDARY:
             return CERTAINTY_BOUNDARY, f"Documented non-computed mechanic: {line}"
     for line in slot_lines:
-        classified = classify_assumption(line)
-        if classified == CERTAINTY_ESTIMATE:
+        if classify_assumption(line) == CERTAINTY_ESTIMATE:
             return CERTAINTY_ESTIMATE, f"Documented approximation/assumption: {line}"
+    return None
 
-    # 4. Global defaulted options (form toggles, pet counts, AD/AS points)
-    #    downgrade every damaging slot: the kit depends on them.
+
+def _global_option_estimate(
+    slot: str, options: Iterable[Mapping[str, Any]], ability_names: dict[str, list[str]]
+) -> _Verdict | None:
+    """The estimate kit-wide defaulted options (form toggles, pet counts,
+    AD/AS points) impose on every damaging slot: the kit depends on them."""
     global_options = [
         option
         for option in options
@@ -223,24 +237,47 @@ def _slot_certainty(
             for other in ability_names
         )
     ]
-    if global_options:
-        labels = ", ".join(
-            f"'{option.get('key')}' (default {option.get('default')})"
-            for option in global_options
-        )
-        return CERTAINTY_ESTIMATE, (
-            f"Kit-wide player-controlled option(s) {labels} can change the "
-            f"damage rows; {slot} inherits the estimate."
-        )
+    if not global_options:
+        return None
+    return CERTAINTY_ESTIMATE, (
+        f"Kit-wide player-controlled option(s) {_option_labels(global_options)} "
+        f"can change the damage rows; {slot} inherits the estimate."
+    )
 
-    # 5. Unknown/synthetic champions have no validated named-module contract.
+
+# pylint: disable-next=too-many-arguments,too-many-positional-arguments
+def _slot_certainty(
+    slot: str,
+    options: Iterable[Mapping[str, Any]],
+    assumptions: Iterable[str],
+    coverage: Mapping[str, str],
+    *,
+    module_slots: Collection[str],
+    ability_names: dict[str, list[str]],
+    audit: Mapping[str, Any] | None,
+    registration: str,
+) -> _Verdict:
+    """Derive one slot's certainty level and its human-readable reason."""
+    verdict = (
+        _certified_boundary(
+            slot,
+            coverage,
+            module_slots=module_slots,
+            ability_names=ability_names,
+            audit=audit,
+        )
+        or _slot_option_estimate(slot, options, ability_names)
+        or _assumption_verdict(slot, assumptions, ability_names)
+        or _global_option_estimate(slot, options, ability_names)
+    )
+    if verdict is not None:
+        return verdict
     if registration != "reviewed_module":
         return CERTAINTY_ESTIMATE, (
             f"No player-controlled defaults or documented boundaries for "
             f"{slot}, but the champion has no validated named module — treat "
             f"numbers as estimates."
         )
-
     return CERTAINTY_EXACT, (
         f"Every damaging/heal row for {slot} is a sourced formula with no "
         f"player-controlled default."
@@ -282,10 +319,10 @@ def derive_certainty(champion: str, champion_data: Mapping[str, Any]) -> dict[st
                 options,
                 assumptions,
                 coverage,
-                module_slots,
-                ability_names,
-                audit,
-                registration,
+                module_slots=module_slots,
+                ability_names=ability_names,
+                audit=audit,
+                registration=registration,
             )
         ]
     }

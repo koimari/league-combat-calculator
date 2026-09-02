@@ -26,7 +26,7 @@ already computed, re-rounded at its declared precision and published.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ...interaction_effects import public_physical_damage_reduction
@@ -53,7 +53,7 @@ def _optional_time(field: str, value: float | None) -> float | None:
 
 
 def _combat_state_blocks(
-    state: dict[str, Any], row: dict[str, Any], leaf: LeafBlock
+    state: Mapping[str, Any], row: dict[str, Any], leaf: LeafBlock
 ) -> None:
     """The two stack-ledger sub-blocks, whose leaf names collide.
 
@@ -100,7 +100,7 @@ def _combat_state_blocks(
 
 
 def _rune_state_blocks(
-    state: dict[str, Any], row: dict[str, Any], leaf: LeafBlock
+    state: Mapping[str, Any], row: dict[str, Any], leaf: LeafBlock
 ) -> None:
     """The two rune lifecycle sub-blocks (Guardian, Aftershock).
 
@@ -135,7 +135,7 @@ def _rune_state_blocks(
 
 
 def _cleanse_receipt(
-    state: dict[str, Any], fold: SurvivalFold, participant_id: str
+    state: Mapping[str, Any], fold: SurvivalFold, participant_id: str
 ) -> dict[str, Any]:
     """One recipient row's published cleanse receipt.
 

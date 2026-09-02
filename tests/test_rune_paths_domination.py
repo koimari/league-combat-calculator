@@ -217,7 +217,7 @@ class TestTasteOfBlood:
 
 class TestTheFiveUtilityRunes:
     @pytest.mark.parametrize(
-        "name,disposition,phrase",
+        ("name", "disposition", "phrase"),
         [
             ("Sixth Sense", "STRUCTURAL_ZERO", "no source prices as damage"),
             ("Deep Ward", "STRUCTURAL_ZERO", "belongs to the champion the fight"),

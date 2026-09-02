@@ -30,9 +30,11 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..damage import effective_cooldown
+from ..stats import effective_cooldown
 from .engine import SlotCtx, build_parser
-from .module_helpers import clamp
+from .inputs import float_option, int_option
+from .module_contract import coverage
+from .module_helpers import clamp, ranked_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -43,8 +45,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
-from .module_contract import coverage
 
 _VI_Q_SPELL = spell_object("Vi", "ViQ")
 _Q_MAX_CHARGE_SECONDS = 1.25
@@ -382,11 +382,10 @@ def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _vault_breaker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _vault_breaker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     minimum = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
@@ -429,11 +428,10 @@ def _e_hit_time(ctx: SlotCtx) -> float:
     return q_time + delay
 
 
-def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _relentless_force(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     flat = extract_value(ability, "Physical Damage", rank)
     total_ad = float(ctx.stat("attack_damage"))
@@ -489,11 +487,10 @@ def _relentless_force(ctx: SlotCtx) -> dict[str, Any] | None:
     return _carry_blast_shield(ctx, entry)
 
 
-def _cease_and_desist(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _cease_and_desist(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
 
     raw = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     sequence_start = (

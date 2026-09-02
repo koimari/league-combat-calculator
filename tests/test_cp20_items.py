@@ -20,25 +20,24 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.item_behavior import FightFacts
+from src.calculator.item_coverage import require_calculation_item_coverage
 from src.calculator.item_effects import (
-    ITEM_EFFECTS,
-    _STATIC_ITEM_EFFECTS,
     _PARSEABLE_ITEM_KEYS,
     _STATIC_ITEM_EFFECTS,
+    ITEM_EFFECTS,
     first_auto_state_ready,
     item_state_receipts,
     required_effect_value,
     resolve_damage_effects,
 )
 from src.calculator.item_support_effects import derive_item_support_effects
-from src.calculator.resource_ledger import TearDeclaration, TearManaflow
 from src.calculator.participant_timeline import build_participant_timeline
 from src.calculator.pipeline import FightParams
+from src.calculator.resource_ledger import TearDeclaration, TearManaflow
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.item_coverage import require_calculation_item_coverage
-
 from tests import item_probe
 
 
@@ -120,14 +119,16 @@ def test_cull_typed_values_match_the_cached_wiki_branches():
         if passive.get("name") == "Reap"
         for b in passive.get("branches", [])
     )
-    assert "maximum" in branch and "100" in branch and "350" in branch
+    assert "maximum" in branch
+    assert "100" in branch
+    assert "350" in branch
 
 
 def test_cull_reap_on_hit_heal_is_a_typed_health_packet():
     """The declaration owns the number; the projection carries no second
     copy of it (SD9)."""
-    from src.calculator.item_behavior import OnHitHealRule
     from src.calculator.interpreters.sustain import declared_sustain
+    from src.calculator.item_behavior import OnHitHealRule
 
     slot = declared_sustain(["Cull"], OnHitHealRule)
     assert slot.owner == "Cull"
@@ -523,13 +524,15 @@ def test_umbral_nightstalker_true_damage_formula_is_typed():
     from src.calculator.interpreters import charged_strike
 
     # First-auto strikes compile in the charged-strike interpreter, the one
-    # home for that family; ``BuildDamageEffects`` no longer carries them.
+    # home for that family; ``BuildDamageEffects`` does not carry them.
     slots = charged_strike.resolve_slots(
         ("Umbral Glaive",),
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert len(slots.first_autos) == 1
     source = slots.first_autos[0].source
@@ -664,7 +667,7 @@ def test_cp20_items_are_classified_modeled_state_and_optimizer_eligible(item_nam
 
 def _timeline(enemy_items=()):
     main = get_champion("Ahri")
-    loadout = ChampionLoadout(champion="Ahri", level=18, items=()).resolve()
+    ChampionLoadout(champion="Ahri", level=18, items=()).resolve()
     params = FightParams.from_request(
         {
             "fight_mode": "timed",
@@ -737,7 +740,7 @@ def test_participant_timeline_utility_receipts_cover_cp20_dimensions():
 
 def test_participant_timeline_phage_rage_movement_receipt():
     main = get_champion("Ahri")
-    loadout = ChampionLoadout(champion="Ahri", level=18, items=()).resolve()
+    ChampionLoadout(champion="Ahri", level=18, items=()).resolve()
     params = FightParams.from_request(
         {
             "fight_mode": "timed",

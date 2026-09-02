@@ -53,7 +53,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_second_branch(self):
         """Molten Fissure's fissure slows, Gaze of the Abyss roots."""
-        assert _CC.kinds(**{"q_variant": 2, "e_variant": 1}) == {
+        assert _CC.kinds(q_variant=2, e_variant=1) == {
             "passive": ["none"],
             "Q": ["none", "slow"],
             "E": ["root"],
@@ -62,7 +62,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_third_branch(self):
         """Crushing Maw slows everything it damages."""
-        assert _CC.kinds(**{"e_variant": 2}) == {
+        assert _CC.kinds(e_variant=2) == {
             "passive": ["none"],
             "Q": ["none"],
             "E": ["slow"],

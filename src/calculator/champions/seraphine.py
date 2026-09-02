@@ -84,7 +84,8 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
-from .module_helpers import buff_window_share
+from .inputs import bool_option, int_option
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -94,7 +95,6 @@ from .slotlib import (
     on_hit_entry,
     with_control,
 )
-from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
@@ -211,12 +211,11 @@ def _surround_sound(packet_w):
     return parse
 
 
-def _high_note(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _high_note(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: flat base + 0%:75% missing-health amplifier (hp-scaled part)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     maximum = extract_named(
         ability, "Maximum Enhanced Damage", rank, ctx.stats, ctx.target
@@ -281,7 +280,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_notes",
         _NOTE_CAP,
@@ -296,7 +296,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Surround Sound) pulses its sourced missing-health heal after 2.5 "
     "seconds when Seraphine has a shield at cast time; the first cast can "
     "use the explicit w_already_shielded option",

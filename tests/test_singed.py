@@ -112,7 +112,7 @@ class TestRInsanityPotion:
         abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": 1})
         assert set(abilities["R"]["stat_buff"]) == _R_STAT_KEYS
 
-    @pytest.mark.parametrize("rank, value", [(1, 25.0), (2, 55.0), (3, 85.0)])
+    @pytest.mark.parametrize(("rank", "value"), [(1, 25.0), (2, 55.0), (3, 85.0)])
     def test_r_rank_values_are_the_sourced_row(self, singed_data, rank, value) -> None:
         abilities = _parse(singed_data, ranks={"Q": 5, "W": 5, "E": 5, "R": rank})
         stat_buff = abilities["R"]["stat_buff"]

@@ -40,12 +40,15 @@ being mislabelled in either direction (the Dr. Mundo P precedent).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import CC_PER_PART, DEBUFF, SlotCtx
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -57,8 +60,6 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 
@@ -70,12 +71,11 @@ _FEROCITY_MAX = int(data_value(_RENGAR_P_SPELL, "MaxFerocity"))
 _R_SHRED_SECONDS = data_value(spell_object("Rengar", "RengarR"), "ArmorShredDuration")
 
 
-def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _thrill_of_the_hunt(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the empowered attack's flat armour shred on the marked target."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     landed = bool(ctx.option("r_thrill_attack"))
     shred = extract_value(ability, "Armor Reduction", rank)
@@ -142,7 +142,7 @@ RENGAR_FEROCITY_STACK_RULE = StackRule(
 
 
 def _ferocity_bonus(
-    ctx: SlotCtx, ability: dict[str, Any], attribute: str
+    ctx: SlotCtx, ability: Mapping[str, Any], attribute: str
 ) -> float | None:
     """Extract the Ferocity-Bonus leveling value for one ability.
 
@@ -196,12 +196,11 @@ def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _savagery(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: Savagery — base or Ferocity-empowered (level array) bonus damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     # Both part sets are emitted unconditionally (P3 package 3V): the
     # engine prices the FEROCITY parts for a live empowered cast (the
     # post-rotation stack walk's consume) and the base parts otherwise,
@@ -238,12 +237,11 @@ def _savagery(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _battle_roar(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: Battle Roar — base or Ferocity-empowered (level array) magic damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     base_damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Magic Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
@@ -270,17 +268,16 @@ def _battle_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _bola_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bola_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: Bola Strike — base or Ferocity-empowered (level array) physical damage.
 
     E is declared ``CC_PER_PART`` because the Ferocity bonus changes the
     kind: the base bola "slows them for 1.75 seconds",
     and the empowered one roots "instead of slowed".
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     base_damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX

@@ -43,10 +43,10 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
-from .module_helpers import buff_window_share
+from .module_contract import coverage
+from .module_helpers import buff_window_share, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value
-from .module_contract import coverage
 
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
 # "the target takes magic damage every second over 4 seconds" — 4 ticks
@@ -157,38 +157,27 @@ def _move_quick(packet_w):
     return parse
 
 
-def _guerrilla_warfare(packet_p):
-    """P: stealth + a real but unmodelable attack-speed steroid.
-
-    Kept ``out_of_scope`` (receipted open, the Olaf-R rule) because
-    Element of Surprise WOULD change damage if it could be modeled.  The
-    row states the mechanic and the two live blockers instead of
-    pretending the slot is non-damaging.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_p(ctx)
-        if entry is None:
-            return None
-        entry["detail"] = (
-            "Stealth (utility) plus Element of Surprise: 20% / 40% / 60% / "
-            "80% (based on level) bonus attack speed for 5s on breaking "
-            "stealth. Not modeled and not called no_damage. (1) The trigger "
-            "is unreachable: the cached innate grants the stealth only "
-            "'after 1.5 seconds without moving, taking non-over-time "
-            "damage, performing actions that break stealth' — a state a "
-            "modeled fight never enters, which is what separates this from "
-            "Twitch Q, an active cast the rotation does break. (2) The "
-            "magnitude has no cached ability atom: both P effect rows carry "
-            "an empty leveling array, so the ladder exists only as wiki "
-            "prose plus the binary's TeemoPassive BonusAttackSpeed level "
-            "breakpoints (0.20 at level 1, +0.20 at 5/10/15) and would have "
-            "to be republished as a module constant with no cached "
-            "accessor behind it."
-        )
-        return entry
-
-    return parse
+# P: stealth + a real but unmodelable attack-speed steroid.  Kept
+# ``out_of_scope`` (receipted open, the Olaf-R rule) because Element of
+# Surprise WOULD change damage if it could be modeled.  The row states the
+# mechanic and the two live blockers instead of pretending the slot is
+# non-damaging.
+_guerrilla_warfare = with_detail(
+    "Stealth (utility) plus Element of Surprise: 20% / 40% / 60% / "
+    "80% (based on level) bonus attack speed for 5s on breaking "
+    "stealth. Not modeled and not called no_damage. (1) The trigger "
+    "is unreachable: the cached innate grants the stealth only "
+    "'after 1.5 seconds without moving, taking non-over-time "
+    "damage, performing actions that break stealth' — a state a "
+    "modeled fight never enters, which is what separates this from "
+    "Twitch Q, an active cast the rotation does break. (2) The "
+    "magnitude has no cached ability atom: both P effect rows carry "
+    "an empty leveling array, so the ladder exists only as wiki "
+    "prose plus the binary's TeemoPassive BonusAttackSpeed level "
+    "breakpoints (0.20 at level 1, +0.20 at 5/10/15) and would have "
+    "to be republished as a module constant with no cached "
+    "accessor behind it."
+)
 
 
 # Reviewed crowd control, read from the cached kit.  Q (Blinding Dart)

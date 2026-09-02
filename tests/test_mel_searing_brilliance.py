@@ -47,8 +47,6 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.mel import (
-    ASSUMPTIONS,
-    MODULE_COVERAGE,
     _P_MAX_MISSILES,
     _P_MISSILE_AP_RATIO,
     _P_MISSILE_LEVEL_1,
@@ -57,6 +55,8 @@ from src.calculator.champions.mel import (
     _P_PER_MISSILE_TOLERANCE,
     _P_TOTAL_TOLERANCE,
     _P_WINDOW_DURATION,
+    ASSUMPTIONS,
+    MODULE_COVERAGE,
     _searing_brilliance_per_missile,
 )
 from src.calculator.damage import (

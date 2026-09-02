@@ -7,9 +7,11 @@ Data Dragon, and Community Dragon, with per-champion progress tracking.
 import json
 import sys
 import threading
+from collections.abc import Generator
 from copy import deepcopy
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import requests as _requests
 
@@ -18,7 +20,7 @@ _LOLSTATICDATA_ROOT = (
     Path(__file__).resolve().parent.parent.parent / "vendor" / "lolstaticdata"
 )
 if str(_LOLSTATICDATA_ROOT) not in sys.path:
-    sys.path.insert(0, str(_LOLSTATICDATA_ROOT))
+    sys.path.insert(0, str(_LOLSTATICDATA_ROOT))  # sightline-ok: 9 - vendored root
 
 from lolstaticdata.common import utils as _lsd_utils
 from lolstaticdata.common.utils import download_json, get_latest_patch_version
@@ -43,10 +45,11 @@ if sys.platform == "win32":
     def _win_download_soup(
         url: str,
         use_cache: bool = True,
-        dir: str = "__cache__",
+        dir: str = "__cache__",  # noqa: A002 - the vendor signature this replaces
     ) -> str:
         import os as _os
-        from bs4 import BeautifulSoup as _BS
+
+        from bs4 import BeautifulSoup as _BeautifulSoup
 
         directory = _os.path.abspath(
             _os.path.join(
@@ -73,7 +76,7 @@ if sys.platform == "win32":
                 with open(fn, "w", encoding="utf-8") as f:
                     f.write(html)
 
-        soup = _BS(html, "lxml")
+        soup = _BeautifulSoup(html, "lxml")
         html = str(soup)
         for old, new in [
             ("\u00a0", " "),
@@ -91,9 +94,9 @@ if sys.platform == "win32":
 
     _lsd_utils.download_soup = _win_download_soup
 
-from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
-from lolstaticdata.champions.pull_champions_dragons import get_ability_url
 from lolstaticdata.champions.__main__ import get_ability_filenames
+from lolstaticdata.champions.pull_champions_dragons import get_ability_url
+from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
 
 from .data_fetcher import DEFAULT_DATA_DIR, _read_cache
 from .data_registry import write_runtime_cache
@@ -164,8 +167,8 @@ def _build_champion_payload(
                         icon_filenames,
                     )
                     ability.icon = url
-        except Exception:
-            pass  # Ability icons are non-critical
+        except Exception:  # noqa: S110 - icons are decoration
+            pass
 
     champion_payload = json.loads(champion.__json__(ensure_ascii=False))
     champion_payload.pop("skins", None)
@@ -175,147 +178,114 @@ def _build_champion_payload(
     return champion_payload
 
 
-def _process_champions(
-    latest_version: str,
-) -> Generator[dict[str, Any], None, tuple[list[dict[str, Any]], list[str]]]:
-    """Fetch and process all champion data from the League Wiki.
+@dataclass
+class _ChampionPass:
+    """What one champion refresh accumulates across its bulk and single passes."""
 
-    Uses a two-phase approach:
-      Phase 1 — bulk generator (fast).  If the generator crashes internally
-        on a champion with unparseable wiki data, fall through to phase 2.
-      Phase 2 — process each remaining champion individually via the
-        ``target_champion`` parameter so one bad champion cannot block others.
+    latest_version: str
+    ddragon: dict[str, Any]
+    champions: list[dict[str, Any]] = field(default_factory=list)
+    skipped: list[str] = field(default_factory=list)
+    processed_keys: set[str] = field(default_factory=set)
+    processed: int = 0
 
-    Yields progress events and returns (champions, skipped).
-    """
-    ddragon_champions = download_json(
-        f"http://ddragon.leagueoflegends.com/cdn/{latest_version}"
-        f"/data/en_US/championFull.json"
-    )["data"]
+    def event(self, status: str, champion: str | None = None) -> dict[str, Any]:
+        """One progress event over the running count."""
+        event: dict[str, Any] = {
+            "phase": "champions",
+            "status": status,
+            "current": self.processed,
+            "total": len(self.ddragon),
+        }
+        if champion is not None:
+            event["champion"] = champion
+        return event
 
-    total_champions = len(ddragon_champions)
-    yield {
-        "phase": "champions",
-        "status": "Processing champions...",
-        "current": 0,
-        "total": total_champions,
-    }
+    def add(self, champion: Any, key: str) -> dict[str, Any]:
+        """Build one champion's payload and report it processed."""
+        self.champions.append(
+            _build_champion_payload(champion, self.latest_version, self.ddragon[key])
+        )
+        self.processed += 1
+        return self.event(f"Processed {champion.name}", champion.name)
 
-    champions: list[dict[str, Any]] = []
-    processed = 0
-    skipped: list[str] = []
-    processed_keys: set[str] = set()
 
-    # ------------------------------------------------------------------
-    # Phase 1: Bulk generator (fastest — single wiki download + parse)
-    # ------------------------------------------------------------------
-    bulk_crashed = False
+def _bulk_pass(state: _ChampionPass) -> Generator[dict[str, Any], None, bool]:
+    """Every champion from one wiki download; True when the generator itself
+    crashed, in which case everything yielded so far stands."""
     handler = LolWikiDataHandler(
         use_cache=False,
         process_stats=True,
         process_abilities=True,
         process_skins=False,
     )
-
     try:
         for champion in handler.get_champions():
             try:
                 champion_key = champion.key
-                processed_keys.add(champion_key)
-
-                if champion_key not in ddragon_champions:
+                state.processed_keys.add(champion_key)
+                if champion_key not in state.ddragon:
                     continue
-
-                ddragon_champion = ddragon_champions[champion_key]
-                payload = _build_champion_payload(
-                    champion,
-                    latest_version,
-                    ddragon_champion,
-                )
-                champions.append(payload)
-                processed += 1
-                yield {
-                    "phase": "champions",
-                    "status": f"Processed {champion.name}",
-                    "current": processed,
-                    "total": total_champions,
-                    "champion": champion.name,
-                }
+                yield state.add(champion, champion_key)
             except Exception as exc:
                 name = getattr(champion, "name", "Unknown")
-                processed_keys.add(getattr(champion, "key", name))
-                skipped.append(name)
-                processed += 1
-                yield {
-                    "phase": "champions",
-                    "status": f"Skipped {name}: {exc}",
-                    "current": processed,
-                    "total": total_champions,
-                    "champion": name,
-                }
+                state.processed_keys.add(getattr(champion, "key", name))
+                state.skipped.append(name)
+                state.processed += 1
+                yield state.event(f"Skipped {name}: {exc}", name)
     except Exception:
-        # The generator itself crashed (wiki parse error for a champion).
-        # Everything yielded so far is fine; fall through to phase 2.
-        bulk_crashed = True
-        skipped.append("Unknown (wiki parse error)")
-        processed += 1
-        yield {
-            "phase": "champions",
-            "status": "Bulk parse error — switching to individual mode",
-            "current": processed,
-            "total": total_champions,
-        }
+        state.skipped.append("Unknown (wiki parse error)")
+        state.processed += 1
+        yield state.event("Bulk parse error — switching to individual mode")
+        return True
+    return False
 
-    # ------------------------------------------------------------------
-    # Phase 2: Process remaining champions one-by-one (resilient but
-    #          slower since each call re-parses the cached wiki page).
-    # ------------------------------------------------------------------
-    if bulk_crashed:
-        remaining_keys = [key for key in ddragon_champions if key not in processed_keys]
 
-        for champion_key in remaining_keys:
-            try:
-                single_handler = LolWikiDataHandler(
-                    use_cache=True,
-                    target_champion=champion_key,
-                    process_stats=True,
-                    process_abilities=True,
-                    process_skins=False,
-                )
-                found = False
-                for champion in single_handler.get_champions():
-                    found = True
-                    processed_keys.add(champion.key)
-                    ddragon_champion = ddragon_champions[champion_key]
-                    payload = _build_champion_payload(
-                        champion,
-                        latest_version,
-                        ddragon_champion,
-                    )
-                    champions.append(payload)
-                    processed += 1
-                    yield {
-                        "phase": "champions",
-                        "status": f"Processed {champion.name}",
-                        "current": processed,
-                        "total": total_champions,
-                        "champion": champion.name,
-                    }
-                if not found:
-                    # Champion exists in ddragon but not in wiki data
-                    processed += 1
-            except Exception as exc:
-                skipped.append(champion_key)
-                processed += 1
-                yield {
-                    "phase": "champions",
-                    "status": f"Skipped {champion_key}: {exc}",
-                    "current": processed,
-                    "total": total_champions,
-                    "champion": champion_key,
-                }
+def _single_pass(state: _ChampionPass) -> Generator[dict[str, Any], None, None]:
+    """The champions the bulk pass never reached, one cached wiki page each,
+    so one bad champion cannot block the others."""
+    remaining = [key for key in state.ddragon if key not in state.processed_keys]
+    for champion_key in remaining:
+        try:
+            handler = LolWikiDataHandler(
+                use_cache=True,
+                target_champion=champion_key,
+                process_stats=True,
+                process_abilities=True,
+                process_skins=False,
+            )
+            found = False
+            for champion in handler.get_champions():
+                found = True
+                state.processed_keys.add(champion.key)
+                yield state.add(champion, champion_key)
+            if not found:
+                # In ddragon but not in the wiki data.
+                state.processed += 1
+        except Exception as exc:
+            state.skipped.append(champion_key)
+            state.processed += 1
+            yield state.event(f"Skipped {champion_key}: {exc}", champion_key)
 
-    return champions, skipped
+
+def _process_champions(
+    latest_version: str,
+) -> Generator[dict[str, Any], None, tuple[list[dict[str, Any]], list[str]]]:
+    """Fetch and process all champion data from the League Wiki.
+
+    One bulk wiki download first; if that generator crashes on a champion
+    with unparseable wiki data, the remaining champions are pulled one page
+    each.  Yields progress events and returns (champions, skipped).
+    """
+    ddragon = download_json(
+        f"http://ddragon.leagueoflegends.com/cdn/{latest_version}"
+        f"/data/en_US/championFull.json"
+    )["data"]
+    state = _ChampionPass(latest_version, ddragon)
+    yield state.event("Processing champions...")
+    if (yield from _bulk_pass(state)):
+        yield from _single_pass(state)
+    return state.champions, state.skipped
 
 
 def _wiki_item_table() -> dict[str, Any]:
@@ -356,7 +326,7 @@ def _process_items() -> dict[str, Any] | None:
 
     items_path = _LOLSTATICDATA_ROOT / "items.json"
     if items_path.exists():
-        with open(items_path, "r", encoding="utf-8") as items_file:
+        with items_path.open(encoding="utf-8") as items_file:
             generated = json.load(items_file)
         return merge_item_sources(
             generated, _wiki_item_table(), _riot_item_descriptions()
@@ -495,10 +465,10 @@ def _rune_page_facts(runes: dict[str, Any]) -> str | None:
             source=_WIKI_PAGE_URL.format(title=_RUNE_PAGE_TITLE),
             revision=revision,
         )
-        return wikitext
     except Exception as exc:
         runes[SHARDS_KEY] = {"error": str(exc)}
         return None
+    return wikitext
 
 
 def _adaptive_force_facts(runes: dict[str, Any]) -> None:
@@ -599,6 +569,45 @@ def reparse_cached_rune_effects(data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, 
     return runes
 
 
+def _update_champions(latest_version: str) -> Generator[dict[str, Any], None, int]:
+    """Refresh champions.json; returns the champion count for the done event."""
+    champions, skipped = yield from _process_champions(latest_version)
+    write_runtime_cache(
+        DEFAULT_DATA_DIR,
+        "champions.json",
+        {payload["key"]: payload for payload in champions},
+        source_version=latest_version,
+        source_url="https://wiki.leagueoflegends.com/en-us/List_of_champions",
+    )
+    status = f"Saved {len(champions)} champions"
+    if skipped:
+        status += f" (skipped {len(skipped)}: {', '.join(skipped)})"
+    yield {
+        "phase": "champions",
+        "status": status,
+        "current": len(champions),
+        "total": len(champions),
+    }
+    return len(champions)
+
+
+def _update_items(latest_version: str) -> Generator[dict[str, Any], None, None]:
+    """Refresh items.json, warning instead of writing when nothing came back."""
+    yield {"phase": "items", "status": "Updating items (this may take a moment)..."}
+    items_data = _process_items()
+    if not items_data:
+        yield {"phase": "items", "status": "Warning: no items data generated"}
+        return
+    write_runtime_cache(
+        DEFAULT_DATA_DIR,
+        "items.json",
+        items_data,
+        source_version=latest_version,
+        source_url="https://wiki.leagueoflegends.com/en-us/Item",
+    )
+    yield {"phase": "items", "status": f"Saved {len(items_data)} items"}
+
+
 def update_data() -> Generator[dict[str, Any], None, None]:
     """Fetch fresh champion and item data from upstream sources.
 
@@ -609,93 +618,23 @@ def update_data() -> Generator[dict[str, Any], None, None]:
         patch: patch version string (done phase)
     """
     if not _update_lock.acquire(blocking=False):
-        yield {
-            "phase": "error",
-            "status": "An update is already in progress.",
-        }
+        yield {"phase": "error", "status": "An update is already in progress."}
         return
 
     try:
         yield {"phase": "init", "status": "Fetching latest patch version..."}
         latest_version = get_latest_patch_version()
-        yield {
-            "phase": "init",
-            "status": f"Latest patch: {latest_version}",
-        }
-
-        # --- Champions ---
-        champion_gen = _process_champions(latest_version)
-        champions: list[dict[str, Any]] = []
-        skipped_champions: list[str] = []
-        try:
-            while True:
-                event = next(champion_gen)
-                yield event
-        except StopIteration as stop:
-            result = stop.value or ([], [])
-            champions, skipped_champions = result
-
-        champion_dict = {payload["key"]: payload for payload in champions}
-        write_runtime_cache(
-            DEFAULT_DATA_DIR,
-            "champions.json",
-            champion_dict,
-            source_version=latest_version,
-            source_url="https://wiki.leagueoflegends.com/en-us/List_of_champions",
-        )
-
-        champ_status = f"Saved {len(champions)} champions"
-        if skipped_champions:
-            champ_status += (
-                f" (skipped {len(skipped_champions)}:"
-                f" {', '.join(skipped_champions)})"
-            )
-        yield {
-            "phase": "champions",
-            "status": champ_status,
-            "current": len(champions),
-            "total": len(champions),
-        }
-
-        # --- Items ---
-        yield {
-            "phase": "items",
-            "status": "Updating items (this may take a moment)...",
-        }
-
-        items_data = _process_items()
-        if items_data:
-            write_runtime_cache(
-                DEFAULT_DATA_DIR,
-                "items.json",
-                items_data,
-                source_version=latest_version,
-                source_url="https://wiki.leagueoflegends.com/en-us/Item",
-            )
-            yield {
-                "phase": "items",
-                "status": f"Saved {len(items_data)} items",
-            }
-        else:
-            yield {
-                "phase": "items",
-                "status": "Warning: no items data generated",
-            }
-
-        # --- Runes (the whole page: keystones, minors, stat shards) ---
+        yield {"phase": "init", "status": f"Latest patch: {latest_version}"}
+        champions_count = yield from _update_champions(latest_version)
+        yield from _update_items(latest_version)
         yield from update_runes(latest_version)
-
         yield {
             "phase": "done",
             "status": f"Update complete! Now on patch {latest_version}",
             "patch": latest_version,
-            "champions_count": len(champions),
+            "champions_count": champions_count,
         }
-
     except Exception as exc:
-        yield {
-            "phase": "error",
-            "status": f"Update failed: {exc}",
-        }
+        yield {"phase": "error", "status": f"Update failed: {exc}"}
     finally:
         _update_lock.release()

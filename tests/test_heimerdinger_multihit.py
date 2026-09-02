@@ -94,9 +94,9 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.champions.slotlib import find_named_leveling
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -273,15 +273,21 @@ def _denial_reasons(result: dict) -> list[str]:
     if walk:
         receipts = walk.get("receipts", [])
         if isinstance(receipts, list):
-            for row in receipts:
-                if not row.get("accepted", True):
-                    reasons.append(str(row.get("reason", "")))
-    for row in result.get("resource_ledger", {}).get("receipts", []):
-        if not row.get("accepted", True):
-            reasons.append(str(row.get("reason", "")))
-    for note in result.get("notes") or []:
-        if isinstance(note, dict):
-            reasons.append(str(note.get("reason", note.get("message", ""))))
+            reasons.extend(
+                str(row.get("reason", ""))
+                for row in receipts
+                if not row.get("accepted", True)
+            )
+    reasons.extend(
+        str(row.get("reason", ""))
+        for row in result.get("resource_ledger", {}).get("receipts", [])
+        if not row.get("accepted", True)
+    )
+    reasons.extend(
+        str(note.get("reason", note.get("message", "")))
+        for note in result.get("notes") or []
+        if isinstance(note, dict)
+    )
     return reasons
 
 
@@ -398,7 +404,7 @@ class TestSourceAndTypedValues:
         assert later["modifiers"][0]["values"] == [10, 15, 20, 25, 30]
         assert later["modifiers"][1]["values"] == [12]
         assert later["modifiers"][1]["units"] == ["% AP"]
-        e = _HEIMER_DATA["abilities"]["E"][0]
+        _HEIMER_DATA["abilities"]["E"][0]
         base = _leveling("E", "Magic Damage")
         assert base["modifiers"][0]["values"] == [60, 100, 140, 180, 220]
         assert base["modifiers"][1]["values"] == [60]
@@ -507,10 +513,10 @@ class TestRocketFirstVsSubsequent:
         # Both rows scale per rank and AP: rank 1 first 50/later 10;
         # rank 5 + 100 AP first 205/later 42.
         for rank, first_want, later_want in ((1, 50.0, 10.0), (5, 150.0, 30.0)):
-            stats, abilities = _parse({"w_rockets": 5}, ranks={**_RANKS, "W": rank})
+            _stats, abilities = _parse({"w_rockets": 5}, ranks={**_RANKS, "W": rank})
             assert abilities["W"]["parts"][0].amount == pytest.approx(first_want)
             assert abilities["W"]["parts"][1].amount == pytest.approx(later_want)
-        stats, abilities = _parse({"w_rockets": 5}, ap=100.0)
+        _stats, abilities = _parse({"w_rockets": 5}, ap=100.0)
         assert abilities["W"]["parts"][0].amount == pytest.approx(205.0)
         assert abilities["W"]["parts"][1].amount == pytest.approx(42.0)
         assert abilities["W"]["total_raw"] == pytest.approx(205.0 + 42.0 * 4)
@@ -1047,7 +1053,7 @@ class TestScoreReceiptParity:
                 assert full["breakdown"]["E"] == scored["breakdown"]["E"]
                 shared = ("time", "slot", "name", "ordinal", "resource_cost")
                 for full_row, scored_row in zip(
-                    full["cast_timeline"], scored["cast_timeline"]
+                    full["cast_timeline"], scored["cast_timeline"], strict=False
                 ):
                     assert {k: full_row[k] for k in shared} == {
                         k: scored_row[k] for k in shared

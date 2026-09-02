@@ -6,7 +6,8 @@ from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -15,23 +16,24 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Demon Shade",
-        reason="Camouflage and low-health regeneration are self-state; no outgoing damage is implied.",
+        reason=(
+            "Camouflage and low-health regeneration are self-state; no outgoing "
+            "damage is implied."
+        ),
         slot="P",
     )
 
 
-def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _hate_spike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     recasts = min(max(int(ctx.option("q_recasts")), 0), 3)
     marked = bool(ctx.option("q_marked_target"))
     dart = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -48,14 +50,14 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     parts = [DamagePart("magic", dart, time_offset=0.3)]
-    for index in range(recasts):
-        parts.append(
-            DamagePart(
-                "magic",
-                spike + (marked_bonus if marked else 0.0),
-                time_offset=0.6 + 0.3 * index,
-            )
+    parts.extend(
+        DamagePart(
+            "magic",
+            spike + (marked_bonus if marked else 0.0),
+            time_offset=0.6 + 0.3 * index,
         )
+        for index in range(recasts)
+    )
     entry["parts"] = tuple(parts)
     entry["detail"] = (
         f"Dart plus {recasts} recast spike(s); mark bonus {'on' if marked else 'off'}."
@@ -63,15 +65,15 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _allure(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason="Charm/slow is selected from the full W entry; champion target is the default branch.",
+        reason=(
+            "Charm/slow is selected from the full W entry; champion target is the "
+            "default branch."
+        ),
     )
     if entry is None:
         return None
@@ -131,26 +133,14 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _last_caress(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    execute = bool(ctx.option("r_execute_ready"))
-    attr = "Empowered Damage" if execute else "Magic Damage"
-    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.35),)
-    entry["detail"] = (
-        "240% execute branch is opt-in only when the target is below 30% maximum health."
-    )
-    return entry
+_last_caress = named_damage(
+    lambda ctx: (
+        "Empowered Damage" if bool(ctx.option("r_execute_ready")) else "Magic Damage"
+    ),
+    "magic",
+    time_offset=0.35,
+    detail="240% execute branch is opt-in only when the target is below 30% maximum health.",
+)
 
 
 SLOTS = {

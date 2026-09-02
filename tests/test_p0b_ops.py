@@ -18,15 +18,14 @@ import base64
 import hashlib
 import json
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from werkzeug.exceptions import TooManyRequests
 
 import src.app as app_module
-import scripts.backup_db as backup_db
-import scripts.load_sanity as load_sanity
+from scripts import backup_db, load_sanity
 
 
 @pytest.fixture(autouse=True)
@@ -208,7 +207,8 @@ def test_deep_health_returns_all_checks():
     assert cache_check["status"] == "ok"
     assert cache_check["enabled"] is False
     assert cache_check["backend"] == "sqlite"
-    assert "hits" in cache_check and "misses" in cache_check
+    assert "hits" in cache_check
+    assert "misses" in cache_check
 
     engine_check = body["checks"]["engine"]
     assert engine_check["status"] == "ok"
@@ -235,7 +235,7 @@ def test_deep_health_golden_fresh_is_ok(monkeypatch, tmp_path):
     # Freshness is measured against the wall clock, so this fixture must be
     # relative to "now". A hardcoded date silently expires once it drifts past
     # the 14-day threshold and turns this into a false "stale" failure.
-    checked_at = datetime.now(timezone.utc) - timedelta(days=1)
+    checked_at = datetime.now(UTC) - timedelta(days=1)
     report = tmp_path / "staleness.json"
     report.write_text(
         json.dumps({"patch": "16.15", "checked_at": checked_at.isoformat()}),
@@ -272,7 +272,10 @@ def test_deep_health_db_failure_is_error(monkeypatch):
 def _test_password_hash(password="secret"):
     salt = b"p0b-ops-salt"
     digest = hashlib.scrypt(password.encode(), salt=salt, n=16_384, r=8, p=1)
-    enc = lambda value: base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+    def enc(value):
+        return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
     return f"scrypt$16384$8$1${enc(salt)}${enc(digest)}"
 
 
@@ -338,7 +341,8 @@ def test_backup_commands_dispatch_by_backend(tmp_path):
     no_redis = backup_db.build_commands(
         None, tmp_path, include_redis=True, redis_url=None, timestamp="20260806-023000"
     )
-    assert len(no_redis) == 1 and "redis-cli" not in no_redis[0]
+    assert len(no_redis) == 1
+    assert "redis-cli" not in no_redis[0]
 
 
 def test_backup_retention_keeps_newest(tmp_path):
@@ -378,7 +382,8 @@ def test_load_sanity_payloads_have_required_contract():
     for payload in load_sanity.CALCULATE_PAYLOADS:
         assert payload["champion"]
         assert payload["role"] in {"top", "jungle", "mid", "bottom", "support"}
-        assert "enemies" in payload and "allies" in payload
+        assert "enemies" in payload
+        assert "allies" in payload
     for payload in load_sanity.BIS_PAYLOADS:
         assert payload["subject_team"] == "main"
         assert payload["slot_kind"] in {"item", "boots"}

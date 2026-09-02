@@ -42,7 +42,7 @@ def _items_payload(objects: dict, domain: str = "items") -> dict:
     return {"domain": domain, "generated_at": 0, "source_ref": None, "objects": objects}
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_tree(tmp_path: Path):
     """A small data tree: one champion, three items, unified item atoms."""
     champs = {"Aatrox": {"name": "Aatrox", "abilities": {}}}
@@ -91,7 +91,7 @@ def tmp_tree(tmp_path: Path):
     return tmp_path
 
 
-@pytest.fixture()
+@pytest.fixture
 def patched(tmp_tree: Path, monkeypatch):
     monkeypatch.setattr(br, "CHAMPS_JSON", tmp_tree / "data" / "champions.json")
     monkeypatch.setattr(br, "ITEMS_JSON", tmp_tree / "data" / "items.json")
@@ -250,7 +250,7 @@ def test_failure_publishes_no_partial_tree(patched):
 
 
 def test_main_completes_on_real_data_and_matches_manifest(tmp_path, monkeypatch):
-    """main() must no longer raise on 'effects'; totals match the manifest."""
+    """main() must not raise on 'effects'; totals match the manifest."""
     # Publish to a scratch OUT so the tracked docs/receipts tree is untouched.
     monkeypatch.setattr(br, "OUT", tmp_path / "receipts")
     objects = br.load_item_atoms()

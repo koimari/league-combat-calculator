@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.ability_spec import DamagePart
 from src.calculator import item_effects
+from src.calculator.ability_spec import DamagePart
 from src.calculator.atomizer_domains import atomize_item
 from src.calculator.damage import (
     FightConfig,

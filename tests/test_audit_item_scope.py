@@ -1,13 +1,15 @@
 """Issue #166 — the full-entry release gate consumes item_source contracts.
 
-The gate used to re-parse ``modes``/``removed`` keys and effect branches
-itself, so a cache-shape or acquisition-rule change could make the audit a
-different item/effect universe than runtime.  These tests pin the parity:
+A gate that re-parses ``modes``/``removed`` keys and effect branches itself
+lets a cache-shape or acquisition-rule change make the audit a different
+item/effect universe than runtime.  These tests pin the parity:
 audit scope is the typed ``item_source.audit_scope`` policy, effect
 enumeration/prose come from ``effect_entries()``/``branches()``/
 ``effect_text()``, and every stored description reaches the receipt exactly
 once.
 """
+
+from pathlib import Path
 
 import pytest
 
@@ -79,7 +81,7 @@ def test_audit_scope_matches_runtime_availability(
 def test_gate_scope_uses_item_source_not_mode_keys():
     """The audit must not re-derive scope from mode/removed keys itself."""
     source = audit.__file__
-    text = open(source).read()
+    text = Path(source).read_text(encoding="utf-8")
     assert "effect_entries" in text
     assert "audit_scope" in text
     assert 'modes.get("classic sr 5v5")' not in text

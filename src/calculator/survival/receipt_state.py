@@ -13,10 +13,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
-from .outcome_state import OutcomeLedger
-from .transitions import participant_pools
 from ..data_registry import data_version
+from ..delivery_eligibility import CombatantFacts, initial_full_block_uses
 from ..interaction_effects import (
     defense_composition,
     defense_eligibility,
@@ -24,7 +22,14 @@ from ..interaction_effects import (
     resolve_projectile_defense,
     resolve_spell_shield,
 )
-from ..delivery_eligibility import initial_full_block_uses
+from .actions import (
+    SurvivalAction,
+    TransitionRank,
+    TriggerLinkage,
+    action_key,
+)
+from .outcome_state import OutcomeLedger
+from .transitions import participant_pools
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives from exactly seven values:
@@ -132,7 +137,7 @@ def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
 
 
 def _state_proto_key(
-    combatant: Any, below_half_healing_bonus: float
+    combatant: CombatantFacts, below_half_healing_bonus: float
 ) -> tuple[Any, ...]:
     """The prototype's value key.
 
@@ -150,7 +155,9 @@ def _state_proto_key(
     )
 
 
-def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, Any]:
+def build_state(
+    combatant: CombatantFacts, below_half_healing_bonus: float
+) -> dict[str, Any]:
     """One participant's canonical survival state.
 
     Clones the memoized prototype for this combatant's defence record: fresh
@@ -196,7 +203,7 @@ def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, An
 
 
 def _build_state_uncached(
-    combatant: Any, below_half_healing_bonus: float
+    combatant: CombatantFacts, below_half_healing_bonus: float
 ) -> dict[str, Any]:
     """The canonical state construction the prototype memo clones.
 
@@ -462,7 +469,7 @@ def _build_state_uncached(
 
 
 def build_states(
-    combatants: Sequence[Any], below_half_healing_bonuses: Sequence[float]
+    combatants: Sequence[CombatantFacts], below_half_healing_bonuses: Sequence[float]
 ) -> list[dict[str, Any]]:
     """Index-aligned canonical state list for a participant roster.
 
@@ -481,27 +488,29 @@ def build_states(
         )
     return [
         build_state(combatant, bonus)
-        for combatant, bonus in zip(combatants, below_half_healing_bonuses)
+        for combatant, bonus in zip(
+            combatants, below_half_healing_bonuses, strict=False
+        )
     ]
 
 
-class ReceiptLedger:
+class ReceiptLedger(TriggerLinkage):
     """The annotating adapter: event-observation writes, trigger-linkage
     status by event id, and walk-authored recovery scheduling."""
 
     __slots__ = (
-        "annotating",
-        "records_annotations",
-        "damage_event_status",
         "actions",
-        "current_index",
-        "index_of",
-        "expanded_healing",
-        "healing",
+        "annotating",
         "annotations_written",
         "compile_event",
-        "outcomes",
+        "current_index",
+        "expanded_healing",
+        "healing",
+        "index_of",
         "next_aidx",
+        "outcomes",
+        "records_annotations",
+        "trigger_status",
     )
 
     # Event writes always persist on this adapter; annotations only when
@@ -537,7 +546,7 @@ class ReceiptLedger:
         self.compile_event = compile_event
         self.annotating = annotating
         self.records_annotations = annotating
-        self.damage_event_status: dict[int, str] = {}
+        self.trigger_status: dict[int, str] = {}
         self.actions = actions
         self.current_index = -1
         self.index_of = index_of
@@ -608,24 +617,6 @@ class ReceiptLedger:
             action.event.setdefault("skipped_reason", reason)
         else:
             action.event["skipped_reason"] = reason
-
-    # -- trigger linkage ----------------------------------------------------
-    def trigger_applied(self, action: SurvivalAction) -> bool:
-        """Whether the action's trigger packet was applied (no trigger
-        passes; a skipped trigger fails closed, never silently applies)."""
-        if action.trigger_slot == NO_SLOT:
-            return True
-        return self.damage_event_status.get(action.trigger_slot) == "applied"
-
-    def mark_applied(self, action: SurvivalAction) -> None:
-        """Mark this action's event applied, so its dependants may fire."""
-        if action.event_slot != NO_SLOT:
-            self.damage_event_status[action.event_slot] = "applied"
-
-    def mark_blocked(self, action: SurvivalAction) -> None:
-        """Mark this action's event blocked, so its dependants fail closed."""
-        if action.event_slot != NO_SLOT:
-            self.damage_event_status[action.event_slot] = "blocked"
 
     # -- walk-authored scheduling -------------------------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:

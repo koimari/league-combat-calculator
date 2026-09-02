@@ -319,7 +319,7 @@ def test_rengar_ferocity_empowers_q_w_e():
     assert empowered["breakdown"]["Q"]["total_damage"] > q_base * 3
     assert base["breakdown"]["Q"]["total_damage"] > q_base * 3
 
-    w_emp = _resolve(
+    _resolve(
         "Rengar",
         "W",
         "Bonus Magic Damage",
@@ -377,7 +377,7 @@ def test_jhin_fourth_shot_parse_formula_matches_wiki():
     """Parse-level: the final-round part is the sourced 25% missing-health
     bonus at level 18 (15/20/25% at levels 1/6/11), not the Every Moment
     Matters AD percent."""
-    stats, abilities = _parse(
+    _stats, abilities = _parse(
         "Jhin",
         options={"p_shot_number": 4},
         target={

@@ -26,16 +26,14 @@ from typing import NamedTuple
 import pytest
 
 from src import app as app_module
-from src.calculator import item_effects
 from src.calculator.ability_spec import (
     AttackClass,
     DamageClass,
 )
 from src.calculator.champions import registered_champion_names
-from src.calculator.interpreters import delta_amp
-from src.calculator.item_behavior import AmpChainSlot
-from src.calculator.trigger_stream import is_immobilizing_event
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.interpreters import delta_amp
+from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.item_support_effects import (
     _declared_authorities,
 )
@@ -47,7 +45,7 @@ from src.calculator.survival.transitions import (
     _apply_damage_modifier,
     _modifier_applies,
 )
-
+from src.calculator.trigger_stream import is_immobilizing_event
 from tests.test_item_support_effects import (
     declared_classes_by_producer,
     timed_cross_participant_producers,
@@ -186,10 +184,12 @@ def command_slot() -> delta_amp.AmpSlot:
     slot = delta_amp.resolve_slot(
         ["Imperial Mandate"],
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None, "D-12: the sweep needs Command's declared window"
     return slot
@@ -373,10 +373,8 @@ class TestCommandWindowsMergeByRefresh:
     wording admits is filed with its cost in
     ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
 
-    This class used to assert that no authored pair could merge, and that the
-    day one did, ``merge`` needed "a fixture and an oracle receipt before
-    landing it".  The corpus grew past it, and keeps growing.  The fixture and
-    the receipt live in
+    An authored pair that merges needs "a fixture and an oracle receipt
+    before landing it".  The fixture and the receipt live in
     ``tests/test_command_amp_roster.py::TestTwoImmobilizesMergeIntoOneRefreshedWindow``
     — the merge is asserted here only as the census fact that makes that
     fixture reachable, so one fact keeps one home.
@@ -885,7 +883,7 @@ class TestSupportValueMixesUnits:
             ("enemy:Aatrox", 0, 1, False),
         ]
         support_value, healing_output = accumulate_support_values(
-            [360.0, 0.07], entries, (), (), 1
+            [360.0, 0.07], entries, (), (), count=1
         )
         assert support_value == [pytest.approx(360.07)], (
             "D-14: the support accumulator gained a unit axis.  That is H3 "

@@ -52,7 +52,7 @@ Full suite exits with `0 failed, 0 xfailed`. Report evidence per round.
 - `test_r23_item_options_rejected_with_named_validation_error_today`
   [Quicksilver Sash / Mercurial Scimitar] — lever (a): removed. The P2
   Slice 4 active option landed for both items, so the 400 "Unknown item
-  option target" this row asserted is no longer reachable; primary
+  option target" this row asserted is unreachable; primary
   `test_r23_new_self_cleanse_option_accepted_and_applied` (passing, both
   items) pins the current 200 self-cast-cleanse behavior instead.
 - `test_multi_tick_dot_application_adds_one_cast_stack` — lever (a):

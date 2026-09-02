@@ -8,6 +8,7 @@ Two layers:
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -22,7 +23,6 @@ from src.calculator.champions.engine import (
     SlotCtx,
     build_parser,
 )
-from src.calculator.damage import _declared_cc_marker
 from src.calculator.champions.slotlib import (
     STEROID_ZERO,
     ability_on_hit_entry,
@@ -37,6 +37,7 @@ from src.calculator.champions.slotlib import (
     stat_buff,
     sum_modifiers,
 )
+from src.calculator.damage import _declared_cc_marker
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
@@ -46,7 +47,7 @@ from src.calculator.champions.slotlib import (
 @pytest.fixture(scope="module")
 def champions_data() -> dict:
     """Load all champion data from JSON."""
-    with open("data/champions.json") as f:
+    with Path("data/champions.json").open(encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -519,7 +520,7 @@ class TestSharedEntryAndModifierPrimitives:
     ) -> None:
         payload = {"name": "Nested", "damage_per_hit": 42.0}
         without_cd = ability_on_hit_entry("Ability", 3, "magic", payload)
-        with_cd = ability_on_hit_entry("Ability", 3, "magic", payload, 8.0)
+        with_cd = ability_on_hit_entry("Ability", 3, "magic", payload, cooldown=8.0)
 
         assert without_cd == {
             "name": "Ability",
@@ -1379,7 +1380,6 @@ class TestModuleCcApplication:
 
         def amp(ctx):
             ctx.results["Q"]["parts"] += (DamagePart("true", 5.0, time_offset=0.0),)
-            return None
 
         amp.phase = AMP
         parse = build_parser(
@@ -1405,7 +1405,7 @@ def _empower_shell(**overrides):
             3,
             "magic",
             {"name": "Shell", "damage_per_hit": 40.0, "damage_type": "magic"},
-            8.0,
+            cooldown=8.0,
         )
         entry.update(overrides)
         return entry

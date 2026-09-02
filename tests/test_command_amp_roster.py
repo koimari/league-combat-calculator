@@ -35,7 +35,7 @@ from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from src.calculator.interpreters import delta_amp
-from src.calculator.item_behavior import AmpChainSlot
+from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.item_behavior_catalog import ACKNOWLEDGED_READING_DIVERGENCES
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.actions import SurvivalAction
@@ -116,18 +116,20 @@ class _CommandNumbers(NamedTuple):
 def _command_effect() -> _CommandNumbers:
     """Command's sourced amp fraction and window, from its declared rule.
 
-    Both numbers used to arrive through a bespoke ``item_effects`` accessor.
-    They now arrive through the ``imperial_mandate.command`` declaration and
-    its ``ValueRef``s into ``ALLY_ITEM_EFFECTS`` — one home for the number,
-    one home for the shape.
+    Both numbers arrive through the ``imperial_mandate.command`` declaration
+    and its ``ValueRef``s into ``ALLY_ITEM_EFFECTS``, not a bespoke
+    ``item_effects`` accessor — one home for the number, one home for the
+    shape.
     """
     slot = delta_amp.resolve_slot(
         [COMMAND_ITEM],
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None, "the roster fixture needs Command's declared rule"
     return _CommandNumbers(
@@ -394,12 +396,12 @@ class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
             "Command's window; this roster no longer authors them"
         )
         duration = _command_effect().duration
-        assert SECOND_TRIGGER - FIRST_TRIGGER < duration
+        assert duration > SECOND_TRIGGER - FIRST_TRIGGER
         assert [packet["expires_at"] for packet in packets] == [
             FIRST_EXPIRY,
             REFRESHED_EXPIRY,
         ]
-        assert REFRESHED_EXPIRY == pytest.approx(SECOND_TRIGGER + duration), (
+        assert pytest.approx(SECOND_TRIGGER + duration) == REFRESHED_EXPIRY, (
             "REFRESH: the surviving expiry is the *last* trigger plus one "
             "duration, not the first expiry plus another"
         )

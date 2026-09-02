@@ -63,7 +63,8 @@ class TestBackstab:
         # One cached row, and it carries only the flat per-level term: the
         # wiki's "+ 20% bonus AD" has no modifier here, which is why the
         # ratio is a module constant.
-        assert len(values) == 1 and values[0][17] == 30
+        assert len(values) == 1
+        assert values[0][17] == 30
         on_hit = row_review.entry("Shaco", "passive")["on_hit"]
         assert on_hit["damage_type"] == "physical"
         assert on_hit["damage_per_hit"] == pytest.approx(30 + 20)
@@ -106,6 +107,6 @@ class TestBackstab:
         assert rider_probe.RIDER_ROW not in result["breakdown"]
 
     def test_every_slot_now_prices_something(self):
-        assert get_champion_module_contract("Shaco").coverage == {
-            slot: "modeled" for slot in "PQWER"
-        }
+        assert get_champion_module_contract("Shaco").coverage == dict.fromkeys(
+            "PQWER", "modeled"
+        )

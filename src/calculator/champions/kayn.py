@@ -8,17 +8,21 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
+from .module_contract import coverage
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    no_damage,
+    ranked_slot,
+    typed_damage,
+)
 from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 
-def _reaping_slash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _reaping_slash(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     hits = 2
     form = str(ctx.option("form"))
     value = extract_named(ability, "Total Physical Damage", rank, ctx.stats, ctx.target)

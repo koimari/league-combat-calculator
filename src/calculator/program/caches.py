@@ -38,9 +38,25 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
 
 from ..data_registry import GOVERNED_MEMOS, Invalidator, data_version
+from ..delivery_eligibility import CombatantFacts
+from .build import ParamPatch, RoutedEvent
+
+#: The value keys below, named so a cache declaration can spell what it holds.
+RosterFingerprint = tuple[int, tuple[str, ...]]
+ActorFingerprint = tuple[str, tuple[tuple[str, float | None], ...]]
+PatchFingerprint = tuple[()] | tuple[str, tuple[tuple[str, object], ...]]
+ProgramInputsFingerprint = tuple[
+    RosterFingerprint,
+    tuple[ActorFingerprint, ...],
+    tuple[object, ...],
+    int,
+    PatchFingerprint,
+]
+ProgramFingerprint = tuple[
+    RosterFingerprint, tuple[RoutedEvent, ...], int, PatchFingerprint
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,12 +137,12 @@ class CacheDeclaration:
             )
 
 
-def roster_fingerprint(participant_ids: Sequence[str]) -> tuple:
+def roster_fingerprint(participant_ids: Sequence[str]) -> RosterFingerprint:
     """The roster's value key: who is in the fight, in kernel index order."""
     return (data_version(), tuple(str(pid) for pid in participant_ids))
 
 
-def actor_fingerprint(actor: Any, fields: Iterable[str]) -> tuple:
+def actor_fingerprint(actor: CombatantFacts, fields: Iterable[str]) -> ActorFingerprint:
     """One actor's value key over the named stat fields.
 
     ``fields`` is passed rather than discovered so the key is declared, and
@@ -139,7 +155,7 @@ def actor_fingerprint(actor: Any, fields: Iterable[str]) -> tuple:
     )
 
 
-def patch_fingerprint(patch: Any) -> tuple:
+def patch_fingerprint(patch: ParamPatch | None) -> PatchFingerprint:
     """A per-pass parameter patch as a value key; ``()`` means no patch.
 
     The overrides are a mapping, flattened in sorted field order: a ``dict``
@@ -157,12 +173,13 @@ def patch_fingerprint(patch: Any) -> tuple:
 
 
 def program_inputs_fingerprint(
-    roster: tuple,
-    actors: Sequence[tuple],
-    params: tuple,
+    roster: RosterFingerprint,
+    actors: Sequence[ActorFingerprint],
+    params: tuple[object, ...],
     pass_index: int,
-    patch: Any,
-) -> tuple:
+    *,
+    patch: ParamPatch | None,
+) -> ProgramInputsFingerprint:
     """What a program was built from: roster, actors, params, pass, patch.
 
     The pass index says which pass and the patch says how it differs, and both
@@ -180,8 +197,11 @@ def program_inputs_fingerprint(
 
 
 def program_fingerprint(
-    roster: tuple, events: Sequence[Any], pass_index: int, patch: Any
-) -> tuple:
+    roster: RosterFingerprint,
+    events: Sequence[RoutedEvent],
+    pass_index: int,
+    patch: ParamPatch | None,
+) -> ProgramFingerprint:
     """What a built program is: every field of it, the events included."""
     return (roster, tuple(events), int(pass_index), patch_fingerprint(patch))
 
@@ -253,8 +273,8 @@ __all__ = [
     "CACHES",
     "CacheDeclaration",
     "Invalidator",
-    "every_declaration",
     "actor_fingerprint",
+    "every_declaration",
     "patch_fingerprint",
     "program_fingerprint",
     "program_inputs_fingerprint",

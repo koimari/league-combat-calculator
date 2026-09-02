@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +35,7 @@ def _pretty(token: str) -> str:
     return token.replace("_", " ").title()
 
 
-def _required(record: dict[str, Any], key: str, owner: str = "") -> Any:
+def _required(record: Mapping[str, Any], key: str, owner: str = "") -> Any:
     """One field the snapshot cannot be written without, failing closed on the key."""
     value = record.get(key)
     if not value:

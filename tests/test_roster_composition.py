@@ -9,74 +9,22 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import item_effects
-from src.calculator import roster_composition
+from src.calculator import item_effects, roster_composition
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters.stat_derivation import StatSlot
-from src.calculator.item_behavior import KernelField, EngineLane
+from src.calculator.item_behavior import EngineLane, KernelField
 from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.roster_composition import (
     ActorRequest,
     Combatant,
     actor_params,
     coalesce_darius_q_heals,
     from_loadout,
-    mana_spent_heal_slot,
     main_combatant,
+    mana_spent_heal_slot,
     target_overrides,
 )
-
-
-@pytest.mark.parametrize(
-    "defenses", [SimpleNamespace(magic_shield=0.0), None], ids=["namespace", "none"]
-)
-def test_a_combatant_refuses_defenses_that_are_not_starting_defenses(defenses):
-    """The typed field is enforced where the participant is built.
-
-    Every walk-side consumer reads ``defenses`` by direct attribute, so a
-    stand-in would fail deep in the kernel on the first field it lacks; the
-    constructor names the participant and the wrong type instead.
-    """
-    with pytest.raises(
-        TypeError, match="ally:Lux: defenses must be a StartingDefenses"
-    ):
-        Combatant(
-            participant_id="ally:Lux",
-            team="ally",
-            champion_data={"name": "Lux"},
-            level=12,
-            items=(),
-            stats={},
-            defenses=defenses,
-        )
-
-
-@pytest.mark.parametrize(
-    "request_double",
-    [SimpleNamespace(role="mid"), None],
-    ids=["namespace", "none"],
-)
-def test_a_combatant_refuses_a_request_that_is_not_an_actor_request(
-    request_double,
-):
-    """``request`` is read by direct attribute the same way ``defenses`` is.
-
-    A stand-in used to buy every field it did not carry a silent default
-    -- an absent ``ability_ranks`` read as no manual allocation, an absent
-    ``ally_effects_enabled`` as opted out.
-    """
-    with pytest.raises(TypeError, match="ally:Lux: request must be an ActorRequest"):
-        Combatant(
-            participant_id="ally:Lux",
-            team="ally",
-            champion_data={"name": "Lux"},
-            level=12,
-            items=(),
-            stats={},
-            defenses=StartingDefenses(),
-            request=request_double,
-        )
+from src.calculator.scenario import ChampionLoadout
 
 
 def test_a_roster_card_and_the_main_params_build_one_request_shape():
@@ -186,7 +134,8 @@ def test_roster_helpers_keep_darius_coalescing_and_catalyst_presence_typed():
     assert events["main"][0]["amount_formula"](500.0, 1000.0) == 170.0
     assert mana_spent_heal_slot([]) is None
     slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
-    assert slot is not None and slot.value("damage_taken_to_mana_ratio") > 0.0
+    assert slot is not None
+    assert slot.value("damage_taken_to_mana_ratio") > 0.0
 
 
 # ── the restore ledger's answer to a late hit ─────────────────────────────

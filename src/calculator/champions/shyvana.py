@@ -25,12 +25,15 @@ four ``Stacks_Per_*`` counts, with no damage node of any kind."""
 import re
 from typing import Any
 
-from ..ability_atoms import ability_payload
 from .. import healing_helpers as _healing
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat, int_option
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -40,9 +43,7 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
-from .module_contract import coverage
 from .source_receipts import load_champion_sources
-from ..binary_roots import data_value, spell_object
 
 # Rooted in ShyvanaW.Duration; the cached W description corroborates the
 # 2.5-second shield window. The 1-second recast window remains prose.
@@ -132,11 +133,10 @@ def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
 _scalemail.phase = BUFF
 
 
-def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _emberstrike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     casts = min(max(int(ctx.option("q_casts")), 1), 3)
     dragon = bool(ctx.option("dragon_form"))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)
@@ -348,32 +348,23 @@ SOURCES = load_champion_sources("Shyvana")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Shyvana self-healing events from its authored packet."""
     healing = []
     w_row = ability_payload(ability_damages, "W")
     if "dragon form" in str(w_row.get("detail", "")).lower():
         level = max(1, int(champion_stat(champion_stats, "level")))
         w = _healing.ability_json(champion_data, "W")
-        flat = _healing.extract_named(w, "Heal", level, champion_stats, {})
+        flat = extract_named(w, "Heal", level, champion_stats, {})
         missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
-        def inferno_aegis_heal(
-            current_health: float,
-            maximum_health: float,
-            flat: float = flat,
-            missing_pct: float = missing_pct,
-        ) -> float:
-            return (
-                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-            )
-
+        inferno_aegis_heal = _healing.flat_plus_missing_heal(flat, missing_pct)
         for payment in _healing.payments(
             _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
         ):

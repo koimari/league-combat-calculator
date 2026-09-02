@@ -814,7 +814,8 @@ class TestMeleeRangedLeveling:
             "{{tip|adaptive damage}} upon arrival"
         )
         melee, ranged = effects["melee_ranged_leveling"]
-        assert len(melee) == 20 and len(ranged) == 20
+        assert len(melee) == 20
+        assert len(ranged) == 20
         assert melee[0] == 9.0
         assert melee[17] == pytest.approx(30.0)
         assert ranged[0] == 6.0
@@ -910,8 +911,8 @@ class TestNestedApWithNamedParamsStaysUnresolved:
 class TestPiecewiseProgressions:
     """Module:Ability progression's ``start; then +f(x) for N; …`` form.
 
-    Two runes state a per-level payout this way, and both used to arrive as
-    a parse warning. Each run continues from the previous run's last value,
+    Two runes state a per-level payout this way, and both parse instead of
+    arriving as a parse warning. Each run continues from the previous run's last value,
     which is what makes ``1; then +0.25*x for 4`` a ramp rather than four
     independent values.
     """

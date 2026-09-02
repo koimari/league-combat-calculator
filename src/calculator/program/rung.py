@@ -30,7 +30,6 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Union
 
 from ..work_counters import Rung as CounterRung
 
@@ -96,7 +95,7 @@ class SearchPoisoned:
     reason: str
 
 
-Rung = Union[CompiledFast, CompiledFull, ReceiptWalk, SearchPoisoned]
+Rung = CompiledFast | CompiledFull | ReceiptWalk | SearchPoisoned
 
 RUNGS: tuple[type, ...] = (CompiledFast, CompiledFull, ReceiptWalk, SearchPoisoned)
 

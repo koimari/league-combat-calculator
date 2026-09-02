@@ -53,19 +53,11 @@ CHAMPIONS_ROOT = ROOT / "src" / "calculator" / "champions"
 # The names a champion input block is bound to.  Duplicating the frontier's
 # set here would be a second thing to maintain, so it is imported from the
 # instrument that gates it.
-from scripts.behavior_frontier import (  # noqa: E402  pylint: disable=wrong-import-position
+from scripts.behavior_frontier import (
     INPUT_BLOCK_NAMES,
+    _literal_default,
     zero_policy_frontier,
 )
-
-
-def _literal_default(node: ast.AST) -> bool:
-    """Whether a ``.get`` default is a bare number (or its negation)."""
-    if isinstance(node, ast.Constant):
-        return isinstance(node.value, (int, float)) and not isinstance(node.value, bool)
-    if isinstance(node, ast.UnaryOp):
-        return _literal_default(node.operand)
-    return False
 
 
 def _input_fallback_sites(root: Path = CHAMPIONS_ROOT) -> list[str]:

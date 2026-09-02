@@ -15,9 +15,11 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import ability_json, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import float_option
+from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -26,8 +28,6 @@ from .slotlib import (
     on_hit_entry,
 )
 from .source_receipts import load_champion_sources
-from ..healing_helpers import ability_json, parsed_rank
-from .inputs import float_option
 
 
 def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -38,20 +38,25 @@ def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
     value = 0.30 * bonus_ms
     entry = on_hit_entry(ability_name(ability), value, "magic")
     entry["detail"] = (
-        f"30% of the explicit {bonus_ms:g} bonus movement speed is bonus magic damage on attacks and Zephyr."
+        f"30% of the explicit {bonus_ms:g} bonus movement speed is bonus magic damage "
+        f"on attacks and Zephyr."
     )
     return entry
 
 
-def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _howling_gale(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
-    low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
-    high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
-    value = low + (high - low) * charge
+    value = between_rows(
+        ctx,
+        ability,
+        rank,
+        "Minimum Magic Damage",
+        high="Maximum Magic Damage",
+        fraction=charge,
+    )
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -66,25 +71,15 @@ def _howling_gale(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _zephyr(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value),)
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Passive movement speed and active slow are sourced utility; the active is one magic hit."
-    )
-    return entry
+_zephyr = named_damage(
+    "Magic Damage",
+    "magic",
+    event_order_certified="single_hit",
+    detail=(
+        "Passive movement speed and active slow are sourced utility; the active "
+        "is one magic hit."
+    ),
+)
 
 
 SLOTS = {
@@ -99,7 +94,10 @@ SLOTS = {
     "R": lambda ctx: no_damage(
         ctx,
         name="Monsoon",
-        reason="Knockback and channelled healing are utility; the parent entry has no outgoing champion damage formula.",
+        reason=(
+            "Knockback and channelled healing are utility; the parent entry has no "
+            "outgoing champion damage formula."
+        ),
     ),
 }
 # Q's whirlwind deals magic damage "and knock[s] them up"; W's air
@@ -128,7 +126,8 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Tailwind's 30% bonus-movement-speed on-hit uses the explicit movement-speed input.",
-    "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive movement speed is not double-counted as damage.",
+    "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive "
+    "movement speed is not double-counted as damage.",
     "Eye of the Storm and Monsoon are visible ally/defensive utility, not TDD.",
     "E (Eye of the Storm) shields the selected teammate for the sourced "
     "Shield Strength (80-240 + 55% AP) for 4s (scanner packet with "
@@ -146,13 +145,13 @@ SOURCES = load_champion_sources("Janna")
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 # pylint: disable=too-many-locals
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Monsoon pays its sourced per-tick heal on its own 0.25s channel.
 
     Monsoon channels for up to 3 seconds, healing Janna herself and nearby
@@ -175,7 +174,7 @@ def derive_self_healing(
     per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
     total = extract_named(ability, "Total Heal", r_rank, champion_stats)
     tick_count = (
-        max(1, min(100, int(round(total / per_tick))))
+        max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0
         else 12
     )
@@ -184,18 +183,18 @@ def derive_self_healing(
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(1, tick_count + 1):
-                healing.append(
-                    {
-                        "time": start + index * 0.25,
-                        "amount": float(per_tick),
-                        "source": "Monsoon",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                        "target_scope": "self_and_all_teammates",
-                        "_event_id": f"janna:r:{cast_index}:{index}",
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.25,
+                    "amount": float(per_tick),
+                    "source": "Monsoon",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                    "target_scope": "self_and_all_teammates",
+                    "_event_id": f"janna:r:{cast_index}:{index}",
+                }
+                for index in range(1, tick_count + 1)
+            )
     return healing
 
 

@@ -69,9 +69,9 @@ class TestReviewedCrowdControl:
     def test_one_bite_pays_one_heal_however_many_parts_price_it(self):
         """The defect this cadence was held back for.
 
-        Two parts per bite used to be two heal events (and, across two
-        casts, three): the rule counted W damage events and skipped the
-        first.  It counts bites now (``HealAnchor.CAST``), so a ten-second
+        Two parts per bite are one heal event, not two (nor three across
+        two casts): the rule counts bites (``HealAnchor.CAST``), not W
+        damage events minus the first, so a ten-second
         fight with three W casts heals exactly twice — the first cast only
         applies the Wound.
         """

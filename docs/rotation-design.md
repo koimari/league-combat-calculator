@@ -131,7 +131,7 @@ The edge taxonomy (closed, asserted by the tests):
 | `amp` | amplifier → burst | damage-taken amplifiers resolve first (Vladimir R Hemoplague) |
 | `recast` | parent → recast | a recast rides its parent's casts on the shared timeline (Q → Q2, Ambessa) |
 
-**`cc_setup` no longer fires from a champion module's own `cc_kind`.** A
+**`cc_setup` does not fire from a champion module's own `cc_kind`.** A
 module recording its reviewed crowd control — per slot in `MODULE_CC` or
 on the part at its construction site — states what a cast *applies*, not
 when to cast it, and recording a true fact must not move published

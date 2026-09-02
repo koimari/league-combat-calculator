@@ -24,7 +24,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import golden_snapshot as gs  # noqa: E402  (path is set above)
+import golden_snapshot as gs
 
 RECEIPTS = REPO_ROOT / "docs" / "receipts"
 COUPLED_BASELINE = REPO_ROOT / "scripts" / "golden_coupled_baseline.json"

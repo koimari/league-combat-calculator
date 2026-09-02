@@ -33,7 +33,8 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(e_text) == ["slow"]
 
     def test_the_no_damage_slots_stay_absent(self):
-        assert "P" not in zed.MODULE_CC and "W" not in zed.MODULE_CC
+        assert "P" not in zed.MODULE_CC
+        assert "W" not in zed.MODULE_CC
         assert get_champion_module_contract("Zed").coverage["P"] == "no_damage"
         assert get_champion_module_contract("Zed").coverage["W"] == "no_damage"
 

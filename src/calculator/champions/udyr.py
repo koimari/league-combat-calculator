@@ -34,10 +34,11 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
-from .engine import ONHIT, SlotCtx
-from .module_helpers import buff_window_share
+from .module_contract import coverage
+from .module_helpers import buff_window_share, ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_name,
@@ -48,7 +49,6 @@ from .slotlib import (
     resolve_scaling,
     with_control_event,
 )
-from .module_contract import coverage
 
 # The Awaken lightning chain's strike COUNT is the binary UdyrQ.Bounces
 # DataValue; the strike INTERVAL (0.2s) has no binary home (script-side)
@@ -107,12 +107,11 @@ def _target_max_health_percent(
     return total
 
 
-def _wilding_claw(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _wilding_claw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the stance's empowered-attack on-hit (+ Awaken rows)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     awaken = bool(ctx.option("q_awaken"))
     empowered = min(
         max(
@@ -242,56 +241,43 @@ def _blazing_stampede(packet_e):
     return parse
 
 
-def _bridge_between(packet_p):
-    """P: stance/cooldown system plus an unmodelable attack-speed steroid.
-
-    Kept ``out_of_scope`` (receipted open, the Olaf-R rule) because Monk
-    Training WOULD change damage if it could be modeled.  The row states
-    the mechanic and its live blockers instead of pretending the slot is
-    non-damaging.
-
-    Three blockers: the windowed path, the cooldown refund, and
-    ``buff_window_share``.  All three hold — the windowed kernel in
-    ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``, and the
-    refund blocker is the SHAPE of the one authoring surface (a static
-    parse-time divisor on an entry's own cooldown, Ezreal's
-    ``_with_q_refund``), not its absence.
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_p(ctx)
-        if entry is None:
-            return None
-        entry["detail"] = (
-            "Awakened Spirit (stance swaps, a 1.5s global cooldown and the "
-            "Awaken recast window) carries no damage instance. Monk "
-            "Training does move damage and is NOT modeled: after any cast, "
-            "the next two basic attacks within 4s gain 30% bonus attack "
-            "speed and refund 5% of Awakened Spirit's cooldown (wiki prose "
-            "plus the binary's UdyrPassive AttackSpeed calculation 0.30, "
-            "AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, "
-            "not called no_damage, on three counts. The engine's only "
-            "WINDOWED attack-speed path resolves its window start by "
-            "walking cast_order to the Q slot, so it is Q-slot-only (the "
-            "Miss Fortune W precedent) and a P-slot steroid cannot reach "
-            "it. The unwindowed self-buff channel "
-            "(module_helpers.buff_window_share) weights a bonus purely by "
-            "TIME, while this window is bounded by attack count as well as "
-            "time — it closes on the second empowered attack or at 4s, "
-            "whichever comes first — so a time-weighted share would "
-            "over-credit it whenever the attacks land early. And the "
-            "cooldown refund has no channel that fits: a champion CAN "
-            "author one (Ezreal's _with_q_refund divides each emitted "
-            "entry's cooldown by a refund rate factor), but every such "
-            "rewrite is static and parse-time, sound only because "
-            "Ezreal's refund stream is always on, while this one is "
-            "bounded by the same 4s/2-attack window — nothing mutates a "
-            "cooldown mid-fight (item_effects' CooldownProcEffect is read "
-            "only by the item-proc scheduler)."
-        )
-        return entry
-
-    return parse
+# P: stance/cooldown system plus an unmodelable attack-speed steroid.  Kept
+# ``out_of_scope`` (receipted open, the Olaf-R rule) because Monk Training
+# WOULD change damage if it could be modeled.  The row states the mechanic
+# and its live blockers instead of pretending the slot is non-damaging.
+# Three blockers: the windowed path, the cooldown refund, and
+# ``buff_window_share``.  All three hold — the windowed kernel in
+# ``damage.py`` walks ``cast_order`` and breaks on ``"Q"``, and the refund
+# blocker is the SHAPE of the one authoring surface (a static parse-time
+# divisor on an entry's own cooldown, Ezreal's ``_with_q_refund``), not its
+# absence.
+_bridge_between = with_detail(
+    "Awakened Spirit (stance swaps, a 1.5s global cooldown and the "
+    "Awaken recast window) carries no damage instance. Monk "
+    "Training does move damage and is NOT modeled: after any cast, "
+    "the next two basic attacks within 4s gain 30% bonus attack "
+    "speed and refund 5% of Awakened Spirit's cooldown (wiki prose "
+    "plus the binary's UdyrPassive AttackSpeed calculation 0.30, "
+    "AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, "
+    "not called no_damage, on three counts. The engine's only "
+    "WINDOWED attack-speed path resolves its window start by "
+    "walking cast_order to the Q slot, so it is Q-slot-only (the "
+    "Miss Fortune W precedent) and a P-slot steroid cannot reach "
+    "it. The unwindowed self-buff channel "
+    "(module_helpers.buff_window_share) weights a bonus purely by "
+    "TIME, while this window is bounded by attack count as well as "
+    "time — it closes on the second empowered attack or at 4s, "
+    "whichever comes first — so a time-weighted share would "
+    "over-credit it whenever the attacks land early. And the "
+    "cooldown refund has no channel that fits: a champion CAN "
+    "author one (Ezreal's _with_q_refund divides each emitted "
+    "entry's cooldown by a refund rate factor), but every such "
+    "rewrite is static and parse-time, sound only because "
+    "Ezreal's refund stream is always on, while this one is "
+    "bounded by the same 4s/2-attack window — nothing mutates a "
+    "cooldown mid-fight (item_effects' CooldownProcEffect is read "
+    "only by the item-proc scheduler)."
+)
 
 
 # Reviewed crowd control, read from the cached kit: R (Wingborne Storm)
@@ -337,7 +323,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic "
     "attacks with the sourced on-hit payload: Bonus Physical Damage "
     "(3% : 8% by rank of the target's maximum health + 3.5% per 100 bonus "
@@ -374,7 +361,8 @@ OPTIONS.append(
         "label": "Q empowered basic attacks",
     }
 )
-ASSUMPTIONS = ASSUMPTIONS + [
+ASSUMPTIONS = [
+    *ASSUMPTIONS,
     "E (Blazing Stampede) is a sourced zero-damage row (MODULE_COVERAGE: "
     "no_damage, reclassified from out_of_scope). Its empowered attack IS "
     "priced as a sourced control event: a 0.75s stun from the validated "
@@ -417,17 +405,17 @@ MODULE_COVERAGE = coverage(no_damage="E", out_of_scope="P")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Udyr self-healing events from its authored packet."""
     healing = []
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    per_tick = _healing.extract_named(
+    per_tick = extract_named(
         _healing.ability_json(champion_data, "W"),
         "Heal per Tick",
         w_rank,
@@ -438,16 +426,16 @@ def derive_self_healing(
             if cast.get("slot") != "W":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(1, 17):
-                healing.append(
-                    {
-                        "time": start + index * 0.25,
-                        "amount": float(per_tick),
-                        "source": "Iron Mantle",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.25,
+                    "amount": float(per_tick),
+                    "source": "Iron Mantle",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(1, 17)
+            )
     return healing
 
 

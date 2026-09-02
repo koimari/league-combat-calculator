@@ -564,8 +564,8 @@ def test_the_exempt_family_really_mounts_nothing():
 
 def test_the_refusal_pass_runs_at_render_time():
     """A boot-time sweep cannot see a control a later render creates, so the
-    pass is the last DOM step of ``render()`` and the boot chain no longer
-    calls it. ``.bis-trigger`` and the roster ``[data-picker]`` rows are
+    pass is the last DOM step of ``render()`` and the boot chain does not
+    call it. ``.bis-trigger`` and the roster ``[data-picker]`` rows are
     render-created, and both are gated families."""
     render_body = APP_JS.split("\nfunction render() {")[1].split("\n}")[0]
     assert "applyControlCapabilities();" in render_body

@@ -19,7 +19,7 @@ measured, not asserted. This is the Vayne-P / Kalista-P / Pyke-P shape:
 sourced, non-damaging, therefore ``no_damage``.
 
 **P's movement grant is still not a ``stat_buff``, but the channel is
-no longer the reason.** The old argument was that
+not the reason.** The old argument was that
 ``_apply_stat_buff_ultimates`` added onto an already-soft-capped
 ``champion_stats["move_speed"]``; CF9's fold re-applies the caps, and
 ``test_the_channel_itself_is_no_longer_the_blocker`` pins that the
@@ -193,9 +193,9 @@ class TestFleetOfFootHasNoDamageAnywhere:
         assert speed == pytest.approx(55.0)
         # +5 at each of levels 6/11/16/18 walks 55 -> 75 by level 18,
         # which is exactly the cached [55, 60, 65, 70, 75] ladder.
-        for breakpoint in parts[0]["mBreakpoints"]:
-            if breakpoint["mLevel"] <= 18:
-                speed += breakpoint["mAdditionalBonusAtThisLevel"]
+        for step in parts[0]["mBreakpoints"]:
+            if step["mLevel"] <= 18:
+                speed += step["mAdditionalBonusAtThisLevel"]
         assert speed == pytest.approx(75.0)
 
     def test_binary_decay_window_matches_the_wiki_prose(self):
@@ -269,7 +269,8 @@ class TestMovementSpeedIsNotStatBuffed:
         assert "decaying over 1.5 seconds" in _P_EFFECT["description"]
         assert "refreshing on subsequent hits" in _P_EFFECT["description"]
         attributes = [row["attribute"] for row in _P_EFFECT["leveling"]]
-        assert "Uptime" not in attributes and attributes == ["Per-Level Scaling"]
+        assert "Uptime" not in attributes
+        assert attributes == ["Per-Level Scaling"]
 
     def test_the_over_credit_would_become_adaptive_force(self):
         # Swiftmarch converts TOTAL movement speed into adaptive force,
@@ -383,7 +384,7 @@ class TestOnTheHuntMovementIsWired:
             stats["move_speed_flat"] * (1.0 + stats["move_speed_percent"] / 100.0)
         )
 
-    @pytest.mark.parametrize("rank,percent", [(1, 20.0), (2, 25.0), (3, 30.0)])
+    @pytest.mark.parametrize(("rank", "percent"), [(1, 20.0), (2, 25.0), (3, 30.0)])
     def test_the_buff_is_the_cached_rank_row(self, rank, percent):
         _, abilities = _parse(ranks={"Q": 5, "W": 5, "E": 5, "R": rank})
         assert abilities["R"]["stat_buff"] == {"move_speed_percent": percent}
@@ -408,7 +409,7 @@ class TestOnTheHuntMovementIsWired:
         assert stats["move_speed"] == pytest.approx(431.4)
 
     @pytest.mark.parametrize(
-        "duration, percent, published",
+        ("duration", "percent", "published"),
         [(5.0, 30.0, 431.4), (10.0, 30.0, 431.4), (30.0, 12.0, 375.2)],
     )
     def test_the_grant_is_weighted_by_its_cached_buff_duration(

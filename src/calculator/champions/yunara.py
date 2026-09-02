@@ -18,7 +18,9 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -27,7 +29,6 @@ from .slotlib import (
     extract_named,
     with_item_on_hits,
 )
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
 # 0.25s over the 1-second linger) is wiki W prose, reconciled by
@@ -43,12 +44,11 @@ _R_ARC_OF_RUIN_AP_RATIO = data_value(_YUNARA_R_SPELL, "RW_APRatio")
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
 
 
-def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _arc_of_judgment(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: initial impact plus the 4 lingering-bead ticks (or Arc of Ruin)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     transcendent = bool(ctx.option("r_transcendent"))
     if transcendent:
         r_rank = ctx.rank_for("R")
@@ -96,25 +96,24 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     parts: list[DamagePart] = [DamagePart("magic", initial, time_offset=0.0)]
-    for index in range(1, _W_LINGER_TICKS + 1):
-        parts.append(
-            DamagePart(
-                "magic",
-                linger_per_tick,
-                time_offset=index * _W_LINGER_TICK_INTERVAL,
-            )
+    parts.extend(
+        DamagePart(
+            "magic",
+            linger_per_tick,
+            time_offset=index * _W_LINGER_TICK_INTERVAL,
         )
+        for index in range(1, _W_LINGER_TICKS + 1)
+    )
     entry["parts"] = tuple(parts)
     entry["detail"] = detail
     return entry
 
 
-def _transcend_one_self(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _transcend_one_self(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the Transcendent State buff shell (zero direct damage)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -157,7 +156,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Arc of Judgment) prices the initial impact plus 4 lingering-bead "
     "ticks at 0.25s intervals over the 1-second linger (Linger Magic "
     "Damage per Tick x 4 == Total Expanded Damage; per-tick is 15% of "

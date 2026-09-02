@@ -24,11 +24,13 @@ hardcoded.
 
 from typing import Any
 
-from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
-from .engine import SlotCtx, build_parser
 from .. import healing_helpers as _healing
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     extract_auto,
@@ -38,7 +40,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 
 def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -72,12 +73,11 @@ def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _fox_fire(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _fox_fire(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: initial flame + 2 subsequent flames at reduced damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     initial = extract_named(ability, "Primary Magic Damage", rank, ctx.stats)
     subsequent = extract_named(ability, "Subsequent Magic Damage", rank, ctx.stats)
@@ -95,12 +95,11 @@ def _fox_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _spirit_rush(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _spirit_rush(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: three dashes emitted as one activation without a cooldown field."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_cast, damage_type = extract_auto(ability, rank, ctx.stats, ctx.target)
     casts = 3
     return {
@@ -113,12 +112,9 @@ def _spirit_rush(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _charm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _charm(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """E: one magic hit with the authored charm/knockdown control marker."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     damage = extract_auto(ability, rank, ctx.stats, ctx.target)[0]
     return {
         "name": ability_name(ability),
@@ -201,19 +197,19 @@ SOURCES = load_champion_sources("Ahri")
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Ahri self-healing events from its authored packet."""
     healing = []
     if "passive" in ability_damages:
         # The module emits the P receipt only at 9+ fragments.
         level = int(champion_stat(champion_stats, "level"))
-        heal = _healing.extract_named(
+        heal = extract_named(
             _healing.ability_json(champion_data, "P"), "Heal", level, champion_stats
         )
         for event in damage_events:

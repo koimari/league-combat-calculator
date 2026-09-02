@@ -24,7 +24,7 @@ import copy
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import dr_mundo, parse_champion_abilities
 from src.calculator.champions.dr_mundo import (
     E_MAX_AMP_MISSING_HEALTH_PERCENT,
     E_MAX_DAMAGE_AMP,
@@ -38,7 +38,6 @@ from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions import dr_mundo
 from tests import cc_review
 
 LEVEL = 18

@@ -36,10 +36,16 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx
-from .module_helpers import no_damage
-from .packet_module import build_packet_module
 from .inputs import bool_option, float_option, int_option
-from .slotlib import HitRider, ability_name, extract_value, with_hit_rider
+from .module_helpers import at_level, no_damage
+from .packet_module import build_packet_module
+from .slotlib import (
+    PER_LEVEL_SCALING,
+    HitRider,
+    ability_name,
+    extract_value,
+    with_hit_rider,
+)
 
 PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
 
@@ -47,13 +53,6 @@ _STYLE_MAX = 6
 # Style bonus movement speed per stack by level bracket (wiki prose:
 # 2.75% / 3% / 3.25% / 3.5% at levels 1 / 6 / 11 / 16).
 _STYLE_MS_BRACKETS = ((16, 3.5), (11, 3.25), (6, 3.0), (1, 2.75))
-
-
-def _style_ms_per_stack(level: int) -> float:
-    for min_level, percent in _STYLE_MS_BRACKETS:
-        if level >= min_level:
-            return percent
-    return _STYLE_MS_BRACKETS[-1][1]
 
 
 def _style_stacks(ctx: SlotCtx) -> int:
@@ -68,7 +67,6 @@ def _style_stacks(ctx: SlotCtx) -> int:
 # missing health, which is the amplification below rather than a term of
 # its own (tests/test_samira.py pins the doubling against them).
 _RIDER_FLAT_ATTRIBUTE = "Bonus Magic Damage"
-_RIDER_AD_ATTRIBUTE = "Per-Level Scaling"
 RIDER_MISSING_HEALTH_AMP = 1.0
 
 
@@ -79,7 +77,7 @@ def _blade_rider(ctx: SlotCtx) -> HitRider | None:
         return None
     level = ctx.level
     flat = extract_value(ability, _RIDER_FLAT_ATTRIBUTE, level, level=level)
-    ad_percent = extract_value(ability, _RIDER_AD_ATTRIBUTE, level, level=level)
+    ad_percent = extract_value(ability, PER_LEVEL_SCALING, level, level=level)
     amount = flat + ad_percent / 100.0 * ctx.stat("attack_damage")
     if amount <= 0:
         return None
@@ -91,19 +89,15 @@ def _blade_rider(ctx: SlotCtx) -> HitRider | None:
     )
 
 
-def _blade_zone(ctx: SlotCtx) -> bool:
-    return bool(ctx.option("p_blade_zone"))
-
-
 def _blade_zone_rider(ctx: SlotCtx) -> HitRider | None:
     """The rider on the carriers the blade zone gates (Flair's slash)."""
-    return _blade_rider(ctx) if _blade_zone(ctx) else None
+    return _blade_rider(ctx) if bool(ctx.option("p_blade_zone")) else None
 
 
 def _style_state(ctx: SlotCtx) -> str:
     """The Style stack state both P rows disclose."""
     stacks = _style_stacks(ctx)
-    per_stack = _style_ms_per_stack(ctx.level)
+    per_stack = at_level(_STYLE_MS_BRACKETS, ctx.level)
     unlock = (
         "Inferno Trigger is available and consumes them all at the end of " "the effect"
         if stacks >= _STYLE_MAX
@@ -226,7 +220,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_style_stacks",
         0,
@@ -237,10 +232,8 @@ OPTIONS = list(OPTIONS) + [
     bool_option(
         "p_blade_zone",
         True,
-        label=(
-            "Samira fights inside her 200-unit blade zone (blade attacks; "
-            "Flair slashes) — the Daredevil Impulse rider's range gate"
-        ),
+        label="Samira fights inside her 200-unit blade zone (blade attacks; "
+        "Flair slashes) — the Daredevil Impulse rider's range gate",
     ),
     bool_option(
         "w_active", False, label="W (Blade Whirl) active against selected skillshots"
@@ -264,9 +257,7 @@ OPTIONS = list(OPTIONS) + [
         "type": "string_list",
         "default": [],
         "max_items": 24,
-        "label": (
-            "Skillshot slots to destroy; an empty list destroys all marked skillshots"
-        ),
+        "label": "Skillshot slots to destroy; an empty list destroys all marked skillshots",
     },
 ]
 

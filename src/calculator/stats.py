@@ -2,18 +2,19 @@
 
 import math
 from collections.abc import Mapping
+from functools import partial
 from typing import Any
 
+from .data_registry import data_version, store_for_generation
+from .interpreters.stat_derivation import armor_penetration_split
 from .item_effects import (
     grouped_sustain_stat_percent,
-    input_option_retribution_bonus_ad,
     input_option_crit_chance,
+    input_option_retribution_bonus_ad,
     input_option_stat_bonuses,
     override_item_stat,
     resolve_stat_effects,
 )
-from .data_registry import data_version, store_for_generation
-from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 from .rune_effects import RunePage, compile_rune_page
 from .stat_conversion import BonusHealthConversion
@@ -106,8 +107,15 @@ def apply_movement_speed_soft_caps(raw_speed: float) -> float:
     return raw_speed
 
 
+def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
+    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
+    if base_cooldown <= 0:
+        return 0.0
+    return base_cooldown * (100.0 / (100.0 + ability_haste))
+
+
 def get_champion_base_stats(
-    champion_data: dict[str, Any], level: int
+    champion_data: Mapping[str, Any], level: int
 ) -> dict[str, float]:
     """Calculate a champion's base stats at a given level (no items).
 
@@ -133,24 +141,12 @@ def get_champion_base_stats(
         level,
     )
 
-    # Attack speed uses percentage growth with separate AS ratio
-    as_ratio = stats.get("attackSpeedRatio", {}).get(
-        "flat", stats["attackSpeed"]["flat"]
-    )
-    attack_speed_bonus_percent = growth_stat(0, stats["attackSpeed"]["perLevel"], level)
-    attack_speed = calculate_attack_speed(
-        stats["attackSpeed"]["flat"], as_ratio, attack_speed_bonus_percent
-    )
-
     return {
         "health": health,
         "attack_damage": attack_damage,
         "ability_power": 0.0,
         "armor": armor,
         "magic_resistance": magic_resistance,
-        "attack_speed": attack_speed,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
         "move_speed": stats["movespeed"]["flat"],
     }
 
@@ -270,17 +266,12 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         return memo[1]
     stats = item_data.get("stats", {})
 
-    def get_flat(stat_name: str) -> float:
+    def stat_part(stat_name: str, part: str) -> float:
         stat = stats.get(stat_name, {})
-        if isinstance(stat, dict):
-            return stat.get("flat", 0.0)
-        return 0.0
+        return stat.get(part, 0.0) if isinstance(stat, dict) else 0.0
 
-    def get_percent(stat_name: str) -> float:
-        stat = stats.get(stat_name, {})
-        if isinstance(stat, dict):
-            return stat.get("percent", 0.0)
-        return 0.0
+    get_flat = partial(stat_part, part="flat")
+    get_percent = partial(stat_part, part="percent")
 
     total_armor_pen_percent, bonus_armor_pen_percent = armor_penetration_split(
         str(item_data.get("name", "")), get_percent("armorPenetration")
@@ -358,6 +349,7 @@ def calculate_total_stats(
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],
+    *,
     item_options: Mapping[str, Mapping[str, int]] | None = None,
     role: str = "",
     role_quest_complete: bool = False,

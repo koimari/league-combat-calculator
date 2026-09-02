@@ -41,13 +41,14 @@ healing rule off the same on-hit events.
 
 from typing import Any
 
-from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat
+from .module_helpers import at_level
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -74,20 +75,12 @@ DETERMINATION_STACKS = 3
 # this is a per-slot source and not the kit-wide ``count_ability_hits``
 # (E and R would count too, and they generate none).
 W_DETERMINATION_STACKS = {"W": 2}
-_DAMAGE_BANDS: tuple[tuple[int, float, float], ...] = (
-    (16, 0.60, 0.20),
-    (11, 0.45, 0.15),
-    (6, 0.30, 0.10),
-    (1, 0.15, 0.05),
+_DAMAGE_BANDS: tuple[tuple[int, tuple[float, float]], ...] = (
+    (16, (0.60, 0.20)),
+    (11, (0.45, 0.15)),
+    (6, (0.30, 0.10)),
+    (1, (0.15, 0.05)),
 )
-
-
-def _determination_ratios(level: int) -> tuple[float, float]:
-    """The third-stack AD and AP ratios at a champion level."""
-    for min_level, ad_ratio, ap_ratio in _DAMAGE_BANDS:
-        if level >= min_level:
-            return ad_ratio, ap_ratio
-    return _DAMAGE_BANDS[-1][1], _DAMAGE_BANDS[-1][2]
 
 
 def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -95,7 +88,7 @@ def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    ad_ratio, ap_ratio = _determination_ratios(ctx.level)
+    ad_ratio, ap_ratio = at_level(_DAMAGE_BANDS, ctx.level)
     per_proc = ad_ratio * ctx.stat("attack_damage") + ap_ratio * ctx.stat(
         "ability_power"
     )
@@ -257,30 +250,22 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 # 2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% /
 # 70% (based on level) AP)".  The level breakpoints 1/6/11 are the wiki
 # template's.
-_HEAL_BANDS: tuple[tuple[int, float, float], ...] = (
-    (11, 0.05, 0.70),
-    (6, 0.035, 0.50),
-    (1, 0.02, 0.40),
+_HEAL_BANDS: tuple[tuple[int, tuple[float, float]], ...] = (
+    (11, (0.05, 0.70)),
+    (6, (0.035, 0.50)),
+    (1, (0.02, 0.40)),
 )
-
-
-def _determination_heal_ratios(level: int) -> tuple[float, float]:
-    """The third-stack maximum-health and AP heal ratios at a level."""
-    for min_level, health_share, ap_ratio in _HEAL_BANDS:
-        if level >= min_level:
-            return health_share, ap_ratio
-    return _HEAL_BANDS[-1][1], _HEAL_BANDS[-1][2]
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Xin Zhao self-healing events from its authored packet."""
     healing = []
     lifesteal = champion_stat(champion_stats, "lifesteal_percent")
@@ -301,7 +286,7 @@ def derive_self_healing(
     determination = ability_field(ability_payload(ability_damages, "passive"), "on_hit")
     if determination:
         xin_level = max(1, int(champion_stat(champion_stats, "level")))
-        health_share, heal_ap_ratio = _determination_heal_ratios(xin_level)
+        health_share, heal_ap_ratio = at_level(_HEAL_BANDS, xin_level)
         per_proc_heal = health_share * float(
             champion_stat(champion_stats, "health")
         ) + heal_ap_ratio * champion_stat(champion_stats, "ability_power")

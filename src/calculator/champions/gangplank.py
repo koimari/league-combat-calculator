@@ -2,24 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, data_value_at_rank, spell_object
 
 _GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
 _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
-
-
-def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    return extract_named(ability, "Bonus True Damage", ctx.level, ctx.stats, ctx.target)
 
 
 def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -34,8 +31,11 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
             reason="Passive burn is ready only when an empowered attack is selected.",
             slot="P",
         )
-    per_tick = _trial_by_fire(ctx, ability) / 10.0
-    entry = {
+    per_tick = (
+        extract_named(ability, "Bonus True Damage", ctx.level, ctx.stats, ctx.target)
+        / 10.0
+    )
+    return {
         "name": "Trial by Fire",
         "damage_type": "true",
         "total_raw": per_tick * 10 * procs,
@@ -45,35 +45,22 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
         "proc_count": procs,
         "detail": f"{procs} empowered attacks, each burning for 2.5 seconds.",
     }
-    return entry
 
 
-def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart("physical", value, crit_effectiveness=1.0, basic_damage=True),
-    )
-    entry["applies_item_on_hits"] = {
+_parrrley = named_damage(
+    "Physical Damage",
+    "physical",
+    crit_effectiveness=1.0,
+    basic_damage=True,
+    applies_item_on_hits={
         "effectiveness": 1.0,
         "hits": 1,
         "triggers": ("on_hit", "on_attack"),
-    }
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Ranged attack: applies on-hit/on-attack effects and may critically strike for the sourced 230% modifier."
-    )
-    return entry
+    },
+    event_order_certified="single_hit",
+    detail="Ranged attack: applies on-hit/on-attack effects and may critically strike "
+    "for the sourced 230% modifier.",
+)
 
 
 # P2 Slice 5 — Remove Scurvy typed declaration.  The heal values are the
@@ -160,7 +147,7 @@ class _RemoveScurvyRule:
 REMOVE_SCURVY_RULE = _RemoveScurvyRule()
 
 
-def _require_w_rows(ability: dict[str, Any]) -> None:
+def _require_w_rows(ability: Mapping[str, Any]) -> None:
     """Fail loud when the W heal row or its modifiers are missing.
 
     The heal (healing.py) and the typed declaration both read the cached
@@ -193,32 +180,19 @@ def _remove_scurvy(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    bonus = extract_named(ability, "Bonus Champion Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        bonus,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", bonus),)
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
-        "Champion keg branch: triggering attack plus the sourced bonus; 40% armor-ignore is retained in provenance."
-    )
-    return entry
+_powder_keg = named_damage(
+    "Bonus Champion Damage",
+    "physical",
+    event_order_certified="single_hit",
+    detail="Champion keg branch: triggering attack plus the sourced bonus; 40% "
+    "armor-ignore is retained in provenance.",
+)
 
 
-def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _cannon_barrage(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     fire_at_will = bool(ctx.option("r_fire_at_will"))
     deaths_daughter = bool(ctx.option("r_deaths_daughter"))
     waves = (
@@ -245,7 +219,8 @@ def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = tuple(parts)
     entry["detail"] = (
-        f"{waves} wave(s); Fire at Will={'on' if fire_at_will else 'off'}, Death's Daughter={'on' if deaths_daughter else 'off'}."
+        f"{waves} wave(s); Fire at Will={'on' if fire_at_will else 'off'}, Death's "
+        f"Daughter={'on' if deaths_daughter else 'off'}."
     )
     return entry
 
@@ -273,8 +248,11 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Trial by Fire is an explicit 10-tick true-damage burn per empowered attack; Parrrley cannot also apply it.",
-    "Powder Keg's triggering attack is a separate authored input; the packet retains the bonus champion branch and armor-ignore note instead of fabricating the trigger.",
+    "Trial by Fire is an explicit 10-tick true-damage burn per empowered attack; "
+    "Parrrley cannot also apply it.",
+    "Powder Keg's triggering attack is a separate authored input; the packet retains "
+    "the bonus champion branch and armor-ignore note instead of fabricating the "
+    "trigger.",
     "Cannon Barrage exposes the 12/18-wave and Death's Daughter branches with ordered tick events.",
 ]
 
@@ -283,30 +261,21 @@ SOURCES = load_champion_sources("Gangplank")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Gangplank self-healing events from its authored packet."""
     healing = []
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats)
-    w_missing_ratio = (
-        _healing.leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+    w_flat = extract_named(w, "Heal", w_rank, champion_stats)
+    remove_scurvy_heal = _healing.flat_plus_missing_heal(
+        w_flat, _healing.leveling_ratio(w, "Heal", "missing health", w_rank)
     )
-
-    def remove_scurvy_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = w_flat,
-        missing_ratio: float = w_missing_ratio,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_ratio
-
     for cast in cast_timeline or []:
         if cast.get("slot") != "W":
             continue

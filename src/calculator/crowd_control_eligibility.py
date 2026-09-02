@@ -66,10 +66,15 @@ from typing import Any
 from .ability_spec import (
     ACTION_BLOCKING_CC_KINDS,
     CC_KIND_VOCABULARY,
-    NON_BLOCKING_CC_KINDS,
     NO_CONTROL_KIND,
+    NON_BLOCKING_CC_KINDS,
 )
-from .delivery_eligibility import DefenseWindow, stable_event_key
+from .delivery_eligibility import (
+    CombatantFacts,
+    DefenseWindow,
+    PacketFacts,
+    stable_event_key,
+)
 from .shield_ledger import ShieldPools, TimedShield
 from .state_lifecycle import SourceReceipt
 
@@ -125,12 +130,12 @@ class UnknownControlError(ValueError):
     reason = "unknown_control"
 
 
-def _action_cc_kind(action: Any) -> str:
+def _action_cc_kind(action: PacketFacts) -> str:
     """Read the typed control-kind marker, defaulting to ""."""
     return str(getattr(action, "cc_kind", "") or "").strip().lower()
 
 
-def classify_control(action: Any) -> ControlProfile:
+def classify_control(action: PacketFacts) -> ControlProfile:
     """Classify one action's crowd control from its typed ``cc_kind``.
 
     Deterministic by construction: the profile is a pure function of the
@@ -153,7 +158,7 @@ def classify_control(action: Any) -> ControlProfile:
     )
 
 
-def required_control_class(action: Any) -> str:
+def required_control_class(action: PacketFacts) -> str:
     """Return one known control kind or fail closed.
 
     Raises :class:`UnknownControlError` when the action carries a kind
@@ -228,8 +233,12 @@ class CrowdControlEligibility:
     source: SourceReceipt | None = None
 
     def decide(
-        self, action: Any, _attacker: Any = None, *, holder: TimedShield | None = None
-    ) -> "CrowdControlDecision":
+        self,
+        action: PacketFacts,
+        _attacker: CombatantFacts | None = None,
+        *,
+        holder: TimedShield | None = None,
+    ) -> CrowdControlDecision:
         """Decide eligibility for one event (deterministic, receipted).
 
         The attacker parameter mirrors the delivery-eligibility decision
@@ -366,10 +375,10 @@ def same_hit_ordering() -> tuple[str, SourceReceipt]:
 
 
 __all__ = [
+    "KNOWN_CONTROL_KINDS",
+    "ControlProfile",
     "CrowdControlDecision",
     "CrowdControlEligibility",
-    "ControlProfile",
-    "KNOWN_CONTROL_KINDS",
     "MissingSameHitRuleError",
     "UnknownControlError",
     "active_until",

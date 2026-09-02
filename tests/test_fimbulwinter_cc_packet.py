@@ -222,7 +222,7 @@ class TestTypedContract:
         )
 
     def test_missing_typed_key_fails_loud_naming_the_item_and_key(self):
-        with pytest.raises(KeyError, match="Fimbulwinter.*everlasting_missing_key"):
+        with pytest.raises(KeyError, match=r"Fimbulwinter.*everlasting_missing_key"):
             required_effect_value(FIMBULWINTER, "everlasting_missing_key")
 
     def test_shield_carries_the_cc_trigger_rule_declaration_receipt(self):
@@ -238,10 +238,10 @@ class TestTypedContract:
         assert receipt["slow_melee_only"] is True
         assert receipt["immobilize_kinds"] == sorted(IMMOBILIZING_CC_KINDS)
         # The declaration is source-backed: Everlasting's trigger is the
-        # Wiki's Immobilizing class (F-9 — the rule used to borrow the
-        # action-blocking set, which holds polymorph, an action block that
-        # is not an immobilize, and missed flee/pull/snare/stasis, which
-        # are).  The rule carries the item source.
+        # Wiki's Immobilizing class (F-9 — not the action-blocking set,
+        # which holds polymorph, an action block that is not an immobilize,
+        # and misses flee/pull/snare/stasis, which are).  The rule carries
+        # the item source.
         assert set(receipt["immobilize_kinds"]) == set(IMMOBILIZING_CC_KINDS)
         assert receipt["source"]["url"] == shield["source_url"]
         assert receipt["source"]["revision_id"] == shield["source_revision_id"]
@@ -291,7 +291,7 @@ class TestImmobilizeEligibility:
         # F-9: both stop the target acting, and neither is Immobilizing —
         # a polymorphed champion keeps moving and a berserked one keeps
         # moving AND attacking.  Everlasting reads the Immobilizing class,
-        # so neither arms it.  Borrowing ACTION_BLOCKING_CC_KINDS used to
+        # so neither arms it.  Borrowing ACTION_BLOCKING_CC_KINDS would
         # arm it on polymorph.
         packets = _run(
             [_cc_event(1.0, cc_kind=kind, event_id="e1")],
@@ -621,7 +621,7 @@ class TestFailClosedMetadata:
         the per-item ``unknown_cc_kind`` receipt it replaces: the row cannot
         reach any consumer at all, and one refusal covers every holder.
         """
-        with pytest.raises(ValueError, match="petrify.*CC_KIND_VOCABULARY"):
+        with pytest.raises(ValueError, match=r"petrify.*CC_KIND_VOCABULARY"):
             _run([_cc_event(1.0, cc_kind="petrify", event_id="e1")])
 
     def test_event_with_no_marker_is_not_a_candidate(self):

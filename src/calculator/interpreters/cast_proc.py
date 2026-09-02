@@ -31,9 +31,11 @@ from ..item_behavior import (
     BuildContext,
     CooldownProcRule,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
     UltimateProcRule,
+    declared_mechanic_id,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import (
@@ -118,13 +120,13 @@ def proc_mechanic_id(owner: str) -> str:
     engine's number in every roster total while the walk prices the same
     declaration, and that is a double count.
     """
-    rules = cast_proc_rules([owner])
-    if not rules:
-        raise CastProcInterpretationError(
-            f"{owner} authors a cast-triggered proc and declares no cast_proc "
-            "rule, so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    return declared_mechanic_id(
+        owner,
+        cast_proc_rules([owner]),
+        CastProcInterpretationError,
+        authors="a cast-triggered proc",
+        declares="cast_proc",
+    )
 
 
 def repeated_target_multiplier(charges: int, single_target: float) -> float:
@@ -151,7 +153,7 @@ def _row(
         item_name=rule.owner,
         breakdown_key=key,
         display_name=name,
-        damage_type=payload.formula.damage_class.value,
+        damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
         **fields,  # type: ignore[arg-type]
     )
@@ -286,10 +288,7 @@ def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
 def resolve_slots(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> CastProcSlots:
     """Every cast-triggered proc this build declares, split by shape.
 
@@ -300,13 +299,7 @@ def resolve_slots(
     cooldown_procs: list[CooldownProcEffect] = []
     ultimate_procs: list[UltimateProcEffect] = []
     for rule in cast_proc_rules(owners):
-        ctx = build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        )
+        ctx = build_context(rule.owner, facts)
         if isinstance(rule.payload, UltimateProcRule):
             ultimate_procs.append(ultimate_proc_effect(rule, ctx))
         else:
@@ -329,11 +322,11 @@ __all__ = [
     "CastProcInterpretationError",
     "CastProcSlots",
     "cast_proc_rules",
+    "cooldown_proc_effect",
     "proc_fields",
     "proc_mechanic_id",
-    "self_shield_owners",
-    "cooldown_proc_effect",
     "repeated_target_multiplier",
     "resolve_slots",
+    "self_shield_owners",
     "ultimate_proc_effect",
 ]

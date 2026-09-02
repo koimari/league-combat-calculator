@@ -15,7 +15,6 @@ These tests pin the *contracts the browser UI consumes* without a browser:
   cards and single-column picker grids
 """
 
-import json
 import re
 import shutil
 import subprocess
@@ -25,7 +24,6 @@ import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
-
 from src import db
 from tests.app_config import app_config
 
@@ -115,7 +113,8 @@ def test_index_renders_the_analyst_view_surface():
     assert soup.select(".view-tab") == []  # no Quick/Analyst tabs
     assert soup.select_one("#quickView") is None  # quick mode removed entirely
     analyst = soup.select_one("#analystView")
-    assert analyst is not None and analyst.get("hidden") is None
+    assert analyst is not None
+    assert analyst.get("hidden") is None
     for required_id in (
         "championPicker",
         "roleSelect",
@@ -131,7 +130,8 @@ def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     page = _client().get("/").get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
     picker = soup.select_one("#championPicker")
-    assert picker is not None and picker.get("type") == "button"
+    assert picker is not None
+    assert picker.get("type") == "button"
     assert soup.select_one("#roleSelect") is not None
     assert soup.select_one("#levelInput") is not None
 
@@ -142,12 +142,14 @@ def test_mobile_css_stacks_the_duel_vertically():
     picker grid becomes one column, and nothing is hover-only."""
     css = CSS.read_text(encoding="utf-8")
     narrow = css.split("@media (max-width: 860px)")[1].split("@media")[0]
-    assert ".duel" in narrow and "grid-template-columns: minmax(0, 1fr)" in narrow
+    assert ".duel" in narrow
+    assert "grid-template-columns: minmax(0, 1fr)" in narrow
     assert ".verdict" in narrow
     assert ".app-grid" in narrow
 
     phone = css.split("@media (max-width: 520px)")[1]
-    assert ".picker-grid" in phone and "minmax(0, 1fr)" in phone
+    assert ".picker-grid" in phone
+    assert "minmax(0, 1fr)" in phone
     assert "min-height: 40px" in phone, "touch targets must stay reachable"
 
     # Nothing the reader needs may depend on hover. Read-only rows carry no
@@ -190,7 +192,8 @@ def test_quick_flow_baseline_and_next_slot_deltas_are_computable():
         main_breakdown["total_damage"] if main_breakdown else base["total_damage"]
     )
     base_ehp = main["survival"]["effective_health"] if main else 0
-    assert base_tdd > 0 and base_ehp > 0
+    assert base_tdd > 0
+    assert base_ehp > 0
 
     bis = client.post(
         "/api/bis",
@@ -253,9 +256,11 @@ def test_optimize_accepts_the_quick_payload_shape():
     response = _client().post("/api/optimize", json=payload)
     assert response.status_code == 200, response.get_json()
     data = response.get_json()
-    assert data.get("items") and data.get("ranked_builds")
+    assert data.get("items")
+    assert data.get("ranked_builds")
     for ranked in data["ranked_builds"][:2]:
-        assert ranked["items"] and ranked["total_damage"] > 0
+        assert ranked["items"]
+        assert ranked["total_damage"] > 0
         assert ranked["timeline_coverage"] is not None
 
 
@@ -438,5 +443,6 @@ def test_node_check_passes_for_app_js():
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
     assert result.returncode == 0, result.stderr

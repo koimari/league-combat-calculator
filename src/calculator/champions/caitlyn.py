@@ -42,8 +42,11 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..damage import effective_cooldown
+from ..binary_roots import data_value, spell_object
+from ..stats import effective_cooldown
 from .engine import SlotCtx, build_parser
+from .inputs import int_option
+from .module_helpers import at_level, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -54,8 +57,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home
 # (the P entry has no leveling data; R's crit scaling is prose).
@@ -69,14 +70,6 @@ _HEADSHOT_LEVEL_RATIOS = ((13, 1.00), (7, 0.80), (1, 0.60))
 _R_CRIT_EFFECTIVENESS = data_value(
     spell_object("Caitlyn", "CaitlynR"), "CriticalStrikeModifier"
 )
-
-
-def _headshot_level_ratio(level: int) -> float:
-    """Headshot's level-bracket AD ratio: 0.60 / 0.80 / 1.00 at 1/7/13."""
-    for min_level, ratio in _HEADSHOT_LEVEL_RATIOS:
-        if level >= min_level:
-            return ratio
-    return _HEADSHOT_LEVEL_RATIOS[-1][1]
 
 
 def _trap_headshot_increase(ctx: SlotCtx) -> float | None:
@@ -195,7 +188,8 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
     bonus_crit_damage = ctx.stat("crit_damage_bonus")
     bonus = total_ad * (
-        _headshot_level_ratio(ctx.level) + crit_chance * (1.0 + bonus_crit_damage)
+        at_level(_HEADSHOT_LEVEL_RATIOS, ctx.level)
+        + crit_chance * (1.0 + bonus_crit_damage)
     )
     trap_increase = _trap_headshot_increase(ctx)
     trap_grants = _trap_grants(ctx)
@@ -231,7 +225,10 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _piltover_peacemaker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: primary hit plus ``q_secondary_targets`` at the sourced 60% row.
 
     The cached prose: the shot "deals physical damage to the first enemy
@@ -242,10 +239,6 @@ def _piltover_peacemaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ``q_secondary_targets`` champion option takes one reduced hit;
     traps-revealed enemies (full damage) are not distinguished.
     """
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)

@@ -24,6 +24,8 @@ import os
 import re
 import sqlite3
 import sys
+from collections.abc import Mapping, Sequence
+from functools import partial
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -41,7 +43,7 @@ try:
 except ImportError:  # imported as scripts.build_reviewed_modules in tests
     from scripts.source_receipt import source_receipt
 
-from src.calculator.cast_dependency import BASE_CAST_SLOTS  # noqa: E402
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 
 SLOTS = BASE_CAST_SLOTS
 
@@ -62,16 +64,22 @@ DEFAULT_AXWORD_SOURCE = (
 )
 
 
-def resolve_wiki_db(cli_value: str | Path | None = None) -> Path:
-    """Resolve the Local League Wiki cache: --wiki-db > LCC_WIKI_DB > repo default."""
-    raw = cli_value or os.environ.get("LCC_WIKI_DB")
-    return Path(raw).expanduser() if raw else DEFAULT_WIKI_DB
+def _resolve_source(
+    cli_value: str | Path | None = None, *, env: str, default: Path
+) -> Path:
+    """Resolve a source path: the flag, else the ``env`` variable, else ``default``."""
+    raw = cli_value or os.environ.get(env)
+    return Path(raw).expanduser() if raw else default
 
 
-def resolve_axword_source(cli_value: str | Path | None = None) -> Path:
-    """Resolve the Axword Meraki kit source: flag > LCC_AXWORD_SOURCE > sibling repo."""
-    raw = cli_value or os.environ.get("LCC_AXWORD_SOURCE")
-    return Path(raw).expanduser() if raw else DEFAULT_AXWORD_SOURCE
+#: The Local League Wiki cache: --wiki-db > LCC_WIKI_DB > repo default.
+resolve_wiki_db = partial(_resolve_source, env="LCC_WIKI_DB", default=DEFAULT_WIKI_DB)
+
+
+#: The Axword Meraki kit source: flag > LCC_AXWORD_SOURCE > sibling repo.
+resolve_axword_source = partial(
+    _resolve_source, env="LCC_AXWORD_SOURCE", default=DEFAULT_AXWORD_SOURCE
+)
 
 
 def _derive_patch(champions_source: Path) -> str:
@@ -109,7 +117,7 @@ def _load_axword(path: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _axword_by_name(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def _axword_by_name(payload: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     aliases = {
         "wukong": "MonkeyKing",
         "nunuandwillump": "Nunu",
@@ -158,7 +166,7 @@ def _wiki_revisions(wiki_db: str | Path | None = None) -> dict[str, dict[str, An
     }
 
 
-def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
+def _damage_kind(ability: Mapping[str, Any], attribute: str) -> str:
     field = str(ability.get("damageType", ""))
     return (
         {
@@ -171,7 +179,7 @@ def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
     )
 
 
-def _wiki_cooldown(ability: dict[str, Any]) -> float:
+def _wiki_cooldown(ability: Mapping[str, Any]) -> float:
     """The rank-1 cooldown, recorded as evidence of the row's shape.
 
     Evidence only.  ``packet_module._packet_cooldown`` serves the cooldown
@@ -190,7 +198,7 @@ def _wiki_packet(
     ability: dict[str, Any],
     slot: str,
     ability_index: int,
-    levelings: list[dict[str, Any]],
+    levelings: Sequence[dict[str, Any]],
 ) -> dict[str, Any] | None:
     """Translate one selected Wiki damage group into an explicit packet."""
     damage_type = _damage_kind(ability, str(levelings[0].get("attribute", "")))
@@ -399,7 +407,7 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
     return specs
 
 
-def _axword_spec(ability: dict[str, Any]) -> dict[str, Any] | None:
+def _axword_spec(ability: Mapping[str, Any]) -> dict[str, Any] | None:
     damage = ability.get("damage")
     if not isinstance(damage, dict) or not damage.get("base"):
         return None
@@ -517,8 +525,11 @@ def build(
             },
             "slots": slots,
             "assumptions": [
-                "Every slot is an explicit packet or sourced no-damage entry from the pinned local Wiki cache; no runtime archetype inference is used.",
-                "Numeric packets preserve rank/level arrays, typed scaling, target-health terms, and explicit variant selectors where the source lists them.",
+                "Every slot is an explicit packet or sourced no-damage entry from the "
+                "pinned local Wiki cache; no runtime archetype inference is used.",
+                "Numeric packets preserve rank/level arrays, typed scaling, "
+                "target-health terms, and explicit variant selectors where the source "
+                "lists them.",
             ],
             "sources": [
                 {"label": "Local League Wiki cache", "url": source_url, **receipt}

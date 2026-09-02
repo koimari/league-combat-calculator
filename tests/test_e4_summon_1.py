@@ -313,8 +313,8 @@ class TestMalzaharVoidlings:
         Cached W text: the Zz'Rot Swarm stacks come from "when he casts
         another ability" and "Active: Malzahar consumes all Zz'Rot Swarm
         stacks and, after a 0.5-second delay, summons a Voidling".  With
-        no cast there is no swarm, so the 1943.5 magic this row used to
-        price in an autos-only window was damage from a cast that never
+        no cast there is no swarm, so 1943.5 magic priced on this row in an
+        autos-only window would be damage from a cast that never
         happened.  Neither swarm option can resurrect it.
         """
         data = _fight("Malzahar", auto_only=True, include_autos=True)

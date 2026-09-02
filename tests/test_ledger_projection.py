@@ -100,9 +100,16 @@ def _inputs(
     real_ledger_inputs = pipeline_module.ledger_inputs
     real_shield_inputs = damage_module.shield_outcome_inputs
 
-    def spy_ledger(params, champion_data, items, effects, stats, abilities):
+    def spy_ledger(
+        params, champion_data, items, item_damage_effects, fight_stats, ability_damages
+    ):
         captured["ledger"] = real_ledger_inputs(
-            params, champion_data, items, effects, stats, abilities
+            params,
+            champion_data,
+            items,
+            item_damage_effects,
+            fight_stats=fight_stats,
+            ability_damages=ability_damages,
         )
         return captured["ledger"]
 
@@ -209,6 +216,7 @@ def test_the_healing_registry_owns_every_declaring_champion():
     MATRIX,
     ids=[row[0] for row in MATRIX],
 )
+# comment-ok: width - a pylint pragma cannot wrap
 def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     label, champion, item_names, keystone, threshold_heal, fires
 ):

@@ -4,29 +4,31 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 from .ability_atoms import (
     AbilityAtomQuery,
+    atom_receipt,
     ranked_ability_atom_value,
-    required_ranked_attribute_atom,
     required_ability_atom,
+    required_ranked_attribute_atom,
 )
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
-from .item_behavior import PacketKind
-from .data_registry import data_version, store_for_generation
-from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
-from .champions.slotlib import ability_name, extract_named, find_named_leveling
 from .champions.skill_orders import get_ability_rank
+from .champions.slotlib import ability_name, extract_named, find_named_leveling
+from .data_registry import data_version, store_for_generation
+from .item_behavior import PacketKind
+from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
 
-def _ability(data: dict[str, Any], slot: str) -> dict[str, Any]:
+def _ability(data: Mapping[str, Any], slot: str) -> dict[str, Any]:
     entries = data.get("abilities", {}).get(slot, [])
     return entries[0] if entries and isinstance(entries[0], dict) else {}
 
 
-def _first_attribute(ability: dict[str, Any], names: tuple[str, ...]) -> str | None:
+def _first_attribute(ability: Mapping[str, Any], names: tuple[str, ...]) -> str | None:
     available = {
         leveling.get("attribute", "")
         for effect in ability.get("effects", [])
@@ -61,7 +63,7 @@ _CASTER_PROSE = re.compile(
 _HEAL_PROSE = re.compile(r"\bheal(?:s|ed|ing)?\b|\brestor(?:e|es|ing)\b|\bregenerat")
 
 
-def _row_prose(ability: dict[str, Any]) -> dict[str, str]:
+def _row_prose(ability: Mapping[str, Any]) -> dict[str, str]:
     """Each attribute mapped to the lowercased prose of the effect declaring it.
 
     ``extract_named`` reads the FIRST matching leveling entry across effects,
@@ -552,7 +554,7 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
 _SUPPORT_PROFILE_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
 
 
-def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
+def _sourced_cast_time(cast: Mapping[str, Any], *, slot: str) -> float:
     """Return one finite authored cast time; never default a missing timestamp."""
     if "time" not in cast:
         raise ValueError(f"Support cast {slot} is missing its sourced time")
@@ -673,7 +675,7 @@ def _scales_off_the_recipient(ability: dict[str, Any], attribute: str) -> bool:
     )
 
 
-def _caster_as_recipient(stats: dict[str, float]) -> dict[str, float]:
+def _caster_as_recipient(stats: Mapping[str, float]) -> dict[str, float]:
     """The one recipient whose stats a scan holds: only the caster's maximum health."""
     return {"target_max_health": float(stats.get("health", 0.0) or 0.0)}
 
@@ -825,10 +827,10 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
 
 
 def _slot_rank(
-    champion_data: dict[str, Any],
+    champion_data: Mapping[str, Any],
     slot: str,
     level: int,
-    requested_ranks: dict[str, int],
+    requested_ranks: Mapping[str, int],
 ) -> int:
     """The rank this slot is cast at: the request's, else the skill order's."""
     default_rank = get_ability_rank(slot, level, champion_data.get("name", ""))
@@ -836,22 +838,6 @@ def _slot_rank(
         return max(0, int(requested_ranks.get(slot, default_rank)))
     except (TypeError, ValueError):
         return default_rank
-
-
-def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
-    """Keep the provenance fields that identify one runtime atom."""
-    return {
-        key: atom[key]
-        for key in (
-            "atom_id",
-            "behavior",
-            "source",
-            "values",
-            "units",
-            "evidence",
-            "hash",
-        )
-    }
 
 
 def _shield_duration_metadata(
@@ -873,7 +859,7 @@ def _shield_duration_metadata(
         raise ValueError(
             f"{champion_name} {slot} shield duration atom must use seconds"
         )
-    return {"duration": duration, "duration_atom": _atom_receipt(atom)}
+    return {"duration": duration, "duration_atom": atom_receipt(atom)}
 
 
 def _invulnerability_timing_metadata(
@@ -910,8 +896,8 @@ def _invulnerability_timing_metadata(
         "duration": ranked_ability_atom_value(
             duration_atom, 1, source=duration_query.source
         ),
-        "activation_delay_atom": _atom_receipt(delay_atom),
-        "duration_atom": _atom_receipt(duration_atom),
+        "activation_delay_atom": atom_receipt(delay_atom),
+        "duration_atom": atom_receipt(duration_atom),
     }
 
 
@@ -1037,8 +1023,8 @@ def _bailout_ramp_metadata(
                     f"{atom.get('source', '')!r} must use {expected!r} units"
                 )
         metadata[field_name] = base + ratio * ability_power / 100.0
-        atoms.append(_atom_receipt(base_atom))
-        atoms.append(_atom_receipt(ratio_atom))
+        atoms.append(atom_receipt(base_atom))
+        atoms.append(atom_receipt(ratio_atom))
 
     duration_atom = required_ability_atom(
         atom_key, champion_data, "W", query=_BAILOUT_DURATION_QUERY
@@ -1048,7 +1034,7 @@ def _bailout_ramp_metadata(
     duration = ranked_ability_atom_value(
         duration_atom, 1, source=_BAILOUT_DURATION_QUERY.source
     )
-    atoms.append(_atom_receipt(duration_atom))
+    atoms.append(atom_receipt(duration_atom))
 
     effects = ability.get("effects", [])
     active = str(effects[0].get("description", "")) if effects else ""
@@ -1225,15 +1211,16 @@ def _morgana_black_shield_metadata(
         "shield_pool": "magic",
         "crowd_control_immunity_while_shield": True,
         "crowd_control_immunity_source": ability_name(ability),
-        "source_atom": _atom_receipt(strength_atom),
+        "source_atom": atom_receipt(strength_atom),
     }
 
 
 def _target_max_health_shield_metadata(
     champion_data: dict[str, Any],
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
     slot: str,
     attribute: str,
+    *,
     rank: int,
 ) -> dict[str, Any]:
     """Return a typed target-health formula when the source names one."""
@@ -1276,7 +1263,7 @@ def _target_max_health_shield_metadata(
                 return {
                     "amount": 0.0,
                     "amount_formula": amount_formula,
-                    "amount_formula_atom": _atom_receipt(atom),
+                    "amount_formula_atom": atom_receipt(atom),
                 }
     return {}
 
@@ -1313,7 +1300,7 @@ def _target_missing_health_heal_metadata(
     return {
         "amount": 0.0,
         "amount_formula": amount_formula,
-        "amount_formula_atom": _atom_receipt(atom),
+        "amount_formula_atom": atom_receipt(atom),
     }
 
 
@@ -1392,6 +1379,7 @@ def _nami_return_bounce_packet(
     ability: dict[str, Any],
     slot: str,
     rank: int,
+    *,
     stats: Mapping[str, float],
     base_amount: float,
     cast_time: float,
@@ -1427,7 +1415,7 @@ def _nami_return_bounce_packet(
         "target_scope": "one_teammate",
         "rank": rank,
         "target_selection_key": f"heal:{slot}:{cast_index}:bounce",
-        "source_atoms": [_atom_receipt(heal_atom), _atom_receipt(floor_atom)],
+        "source_atoms": [atom_receipt(heal_atom), atom_receipt(floor_atom)],
     }
 
 
@@ -1436,6 +1424,7 @@ def _yuumi_best_friend_packet(
     slot: str,
     level: int,
     rank: int,
+    *,
     base_amount: float,
     cast_time: float,
     cast_index: int,
@@ -1467,7 +1456,7 @@ def _yuumi_best_friend_packet(
         "target_scope": "one_teammate",
         "rank": rank,
         "target_selection_key": f"heal:{slot}:{cast_index}:best_friend",
-        "source_atoms": [_atom_receipt(total_atom), _atom_receipt(bonus_atom)],
+        "source_atoms": [atom_receipt(total_atom), atom_receipt(bonus_atom)],
     }
 
 
@@ -1526,10 +1515,10 @@ def _yuumi_conversion_shield_packet(
         # lands on the ally who was healed, not an independent target).
         "target_selection_key": str(heal_event.get("target_selection_key", "")),
         "duration": duration,
-        "duration_atom": _atom_receipt(shield_duration_atom),
+        "duration_atom": atom_receipt(shield_duration_atom),
         "source_atoms": [
-            _atom_receipt(shield_duration_atom),
-            _atom_receipt(channel_atom),
+            atom_receipt(shield_duration_atom),
+            atom_receipt(channel_atom),
         ],
     }
 
@@ -1538,7 +1527,8 @@ def derive_ally_effects(
     champion_data: dict[str, Any],
     level: int,
     stats: dict[str, float],
-    cast_timeline: list[dict[str, Any]],
+    cast_timeline: Iterable[dict[str, Any]],
+    *,
     ability_ranks: dict[str, int] | None = None,
     champion_options: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
@@ -1667,7 +1657,7 @@ def derive_ally_effects(
                 amount_metadata = {
                     key: value
                     for key, value in _target_max_health_shield_metadata(
-                        champion_data, ability, slot, shield_attr, rank
+                        champion_data, ability, slot, shield_attr, rank=rank
                     ).items()
                     if key != "amount"
                 }
@@ -1788,10 +1778,10 @@ def derive_ally_effects(
                                 ability,
                                 slot,
                                 rank,
-                                stats,
-                                amount,
-                                heal_time,
-                                cast_index,
+                                stats=stats,
+                                base_amount=amount,
+                                cast_time=heal_time,
+                                cast_index=cast_index,
                             )
                         )
                     elif champion_key == ("Yuumi", "R"):
@@ -1800,9 +1790,9 @@ def derive_ally_effects(
                             slot,
                             level,
                             rank,
-                            amount,
-                            heal_time,
-                            cast_index,
+                            base_amount=amount,
+                            cast_time=heal_time,
+                            cast_index=cast_index,
                         )
                         effects.append(best_friend)
                         effects.append(
@@ -1838,7 +1828,7 @@ _SELF_STATE_EVENT_KINDS = frozenset(
 
 def derive_self_state_effects(
     ability_damages: Mapping[str, Any],
-    cast_timeline: list[dict[str, Any]],
+    cast_timeline: Iterable[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Expand module-authored self state atoms over accepted cast times.
 

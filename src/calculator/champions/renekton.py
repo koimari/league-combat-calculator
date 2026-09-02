@@ -13,12 +13,13 @@ here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
 """
 
 from functools import partial
+from typing import Any
 
+from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
 from .healing_contract import self_healing_rule
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import extract_named, with_item_on_hits
-from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
-from .module_contract import coverage
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 
@@ -61,7 +62,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Reign of Anger) has no enemy-damage formula: all three cached "
     "effects (Fury generation/decay, the 50-Fury empower gate, the "
     "sub-50%-health bonus-Fury-generation rule) carry zero leveling "
@@ -76,13 +78,13 @@ MODULE_COVERAGE = coverage(no_damage="P")
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Cull the Meek pays its heal on every Q hit that lands."""
     healing: list[dict] = []
     ability = ability_json(champion_data, "Q")

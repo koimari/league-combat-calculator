@@ -22,8 +22,9 @@ from __future__ import annotations
 
 import ast
 import sys
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Iterable, Iterator, NamedTuple
+from typing import NamedTuple
 
 _EMPTY_FACTORIES = frozenset({"dict", "list", "set", "tuple", "frozenset"})
 # The one receiver whose computed keys are still cached data: champion slots.
@@ -123,14 +124,17 @@ def _flagged(node: ast.AST) -> tuple[str, ast.AST | None, ast.AST] | None:
         if _is_literal(default) and not _indexing(node, key, default):
             return "dict.get", key, default
         return None
-    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-        if (
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and (
             node.func.id == "getattr"
             and len(node.args) == 3
             and not node.keywords
             and _is_literal(node.args[2])
-        ):
-            return "getattr", node.args[1], node.args[2]
+        )
+    ):
+        return "getattr", node.args[1], node.args[2]
     if (
         isinstance(node, ast.BoolOp)
         and isinstance(node.op, ast.Or)

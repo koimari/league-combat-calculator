@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 from .atomizer_domains import atomize_abilities
 from .data_registry import data_version, store_for_generation
@@ -16,7 +17,7 @@ _ABILITY_ATOMS_MEMO: dict[tuple[int, str], dict[str, tuple[dict, ...]]] = {}
 
 @dataclass(frozen=True)
 class AbilityAtomQuery:
-    """Exact source receipt used to select one typed ability atom."""
+    """Exact source receipt that selects one typed ability atom."""
 
     source: str
     behavior: str
@@ -120,6 +121,22 @@ def required_ability_atom(
     if not atom.get("evidence") or not _valid_atom_hash(atom):
         raise ValueError(f"ability atom {query.source!r} has invalid provenance")
     return dict(atom)
+
+
+def atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep the provenance fields that identify one runtime atom."""
+    return {
+        key: atom[key]
+        for key in (
+            "atom_id",
+            "behavior",
+            "source",
+            "values",
+            "units",
+            "evidence",
+            "hash",
+        )
+    }
 
 
 def ranked_ability_atom_value(
@@ -356,7 +373,7 @@ _MISSING = object()
 
 def ability_field(
     payload: Mapping[str, Any], key: str, *, form: str = "ability"
-) -> Any:
+) -> Any:  # sightline-ok: 1 - key-typed read
     """One field of an authored ability payload, through its declared schema.
 
     The payload identifies itself by the ability ``name`` its module authored,
@@ -394,13 +411,13 @@ def ability_sub_payload(
 
 __all__ = [
     "ABILITY_PAYLOAD_SCHEMA",
-    "AbilityAtomQuery",
     "EMPTY_PAYLOAD",
     "REQUIRED",
+    "AbilityAtomQuery",
     "ability_field",
     "ability_payload",
     "ability_sub_payload",
     "ranked_ability_atom_value",
-    "required_ranked_attribute_atom",
     "required_ability_atom",
+    "required_ranked_attribute_atom",
 ]

@@ -27,8 +27,9 @@ import argparse
 import json
 import subprocess
 import sys
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Collection, Iterable, Mapping, Sequence
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -56,8 +57,7 @@ LEGACY_SCENARIO_IDS = frozenset(
 
 def load_corpus(path: Path = CORPUS_PATH) -> dict[str, Any]:
     """The corpus document."""
-    with Path(path).open(encoding="utf-8") as handle:
-        return json.load(handle)
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def write_corpus(corpus: Mapping[str, Any], path: Path = CORPUS_PATH) -> None:
@@ -72,9 +72,7 @@ def non_legacy_scenarios(corpus: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 def parametrized_ids() -> tuple[str, ...]:
     """The scenario ids ``tests/test_e9_corpus.py`` parametrizes."""
-    from tests.test_e9_corpus import _EXECUTED  # local: keeps the import edge one-way
-
-    return tuple(s["id"] for s in _EXECUTED)
+    return tuple(s["id"] for s in non_legacy_scenarios(load_corpus()))
 
 
 def expected_non_legacy_count() -> int | None:
@@ -111,9 +109,11 @@ def check_pins(
     """
     reasons: list[str] = []
     governed = non_legacy_scenarios(corpus)
-    for scenario in governed:
-        if not scenario.get("sha"):
-            reasons.append(f"{scenario['id']} is missing its pinned SHA")
+    reasons.extend(
+        f"{scenario['id']} is missing its pinned SHA"
+        for scenario in governed
+        if not scenario.get("sha")
+    )
 
     executed = tuple(s["id"] for s in governed)
     if not executed:
@@ -165,7 +165,7 @@ def reprobe_failures(
     The receipt kinds live once, in ``tests/test_e9_corpus.py``; the writer
     borrows them rather than growing a second copy that could disagree.
     """
-    from tests.test_e9_corpus import (  # local: keeps the import edge one-way
+    from tests.test_e9_corpus import (  # sightline-ok: 35 - borrows the suite's receipts
         _KIND_ASSERTIONS,
         _run_calculate,
     )

@@ -11,9 +11,7 @@ import dataclasses
 
 import pytest
 
-from src.calculator import item_behavior_catalog
-from src.calculator import rune_effects
-from src.calculator import rune_paths
+from src.calculator import item_behavior_catalog, rune_effects, rune_paths
 from src.calculator.item_behavior import (
     AmpChainSlot,
     Comparison,
@@ -21,7 +19,6 @@ from src.calculator.item_behavior import (
     chain_rank,
 )
 from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
-from src.calculator.value_ref import resolve as resolve_ref
 from src.calculator.rune_paths import (
     domination,
     inspiration,
@@ -30,6 +27,7 @@ from src.calculator.rune_paths import (
     shards,
     sorcery,
 )
+from src.calculator.value_ref import resolve as resolve_ref
 
 PATH_MODULES = (precision, domination, sorcery, resolve, inspiration)
 

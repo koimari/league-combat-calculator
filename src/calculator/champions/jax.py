@@ -6,7 +6,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, float_option, int_option
+from .module_helpers import no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -20,7 +21,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
 
 def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -44,11 +44,8 @@ def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
 _assault.phase = BUFF
 
 
-def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _empower(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     value = extract_named(
         ability, "Additional Magic Damage", rank, ctx.stats, ctx.target
     )
@@ -57,7 +54,7 @@ def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
         rank,
         "magic",
         {"name": "Empower", "damage_per_hit": value, "damage_type": "magic"},
-        extract_cooldown(ability, rank),
+        cooldown=extract_cooldown(ability, rank),
     )
     entry["empowers_next_auto"] = True
     entry["detail"] = (
@@ -66,11 +63,10 @@ def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _counter_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     dodged = min(max(int(ctx.option("e_dodged_attacks")), 0), 5)
     low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
     high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
@@ -89,11 +85,10 @@ def _counter_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _grandmaster(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -126,7 +121,8 @@ def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         }
     entry["detail"] = (
-        f"Active lantern swing; +{armor:g} armor/+{mr:g} magic resistance for the authored 8-second window."
+        f"Active lantern swing; +{armor:g} armor/+{mr:g} magic resistance for the "
+        f"authored 8-second window."
     )
     return entry
 
@@ -185,9 +181,13 @@ OPTIONS = [
     bool_option("r_passive_ready", False, label="Grandmaster passive hit ready"),
 ]
 ASSUMPTIONS = [
-    "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied before later casts and autos.",
-    "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% dodge-damage range.",
-    "Counter Strike's sourced 2-second evasion window blocks incoming basic attacks and reduces marked area-ability damage by 25% when e_active is selected.",
-    "Grandmaster-at-Arms includes the active swing and defensive resistances; its passive hit is opt-in to avoid inventing prior stacks.",
+    "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied "
+    "before later casts and autos.",
+    "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% "
+    "dodge-damage range.",
+    "Counter Strike's sourced 2-second evasion window blocks incoming basic attacks "
+    "and reduces marked area-ability damage by 25% when e_active is selected.",
+    "Grandmaster-at-Arms includes the active swing and defensive resistances; its "
+    "passive hit is opt-in to avoid inventing prior stacks.",
 ]
 SOURCES = load_champion_sources("Jax")

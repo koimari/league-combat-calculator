@@ -67,7 +67,9 @@ def _data_values(object_name: str) -> dict[str, list]:
 
 
 def _parse(**ranks) -> dict:
-    return udyr.parse_abilities(get_champion("Udyr"), 18, 0.0, dict(RANKS, **ranks), {})
+    return udyr.parse_abilities(
+        get_champion("Udyr"), 18, 0.0, dict(RANKS, **ranks), champion_options={}
+    )
 
 
 def _e_leveling(attribute: str) -> list[float]:
@@ -156,7 +158,8 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
         decayed = _e_leveling("Decayed Bonus Movement Speed")[rank - 1]
         detail = _parse(E=rank)["E"]["detail"]
 
-        assert burst > 0.0 and decayed > 0.0
+        assert burst > 0.0
+        assert decayed > 0.0
         assert f"{burst:g}%" in detail
         assert f"{decayed:g}%" in detail
 
@@ -375,7 +378,7 @@ class TestTheStunIsAuthoredAsASourcedControlEvent:
                 effect["description"] = ""
 
         with pytest.raises((KeyError, ValueError)):
-            udyr.parse_abilities(data, 18, 0.0, dict(RANKS), {})
+            udyr.parse_abilities(data, 18, 0.0, dict(RANKS), champion_options={})
 
     def test_the_stripped_description_guard_is_not_vacuous(self, monkeypatch):
         """The cold catalog alone must NOT raise — only the degraded one.
@@ -386,7 +389,7 @@ class TestTheStunIsAuthoredAsASourcedControlEvent:
         monkeypatch.setattr(ability_atoms, "_ABILITY_ATOMS_MEMO", {})
         data = json.loads(json.dumps(get_champion("Udyr")))
 
-        row = udyr.parse_abilities(data, 18, 0.0, dict(RANKS), {})["E"]
+        row = udyr.parse_abilities(data, 18, 0.0, dict(RANKS), champion_options={})["E"]
         assert row["control_events"][0].duration == pytest.approx(0.75)
 
     def test_the_binary_corroborates_the_stun_duration(self):

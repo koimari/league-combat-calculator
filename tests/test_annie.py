@@ -3,6 +3,7 @@
 import copy
 
 import pytest
+
 from src.calculator.champions import annie, parse_champion_abilities
 from tests import cc_review
 
@@ -94,7 +95,7 @@ class TestPyromaniaChargeWalk:
         assert "charge 1/4 at the opening, 1/4 at the end" in row["detail"]
 
     @pytest.mark.parametrize(
-        "level,seconds",
+        ("level", "seconds"),
         [
             (1, "1.25s"),
             (5, "1.25s"),

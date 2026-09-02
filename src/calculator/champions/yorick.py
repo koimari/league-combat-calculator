@@ -40,8 +40,10 @@ fight-computation change.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import (
     calculation_interpolation,
@@ -50,14 +52,13 @@ from ..binary_roots import (
     spell_object,
 )
 from ..stats import growth_multiplier
-from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown
-from .. import healing_helpers as _healing
-from .module_contract import coverage
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 
@@ -154,12 +155,9 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _maiden(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _maiden(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R: Eulogy of the Isles — Maiden basic attacks over the window."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     attacks = min(max(int(ctx.option("maiden_attacks")), 0), 10)
     if attacks <= 0:
         return no_damage(
@@ -255,7 +253,7 @@ MODULE_COVERAGE = coverage(no_damage="W")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def _leveling_flat_at_level(
-    ability: dict[str, Any], attribute: str, level: int
+    ability: Mapping[str, Any], attribute: str, level: int
 ) -> float:
     """Read the flat (unit-less) modifier of one attribute at champion level."""
     for effect in ability.get("effects", []):
@@ -274,31 +272,22 @@ def _leveling_flat_at_level(
 
 
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Yorick self-healing events from its authored packet."""
     healing = []
     q = _healing.ability_json(champion_data, "Q")
     q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_level = int(champion_stat(champion_stats, "level"))
     q_flat = _leveling_flat_at_level(q, "Heal", q_level)
-    q_missing_ratio = (
-        _healing.leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
+    last_rites_heal = _healing.flat_plus_missing_heal(
+        q_flat, _healing.leveling_ratio(q, "Heal", "missing health", q_rank)
     )
-
-    def last_rites_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = q_flat,
-        missing_ratio: float = q_missing_ratio,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_ratio
-
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):

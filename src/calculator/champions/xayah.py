@@ -19,6 +19,7 @@ E3 additions over the CP10.9 packet module:
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import (
@@ -27,11 +28,12 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import ControlEvent, DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .inputs import int_option
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import ability_name, damage_entry, extract_cooldown
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
@@ -57,7 +59,7 @@ _MAX_FEATHERS = 12  # + 5 R feathers (sourced maximum)
 _CLEAN_CUTS_LEVEL_BRACKETS = ((13, 3), (7, 2), (1, 1))  # 1/7/13 -> index
 
 
-def _secondary_feather_ratio(ability: dict[str, Any], level: int) -> float:
+def _secondary_feather_ratio(ability: Mapping[str, Any], level: int) -> float:
     """Level-bracketed 35/45/55% AD secondary-feather damage (P prose)."""
     description = " ".join(
         str(effect.get("description", "")) for effect in ability.get("effects", [])
@@ -79,7 +81,7 @@ def _secondary_feather_ratio(ability: dict[str, Any], level: int) -> float:
     return values[0] / 100.0
 
 
-def _secondary_feather_crit_extra(ability: dict[str, Any]) -> float:
+def _secondary_feather_crit_extra(ability: Mapping[str, Any]) -> float:
     """Extra crit multiplier on the secondary feather (P prose).
 
     "can critically strike for (200% + 30%) damage if the triggering
@@ -160,12 +162,11 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _bladecaller(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bladecaller(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: per-Feather damage x recalled Feather count (stack detonation)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     base_source = "Xayah.E[0].effects[0].leveling[0].modifiers[0]"
     ratio_source = "Xayah.E[0].effects[0].leveling[0].modifiers[1]"
@@ -271,7 +272,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "clean_cuts_secondary_targets",
         0,
@@ -297,7 +299,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Clean Cuts stack count is user-set (default 5); the 8-second stack "
     "window and which casts generate stacks are not simulated",
     "Each empowered auto deals the triggering attack's damage to the "

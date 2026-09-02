@@ -30,21 +30,24 @@ from dataclasses import dataclass
 
 from .. import item_effects
 from ..item_behavior import (
+    SUSTAIN_PAYLOAD_REFERENCES,
+    SUSTAIN_VALUE_PAYLOADS,
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     DefenseField,
     DefenseMechanic,
     DefenseOutcome,
     DefenseSubject,
     EngineLane,
+    FightFacts,
     KernelField,
     MeleeRangedSplit,
     ReceivedHealingRule,
     RuleFamily,
-    SUSTAIN_PAYLOAD_REFERENCES,
-    SUSTAIN_VALUE_PAYLOADS,
     SustainStat,
     SustainStatRule,
+    sole_declaration,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
@@ -133,7 +136,7 @@ def received_healing_multiplier(rule: BehaviorRule) -> float:
 
 
 @dataclass(frozen=True, slots=True)
-class SustainSlot:
+class SustainSlot(CompiledSlot):
     """One holder's sustain declaration, resolved for one build.
 
     The accessor engines hold instead of an item name.  ``value`` refuses a
@@ -144,21 +147,16 @@ class SustainSlot:
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
+    stop = SustainInterpretationError
+    missing = (
+        "{mechanic_id} declares no {name!r} value; a sustain rule reads the "
+        "numbers its declaration names and no others"
+    )
 
     @property
     def owner(self) -> str:
         """The item whose registry entry carries this sustain."""
         return self.rule.owner
-
-    def value(self, name: str) -> float:
-        """One declared number, by the field name it was declared under."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise SustainInterpretationError(
-            f"{self.rule.mechanic_id} declares no {name!r} value; a sustain "
-            "rule reads the numbers its declaration names and no others"
-        )
 
 
 def sustain_rules(
@@ -177,10 +175,7 @@ def sustain_slot(
     owners: Sequence[str],
     payload_type: type,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> SustainSlot | None:
     """This build's sustain of one shape, or ``None`` if nobody declares one.
 
@@ -202,13 +197,7 @@ def sustain_slot(
         rule=rule,
         fields=sustain_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         ),
     )
@@ -244,15 +233,12 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
     declares how two of them compose — the same refusal the shred slot makes.
     """
     rules = sustain_rules(owners, payload_type)
-    if not rules:
-        return None
-    if len(rules) > 1:
-        raise SustainInterpretationError(
-            f"{[rule.owner for rule in rules]} all declare "
-            f"{payload_type.__name__} and no rule declares how two of them "
-            "compose; the slice that declares a second one owns the fold"
-        )
-    return rules[0]
+    return sole_declaration(
+        rules,
+        [rule.owner for rule in rules],
+        payload_type,
+        SustainInterpretationError,
+    )
 
 
 def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:
@@ -276,7 +262,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         ) from exc
     return tuple(
         KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for name, value in zip(names, values)
+        for name, value in zip(names, values, strict=False)
     )
 
 

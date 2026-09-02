@@ -1,12 +1,12 @@
 """The front door for the periodic interpreter.
 
-Three registry tags used to reach the engine as three unrelated typed records
-with no shared vocabulary.  What is pinned here is that they are one declared
-family with three cadences; that each cadence's row keeps the breakdown key
-and display name the engine has always published; that a burn without a
-declared window is refused rather than priced; and that Anguish's radius is
-read off its own declaration instead of being fetched by spelling its item's
-name at the point of use.
+Three registry tags reach the engine as one declared family, not as three
+unrelated typed records with no shared vocabulary.  What is pinned here is
+that the family has three cadences; that each cadence's row keeps the
+breakdown key and display name the engine has always published; that a burn
+without a declared window is refused rather than priced; and that Anguish's
+radius is read off its own declaration instead of being fetched by spelling
+its item's name at the point of use.
 """
 
 import pytest
@@ -14,6 +14,7 @@ import pytest
 from src.calculator.interpreters import periodic
 from src.calculator.item_behavior import (
     EngineLane,
+    FightFacts,
     PeriodicCadence,
     PeriodicRule,
     RuleFamily,
@@ -34,10 +35,12 @@ def _slots(*owners: str, level: int = 18) -> periodic.PeriodicSlots:
     """The periodic strikes a build of *owners* declares."""
     return periodic.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -198,10 +201,12 @@ def test_the_pair_interpreter_compiles_the_cadence_it_can_know() -> None:
     (rule,) = periodic.periodic_rules([ANGUISH])
     ctx = build_context(
         ANGUISH,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = periodic.cadence_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == periodic.PERIODIC_INTERVAL_FIELD
@@ -218,10 +223,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Tiamat",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(periodic.PeriodicInterpretationError):
         periodic.cadence_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

@@ -11,11 +11,9 @@ from pathlib import Path
 import pytest
 
 from src.calculator.ability_atoms import _ability_atoms
-from src.calculator.champions import get_champion_module_contract
+from src.calculator.champions import get_champion_module_contract, sona
 from src.calculator.data_fetcher import get_champion
-from tests import rider_probe
-from src.calculator.champions import sona
-from tests import cc_review
+from tests import cc_review, rider_probe
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

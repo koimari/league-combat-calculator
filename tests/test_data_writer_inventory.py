@@ -31,11 +31,13 @@ def _data_writes(tree: ast.AST) -> list[str]:
 
     def literal_data_parent(node):
         # Path("data/...") or Path(...) / "data" / ...
-        if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            if node.value.startswith("data") and (
-                "/" in node.value or node.value == "data"
-            ):
-                return node.value
+        if (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and node.value.startswith("data")
+            and ("/" in node.value or node.value == "data")
+        ):
+            return node.value
         return None
 
     for n in ast.walk(tree):
@@ -55,14 +57,17 @@ def _data_writes(tree: ast.AST) -> list[str]:
                         hits.append(f"{name}({lit})")
                         break
         if (
-            isinstance(n, ast.Call)
-            and isinstance(n.func, ast.Name)
-            and n.func.id == "open"
+            (
+                isinstance(n, ast.Call)
+                and isinstance(n.func, ast.Name)
+                and n.func.id == "open"
+            )
+            and n.args
+            and isinstance(n.args[0], ast.Constant)
         ):
-            if n.args and isinstance(n.args[0], ast.Constant):
-                v = n.args[0].value
-                if isinstance(v, str) and v.startswith("data") and "/" in v:
-                    hits.append(f"open({v})")
+            v = n.args[0].value
+            if isinstance(v, str) and v.startswith("data") and "/" in v:
+                hits.append(f"open({v})")
     return hits
 
 
@@ -74,10 +79,11 @@ def test_no_data_write_site_uses_a_cwd_relative_literal():
         if not any(rel.startswith(prefix) for prefix in ("src/", "scripts/", "tests/")):
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        for hit in _data_writes(tree):
-            # a data/ write must be repo-anchored, never cwd-relative
-            if hit.startswith("data/") and "tests/" not in rel:
-                problems.append(f"{rel}: {hit}")
+        problems.extend(
+            f"{rel}: {hit}"
+            for hit in _data_writes(tree)
+            if hit.startswith("data/") and "tests/" not in rel
+        )
     assert not problems, "\n".join(problems[:20])
 
 

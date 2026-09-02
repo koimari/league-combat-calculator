@@ -42,7 +42,9 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Collection, Iterable, Mapping
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 BIN_DIR = ROOT / "data" / "bin" / "characters"
@@ -146,7 +148,7 @@ GENERIC_THRESHOLD = 0.032
 
 
 def keyword_matches(
-    nk: str, ktoks: list[str], obj_tokens: set[str], obj_hay: str
+    nk: str, ktoks: list[str], obj_tokens: Collection[str], obj_hay: str
 ) -> bool:
     """True if a normalized keyword matches an object's token set / haystack."""
     if nk in obj_tokens:
@@ -161,9 +163,7 @@ def keyword_matches(
             for t in obj_tokens:
                 if len(t) > n and t.startswith(nk):
                     return True
-    if len(ktoks) >= 2 and all(t in obj_tokens for t in ktoks):
-        return True
-    return False
+    return bool(len(ktoks) >= 2 and all(t in obj_tokens for t in ktoks))
 
 
 def usable_keyword(
@@ -171,21 +171,16 @@ def usable_keyword(
     ktoks: list[str],
     atom_name_toks: set[str],
     head_word: str,
+    *,
     generic_tokens: set[str],
     champion_tokens: set[str],
-    keyword_atom_count: dict[str, int],
+    keyword_atom_count: Mapping[str, int],
 ) -> bool:
     """Whether a vocab keyword is allowed to vote for its atom.
 
-    Drops keywords that carry no signal in this corpus:
-      * keywords made entirely of champion names (the vocab lists champions
-        like "Aatrox"/"Aphelios"/"Yasuo" as examples, but every object of that
-        champion would then match), and
-      * keywords made entirely of corpus-generic engine tokens ("duration",
-        "ability damage", "basic damage", "% crit" -> "crit" ...).
-    Ambiguous single-token keywords ("shield" is the head of the shield atom
-    but also a keyword of the true-damage / flow atoms) only vote for the atom
-    they are the head word of.
+    Keywords made only of champion names or of corpus-generic engine tokens carry
+    no signal and are dropped; an ambiguous single-token keyword ("shield") votes
+    only for the atom it heads.
     """
     if len(nk) <= SHORT_KEYWORD_MAX:
         return True
@@ -194,17 +189,13 @@ def usable_keyword(
             return True
         if keyword_atom_count.get(nk, 0) >= 2:
             return False
-        if nk in generic_tokens or nk in champion_tokens:
-            return False
-        return True
+        return not (nk in generic_tokens or nk in champion_tokens)
     if set(ktoks) <= atom_name_toks:
         return True
-    if set(ktoks) <= (generic_tokens | champion_tokens):
-        return False
-    return True
+    return not set(ktoks) <= generic_tokens | champion_tokens
 
 
-def compute_generic_tokens(champ_paths: list[Path]) -> set[str]:
+def compute_generic_tokens(champ_paths: Iterable[Path]) -> set[str]:
     """Single tokens that appear in >= GENERIC_THRESHOLD of all spell objects."""
     doc = {}
     n_obj = 0
@@ -392,7 +383,7 @@ def load_atom_relations() -> dict[str, list[str]]:
     return {}
 
 
-def load_tag_map() -> dict:
+def load_tag_map() -> dict[str, list[str]]:
     if TAG_MAP_FILE.exists():
         return json.loads(TAG_MAP_FILE.read_text())
     return {}
@@ -432,7 +423,7 @@ def load_vocab() -> dict[str, dict]:
 
 
 def build_keyword_index(
-    vocab: dict[str, dict], generic_tokens: set[str], champ_tokens: set[str]
+    vocab: Mapping[str, dict], generic_tokens: set[str], champ_tokens: set[str]
 ) -> list[tuple[str, str, list[tuple[str, list[str]]]]]:
     """[(atom_id, family, [(norm_keyword, keyword_tokens), ...]), ...]
 
@@ -465,9 +456,9 @@ def build_keyword_index(
                 ktoks,
                 set(name_toks),
                 head_word,
-                generic_tokens,
-                champ_tokens,
-                keyword_atom_count,
+                generic_tokens=generic_tokens,
+                champion_tokens=champ_tokens,
+                keyword_atom_count=keyword_atom_count,
             ):
                 specs.append((nk, ktoks))
         index.append((atom_id, a["family"], specs))
@@ -488,7 +479,9 @@ def strip_champ_prefix(name: str, champ_norm: str) -> str:
     return name
 
 
-def object_features(obj: dict, key: str, champ_norm: str) -> dict:
+def object_features(
+    obj: Mapping[str, Any], key: str, champ_norm: str
+) -> dict[str, Any]:
     sp = obj.get("mSpell") or {}
     name = obj.get("mScriptName") or obj.get("ObjectName") or key.rsplit("/", 1)[-1]
     alt = sp.get("mAlternateName") or ""
@@ -505,7 +498,7 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
     calcs = list((sp.get("mSpellCalculations") or {}).keys())
     dvs_raw = sp.get("DataValues") or []
     if isinstance(dvs_raw, dict):
-        dvs = [str(k) for k in dvs_raw.keys()]
+        dvs = [str(k) for k in dvs_raw]
     else:
         dvs = [
             dv.get("name") for dv in dvs_raw if isinstance(dv, dict) and dv.get("name")
@@ -518,7 +511,7 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
     # (TAG_ATOMS); feeding tag text into the free-text keyword matcher would
     # re-match them with weaker semantics ("wind" from "Melee_BigWindup",
     # "block" from "PositiveEffect_MoveBlock", "ranged" from "Trait_Ranged_*").
-    sources = [match_name, match_alt] + calcs + dvs + [buff_desc]
+    sources = [match_name, match_alt, *calcs, *dvs, buff_desc]
     toks: set[str] = set()
     for s in sources:
         if s:
@@ -539,13 +532,13 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
     }
 
 
-def is_noise(feat: dict) -> bool:
+def is_noise(feat: Mapping) -> bool:
     name_toks = set(tokens(feat["name"]))
     key_toks = set(tokens(feat["key"].rsplit("/", 1)[-1]))
     return bool((name_toks | key_toks) & NOISE_TOKENS)
 
 
-def infer_trigger(feat: dict) -> str:
+def infer_trigger(feat: Mapping) -> str:
     name_toks = set(tokens(feat["name"]))
     toks = feat["toks"]
     if name_toks & {"kill", "takedown", "assist"}:
@@ -567,7 +560,7 @@ def infer_trigger(feat: dict) -> str:
     return "on_effect"
 
 
-def infer_target(atom_id: str, feat: dict) -> str:
+def infer_target(atom_id: str, feat: Mapping) -> str:
     tag_tp = (feat.get("tag_targets") or {}).get(atom_id)
     if tag_tp:
         return tag_tp
@@ -590,7 +583,7 @@ def infer_target(atom_id: str, feat: dict) -> str:
     return "self"
 
 
-def infer_damage_type(feat: dict) -> str | None:
+def infer_damage_type(feat: Mapping) -> str | None:
     toks = feat["toks"]
     if "true" in toks:
         return "true"
@@ -604,7 +597,11 @@ def infer_damage_type(feat: dict) -> str | None:
 # --------------------------------------------------------------------------
 # Wiki damage-type bridge (data-driven; data/champions.json)
 # --------------------------------------------------------------------------
-def load_wiki_damage_types() -> dict[str, list[tuple[str, str, str | None]]]:
+#: One wiki ability row: ``(slot, ability name, damage type or None)``.
+WikiEntry = tuple[str, str, str | None]
+
+
+def load_wiki_damage_types() -> dict[str, list[WikiEntry]]:
     """champion_key -> [(slot, ability_name, damage_type), ...].
 
     Each ability entry's damageType from the wiki champion cache
@@ -658,7 +655,9 @@ def _entry_token_hits(entry_toks: set[str], obj_toks: set[str]) -> int:
     return len(hits)
 
 
-def _best_entry_match(entries, obj_toks: set[str], champ_norm: str = "") -> list | None:
+def _best_entry_match(
+    entries: Iterable[WikiEntry], obj_toks: set[str], champ_norm: str = ""
+) -> WikiEntry | None:
     """Best ability entry by name-token overlap with the object's name.
 
     Returns None when nothing matches or the best match is tied (ambiguous),
@@ -677,7 +676,7 @@ def _best_entry_match(entries, obj_toks: set[str], champ_norm: str = "") -> list
 
 
 def _slot_damage_type(
-    entries, slot: str, obj_toks: set[str], champ_norm: str = ""
+    entries: Iterable[WikiEntry], slot: str, obj_toks: set[str], champ_norm: str = ""
 ) -> str | None:
     """Wiki damage type for one ability slot.
 
@@ -695,7 +694,9 @@ def _slot_damage_type(
     return None
 
 
-def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | None:
+def wiki_damage_type(
+    entries: list[WikiEntry], champ_norm: str, name: str, alt: str
+) -> str | None:
     """Best wiki damage type for a SpellObject, or None (never a guess).
 
     Matching order, all driven by data/champions.json (no champion names
@@ -736,7 +737,11 @@ def wiki_damage_type(entries, champ_norm: str, name: str, alt: str) -> str | Non
 # --------------------------------------------------------------------------
 # Classification
 # --------------------------------------------------------------------------
-def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, str]]:
+def classify_object(
+    feat: dict[str, Any],
+    keyword_index: Iterable[tuple[str, str, list[tuple[str, list[str]]]]],
+    tag_map: Mapping[str, list[str]] | None = None,
+) -> list[tuple[str, str]]:
     """Return [(atom_id, family), ...] for one SpellObject.
 
     Evidence order (a later tier never overrides an earlier one):
@@ -788,10 +793,9 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
     # generic execute rule: an ultimate-tagged damage spell whose data values
     # carry a damage cap is an execute (below-health-threshold kill).
     is_ult = any(t.startswith("Trait_Ultimate") for t in feat["tags"])
-    if "execute" in feat["toks"]:
-        hits.setdefault("damage.execute", "damage")
-        evidence.setdefault("damage.execute", "rule:execute")
-    elif is_ult and "cap" in feat["toks"] and "damage" in feat["toks"]:
+    if "execute" in feat["toks"] or (
+        is_ult and "cap" in feat["toks"] and "damage" in feat["toks"]
+    ):
         hits.setdefault("damage.execute", "damage")
         evidence.setdefault("damage.execute", "rule:execute")
     # generic crit-event rule: script names like "XxxCritAttack" carry the
@@ -811,13 +815,14 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
 def extract_champion(
     champ_name: str,
     bin_path: Path,
-    keyword_index,
-    vocab,
-    passive_map=None,
-    tag_map=None,
-    wiki_types=None,
-    atom_relations=None,
-) -> dict:
+    keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
+    vocab: Mapping[str, dict[str, Any]],
+    *,
+    passive_map: Mapping[str, list[dict[str, Any]]] | None = None,
+    tag_map: Mapping[str, list[str]] | None = None,
+    wiki_types: None | dict[str, list[WikiEntry]] = None,
+    atom_relations: None | dict[str, list[str]] = None,
+) -> dict[str, Any]:
     ser = json.loads(bin_path.read_text())
     atoms: dict[tuple[str, str], dict] = {}  # (atom_id, behavior) -> atom
     unclassified: list[dict] = []
@@ -912,8 +917,10 @@ def extract_champion(
                     "target_policy": "self",
                     "parameters": {},
                     "provenance": {
-                        "wiki": list(vocab.get(atom_id, {}).get("wiki_pages", []))
-                        + [entry.get("wiki_name", "")],
+                        "wiki": [
+                            *list(vocab.get(atom_id, {}).get("wiki_pages", [])),
+                            entry.get("wiki_name", ""),
+                        ],
                         "binary": [],
                         "source": "wiki-map",
                         "evidence": "wiki-map",
@@ -955,9 +962,8 @@ def extract_champion(
                 if cand in behavior_atoms:
                     parent = cand
                     break
-        if parent is None and base != name:
-            if base in behavior_atoms:
-                parent = base
+        if parent is None and base != name and base in behavior_atoms:
+            parent = base
         # multi-level: recursively strip clone suffixes down to a classified
         # parent (ApheliosCalibrumAttackMisMini -> ApheliosCalibrum -> falls
         # back to the champion's base ability or basic attack).
@@ -1048,7 +1054,7 @@ def champion_key(name: str) -> str:
 # --------------------------------------------------------------------------
 # Outputs
 # --------------------------------------------------------------------------
-def build_summary(results: list[dict]) -> dict:
+def build_summary(results: Iterable[dict[str, Any]]) -> dict[str, list[str]]:
     summary: dict[str, set] = {}
     for r in results:
         for a in r["atoms"]:
@@ -1056,7 +1062,7 @@ def build_summary(results: list[dict]) -> dict:
     return {fam: sorted(champs) for fam, champs in sorted(summary.items())}
 
 
-def compute_damage_type_stats(results: list[dict]) -> dict:
+def compute_damage_type_stats(results: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Coverage of parameters.damage_type across damage-family atoms."""
     total = typed = 0
     by_type: dict[str, int] = {}
@@ -1082,8 +1088,11 @@ def compute_damage_type_stats(results: list[dict]) -> dict:
 
 
 def build_report(
-    results: list[dict], vocab, sanity: list[dict], suggestions: list[str]
-) -> dict:
+    results: list[dict[str, Any]],
+    vocab: Mapping[str, dict[str, Any]],
+    sanity: list[dict[str, Any]],
+    suggestions: list[str],
+) -> dict[str, Any]:
     total_atoms = 0
     total_unclassified = 0
     total_noise = 0
@@ -1109,7 +1118,10 @@ def build_report(
         for fam, c in r["family_counts"].items():
             totals[fam] = totals.get(fam, 0) + c
     return {
-        "classifier": "scripts/extract_atoms.py (v2.1 data-driven: wiki-atoms vocab + wiki damage-type bridge)",
+        "classifier": (
+            "scripts/extract_atoms.py (v2.1 data-driven: wiki-atoms vocab + wiki "
+            "damage-type bridge)"
+        ),
         "vocab": {
             "atom_count": len(vocab),
             "families": sorted({a["family"] for a in vocab.values()}),
@@ -1130,7 +1142,7 @@ def build_report(
     }
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--champions",
@@ -1186,10 +1198,10 @@ def main(argv=None) -> int:
                 f,
                 keyword_index,
                 vocab,
-                passive_map,
-                tag_map,
-                wiki_types,
-                atom_relations,
+                passive_map=passive_map,
+                tag_map=tag_map,
+                wiki_types=wiki_types,
+                atom_relations=atom_relations,
             )
         )
         (out / f"{champ}.atoms.json").write_text(
@@ -1209,7 +1221,7 @@ def main(argv=None) -> int:
 
     # sanity checks + suggestions are produced by the caller for a curated set;
     # default run emits the generic report without them.
-    sanity, suggestions = build_sanity_and_suggestions(results, vocab)
+    sanity, suggestions = build_sanity_and_suggestions(results)
     report = build_report(results, vocab, sanity, suggestions)
     # Carry over externally-added report sections (e.g. the autoresearch
     # weak-evidence experiment log) so a regeneration never clobbers them.
@@ -1238,12 +1250,14 @@ def main(argv=None) -> int:
     return 0
 
 
-def build_sanity_and_suggestions(results, vocab):
+def build_sanity_and_suggestions(
+    results: Iterable[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Sanity checks for curated mechanics + classifier improvement list."""
     by_champ = {r["champion"]: r for r in results}
     sanity = []
 
-    def check(label, champ, atom_id, key_hint=None, extra=None):
+    def check(label, champ, atom_id, key_hint=None, *, extra=None):
         """Pass if the atom exists on an object whose binary key/script name
         contains key_hint (the champion prefix is stripped from behaviors in
         matching, so search the full binary keys too)."""
@@ -1267,11 +1281,11 @@ def build_sanity_and_suggestions(results, vocab):
         passed = found is not None
         evidence = []
         if r:
-            for a in r["atoms"]:
-                if a["atom_id"] == atom_id:
-                    evidence.append(
-                        f"{a['atom_id']} @ {a['behavior']} ({a['trigger']})"
-                    )
+            evidence.extend(
+                f"{a['atom_id']} @ {a['behavior']} ({a['trigger']})"
+                for a in r["atoms"]
+                if a["atom_id"] == atom_id
+            )
         sanity.append(
             {
                 "mechanic": label,
@@ -1289,49 +1303,49 @@ def build_sanity_and_suggestions(results, vocab):
         "vladimir",
         "heal-shield.heal",
         "TransfusionHeal",
-        "VladimirQ also carries Trait_ActiveHeal.",
+        extra="VladimirQ also carries Trait_ActiveHeal.",
     )
     check(
         "Gnar transform (Rage Gene)",
         "gnar",
         "stack-transform-summon-resource.transform",
         "GnarTransform",
-        "GnarFuryGeneration maps to fury/rage resource atom.",
+        extra="GnarFuryGeneration maps to fury/rage resource atom.",
     )
     check(
         "Jinx execute reset (Get Excited!)",
         "jinx",
         "damage.execute",
         "JinxR",
-        "JinxPassiveKill is tagged on_takedown (kill token).",
+        extra="JinxPassiveKill is tagged on_takedown (kill token).",
     )
     check(
         "Pyke execute (Death from Below)",
         "pyke",
         "damage.execute",
         "PykeR",
-        "via generic rule: ultimate + damage-cap datavalue.",
+        extra="via generic rule: ultimate + damage-cap datavalue.",
     )
     check(
         "Senna soul stacking (Absolution)",
         "senna",
         "stack-transform-summon-resource.stack",
         "SennaPassiveStacks",
-        "Soul drops live under SennaPassive stacks; 'soul' itself is not a vocab keyword.",
+        extra="Soul drops live under SennaPassive stacks; 'soul' itself is not a vocab keyword.",
     )
     check(
         "Neeko transform (Inherent Glamour)",
         "neeko",
         "stack-transform-summon-resource.transform",
         "NeekoPassive",
-        "NeekoPassive has no transform/disguise tokens; clone+stealth captured on W.",
+        extra="NeekoPassive has no transform/disguise tokens; clone+stealth captured on W.",
     )
     check(
         "Kayle transform (Divine Ascent)",
         "kayle",
         "stack-transform-summon-resource.transform",
         "KaylePassive",
-        "Level-gated form change is only visible as LevelForPassiveRank datavalues.",
+        extra="Level-gated form change is only visible as LevelForPassiveRank datavalues.",
     )
 
     # Extended semantic-layer checks (tag-backed atoms)
@@ -1340,108 +1354,134 @@ def build_sanity_and_suggestions(results, vocab):
         "senna",
         "heal-shield.heal",
         "SennaQ",
-        "Trait_ActiveHeal + BaseHeal datavalue; target should be ally/self.",
+        extra="Trait_ActiveHeal + BaseHeal datavalue; target should be ally/self.",
     )
     check(
         "Thresh W ally shield (Dark Passage)",
         "thresh",
         "heal-shield.shield",
         "ThreshW",
-        "Trait_Shield + ShieldPerSoul datavalue.",
+        extra="Trait_Shield + ShieldPerSoul datavalue.",
     )
     check(
         "Kayle W ally heal",
         "kayle",
         "heal-shield.heal",
         "KayleW",
-        "ally-targeted heal via Trait_ActiveHeal.",
+        extra="ally-targeted heal via Trait_ActiveHeal.",
     )
     check(
         "Twitch Q stealth (Ambush)",
         "twitch",
         "vision-economy.stealth",
         "HideInShadows",
-        "Trait_Invisibility.",
+        extra="Trait_Invisibility.",
     )
     check(
         "Malzahar voidling summon",
         "malzahar",
         "stack-transform-summon-resource.summon",
         "MalzaharW",
-        "Trait_Pet summon.",
+        extra="Trait_Pet summon.",
     )
     check(
         "Annie Tibbers summon",
         "annie",
         "stack-transform-summon-resource.summon",
         "EmpoweredTibbers",
-        "Trait_Pet summon.",
+        extra="Trait_Pet summon.",
     )
     check(
         "LeBlanc clone",
         "leblanc",
         "stack-transform-summon-resource.clone",
         "MirrorImage",
-        "Trait_CreateClone.",
+        extra="Trait_CreateClone.",
     )
     check(
         "Darius R execute reset",
         "darius",
         "interaction.attack-reset",
         "NoxianTactics",
-        "Trait_AttackReset on ultimate.",
+        extra="Trait_AttackReset on ultimate.",
     )
-    check("Teemo poison DoT", "teemo", "damage.dot", "TeemoR", "Trait_DoT poison.")
+    check(
+        "Teemo poison DoT", "teemo", "damage.dot", "TeemoR", extra="Trait_DoT poison."
+    )
     check(
         "Ashe slow",
         "ashe",
         "crowd-control-mobility.slow",
         "Ashe",
-        "PositiveEffect_MoveBlock slow.",
+        extra="PositiveEffect_MoveBlock slow.",
     )
     check(
         "Lee Sin dash",
         "leesin",
         "crowd-control-mobility.dash",
         "LeeSinQ",
-        "Trait_PlayerSelectedDashDirection.",
+        extra="Trait_PlayerSelectedDashDirection.",
     )
     check(
         "Heimerdinger turret summon",
         "heimerdinger",
         "stack-transform-summon-resource.summon",
         "HeimerdingerTurretBehavior",
-        "Trait_Pet/turret summon.",
+        extra="Trait_Pet/turret summon.",
     )
 
     suggestions = [
-        "Extend the transform atom (or add a 'disguise / level-gated form' atom) with keywords for level-gated "
-        "passive ranks and 'disguise' — NeekoPassive and KaylePassive both fail today because their binaries "
-        "never contain 'transform'/'form' tokens (Kayle's ranks are only visible as LevelForPassiveRank* datavalues).",
-        "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and Nasus Q stacks appear as "
-        "'Soul*'/'Stacks' datavalues, and only 'stack' currently matches — soul-gated scaling is invisible, and "
+        "Extend the transform atom (or add a 'disguise / level-gated form' atom) with "
+        "keywords for level-gated "
+        "passive ranks and 'disguise' — NeekoPassive and KaylePassive both fail today "
+        "because their binaries "
+        "never contain 'transform'/'form' tokens (Kayle's ranks are only visible as "
+        "LevelForPassiveRank* datavalues).",
+        "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and "
+        "Nasus Q stacks appear as "
+        "'Soul*'/'Stacks' datavalues, and only 'stack' currently matches — soul-gated "
+        "scaling is invisible, and "
         "objects like ThreshPassiveSouls / SennaBasicAttackSouls stay unclassified.",
-        "Damage types are now bridged from the wiki champion cache (data/champions.json per-ability damageType) "
-        "via script-name prefix (champion+slot letter) and ability-name token matching, with token inference as the "
-        "fallback. Remaining damage_type=null atoms are: basic-attack objects (the cache types abilities, not "
-        "autos), slots the wiki marks without a type, and multi-form slots whose entries disagree on the type "
-        "(e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when the object name cannot "
+        "Damage types are now bridged from the wiki champion cache "
+        "(data/champions.json per-ability damageType) "
+        "via script-name prefix (champion+slot letter) and ability-name token "
+        "matching, with token inference as the "
+        "fallback. Remaining damage_type=null atoms are: basic-attack objects (the "
+        "cache types abilities, not "
+        "autos), slots the wiki marks without a type, and multi-form slots whose "
+        "entries disagree on the type "
+        "(e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when "
+        "the object name cannot "
         "disambiguate the form.",
-        "Curate ambiguous vocab keywords before scaling to all champions. The classifier already guards against "
-        "champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', 'ability damage', 'crit'), and "
-        "substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) — but residual noise remains: "
-        "'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' in deep-ward fires on any "
-        "bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, 'refund' fires on ManaRefund, "
+        "Curate ambiguous vocab keywords before scaling to all champions. The "
+        "classifier already guards against "
+        "champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', "
+        "'ability damage', 'crit'), and "
+        "substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) "
+        "— but residual noise remains: "
+        "'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' "
+        "in deep-ward fires on any "
+        "bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, "
+        "'refund' fires on ManaRefund, "
         "and meta atoms (internal-resource-index, buff-duration-class) over-fire by design.",
-        "Add a targeting-data source for target_policy: mTargetingTypeData is nearly empty in these binaries, so "
-        "heal/shield target_policy defaults to 'self' and misses ally-targeted heals (Senna Q, Kayle W, Thresh W "
-        "lantern). mAffectsTypeFlags is also recorded raw (no decode table available for this data version).",
-        "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, "
-        "ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for "
-        "'*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half.",
-        "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, Sett W, Urgot R, Vel'Koz R, "
-        "Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. Several are true damage in game "
-        "(e.g. Pyke R, Camille Q2, Sett W, Urgot R) — verify against the game files if 'true' matters, and only "
+        "Add a targeting-data source for target_policy: mTargetingTypeData is nearly "
+        "empty in these binaries, so "
+        "heal/shield target_policy defaults to 'self' and misses ally-targeted heals "
+        "(Senna Q, Kayle W, Thresh W "
+        "lantern). mAffectsTypeFlags is also recorded raw (no decode table available "
+        "for this data version).",
+        "Missiles and empowered-attack variants of an already-classified parent spell "
+        "(e.g. JinxQAttack, "
+        "ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the "
+        "parent ability's atoms for "
+        "'*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count "
+        "roughly in half.",
+        "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, "
+        "Sett W, Urgot R, Vel'Koz R, "
+        "Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. "
+        "Several are true damage in game "
+        "(e.g. Pyke R, Camille Q2, Sett W, Urgot R) — verify against the game files "
+        "if 'true' matters, and only "
         "then special-case them (ideally as data, not code).",
     ]
     return sanity, suggestions

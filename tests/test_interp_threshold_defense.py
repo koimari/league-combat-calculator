@@ -10,18 +10,18 @@ rule rather than by whichever name a tuple listed first.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
-from dataclasses import replace
-
+from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.defense_state import (
     DefenseInterpretationError,
     DefenseSlot,
     compiled_shape,
     declared_defenses,
 )
-from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.threshold_defense import (
     THRESHOLD_HEALTH_MECHANIC,
     TICK_INTERVAL_KEY,
@@ -201,7 +201,7 @@ def test_a_missing_typing_key_fails_loud_with_item_and_key() -> None:
     original = item_effects.ITEM_EFFECTS["Immortal Shieldbow"]
     item_effects.ITEM_EFFECTS["Immortal Shieldbow"] = broken
     try:
-        with pytest.raises(KeyError, match="Immortal Shieldbow.*damage_type"):
+        with pytest.raises(KeyError, match=r"Immortal Shieldbow.*damage_type"):
             catalog.behavior_rules("Immortal Shieldbow")
     finally:
         item_effects.ITEM_EFFECTS["Immortal Shieldbow"] = original
@@ -215,7 +215,7 @@ def test_the_temporary_health_lifelines_owner_comes_from_the_declaration() -> No
 
     The pair engine sees a defender's resolved numbers and never its items,
     so both readers of this mechanic — the fight's coverage downgrade and
-    the optimizer's candidate rejection — used to spell the item.  Asserted
+    the optimizer's candidate rejection — need the item's name.  Asserted
     against the catalog rather than a literal, so the day another item grows
     the mechanic this stops rather than names the wrong one.
     """
@@ -285,10 +285,10 @@ def test_a_declaration_without_the_cadence_key_stops_rather_than_guesses(
         )
 
     monkeypatch.setattr(threshold_defense, "behavior_rules", stripped)
-    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()  # noqa: SLF001
+    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()
     with pytest.raises(DefenseInterpretationError) as excinfo:
         threshold_defense.threshold_health_tick_interval()
-    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()  # noqa: SLF001
+    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()
 
     assert TICK_INTERVAL_KEY in str(excinfo.value)
 

@@ -41,7 +41,7 @@ def _request(**overrides):
 
 
 class TestEveryInspirationRuneIsCompiledAndReceipted:
-    @pytest.mark.parametrize("name,declaration", sorted(DISPOSITIONS.items()))
+    @pytest.mark.parametrize(("name", "declaration"), sorted(DISPOSITIONS.items()))
     def test_it_books_no_damage_and_says_why(self, name, declaration):
         disposition, reason = declaration
         effect = rune_effects.resolve_rune(name)
@@ -98,9 +98,9 @@ class TestJackOfAllTrades:
     def test_the_cache_carries_the_step_and_both_gates(self):
         """Every number the compiler reads, checked against the cache.
 
-        The three adaptive figures used to conflict in the parse and be
-        dropped; the gates are claimed as gates now and the total that used
-        to conflict with them certifies them instead.
+        The three adaptive figures parse without conflict: the gates are
+        claimed as gates and the total certifies them instead of
+        conflicting with them.
         """
         jack = rune_effects.RUNE_EFFECTS["Jack Of All Trades"]
         assert jack["effects"] == {

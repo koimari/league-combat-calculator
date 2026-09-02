@@ -20,9 +20,10 @@ with it absent.
 import pytest
 
 import src.app as app_module
-from src.calculator import item_behavior_catalog
-from src.calculator import rune_effects
+from src.calculator import item_behavior_catalog, rune_effects
 from src.calculator.ability_spec import DamagePart
+from src.calculator.calculate import calculate_payload
+from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.item_behavior import (
     AmpChainSlot,
     Comparison,
@@ -30,10 +31,8 @@ from src.calculator.item_behavior import (
     chain_rank,
 )
 from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
-from src.calculator.value_ref import resolve as resolve_ref
-from src.calculator.calculate import calculate_payload
-from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.rune_paths import precision, sorcery
+from src.calculator.value_ref import resolve as resolve_ref
 
 # ---------------------------------------------------------------------------
 # What the cache states
@@ -84,7 +83,7 @@ class TestLastStandsRamp:
         assert effects["escalated_damage_amp_health_gate"] == "self_below"
 
     @pytest.mark.parametrize(
-        "health_percent,ratio",
+        ("health_percent", "ratio"),
         [
             (100, 0.0),  # full health: the rune has not armed
             (60, 0.0),  # exactly at the gate: "below" excludes it
@@ -325,7 +324,7 @@ class TestTheWalkerPricesTheFilteredSet:
         )
 
     @pytest.mark.parametrize(
-        "health_percent,ratio", [(45, 0.08), (30, 0.11), (10, 0.11)]
+        ("health_percent", "ratio"), [(45, 0.08), (30, 0.11), (10, 0.11)]
     )
     def test_last_stand_amplifies_the_whole_ledger_at_its_stated_health(
         self, health_percent, ratio

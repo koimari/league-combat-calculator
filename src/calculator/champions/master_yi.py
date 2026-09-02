@@ -32,14 +32,14 @@ from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
-    STEROID_ZERO,
     ability_name,
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
+    extract_named,
     extract_value,
 )
 
@@ -102,12 +102,11 @@ def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
 _double_strike.phase = ONHIT
 
 
-def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _meditate(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: a zero-damage channel receipt (the heal lives in healing.py)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -125,32 +124,26 @@ def _meditate(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _highlander(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the 25/45/65% attack-speed steroid, priced onto the auto count."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
-    entry = damage_entry(
-        ability_name(ability),
+    return steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{granted:g}% bonus attack speed for {_R_DURATION_SECONDS:g}s "
+            f"({bonus_as:g}% over the fight window); the row's "
+            f"+{movement:g}% movement speed, the crowd-control immunities and "
+            "the takedown cooldown refund have no channel"
+        ),
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for {_R_DURATION_SECONDS:g}s "
-        f"({bonus_as:g}% over the fight window); the row's "
-        f"+{movement:g}% movement speed, the crowd-control immunities and "
-        "the takedown cooldown refund have no channel"
-    )
-    return entry
 
 
 _highlander.phase = BUFF
@@ -182,7 +175,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Double Strike procs on every 3rd basic attack; the second strike "
     "deals 50% AD physical damage — wiki prose (module constants)",
     "The second strike 'is affected by critical strike modifiers' and "
@@ -219,39 +213,35 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 # is paid on the channel's own tick schedule, not inferred from hits.
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Master Yi self-healing events from its authored packet."""
     healing = []
     w_rank = _healing.parsed_rank(ability_damages, "W")
     w_ability = _healing.ability_json(champion_data, "W")
-    min_tick = _healing.extract_named(
-        w_ability, "Minimum Heal Per Tick", w_rank, champion_stats
-    )
-    max_tick = _healing.extract_named(
-        w_ability, "Maximum Heal Per Tick", w_rank, champion_stats
-    )
+    min_tick = extract_named(w_ability, "Minimum Heal Per Tick", w_rank, champion_stats)
+    max_tick = extract_named(w_ability, "Maximum Heal Per Tick", w_rank, champion_stats)
     if min_tick > 0.0:
         for cast_time in _healing.cast_slot_times(cast_timeline, "W"):
             start = float(cast_time)
-            for index in range(1, 9):
-                healing.append(
-                    {
-                        "time": start + index * 0.5,
-                        "amount": 0.0,
-                        "amount_formula": _healing.missing_health_scaled_heal(
-                            min_tick, max_tick
-                        ),
-                        "source": "Meditate",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.5,
+                    "amount": 0.0,
+                    "amount_formula": _healing.missing_health_scaled_heal(
+                        min_tick, max_tick
+                    ),
+                    "source": "Meditate",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(1, 9)
+            )
     return healing
 
 

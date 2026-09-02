@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from .build import ParamPatch
 from .identity import MechanicId
@@ -118,7 +118,7 @@ class PassRequest:
 _Result = TypeVar("_Result")
 
 #: What a pass function hands back: the finished composition, or a request.
-PassOutcome = Union[_Result, PassRequest]
+PassOutcome = _Result | PassRequest
 
 #: One pass, as the driver sees it — given its pass number and the patch it
 #: carries, it either finishes or asks for another.
@@ -131,7 +131,7 @@ def pass_count(dependencies: Sequence[CrossPassDependency]) -> int:
 
 
 def patch_for_pass(
-    dependency: CrossPassDependency, value: Any, pass_index: int
+    dependency: CrossPassDependency, value: object, pass_index: int
 ) -> ParamPatch:
     """The parameter patch pass *pass_index* carries for one dependency.
 
@@ -151,10 +151,10 @@ def patch_for_pass(
     )
 
 
-def run_passes(
-    run_pass: PassFunction,
+def run_passes[Result](
+    run_pass: PassFunction[Result],
     dependencies: Sequence[CrossPassDependency],
-) -> Any:
+) -> Result:
     """Drive one composition across its declared passes and fold the result.
 
     The loop is the whole design.  ``run_pass`` is called once per pass with

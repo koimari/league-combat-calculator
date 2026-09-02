@@ -23,10 +23,10 @@ from typing import Any
 from .. import healing_helpers as _healing
 from .engine import build_parser
 from .healing_contract import self_healing_rule
-from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
-from .slotlib import simple_damage
 from .module_contract import coverage
+from .module_helpers import no_damage_parser
+from .slotlib import extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 ASSUMPTIONS = [
     "Q (Bloodlust) is a heal; no enemy-damage leveling row exists for it "
@@ -80,32 +80,32 @@ parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Tryndamere self-healing events from its authored packet."""
     healing = []
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    amount = _healing.extract_named(
+    amount = extract_named(
         _healing.ability_json(champion_data, "Q"),
         "Minimum Heal",
         q_rank,
         champion_stats,
     )
-    for cast_time in _healing.cast_slot_times(cast_timeline, "Q"):
-        healing.append(
-            {
-                "time": cast_time,
-                "amount": amount,
-                "source": "Bloodlust",
-                "kind": "champion_ability",
-                "actor_wide": True,
-            }
-        )
+    healing.extend(
+        {
+            "time": cast_time,
+            "amount": amount,
+            "source": "Bloodlust",
+            "kind": "champion_ability",
+            "actor_wide": True,
+        }
+        for cast_time in _healing.cast_slot_times(cast_timeline, "Q")
+    )
     return healing
 
 

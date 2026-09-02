@@ -14,8 +14,9 @@ Extraction core:
 """
 
 import re
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Callable
+from typing import Any
 
 from ..ability_spec import (
     ControlEvent,
@@ -39,6 +40,9 @@ from .scaling import is_flat_unit, resolve_scaling
 
 
 ModifierOverride = Callable[[str, float], float | None]
+
+# The cached wiki leveling attribute a per-level ramp is filed under.
+PER_LEVEL_SCALING = "Per-Level Scaling"
 
 
 _MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
@@ -84,7 +88,7 @@ _PROSE_DAMAGE_REDUCTION_RE = re.compile(
 )
 
 
-def effect_description(ability: dict[str, Any], effect_index: int) -> str:
+def effect_description(ability: Mapping[str, Any], effect_index: int) -> str:
     """One cached effect's description text, or "" when that effect is gone.
 
     A mechanic the cache states only in prose (Annie's Pyromania charge,
@@ -103,32 +107,26 @@ def effect_description(ability: dict[str, Any], effect_index: int) -> str:
     return "" if description is None else str(description)
 
 
-def extract_description_duration(
-    ability: dict[str, Any], effect_index: int = 0
+def _prose_value(
+    pattern: re.Pattern[str], ability: Mapping[str, Any], effect_index: int
 ) -> float | None:
-    """Read the first seconds value from one cached effect description."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
-    match = _PROSE_SECONDS_RE.search(description)
+    """The ``value`` group of *pattern*'s first match in one effect description."""
+    match = pattern.search(effect_description(ability, effect_index))
     return float(match.group("value")) if match else None
 
 
+def extract_description_duration(
+    ability: Mapping[str, Any], effect_index: int = 0
+) -> float | None:
+    """Read the first seconds value from one cached effect description."""
+    return _prose_value(_PROSE_SECONDS_RE, ability, effect_index)
+
+
 def extract_description_shield_duration(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read the duration attached to a shield phrase in one effect."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
+    description = effect_description(ability, effect_index)
     sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", description)
     for sentence in sentences:
         match = _PROSE_SHIELD_SECONDS_RE.search(sentence)
@@ -138,21 +136,12 @@ def extract_description_shield_duration(
 
 
 def extract_description_invulnerability_timing(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> tuple[float | None, float | None]:
     """Read a sourced invulnerability delay and window from one description."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None, None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None, None
-    description = str(effect.get("description") or "")
-    delay_match = _PROSE_INVULNERABILITY_DELAY_RE.search(description)
-    duration_match = _PROSE_INVULNERABILITY_DURATION_RE.search(description)
     return (
-        float(delay_match.group("value")) if delay_match else None,
-        float(duration_match.group("value")) if duration_match else None,
+        _prose_value(_PROSE_INVULNERABILITY_DELAY_RE, ability, effect_index),
+        _prose_value(_PROSE_INVULNERABILITY_DURATION_RE, ability, effect_index),
     )
 
 
@@ -165,16 +154,10 @@ def extract_description_control_duration(
 
 
 def extract_description_control_durations(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> list[float]:
     """Read every action-blocking control duration from one description."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return []
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return []
-    description = str(effect.get("description") or "")
+    description = effect_description(ability, effect_index)
     return [
         float(match.group("value"))
         for match in _PROSE_CONTROL_DURATION_RE.finditer(description)
@@ -182,33 +165,17 @@ def extract_description_control_durations(
 
 
 def extract_description_damage_reduction_cap(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read a percentage cap on one pre-mitigation damage instance."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
-    match = _PROSE_DAMAGE_REDUCTION_CAP_RE.search(description)
-    return float(match.group("value")) if match else None
+    return _prose_value(_PROSE_DAMAGE_REDUCTION_CAP_RE, ability, effect_index)
 
 
 def extract_description_damage_reduction(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read a sourced percentage of incoming damage reduction."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
-    match = _PROSE_DAMAGE_REDUCTION_RE.search(description)
-    return float(match.group("value")) if match else None
+    return _prose_value(_PROSE_DAMAGE_REDUCTION_RE, ability, effect_index)
 
 
 # An ability's rank array holds one value per rank — five, or six for
@@ -381,7 +348,7 @@ def find_named_leveling(
 
 
 def _modifier_value(
-    leveling: dict[str, Any],
+    leveling: Mapping[str, Any],
     modifier_index: int,
     rank: int,
     level: int | None = None,
@@ -420,12 +387,11 @@ def pct_health_per_hit(
     attr: str,
     rank: int,
     target: dict[str, float] | None,
+    *,
     ap: float = 0.0,
     ap_ratio_per_100: bool = False,
     floor_attr: str | None = None,
     stacks_required: int = 1,
-    *,
-    level: int | None = None,
 ) -> float | None:
     """Per-hit on-hit damage as a percentage of the target's max health.
 
@@ -444,18 +410,18 @@ def pct_health_per_hit(
     if leveling is None:
         return None
 
-    percent = _modifier_value(leveling, 0, rank, level)
+    percent = _modifier_value(leveling, 0, rank)
     if ap_ratio_per_100:
-        percent += ap * _modifier_value(leveling, 1, rank, level) / 100.0
+        percent += ap * _modifier_value(leveling, 1, rank) / 100.0
 
     max_health = target_stat(target or {}, "target_max_health")
     per_proc = (percent / 100.0) * max_health
     if floor_attr:
-        per_proc = max(per_proc, extract_value(ability, floor_attr, rank, level=level))
+        per_proc = max(per_proc, extract_value(ability, floor_attr, rank))
     return per_proc / stacks_required
 
 
-def ability_name(ability: dict[str, Any]) -> str:
+def ability_name(ability: Mapping[str, Any]) -> str:
     """The cached row's own name — the fourth input block read with no literal.
 
     ``SlotCtx`` refuses a ``.get(key, <literal>)`` on stats, target and
@@ -473,7 +439,7 @@ def ability_name(ability: dict[str, Any]) -> str:
 
 
 def extract_cooldown(
-    ability: dict[str, Any], rank: int, *, level: int | None = None
+    ability: Mapping[str, Any], rank: int, *, level: int | None = None
 ) -> float:
     """The base cooldown at *rank*, or 0.0 when the ability declares none.
 
@@ -491,7 +457,7 @@ def extract_cooldown(
     return float(values[_axis_index(values, rank, level)])
 
 
-def extract_resource_cost(ability: dict[str, Any], rank: int, level: int) -> float:
+def extract_resource_cost(ability: Mapping[str, Any], rank: int, level: int) -> float:
     """What one cast of this ability spends, from its own cost row.
 
     The sole home of the cached cost lookup: ``engine._stamp_resource_cost``
@@ -514,7 +480,7 @@ _NUMBER = re.compile(r"\d+(?:\.\d+)?")
 _PERCENT = re.compile(r"\d+(?:\.\d+)?\s*%")
 
 
-def extract_cast_time(ability: dict[str, Any]) -> float:
+def extract_cast_time(ability: Mapping[str, Any]) -> float:
     """Seconds the champion is locked out casting this ability.
 
     The wiki's ``castTime`` is free text: "0.25", "none", "0.25 / 0.2 (based on
@@ -562,9 +528,9 @@ below, so this is the single place the disposition has to be stated — the
 and a required-no-default field there would be a campaign-wide champion
 sweep smuggled in by an idiom.  Those two figures are measured, not
 recalled: ``tests/test_zero_policy.py`` counts the calls and states the
-counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the honest default at this layer
-and only at this layer: a module formula that evaluates to zero *computed*
-that zero.  Any slot whose zero means something else passes its own policy.
+counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the
+honest default at this layer and only at this layer: a module formula that evaluates
+to zero *computed* that zero.  Any slot whose zero means something else passes its own policy.
 
 The default's safety rests on the inputs being wired, which is why it ships
 with a guard rather than on its own.  A ``.get(key, <literal>)`` on one of
@@ -713,9 +679,8 @@ def support_cast(
     *,
     default_name: str,
     detail: str,
-    dmg_type: str = "magic",
     resource_cost: float | None = None,
-) -> Any:
+) -> SlotParser:
     """A slot parser for a shield/heal-only ability that damages nothing.
 
     ``support_effects`` hangs its packet on a CAST, so a shield- or heal-only
@@ -725,7 +690,7 @@ def support_cast(
     ledger would mislabel (Soraka W's 10%-of-max-health cost).
     """
 
-    def parse(ctx: Any) -> dict[str, Any] | None:
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ranked = ctx.ranked()
         if ranked is None:
             return None
@@ -735,7 +700,7 @@ def support_cast(
             rank,
             extract_cooldown(ability, rank),
             0.0,
-            dmg_type,
+            "magic",
         )
         # The shared builder always writes one part; a support cast has none
         # to price, and an authored zero part would put a zero-damage
@@ -869,7 +834,9 @@ class HitRider:
         return entry
 
 
-def with_hit_rider(parser: SlotParser, rider_for) -> SlotParser:
+def with_hit_rider(
+    parser: SlotParser, rider_for: Callable[[SlotCtx], HitRider | None]
+) -> SlotParser:
     """Wrap a slot so every hit its parts deal carries a declared rider.
 
     ``rider_for(ctx)`` returns this fight's :class:`HitRider`, or None when
@@ -912,6 +879,7 @@ def fixed_count_pet_row(
     damage_type: str,
     damage_per_hit: float,
     attack_times: list[float],
+    *,
     detail: str,
 ) -> dict[str, Any]:
     """Build a fixed-count pet-attack proc row (E4 summoned units).
@@ -948,6 +916,7 @@ def ability_on_hit_entry(
     rank: int,
     damage_type: str,
     on_hit: dict[str, Any],
+    *,
     cooldown: float | None = None,
 ) -> dict[str, Any]:
     """Wrap an on-hit payload in a zero-direct-damage ability shell."""
@@ -974,7 +943,7 @@ def _resolve_source(
     source: tuple[str, int] | None,
 ) -> tuple[dict[str, Any] | None, str]:
     """Resolve a factory's source param to (ability JSON, source slot)."""
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     return ctx.ability(src_slot, src_index), src_slot
 
 
@@ -983,10 +952,11 @@ def _control_duration_atom(
     source: tuple[str, int] | None,
     attribute: str,
     rank: int,
+    *,
     effect_index: int = 0,
 ) -> tuple[float, dict[str, Any]]:
     """Read a control duration through the validated ability atom catalog."""
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
     from ..ability_atoms import (
         AbilityAtomQuery,
@@ -1037,7 +1007,7 @@ ATOM_RECEIPT_KEYS = (
 )
 
 
-def atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+def atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
     """The provenance fields a sourced control number publishes."""
     return {key: atom[key] for key in ATOM_RECEIPT_KEYS}
 
@@ -1065,7 +1035,7 @@ def _prose_control_atom(
     exactly when the control lasts as long as the effect.  The caller says
     which it means rather than the reader guessing.
     """
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
     from ..ability_atoms import (
         AbilityAtomQuery,
@@ -1105,7 +1075,7 @@ def _control_magnitude_atom(
     cache either carries under a name or does not carry at all, and a prose
     fallback here would be the literal-default shape rule 5 refuses.
     """
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
     from ..ability_atoms import required_ranked_attribute_atom
 
@@ -1120,7 +1090,7 @@ def _control_magnitude_atom(
     return value, atom_receipt(atom)
 
 
-def _require_seconds(ctx: SlotCtx, src_slot: str, atom: dict[str, Any]) -> None:
+def _require_seconds(ctx: SlotCtx, src_slot: str, atom: Mapping[str, Any]) -> None:
     """A control window is an interval; anything else is the wrong atom."""
     units = atom.get("units", [])
     allowed_units = {"seconds", "s"}
@@ -1347,7 +1317,7 @@ def with_control(
             )
         rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
         duration, duration_atom = _control_duration_atom(
-            ctx, source, duration_attr, rank, effect_index
+            ctx, source, duration_attr, rank, effect_index=effect_index
         )
         if duration <= 0.0:
             raise ValueError(
@@ -1404,7 +1374,8 @@ def park_control_interval(
 
     :func:`with_control_event` for a slot that builds its entry by hand.
     """
-    entry[PENDING_CONTROL_EVENTS] = tuple(entry.get(PENDING_CONTROL_EVENTS, ())) + (
+    entry[PENDING_CONTROL_EVENTS] = (
+        *tuple(entry.get(PENDING_CONTROL_EVENTS, ())),
         {
             "duration": float(duration),
             "time_offset": time_offset,
@@ -1421,8 +1392,6 @@ def with_control_event(
     duration_source: str = "attribute",
     magnitude_attr: str | None = None,
     kind: str | None = None,
-    source: tuple[str, int] | None = None,
-    ranks: str = "rank",
     time_offset: float | None = 0.0,
     effect_index: int = 0,
     scope: ControlScope = ControlScope.EVERY_TARGET,
@@ -1468,8 +1437,6 @@ def with_control_event(
     """
     if kind is not None and not kind.strip():
         raise ValueError("with_control_event kind must be a non-empty string")
-    if ranks not in {"rank", "level"}:
-        raise ValueError("with_control_event ranks must be 'rank' or 'level'")
     if duration_source not in {"attribute", "prose", "active"}:
         raise ValueError(
             "with_control_event duration_source must be 'attribute', 'prose' "
@@ -1483,21 +1450,21 @@ def with_control_event(
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
-        ability, source_slot = _resolve_source(ctx, source)
+        ability, source_slot = _resolve_source(ctx, None)
         if ability is None:
             raise ValueError(
                 f"{ctx.champion_name} {ctx.slot}: control source ability is missing"
             )
-        rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
+        rank = ctx.rank_for(source_slot)
         if rank < 1:
             return entry
         if duration_source != "attribute":
             duration, duration_atom = _prose_control_atom(
-                ctx, source, effect_index, duration_source
+                ctx, None, effect_index, duration_source
             )
         else:
             duration, duration_atom = _control_duration_atom(
-                ctx, source, duration_attr, rank, effect_index
+                ctx, None, duration_attr, rank, effect_index=effect_index
             )
         if duration <= 0.0:
             raise ValueError(
@@ -1508,7 +1475,7 @@ def with_control_event(
         magnitude_atom = None
         if magnitude_attr is not None:
             magnitude, magnitude_atom = _control_magnitude_atom(
-                ctx, source, magnitude_attr, rank
+                ctx, None, magnitude_attr, rank
             )
             if magnitude <= 0.0:
                 raise ValueError(
@@ -1559,11 +1526,11 @@ def with_control_event(
 def stat_buff(
     attr: str,
     stat: str,
+    *,
     mode: str = "flat",
     percent_of: str = "attack_damage",
     apply_to: tuple[str, ...] = (),
     damage_attr: str | None = None,
-    dmg_type: str = "physical",
     couples: tuple[str, str] | None = None,
     uptime_option: str | None = None,
 ) -> SlotParser:
@@ -1588,7 +1555,6 @@ def stat_buff(
         damage_attr: Leveling attribute for the ability's own active
             damage (Ambessa R), extracted from PRE-buff stats. None
             emits 0.0 damage.
-        dmg_type: Damage type labeling the entry.
         couples: ``(stats_key, attr_name)`` — publish another leveling
             value into ``ctx.stats`` under ``stats_key`` for a dependent
             slot listed later (Vayne R's Tumble cooldown reduction,
@@ -1644,7 +1610,7 @@ def stat_buff(
             rank,
             extract_cooldown(ability, rank, level=ctx.level),
             damage,
-            dmg_type,
+            "physical",
             zero_policy=(
                 MODULE_FORMULA_ZERO if damage_attr is not None else STEROID_ZERO
             ),
@@ -1663,8 +1629,8 @@ def stat_buff(
 
 def by_option(
     option: str,
-    cases: dict[Any, SlotParser],
-    default: Any,
+    cases: Mapping[bool | int | str, SlotParser],
+    default: bool | int | str,
 ) -> SlotParser:
     """Dispatch a slot to one of several parsers by a champion option.
 
@@ -1703,6 +1669,7 @@ ProcDamageResolver = Callable[[SlotCtx, dict[str, Any]], float]
 def proc_damage(
     per_proc: ProcDamageResolver,
     dmg_type: str,
+    *,
     count_option: str = "passive_procs",
     default_count: int = 4,
     name: str | None = None,
@@ -1787,7 +1754,13 @@ def _slot_passive_on_hit(
     return on_hit_entry(name, total, resolved_type)
 
 
-def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
+def with_item_on_hits(
+    parser: SlotParser,
+    *,
+    effectiveness: float,
+    hits: int = 1,
+    triggers: Iterable[str] = ("on_hit",),
+) -> SlotParser:
     """Wrap a slot parser so its entry declares item on-hit application.
 
     Used by named champion modules to add wiki-sourced
@@ -1795,7 +1768,7 @@ def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
     (spellblade charges, on-hit items) without rewriting the packet parser.
     """
 
-    def parse(ctx):
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
         if entry is None:
             return None

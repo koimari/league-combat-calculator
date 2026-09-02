@@ -70,17 +70,87 @@ the declaration; the kernel never invents a number.
 
 from __future__ import annotations
 
-# pylint: disable=too-many-lines  # one dependency-light leaf owns the typed
-# contracts; splitting it would create a second decision path.
+# pylint: disable=too-many-lines  # file-length-ok: one dependency-light leaf owns
+# the typed contracts; splitting it would create a second decision path.
 import math
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping
+from typing import Any, Literal, Protocol
 
 from .state_lifecycle import SourceReceipt
 
 # Floating-point tolerance shared with the damage/survival walks.  All
 # kernel comparisons use the same 1e-9 convention as the engine receipts.
 _EPS = 1e-9
+
+
+# ---------------------------------------------------------------------------
+# What the kernels read: the packet and the combatant, structurally
+# ---------------------------------------------------------------------------
+
+
+class PacketIdentity(Protocol):  # pylint: disable=too-few-public-methods
+    """The three fields :func:`stable_event_key` identifies a packet by."""
+
+    time: float
+    source_key: str
+    sequence: int | None
+
+
+class PacketFacts(PacketIdentity, Protocol):  # pylint: disable=too-few-public-methods
+    """One survival action as the eligibility kernels read it.
+
+    ``survival.actions.SurvivalAction`` is the one production packet; the
+    survival package imports this module, so the kernels name its delivery
+    markers and identity fields structurally.
+    """
+
+    source: str
+    event_id: str
+    ability_instance: str | None
+    is_ability: bool
+    basic_attack: bool
+    skillshot: bool
+    area_damage: bool
+    damage_over_time: bool
+    cc_kind: str
+
+
+class RequestFacts(Protocol):  # pylint: disable=too-few-public-methods
+    """The request fields the kernels read off a combatant."""
+
+    current_health: float | None
+    champion_options: Mapping[str, Any] | None
+    ability_ranks: Mapping[str, int] | None
+
+
+class ChampionFacts(Protocol):  # pylint: disable=too-few-public-methods
+    """A champion record with its request and stats.
+
+    What a roster ``Combatant`` and a pre-combat ``ResolvedLoadout`` share,
+    so a target resolver can serve both.
+    """
+
+    champion_data: Mapping[str, Any]
+    request: RequestFacts
+    stats: Mapping[str, float]
+
+
+class CombatantFacts(ChampionFacts, Protocol):  # pylint: disable=too-few-public-methods
+    """A roster combatant as the kernels and the program layer read it.
+
+    The structural face of ``roster_composition.Combatant`` for the modules
+    the roster imports and which cannot import it back.  ``defenses`` is the
+    holder's ``defensive_effects.StartingDefenses`` record, unnamed here
+    because the declaration layer imports the survival package too.
+    """
+
+    defenses: Any
+    participant_id: str
+    team: str
+    level: int
+    items: Sequence[Mapping[str, Any]]
+
 
 # ---------------------------------------------------------------------------
 # Delivery declarations
@@ -238,12 +308,12 @@ class UnknownDeliveryError(ValueError):
     cannot classify.  Naming the event keeps the failure actionable."""
 
 
-def _action_flag(action: Any, name: str) -> bool:
+def _action_flag(action: PacketFacts, name: str) -> bool:
     """Read one typed marker, defaulting to False for absent fields."""
     return bool(getattr(action, name, False))
 
 
-def classify_delivery(action: Any) -> DeliveryProfile:
+def classify_delivery(action: PacketFacts) -> DeliveryProfile:
     """Classify one survival action's delivery from its typed markers.
 
     Deterministic by construction: the classes are a pure function of the
@@ -274,7 +344,7 @@ def classify_delivery(action: Any) -> DeliveryProfile:
     )
 
 
-def required_delivery_class(action: Any, accepted: frozenset[str]) -> str:
+def required_delivery_class(action: PacketFacts, accepted: frozenset[str]) -> str:
     """Return one accepted delivery class or fail closed.
 
     Raises :class:`UnknownDeliveryError` when the event's delivery cannot
@@ -329,7 +399,7 @@ class DefenseWindow:
         }
 
 
-def _attacker_name(attacker: Any) -> str:
+def _attacker_name(attacker: CombatantFacts | None) -> str:
     """Read the attacker display name from a combatant."""
     if attacker is None:
         return ""
@@ -354,14 +424,15 @@ class SourceSelection:
     blocked_sources: tuple[str, ...] = ()
     blocked_event_ids: tuple[str, ...] = ()
 
-    def selects(self, action: Any, attacker: Any) -> tuple[bool, str]:
+    def selects(
+        self, action: PacketFacts, attacker: CombatantFacts | None
+    ) -> tuple[bool, str]:
         """Whether one event is selected; returns (selected, reason)."""
         if not self.blocked_sources and not self.blocked_event_ids:
             return True, ""
         event_id = str(getattr(action, "event_id", "") or "")
-        if self.blocked_event_ids:
-            if event_id and event_id in self.blocked_event_ids:
-                return True, ""
+        if self.blocked_event_ids and event_id and event_id in self.blocked_event_ids:
+            return True, ""
         source_key = str(getattr(action, "source_key", "") or "")
         source = str(getattr(action, "source", "") or "")
         attacker_name = _attacker_name(attacker)
@@ -401,7 +472,9 @@ class DeliveryAcceptance:
     area_damage_reduction: float = 0.0
     accepts_unknown: bool = False
 
-    def accepts(self, action: Any, profile: DeliveryProfile) -> tuple[bool, str]:
+    def accepts(
+        self, action: PacketFacts, profile: DeliveryProfile
+    ) -> tuple[bool, str]:
         """Return (accepted, reason) for one event's delivery profile.
 
         An unclassifiable delivery fails closed FIRST with the named
@@ -479,7 +552,9 @@ class DefenseEligibility:
     acceptance: DeliveryAcceptance = DeliveryAcceptance()
     source: SourceReceipt | None = None
 
-    def decide(self, action: Any, attacker: Any) -> "EligibilityDecision":
+    def decide(
+        self, action: PacketFacts, attacker: CombatantFacts | None
+    ) -> EligibilityDecision:
         """Decide eligibility for one event (deterministic, receipted)."""
         profile = classify_delivery(action)
         event_time = float(getattr(action, "time", 0.0) or 0.0)
@@ -549,7 +624,7 @@ class EligibilityDecision:
         }
 
 
-def stable_event_key(action: Any) -> str:
+def stable_event_key(action: PacketIdentity) -> str:
     """One stable identity for an interaction packet.
 
     ``source_key:time:sequence`` — the exact key the survival walk uses
@@ -672,7 +747,7 @@ class ReductionRule:
     applies_to_true_damage: bool = False
     source: SourceReceipt | None = None
 
-    def reduction_for(self, action: Any) -> float:
+    def reduction_for(self, action: PacketFacts) -> float:
         """A defense with no area rule reduces area-marked skillshots with its
         later-hit reduction: Braum's shield intercepts Trueshot Barrage in-game
         (wiki: "intercepts all incoming hostile projectiles")."""
@@ -822,7 +897,9 @@ class SpellShieldAcceptance:
     blocks_control_only: bool = True
     accepts_unknown: bool = False
 
-    def accepts(self, action: Any, profile: DeliveryProfile) -> tuple[bool, str]:
+    def accepts(
+        self, action: PacketFacts, profile: DeliveryProfile
+    ) -> tuple[bool, str]:
         """Return (accepted, reason) for one event's delivery profile.
 
         Unclassifiable deliveries fail closed FIRST with the named
@@ -842,10 +919,6 @@ class SpellShieldAcceptance:
             return False, "control_only_not_blocked"
         return True, ""
 
-    def accepts_deliveries(self) -> tuple[str, ...]:
-        """Every declared delivery class a hostile ability may use."""
-        return DELIVERY_CLASSES
-
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe acceptance receipt."""
         return {
@@ -856,7 +929,7 @@ class SpellShieldAcceptance:
         }
 
 
-def resolve_cast_identity(action: Any) -> tuple[str, str]:
+def resolve_cast_identity(action: PacketFacts) -> tuple[str, str]:
     """One cast identity for spell-shield grouping.
 
     Returns ``(identity, kind)``: ``("sourced", instance)`` when the packet
@@ -897,7 +970,9 @@ class SpellShieldEligibility:
     block_rule: str = SPELL_SHIELD_ONE_USE_RULE
     source: SourceReceipt | None = None
 
-    def decide(self, action: Any, _attacker: Any) -> "SpellShieldDecision":
+    def decide(
+        self, action: PacketFacts, _attacker: CombatantFacts | None
+    ) -> SpellShieldDecision:
         """Decide eligibility for one event (deterministic, receipted).
 
         The attacker parameter mirrors :meth:`DefenseEligibility.decide`
@@ -1035,7 +1110,9 @@ class SpellShieldComposition:
         }
 
 
-def spell_shield_group_key(attacker: Any, cast_identity: str) -> tuple[str, ...]:
+def spell_shield_group_key(
+    attacker: CombatantFacts | None, cast_identity: str
+) -> tuple[str, ...]:
     """One per-attacker grouping key for a cast identity.
 
     Instances are stamped ``slot:ordinal`` WITHOUT the attacker, so Ahri E and
@@ -1094,8 +1171,7 @@ class SpellShieldRearmClock:
         started = float(consumed_at)
         if self.restarts_on_champion_damage and last_champion_damage_at is not None:
             damaged_at = float(last_champion_damage_at)
-            if damaged_at > started:
-                started = damaged_at
+            started = max(started, damaged_at)
         return started
 
     def ready_at(
@@ -1150,7 +1226,7 @@ def spell_shield_block_decision(
     used: bool,
     blocked_cast: tuple[str, ...] | None,
     cast_identity: str,
-    attacker: Any = None,
+    attacker: CombatantFacts | None = None,
     *,
     rearm: SpellShieldRearmClock | None = None,
     event_time: float | None = None,
@@ -1193,6 +1269,11 @@ __all__ = [
     "DELIVERY_HITSCAN",
     "DELIVERY_PROJECTILE",
     "DELIVERY_TARGETED",
+    "SPELL_SHIELD_BASIC_ATTACK_RULE",
+    "SPELL_SHIELD_CONTROL_ONLY_RULE",
+    "SPELL_SHIELD_ONE_USE_RULE",
+    "SPELL_SHIELD_PRIOR_DISPOSAL_RULE",
+    "SPELL_SHIELD_REARM_RULE",
     "DefenseComposition",
     "DefenseEligibility",
     "DefenseWindow",
@@ -1204,12 +1285,6 @@ __all__ = [
     "FullBlockRule",
     "ReductionRule",
     "SourceSelection",
-    "UnknownDeliveryError",
-    "SPELL_SHIELD_BASIC_ATTACK_RULE",
-    "SPELL_SHIELD_CONTROL_ONLY_RULE",
-    "SPELL_SHIELD_ONE_USE_RULE",
-    "SPELL_SHIELD_PRIOR_DISPOSAL_RULE",
-    "SPELL_SHIELD_REARM_RULE",
     "SpellShieldAcceptance",
     "SpellShieldComposition",
     "SpellShieldDecision",
@@ -1217,6 +1292,7 @@ __all__ = [
     "SpellShieldRearmClock",
     "SpellShieldRuleDeclaration",
     "TriggeredHealRule",
+    "UnknownDeliveryError",
     "UseBudget",
     "classify_delivery",
     "delivery_declarations_receipt",

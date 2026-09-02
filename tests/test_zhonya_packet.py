@@ -56,17 +56,21 @@ AGENTS.md rule 5 tests may assert literals; source must not).
 """
 
 import json
-import math
+import re
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
 from src.calculator.defensive_effects import (
+    StartingDefenses,
+    defense_source,
     resolve_starting_defenses,
 )
+from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.item_coverage import target_item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
@@ -82,15 +86,8 @@ from src.calculator.participant_timeline import (
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-
-# The retired per-item ``_X_SOURCE`` constant, read from the one home it
-# moved to: the declaration's own resolved citation.
-from src.calculator.defensive_effects import defense_source
-from src.calculator.item_behavior import DefenseMechanic
-
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests import item_probe
+from tests.survival_probe import simulate_survival, survival_of
 
 _SOURCE = defense_source("Zhonya's Hourglass", DefenseMechanic.TIME_STOP)
 
@@ -238,7 +235,8 @@ def test_missing_stasis_key_raises_keyerror_naming_item_and_key(monkeypatch):
     message = str(excinfo.value)
     # str(KeyError) wraps the repr, escaping the apostrophe; the item and
     # key names still appear verbatim.
-    assert "Zhonya" in message and "Hourglass" in message
+    assert "Zhonya" in message
+    assert "Hourglass" in message
     assert "stasis_duration" in message
 
 
@@ -445,7 +443,8 @@ def test_holder_outgoing_actions_blocked_during_stasis():
     landed = [
         event for event in _events(stasis, attacker="main") if event["time"] >= 2.0
     ]
-    assert landed and any(event["damage"] > 0.0 for event in landed)
+    assert landed
+    assert any(event["damage"] > 0.0 for event in landed)
 
 
 # ---------------------------------------------------------------------------
@@ -802,7 +801,7 @@ def test_step_validation_rejects_non_multiple_values():
     from src.calculator.pipeline import FightParams
 
     for bad in (1.3, 2.25, 0.7):
-        with pytest.raises(ValueError, match="multiple of 0.5"):
+        with pytest.raises(ValueError, match=re.escape("multiple of 0.5")):
             FightParams.from_request(
                 {
                     "fight_mode": "one_rotation",
@@ -810,7 +809,7 @@ def test_step_validation_rejects_non_multiple_values():
                 },
                 deterministic=True,
             )
-        with pytest.raises(ValueError, match="multiple of 0.5"):
+        with pytest.raises(ValueError, match=re.escape("multiple of 0.5")):
             _zhonya_defenses(item_options={ZHONYA: {"stasis_active_seconds": bad}})
     # Multiples still pass through both layers.
     for good in (0.0, 0.5, 1.0, 2.0, 2.5):

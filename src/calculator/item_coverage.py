@@ -16,7 +16,7 @@ and this is one.
 
 # pylint: disable=too-many-lines
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -26,8 +26,8 @@ from .coverage_evidence import (
     CoverageClaimError,
     EffectKey,
     Evidence,
-    OwnerPolicy,
     OptionSchema,
+    OwnerPolicy,
     PacketSource,
     PairedSides,
     SourceRef,
@@ -238,10 +238,22 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions "
     "(a minion-class fight arms it from the item's own restricted-channel "
     "declaration); the full Wiki entry has no champion-facing sustain branch.",
-    "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
-    "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
-    "Mosstomper Seedling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
-    "Refillable Potion": "Potion charges restore the holder's health; they add no outgoing target damage.",
+    "Scorchclaw Pup": (
+        "The jungle companion and evolved Smite buff affect monsters, not the "
+        "champion target model."
+    ),
+    "Gustwalker Hatchling": (
+        "The jungle companion and evolved Smite buff affect monsters, not the "
+        "champion target model."
+    ),
+    "Mosstomper Seedling": (
+        "The jungle companion and evolved Smite buff affect monsters, not the "
+        "champion target model."
+    ),
+    "Refillable Potion": (
+        "Potion charges restore the holder's health; they add no outgoing target "
+        "damage."
+    ),
     "Executioner's Calling": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Oblivion Orb": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Chempunk Chainsword": "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
@@ -1285,7 +1297,7 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
+def target_build_coverage(items: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Summarise whether a target inventory is safe to calculate."""
     entries = [target_item_model_coverage(item) for item in items]
     withheld = [entry for entry in entries if not entry["calculation_eligible"]]
@@ -1314,7 +1326,7 @@ def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
 
 
 def require_certified_target_timeline(
-    items: list[dict[str, Any]], timeline_coverage: dict[str, Any]
+    items: Iterable[dict[str, Any]], timeline_coverage: Mapping[str, Any]
 ) -> None:
     """Withhold a computed fight that cannot price a conditional defense.
 
@@ -1343,7 +1355,7 @@ def require_certified_target_timeline(
     )
 
 
-def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
+def optimizer_candidate_coverage(items: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Summarise which legal item candidates can be scored without omission.
 
     D-23's published half.  A withheld candidate is **excluded from candidate
@@ -1376,7 +1388,7 @@ def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def optimizer_supported_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def optimizer_supported_items(items: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return candidates whose outgoing TDD can be scored without omission.
 
     The exclusion half of D-23: a withheld item never reaches candidate
@@ -1392,7 +1404,7 @@ def optimizer_supported_items(items: list[dict[str, Any]]) -> list[dict[str, Any
     ]
 
 
-def require_optimizer_item_coverage(item: dict[str, Any]) -> None:
+def require_optimizer_item_coverage(item: Mapping[str, Any]) -> None:
     """Reject a locked item whose damage-relevant mechanics are incomplete."""
     coverage = item_model_coverage(str(item.get("name", "")), SCORING_LANES)
     if not coverage.optimizer_eligible:
@@ -1403,7 +1415,7 @@ def require_optimizer_item_coverage(item: dict[str, Any]) -> None:
 
 
 def require_calculation_item_coverage(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
     *,
     participant: str,
     allow_ally_effects: bool = False,
@@ -2396,11 +2408,10 @@ __all__ = [
     "ATTACKER_LANES",
     "COVERAGE_EVIDENCE",
     "FRONTIER",
-    "ItemCoverage",
     "NO_RUNTIME_BEHAVIOR",
-    "declared_boundaries",
-    "reviewed_as_inert",
     "SCORING_LANES",
+    "ItemCoverage",
+    "declared_boundaries",
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",
@@ -2409,6 +2420,7 @@ __all__ = [
     "require_optimizer_item_coverage",
     "require_target_item_coverage",
     "review_issue_refs",
+    "reviewed_as_inert",
     "stats_only_effect_fingerprint",
     "target_build_coverage",
     "target_item_model_coverage",

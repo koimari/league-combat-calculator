@@ -21,11 +21,16 @@ import json
 import sys
 import time
 from collections import Counter
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+from scripts.gate_receipt import (  # pylint: disable=wrong-import-position
+    build_receipt,
+)
 
 EXPECTED_WITHHOLDING_PREFIXES = (
     "No complete legal event-ordered build fits",
@@ -145,12 +150,8 @@ def run_matrix(
     }
 
 
-def build_gate_report(report: dict[str, Any], names: list[str]) -> dict[str, Any]:
+def build_gate_report(report: Mapping[str, Any], names: list[str]) -> dict[str, Any]:
     """Wrap one optimizer matrix in the shared CI gate receipt."""
-    from scripts.gate_receipt import (  # pylint: disable=import-outside-toplevel
-        build_receipt,
-    )
-
     counts = report["outcome_counts"]
     passing_outcomes = {"certified", "certified_with_item_scope_gap"}
     passed_count = sum(int(counts.get(outcome, 0)) for outcome in passing_outcomes)

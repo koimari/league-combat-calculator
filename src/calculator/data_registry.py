@@ -25,6 +25,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from .data_fetcher import _item_name_index, _read_json_version
+from .patch_identity import PatchIdentityError, canonical_patch
+
 CACHE_FILES = frozenset({"champions.json", "items.json", "runes.json"})
 
 # How many times this process has replaced a runtime cache.  Starts at zero
@@ -39,10 +42,10 @@ def data_version() -> int:
     return _DATA_VERSION
 
 
-def store_for_generation(
-    memo: MutableMapping[tuple[int, Any], Any],
-    key: tuple[int, Any],
-    value: Any,
+def store_for_generation[K, V](
+    memo: MutableMapping[tuple[int, K], V],
+    key: tuple[int, K],
+    value: V,
 ) -> None:
     """Write one memo entry, dropping any superseded generation first.
 
@@ -330,7 +333,6 @@ def write_runtime_cache(
     *,
     source_url: str | None = None,
     source_version: str | None = None,
-    source_hash: str | None = None,
     fetched_at: float | None = None,
 ) -> None:
     """Atomically write one tracked runtime-cache file with provenance meta.
@@ -352,18 +354,16 @@ def write_runtime_cache(
     data_path = data_directory / filename
     tmp_path = data_directory / f".{filename}.tmp"
     try:
-        with open(tmp_path, "w", encoding="utf-8") as handle:
+        with tmp_path.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp_path, data_path)
+        tmp_path.replace(data_path)
     finally:
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
 
     # local: no import cycle
-    from .data_fetcher import _item_name_index, _read_json_version
-    from .patch_identity import PatchIdentityError, canonical_patch
 
     # The file on disk has changed, so the parsed-JSON cache is stale and so
     # is everything derived from it.  Both are invalidated here, before the
@@ -381,7 +381,6 @@ def write_runtime_cache(
         "filename": filename,
         "source_url": source_url,
         "source_version": source_version,
-        "source_hash": source_hash,
     }
     if source_version:
         try:
@@ -399,5 +398,5 @@ def write_runtime_cache(
                 "source_version": source_version,
             }
     meta_path = data_directory / f".{filename}.meta"
-    with open(meta_path, "w", encoding="utf-8") as meta_file:
+    with meta_path.open("w", encoding="utf-8") as meta_file:
         json.dump(metadata, meta_file, indent=2)

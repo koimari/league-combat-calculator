@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import ast
 import sys
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -42,7 +43,7 @@ CHAMPIONS = ROOT / "src" / "calculator" / "champions"
 
 sys.path.insert(0, str(ROOT))
 
-from src.calculator.champions.packet_module import (  # noqa: E402
+from src.calculator.champions.packet_module import (
     _packet_specs,
     _single_hit_row,
 )
@@ -120,10 +121,7 @@ def _packet_call(tree: ast.AST) -> ast.Call | None:
 
 
 def _keyword(call: ast.Call, name: str) -> ast.expr | None:
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return None
+    return next((k.value for k in call.keywords if k.arg == name), None)
 
 
 def _slot_map(call: ast.Call, name: str) -> dict[str, str]:
@@ -132,7 +130,7 @@ def _slot_map(call: ast.Call, name: str) -> dict[str, str]:
     if not isinstance(node, ast.Dict):
         return {}
     resolved: dict[str, str] = {}
-    for key, value in zip(node.keys, node.values):
+    for key, value in zip(node.keys, node.values, strict=False):
         if not (isinstance(key, ast.Constant) and isinstance(key.value, str)):
             continue
         if isinstance(value, ast.Name):
@@ -157,7 +155,7 @@ def _champion_name(call: ast.Call) -> str | None:
     return None
 
 
-def survey(path: Path, packets: dict[str, dict]) -> list[Site]:
+def survey(path: Path, packets: Mapping[str, dict]) -> list[Site]:
     """Every certification in *path*, each with its migration verdict."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
     lines = [
@@ -212,14 +210,16 @@ def survey(path: Path, packets: dict[str, dict]) -> list[Site]:
     return sites
 
 
-def _rewrite(path: Path, sites: list[Site]) -> None:
+def _rewrite(path: Path, sites: Iterable[Site]) -> None:
     """Delete the named lines and name their slots in ``single_hit_slots``."""
     text = path.read_text(encoding="utf-8", newline="")
     tree = ast.parse(path.read_text(encoding="utf-8"))
     call = _packet_call(tree)
     assert call is not None
     slots = _named_slots(call) | {site.slot for site in sites if site.slot}
-    rendered = "frozenset({%s})" % ", ".join(f'"{slot}"' for slot in sorted(slots))
+    rendered = "frozenset({{{}}})".format(
+        ", ".join(f'"{slot}"' for slot in sorted(slots))
+    )
 
     keep = {site.lineno for site in sites}
     physical = text.splitlines(keepends=True)

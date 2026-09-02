@@ -122,11 +122,14 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
+from .inputs import int_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
+    effect_description,
     extract_description_duration,
     extract_named,
     extract_value,
@@ -134,8 +137,6 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 
@@ -165,20 +166,6 @@ _HEAT_GENERATOR_SLOTS = ("Q", "W", "E")
 _OVERHEAT_EFFECT_INDEX = 2
 
 
-def _effect_text(ability: dict[str, Any] | None, index: int) -> str:
-    """One cached effect description, or an empty string when absent."""
-    if ability is None:
-        return ""
-    effects = ability.get("effects")
-    if not isinstance(effects, list) or not 0 <= index < len(effects):
-        return ""
-    effect = effects[index]
-    if not isinstance(effect, dict):
-        return ""
-    description = effect.get("description")
-    return description if isinstance(description, str) else ""
-
-
 def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
     """The cached Heat ceiling, per-cast gain, and Overheat window.
 
@@ -189,7 +176,7 @@ def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
     passive = ctx.ability("P")
     if passive is None:
         raise ValueError("Rumble P: the cached Junkyard Titan entry is missing")
-    ceiling = _MAX_HEAT_RE.search(_effect_text(passive, 0))
+    ceiling = _MAX_HEAT_RE.search(effect_description(passive, 0))
     if ceiling is None:
         raise ValueError(
             "Rumble P: the cached innate no longer states the Overheat "
@@ -198,7 +185,7 @@ def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
 
     gains: set[float] = set()
     for slot in _HEAT_GENERATOR_SLOTS:
-        match = _HEAT_PER_CAST_RE.search(_effect_text(ctx.ability(slot), 0))
+        match = _HEAT_PER_CAST_RE.search(effect_description(ctx.ability(slot) or {}, 0))
         if match is None:
             raise ValueError(
                 f"Rumble {slot}: the cached entry no longer states its Heat "
@@ -479,7 +466,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={"Q": _flamespitter_full_channel, "P": _junkyard_titan},
     cc_kinds=MODULE_CC,
 )
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "overheat_autos",
         0,
@@ -497,16 +485,15 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "Heat is a resource this engine does not simulate, and the "
-                "cast plan cannot stand in for it while E is scheduled on "
-                "its 0.5s inter-charge cooldown instead of its 6s recharge. "
-                "How often the mech reaches the ceiling is declared."
-            ),
+            "note": "Heat is a resource this engine does not simulate, and the "
+            "cast plan cannot stand in for it while E is scheduled on "
+            "its 0.5s inter-charge cooldown instead of its 6s recharge. "
+            "How often the mech reaches the ceiling is declared.",
         },
     ),
 ]
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Flamespitter) prices the cached Maximum Magic Damage row "
     "(62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5% : 10% of the "
     "target's maximum health) — the whole 3-second flamethrower, equal "

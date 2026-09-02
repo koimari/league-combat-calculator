@@ -17,39 +17,39 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import golden_snapshot as gs  # noqa: E402  (path is set above)
+import golden_snapshot as gs
 
-from src.calculator import pipeline  # noqa: E402
-from src.calculator.interpreters.delta_amp import (  # noqa: E402
+from src.calculator import pipeline
+from src.calculator.interpreters.delta_amp import (
     EVERY_DAMAGE_CLASS,
     declared_magic_amp,
     resolve_part_amp,
 )
-from src.calculator.item_behavior import (  # noqa: E402
+from src.calculator.item_behavior import (
     Basis,
     DefenseField,
     EmpoweredHitRule,
+    FightFacts,
     OpeningDefenseRule,
     PartAmpRule,
     PeriodicRule,
     ThresholdDefenseRule,
 )
-from src.calculator.item_behavior_catalog import (  # noqa: E402
+from src.calculator.item_behavior_catalog import (
     behavior_rules,
     rule_owners,
 )
-from src.calculator.item_effects import (  # noqa: E402
+from src.calculator.item_effects import (
     required_effect_value,
-    resolve_damage_effects,
 )
-from src.calculator.item_support_effects import producer_item  # noqa: E402
-from src.calculator.pipeline import run_fight  # noqa: E402
-from src.calculator.roster_composition import (  # noqa: E402
+from src.calculator.item_support_effects import producer_item
+from src.calculator.pipeline import run_fight
+from src.calculator.roster_composition import (
     from_loadout,
     target_overrides,
     target_params,
 )
-from src.calculator.scenario import (  # noqa: E402
+from src.calculator.scenario import (
     parse_scenario_request,
     resolve_scenario,
 )
@@ -98,7 +98,7 @@ class TestProvenanceExclusion:
     def test_every_excluded_key_is_actually_captured(self, path):
         """The exclusion set names keys the snapshot carries, not aspirations."""
         metadata = _load(path)["metadata"]
-        assert gs.COMPARE_EXCLUDED_PROVENANCE <= set(metadata)
+        assert set(metadata) >= gs.COMPARE_EXCLUDED_PROVENANCE
 
     def test_dropping_git_head_from_the_exclusion_set_turns_compare_red(self):
         """R-05: the gate's own red, reproducible on demand.
@@ -160,7 +160,7 @@ class TestFingerprint:
 
 class TestLeafReport:
     @pytest.mark.parametrize(
-        "old, new, transition",
+        ("old", "new", "transition"),
         [
             ({"a": 10.0}, {"a": 10.5}, "value"),
             ({"a": 0.0}, {"a": 3.0}, "zero_to_value"),
@@ -800,10 +800,12 @@ class TestHolderAmpCoverage:
                         resolved = resolve_part_amp(
                             [owner],
                             attack_class,
-                            level=18,
-                            fight_duration_seconds=8.0,
-                            target_bonus_health=0.0,
-                            holder_is_melee=False,
+                            facts=FightFacts(
+                                level=18,
+                                fight_duration_seconds=8.0,
+                                target_bonus_health=0.0,
+                                holder_is_melee=False,
+                            ),
                         )
                         assert resolved is not None
                         assert resolved.owner == owner
@@ -1009,7 +1011,8 @@ class TestRepricingWindowCoverage:
         ]
         inside = [e["damage"] for e in autos if e["time"] <= window["duration"]]
         outside = [e["damage"] for e in autos if e["time"] > window["duration"]]
-        assert inside and outside
+        assert inside
+        assert outside
         published = float(fight["effective_armor"])
         windowed = published - float(window["amount"])
         # Flat penetration cannot drive armour below zero, so the subtraction
@@ -1042,10 +1045,9 @@ class TestRepricingWindowCoverage:
         assert max(ticks) / min(ticks) == pytest.approx(expected, rel=1e-2)
 
     def test_the_longer_fight_prices_the_lifeline_expiry(self, coupled):
-        """The refusal this scenario's short window used to dodge is retired.
+        """A fight outliving the temporary maximum prices its expiry.
 
-        A fight outliving the temporary maximum used to be withheld.  The
-        expiry is modelled now, so the same roster at the shared eight
+        The expiry is modelled, so the same roster at the shared eight
         seconds prices — and it prices by *doing the arithmetic*: the burn
         ticks step up while the maximum is raised and fall back to their
         opening size once it lapses, which a deleted refusal could not
@@ -1459,7 +1461,7 @@ class TestSyndraPinScenarios:
         assert "Q2" in slots("syndra_derived_order_120")
 
     def test_a_custom_order_keeps_the_recast_slot(self, coupled):
-        """The defect C6 corrected: the request used to delete this row.
+        """The defect C6 corrected, pinned: the request keeps this row.
 
         This test replaces the pre-C6 ``..._drops_the_recast_slot_today``,
         which pinned the defect and had to invert with the fix.  Both ends
@@ -1639,7 +1641,7 @@ class TestFingerprintsReceipt:
     RECEIPT = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 
     @pytest.mark.parametrize(
-        "block, path",
+        ("block", "path"),
         [
             ("golden", PAIR_BASELINE),
             ("coupled_golden", COUPLED_BASELINE),

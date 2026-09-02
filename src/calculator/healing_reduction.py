@@ -11,7 +11,6 @@ event rows carry the sources each application saw.
 
 from __future__ import annotations
 
-from importlib import import_module
 from collections.abc import Iterable, Mapping
 from typing import Any
 
@@ -127,11 +126,9 @@ def champion_grievous_wound_sources(
     # a wound-declaring module is actually on the roster.
     from .champions import _CHAMPION_MODULES  # pylint: disable=import-outside-toplevel
 
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    module = _CHAMPION_MODULES.get(champion_name)
+    if module is None:
         return ()
-    package = f"{__name__.rsplit('.', 1)[0]}.champions"
-    module = import_module(f".{module_name}", package=package)
     sources = getattr(module, "GRIEVOUS_WOUNDS_SOURCES", None)
     if not sources:
         return ()

@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import os
 import socket
 import statistics
@@ -41,6 +42,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import httpx
@@ -187,18 +189,19 @@ def _spawn_server(port: int, database: str) -> subprocess.Popen:
     env["DATABASE_URL"] = f"sqlite:///{database}"
     env.pop("REDIS_URL", None)
     env.pop("SENTRY_DSN", None)
-    proc = subprocess.Popen(
+    return subprocess.Popen(
         [sys.executable, "-c", spawn_code, str(port)],
         cwd=str(Path(__file__).resolve().parent.parent),
         env=env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
-    return proc
 
 
 async def _wait_until_healthy(
-    client: httpx.AsyncClient, base_url: str, timeout: float = 60.0
+    client: httpx.AsyncClient,
+    base_url: str,
+    timeout: float = 60.0,  # noqa: ASYNC109 - the poll window
 ) -> None:
     """Poll /healthz until the server responds."""
     deadline = time.monotonic() + timeout
@@ -247,9 +250,9 @@ def _build_user_plan(users: int, requests: int) -> list[tuple[str, dict]]:
 async def _run_pass(
     client: httpx.AsyncClient,
     base_url: str,
-    plan: list[tuple[str, dict]],
+    plan: Iterable[tuple[str, dict]],
     concurrency: int,
-) -> tuple[list[tuple[str, float, int]], list[str]]:
+) -> list[tuple[str, float, int]]:
     """Execute the plan with a fixed worker pool; returns the result rows."""
     results: list[tuple[str, float, int]] = []
     queue: asyncio.Queue = asyncio.Queue()
@@ -303,7 +306,7 @@ async def _run(
 
         cold = await _run_pass(client, base_url, plan, concurrency=users)
         before = await _cache_counters(client, base_url)
-        warm, _ = await _run_pass(client, base_url, plan, concurrency=warm_concurrency)
+        warm = await _run_pass(client, base_url, plan, concurrency=warm_concurrency)
         after = await _cache_counters(client, base_url)
 
     hits_delta = int(after["hits"]) - int(before["hits"])
@@ -322,7 +325,7 @@ async def _run(
             failures += 1
             failures_detail.append(f"{endpoint} -> {status}")
 
-    summary = {
+    return {
         "users": users,
         "requests_per_user": requests,
         "total_requests": len(cold) + len(warm),
@@ -341,7 +344,6 @@ async def _run(
             if values
         },
     }
-    return summary
 
 
 def _percentile(values: list[float], fraction: float) -> float:
@@ -352,7 +354,7 @@ def _percentile(values: list[float], fraction: float) -> float:
     return ordered[index]
 
 
-def _check_budgets(summary: dict) -> bool:
+def _check_budgets(summary: Mapping) -> bool:
     """Assert p95 budgets and the warm-pass cache hit ratio; returns pass."""
     ok = True
     calculate_p95 = summary["latencies"]["calculate"]["p95"]
@@ -417,10 +419,8 @@ def main(argv: list[str] | None = None) -> int:
                 spawned.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 spawned.kill()
-            try:
+            with contextlib.suppress(OSError):
                 Path(database).unlink(missing_ok=True)
-            except OSError:
-                pass
 
     print(
         f"[load_sanity] users={summary['users']} requests/user={summary['requests_per_user']}"

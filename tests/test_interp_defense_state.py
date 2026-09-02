@@ -3,9 +3,9 @@
 The four defence families share no arithmetic and one contract, and this is
 the contract.  Every clause below is a *refusal*: a key the declaration does
 not carry, a ramp asked for as a flat number, a field the mechanic never
-said it writes.  Each of them used to be impossible to get wrong only
-because the resolver read the registry directly, which is another way of
-saying nothing checked it at all.
+said it writes.  A resolver that reads the registry directly makes each of
+them impossible to get wrong, which is another way of saying nothing checks
+it at all.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from src.calculator.item_behavior import (
     DefenseField,
     DefenseMechanic,
     EngineLane,
+    FightFacts,
     RuleFamily,
 )
 
@@ -84,10 +85,12 @@ def test_compiling_resolves_every_reference_at_build_time() -> None:
         rule,
         catalog.build_context(
             rule.owner,
-            18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.DEFENSE_RESOLVER,
     )

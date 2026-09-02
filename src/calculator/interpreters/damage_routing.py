@@ -39,12 +39,15 @@ from ..item_behavior import (
     DefenseSubject,
     EngineLane,
     ExecuteRule,
+    FightFacts,
     KernelField,
     RuleFamily,
     ShieldBypassRule,
+    compiled_value,
+    flat_fields,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
+from ..value_ref import AnyValueRef, resolve
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 # The field names a routing rule compiles to on the pair lane.
@@ -240,12 +243,12 @@ class ShieldBypass:
 
 def _field(fields: tuple[KernelField, ...], name: str) -> float:
     """One compiled field by name, or a stop naming the question asked."""
-    for compiled in fields:
-        if compiled.name == name:
-            return float(compiled.value)
-    raise DamageRoutingInterpretationError(
-        f"no routing field named {name!r} was compiled; the engine asked a "
-        "declaration a question it does not answer"
+    return compiled_value(
+        fields,
+        name,
+        DamageRoutingInterpretationError,
+        f"no routing field named {name!r} was compiled; the engine asked "
+        "a declaration a question it does not answer",
     )
 
 
@@ -294,18 +297,12 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
     :func:`pair_fields`.  A reference needing a level or a fight fact is a stop
     naming the shape, exactly as sustain's fight-free reader refuses one.
     """
-    references = _flat_references(rule)
-    try:
-        values = resolve_flat([reference for _, reference in references])
-    except ValueRefError as exc:
-        raise DamageRoutingInterpretationError(
-            f"{rule.mechanic_id} declares a reference that needs a level or a "
-            "fight fact, and this accessor has neither; read it through "
-            "resolve_execution, which is handed the context it resolves against"
-        ) from exc
-    return tuple(
-        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for (name, _), value in zip(references, values)
+    return flat_fields(
+        rule,
+        _flat_references(rule),
+        lane,
+        DamageRoutingInterpretationError,
+        reader="resolve_execution",
     )
 
 
@@ -328,10 +325,7 @@ def declared_execution(owners: Sequence[str]) -> Execution | None:
 def resolve_execution(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> Execution | None:
     """This build's execution threshold, or ``None`` if nobody declares one.
 
@@ -343,13 +337,7 @@ def resolve_execution(
         return None
     fields = pair_fields(
         rule,
-        build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        ),
+        build_context(rule.owner, facts),
         EngineLane.PAIR_ENGINE,
     )
     return Execution(
@@ -360,10 +348,7 @@ def resolve_execution(
 def resolve_shield_bypass(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> ShieldBypass | None:
     """This build's shield bypass, or ``None`` if nobody declares one."""
     rule = _sole_rule(owners, ShieldBypassRule)
@@ -371,13 +356,7 @@ def resolve_shield_bypass(
         return None
     fields = pair_fields(
         rule,
-        build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        ),
+        build_context(rule.owner, facts),
         EngineLane.PAIR_ENGINE,
     )
     return ShieldBypass(
@@ -429,10 +408,7 @@ def _walk_fields(  # pylint: disable=too-many-arguments
     owners: Sequence[str],
     payload_type: type,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> tuple[BehaviorRule, tuple[KernelField, ...]] | None:
     """The one declaration of *payload_type* this build brings, compiled.
 
@@ -444,13 +420,7 @@ def _walk_fields(  # pylint: disable=too-many-arguments
         return None
     return rule, walk_fields(
         rule,
-        build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        ),
+        build_context(rule.owner, facts),
         EngineLane.RECEIPT_WALK,
     )
 
@@ -458,19 +428,13 @@ def _walk_fields(  # pylint: disable=too-many-arguments
 def walk_execution(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> Execution | None:
     """The Execute rider this build's declarations arm, or ``None``."""
     compiled = _walk_fields(
         owners,
         ExecuteRule,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        facts=facts,
     )
     if compiled is None:
         return None
@@ -483,10 +447,7 @@ def walk_execution(
 def walk_venom(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> Venom | None:
     """The barrier-state adjustment this build's declarations arm, or ``None``.
 
@@ -496,10 +457,7 @@ def walk_venom(
     compiled = _walk_fields(
         owners,
         ShieldBypassRule,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        facts=facts,
     )
     if compiled is None:
         return None
@@ -517,10 +475,7 @@ def walk_venom(
 def walk_deferral(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> Deferral | None:
     """The Defer rider this build's declarations arm, or ``None``.
 
@@ -530,10 +485,7 @@ def walk_deferral(
     compiled = _walk_fields(
         owners,
         DamageDeferralRule,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        facts=facts,
     )
     if compiled is None:
         return None
@@ -550,17 +502,17 @@ __all__ = [
     "DEFER_DURATION_FIELD",
     "DEFER_FRACTION_FIELD",
     "DEFER_TICKS_FIELD",
-    "DamageRoutingInterpretationError",
-    "Deferral",
     "EXECUTE_THRESHOLD_FIELD",
-    "Execution",
     "FLAT_ROUTING_REFERENCES",
     "IGNORE_PAIN_NOTE",
     "SHIELD_BYPASS_DURATION_FIELD",
     "SHIELD_BYPASS_FRACTION_FIELD",
-    "ShieldBypass",
     "VENOM_DURATION_FIELD",
     "VENOM_KEEP_FIELD",
+    "DamageRoutingInterpretationError",
+    "Deferral",
+    "Execution",
+    "ShieldBypass",
     "Venom",
     "declared_execution",
     "pair_fields",

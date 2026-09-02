@@ -15,7 +15,6 @@ import pytest
 from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.champions import (
     get_champion_module_contract,
-    parse_champion_abilities,
     warwick,
 )
 from src.calculator.scenario import load_public_champion
@@ -60,7 +59,8 @@ class TestReviewedCrowdControl:
         review could reach.  W is a pure stat buff.
         """
         data = cc_review.kit("Warwick")
-        assert "W" not in warwick.MODULE_CC and "E" not in warwick.MODULE_CC
+        assert "W" not in warwick.MODULE_CC
+        assert "E" not in warwick.MODULE_CC
         assert get_champion_module_contract("Warwick").coverage["E"] == "modeled"
         assert "fearing nearby enemies for 1 second" in cc_review.slot_text(data, "E")
         assert row_review.parts("Warwick", "E") == ()

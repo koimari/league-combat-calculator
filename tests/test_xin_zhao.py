@@ -255,6 +255,6 @@ class TestDetermination:
         )
 
     def test_every_slot_now_prices_something(self):
-        assert get_champion_module_contract("Xin Zhao").coverage == {
-            slot: "modeled" for slot in "PQWER"
-        }
+        assert get_champion_module_contract("Xin Zhao").coverage == dict.fromkeys(
+            "PQWER", "modeled"
+        )

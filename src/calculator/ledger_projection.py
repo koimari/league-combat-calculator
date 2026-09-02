@@ -253,7 +253,7 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
     # Uncoerced: the regen condition treats an unparseable stat as a demand
     # and the vamp conditions treat it as no demand, so a shared coercion
     # here would silently pick one of them.
-    def raw_stat(self, condition: AdequacyCondition, field: str) -> Any:
+    def raw_stat(self, condition: AdequacyCondition, field: str) -> object:
         """One declared champion stat, uncoerced, or a refusal."""
         if field not in DECLARATIONS[condition].requires_fields:
             raise UndeclaredStatRead(condition, field)
@@ -726,15 +726,15 @@ def _demands(
     found: list[LedgerDemand] = []
     for condition in conditions:
         declaration = DECLARATIONS[condition]
-        for owner in probes[condition](inputs):
-            found.append(
-                LedgerDemand(
-                    condition=condition,
-                    owner=owner,
-                    reader=declaration.reader,
-                    reason=declaration.reason,
-                )
+        found.extend(
+            LedgerDemand(
+                condition=condition,
+                owner=owner,
+                reader=declaration.reader,
+                reason=declaration.reason,
             )
+            for owner in probes[condition](inputs)
+        )
         if found and stop_at_first:
             break
     return tuple(found)
@@ -774,15 +774,15 @@ def shield_outcome_projection(inputs: ShieldOutcomeInputs) -> ResultProjection:
 
 
 __all__ = [
-    "AdequacyCondition",
-    "AdequacyDeclaration",
     "DECLARATIONS",
     "LEDGER_CONDITIONS",
+    "SHIELD_OUTCOME_CONDITIONS",
+    "AdequacyCondition",
+    "AdequacyDeclaration",
     "LedgerDemand",
     "LedgerInputs",
     "ProjectionRegistryError",
     "ResultProjection",
-    "SHIELD_OUTCOME_CONDITIONS",
     "ShieldOutcomeInputs",
     "UndeclaredStatRead",
     "ledger_demands",

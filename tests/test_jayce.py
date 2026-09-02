@@ -23,14 +23,16 @@ Jayce starts with R at rank 1 and can never level it, so Q/W/E have SIX
 ranks and R's values step with CHAMPION LEVEL at 1 / 6 / 11 / 16.
 """
 
+from typing import Any
+
 import pytest
 
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions.slotlib import extract_value
-from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.stats import ATTACK_SPEED_CAP
 from tests import cc_review
 
@@ -550,7 +552,8 @@ class TestOptions:
         hammer = _parse(jayce_data, options=HAMMER)
         assert cannon["Q"]["name"] != hammer["Q"]["name"]
         assert cannon["W"]["name"] != hammer["W"]["name"]
-        assert "E" not in cannon and hammer["E"]["name"] == "Thundering Blow"
+        assert "E" not in cannon
+        assert hammer["E"]["name"] == "Thundering Blow"
         assert cannon["R"]["name"] != hammer["R"]["name"]
 
 
@@ -731,7 +734,7 @@ class TestHyperChargeBurstAttackSpeed:
         the whole ~1s burst, so the four forced attacks in this rotation
         cannot yield four procs: a charge is spent per CAST that forces
         swings, and only R and W do. Pricing the procs against the
-        nominal 5s rotation instead used to hand one out per attack.
+        nominal 5s rotation instead would hand one out per attack.
         """
         essence_reaver = get_item_by_name("Essence Reaver")
         stats = dict(STATS_250_AD, critical_strike_chance=0.0)
@@ -842,7 +845,7 @@ class TestCannonShredDuration:
         "critical_strike_chance": 0.0,
     }
 
-    def _armor(self, jayce_data, duration):
+    def _armor(self, jayce_data, duration) -> dict[str, Any]:
         abilities = _parse(jayce_data, level=13, stats=self._STATS)
         return calculate_fight_damage(
             dict(self._STATS),
@@ -887,14 +890,14 @@ class TestCannonShredDuration:
     def test_shredded_q_hits_harder_than_unshredded(self, jayce_data) -> None:
         """Same fight, R's shred before vs after Q: Q must feel it."""
         abilities = _parse(jayce_data, level=13, stats=self._STATS)
-        config = dict(
-            target_health=100000,
-            target_armor=100,
-            target_magic_resistance=100,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=0.0,
-            deterministic=True,
-        )
+        config = {
+            "target_health": 100000,
+            "target_armor": 100,
+            "target_magic_resistance": 100,
+            "fight_duration_seconds": 5.0,
+            "auto_attack_uptime": 0.0,
+            "deterministic": True,
+        }
         r_first = calculate_fight_damage(
             dict(self._STATS),
             abilities,
@@ -940,7 +943,6 @@ class TestReviewedCrowdControl:
         attack they empower, and neither controls.
         """
         from src.calculator.champions import jayce
-
         from src.calculator.champions.engine import CC_PER_PART
 
         assert jayce.MODULE_CC == {
@@ -974,7 +976,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """Hammer's To the Skies! slows and Thundering Blow knocks back."""
-        assert _CC.kinds(**{"hammer_stance": True}) == {
+        assert _CC.kinds(hammer_stance=True) == {
             "Q": ["slow"],
             "W": ["none"],
             "E": ["knockback"],

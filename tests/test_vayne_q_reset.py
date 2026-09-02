@@ -253,17 +253,17 @@ def _pipeline_fight(
     **overrides,
 ) -> dict:
     """Pipeline fight (real champion stats) for the registered surface."""
-    params = dict(
-        target_health=1000.0,
-        target_armor=100.0,
-        target_magic_resistance=100.0,
-        fight_duration_seconds=_DURATION,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        deterministic=True,
-        ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
-        champion_options=options or {},
-    )
+    params = {
+        "target_health": 1000.0,
+        "target_armor": 100.0,
+        "target_magic_resistance": 100.0,
+        "fight_duration_seconds": _DURATION,
+        "auto_attack_uptime": 1.0,
+        "one_rotation": False,
+        "deterministic": True,
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "champion_options": options or {},
+    }
     params.update(overrides)
     return run_fight(
         copy.deepcopy(get_champion(CHAMPION)),

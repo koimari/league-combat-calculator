@@ -25,7 +25,7 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.interpreters import cast_proc
-from src.calculator.item_effects import resolve_damage_effects
+from src.calculator.item_behavior import FightFacts
 
 
 def _stats() -> dict:
@@ -154,10 +154,12 @@ def _eclipse_proc():
         proc
         for proc in cast_proc.resolve_slots(
             ("Eclipse",),
-            level=11,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=11,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ).cooldown_procs
         if proc.source.item_name == "Eclipse"
     )
@@ -292,8 +294,8 @@ class TestFailClosedIdentityAndMetadata:
         assert denials[0]["reason"] == "target_identity_unavailable"
 
     def test_malformed_dot_metadata_has_named_denial(self) -> None:
-        """A non-numeric ``dot_tick_interval`` used to crash the fight calc
-        with a raw ``ValueError`` (``float('half-second')``). It is now
+        """A non-numeric ``dot_tick_interval`` (``float('half-second')``
+        raises ``ValueError`` — never a crash out of the fight calc) is
         treated the same as a missing cadence (fail-closed — never coerced
         or invented): the row stays coarse (no per-tick ``damage_events``,
         ``total_damage`` unchanged), and the ability still declares a

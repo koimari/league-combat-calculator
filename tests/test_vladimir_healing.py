@@ -77,7 +77,8 @@ def test_vladimir_sanguine_pool_heals_thirty_percent_of_pre_mitigation_damage():
         if e.get("attacker") == "main" and e.get("source") == "W"
     ]
     w_heals = [e for e in _main_heals(combat) if e["source"] == "Sanguine Pool"]
-    assert w_damage and w_heals
+    assert w_damage
+    assert w_heals
     event = w_damage[0]
     assert "raw_damage" in event, "engine must expose pre-mitigation raw_damage"
     assert event["raw_damage"] > event["damage"], "raw must exceed mitigated"

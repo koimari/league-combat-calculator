@@ -28,9 +28,9 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.slotlib import find_named_leveling
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _CACHE_KEY_BY_DISPLAY = {

@@ -4,7 +4,7 @@
 an ordering claim: a :class:`Projection` selects which **fields** the
 compiler reads and never which **events exist**, because the Imperial Mandate
 incident was an event dropped before compilation, where the compiler's own
-fail-closed raise could no longer see it.  The suite asserts that as a
+fail-closed raise could not see it.  The suite asserts that as a
 property of the two programs rather than as a comment.
 """
 

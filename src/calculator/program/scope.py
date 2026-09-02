@@ -31,7 +31,6 @@ reason the union carries a member nobody declares yet.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Union
 
 from . import route
 
@@ -89,7 +88,7 @@ class Unreviewed:
             )
 
 
-CcScope = Union[SingleTarget, MultiTarget, Unreviewed]
+CcScope = SingleTarget | MultiTarget | Unreviewed
 
 CC_SCOPES: tuple[type, ...] = (SingleTarget, MultiTarget, Unreviewed)
 
@@ -141,16 +140,18 @@ def scope_policy(scope: CcScope) -> route.RoutePolicy:
     the recorded default, so reaching here with one means a caller took the
     routing answer without the disclosure that qualifies it.
     """
-    if isinstance(scope, SingleTarget):
-        return route.PairDefender()
-    if isinstance(scope, MultiTarget):
-        return route.AllOpponents()
-    if isinstance(scope, Unreviewed):
-        raise UnscopedCrowdControl(scope)
-    raise TypeError(
-        f"{type(scope).__name__} is not a CcScope; the union is closed "
-        f"({', '.join(member.__name__ for member in CC_SCOPES)})"
-    )
+    match scope:
+        case SingleTarget():
+            return route.PairDefender()
+        case MultiTarget():
+            return route.AllOpponents()
+        case Unreviewed():
+            raise UnscopedCrowdControl(scope)
+        case _:
+            raise TypeError(
+                f"{type(scope).__name__} is not a CcScope; the union is closed "
+                f"({', '.join(member.__name__ for member in CC_SCOPES)})"
+            )
 
 
 class UnscopedCrowdControl(ValueError):

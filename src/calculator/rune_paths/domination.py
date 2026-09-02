@@ -13,9 +13,9 @@ who picks Taste of Blood should be told what the rune would have healed, not
 merely that it dealt nothing.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition
 from ..item_effects import DamageInputs
 from ..rune_effects import (
@@ -26,15 +26,17 @@ from ..rune_effects import (
     RuneOptionKind,
     RuneProcEffect,
     RuneStat,
-    RuneStatContext,
     RuneStatGrantEffect,
     RuneTrigger,
     RuneValues,
+    adaptive_formula,
     armed_by_option,
     at_level,
     breakdown_key,
     display_name,
+    leveled_damage,
     no_damage_compiler,
+    per_stack_grant,
     required_leveling,
     stack_count_option,
     stated_type,
@@ -64,11 +66,8 @@ def _compile_cheap_shot(entry: Mapping[str, Any]) -> RuneProcEffect:
     """
     name = "Cheap Shot"
     effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
+    raw = leveled_damage(name, effects)
     top = RuneValues(name, entry)
-
-    def raw(inputs: DamageInputs) -> float:
-        return at_level(base_by_level, inputs.level)
 
     return RuneProcEffect(
         rune_name=name,
@@ -106,19 +105,9 @@ def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneHealEffect:
     """
     name = "Taste of Blood"
     effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
+    amount, bonus_ad_ratio, ap_ratio = adaptive_formula(name, effects)
     top = RuneValues(name, entry)
     first, last = _level_span(name, effects)
-
-    def amount(inputs: DamageInputs) -> float:
-        stats = inputs.champion_stats
-        return (
-            at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
-            + ap_ratio * champion_stat(stats, "ability_power")
-        )
 
     return RuneHealEffect(
         rune_name=name,
@@ -209,12 +198,10 @@ def _compile_ultimate_hunter(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     """
     name = "Ultimate Hunter"
     effects = RuneValues(name, entry.get("effects", {}))
-    base = effects.number("ultimate_haste")
-    per_stack = effects.number("ultimate_haste_per_stack")
-    ceiling = effects.number("max_stacks")
-
-    def amount(context: RuneStatContext) -> float:
-        return base + per_stack * context.option(name, _HUNTER_STACKS, 0.0)
+    base, per_stack, ceiling = effects.numbers(
+        "ultimate_haste", "ultimate_haste_per_stack", "max_stacks"
+    )
+    amount = per_stack_grant(name, base, per_stack, _HUNTER_STACKS)
 
     return RuneStatGrantEffect(
         rune_name=name,

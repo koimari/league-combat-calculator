@@ -28,12 +28,13 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-
 from functools import cache
 from types import MappingProxyType
+from typing import Any
 
-from ..item_behavior import Compilable, Compilability, EngineLane
+from ..ability_spec import Quantity
+from ..delivery_eligibility import CombatantFacts
+from ..item_behavior import Compilability, Compilable, EngineLane
 from ..survival.actions import TransitionRank
 from ..trigger_stream import (
     CAPABILITIES,
@@ -43,11 +44,10 @@ from ..trigger_stream import (
     HolderStacking,
     packet_source_literal,
 )
-from ..ability_spec import Quantity
-from .views import UnrankableNumber, ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
 from .route import PairDefender, RouteContext, resolve_route
+from .views import UnrankableNumber, ViewTag
 
 
 class Projection(Enum):
@@ -104,7 +104,7 @@ class Tagged:
     quantity: Quantity
     tag: ViewTag
 
-    def __add__(self, other: object) -> "Tagged":
+    def __add__(self, other: object) -> Tagged:
         """Fold two quantities that mean the same thing, or refuse."""
         if not isinstance(other, Tagged):
             return NotImplemented
@@ -297,23 +297,22 @@ def pair_preview_mechanics() -> frozenset[str]:
     return frozenset(previewed)
 
 
-def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """Which of one pair fight's breakdown rows are previews, not deliveries.
-
-    The join has two declared halves: the pair engine stamps each row it authors
-    with the mechanic that rule belongs to (``pair_preview_of``), and the
-    capability registry says whether that mechanic's pair-lane number is
-    ``THEORETICAL``.  One home, because a roster composes a pair fight in two
-    places and two copies would answer identically until one was not updated.
-    """
-    previews = pair_preview_mechanics()
-    if not previews:
+def _rows_previewing(
+    result_breakdown: Mapping[str, Any], mechanics: frozenset[str]
+) -> frozenset[str]:
+    """The breakdown rows stamped as previews of one of *mechanics*."""
+    if not mechanics:
         return frozenset()
     return frozenset(
         source
         for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in previews
+        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in mechanics
     )
+
+
+def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
+    """Which of one pair fight's breakdown rows are previews, not deliveries."""
+    return _rows_previewing(result_breakdown, pair_preview_mechanics())
 
 
 @cache
@@ -354,14 +353,7 @@ def dropped_preview_mechanics() -> frozenset[str]:
 
 def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
     """The preview rows of one pair fight a roster composition leaves out."""
-    dropped = dropped_preview_mechanics()
-    if not dropped:
-        return frozenset()
-    return frozenset(
-        source
-        for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in dropped
-    )
+    return _rows_previewing(result_breakdown, dropped_preview_mechanics())
 
 
 @cache
@@ -438,7 +430,7 @@ class Program:
     events: tuple[RoutedEvent, ...]
     pass_index: int = 0
     patch: ParamPatch | None = None
-    actors: tuple[Any, ...] = ()
+    actors: tuple[CombatantFacts, ...] = ()
     focus: str = ""
 
     def __post_init__(self) -> None:
@@ -462,7 +454,7 @@ class Program:
 
 
 def roster_program(
-    actors: Sequence[Any],
+    actors: Sequence[CombatantFacts],
     *,
     pass_index: int = 0,
     patch: ParamPatch | None = None,
@@ -623,19 +615,19 @@ def build_program(
             opponents=(defender,),
         )
         for event in pair.events:
-            for subject in resolve_route(event.route, ctx, roster_size=len(roster)):
-                routed.append(
-                    RoutedEvent(
-                        id=event.id,
-                        subject=subject,
-                        source=attacker,
-                        time=event.time,
-                        sequence=event.sequence,
-                        rank=event.rank,
-                        payload=event.payload,
-                        riders=event.riders,
-                    )
+            routed.extend(
+                RoutedEvent(
+                    id=event.id,
+                    subject=subject,
+                    source=attacker,
+                    time=event.time,
+                    sequence=event.sequence,
+                    rank=event.rank,
+                    payload=event.payload,
+                    riders=event.riders,
                 )
+                for subject in resolve_route(event.route, ctx, roster_size=len(roster))
+            )
     return Program(
         participants=roster,
         events=tuple(routed),
@@ -646,25 +638,25 @@ def build_program(
 
 __all__ = [
     "CapabilityView",
-    "MixedViewFold",
-    "Tagged",
-    "declared_view_tags",
-    "fold_tagged",
-    "ranked_total",
-    "tag_for",
     "DerivationCycle",
     "MechanicView",
+    "MixedViewFold",
     "PairProgram",
     "ParamPatch",
     "Program",
     "Projection",
+    "Tagged",
     "build_program",
+    "declared_view_tags",
     "derivation_order",
     "dropped_pair_previews",
     "dropped_preview_mechanics",
+    "fold_tagged",
     "pair_preview_mechanics",
     "pair_preview_sources",
     "pair_program",
-    "walk_repriced_mechanics",
+    "ranked_total",
     "roster_program",
+    "tag_for",
+    "walk_repriced_mechanics",
 ]

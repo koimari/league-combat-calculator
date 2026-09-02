@@ -7,31 +7,35 @@ test_item_damage.py; resistance/pen primitives in test_resistance.py; ability
 primitives in test_champion_primitives.py.
 """
 
-import pytest
 from types import SimpleNamespace
+
+import pytest
 
 from src.calculator import damage
 from src.calculator.ability_spec import DamagePart
-from src.calculator.interpreters import on_hit_strike
-from src.calculator.resistance import apply_resistance
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
     DecayingTarget,
     FightConfig,
+    _event_timeline_coverage,
+    _mitigate,
+    _navori_effective_cd,
+    _ordered_damage_events,
+    _simulate_current_health_on_hit,
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
-    _event_timeline_coverage,
-    _ordered_damage_events,
-    _simulate_current_health_on_hit,
+)
+from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
-    _navori_effective_cd,
-    _mitigate,
 )
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interpreters import on_hit_strike
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
+from src.calculator.resistance import apply_resistance
 
 
 def _simulate_bork_damage(
@@ -48,27 +52,29 @@ def _simulate_bork_damage(
     """Readable test adapter around the generic current-health simulation."""
     strikes = on_hit_strike.per_hit_effects(
         ["Blade of the Ruined King"],
-        level=1,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=1,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         target_health,
         num_auto_attacks,
-        auto_damage_per_hit,
-        other_on_hit_per_hit,
-        SimpleNamespace(
+        auto_damage_per_hit=auto_damage_per_hit,
+        other_on_hit_per_hit=other_on_hit_per_hit,
+        resists=SimpleNamespace(
             effective_armor=effective_armor,
             effective_mr=0.0,
             physical_damage_flat_reduction=0.0,
             physical_damage_flat_reduction_cap=0.0,
         ),
-        1.0,
-        phantom_hit_autos,
-        double_hit_all,
+        magic_amp=1.0,
+        phantom_hit_autos=phantom_hit_autos,
+        double_hit_all=double_hit_all,
     )
     return total, hits
 
@@ -532,7 +538,7 @@ class TestLedgerRowShapes:
         light = self._ledger(light=True)
 
         assert len(full) == len(lean) == len(light) > 4
-        for full_row, lean_row, light_row in zip(full, lean, light):
+        for full_row, lean_row, light_row in zip(full, lean, light, strict=False):
             assert light_row[0] == full_row["_lk"] == lean_row["_lk"]
             assert light_row[1] == full_row["damage"]
             assert light_row[2] == full_row["damage_type"]
@@ -542,7 +548,9 @@ class TestLedgerRowShapes:
             assert light_row[6] == full_row.get("declared")
 
     def test_lean_drops_the_display_fields_and_nothing_else(self):
-        for full_row, lean_row in zip(self._ledger(), self._ledger(lean=True)):
+        for full_row, lean_row in zip(
+            self._ledger(), self._ledger(lean=True), strict=False
+        ):
             assert set(lean_row) == set(full_row) - self.DISPLAY_ONLY
             for key, value in lean_row.items():
                 assert full_row[key] == value
@@ -1214,7 +1222,7 @@ class TestTargetIncomingDamageModifiers:
         Banned shortcut check: the coverage refusal was not deleted, it was
         *measured*.  A declaration subdividing the sourced window into no
         ticks leaves the heal a total rather than a schedule, and the coarse
-        source comes back exactly as it used to.
+        source comes back unchanged.
         """
         monkeypatch.setattr(
             damage.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
@@ -1251,7 +1259,7 @@ class TestTargetIncomingDamageModifiers:
     def test_protoplasm_prices_a_fight_that_outlives_its_window(
         self, fight, attacker_stats
     ):
-        """The fight the refusal used to withhold now computes.
+        """A fight that outlives the window computes instead of being refused.
 
         Six seconds outlives the five-second window, and the second cast
         lands after it: the temporary maximum is gone by then, so the
@@ -1994,8 +2002,8 @@ class TestOnHitSwingEvents:
 class TestSplitAutoVsAbility:
     """Tests for split_auto_vs_ability — auto vs ability damage attribution.
 
-    Expected values replicate the attribution rules that previously lived
-    in app.py's /api/calculate route.
+    Expected values pin the attribution rules the /api/calculate route
+    publishes through ``pipeline``.
     """
 
     def test_pure_ability_damage(self) -> None:
@@ -3228,7 +3236,7 @@ class TestHealthComponentInvariant:
     """
 
     @staticmethod
-    def _stats(champion_data, level, items, options):
+    def _stats(champion_data, level, items, options) -> dict[str, float]:
         from src.calculator.pipeline import FightParams, run_fight
 
         params = FightParams.from_request({"champion_options": options})

@@ -25,18 +25,18 @@ from ..binary_roots import data_value, spell_object
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
-    payments,
     parsed_rank,
+    payments,
     trigger_fields,
 )
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
+from .module_helpers import named_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
     damage_entry,
-    extract_cooldown,
     extract_named,
 )
 
@@ -73,32 +73,17 @@ def _call_of_the_freljord(ctx: SlotCtx) -> dict[str, Any] | None:
 _call_of_the_freljord.phase = BUFF
 
 
-def _consume(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: Champion Magic Damage (60-220 + 65% AP + 5% bonus health)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-
-    damage = extract_named(
-        ability, "Champion Magic Damage", rank, ctx.stats, ctx.target
-    )
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "magic",
-        # One bite, at the cast boundary — the claim that carries
-        # MODULE_CC's reviewed answer for Q into the event ledger.
-        event_order_certified="single_hit",
-    )
-    entry["detail"] = (
-        "Champion Magic Damage basis (60-220 + 65% AP + 5% bonus "
-        "health); the Non-Champion True Damage row (400-1200) is the "
-        "minion/monster branch and is not priced in a champion duel."
-    )
-    return entry
+# Q: Champion Magic Damage (60-220 + 65% AP + 5% bonus health).
+_consume = named_damage(
+    "Champion Magic Damage",
+    "magic",
+    # One bite, at the cast boundary — the claim that carries
+    # MODULE_CC's reviewed answer for Q into the event ledger.
+    event_order_certified="single_hit",
+    detail="Champion Magic Damage basis (60-220 + 65% AP + 5% bonus "
+    "health); the Non-Champion True Damage row (400-1200) is the "
+    "minion/monster branch and is not priced in a champion duel.",
+)
 
 
 PACKET_SHA256 = "a41876fad651b2f3fca034c6a2c1ba7e0bdab4d8874850a2decd86e65b420920"
@@ -146,7 +131,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Consume) prices the champion branch — Champion Magic Damage "
     "60-220 + 65% AP + 5% bonus health — instead of the "
     "Non-Champion True Damage row (400-1200), which applies to "
@@ -205,7 +191,7 @@ def derive_self_healing(
             return base_amount * 1.5
         return base_amount
 
-    healing = [
+    return [
         {
             "time": float(payment.event.get("time", 0.0)),
             "amount": 0.0,
@@ -216,7 +202,6 @@ def derive_self_healing(
         }
         for payment in payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
     ]
-    return healing
 
 
 SELF_HEALING_RULE = self_healing_rule("Nunu & Willump")(derive_self_healing)

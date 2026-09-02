@@ -38,8 +38,11 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
+from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -50,9 +53,6 @@ from .slotlib import (
     with_control,
 )
 
-from ..healing_helpers import HealAnchor, heal_from_damage, payments
-from ..binary_roots import data_value, spell_object
-
 _MORGANA_W_SPELL = spell_object("Morgana", "MorganaW")
 _W_TICK_INTERVAL = data_value(_MORGANA_W_SPELL, "TickRate")
 _W_DURATION = data_value(_MORGANA_W_SPELL, "WDuration")
@@ -62,12 +62,11 @@ _W_TICKS = int(_W_DURATION / _W_TICK_INTERVAL)
 _R_TETHER_SECONDS = data_value(spell_object("Morgana", "MorganaR"), "ChainDuration")
 
 
-def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tormented_shadow(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: 10 ticks of Maximum Damage Per Tick == Maximum Total Damage."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Maximum Damage Per Tick", rank, ctx.stats, ctx.target
@@ -96,12 +95,11 @@ def _tormented_shadow(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _soul_shackles(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _soul_shackles(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: initial hit + the same damage again at the 3s tether break."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -190,7 +188,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Tormented Shadow) prices all 10 storm ticks (Maximum Damage Per "
     "Tick x10 == Maximum Total Damage 180-700 + 200% AP) at 0.5-second "
     "intervals over the 5-second desecrated area, first tick on-cast.",
@@ -215,13 +214,13 @@ COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Soul Siphon pays 18% of every damaging ability hit.
 
     "heals herself for 18% of the post-mitigation damage dealt by her

@@ -22,13 +22,13 @@ to Mordekaiser for 7 seconds) has no engine axis and stays documented.
 import re
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
 from .slotlib import simple_damage
-from .. import healing_helpers as _healing
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
 
@@ -115,7 +115,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Indestructible) stores 45% of post-mitigation damage dealt and "
     "7.5% of pre-mitigation damage taken as Potential Shield (capped at "
     "30% of maximum health); the recast (modeled at W cast + 0.5 s, the "
@@ -154,13 +155,13 @@ ASSUMPTIONS = list(ASSUMPTIONS) + [
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Price Realm of Death's soul drain: one banishment, one heal.
 
     Mordekaiser "consumes the target's soul ..., healing himself for 10%
@@ -174,16 +175,16 @@ def derive_self_healing(
     realm = ability_payload(ability_damages, "R").get("self_heal_state")
     if isinstance(realm, dict):
         amount = float(realm.get("amount", 0.0) or 0.0)
-        for cast_time in _healing.cast_slot_times(cast_timeline, "R"):
-            healing.append(
-                {
-                    "time": cast_time,
-                    "amount": amount,
-                    "source": "Realm of Death",
-                    "kind": "champion_ability",
-                    "actor_wide": True,
-                }
-            )
+        healing.extend(
+            {
+                "time": cast_time,
+                "amount": amount,
+                "source": "Realm of Death",
+                "kind": "champion_ability",
+                "actor_wide": True,
+            }
+            for cast_time in _healing.cast_slot_times(cast_timeline, "R")
+        )
     return healing
 
 

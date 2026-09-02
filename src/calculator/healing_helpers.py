@@ -16,57 +16,53 @@ of the ledger the module happened to author.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable
+from typing import Any
 
-from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
+# The event source a heal rule reads: a slot letter, a set of source keys,
+# or a predicate over the key.
+HealSource = str | Container[str] | Callable[[str], bool]
 
 
-def leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
+def modifier_at_rank(
+    leveling: Mapping[str, Any], modifier_index: int, rank: int
+) -> float:
+    """One leveling row's modifier value at ``rank``; 0.0 when it has none."""
+    modifiers = leveling.get("modifiers", [])
+    if modifier_index >= len(modifiers):
+        return 0.0
+    values = modifiers[modifier_index].get("values", [])
+    if not values:
+        return 0.0
+    return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+
+
+def leveling_value(ability: Mapping[str, Any], attribute: str, rank: int) -> float:
     """Read one sourced leveling attribute without inventing a fallback."""
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                return 0.0
-            values = modifiers[0].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, 0, rank)
     return 0.0
 
 
 def leveling_modifier(
-    ability: dict[str, Any], attribute: str, rank: int, modifier_index: int = 0
+    ability: Mapping[str, Any], attribute: str, rank: int, modifier_index: int = 0
 ) -> float:
-    """Read one sourced leveling modifier at rank without scaling resolution.
-
-    ``extract_named`` sums every modifier and resolves stat-scaling units,
-    but a missing-health percentage (e.g. Tahm Kench's ``"% of missing
-    health"``) is not a stat the scaling layer knows, so it resolves to 0.0.
-    This helper reads the raw percentage value for those formula components;
-    the caller folds it into an amount formula evaluated against the
-    fighter's live health.
-    """
+    """Read one sourced leveling modifier at rank, without scaling resolution."""
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, modifier_index, rank)
     return 0.0
 
 
 def ability_json(
-    champion_data: dict[str, Any], slot: str, index: int = 0
+    champion_data: Mapping[str, Any], slot: str, index: int = 0
 ) -> dict[str, Any]:
     entries = champion_data.get("abilities", {}).get(slot, [])
     if index >= len(entries):
@@ -75,7 +71,7 @@ def ability_json(
 
 
 def leveling_ratio(
-    ability: dict[str, Any], attribute: str, unit_substring: str, rank: int
+    ability: Mapping[str, Any], attribute: str, unit_substring: str, rank: int
 ) -> float:
     """Read one sourced modifier whose unit contains a substring at rank.
 
@@ -99,18 +95,18 @@ def leveling_ratio(
     return 0.0
 
 
-def event_source(event: dict[str, Any]) -> str:
+def event_source(event: Mapping[str, Any]) -> str:
     return str(event.get("source_key", ""))
 
 
 def attributed_events(
     events: Iterable[dict[str, Any]],
-    predicate,
+    predicate: Callable[[str, dict[str, Any]], bool],
 ) -> list[dict[str, Any]]:
     return [event for event in events if predicate(event_source(event), event)]
 
 
-def parsed_rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
+def parsed_rank(ability_damages: Mapping[str, dict[str, Any]], slot: str) -> int:
     """Use the parser's sourced rank; omitted ranks are already level-derived."""
     try:
         return max(0, int(ability_damages.get(slot, {}).get("rank", 0) or 0))
@@ -168,7 +164,20 @@ def heal_from_damage(
     healing.append(heal)
 
 
-def missing_health_scaled_heal(minimum: float, maximum: float):
+def flat_plus_missing_heal(
+    flat: float, missing_pct: float
+) -> Callable[[float, float], float]:
+    """A flat heal plus *missing_pct* percent of the recipient's live missing health."""
+
+    def amount_formula(current_health: float, maximum_health: float) -> float:
+        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
+
+    return amount_formula
+
+
+def missing_health_scaled_heal(
+    minimum: float, maximum: float
+) -> Callable[[float, float], float]:
     """Build a live missing-health interpolation between two sourced bounds.
 
     Wiki "0% : 100% (based on missing health)" means the heal pays the
@@ -253,7 +262,9 @@ class _Payment:
     event: dict[str, Any]
 
 
-def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
+def _events_matching(
+    source: HealSource, damage_events: Iterable[dict[str, Any]]
+) -> list[dict[str, Any]]:
     """Damage events whose source key the rule claims."""
     if callable(source):
         return [event for event in damage_events if source(event_source(event))]
@@ -262,7 +273,7 @@ def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
     return [event for event in damage_events if event_source(event) in source]
 
 
-def _attributing_cast(cast_times: list[float], event_time: float) -> float | None:
+def _attributing_cast(cast_times: Iterable[float], event_time: float) -> float | None:
     """The activation an event at *event_time* came from, if one names it."""
     attributed: float | None = None
     for cast_time in cast_times:
@@ -290,7 +301,7 @@ def takedown_payments(
 
 def payments(
     anchor: HealAnchor,
-    source,
+    source: HealSource,
     damage_events: list[dict[str, Any]],
     cast_timeline: list[dict[str, Any]] | None = None,
 ) -> list[_Payment]:

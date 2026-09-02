@@ -99,9 +99,11 @@ def test_damage_engine_does_not_dispatch_on_item_names() -> None:
         if not isinstance(node, ast.Compare):
             continue
         compared = [node.left, *node.comparators]
-        for value in compared:
-            if isinstance(value, ast.Constant) and value.value in item_names:
-                offenders.append((node.lineno, value.value))
+        offenders.extend(
+            (node.lineno, value.value)
+            for value in compared
+            if isinstance(value, ast.Constant) and value.value in item_names
+        )
 
     assert offenders == []
 

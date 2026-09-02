@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Union
 
 from .identity import PIdx
 
@@ -113,18 +112,18 @@ class TriggerTarget:
     """
 
 
-RoutePolicy = Union[
-    SelfOnly,
-    Holder,
-    PairDefender,
-    AllOpponents,
-    AllTeammates,
-    SelfAndAllTeammates,
-    OneTeammate,
-    SelfAndOneTeammate,
-    ExplicitTargets,
-    TriggerTarget,
-]
+RoutePolicy = (
+    SelfOnly
+    | Holder
+    | PairDefender
+    | AllOpponents
+    | AllTeammates
+    | SelfAndAllTeammates
+    | OneTeammate
+    | SelfAndOneTeammate
+    | ExplicitTargets
+    | TriggerTarget
+)
 
 ROUTE_POLICIES: tuple[type, ...] = (
     SelfOnly,
@@ -233,38 +232,40 @@ def resolve_route(  # pylint: disable=too-many-return-statements
     the union gains without a branch here raises at the bottom, which is
     what makes this function total rather than merely long.
     """
-    if isinstance(policy, SelfOnly):
-        return _checked(policy, (ctx.author,), roster_size)
-    if isinstance(policy, Holder):
-        return _checked(policy, (ctx.holder,), roster_size)
-    if isinstance(policy, PairDefender):
-        if ctx.pair_defender is None:
-            raise UnroutableEvent(policy, "the context names no pair defender")
-        return _checked(policy, (ctx.pair_defender,), roster_size)
-    if isinstance(policy, AllOpponents):
-        return _checked(policy, ctx.opponents, roster_size)
-    if isinstance(policy, AllTeammates):
-        return _checked(policy, ctx.teammates, roster_size)
-    if isinstance(policy, SelfAndAllTeammates):
-        return _checked(policy, (ctx.author, *ctx.teammates), roster_size)
-    if isinstance(policy, OneTeammate):
-        return _checked(policy, (policy.teammate,), roster_size)
-    if isinstance(policy, SelfAndOneTeammate):
-        return _checked(policy, (ctx.author, policy.teammate), roster_size)
-    if isinstance(policy, ExplicitTargets):
-        return _checked(policy, policy.targets, roster_size)
-    if isinstance(policy, TriggerTarget):
-        if not ctx.trigger_subjects:
-            raise UnroutableEvent(
-                policy,
-                "the triggering event reached nobody; a mark that hit no "
-                "subject routes to no subject rather than to roster slot zero",
+    match policy:
+        case SelfOnly():
+            return _checked(policy, (ctx.author,), roster_size)
+        case Holder():
+            return _checked(policy, (ctx.holder,), roster_size)
+        case PairDefender():
+            if ctx.pair_defender is None:
+                raise UnroutableEvent(policy, "the context names no pair defender")
+            return _checked(policy, (ctx.pair_defender,), roster_size)
+        case AllOpponents():
+            return _checked(policy, ctx.opponents, roster_size)
+        case AllTeammates():
+            return _checked(policy, ctx.teammates, roster_size)
+        case SelfAndAllTeammates():
+            return _checked(policy, (ctx.author, *ctx.teammates), roster_size)
+        case OneTeammate():
+            return _checked(policy, (policy.teammate,), roster_size)
+        case SelfAndOneTeammate():
+            return _checked(policy, (ctx.author, policy.teammate), roster_size)
+        case ExplicitTargets():
+            return _checked(policy, policy.targets, roster_size)
+        case TriggerTarget():
+            if not ctx.trigger_subjects:
+                raise UnroutableEvent(
+                    policy,
+                    "the triggering event reached nobody; a mark that hit no "
+                    "subject routes to no subject rather than to roster slot zero",
+                )
+            return _checked(policy, ctx.trigger_subjects, roster_size)
+        case _:
+            raise TypeError(
+                f"{type(policy).__name__} is not a RoutePolicy; the union is closed "
+                f"({', '.join(member.__name__ for member in ROUTE_POLICIES)})"
             )
-        return _checked(policy, ctx.trigger_subjects, roster_size)
-    raise TypeError(
-        f"{type(policy).__name__} is not a RoutePolicy; the union is closed "
-        f"({', '.join(member.__name__ for member in ROUTE_POLICIES)})"
-    )
 
 
 def resolve(

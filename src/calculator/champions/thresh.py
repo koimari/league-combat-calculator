@@ -18,11 +18,11 @@ is a separate, already-modeled mechanism.
 
 from typing import Any
 
-from .engine import BUFF, SlotCtx
-from .slotlib import ability_name
-from .packet_module import build_packet_module
-from .inputs import int_option
 from ..binary_roots import data_value, spell_object
+from .engine import BUFF, SlotCtx
+from .inputs import int_option
+from .packet_module import build_packet_module
+from .slotlib import ability_name
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
@@ -103,13 +103,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "souls", _DEFAULT_SOULS, minimum=0, maximum=_MAX_SOULS, label="Souls collected"
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Soul count is user-set (default 40 — the expected mid-game state); "
     "soul farming is not simulated",
     "Each Soul grants 1 ability power and 1 bonus armor — wiki prose "

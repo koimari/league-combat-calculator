@@ -5,8 +5,8 @@ together — how much more a crit pays, whether one strike is *made* to crit,
 and how much ability cooldown an attack refunds — and the family is the one
 place a build turns into a single answer to all three.
 
-The tests below pin what the retired accumulators inside ``item_effects``
-used to compute, value for value, because this migration's claim is that the
+The tests below pin, value for value, what the retired accumulators inside
+``item_effects`` computed, because this migration's claim is that the
 declarations reproduce them exactly.
 """
 
@@ -18,8 +18,8 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters.crit_profile import (
-    CRIT_DAMAGE_BONUS_FIELD,
     COOLDOWN_REFUND_FIELD,
+    CRIT_DAMAGE_BONUS_FIELD,
     CritProfileInterpretationError,
     crit_fields,
     resolve_profile,
@@ -29,6 +29,7 @@ from src.calculator.item_behavior import (
     CritDamageBonusRule,
     CritOccurrence,
     EngineLane,
+    FightFacts,
     ForcedCritRule,
     RuleFamily,
     Subject,
@@ -44,10 +45,12 @@ def _profile(*owners: str):
     """The declared crit profile of a build, at a mid-fight level."""
     return resolve_profile(
         list(owners),
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=1000.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=5.0,
+            target_bonus_health=1000.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -171,10 +174,12 @@ def test_the_interpreter_refuses_a_rule_of_another_family() -> None:
             other,
             catalog.build_context(
                 other.owner,
-                13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             EngineLane.PAIR_ENGINE,
         )
@@ -187,10 +192,12 @@ def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
         rule,
         catalog.build_context(
             rule.owner,
-            13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.PAIR_ENGINE,
     )
@@ -202,10 +209,12 @@ def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
         refund_rule,
         catalog.build_context(
             refund_rule.owner,
-            13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.PAIR_ENGINE,
     )

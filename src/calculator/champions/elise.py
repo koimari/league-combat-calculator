@@ -5,24 +5,19 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
-from .module_helpers import no_damage
+from .inputs import bool_option, int_option
+from .module_helpers import named_damage, no_damage
 from .slotlib import (
-    ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
 _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
 _SPIDER_HEAL = (6.0, 8.0, 10.0, 12.0)
-
-
-def _spider_tier(level: int) -> int:
-    return min(sum(level >= threshold for threshold in _SPIDER_FORM_LEVELS) - 1, 3)
 
 
 def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -31,7 +26,7 @@ def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     if not bool(ctx.option("spider_form")):
         return None
-    tier = _spider_tier(ctx.level)
+    tier = min(sum(ctx.level >= threshold for threshold in _SPIDER_FORM_LEVELS) - 1, 3)
     bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stat("ability_power")
     entry = no_damage(
         ctx,
@@ -88,28 +83,16 @@ def _neurotoxin_or_bite(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _volatile_spiderling(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-        # One explosion.  Its arrival has no sourced duration — the spider
-        # crawls "after a delay of 0.75 seconds" only when it detects a
-        # target first, and its travel is proximity-driven — so the cast
-        # boundary is the only placement the source gives it.
-        event_order_certified="single_hit",
-    )
-    entry["detail"] = (
-        "One untargetable spider explosion; target selection is a sourced proximity branch."
-    )
-    return entry
+_volatile_spiderling = named_damage(
+    "Magic Damage",
+    "magic",
+    # One explosion.  Its arrival has no sourced duration — the spider
+    # crawls "after a delay of 0.75 seconds" only when it detects a
+    # target first, and its travel is proximity-driven — so the cast
+    # boundary is the only placement the source gives it.
+    event_order_certified="single_hit",
+    detail="One untargetable spider explosion; target selection is a sourced proximity branch.",
+)
 
 
 def _cocoon(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -125,7 +108,10 @@ def _form_toggle(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Spider Form / Human Form",
-        reason=f"Explicit {form} form selected; transformation and spiderling state are not outgoing damage.",
+        reason=(
+            f"Explicit {form} form selected; transformation and spiderling state are "
+            f"not outgoing damage."
+        ),
     )
 
 
@@ -155,8 +141,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q is a real form variant: Neurotoxin scales from target current health, while Venomous Bite scales from target missing health.",
-    "Spiderlings, Rappel untargetability and the Spider Form heal are explicit state/utility rows; only Spider Form's on-hit damage enters TDD.",
+    "Q is a real form variant: Neurotoxin scales from target current health, while "
+    "Venomous Bite scales from target missing health.",
+    "Spiderlings, Rappel untargetability and the Spider Form heal are explicit "
+    "state/utility rows; only Spider Form's on-hit damage enters TDD.",
 ]
 
 SOURCES = load_champion_sources("Elise")

@@ -2,7 +2,7 @@
 
 The resolver derives setup/consume edges from the module OPTIONS rotation
 declarations (``get_champion_option_rotation``).  These tests lock the
-semantics that were previously invisible to the receipt:
+semantics the receipt must make visible:
 
 - Diana ``moonlight_reset`` — consume(E <- Q): a real ``Q→E`` mark_consume
   edge cited with the option; the option gates E's dash count, not the edge.
@@ -174,7 +174,8 @@ class TestFiddlesticksIrrelevantOption:
         parsed = _parse(data, 11, (), items_by_name)
         order, rule = _resolve(data, parsed)
         assert order == ["Q", "W", "E", "R"]
-        assert rule.setup == () and rule.consume == ()
+        assert rule.setup == ()
+        assert rule.consume == ()
         text = _receipt_text(rule)
         assert "q_target_already_feared" in text
         assert "(irrelevant" in text
@@ -264,8 +265,9 @@ class TestSelfStateOptions:
     ) -> None:
         data = champion_by_name[champion]
         parsed = _parse(data, 11, (), items_by_name)
-        order, rule = _resolve(data, parsed)
-        assert rule.setup == () and rule.consume == ()
+        _order, rule = _resolve(data, parsed)
+        assert rule.setup == ()
+        assert rule.consume == ()
         assert option_key in _receipt_text(rule)
         assert "(self_state" in _receipt_text(rule)
         assert "no detectable setup/consume signal" in rule.rationale

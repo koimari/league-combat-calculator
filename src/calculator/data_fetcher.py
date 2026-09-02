@@ -6,7 +6,7 @@ only reads from the local cache in the ``data/`` directory.
 """
 
 import json
-from functools import lru_cache
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import Any
 
@@ -19,13 +19,13 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
     """Parse one immutable on-disk JSON version.  ``_modified_ns`` joins the
     cache key so a file ``data_updater`` replaces is never served stale."""
-    with open(data_path, "r", encoding="utf-8") as data_file:
+    with Path(data_path).open(encoding="utf-8") as data_file:
         return json.load(data_file)
 
 
 @lru_cache(maxsize=8)
 def _resolved(data_directory: Path, filename: str) -> Path:
-    """Canonical path of one cache file; memoized because only its contents ever change (freshness is ``_cache_version``'s un-memoized stat)."""
+    """Canonical path of one cache file; memoized since only its contents ever change."""
     return (data_directory / filename).resolve()
 
 
@@ -40,100 +40,51 @@ def _read_cache(data_directory: Path, filename: str) -> dict[str, Any]:
     return _read_json_version(*_cache_version(data_directory, filename))
 
 
-def _validate_champion_data(data: dict[str, Any]) -> None:
-    """Validate that champion data has the expected structure.
-
-    Raises:
-        ValueError: If the data structure is invalid.
-    """
+def _validate_cache(data: dict[str, Any], what: str) -> None:
+    """Validate that a cache has the expected structure, or raise ValueError."""
     if not isinstance(data, dict):
-        raise ValueError("Champion data must be a dictionary")
+        raise ValueError(f"{what.capitalize()} data must be a dictionary")
 
     if len(data) == 0:
-        raise ValueError("Champion data is empty")
+        raise ValueError(f"{what.capitalize()} data is empty")
 
     sample_key = next(iter(data))
-    sample_champion = data[sample_key]
+    sample = data[sample_key]
 
     required_fields = ["name", "stats"]
     for field in required_fields:
-        if field not in sample_champion:
-            raise ValueError(f"Champion data missing required field: '{field}'")
+        if field not in sample:
+            raise ValueError(
+                f"{what.capitalize()} data missing required field: '{field}'"
+            )
 
 
-def _validate_item_data(data: dict[str, Any]) -> None:
-    """Validate that item data has the expected structure.
-
-    Raises:
-        ValueError: If the data structure is invalid.
-    """
-    if not isinstance(data, dict):
-        raise ValueError("Item data must be a dictionary")
-
-    if len(data) == 0:
-        raise ValueError("Item data is empty")
-
-    sample_key = next(iter(data))
-    sample_item = data[sample_key]
-
-    required_fields = ["name", "stats"]
-    for field in required_fields:
-        if field not in sample_item:
-            raise ValueError(f"Item data missing required field: '{field}'")
-
-
-def fetch_champion_data(
-    data_directory: Path = DEFAULT_DATA_DIR,
+def _fetch_cache(
+    data_directory: Path = DEFAULT_DATA_DIR, *, filename: str, what: str
 ) -> dict[str, Any]:
-    """Read champion data from the local cache.
-
-    Args:
-        data_directory: Directory where cached data is stored.
-
-    Returns:
-        Dictionary of champion data keyed by champion identifier.
+    """Read one ``what`` cache from the local data directory.
 
     Raises:
         FileNotFoundError: If no cached data exists.  Run the updater first.
     """
-    filename = "champions.json"
     cache_path = data_directory / filename
 
     if not cache_path.exists():
         raise FileNotFoundError(
-            "No champion data found. Click 'Update to latest patch' to fetch data."
+            f"No {what} data found. Click 'Update to latest patch' to fetch data."
         )
 
     data = _read_cache(data_directory, filename)
-    _validate_champion_data(data)
+    _validate_cache(data, what)
     return data
 
 
-def fetch_item_data(
-    data_directory: Path = DEFAULT_DATA_DIR,
-) -> dict[str, Any]:
-    """Read item data from the local cache.
+#: Champion data keyed by champion identifier, from the local cache.
+fetch_champion_data = partial(_fetch_cache, filename="champions.json", what="champion")
 
-    Args:
-        data_directory: Directory where cached data is stored.
 
-    Returns:
-        Dictionary of item data keyed by item identifier.
-
-    Raises:
-        FileNotFoundError: If no cached data exists.  Run the updater first.
-    """
-    filename = "items.json"
-    cache_path = data_directory / filename
-
-    if not cache_path.exists():
-        raise FileNotFoundError(
-            "No item data found. Click 'Update to latest patch' to fetch data."
-        )
-
-    data = _read_cache(data_directory, filename)
-    _validate_item_data(data)
-    return data
+#: Item data keyed by item identifier, from the local cache.
+fetch_item_data = partial(_fetch_cache, filename="items.json", what="item")
 
 
 def fetch_rune_data(
@@ -151,6 +102,7 @@ def fetch_rune_data(
 
     Raises:
         FileNotFoundError: If no cached data exists.  Run the updater first.
+        ValueError: If the cache is not a non-empty mapping of named runes.
     """
     filename = "runes.json"
     cache_path = data_directory / filename
@@ -185,7 +137,8 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
 
 @lru_cache(maxsize=8)
 def _item_name_index(data_path: Path, _modified_ns: int) -> dict[str, dict[str, Any]]:
-    """``{lowered display name: record}`` for one items version; the first record with a name wins, keyed on the parse's path-and-mtime so a replaced file is a new key."""
+    """``{lowered display name: record}`` for one items version; the first record with a
+    name wins, keyed on the parse's path-and-mtime so a replaced file is a new key."""
     index: dict[str, dict[str, Any]] = {}
     for item_data in _read_json_version(data_path, _modified_ns).values():
         index.setdefault(item_data.get("name", "").lower(), item_data)

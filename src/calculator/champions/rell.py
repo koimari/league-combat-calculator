@@ -21,8 +21,8 @@ P1-2 fixes:
 from typing import Any
 
 from ..binary_roots import calculation_coefficients, spell_object
-from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
+from .packet_module import build_packet_module
 from .slotlib import ability_name, on_hit_entry
 
 # Break the Mold's on-hit formula is the ordered armor/MR pair in the
@@ -89,7 +89,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Break the Mold) deals 5% of Rell's total armor + 5% of her total "
     "magic resistance as bonus magic damage on-hit (wiki prose; module "
     "constants). The 3%-per-stack armor/MR reduction (5 stacks max, 5s "

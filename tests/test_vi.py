@@ -8,10 +8,10 @@ from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_options_meta,
     parse_champion_abilities,
+    vi,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.champions import vi
 from tests import cc_review
 
 

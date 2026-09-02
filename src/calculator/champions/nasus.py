@@ -39,9 +39,11 @@ from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
-from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
+from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -50,7 +52,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 # E2-sourced tick cadences (data/worklists/e2-dot-ticks.json and the
 # ability descriptions): Spirit Fire's zone ticks every 0.5s over 5s
@@ -75,12 +76,11 @@ _R_DOT_DURATION = data_value(_NASUS_R_SPELL, "Duration")
 _R_TICKS = int(_R_DOT_DURATION / _R_TICK_INTERVAL)
 
 
-def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _siphoning_strike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: bonus damage (flat + permanent stacks) riding the next auto."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     stacks = max(0, int(ctx.option("q_stacks")))
     bonus = (
@@ -114,12 +114,11 @@ def _siphoning_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _spirit_fire(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: initial hit + 10 sourced 0.5s zone ticks (E2 fix)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     initial = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_tick = extract_named(
@@ -151,12 +150,11 @@ def _spirit_fire(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _fury_of_the_sands(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _fury_of_the_sands(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: all 30 sourced 0.5s ticks (E2 fix)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     per_tick = extract_named(
         ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
@@ -339,7 +337,7 @@ def derive_self_healing(
     healing: list[dict[str, Any]] = []
     level = max(1, int(champion_stat(champion_stats, "level")))
     ratio = next(
-        share for breakpoint, share in _SOUL_EATER_BREAKPOINTS if level >= breakpoint
+        share for threshold, share in _SOUL_EATER_BREAKPOINTS if level >= threshold
     )
     empowered = bool(ability_payload(ability_damages, "Q").get("empowers_next_auto"))
 

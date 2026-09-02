@@ -6,13 +6,16 @@ physical, or magic damage) for a given champion/level/target configuration.
 
 import math
 import time
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
 from .application_errors import NoCompleteEventOrder
 from .data_fetcher import fetch_item_data, get_item_by_name
+from .defensive_effects import resolve_starting_defenses
 from .economy import (
     PurchasePlan,
+    _item_by_id,
     apply_purchase_plan,
     combine_candidates,
     is_purchasable,
@@ -20,7 +23,6 @@ from .economy import (
     item_total,
     plan_incomplete_combine,
     recipe_demand,
-    _item_by_id,
 )
 from .item_coverage import (
     optimizer_candidate_coverage,
@@ -32,18 +34,18 @@ from .loadout_rules import (
     ITEM_TO_EXCLUSIVITY_GROUPS,
     conflicts_with_groups,
     occupied_groups,
-    inventory_capacity,
     role_quest_legal_items,
     role_scoped_shop_items,
     validate_resolved_loadout,
 )
-from .program.views import RankingWriter, name_every_number
-from .pipeline import FightParams, run_fight
-from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
+from .pipeline import FightParams, run_fight
+from .program.views import RankingWriter, name_every_number
+from .role_quests import inventory_capacity
+from .scenario import ResolvedLoadout
 from .timeline_coverage import (
+    aggregate_timeline_coverage,
     applicability_exclusion_sources,
-    combine_timeline_coverages,
 )
 from .work_counters import WorkCounterSink
 
@@ -108,7 +110,7 @@ def get_eligible_boots(tier: int | None = 2) -> list[dict[str, Any]]:
     ]
 
 
-def _get_occupied_groups(items: list[dict[str, Any]]) -> set[str]:
+def _get_occupied_groups(items: Iterable[dict[str, Any]]) -> set[str]:
     """Return the set of exclusivity groups already occupied by *items*."""
     return occupied_groups(item.get("name", "") for item in items)
 
@@ -126,6 +128,7 @@ def _evaluate_build(
     level: int,
     items: list[dict[str, Any]],
     fight_params: FightParams | tuple[FightParams, ...],
+    *,
     objective: str,
     gold_budget: int | None = None,
     timeline_audit: dict[str, Any] | None = None,
@@ -154,7 +157,7 @@ def _evaluate_build(
             level,
             items,
             fight_params,
-            objective,
+            objective=objective,
             gold_budget=gold_budget,
             timeline_audit=timeline_audit,
             require_complete_timeline=require_complete_timeline,
@@ -199,7 +202,7 @@ def _evaluate_build(
         level,
         items,
         fight_params,
-        objective,
+        objective=objective,
         gold_budget=gold_budget,
         timeline_audit=timeline_audit,
         require_complete_timeline=require_complete_timeline,
@@ -229,6 +232,7 @@ def _evaluate_build_uncached(
     level: int,
     items: list[dict[str, Any]],
     fight_params: FightParams | tuple[FightParams, ...],
+    *,
     objective: str,
     gold_budget: int | None = None,
     timeline_audit: dict[str, Any] | None = None,
@@ -441,7 +445,7 @@ def _evaluate_build_uncached(
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
         results.append(result)
-    coverage = _combined_build_timeline_coverage(results)
+    coverage = aggregate_timeline_coverage(results)
     excluded_sources = (
         applicability_exclusion_sources(coverage) if require_complete_timeline else []
     )
@@ -480,7 +484,7 @@ def _evaluate_build_uncached(
     if require_complete_timeline and not coverage["complete"]:
         return float("-inf")
 
-    def included(entry: dict[str, Any]) -> bool:
+    def included(entry: Mapping[str, Any]) -> bool:
         if objective == "physical_damage":
             return entry.get("damage_type") == "physical"
         if objective == "magic_damage":
@@ -513,26 +517,16 @@ def _build_timeline_coverage(
         run_fight(champion_data, level, items, target_params)
         for target_params in targets
     ]
-    return _combined_build_timeline_coverage(results)
+    return aggregate_timeline_coverage(results)
 
 
-def _combined_build_timeline_coverage(
-    results: list[dict[str, Any]],
-) -> dict[str, Any]:
-    """Combine targets and fail partial on post-ledger charged allocation."""
-    return combine_timeline_coverages(
-        (result.get("timeline_coverage", {}) for result in results),
-        target_count=len(results),
-    )
-
-
-def _build_receipt_key(items: list[dict[str, Any]]) -> tuple[str, ...]:
+def _build_receipt_key(items: Iterable[dict[str, Any]]) -> tuple[str, ...]:
     """Identify one evaluated build by the ordered list the score memo keys on."""
     return tuple(str(item.get("name", "")) for item in items)
 
 
 def _public_build_receipt(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
     coverage: dict[str, Any],
     reason: str,
     *,
@@ -562,7 +556,7 @@ def _public_build_receipt(
     return receipt
 
 
-def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
+def _public_search_timeline_coverage(audit: Mapping[str, Any]) -> dict[str, Any]:
     """Serialize precision across every candidate evaluation in this search."""
     evaluations = int(audit["evaluations"])
     partial_evaluations = int(audit["partial_evaluations"])
@@ -609,7 +603,7 @@ def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def item_gold(item: dict[str, Any]) -> int:
+def item_gold(item: Mapping[str, Any]) -> int:
     """Return the sourced total shop price, failing closed on a broken record.
 
     ``shop.prices.total`` is cache-owned; a literal default here would make
@@ -625,7 +619,7 @@ def item_gold(item: dict[str, Any]) -> int:
     return price
 
 
-def _build_gold(items: list[dict[str, Any]]) -> int:
+def _build_gold(items: Iterable[dict[str, Any]]) -> int:
     """Return total shop price for a resolved build."""
     return sum(item_gold(item) for item in items)
 
@@ -635,9 +629,10 @@ def _greedy_fill(
     level: int,
     locked_legendaries: list[dict[str, Any]],
     locked_boots: dict[str, Any] | None,
+    *,
     slots_to_fill: int,
     fill_boots: bool,
-    pool: list[dict[str, Any]],
+    pool: Iterable[dict[str, Any]],
     boots_pool: list[dict[str, Any]],
     eval_kwargs: dict[str, Any],
     seed_item: dict[str, Any] | None = None,
@@ -675,9 +670,9 @@ def _greedy_fill(
             if _conflicts_with_build(name, build_groups):
                 continue
 
-            trial_items = current + [candidate]
+            trial_items = [*current, candidate]
             if boots:
-                trial_items = [boots] + trial_items
+                trial_items = [boots, *trial_items]
 
             score = _evaluate_build(
                 champion_data,
@@ -700,7 +695,7 @@ def _greedy_fill(
         best_score = -1.0
         best_boots = None
         for candidate in boots_pool:
-            trial_items = [candidate] + current
+            trial_items = [candidate, *current]
             score = _evaluate_build(
                 champion_data,
                 level,
@@ -723,14 +718,32 @@ def _greedy_fill(
     return current, boots, final_score
 
 
+def _score_with_swap(
+    champion_data: dict[str, Any],
+    level: int,
+    base: list[dict[str, Any]],
+    index: int,
+    *,
+    candidate: dict[str, Any],
+    boots: dict[str, Any] | None,
+    eval_kwargs: dict[str, Any],
+) -> tuple[list[dict[str, Any]], float]:
+    """*base* with *candidate* in slot *index*, and that build's score."""
+    trial = list(base)
+    trial[index] = candidate
+    trial_items = ([boots] if boots else []) + trial
+    return trial, _evaluate_build(champion_data, level, trial_items, **eval_kwargs)
+
+
 def _hill_climb(
     champion_data: dict[str, Any],
     level: int,
     legendaries: list[dict[str, Any]],
     boots: dict[str, Any] | None,
-    locked_legendary_names: set[str],
+    *,
+    locked_legendary_names: Collection[str],
     locked_boots: bool,
-    pool: list[dict[str, Any]],
+    pool: Iterable[dict[str, Any]],
     boots_pool: list[dict[str, Any]],
     eval_kwargs: dict[str, Any],
     max_iterations: int = 10,
@@ -777,15 +790,14 @@ def _hill_climb(
                 if _conflicts_with_build(name, other_groups):
                     continue
 
-                trial = list(current)
-                trial[slot_idx] = candidate
-                trial_items = ([current_boots] if current_boots else []) + trial
-
-                score = _evaluate_build(
+                trial, score = _score_with_swap(
                     champion_data,
                     level,
-                    trial_items,
-                    **eval_kwargs,
+                    current,
+                    slot_idx,
+                    candidate=candidate,
+                    boots=current_boots,
+                    eval_kwargs=eval_kwargs,
                 )
                 evals += 1
 
@@ -803,7 +815,7 @@ def _hill_climb(
             for candidate in boots_pool:
                 if current_boots and candidate["name"] == current_boots["name"]:
                     continue
-                trial_items = [candidate] + current
+                trial_items = [candidate, *current]
                 score = _evaluate_build(
                     champion_data,
                     level,
@@ -884,6 +896,7 @@ class _PurchaseSearch:
         level: int,
         owned: list[dict[str, Any]],
         owned_boots: dict[str, Any] | None,
+        *,
         available_gold: int,
         max_buys: int,
         combine_policy: str,
@@ -955,8 +968,6 @@ class _PurchaseSearch:
                 sell_items=[sell] if sell else None,
                 combine_items=combines,
                 combine_policy=self.combine_policy,
-                role=self.role,
-                role_quest_complete=self.role_quest_complete,
                 # Receipt-only shop scan, recomputed for the winner.
                 flag_incomplete_combine=False,
             )
@@ -1044,8 +1055,9 @@ class _PurchaseSearch:
 def _enumerate_affordable_shapes(
     search: _PurchaseSearch,
     sell: dict[str, Any] | None,
-    buyables: list[dict[str, Any]],
+    buyables: Sequence[dict[str, Any]],
     cap: int,
+    *,
     counted: int,
 ) -> tuple[list[list[dict[str, Any]]], bool]:
     """Depth-first walk of every priceable buy list, in pool order.
@@ -1140,8 +1152,9 @@ def _enumerate_affordable_shapes(
 def _greedy_purchase_chain(
     search: _PurchaseSearch,
     sell: dict[str, Any] | None,
-    buyables: list[dict[str, Any]],
+    buyables: Iterable[dict[str, Any]],
     per_gold: bool,
+    *,
     start: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], float] | None:
     """Add the best affordable buy one slot at a time until nothing improves.
@@ -1233,8 +1246,8 @@ def _improve_purchase_chain(
 
 def _score_exhaustive_purchase_plans(
     search: _PurchaseSearch,
-    shape_rows: list[tuple[dict[str, Any] | None, list[dict[str, Any]]]],
-    pool_names: set[str],
+    shape_rows: Iterable[tuple[dict[str, Any] | None, list[dict[str, Any]]]],
+    pool_names: Collection[str],
 ) -> bool:
     """Score every enumerated shape plus its combine completions.
 
@@ -1279,7 +1292,7 @@ def _score_exhaustive_purchase_plans(
 
 def _run_purchase_local_search(
     search: _PurchaseSearch,
-    sell_options: list[dict[str, Any] | None],
+    sell_options: Iterable[dict[str, Any] | None],
     buyables: list[dict[str, Any]],
 ) -> bool:
     """Greedy-fill each sell pivot from two angles, then climb the best.
@@ -1315,8 +1328,8 @@ def optimize_purchase(
     target_fight_params: tuple[FightParams, ...] | None = None,
     boots_tier: int = 2,
     require_complete_timeline: bool = True,
-    enemy_loadouts: list[Any] | None = None,
-    ally_loadouts: list[Any] | None = None,
+    enemy_loadouts: list[ResolvedLoadout] | None = None,
+    ally_loadouts: list[ResolvedLoadout] | None = None,
     include_boots: bool = True,
     candidate_cap: int = 2000,
     allow_sell: bool = False,
@@ -1476,7 +1489,7 @@ def optimize_purchase(
         level,
         owned,
         owned_boots,
-        available_gold,
+        available_gold=available_gold,
         max_buys=max_purchase_items or capacity,
         combine_policy=combine_policy,
         role=role,
@@ -1518,7 +1531,7 @@ def optimize_purchase(
     exhaustive_complete = True
     for sell in sell_options:
         shapes, sell_complete = _enumerate_affordable_shapes(
-            search, sell, buyables, candidate_cap, len(shape_rows)
+            search, sell, buyables, candidate_cap, counted=len(shape_rows)
         )
         shape_rows.extend((sell, shape) for shape in shapes)
         if not sell_complete:
@@ -1749,6 +1762,7 @@ def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, objec
 def optimize_build(
     champion_data: dict[str, Any],
     level: int,
+    *,
     fight_params: FightParams | None = None,
     objective: str = "total_damage",
     locked_items: list[str] | None = None,
@@ -1758,8 +1772,8 @@ def optimize_build(
     boots_tier: int = 2,
     gold_budget: int | None = None,
     require_complete_timeline: bool = False,
-    enemy_loadouts: list[Any] | None = None,
-    ally_loadouts: list[Any] | None = None,
+    enemy_loadouts: list[ResolvedLoadout] | None = None,
+    ally_loadouts: list[ResolvedLoadout] | None = None,
     include_boots: bool = True,
     work_counters: WorkCounterSink | None = None,
     use_compiled_walk: bool = True,
@@ -2003,11 +2017,11 @@ def optimize_build(
             level,
             resolved_locked,
             resolved_locked_boots,
-            slots_to_fill,
-            fill_boots,
-            pool,
-            boots_pool,
-            eval_kwargs,
+            slots_to_fill=slots_to_fill,
+            fill_boots=fill_boots,
+            pool=pool,
+            boots_pool=boots_pool,
+            eval_kwargs=eval_kwargs,
             seed_item=seed,
         )
         # Rough eval count estimate for greedy phase
@@ -2018,11 +2032,11 @@ def optimize_build(
             level,
             legendaries,
             boots,
-            locked_names,
-            boots_locked,
-            pool,
-            boots_pool,
-            eval_kwargs,
+            locked_legendary_names=locked_names,
+            locked_boots=boots_locked,
+            pool=pool,
+            boots_pool=boots_pool,
+            eval_kwargs=eval_kwargs,
             max_iterations=3 if coupled_objective else 10,
             initial_score=greedy_score,
         )
@@ -2058,11 +2072,14 @@ def optimize_build(
                     continue
                 if _conflicts_with_build(candidate["name"], other_groups):
                     continue
-                trial = list(best_legendaries)
-                trial[slot_index] = candidate
-                trial_items = ([best_boots] if best_boots else []) + trial
-                score = _evaluate_build(
-                    champion_data, level, trial_items, **eval_kwargs
+                trial, score = _score_with_swap(
+                    champion_data,
+                    level,
+                    best_legendaries,
+                    slot_index,
+                    candidate=candidate,
+                    boots=best_boots,
+                    eval_kwargs=eval_kwargs,
                 )
                 total_evals += 1
                 remember_candidate(trial, best_boots, score)
@@ -2074,7 +2091,7 @@ def optimize_build(
                 score = _evaluate_build(
                     champion_data,
                     level,
-                    [candidate] + best_legendaries,
+                    [candidate, *best_legendaries],
                     **eval_kwargs,
                 )
                 total_evals += 1

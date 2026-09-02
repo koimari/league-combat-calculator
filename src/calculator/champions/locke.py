@@ -20,10 +20,15 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
+from .inputs import bool_option, int_option
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    no_damage,
+    typed_damage,
+    with_item_on_hit_specs,
+)
 from .slotlib import ability_name, extract_cooldown, extract_named, on_hit_entry
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -142,23 +147,7 @@ _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
 }
 
-_parse_abilities = parse_abilities
-
-
-def parse_abilities(*args, **kwargs):
-    """Parse abilities, then declare wiki-sourced item on-hit application."""
-    result = _parse_abilities(*args, **kwargs)
-    for slot, spec in _ON_HIT_SPECS.items():
-        entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
-        if entry is not None:
-            entry["applies_item_on_hits"] = dict(spec)
-    return result
-
-
-# The wrapper is the module's published parser, so it republishes the
-# wiring the inner parser holds — the contract proves declaration and
-# wiring are one dict off whichever function the module exports.
-parse_abilities.cc_kinds = _parse_abilities.cc_kinds
+parse_abilities = with_item_on_hit_specs(parse_abilities, _ON_HIT_SPECS)
 
 
 ASSUMPTIONS += [

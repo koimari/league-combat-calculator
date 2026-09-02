@@ -160,7 +160,7 @@ def test_module_and_api_expose_the_exact_w_source_receipt():
 
 
 @pytest.mark.parametrize(
-    "attribute,modifier,rank_value,values,atom_hash",
+    ("attribute", "modifier", "rank_value", "values", "atom_hash"),
     [
         ("Bonus Attack Speed", 0, 30.0, [10, 15, 20, 25, 30], "733a5a24f38dc26c"),
         ("Bonus Attack Speed", 1, 1.0, [1, 1, 1, 1, 1], "cfeff805cd148975"),

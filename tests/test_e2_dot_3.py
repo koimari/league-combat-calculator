@@ -1,6 +1,6 @@
 """E2-3: sourced DoT/channel tick counts (Skarner ... Zeri).
 
-Each champion module / shared packet builder previously priced ONE tick of
+Each champion module / shared packet builder prices every tick, not ONE tick, of
 a multi-tick ability.  The wiki cache carries BOTH the per-tick leveling
 row and a "Total ..." row; this suite drives /api/calculate fights and
 asserts the ability prices the full wiki Total (raw pre-mitigation damage)

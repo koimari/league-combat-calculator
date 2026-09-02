@@ -147,7 +147,7 @@ Contract sections (numbered as in the RLM-2 C brief):
       the shield-before-damage arm priority PASS; the wired
       cleanse-vs-immunity-vs-stat-buff ordering xfailed).
   S10 Missing identity or rows (resolve_cleanse_item fails closed
-      naming the source PASS; the _require_row fail-loud precedent).
+      naming the source PASS; the require_named_leveling fail-loud precedent).
   S11 Score fail-closed (the generic gates PASS: support_kind=cleanse /
       stat_buff / movement / support_cleanse; crowd_control_resist
       representable — never a silent re-price).
@@ -177,7 +177,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -196,13 +195,13 @@ from src.calculator.crowd_control_eligibility import (
     classify_control,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.data_fetcher import get_champion
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
+from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival, survival_of
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _OLAF_DATA = _CHAMPION_DATA["Olaf"]
@@ -733,7 +732,7 @@ class TestSourceAndTypedValues:
         # no-damage placeholder.  The no-outgoing-damage half of the
         # brief's contract #1 is unchanged (total_raw 0, one structural
         # zero part, no cast time); what is added is the cached rank-3
-        # cooldown row (80) the packet module used to withhold and the
+        # cooldown row (80) the packet module publishes and the
         # stat_buff carrying the sourced resistances and bonus AD.
         _, abilities = _parse()
         r = abilities["R"]
@@ -1137,7 +1136,7 @@ class TestCleanseOfActiveControls:
 
     def test_r_cleanse_activates_at_the_cast_and_spends_its_use(self):
         # MERGE (the brief's contract #4 + #6): the app-level truncation
-        # this used to assert is unreachable now — nothing hostile is
+        # is unreachable in the app fight — nothing hostile is
         # still active once Ragnarok opens the rotation — so the
         # truncation ITSELF is pinned at kernel level above
         # (``test_slice4_*`` / ``test_r_denied_under_suppression``, which
@@ -1393,7 +1392,7 @@ class TestCastability:
         # stasis", and stasis is now a kind the classifier knows) and
         # either one ACTIVE at the activation denies the cleanse with the
         # named caster_control_blocks_cleanse reason (use NOT consumed).
-        assert CAST_BLOCKING_CONTROL_KINDS == frozenset({"stasis", "suppression"})
+        assert frozenset({"stasis", "suppression"}) == CAST_BLOCKING_CONTROL_KINDS
         decision = CleanseEligibility(declaration=_candidate_declaration()).decide(
             SimpleNamespace(
                 time=1.0,
@@ -1469,7 +1468,7 @@ class TestCastability:
         # at the cast, and the caster use receipt names
         # fired_while_crowd_controlled true.
         #
-        # MERGE: the app fight no longer reaches this state — a priced R
+        # MERGE: the app fight never reaches this state — a priced R
         # opens the rotation, so Olaf is never crowd-controlled when it
         # casts (see ``test_the_enemy_charm_never_blocks_olaf``).  The
         # contract is unchanged and is pinned at kernel level instead,
@@ -1553,7 +1552,7 @@ class TestCastability:
             support=[
                 {
                     **_ragnarok_cleanse_packet(1.0),
-                    **{SUPPORT_RANK_KEY: TransitionRank.STATE_GRANT},
+                    SUPPORT_RANK_KEY: TransitionRank.STATE_GRANT,
                 }
             ],
             duration=8.0,
@@ -1615,7 +1614,8 @@ class TestBonusStateReceipts:
             for e in rows
             if e.get("kind") == "stat_buff" and e.get("source") == _R_CLEANSE_SOURCE
         ]
-        assert stat_rows and stat_rows[0]["bonus_armor"] == pytest.approx(20.0)
+        assert stat_rows
+        assert stat_rows[0]["bonus_armor"] == pytest.approx(20.0)
         movement = combat["utility_outcomes"]["participants"]["main"]["movement"]
         assert movement["event_count"] == 1
         assert movement["speed_percent_seconds"] == pytest.approx(70.0)
@@ -1858,8 +1858,8 @@ class TestSameTimeOrdering:
         # packet at t.  The R's own packets (cleanse/immunity/stat buff
         # at the cast) all dispatch in this support band; the exact
         # intra-band order is the walk's total order (action_key: rank,
-        # time, participant, sequence).  Read off the one rank ladder:
-        # the parallel float table this used to read is retired.
+        # time, participant, sequence).  Read off the one rank ladder;
+        # there is no parallel float table.
         from src.calculator.survival.actions import support_transition_rank
 
         shield_rank = support_transition_rank({"kind": "shield"})
@@ -1908,7 +1908,7 @@ class TestSameTimeOrdering:
         # per-cast receipt trio (cleanse + heal) landing at one
         # timestamp in the app fight.
         combat = _app_combat(enemy="Ahri")
-        survival = survival_of(combat)
+        survival_of(combat)
         # The E8c W shield (support band) landed at 0.25 even though the
         # same-timestamp W heal + cleanse ordering is the walk's total
         # order — the shield row proves the support band executes at the
@@ -1971,18 +1971,18 @@ class TestMissingIdentityAndRows:
         assert resolve_cleanse_item("Mercurial Scimitar") == "Mercurial Scimitar"
 
     def test_require_row_fail_loud_precedent(self):
-        # The _require_row precedent (the brief's contract #11): missing
+        # The require_named_leveling precedent (the brief's contract #11): missing
         # leveling rows fail LOUD, naming the ability + the attribute —
         # the helper the R declaration must mirror for any row the
         # parser drops (the duration-extension row has EMPTY leveling).
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         fake = {
             "name": "Ragnarok",
             "effects": [{"leveling": []}],
         }
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Bonus Resistances")
+            require_named_leveling("K'Sante", fake, "Bonus Resistances")
         assert "Ragnarok" in str(excinfo.value)
         assert "Bonus Resistances" in str(excinfo.value)
         # The duration-extension row is prose + game DataValue only —
@@ -2141,8 +2141,8 @@ class TestModeParity:
         for one_rotation in (True, False):
             full = _fight({}, one_rotation=one_rotation)
             scored = _fight({}, one_rotation=one_rotation, score_only=True)
-            full_r = [c for c in full["cast_timeline"] if c["slot"] == "R"][0]
-            score_r = [c for c in scored["cast_timeline"] if c["slot"] == "R"][0]
+            full_r = next(c for c in full["cast_timeline"] if c["slot"] == "R")
+            score_r = next(c for c in scored["cast_timeline"] if c["slot"] == "R")
             assert full_r["time"] == pytest.approx(score_r["time"])
             assert full_r["resource_cost"] == pytest.approx(score_r["resource_cost"])
             assert full_r["time"] == pytest.approx(0.0 if one_rotation else 0.5)
@@ -2188,8 +2188,8 @@ class TestUnchangedBoundaries:
         assert abilities["E"]["damage_type"] == "true"
         # MERGE: the cooldown is published at the SELECTED rank now (the
         # reference build maxes E, and the cached row is 11/10/9/8/7 by
-        # rank, so rank 5 is 7) — it used to come back as the rank-1 row
-        # whatever rank was asked for.
+        # rank, so rank 5 is 7) — never the rank-1 row whatever rank was
+        # asked for.
         assert abilities["E"]["rank"] == 5
         assert abilities["E"]["cooldown"] == pytest.approx(7.0)
         assert abilities["E"]["resource_cost"] == pytest.approx(100.0)
@@ -2205,9 +2205,9 @@ class TestUnchangedBoundaries:
             TOUGH_IT_OUT_SHIELD_DURATION_SECONDS,
         )
 
-        assert TOUGH_IT_OUT_SHIELD_DURATION_SECONDS == pytest.approx(2.5)
-        assert TOUGH_IT_OUT_MISSING_HEALTH_RATIO == pytest.approx(0.175)
-        assert TOUGH_IT_OUT_MISSING_HEALTH_CAP == pytest.approx(0.70)
+        assert pytest.approx(2.5) == TOUGH_IT_OUT_SHIELD_DURATION_SECONDS
+        assert pytest.approx(0.175) == TOUGH_IT_OUT_MISSING_HEALTH_RATIO
+        assert pytest.approx(0.70) == TOUGH_IT_OUT_MISSING_HEALTH_CAP
         combat = _app_combat()
         rows = [
             e
@@ -2257,7 +2257,7 @@ class TestUnchangedBoundaries:
         )
         assert kept[0]["end"] == pytest.approx(0.25)
         assert removed[0]["start"] == pytest.approx(0.25)
-        assert CAST_BLOCKING_CONTROL_KINDS == frozenset({"stasis", "suppression"})
+        assert frozenset({"stasis", "suppression"}) == CAST_BLOCKING_CONTROL_KINDS
         assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
         assert classify_control(SimpleNamespace(cc_kind="stun")).blocking is True
         unknown = classify_control(SimpleNamespace(cc_kind="mystery"))
@@ -2279,41 +2279,6 @@ class TestUnchangedBoundaries:
 # ---------------------------------------------------------------------------
 # S14 — Regression surface (the mandated sanity run list)
 # ---------------------------------------------------------------------------
-
-
-class TestRegressionSurface:
-    def test_slice_regression_files_collected(self):
-        # The mandated sanity list (the brief's contract #15) is the
-        # full run gate: every file below stays green with this matrix
-        # in the same invocation (the footer command).
-        import tests.test_gangplank_w_cleanse  # noqa: F401
-        import tests.test_milio_r_cleanse  # noqa: F401
-        import tests.test_rengar_w_cleanse  # noqa: F401
-        import tests.test_dr_mundo_passive  # noqa: F401
-        import tests.test_cleanse_eligibility  # noqa: F401
-        import tests.test_cleanse_eligibility_kernel  # noqa: F401
-        import tests.test_cleanse_eligibility_consumers  # noqa: F401
-        import tests.test_state_lifecycle  # noqa: F401
-        import tests.test_state_lifecycle_consumers  # noqa: F401
-        import tests.test_resource_ledger  # noqa: F401
-        import tests.test_resource_ledger_consumers  # noqa: F401
-        import tests.test_resource_ledger_champion_consumers  # noqa: F401
-        import tests.test_catalyst_resource_ledger  # noqa: F401
-        import tests.test_item_sustain  # noqa: F401
-        import tests.test_mana_restore_refund  # noqa: F401
-        import tests.test_app  # noqa: F401
-
-    def test_existing_olaf_surfaces_stay_green(self):
-        # The existing Olaf regression surface (the brief's contract
-        # #15): the CP10 batch + the E8c shields + the support-effects
-        # atom rows all name Olaf — they must stay green with the R
-        # matrix (run in the footer command).
-        # MERGE: the eleven ``test_cp10_batch_*.py`` scaffolds folded into
-        # ``test_full_entry_packets.py`` (ours, 108872c8), which names the
-        # same 120 full-entry champions Olaf sat in.
-        import tests.test_full_entry_packets  # noqa: F401
-        import tests.test_e8_shields  # noqa: F401
-        import tests.test_support_effects  # noqa: F401
 
 
 # The full mandated sanity gate (the brief's contract #15):

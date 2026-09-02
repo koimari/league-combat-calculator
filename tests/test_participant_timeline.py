@@ -4,25 +4,14 @@ from dataclasses import replace
 
 import pytest
 
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
-from src.calculator.program.views import LeafWriter, name_every_number
+import src.calculator.bis as bis_module
+from src.app import app
+from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.defensive_effects import (
     StartingDefenses,
     resolve_starting_defenses,
 )
-from src.calculator.program.build import dropped_preview_mechanics
-from src.calculator.scenario import (
-    ChampionLoadout,
-    parse_scenario_request,
-    resolve_scenario,
-)
-from src.calculator.stats import calculate_total_stats
-from src.app import app
-import src.calculator.bis as bis_module
-from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
 from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.optimizer import get_eligible_legendaries
 from src.calculator.participant_timeline import (
@@ -31,15 +20,25 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     _actor_params,
     _owned_state_event_id,
+    _regeneration_windows,
     _schedule_authored_reactive_events,
     _schedule_thorns_events,
-    _regeneration_windows,
     _simulate_survival,
     build_participant_timeline,
 )
-from src.calculator.program.build import roster_program
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.program.build import dropped_preview_mechanics, roster_program
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views import LeafWriter, name_every_number
 from src.calculator.program.views.survival import survival
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.program.walk import walk as run_one_walk
+from src.calculator.scenario import (
+    ChampionLoadout,
+    parse_scenario_request,
+    resolve_scenario,
+)
+from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,
@@ -49,8 +48,6 @@ from src.calculator.survival import (
     TransitionContext,
     TransitionRank,
     build_states,
-    finalize_states,
-    run_survival_walk,
 )
 
 
@@ -302,16 +299,15 @@ def test_fimbulwinter_holder_keeps_dict_rows_in_score_only_fights():
     """
     champion = get_champion("Ahri")
     item = get_item_by_name("Fimbulwinter")
-    stats = calculate_total_stats(champion, 18, [item])
+    calculate_total_stats(champion, 18, [item])
     params = FightParams.from_request(
         {"fight_mode": "one_rotation", "auto_attack_uptime": 0.0},
         deterministic=True,
     )
     result = run_fight(champion, 18, [item], params, score_only=True)
     assert "damage_events_tuple" not in result
-    assert result["damage_events"] and all(
-        isinstance(event, dict) for event in result["damage_events"]
-    )
+    assert result["damage_events"]
+    assert all(isinstance(event, dict) for event in result["damage_events"])
 
 
 def test_eclipse_holder_keeps_dict_rows_in_score_only_fights():
@@ -320,7 +316,7 @@ def test_eclipse_holder_keeps_dict_rows_in_score_only_fights():
     dict rows (P3-3C hardening; the compiled walk already fails closed)."""
     champion = get_champion("Ziggs")
     item = get_item_by_name("Eclipse")
-    stats = calculate_total_stats(champion, 18, [item])
+    calculate_total_stats(champion, 18, [item])
     params = FightParams.from_request(
         {
             "fight_mode": "one_rotation",
@@ -331,9 +327,8 @@ def test_eclipse_holder_keeps_dict_rows_in_score_only_fights():
     )
     result = run_fight(champion, 18, [item], params, score_only=True)
     assert "damage_events_tuple" not in result
-    assert result["damage_events"] and all(
-        isinstance(event, dict) for event in result["damage_events"]
-    )
+    assert result["damage_events"]
+    assert all(isinstance(event, dict) for event in result["damage_events"])
     # The proc row and its shield receipt survive the score-only fight.
     row = result["breakdown"].get("proc_Eclipse")
     if row is not None:
@@ -1280,7 +1275,8 @@ def test_cinderbloom_is_priced_by_the_walk_not_as_a_coupled_source_row():
     without = _shadowflame_scenario(
         ["Doran's Ring", "Blackfire Torch", "Verdant Barrier"]
     )
-    assert with_flame.status_code == 200 and without.status_code == 200
+    assert with_flame.status_code == 200
+    assert without.status_code == 200
 
     assert "shadowflame.cinderbloom" in dropped_preview_mechanics()
     combat = with_flame.get_json()["combat"]
@@ -1297,7 +1293,8 @@ def test_cinderbloom_is_priced_by_the_walk_not_as_a_coupled_source_row():
         ]
 
     armed, bare = death_time(with_flame), death_time(without)
-    assert armed is not None and bare is not None
+    assert armed is not None
+    assert bare is not None
     assert armed < bare
 
 
@@ -2418,8 +2415,8 @@ def _named_like_the_real_timeline(payload):
     ``build_participant_timeline`` names every number it publishes, and the
     BIS objective refuses to rank a number no entry names (D-62): a payload
     with bare numbers is a payload nobody can ask what its numbers mean.  So
-    a fake that returned one would be a fake of a shape the tree no longer
-    has.  The map is built through the same writer the views use rather than
+    a fake that returned one would be a fake of a shape the tree does not
+    have.  The map is built through the same writer the views use rather than
     hand-listed, which is what keeps the fake honest as the writer changes.
     """
     payload["dispositions"] = name_every_number(payload, LeafWriter())
@@ -2773,7 +2770,7 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
 
 
 def test_roster_bis_includes_event_certified_target_defenses():
-    """Event-certified target defenses no longer disappear from the BIS pool."""
+    """Event-certified target defenses stay in the BIS pool."""
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
     body = response.get_json()
@@ -4113,8 +4110,8 @@ def test_post_window_damage_receipt_preserves_pair_amount_and_skip_reason():
 def _collector_execute_event() -> dict:
     """One packet that leaves the target inside The Collector's threshold.
 
-    It carries the pair engine's own stamp, because that is what the walk
-    used to read and what this pair of tests is about.
+    It carries the pair engine's own stamp, because that stamp is what this
+    pair of tests is about.
     """
     return {
         "time": 1.0,
@@ -5569,16 +5566,12 @@ def test_healing_rule_champions_matches_the_dispatch_source():
     entrypoint. A missing local declaration would make the import fail before
     a fight can silently skip the rule.
     """
-    import importlib
-
     from src.calculator import healing
     from src.calculator.champions import _CHAMPION_MODULES
     from src.calculator.champions.healing_contract import ChampionHealingRule
 
     for name in healing.HEALING_RULE_CHAMPIONS:
-        module = importlib.import_module(
-            f"src.calculator.champions.{_CHAMPION_MODULES[name]}"
-        )
+        module = _CHAMPION_MODULES[name]
         declaration = getattr(module, "SELF_HEALING_RULE", None)
         assert isinstance(declaration, ChampionHealingRule)
         assert declaration.champion_name == name
@@ -5875,12 +5868,12 @@ class TestCatalystIsTwoPassesAndNotARecursion:
         params = FightParams.from_request(
             {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
         )
-        arguments = dict(
-            main_stats=main.stats,
-            main_defenses=main.defenses,
-            enemies=enemies,
-            allies=allies,
-        )
+        arguments = {
+            "main_stats": main.stats,
+            "main_defenses": main.defenses,
+            "enemies": enemies,
+            "allies": allies,
+        }
         arguments.update(overrides)
         return build_participant_timeline(
             main.champion_data,
@@ -6051,16 +6044,18 @@ class TestCatalystIsTwoPassesAndNotARecursion:
     def test_an_unanswerable_ledger_raises_the_typed_failure(self):
         """Criterion 13's third clause: not an untyped ValueError.
 
-        A caller could not previously tell "this needs another pass" from
-        "this request is malformed" -- both arrived as ValueError, and
-        /api/calculate turned both into a 400.
+        A caller must be able to tell "this needs another pass" from
+        "this request is malformed" -- as one ValueError both would arrive
+        alike, and /api/calculate would turn both into a 400.
         """
-        from src.calculator.program.dependency import IncompleteDependency
         from src.calculator import participant_timeline as timeline
+        from src.calculator.program.dependency import IncompleteDependency
 
         assert not issubclass(IncompleteDependency, ValueError)
 
-        broken = lambda actor, incoming, duration: ((), False)
+        def broken(actor, incoming, duration):
+            return ((), False)
+
         original = timeline._declared_resource_restores
         timeline._declared_resource_restores = broken
         try:
@@ -6088,7 +6083,7 @@ class TestCatalystIsTwoPassesAndNotARecursion:
 
 
 class TestThePublishedReceiptFieldsHaveOneProducer:
-    """Two fields the receipt view used to compute for itself (criterion 3).
+    """Two fields the receipt view must not compute for itself (criterion 3).
 
     Both were spelled as a *default* behind ``event.get(...)``, which is the
     least visible way for a published number to acquire a second producer:

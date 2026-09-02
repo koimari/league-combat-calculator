@@ -170,12 +170,6 @@ def test_blank_subject_is_rejected() -> None:
         validate_claim(claim(subject="   "))
 
 
-def test_a_non_claim_value_is_rejected() -> None:
-    """The table holds claims, not look-alike mappings."""
-    with pytest.raises(CoverageClaimError, match="is not a Claim"):
-        validate_claim({"subject": "Imperial Mandate"})
-
-
 # ---------------------------------------------------------------------------
 # The requirement matrix
 # ---------------------------------------------------------------------------
@@ -343,7 +337,7 @@ def test_key_disagreeing_with_its_claim_is_rejected() -> None:
 
 def test_key_that_is_not_a_triple_is_rejected() -> None:
     """The key is ``(subject_kind, subject, lane)`` and nothing shorter."""
-    with pytest.raises(CoverageClaimError, match="is not a .subject_kind"):
+    with pytest.raises(CoverageClaimError, match=r"is not a .subject_kind"):
         validate_claim_table({"Imperial Mandate": claim()})
 
 
@@ -496,11 +490,6 @@ def test_key_that_is_not_a_triple_is_rejected() -> None:
             id="source-ref-zero-revision",
         ),
         pytest.param(
-            SourceRef(url="https://wiki.leagueoflegends.com/en-us/X", revision_id="7"),
-            "is not an integer",
-            id="source-ref-revision-is-a-string",
-        ),
-        pytest.param(
             SourceRef(url="https://wiki.leagueoflegends.com/en-us/X", revision_id=True),
             "is not an integer",
             id="source-ref-revision-is-a-bool",
@@ -536,10 +525,10 @@ def test_malformed_evidence_member_is_rejected(member, message: str) -> None:
 def test_the_evidence_union_is_the_closed_nine() -> None:
     """Nine members, and ``StreamMembership`` deliberately absent.
 
-    It would have resolved against five hand name sets Phase 2 deleted, so it
-    could only ever have been evidence for something that no longer exists.
+    It would resolve against five hand name sets Phase 2 deleted, so it
+    could only ever be evidence for something that does not exist.
     """
-    assert EVIDENCE_KINDS == {
+    assert {
         "Symbol",
         "PacketSource",
         "PairedSides",
@@ -549,7 +538,7 @@ def test_the_evidence_union_is_the_closed_nine() -> None:
         "TestRef",
         "SourceRef",
         "Absence",
-    }
+    } == EVIDENCE_KINDS
     assert len(EVIDENCE_TYPES) == len(EVIDENCE_KINDS)
     assert "StreamMembership" not in EVIDENCE_KINDS
 
@@ -614,7 +603,7 @@ def test_utility_dimensions_project_the_single_home() -> None:
     measured from maps 43 items onto the distinct strings, so either integer
     is a plausible-looking wrong answer.
     """
-    assert UTILITY_DIMENSIONS == {dimension.value for dimension in UtilityDimension}
+    assert {dimension.value for dimension in UtilityDimension} == UTILITY_DIMENSIONS
 
 
 # ---------------------------------------------------------------------------

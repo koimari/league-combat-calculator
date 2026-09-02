@@ -56,17 +56,17 @@ def _combat(scenario: str) -> dict:
 
 
 @pytest.mark.parametrize(
-    "scenario", ("mandate_abyssal_curse_roster", "cleaver_bloodsong_roster")
+    "scenario", ["mandate_abyssal_curse_roster", "cleaver_bloodsong_roster"]
 )
 def test_a_refused_row_publishes_a_declared_zero(scenario: str) -> None:
     """The reproducer, inverted, against a live run.
 
-    It used to read "the disposition set is exactly ``{MEASURED}``, including
-    on the rows whose ``skipped_reason`` says the walk refused them".  Now
-    the refusal is what the entry says: a refused row's outcome fields carry
-    ``STRUCTURAL_ZERO`` and the reason beside them is the walk's own, so a
-    reader of the map can tell a number no rule computed from a computed
-    zero without reading a sibling string and knowing what it implies.
+    The reproducer's claim, "the disposition set is exactly ``{MEASURED}``,
+    including on the rows whose ``skipped_reason`` says the walk refused
+    them", is false: a refused row's outcome fields carry ``STRUCTURAL_ZERO``
+    and the reason beside them is the walk's own, so a reader of the map can
+    tell a number no rule computed from a computed zero without reading a
+    sibling string and knowing what it implies.
 
     Both scenarios run, and one of them has no refusal at all — which is the
     other half of the property: a priced row is still ``MEASURED``, so this
@@ -143,7 +143,7 @@ def _outcome_ledger_sites() -> dict[str, int]:
 
 
 def test_the_outcome_ledger_is_the_receipt_walks_companion() -> None:
-    """The other half, inverted: this reproducer no longer reproduces.
+    """The other half, inverted: this reproducer does not reproduce.
 
     It read "no walk runs on it, so ``StructuralZero`` and ``Starved`` reach
     no payload".  Both clauses are now false — the receipt adapter builds one

@@ -11,8 +11,8 @@ dischargeable by creating a fourteenth.
 """
 
 import ast
-import shutil
 import json
+import shutil
 import subprocess
 from dataclasses import fields
 from pathlib import Path
@@ -21,9 +21,8 @@ from unittest import mock
 import pytest
 
 from scripts import behavior_frontier
-from src.calculator import interpreters
+from src.calculator import interpreters, item_coverage
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator import item_coverage
 from src.calculator.interpreters.stat_derivation import declared_stat_derivations
 from src.calculator.item_behavior import ThresholdRegenRule
 
@@ -165,9 +164,7 @@ def test_a_container_exclusion_outside_class_b_is_refused() -> None:
         "calculator/damage.py"
     ] = {"SOMETHING": "a reason"}
 
-    failures = behavior_frontier._claim_evidence_failures(  # noqa: SLF001
-        committed, fresh
-    )
+    failures = behavior_frontier._claim_evidence_failures(committed, fresh)
 
     assert any("is not a Class B module" in failure for failure in failures)
 
@@ -497,7 +494,7 @@ def test_the_hand_set_is_gone_and_the_fold_is_what_the_gate_reads() -> None:
     The retired symbol has zero occurrences in ``src/`` — not as a binding
     and not as a sentence about one, because a name that survives in prose is
     how a reader learns to look for something that is not there — and the
-    build-level gate that used to read it now answers from the fold: an owner
+    build-level gate answers from the fold: an owner
     the fold refuses is refused by the gate, and an owner it does not is not.
     Both directions, so a gate wired to something else entirely could not
     pass this by refusing everything.
@@ -611,9 +608,7 @@ def test_a_member_with_a_compiled_rule_fails_the_ratchet() -> None:
     committed = json.loads(json.dumps(fresh))
     fresh["no_runtime_behavior"]["declaring"] = ["Spirit Visage"]
 
-    failures = behavior_frontier._no_runtime_behavior_failures(  # noqa: SLF001
-        committed, fresh
-    )
+    failures = behavior_frontier._no_runtime_behavior_failures(committed, fresh)
 
     assert any("compile a BehaviorRule" in failure for failure in failures)
 
@@ -775,13 +770,12 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
     state it was meant to refuse.  ``creditor_of`` is the ruled claim and
     exactly one record may carry it.
 
-    A row carries the stage **once**.  It used to carry it twice — a
-    ``retires_at`` copied off ``interpreters.UnservedLane`` beside the
-    ``recorded_stage`` resolved from the claim — which put campaign
-    bookkeeping in a runtime module and made a ruled re-dating a ``src/``
-    commit.  What the two copies bought was a clause that caught a re-dating
-    landing on one of them; what one copy buys is a re-dating that cannot land
-    on one of them.
+    A row carries the stage **once**.  A second copy — a ``retires_at`` off
+    ``interpreters.UnservedLane`` beside the ``recorded_stage`` resolved from
+    the claim — would put campaign bookkeeping in a runtime module and make a
+    ruled re-dating a ``src/`` commit.  What the two copies bought was a
+    clause that caught a re-dating landing on one of them; what one copy buys
+    is a re-dating that cannot land on one of them.
     """
     block = _receipt()["counters"]["counter_4"]["deferrals"]
     assert set(block["rows"]) == set(behavior_frontier.COUNTER_4_DEFERRALS)
@@ -831,7 +825,7 @@ def test_a_deferral_that_outlives_its_gap_fails_the_gate() -> None:
         "counter_4"
     ]["deferrals"]["rows"][stale]
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is not an open gap" in failure for failure in failures)
 
@@ -852,7 +846,7 @@ def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
         "recorded_stage"
     ] = "Phase 4 S3 — one kernel, five views"
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is half-landed" in failure for failure in failures)
 
@@ -1047,7 +1041,7 @@ def test_a_row_whose_stage_shipped_without_saying_so_fails_the_gate() -> None:
         row["overdue"] = False
         row["blocked_on"] = ""
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is not declared overdue with a blocker" in f for f in failures)
 
@@ -1062,7 +1056,7 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "a stage that has not shipped"
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is not a completed stage" in f for f in failures)
 
@@ -1070,12 +1064,11 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
 def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
     """The clause that makes the overdue rule come due on its own.
 
-    ``COMPLETED_STAGES`` used to be a literal inside this module and was the
-    sole trigger of the overdue rule, so a stage could ship and every row
-    deferred to it stay silent until somebody remembered to edit the tool —
-    the failure shape the campaign is named after, one level up.  A deferral
-    may now only name a stage the committed record declares, and shippedness
-    is read from the tree from then on.
+    A ``COMPLETED_STAGES`` literal inside this module as the sole trigger of
+    the overdue rule would let a stage ship and every row deferred to it stay
+    silent until somebody remembered to edit the tool — the failure shape the
+    campaign is named after, one level up.  A deferral may only name a stage
+    the committed record declares, and shippedness is read from the tree.
     """
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
@@ -1085,7 +1078,7 @@ def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "Phase 9 S1 — a stage no record declares"
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("campaign-stages.json declares" in f for f in failures)
 
@@ -1137,11 +1130,12 @@ def test_stage_completion_is_read_from_the_tree_not_from_a_declaration() -> None
     assert set(shipped) <= set(declared)
     assert "Phase 4 S3 — one kernel, five views" in shipped
 
-    tags = behavior_frontier._tag_first_seen()  # noqa: SLF001
+    tags = behavior_frontier._tag_first_seen()
     for stage, row in declared.items():
         assert "shipped" not in row, f"{stage} declares shippedness rather than a tag"
         if stage in shipped:
-            assert row["slice_tag"] in tags and row["followed_by"] in tags
+            assert row["slice_tag"] in tags
+            assert row["followed_by"] in tags
             assert tags[row["slice_tag"]] in shipped[stage]
 
 
@@ -1205,8 +1199,8 @@ def test_the_two_committed_artifacts_are_each_read_once_per_process() -> None:
         return real_run(command, *args, **kwargs)  # type: ignore[arg-type]
 
     for cached in (
-        behavior_frontier._campaign_stages_block,  # noqa: SLF001
-        behavior_frontier._tag_first_seen,  # noqa: SLF001
+        behavior_frontier._campaign_stages_block,
+        behavior_frontier._tag_first_seen,
     ):
         # Tolerated rather than required, so that dropping a decorator fails
         # this test on the count it is about instead of on an AttributeError.
@@ -1234,22 +1228,25 @@ def test_the_pinned_slice_tags_name_the_range_the_stage_records_declare() -> Non
         behavior_frontier.CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8")
     )
     assert pinned["range"] == behavior_frontier.campaign_range()
-    behavior_frontier._tag_first_seen.cache_clear()  # noqa: SLF001
+    behavior_frontier._tag_first_seen.cache_clear()
     try:
-        with mock.patch.object(
-            behavior_frontier, "campaign_range", lambda: "deadbee..cafe000"
+        with (
+            mock.patch.object(
+                behavior_frontier, "campaign_range", return_value="deadbee..cafe000"
+            ),
+            pytest.raises(RuntimeError, match="campaign range"),
         ):
-            with pytest.raises(RuntimeError, match="campaign range"):
-                behavior_frontier._tag_first_seen()  # noqa: SLF001
+            behavior_frontier._tag_first_seen()
     finally:
-        behavior_frontier._tag_first_seen.cache_clear()  # noqa: SLF001
+        behavior_frontier._tag_first_seen.cache_clear()
 
 
 def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:
     """A stage record is only useful if its blocker names an artifact."""
     for stage, row in behavior_frontier.declared_stages().items():
         assert row["blocked_on"].startswith("docs/receipts/"), stage
-        assert row["slice_tag"] and row["followed_by"], stage
+        assert row["slice_tag"], stage
+        assert row["followed_by"], stage
 
 
 def test_a_file_vanishing_mid_scan_is_skipped(tmp_path) -> None:

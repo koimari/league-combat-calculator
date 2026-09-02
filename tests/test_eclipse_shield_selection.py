@@ -32,21 +32,20 @@ not xfails.
 """
 
 from copy import deepcopy
-from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.interpreters import survival_ledger_certifications
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.interpreters import survival_ledger_certifications
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.build import roster_program
 from src.calculator.program.compile import action_from_event
 from src.calculator.program.views.survival import survival
 from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.survival import (
+    SUPPORT_RANK_KEY,
     ReceiptLedger,
     ScoreLedger,
-    SUPPORT_RANK_KEY,
     TransitionContext,
     TransitionRank,
     build_states,

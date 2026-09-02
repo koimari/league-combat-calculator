@@ -4,21 +4,26 @@ import pytest
 
 from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.loadout_rules import ITEM_EXCLUSIVITY_GROUPS, exclusivity_groups
+from src.calculator.loadout_rules import (
+    ITEM_EXCLUSIVITY_GROUPS,
+    exclusivity_groups,
+    role_scoped_shop_items,
+)
 from src.calculator.optimizer import (
     _evaluate_build,
-    get_eligible_legendaries,
-    get_eligible_boots,
-    optimizer_supported_items,
-    optimize_build as _optimize_build,
-    get_selectable_items,
-    get_purchase_items,
-    optimize_purchase,
-    item_gold,
     _hill_climb,
+    get_eligible_boots,
+    get_eligible_legendaries,
+    get_purchase_items,
+    get_selectable_items,
+    item_gold,
+    optimize_purchase,
+    optimizer_supported_items,
+)
+from src.calculator.optimizer import (
+    optimize_build as _optimize_build,
 )
 from src.calculator.pipeline import FightParams
-from src.calculator.loadout_rules import role_scoped_shop_items
 
 _FIGHT_PARAM_KEYS = {
     "target_health",
@@ -177,7 +182,7 @@ def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
     first = FightParams.from_request({"target_health": 1000}, deterministic=True)
     second = FightParams.from_request({"target_health": 2500}, deterministic=True)
 
-    score = _evaluate_build({}, 1, [], (first, second), "magic_damage")
+    score = _evaluate_build({}, 1, [], (first, second), objective="magic_damage")
 
     assert score == 350
 
@@ -193,11 +198,11 @@ def test_hill_climb_reuses_greedy_score_without_duplicate_evaluation(monkeypatch
         18,
         [item],
         None,
-        set(),
-        True,
-        [],
-        [],
-        {
+        locked_legendary_names=set(),
+        locked_boots=True,
+        pool=[],
+        boots_pool=[],
+        eval_kwargs={
             "fight_params": FightParams.from_request({}, deterministic=True),
             "objective": "total_damage",
         },
@@ -235,7 +240,7 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
         18,
         [],
         params,
-        "total_damage",
+        objective="total_damage",
         combat_context={"enemies": [object()], "allies": []},
     )
 
@@ -489,7 +494,7 @@ def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
         18,
         [],
         params,
-        "total_damage",
+        objective="total_damage",
         require_complete_timeline=True,
         combat_context={"enemies": [object()], "allies": []},
     )
@@ -532,7 +537,7 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
         18,
         owned,
         params,
-        "total_damage",
+        objective="total_damage",
         timeline_audit=None,
         require_complete_timeline=True,
         combat_context=combat_context,
@@ -554,7 +559,7 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
         18,
         owned,
         params,
-        "total_damage",
+        objective="total_damage",
         timeline_audit=audit,
         require_complete_timeline=True,
         combat_context=combat_context,
@@ -805,7 +810,7 @@ class TestOptimizerBasic:
         ``-n auto`` multiplier over the dev box was ~2.2x when the old 8 s
         cap was set and measures ~3.4x now (8.2 s and 8.7 s on two green
         trees), so the cap is recalibrated to 15 s: still an instant fail
-        on a runaway search (historically >30 s) without repinning the
+        on a runaway search (observed at >30 s) without repinning the
         runner pool's scheduling noise as a formula change.
         """
         champ_data = get_champion("Ahri")
@@ -1140,16 +1145,16 @@ def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
             items=("Randuin's Omen", "Bramble Vest"),
         ).resolve(),
     ]
-    common = dict(
-        champion_data=get_champion("Cassiopeia"),
-        level=13,
-        fight_params=FightParams.from_request(
+    common = {
+        "champion_data": get_champion("Cassiopeia"),
+        "level": 13,
+        "fight_params": FightParams.from_request(
             {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
         ),
-        max_legendary_slots=2,
-        require_complete_timeline=True,
-        enemy_loadouts=enemies,
-    )
+        "max_legendary_slots": 2,
+        "require_complete_timeline": True,
+        "enemy_loadouts": enemies,
+    }
     baseline = _optimize_build(**common)
 
     monkeypatch.setattr(
@@ -1186,7 +1191,7 @@ def _patch_purchase_prices(monkeypatch, pool):
     ``economy.item_total`` reads the atomized economics table and
     nothing else, so a fabricated item needs a fabricated row; a test
     world that skipped this would be pricing off the wiki cache the
-    engine no longer reads.
+    engine does not read.
     """
     real = economy.sourced_total
     rows = {int(item["id"]): int(item["shop"]["prices"]["total"]) for item in pool}
@@ -1220,9 +1225,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
     monkeypatch.setattr(
         "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
     )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda _items: {"complete": True},
@@ -1268,9 +1271,7 @@ def _patch_purchase_world(monkeypatch, pool, score):
     monkeypatch.setattr(
         "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
     )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda _items: {"complete": True},
@@ -1491,9 +1492,7 @@ def test_purchase_exhaustive_walk_can_hold_a_component_and_its_legendary(
     monkeypatch.setattr(
         "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
     )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda _items: {"complete": True},
@@ -1793,9 +1792,7 @@ def test_purchase_pool_includes_components_but_not_starters(monkeypatch):
         _purchase_item("Doran's Ring", "STARTER", 400),
     ]
     monkeypatch.setattr("src.calculator.optimizer._ordinary_sr_items", lambda: items)
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda rows: list(rows)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
 
     assert [item["name"] for item in get_purchase_items("top")] == [
         "Ruby Crystal",
@@ -1814,7 +1811,7 @@ def test_optimize_build_rejects_consumable_locked_items():
 
 
 def test_role_scope_keeps_multiclass_lane_items_available():
-    """A SUPPORT tag no longer hides lane-class items (patch 16.15.1 added
+    """A SUPPORT tag does not hide lane-class items (patch 16.15.1 added
     SUPPORT to Whispering Circlet, a MAGE item; Morellonomicon/Frozen Heart
     are TANK/MAGE+SUPPORT and legal for those lanes in the real shop)."""
     from src.calculator.loadout_rules import role_scoped_shop_items
@@ -1824,7 +1821,8 @@ def test_role_scope_keeps_multiclass_lane_items_available():
     mid = {item["name"] for item in role_scoped_shop_items(pool, "mid")}
     support = {item["name"] for item in role_scoped_shop_items(pool, "support")}
 
-    assert "Whispering Circlet" in top and "Whispering Circlet" in mid
+    assert "Whispering Circlet" in top
+    assert "Whispering Circlet" in mid
     assert "Morellonomicon" in top
     assert "Frozen Heart" in top
     assert "Locket of the Iron Solari" in top

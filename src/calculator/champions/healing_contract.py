@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import functools
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -26,6 +26,7 @@ class ChampionHealingRule:
         champion_stats: dict[str, float],
         ability_damages: dict[str, dict[str, Any]],
         damage_events: list[dict[str, Any]],
+        *,
         cast_timeline: list[dict[str, Any]] | None = None,
         fight_duration_seconds: float | None = None,
     ) -> list[dict[str, Any]]:
