@@ -32,7 +32,7 @@ scope; the stances' own damage is priced on Q/W/E/R.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlScope, DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
@@ -313,10 +313,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         # The Rammus-E shape: a utility-only slot still publishes its one
         # sourced control event, read through the validated atom catalog.
+        # The stun is an empowered basic attack that "pounce[s] on the
+        # target", so the first roster enemy holds it.
         "E": lambda parser: with_control_event(
             _blazing_stampede(parser),
             duration_attr="Stun Duration",
             time_offset=None,
+            scope=ControlScope.ONE_TARGET,
         ),
         "P": _bridge_between,
     },

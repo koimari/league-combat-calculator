@@ -6629,7 +6629,7 @@
         "E": {
           "cast_time": 0.25,
           "control_events": [
-            "ControlEvent('stun', duration=1.6, time_offset=0.0)"
+            "ControlEvent('stun', duration=1.6, time_offset=0.0, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -19569,7 +19569,7 @@
         "W": {
           "cast_time": 0.25,
           "control_events": [
-            "ControlEvent('slow', duration=5.0, magnitude=71.0, time_offset=0.0)"
+            "ControlEvent('slow', duration=5.0, magnitude=71.0, time_offset=0.0, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -20621,7 +20621,7 @@
       "abilities_level_11": {
         "E": {
           "control_events": [
-            "ControlEvent('fear', duration=1.25, time_offset=2.0)"
+            "ControlEvent('fear', duration=1.25, time_offset=2.0, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -22977,7 +22977,7 @@
         "E": {
           "cast_time": 0.25,
           "control_events": [
-            "ControlEvent('taunt', duration=1.2, time_offset=0.0)"
+            "ControlEvent('taunt', duration=1.2, time_offset=0.0, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -31180,7 +31180,7 @@
       "abilities_level_11": {
         "E": {
           "control_events": [
-            "ControlEvent('stun', duration=0.75)"
+            "ControlEvent('stun', duration=0.75, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -31854,7 +31854,7 @@
         "E": {
           "cast_time": 0.25,
           "control_events": [
-            "ControlEvent('stun', duration=1.5, time_offset=0.0)"
+            "ControlEvent('stun', duration=1.5, time_offset=0.0, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -37047,7 +37047,7 @@
       "abilities_level_11": {
         "E": {
           "control_events": [
-            "ControlEvent('slow', duration=2.5, magnitude=40.0, time_offset=0.0)"
+            "ControlEvent('slow', duration=2.5, magnitude=40.0, time_offset=0.0, scope=one_target)"
           ],
           "control_source_atoms": [
             {
@@ -52939,14 +52939,14 @@
       "numeric_leaves": 46189,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "13941323668e32a160d71f43bd9d1912785180c7",
+    "git_head": "3dcd72528e7fe13da68de1fab4d1f79dd804302d",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "f9e4a1b5f11b1a8a94beee464f8b6e59af143563"
+    "src_tree_sha": "e925d73cb7adc502ed952c4eb90f0c657db7fe8f"
   },
   "registered_champion_fights": {
     "Aatrox": {

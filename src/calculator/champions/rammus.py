@@ -54,7 +54,7 @@ Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
 
 from typing import Any
 
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlScope, DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .inputs import int_option
@@ -215,9 +215,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "P": _spiked_shell,
     },
     slot_wrappers={
+        # "taunts the target enemy champion or monster for a duration":
+        # one enemy holds it, so it is allocated to the first roster enemy.
         "E": lambda parser: with_control_event(
             parser,
             duration_attr="Taunt Duration",
+            scope=ControlScope.ONE_TARGET,
         ),
     },
     cc_kinds=MODULE_CC,

@@ -36,7 +36,7 @@ unpriced; its kind rides ``MODULE_CC``.
 from typing import Any
 
 from ..ability_atoms import ability_payload
-from ..ability_spec import DamagePart
+from ..ability_spec import ControlScope, DamagePart
 from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .engine import SlotCtx, build_parser
@@ -274,11 +274,13 @@ SLOTS = {
     # slot's active-duration atom, and its strength is the cached
     # "Maximum Slow" row (47/59/71/83/95%) at the end of that window.
     # The initial 35% and the cripple half are prose only and stay
-    # unpriced: one slot carries one kind.
+    # unpriced: one slot carries one kind.  "the target enemy champion"
+    # is one enemy, so the slow is allocated to the first roster enemy.
     "W": with_control_event(
         _wither,
         duration_source="active",
         magnitude_attr="Maximum Slow",
+        scope=ControlScope.ONE_TARGET,
     ),
     "E": _spirit_fire,
     "R": _fury_of_the_sands,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_spec import ControlScope
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage
@@ -119,9 +120,12 @@ SLOTS = {
     "P": _spider_queen,
     "Q": _neurotoxin_or_bite,
     "W": _volatile_spiderling,
+    # Cocoon stuns "the first enemy hit", so one enemy holds it: the web
+    # is allocated to the first roster enemy.
     "E": with_control_event(
         _cocoon,
         duration_attr="Stun Duration",
+        scope=ControlScope.ONE_TARGET,
     ),
     "R": _form_toggle,
 }

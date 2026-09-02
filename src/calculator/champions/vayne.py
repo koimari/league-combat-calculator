@@ -37,6 +37,7 @@ absence of damage rather than an unmodeled gap.
 
 from typing import Any
 
+from ..ability_spec import ControlScope
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
 from .module_contract import coverage
@@ -169,7 +170,9 @@ SLOTS = {
             # The wall branch adds the sourced 1.5s stun as its own control
             # event: the slot's declared kind stays the knockback every cast
             # applies, so the no-wall branch cannot report a stun it never
-            # lands.
+            # lands.  Condemn "fires a heavy bolt at the target enemy" and
+            # the stun is "if the target collides with terrain", so the one
+            # enemy hit holds it — the first roster enemy.
             True: with_control_event(
                 simple_damage(
                     attr="Total Physical Damage",
@@ -179,6 +182,7 @@ SLOTS = {
                 kind="stun",
                 duration_attr="Stun Duration",
                 effect_index=1,
+                scope=ControlScope.ONE_TARGET,
             ),
             False: simple_damage(
                 attr="Physical Damage",
