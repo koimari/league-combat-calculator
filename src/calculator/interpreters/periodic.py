@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 
 from ..item_behavior import (
     BehaviorRule,
@@ -29,6 +30,8 @@ from ..item_behavior import (
     PeriodicCadence,
     PeriodicRule,
     RuleFamily,
+    declared_mechanic_id,
+    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import BurnEffect, DamageSource, PeriodicEffect, damage_source
@@ -58,14 +61,12 @@ class PeriodicInterpretationError(ValueError):
     """A rule reached this interpreter that is not a periodic strike."""
 
 
-def _payload(rule: BehaviorRule) -> PeriodicRule:
-    """*rule*'s periodic payload, or a stop."""
-    payload = rule.payload
-    if not isinstance(payload, PeriodicRule):
-        raise PeriodicInterpretationError(
-            f"{rule.mechanic_id} is not a periodic strike rule"
-        )
-    return payload
+_payload = partial(
+    typed_payload,
+    payload_type=PeriodicRule,
+    stop=PeriodicInterpretationError,
+    noun="a periodic strike rule",
+)
 
 
 def cadence_fields(
@@ -80,15 +81,8 @@ def cadence_fields(
     reads the same declaration the pair engine reads" a property of the tree
     rather than a claim two functions could drift out of.
     """
-    payload = _payload(rule)
-    damage_formula.compile_formula(payload.formula, ctx)
-    return (
-        KernelField(
-            name=PERIODIC_INTERVAL_FIELD,
-            value=resolve(payload.interval, ctx.level),
-            lane=lane,
-            rule_id=rule.mechanic_id,
-        ),
+    return damage_formula.compiled_field(
+        _payload(rule), "interval", PERIODIC_INTERVAL_FIELD, rule, ctx, lane
     )
 
 
@@ -99,13 +93,13 @@ def periodic_mechanic_id(owner: str) -> str:
     engine's number in every roster total while the walk prices the same
     declaration, and that is a double count.
     """
-    rules = periodic_rules([owner])
-    if not rules:
-        raise PeriodicInterpretationError(
-            f"{owner} authors a periodic row and declares no periodic rule, "
-            "so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    return declared_mechanic_id(
+        owner,
+        periodic_rules([owner]),
+        PeriodicInterpretationError,
+        authors="a periodic row",
+        declares="periodic",
+    )
 
 
 def _row(
@@ -125,7 +119,7 @@ def _row(
     prefix, suffix = CADENCE_PRESENTATION[payload.cadence]
     return damage_source(
         rule.owner,
-        payload.formula.damage_class.value,
+        payload.formula.damage_type,
         damage_formula.compile_formula(payload.formula, ctx),
         suffix=suffix,
         breakdown_key=f"{prefix}{rule.owner}",

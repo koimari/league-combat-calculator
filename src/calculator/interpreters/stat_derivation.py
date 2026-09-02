@@ -36,6 +36,8 @@ from ..item_behavior import (
     PenetrationChannelRule,
     RuleFamily,
     StatAvailability,
+    compiled_value,
+    sole_declaration,
 )
 from ..item_behavior_catalog import behavior_rules
 from ..value_ref import ValueRefError, resolve, resolve_flat
@@ -132,12 +134,12 @@ class StatSlot:
 
     def value(self, name: str) -> float:
         """One declared number, by the field name it was declared under."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise StatDerivationInterpretationError(
-            f"{self.rule.mechanic_id} declares no {name!r} value; a stat "
-            "derivation reads the numbers its declaration names and no others"
+        return compiled_value(
+            self.fields,
+            name,
+            StatDerivationInterpretationError,
+            f"{self.rule.mechanic_id} declares no {name!r} value; a stat derivation "
+            "reads the numbers its declaration names and no others",
         )
 
 
@@ -167,15 +169,12 @@ def sole_declared_derivation(
     as it was.
     """
     slots = declared_stat_derivations(owners, payload_type)
-    if not slots:
-        return None
-    if len(slots) > 1:
-        raise StatDerivationInterpretationError(
-            f"{[slot.owner for slot in slots]} all declare "
-            f"{payload_type.__name__} and no rule declares how two of them "
-            "compose; the slice that declares a second one owns the fold"
-        )
-    return slots[0]
+    return sole_declaration(
+        slots,
+        [slot.owner for slot in slots],
+        payload_type,
+        StatDerivationInterpretationError,
+    )
 
 
 def declared_stat_derivations(

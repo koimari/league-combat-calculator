@@ -26,6 +26,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     SecondaryTargetRule,
+    compiled_value,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
@@ -83,12 +84,12 @@ class SecondaryTargetSlot:
 
     def value(self, name: str) -> float:
         """One compiled field of the slot's rule, or a stop."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise SecondaryTargetInterpretationError(
+        return compiled_value(
+            self.fields,
+            name,
+            SecondaryTargetInterpretationError,
             f"{self.rule.mechanic_id} compiles no {name!r} field; the engine "
-            "asked its declaration a question it does not answer"
+            "asked its declaration a question it does not answer",
         )
 
     def bolt_count(self, roster_target_count: int) -> int:

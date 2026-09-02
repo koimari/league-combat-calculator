@@ -45,6 +45,8 @@ from ..item_behavior import (
     RuleFamily,
     SustainStat,
     SustainStatRule,
+    compiled_value,
+    sole_declaration,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
@@ -152,12 +154,12 @@ class SustainSlot:
 
     def value(self, name: str) -> float:
         """One declared number, by the field name it was declared under."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise SustainInterpretationError(
-            f"{self.rule.mechanic_id} declares no {name!r} value; a sustain "
-            "rule reads the numbers its declaration names and no others"
+        return compiled_value(
+            self.fields,
+            name,
+            SustainInterpretationError,
+            f"{self.rule.mechanic_id} declares no {name!r} value; a sustain rule "
+            "reads the numbers its declaration names and no others",
         )
 
 
@@ -244,15 +246,12 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
     declares how two of them compose — the same refusal the shred slot makes.
     """
     rules = sustain_rules(owners, payload_type)
-    if not rules:
-        return None
-    if len(rules) > 1:
-        raise SustainInterpretationError(
-            f"{[rule.owner for rule in rules]} all declare "
-            f"{payload_type.__name__} and no rule declares how two of them "
-            "compose; the slice that declares a second one owns the fold"
-        )
-    return rules[0]
+    return sole_declaration(
+        rules,
+        [rule.owner for rule in rules],
+        payload_type,
+        SustainInterpretationError,
+    )
 
 
 def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...]:

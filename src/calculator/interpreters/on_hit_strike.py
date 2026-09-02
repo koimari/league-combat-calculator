@@ -30,7 +30,7 @@ from ..item_behavior import (
     RestrictedPacket,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules, rule_contexts
 from ..item_effects import PerHitEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -204,7 +204,7 @@ def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
     return PerHitEffect(
         damage_source(
             rule.owner,
-            payload.formula.damage_class.value,
+            payload.formula.damage_type,
             damage_formula.compile_formula(payload.formula, ctx),
             suffix=ON_HIT_SUFFIX,
             breakdown_key=f"{ON_HIT_BREAKDOWN_PREFIX}{rule.owner}",
@@ -248,17 +248,14 @@ def per_hit_effects(
     fight would be a different mechanic.
     """
     return tuple(
-        per_hit_effect(
-            rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+        per_hit_effect(rule, ctx)
+        for rule, ctx in rule_contexts(
+            strike_rules(owners),
+            level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=target_bonus_health,
+            holder_is_melee=holder_is_melee,
         )
-        for rule in strike_rules(owners)
     )
 
 

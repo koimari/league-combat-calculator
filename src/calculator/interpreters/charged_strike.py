@@ -186,7 +186,7 @@ def _row(
         item_name=rule.owner,
         breakdown_key=key,
         display_name=name,
-        damage_type=payload.formula.damage_class.value,
+        damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
         basic_damage=basic_damage,
     )

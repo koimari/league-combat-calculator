@@ -44,6 +44,7 @@ from ..item_behavior import (
     Resistance,
     ResistanceShredRule,
     RuleFamily,
+    compiled_value,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
@@ -148,12 +149,12 @@ class ShredSlot:
 
     def value(self, name: str) -> float:
         """One compiled field of the slot's rule, or a stop."""
-        for field in self.fields:
-            if field.name == name:
-                return float(field.value)
-        raise ResistanceShredInterpretationError(
+        return compiled_value(
+            self.fields,
+            name,
+            ResistanceShredInterpretationError,
             f"{self.rule.mechanic_id} compiles no {name!r} field; the engine "
-            "asked its declaration a question it does not answer"
+            "asked its declaration a question it does not answer",
         )
 
     @property

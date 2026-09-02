@@ -42,9 +42,11 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     ShieldBypassRule,
+    compiled_value,
+    flat_fields,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import AnyValueRef, ValueRefError, resolve, resolve_flat
+from ..value_ref import AnyValueRef, resolve
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 # The field names a routing rule compiles to on the pair lane.
@@ -240,12 +242,12 @@ class ShieldBypass:
 
 def _field(fields: tuple[KernelField, ...], name: str) -> float:
     """One compiled field by name, or a stop naming the question asked."""
-    for compiled in fields:
-        if compiled.name == name:
-            return float(compiled.value)
-    raise DamageRoutingInterpretationError(
-        f"no routing field named {name!r} was compiled; the engine asked a "
-        "declaration a question it does not answer"
+    return compiled_value(
+        fields,
+        name,
+        DamageRoutingInterpretationError,
+        f"no routing field named {name!r} was compiled; the engine asked "
+        "a declaration a question it does not answer",
     )
 
 
@@ -294,18 +296,12 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
     :func:`pair_fields`.  A reference needing a level or a fight fact is a stop
     naming the shape, exactly as sustain's fight-free reader refuses one.
     """
-    references = _flat_references(rule)
-    try:
-        values = resolve_flat([reference for _, reference in references])
-    except ValueRefError as exc:
-        raise DamageRoutingInterpretationError(
-            f"{rule.mechanic_id} declares a reference that needs a level or a "
-            "fight fact, and this accessor has neither; read it through "
-            "resolve_execution, which is handed the context it resolves against"
-        ) from exc
-    return tuple(
-        KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for (name, _), value in zip(references, values, strict=False)
+    return flat_fields(
+        rule,
+        _flat_references(rule),
+        lane,
+        DamageRoutingInterpretationError,
+        "resolve_execution",
     )
 
 

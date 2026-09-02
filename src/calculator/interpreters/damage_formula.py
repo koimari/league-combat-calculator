@@ -31,13 +31,17 @@ claim no number moved rather than no number moved much.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from typing import Any
 
 from ..champions.inputs import champion_stat
 from ..item_behavior import (
     AtLeast,
     Basis,
+    BehaviorRule,
     BuildContext,
     DamageFormula,
+    EngineLane,
+    KernelField,
     LevelSteppedRate,
     MeleeRangedSplit,
     NoFloor,
@@ -226,9 +230,36 @@ def reads_target_current_health(formula: DamageFormula) -> bool:
     return any(term.basis is Basis.TARGET_CURRENT_HEALTH for term in formula.terms)
 
 
+def compiled_field(
+    payload: Any,
+    attribute: str,
+    name: str,
+    rule: BehaviorRule,
+    ctx: BuildContext,
+    lane: EngineLane,
+) -> tuple[KernelField, ...]:
+    """*payload*'s *attribute* as the one compiled *name* field, stamped *lane*.
+
+    Compiling the formula here fails a missing registry key when the build is
+    made rather than on whichever event first asks for the number; one body
+    serves both the pair engine and the receipt walk, so the two cannot drift
+    over which declaration they read.
+    """
+    compile_formula(payload.formula, ctx)
+    return (
+        KernelField(
+            name=name,
+            value=resolve(getattr(payload, attribute), ctx.level),
+            lane=lane,
+            rule_id=rule.mechanic_id,
+        ),
+    )
+
+
 __all__ = [
     "DamageFormulaError",
     "basis_value",
     "compile_formula",
+    "compiled_field",
     "reads_target_current_health",
 ]

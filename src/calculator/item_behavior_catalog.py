@@ -6615,6 +6615,30 @@ def validate_catalog() -> None:
 validate_catalog()
 
 
+def rule_contexts(
+    rules: Sequence[BehaviorRule],
+    level: int,
+    *,
+    fight_duration_seconds: float,
+    target_bonus_health: float,
+    holder_is_melee: bool,
+) -> tuple[tuple[BehaviorRule, BuildContext], ...]:
+    """Each rule with its owner's build context, in the order given."""
+    return tuple(
+        (
+            rule,
+            build_context(
+                rule.owner,
+                level,
+                fight_duration_seconds=fight_duration_seconds,
+                target_bonus_health=target_bonus_health,
+                holder_is_melee=holder_is_melee,
+            ),
+        )
+        for rule in rules
+    )
+
+
 __all__ = [
     "ACKNOWLEDGED_READING_DIVERGENCES",
     "ACTION_KIND_FAMILY",
@@ -6670,6 +6694,7 @@ __all__ = [
     "producers_for",
     "registry_entries",
     "registry_owners",
+    "rule_contexts",
     "rule_owners",
     "rune_amp_entries",
     "undeclared_entry_count",

@@ -34,6 +34,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     UltimateProcRule,
+    declared_mechanic_id,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import (
@@ -118,13 +119,13 @@ def proc_mechanic_id(owner: str) -> str:
     engine's number in every roster total while the walk prices the same
     declaration, and that is a double count.
     """
-    rules = cast_proc_rules([owner])
-    if not rules:
-        raise CastProcInterpretationError(
-            f"{owner} authors a cast-triggered proc and declares no cast_proc "
-            "rule, so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    return declared_mechanic_id(
+        owner,
+        cast_proc_rules([owner]),
+        CastProcInterpretationError,
+        authors="a cast-triggered proc",
+        declares="cast_proc",
+    )
 
 
 def repeated_target_multiplier(charges: int, single_target: float) -> float:
@@ -151,7 +152,7 @@ def _row(
         item_name=rule.owner,
         breakdown_key=key,
         display_name=name,
-        damage_type=payload.formula.damage_class.value,
+        damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
         **fields,  # type: ignore[arg-type]
     )

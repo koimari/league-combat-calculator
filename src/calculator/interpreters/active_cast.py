@@ -21,6 +21,7 @@ Nothing here is memoized, for the same reason the catalog is not:
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
 
 from ..item_behavior import (
     ActiveCastRule,
@@ -29,8 +30,10 @@ from ..item_behavior import (
     EngineLane,
     KernelField,
     RuleFamily,
+    declared_mechanic_id,
+    typed_payload,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules, rule_contexts
 from ..item_effects import DamageSource, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -56,12 +59,12 @@ class ActiveCastInterpretationError(ValueError):
     """A rule reached this interpreter that is not an item active."""
 
 
-def _payload(rule: BehaviorRule) -> ActiveCastRule:
-    """*rule*'s active payload, or a stop."""
-    payload = rule.payload
-    if not isinstance(payload, ActiveCastRule):
-        raise ActiveCastInterpretationError(f"{rule.mechanic_id} is not an active rule")
-    return payload
+_payload = partial(
+    typed_payload,
+    payload_type=ActiveCastRule,
+    stop=ActiveCastInterpretationError,
+    noun="an active rule",
+)
 
 
 def active_fields(
@@ -75,15 +78,8 @@ def active_fields(
     formula here fails a missing registry key when the build is made rather
     than on whichever event first asks for the number.
     """
-    payload = _payload(rule)
-    damage_formula.compile_formula(payload.formula, ctx)
-    return (
-        KernelField(
-            name=ACTIVE_COOLDOWN_FIELD,
-            value=resolve(payload.cooldown, ctx.level),
-            lane=lane,
-            rule_id=rule.mechanic_id,
-        ),
+    return damage_formula.compiled_field(
+        _payload(rule), "cooldown", ACTIVE_COOLDOWN_FIELD, rule, ctx, lane
     )
 
 
@@ -93,7 +89,7 @@ def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
     inherited = payload.lifesteal_effectiveness
     return damage_source(
         rule.owner,
-        payload.formula.damage_class.value,
+        payload.formula.damage_type,
         damage_formula.compile_formula(payload.formula, ctx),
         suffix=ACTIVE_SUFFIX,
         breakdown_key=f"{ACTIVE_BREAKDOWN_PREFIX}{rule.owner}",
@@ -123,13 +119,13 @@ def active_mechanic_id(owner: str) -> str:
     spelling of the slug.  A missing rule stops rather than defaults: an
     unstamped row would double count, in the roster total and in the walk.
     """
-    rules = active_rules([owner])
-    if not rules:
-        raise ActiveCastInterpretationError(
-            f"{owner} authors an item active and declares no active_cast rule, "
-            "so its pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
+    return declared_mechanic_id(
+        owner,
+        active_rules([owner]),
+        ActiveCastInterpretationError,
+        authors="an item active",
+        declares="active_cast",
+    )
 
 
 def active_sources(
@@ -148,17 +144,14 @@ def active_sources(
     provably neutral rather than merely equivalent.
     """
     return tuple(
-        active_source(
-            rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+        active_source(rule, ctx)
+        for rule, ctx in rule_contexts(
+            active_rules(owners),
+            level,
+            fight_duration_seconds=fight_duration_seconds,
+            target_bonus_health=target_bonus_health,
+            holder_is_melee=holder_is_melee,
         )
-        for rule in active_rules(owners)
     )
 
 
