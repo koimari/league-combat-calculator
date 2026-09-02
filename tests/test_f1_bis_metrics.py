@@ -22,15 +22,14 @@ import pytest
 import src.app as app_module
 from src.calculator.bis import bis_candidate_pool
 from src.calculator.calculate import calculate_payload
+from tests.app_config import app_config
 
 
 @pytest.fixture(autouse=True)
 def _disable_rate_limits_between_tests():
     """Only dedicated tests spend the production abuse-control budget."""
-    previous = app_module.app.config.get("RATE_LIMIT_ENABLED", True)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = False
-    yield
-    app_module.app.config["RATE_LIMIT_ENABLED"] = previous
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _bis_payload(**overrides):

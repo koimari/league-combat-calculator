@@ -7,6 +7,14 @@ from src.calculator.champions import get_champion_options_meta
 from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import load_public_champion as _load_public_champion
+from tests.app_config import app_config
+
+
+@pytest.fixture(autouse=True)
+def _disable_rate_limits_between_route_tests():
+    """The route tests here post in bulk; only dedicated tests spend the budget."""
+    with app_config(RATE_LIMIT_ENABLED=False):
+        yield
 
 
 def _timed_params():
@@ -144,7 +152,6 @@ def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
 )
 def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, source):
     """Wave 1B: the public API does not report Shen Q as coarse."""
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/calculate",
@@ -166,7 +173,6 @@ def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, so
 
 
 def test_calculate_api_soraka_exposes_exact_delayed_equinox_receipt():
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/calculate",
@@ -203,7 +209,6 @@ def test_persistent_state_champions_validate_for_every_fight_window(champion):
 
 @pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
 def test_calculate_api_serves_persistent_state_champions_in_timed_windows(champion):
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/calculate",
@@ -217,7 +222,6 @@ def test_calculate_api_serves_persistent_state_champions_in_timed_windows(champi
 
 @pytest.mark.parametrize("champion", FORMERLY_ONE_ROTATION_ONLY)
 def test_optimize_api_matches_calculate_for_persistent_state_champions(champion):
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -234,7 +238,6 @@ def test_optimize_api_matches_calculate_for_persistent_state_champions(champion)
 
 def test_optimize_api_certifies_tahm_kench_event_order():
     """Tahm's reviewed packet can participate in an event-ordered search."""
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -254,7 +257,6 @@ def test_optimize_api_certifies_tahm_kench_event_order():
 
 def test_optimize_api_certifies_qiyana_multistage_ultimate():
     """Qiyana's reviewed multi-stage R can participate in a build search."""
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -274,7 +276,6 @@ def test_optimize_api_certifies_qiyana_multistage_ultimate():
 
 def test_optimize_api_certifies_shyvana_form_packets():
     """Shyvana's reviewed form-dependent packets can be searched."""
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -298,7 +299,6 @@ def test_optimize_api_labels_partial_candidate_search_without_claiming_certified
     Ahri's W and R carry no reviewed control kind (docs/coverage-residue.json),
     so her Fimbulwinter candidates are honestly coarse in every window.
     """
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -332,7 +332,6 @@ def test_optimize_api_labels_partial_candidate_search_without_claiming_certified
 
 def test_optimize_api_darius_returns_visible_event_certified_build():
     """Browser-facing Darius optimization succeeds without overclaiming search."""
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -360,7 +359,6 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
 
 def test_optimize_api_certifies_ziggs_minefield_cadence():
     """Ziggs's reviewed minefield cadence can participate in a build search."""
-    app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",

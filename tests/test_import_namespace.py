@@ -16,6 +16,12 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 
+#: A guard against a wedged child, not a budget: importing the app costs 0.85 s
+#: on an idle box and 5-15 s while ``pytest -n auto`` has all sixteen cores
+#: busy, so a cap sized for the idle number fails under the suite that runs it
+#: (issue #263).
+HANG_GUARD_SECONDS = 120
+
 
 def _src_text(relpath: str) -> str:
     return (ROOT / relpath).read_text(encoding="utf-8")
@@ -57,7 +63,7 @@ def test_flask_entry_imports_one_calculator_tree():
         capture_output=True,
         text=True,
         check=False,
-        timeout=60,
+        timeout=HANG_GUARD_SECONDS,
     )
     assert result.returncode == 0, result.stderr
     assert "single-namespace ok" in result.stdout
@@ -81,7 +87,7 @@ def test_direct_entrypoint_runs_without_second_namespace():
         capture_output=True,
         text=True,
         check=False,
-        timeout=30,
+        timeout=HANG_GUARD_SECONDS,
     )
     assert result.returncode == 0, result.stderr
     assert "direct-entry ok" in result.stdout

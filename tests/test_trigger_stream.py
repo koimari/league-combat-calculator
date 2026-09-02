@@ -2683,7 +2683,7 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
             ts.is_immobilizing_event({"cc_kind": self.UNKNOWN_KIND})
         assert not isinstance(excinfo.value, ProjectionStarvation)
 
-    def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self):
+    def test_the_caller_is_told_a_champion_defect_is_a_bad_request(self, monkeypatch):
         """What the endpoint actually does with it — measured, not reasoned.
 
         It is a 400 whose body is the vocabulary message, because
@@ -2703,14 +2703,10 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         def _raise_the_walks_error(_data, **_kwargs):
             raise raised
 
-        original = app_module.calculate_payload
-        app_module.calculate_payload = _raise_the_walks_error
-        try:
-            response = app_module.app.test_client().post(
-                "/api/calculate", json={"champion": "Ahri", "level": 1}
-            )
-        finally:
-            app_module.calculate_payload = original
+        monkeypatch.setattr(app_module, "calculate_payload", _raise_the_walks_error)
+        response = app_module.app.test_client().post(
+            "/api/calculate", json={"champion": "Ahri", "level": 1}
+        )
         assert response.status_code == 400
         payload = response.get_json()
         assert sorted(payload) == ["error"]
