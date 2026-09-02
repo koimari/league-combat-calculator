@@ -44,7 +44,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import named_damage, no_damage_slot
+from .module_helpers import named_damage, no_damage_slot, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -74,11 +74,8 @@ def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _rend(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     stacks = min(max(int(ctx.option("rend_stacks")), 1), 254)
     first = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     additional = extract_named(

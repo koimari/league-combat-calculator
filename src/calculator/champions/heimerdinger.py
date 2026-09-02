@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage, require_named_leveling
+from .module_helpers import no_damage, ranked_slot, require_named_leveling
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -187,11 +187,10 @@ class _GrenadeRule:
 HEIMER_E_GRENADE_RULE = _GrenadeRule()
 
 
-def _micro_rockets(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _micro_rockets(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
     require_named_leveling("Heimerdinger", ability, "Initial Rocket Magic Damage")
     require_named_leveling("Heimerdinger", ability, "Subsequent Rocket Magic Damage")

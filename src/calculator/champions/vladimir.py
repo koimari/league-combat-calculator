@@ -34,7 +34,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option
 from .module_contract import coverage
-from .module_helpers import amp_slot
+from .module_helpers import amp_slot, ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import ability_name, damage_entry, extract_named
 
@@ -174,7 +174,10 @@ class _TidesOfBloodBoundaryRules:
 TIDES_OF_BLOOD_BOUNDARY_RULES = _TidesOfBloodBoundaryRules()
 
 
-def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _tides_of_blood(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: charge-interpolated nova between the sourced min/max rows.
 
     Each of the three modifiers (flat, % maximum health, % AP) is read
@@ -185,10 +188,6 @@ def _tides_of_blood(ctx: SlotCtx) -> dict[str, Any] | None:
     champion's OWN maximum health (``ctx.stats["health"]``), the same
     ``health`` stat the pinned packet maps it to.
     """
-    ranked = ctx.ranked("E", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     raw_fraction = ctx.option("e_charge_fraction")
     if isinstance(raw_fraction, bool):

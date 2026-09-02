@@ -71,12 +71,11 @@ _FEROCITY_MAX = int(data_value(_RENGAR_P_SPELL, "MaxFerocity"))
 _R_SHRED_SECONDS = data_value(spell_object("Rengar", "RengarR"), "ArmorShredDuration")
 
 
-def _thrill_of_the_hunt(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _thrill_of_the_hunt(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the empowered attack's flat armour shred on the marked target."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     landed = bool(ctx.option("r_thrill_attack"))
     shred = extract_value(ability, "Armor Reduction", rank)

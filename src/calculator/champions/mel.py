@@ -245,34 +245,15 @@ def _searing_brilliance(ctx: SlotCtx) -> dict[str, Any] | None:
 _searing_brilliance.phase = ONHIT
 
 
-def _rebuttal(ctx: SlotCtx):
+@ranked_slot
+def _rebuttal(_ctx: SlotCtx, ability: dict[str, Any], rank: int):
     """W: shield + conditional projectile reflection, priced ``no_damage``.
 
-    Rebuttal owns no damage on any cached source, so the slot is
-    ``no_damage`` rather than a gap awaiting a kernel:
-
-    * Wiki (data/champions.json Mel W): "Shield" (80-200 + 70% AP), plus two
-      "Replicated Projectile ... Modifier" rows (40-60% magic, 28-42%
-      physical) whose unit is "% of the original damage" of an enemy
-      projectile, not a damage amount.
-    * Game binary (data/bin/characters/mel.bin.json,
-      Characters/Mel/Spells/MelWAbility/MelW): mSpellCalculations holds only
-      ``DamagePercent`` (0.40/0.45/0.50/0.55/0.60, + 0.0005 per AP) and
-      ``ShieldAmount`` (80-200 + 0.7 AP).  ``PhysDamageMod`` 0.30 is the
-      conversion step behind the cached 28% (0.7 x 40%).
-    * Atoms (data/atoms/mel.atoms.json): MelW emits ``cc-immunity``,
-      ``shield`` and ``projectile-destruction``, and no ``damage.*`` atom.
-
-    The multiplicand is structurally absent: this calculator models one
-    attacker against a target that never casts, so no enemy projectile can
-    exist for any build.
+    Every source (the wiki rows, MelW's mSpellCalculations, the atom
+    catalog) states a shield and a "% of the original damage" reflection,
+    never a damage amount, and the multiplicand is structurally absent:
+    this calculator models one attacker against a target that never casts.
     """
-    ability = ctx.ability("W", 0)
-    if ability is None:
-        return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
     return {
         "name": ability_name(ability),
         "rank": rank,
@@ -291,14 +272,11 @@ def _rebuttal(ctx: SlotCtx):
     }
 
 
-def _golden_eclipse(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _golden_eclipse(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: flat Magic Damage row + (4/7/10 + 4% AP) per Overwhelm stack."""
-    ability = ctx.ability("R", 0)
-    if ability is None:
-        return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
     # The wiki's "Magic Damage" row: flat + 30% AP + per-stack term.  The
     # per-stack unit (" (+ 4% AP) per Overwhelm stack on the target") is
     # not a generic scaling unit, so the flat+AP share comes from the row

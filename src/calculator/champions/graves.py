@@ -119,25 +119,16 @@ def _quickdraw(
 _quickdraw.phase = BUFF
 
 
-@ranked_slot
-def _collateral_damage(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int
-) -> dict[str, Any] | None:
-    secondary = bool(ctx.option("r_secondary_target"))
-    attr = "Reduced Damage" if secondary else "Physical Damage"
-    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "physical",
-    )
-    entry["parts"] = (DamagePart("physical", value, time_offset=0.25),)
-    entry["detail"] = (
-        "Primary shell or reduced cone explosion branch selected explicitly."
-    )
-    return entry
+_collateral_damage = named_damage(
+    lambda ctx: (
+        "Reduced Damage"
+        if bool(ctx.option("r_secondary_target"))
+        else "Physical Damage"
+    ),
+    "physical",
+    time_offset=0.25,
+    detail="Primary shell or reduced cone explosion branch selected explicitly.",
+)
 
 
 SLOTS = {

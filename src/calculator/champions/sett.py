@@ -26,7 +26,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -95,7 +95,10 @@ def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _knuckle_down(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: BOTH empowered basic attacks (the Total Bonus Physical Damage row).
 
     Knuckle Down empowers Sett's next two basic attacks; the reviewed
@@ -108,10 +111,6 @@ def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
     string (2/3/4/5/6% by rank), both priced against the target's max
     health and Sett's total AD.
     """
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     leveling = find_named_leveling(ability, _Q_TOTAL_ATTR)
     if leveling is None:
         raise ValueError("Sett Q Total Bonus Physical Damage row is unavailable")
@@ -156,7 +155,10 @@ def _knuckle_down(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _haymaker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the center-line TRUE damage plus the grit shield.
 
     Haymaker consumes all stored Grit: the blast deals the cached "Damage"
@@ -168,10 +170,6 @@ def _haymaker(ctx: SlotCtx) -> dict[str, Any] | None:
     ``w_grit`` is the explicit expended-Grit state that prices both the
     grit damage term and the self-shield.
     """
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     leveling = find_named_leveling(ability, "Damage")
     if leveling is None:
         raise ValueError("Sett W Damage leveling row is unavailable")

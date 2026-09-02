@@ -14,15 +14,17 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import AMP, DAMAGE, SlotCtx, SlotParser
+from .engine import AMP, DAMAGE, ONHIT, SlotCtx, SlotParser
 from .slotlib import (
     MODULE_FORMULA_ZERO,
+    STEROID_ZERO,
     ProcDamageResolver,
     ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
+    on_hit_entry,
     simple_damage,
 )
 
@@ -126,7 +128,7 @@ def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
 
 
 def named_damage(  # pylint: disable=too-many-arguments
-    attr: str,
+    attr: str | Callable[[SlotCtx], str],
     dmg_type: str,
     *,
     ticks: int | None = None,
@@ -138,11 +140,13 @@ def named_damage(  # pylint: disable=too-many-arguments
 ) -> SlotParser:
     """A slot pricing one named row of its cached entry at the slot's rank.
 
-    The row is one cast's whole damage; ``ticks`` delivers it as that many
-    even hits (the Cassiopeia rule).  The part keywords author the hit, and
-    every other keyword lands on the entry as-is (``detail``,
-    ``event_order_certified``, ``empowers_next_auto``, ...), in the order
-    written; the engine's entry-key check refuses a misspelling.
+    ``attr`` names the row, or picks it from the fight's options (an
+    execute branch).  The row is one cast's whole damage; ``ticks``
+    delivers it as that many even hits (the Cassiopeia rule).  The part
+    keywords author the hit, and every other keyword lands on the entry
+    as-is (``detail``, ``event_order_certified``, ``empowers_next_auto``,
+    ...), in the order written; the engine's entry-key check refuses a
+    misspelling.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -150,7 +154,8 @@ def named_damage(  # pylint: disable=too-many-arguments
         if ranked is None:
             return None
         ability, selected = ranked
-        value = extract_named(ability, attr, selected, ctx.stats, ctx.target)
+        row = attr(ctx) if callable(attr) else attr
+        value = extract_named(ability, row, selected, ctx.stats, ctx.target)
         entry = damage_entry(
             ability_name(ability),
             selected,
@@ -411,6 +416,58 @@ def no_damage_slot(reason: str) -> SlotParser:
         return no_damage(ctx, name=ability_name(ability), reason=reason)
 
     parse.phase = DAMAGE
+    return parse
+
+
+def steroid_entry(
+    ability: dict[str, Any],
+    rank_value: int,
+    stat_buff: dict[str, float],
+    detail: str,
+    *,
+    dmg_type: str = "physical",
+    **flags: Any,
+) -> dict[str, Any]:
+    """A zero-damage row carrying a stat buff: its number is the grant, not a hit."""
+    entry = damage_entry(
+        ability_name(ability),
+        rank_value,
+        extract_cooldown(ability, rank_value),
+        0.0,
+        dmg_type,
+        zero_policy=STEROID_ZERO,
+    )
+    entry["stat_buff"] = stat_buff
+    entry.update(flags)
+    entry["detail"] = detail
+    return entry
+
+
+def between_rows(  # pylint: disable=too-many-arguments
+    ctx: SlotCtx,
+    ability: dict[str, Any],
+    rank_value: int,
+    low: str,
+    high: str,
+    fraction: float,
+) -> float:
+    """The *low* row plus *fraction* of the way to the *high* row (a charge)."""
+    floor = extract_named(ability, low, rank_value, ctx.stats, ctx.target)
+    ceiling = extract_named(ability, high, rank_value, ctx.stats, ctx.target)
+    return floor + (ceiling - floor) * fraction
+
+
+def innate_on_hit(attr: str, dmg_type: str) -> SlotParser:
+    """P: an on-hit row priced from the innate's per-level *attr* at the champion's level."""
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability("P", 0)
+        if ability is None:
+            return None
+        per_hit = extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
+        return on_hit_entry(ability_name(ability), per_hit, dmg_type)
+
+    parse.phase = ONHIT
     return parse
 
 

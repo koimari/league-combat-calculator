@@ -49,6 +49,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -91,11 +92,10 @@ def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
 _stone_skin.phase = BUFF
 
 
-def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _crushing_blow(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -124,11 +124,8 @@ def _crushing_blow(ctx: SlotCtx) -> dict[str, Any] | None:
 _crushing_blow.phase = DEBUFF
 
 
-def _cyclone(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _cyclone(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     per_tick = extract_named(
         ability, "Physical Damage Per Tick", rank, ctx.stats, ctx.target
     )

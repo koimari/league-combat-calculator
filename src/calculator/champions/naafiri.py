@@ -132,7 +132,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -188,7 +188,10 @@ def _packmate_count(level: int, *, hunt: bool) -> int:
     raise ValueError(f"Naafiri: no sourced Packmate cap for level {level!r}")
 
 
-def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _call_of_the_pack(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W: the hunt's 20%-of-total-AD bonus-attack-damage steroid.
 
     See the module docstring's W entry for the two-channel sourcing of
@@ -196,10 +199,6 @@ def _call_of_the_pack(ctx: SlotCtx) -> dict[str, Any] | None:
     ``NaafiriADPercentBoost``) and for why the branch's bonus movement
     speed stays a documented rider instead of a ``stat_buff`` key.
     """
-    ranked = ctx.ranked("W", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     entry = damage_entry(
         ability_name(ability),
@@ -325,12 +324,11 @@ def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _darkin_daggers(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: initial dagger + 10 bleed ticks + the recast's bonus damage."""
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     initial = extract_named(
         ability, "Initial Physical Damage", rank, ctx.stats, ctx.target
@@ -393,12 +391,11 @@ def _darkin_daggers(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _eviscerate(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _eviscerate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: dash damage plus the Flurry explosion on arrival."""
-    ranked = ctx.ranked("E", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     dash = extract_named(ability, "Dash Physical Damage", rank, ctx.stats, ctx.target)
     flurry = extract_named(

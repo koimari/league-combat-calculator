@@ -28,7 +28,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx
 from .inputs import int_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -172,12 +172,11 @@ def _fate_sealed(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _soul_unbound(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _soul_unbound(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: declare a post-mitigation damage store for the fight engine."""
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     ratio = extract_value(ability, "Damage Stored", rank, 0) / 100.0
     entry = damage_entry(
         ability_name(ability),

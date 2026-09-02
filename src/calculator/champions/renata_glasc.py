@@ -45,7 +45,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
 from .module_contract import coverage
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -372,12 +372,9 @@ _leverage = proc_damage(
 )
 
 
-def _bailout(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _bailout(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: the self cast's ramping attack speed, at the ramp's mean."""
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     on_self = str(ctx.option("w_bailout_target")) == _W_SELF_CAST
     start = extract_named(ability, "Bonus Attack Speed", rank, ctx.stats, {})

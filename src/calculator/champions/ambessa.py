@@ -34,7 +34,6 @@ from .engine import SlotCtx, SlotParser, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import delayed
-from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
     attach_self_shield,
     by_option,
@@ -56,13 +55,7 @@ _REPUDIATION_SHIELD_DURATION_SECONDS = data_value(
 
 def _repudiation_shield_amount(ctx: SlotCtx) -> float:
     """W's shield: a per-LEVEL base (40 cached values, 50 at level 1 and
-    320 at level 18) plus 150% bonus AD.
-
-    ``sum_modifiers`` indexes every modifier by RANK, so the 40-value
-    level row would read values[4] = 113.53 at W rank 5; the shield's
-    base is level-indexed, matching the wiki's "50 : 320 (based on
-    level)" prose.  Long arrays (>= 18 values) are level-indexed here,
-    short arrays rank-indexed.
+    320 at level 18) plus 150% bonus AD; the long row reads at the level.
     """
     ability = ctx.ability()
     if ability is None:
@@ -70,25 +63,9 @@ def _repudiation_shield_amount(ctx: SlotCtx) -> float:
     leveling = find_named_leveling(ability, "Shield")
     if leveling is None:
         raise ValueError("Ambessa W Shield leveling row is unavailable")
-    total = 0.0
-    rank = ctx.rank_for()
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-        if len(values) >= 18:
-            index = min(max(ctx.level - 1, 0), len(values) - 1)
-        else:
-            index = min(max(rank - 1, 0), len(values) - 1)
-        value = float(values[index])
-        unit = units[index] if index < len(units) else ""
-        total += (
-            value
-            if is_flat_unit(unit)
-            else resolve_scaling(unit, value, ctx.stats, ctx.target)
-        )
-    return total
+    return sum_modifiers(
+        leveling, ctx.rank_for(), ctx.stats, ctx.target, level=ctx.level
+    )
 
 
 def _repudiation(ctx: SlotCtx) -> dict[str, Any] | None:

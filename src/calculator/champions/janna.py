@@ -19,7 +19,7 @@ from ..healing_helpers import ability_json, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -49,9 +49,9 @@ def _howling_gale(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
-    low = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
-    high = extract_named(ability, "Maximum Magic Damage", rank, ctx.stats, ctx.target)
-    value = low + (high - low) * charge
+    value = between_rows(
+        ctx, ability, rank, "Minimum Magic Damage", "Maximum Magic Damage", charge
+    )
     entry = damage_entry(
         ability_name(ability),
         rank,

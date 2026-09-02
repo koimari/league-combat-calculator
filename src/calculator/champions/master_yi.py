@@ -32,10 +32,9 @@ from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import buff_window_share, ranked_slot
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
-    STEROID_ZERO,
     ability_name,
     ability_on_hit_entry,
     damage_entry,
@@ -125,32 +124,26 @@ def _meditate(
     return entry
 
 
-def _highlander(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _highlander(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the 25/45/65% attack-speed steroid, priced onto the auto count."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     movement = extract_value(ability, "Bonus Movement Speed", rank)
     bonus_as = granted * buff_window_share(ctx, _R_DURATION_SECONDS)
-    entry = damage_entry(
-        ability_name(ability),
+    return steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
+        {"bonus_attack_speed": bonus_as},
+        (
+            f"+{granted:g}% bonus attack speed for {_R_DURATION_SECONDS:g}s "
+            f"({bonus_as:g}% over the fight window); the row's "
+            f"+{movement:g}% movement speed, the crowd-control immunities and "
+            "the takedown cooldown refund have no channel"
+        ),
     )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    entry["detail"] = (
-        f"+{granted:g}% bonus attack speed for {_R_DURATION_SECONDS:g}s "
-        f"({bonus_as:g}% over the fight window); the row's "
-        f"+{movement:g}% movement speed, the crowd-control immunities and "
-        "the takedown cooldown refund have no channel"
-    )
-    return entry
 
 
 _highlander.phase = BUFF

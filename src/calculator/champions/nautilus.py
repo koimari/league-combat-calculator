@@ -23,8 +23,8 @@ P1-2 fixes:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx
-from .module_helpers import ranked_slot
+from .engine import SlotCtx
+from .module_helpers import innate_on_hit, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -32,7 +32,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
-    on_hit_entry,
 )
 
 # HARDCODED: verify on patch updates — Pain of Wrath's second instance
@@ -43,19 +42,9 @@ _W_SECOND_INSTANCE_DELAY = 1.25
 PACKET_SHA256 = "66ae84d11488386be94ff6ac41a99478d1d5d6394c98003813b547dbda249172"
 
 
-def _staggering_blow(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: empowered basic attacks deal 14 : 128 (based on level) bonus
-    physical damage — the "Per-Level Scaling" leveling row."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
-    per_hit = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
-    )
-    return on_hit_entry(ability_name(ability), per_hit, "physical")
-
-
-_staggering_blow.phase = ONHIT
+# P: empowered basic attacks deal 14 : 128 (based on level) bonus
+# physical damage — the "Per-Level Scaling" leveling row.
+_staggering_blow = innate_on_hit("Per-Level Scaling", "physical")
 
 
 @ranked_slot

@@ -36,7 +36,7 @@ from typing import Any
 from ..ability_spec import ControlScope
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import buff_window_share
+from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -89,7 +89,8 @@ def _pix_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
 _pix_bolts.phase = ONHIT
 
 
-def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _whimsy(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """W: one cast, one branch — the self/ally buff OR the enemy polymorph.
 
     The cache states them as two mutually exclusive halves of one active:
@@ -101,40 +102,32 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
     polymorphed would be one cast modelled twice, and it would hold an
     enemy nobody cast it on.
     """
-    ranked = ctx.ranked("W")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     target = str(ctx.option("lulu_whimsy_target"))
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     duration = extract_value(ability, "Effect Duration", rank)
     share = buff_window_share(ctx, duration) if target == _SELF_CAST else 0.0
     bonus_as = granted * share
-    entry = damage_entry(
-        ability_name(ability),
+    entry = steroid_entry(
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
-        zero_policy=STEROID_ZERO,
-    )
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    entry["detail"] = _cast_detail(
-        target,
-        self_text=(
-            f"+{granted:g}% bonus attack speed for {duration:g}s "
-            f"({bonus_as:g}% over the fight window); the cast's 25% "
-            "(+5% per 100 AP) movement speed has no stat_buff key"
-        ),
-        ally_text=(
-            f"cast on an ally: the same +{granted:g}% for {duration:g}s "
-            "reaches the roster through the ally-support scanner, not "
-            "this slot"
-        ),
-        enemy_text=(
-            "cast on an enemy: the sourced Disable Duration polymorph "
-            "(1.2-2s) and its disarm; the branch grants no attack speed"
+        {"bonus_attack_speed": bonus_as},
+        _cast_detail(
+            target,
+            self_text=(
+                f"+{granted:g}% bonus attack speed for {duration:g}s "
+                f"({bonus_as:g}% over the fight window); the cast's 25% "
+                "(+5% per 100 AP) movement speed has no stat_buff key"
+            ),
+            ally_text=(
+                f"cast on an ally: the same +{granted:g}% for {duration:g}s "
+                "reaches the roster through the ally-support scanner, not "
+                "this slot"
+            ),
+            enemy_text=(
+                "cast on an enemy: the sourced Disable Duration polymorph "
+                "(1.2-2s) and its disarm; the branch grants no attack speed"
+            ),
         ),
     )
     if target == _ENEMY_CAST:
@@ -153,12 +146,11 @@ def _whimsy(ctx: SlotCtx) -> dict[str, Any] | None:
 _whimsy.phase = BUFF
 
 
-def _wild_growth(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _wild_growth(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the self cast's 275-575 (+55% AP) bonus health for 7 seconds."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     target = str(ctx.option("lulu_wild_growth_target"))
     granted = extract_named(ability, "Bonus Health", rank, ctx.stats, ctx.target)

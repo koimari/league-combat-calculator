@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -133,25 +133,14 @@ def _whiplash(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-@ranked_slot
-def _last_caress(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int
-) -> dict[str, Any] | None:
-    execute = bool(ctx.option("r_execute_ready"))
-    attr = "Empowered Damage" if execute else "Magic Damage"
-    value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        value,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", value, time_offset=0.35),)
-    entry["detail"] = (
-        "240% execute branch is opt-in only when the target is below 30% maximum health."
-    )
-    return entry
+_last_caress = named_damage(
+    lambda ctx: (
+        "Empowered Damage" if bool(ctx.option("r_execute_ready")) else "Magic Damage"
+    ),
+    "magic",
+    time_offset=0.35,
+    detail="240% execute branch is opt-in only when the target is below 30% maximum health.",
+)
 
 
 SLOTS = {

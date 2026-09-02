@@ -86,12 +86,11 @@ def _q_true_ratio(ability: dict[str, Any], level: int) -> float:
     return min(extract_value(ability, "Bonus True Damage", level), 100.0) / 100.0
 
 
-def _precision_protocol(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _precision_protocol(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q1: next basic attack deals +20-40% total AD physical, no crit."""
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
 
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     total_ad = ctx.stat("attack_damage")

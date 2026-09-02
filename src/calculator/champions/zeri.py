@@ -19,6 +19,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import ONHIT, SlotCtx
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
     ability_name,
@@ -172,14 +173,11 @@ def _living_battery(ctx: SlotCtx) -> dict[str, Any] | None:
 _living_battery.phase = ONHIT
 
 
-def _spark_surge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _spark_surge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: the dash plus 7 Lightning-Rounds-empowered Burst Fire rounds."""
-    ability = ctx.ability("E", 0)
-    if ability is None:
-        return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
     per_round = extract_named(
         ability, "Burst Fire Bonus Magic Damage", rank, ctx.stats, ctx.target
     )

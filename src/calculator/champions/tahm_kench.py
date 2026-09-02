@@ -31,6 +31,7 @@ from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -57,11 +58,10 @@ def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
 _acquired_taste.phase = ONHIT
 
 
-def _tongue_lash(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _tongue_lash(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     # Tongue Lash's row carries a per-rank base and an eighteen-entry per-level
     # term, so reading it needs the level as well as the rank.
     total = extract_named(

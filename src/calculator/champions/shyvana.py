@@ -33,6 +33,7 @@ from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_contract import coverage
+from .module_helpers import ranked_slot
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -132,11 +133,10 @@ def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
 _scalemail.phase = BUFF
 
 
-def _emberstrike(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_slot
+def _emberstrike(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     casts = min(max(int(ctx.option("q_casts")), 1), 3)
     dragon = bool(ctx.option("dragon_form"))
     human = extract_named(ability, "Area Physical Damage", rank, ctx.stats, ctx.target)

@@ -23,34 +23,24 @@ static/reviewed-packets.json (only the Poppy entry changed; the other
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import ONHIT, SlotCtx
+from .engine import SlotCtx
 from .inputs import bool_option
+from .module_helpers import innate_on_hit
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
-    on_hit_entry,
     with_control,
 )
 
 PACKET_SHA256 = "b6f179d37816f86a3c589048738bf588034d2340535ad6dde533391daf113d90"
 
 
-def _iron_ambassador(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the empowered buckler toss deals 20 : 198.82 (based on level)
-    bonus magic damage on-hit — the "Bonus Magic Damage" leveling row."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
-    per_hit = extract_named(
-        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-    )
-    return on_hit_entry(ability_name(ability), per_hit, "magic")
-
-
-_iron_ambassador.phase = ONHIT
+# P: the empowered buckler toss deals 20 : 198.82 (based on level)
+# bonus magic damage on-hit — the "Bonus Magic Damage" leveling row.
+_iron_ambassador = innate_on_hit("Bonus Magic Damage", "magic")
 
 
 def _keepers_verdict(packet_r):

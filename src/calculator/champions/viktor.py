@@ -43,8 +43,7 @@ from .slotlib import (
     attach_self_shield,
     extract_named,
     find_named_leveling,
-    is_flat_unit,
-    resolve_scaling,
+    sum_modifiers,
     with_control_event,
 )
 
@@ -61,12 +60,8 @@ PACKET_SHA256 = "542116107f7a930a0dbae3ed0dfb602d84d0b90cb6bf86f2b4832bae1c8ad13
 
 
 def _siphon_shield(ctx: SlotCtx) -> float:
-    """Q's shield: per-LEVEL base (40 : 140, 18 cached values) + 25% AP.
-
-    ``extract_named`` indexes the 18-value row by RANK (values[4] at
-    rank 5), but the wiki prose is "40 : 140 (based on level)"; long
-    arrays (>= 18 values) are level-indexed here, the Ambessa W
-    convention.
+    """Q's shield: per-LEVEL base (40 : 140, 18 cached values) + 25% AP;
+    the long row reads at the level.
     """
     ability = ctx.ability()
     if ability is None:
@@ -74,25 +69,9 @@ def _siphon_shield(ctx: SlotCtx) -> float:
     leveling = find_named_leveling(ability, "Bonus Damage")
     if leveling is None:
         raise ValueError("Viktor Q shield leveling row is unavailable")
-    total = 0.0
-    rank = ctx.rank_for()
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-        if len(values) >= 18:
-            index = min(max(ctx.level - 1, 0), len(values) - 1)
-        else:
-            index = min(max(rank - 1, 0), len(values) - 1)
-        value = float(values[index])
-        unit = units[index] if index < len(units) else ""
-        total += (
-            value
-            if is_flat_unit(unit)
-            else resolve_scaling(unit, value, ctx.stats, ctx.target)
-        )
-    return total
+    return sum_modifiers(
+        leveling, ctx.rank_for(), ctx.stats, ctx.target, level=ctx.level
+    )
 
 
 def _siphon_power(packet_q):
